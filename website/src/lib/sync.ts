@@ -5,7 +5,11 @@ import fs from 'fs'
 
 import path from 'path'
 import { ChunkReqPayload, TrieveSDK } from 'trieve-ts-sdk'
-import { processMdx } from 'docs-website/app/lib/mdx'
+import {
+    DocumentRecord,
+    processMdx,
+    StructuredData,
+} from 'docs-website/app/lib/mdx'
 
 type Page = {
     pageInput: Omit<Prisma.MarkdownPageUncheckedCreateInput, 'tabId'>
@@ -18,12 +22,14 @@ export async function syncWebsiteDocsV2({
     internalHost,
     name,
     tabId,
+    orgId,
     pages,
 }: {
     siteId: string
     internalHost: string
     name?: string
     tabId: string
+    orgId: string
     pages: AsyncIterable<Page>
 }) {
     console.log('Starting import script...')
@@ -36,7 +42,7 @@ export async function syncWebsiteDocsV2({
         create: {
             id: siteId,
             name,
-            siteType: 'docsv2',
+            orgId,
         },
         include: {
             domains: {
@@ -47,7 +53,7 @@ export async function syncWebsiteDocsV2({
         },
     })
     console.log(
-        `Site upsert complete: ${site.id} (${site.name}) - siteType: ${site.siteType}`,
+        `Site upsert complete: ${site.id} (${site.name}) `,
     )
 
     // Find existing domain or create a new one
@@ -282,81 +288,6 @@ export async function* pagesFromDirectory(
         const fullPath = path.join(dirPath, entry.name)
         yield* pagesFromDirectory(fullPath, base)
     }
-}
-
-export async function* pagesFromNotion({
-    updatedPageIds,
-    notionToMdx,
-}: {
-    updatedPageIds: string[]
-    notionToMdx: NotionToMdx
-}): AsyncGenerator<Page> {
-    console.log(
-        `Initializing Notion client with root page ID: ${notionToMdx.rootPageId}`,
-    )
-
-    // Build a list of all pages
-    console.log('Building page list from Notion...')
-
-    const pages = await notionToMdx.buildPageList({
-        filteredIds: updatedPageIds,
-    })
-    console.log(`Found ${pages.length} pages in Notion workspace`)
-    const totalPages = pages.length
-
-    // Process each page
-    for (const p of pages) {
-        const notionPageId = p.id
-
-        try {
-            console.log(`Processing Notion page: ${notionPageId}`)
-
-            const {
-                mdx: markdown,
-                lastEditedAt,
-                jsonTree,
-                mdast,
-            } = await notionToMdx.pageToMdx({
-                pageId: notionPageId,
-            })
-
-            // Process the MDX to get structured data
-            const { data } = await processMdx({
-                markdown,
-                extension: 'mdx',
-            }).catch((e) => {
-                if (process.env.DEBUG_NOTION_MDX) {
-                    console.log('Saving problematic MDX to clipboard...')
-                    execSync('pbcopy', { input: markdown })
-                    console.log('MDX copied to clipboard for debugging')
-                }
-                throw e
-            })
-
-            const page: Page = {
-                totalPages,
-                pageInput: {
-                    slug: p.slug,
-                    title: data.title || '',
-                    markdown,
-                    frontmatter: data.frontmatter,
-                    notionPageId,
-                    lastEditedAt,
-                },
-                structuredData: data.structuredData,
-            }
-
-            console.log(`Generated page: ${data.title} (slug: ${p.slug})`)
-            yield page
-        } catch (error) {
-            console.error(
-                `Error processing Notion page ${notionPageId}:`,
-                error,
-            )
-        }
-    }
-
-    console.log('Finished processing all Notion pages')
 }
 
 export async function deletePages({

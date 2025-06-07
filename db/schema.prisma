@@ -206,7 +206,24 @@ model Site {
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  tabs Tab[]
+  tabs    Tab[]
+  domains Domain[]
 
   @@index([createdAt])
+}
+
+enum DomainType {
+  customDomain
+  internalDomain
+}
+
+model Domain {
+  id         String     @id @default(cuid())
+  host       String     @unique
+  siteId     String
+  domainType DomainType
+  site       Site       @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  // isVercelVerified Boolean?
+  // lastCheck        DateTime?
 }

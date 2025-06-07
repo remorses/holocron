@@ -13,7 +13,7 @@
         "push": "doppler run -c dev --command 'prisma db push && pnpm fix-permissions && pnpm gen:supabase && pnpm gen:kysely'",
         "push:prod": "doppler run -c production -- prisma db push && prisma generate",
         "pull": "doppler run -c dev -- prisma db pull && prisma generate",
-        "prepare": "prisma generate",
+        "gen": "prisma generate",
         "pull:prod": "doppler run -c production -- prisma db pull "
     },
     "keywords": [],
