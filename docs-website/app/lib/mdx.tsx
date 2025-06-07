@@ -13,7 +13,7 @@ import {
     transformerNotationHighlight,
     transformerNotationWordHighlight,
 } from '@shikijs/transformers'
-import { Root, Heading } from 'remark'
+import { Root, Heading } from 'mdast'
 import { visit } from 'unist-util-visit'
 import { remarkGitHubBlockquotes } from './github-blockquotes'
 import { notifyError } from './sentry'
@@ -66,6 +66,12 @@ const remarkCodeToHtml = () => {
 
         await Promise.allSettled(promises)
         return tree
+    }
+}
+
+declare module 'mdast' {
+    interface CodeData {
+        html?: string
     }
 }
 
