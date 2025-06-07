@@ -1,0 +1,4 @@
+[submodule "fumadocs"]
+	path = fumadocs
+	url = https://github.com/remorses/fumadocs.git
+	branch = fumabase

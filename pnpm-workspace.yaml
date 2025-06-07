@@ -1,2 +1,4 @@
 packages:
-  - ./*
+    - ./*
+    - fumadocs/packages/*
+    - fumadocs/

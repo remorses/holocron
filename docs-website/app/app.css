@@ -1,0 +1,45 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+summary > p {
+    display: inline;
+}
+
+summary {
+    cursor: pointer;
+}
+
+.navIcon {
+    width: 19px;
+    height: 19px;
+    display: flex;
+    /* TODO remove this margin top when i have line height clip */
+    margin-top: 1px;
+    align-items: center;
+    /* background: #b5b5b5;
+    border-radius: 6px;
+    padding: 2px; */
+    font-size: 13px;
+    margin-right: 8px !important;
+    filter: grayscale(40%);
+    /* opacity: 0.9; */
+    flex-shrink: 0;
+    transition: all 400ms ease;
+    transition-property: opacity, filter;
+}
+
+.navIcon img {
+    /* fill all the width, object fit */
+    object-fit: cover;
+    overflow: hidden;
+    min-width: 100%;
+    width: 19px;
+    height: 19px;
+}
+
+.navLink:hover .navIcon {
+    /* filter: unset; */
+    filter: saturate(100%);
+    opacity: 1;
+}

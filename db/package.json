@@ -2,6 +2,7 @@
     "name": "db",
     "version": "0.0.0",
     "private": true,
+    "main": "src/prisma.ts",
     "description": "db",
     "scripts": {
         "studio": "doppler run -- prisma studio",
