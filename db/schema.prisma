@@ -1,0 +1,212 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String      @id
+  name             String      @db.Text
+  email            String
+  emailVerified    Boolean
+  image            String?     @db.Text
+  createdAt        DateTime
+  updatedAt        DateTime
+  twoFactorEnabled Boolean?
+  username         String?
+  sessions         Session[]
+  accounts         Account[]
+  twofactors       TwoFactor[]
+  orgs             OrgsUsers[]
+
+  @@unique([email])
+  @@unique([username])
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?  @db.Text
+  userAgent String?  @db.Text
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+}
+
+model Account {
+  id                    String    @id
+  accountId             String    @db.Text
+  providerId            String    @db.Text
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?   @db.Text
+  password              String?   @db.Text
+  createdAt             DateTime
+  updatedAt             DateTime
+}
+
+model Verification {
+  id         String    @id
+  identifier String    @db.Text
+  value      String    @db.Text
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+}
+
+model TwoFactor {
+  id          String @id
+  secret      String @db.Text
+  backupCodes String @db.Text
+  userId      String
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum UserRole {
+  ADMIN
+  MEMBER
+  GUEST
+}
+
+enum PaymentProvider {
+  stripe
+}
+
+enum SubscriptionStatus {
+  on_trial
+  active
+  paused
+  past_due
+  unpaid
+  cancelled
+  expired
+}
+
+model OrgsUsers {
+  userId String
+  orgId  String
+  role   UserRole @default(MEMBER)
+  // guestSiteIds String[]
+  org    Org      @relation(fields: [orgId], references: [orgId], onDelete: Cascade)
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, orgId])
+  @@index([orgId])
+  @@index([userId])
+}
+
+model OrgInviteLink {
+  createdAt DateTime @default(now())
+  key       String   @id
+  orgId     String
+  forSiteId String?
+  forPageId String?
+  org       Org      @relation(fields: [orgId], references: [orgId], onDelete: Cascade)
+}
+
+model Org {
+  orgId            String   @id @default(cuid())
+  name             String   @default("")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now()) @updatedAt
+  stripeCustomerId String?
+
+  invitationLinks OrgInviteLink[]
+  users           OrgsUsers[]
+
+  subscriptions Subscription[]
+  sites         Site[]
+}
+
+model Subscription {
+  subscriptionId String
+  orderId        String?
+  variantId      String
+  productId      String
+  variantName    String?
+  createdAt      DateTime           @default(now())
+  status         SubscriptionStatus
+  endsAt         DateTime?
+  email          String?            @db.VarChar(255)
+  orgId          String
+  provider       PaymentProvider    @default(stripe)
+  itemId         String?            @unique
+  quantity       Int                @default(1)
+  org            Org                @relation(fields: [orgId], references: [orgId], onDelete: Cascade)
+
+  @@id([subscriptionId, variantId])
+  @@index([orgId])
+}
+
+model Tab {
+  tabId     String   @id @default(cuid())
+  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  siteId    String
+  title     String
+  // enabled   Boolean    @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pages MarkdownPage[]
+
+  @@index([siteId])
+}
+
+model MarkdownPage {
+  pageId       String    @id @default(cuid())
+  slug         String
+  // id    String @unique @id
+  tabId        String
+  tab          Tab       @relation(fields: [tabId], references: [tabId], onDelete: Cascade)
+  title        String?   @db.Text
+  markdown     String    @db.Text
+  createdAt    DateTime  @default(now())
+  // updatedAt DateTime @updatedAt
+  lastEditedAt DateTime?
+
+  // ogImage      String?           @db.Text
+  description  String? @db.Text
+  // keywords     String?           @db.Text
+  icon         String?
+  /// [FrontmatterJson]
+  frontmatter  Json?
+  notionPageId String?
+
+  extension MarkdownExtension @default(mdx)
+
+  @@unique([tabId, slug])
+  @@index([tabId])
+  @@index([slug])
+}
+
+enum MarkdownExtension {
+  mdx
+  md
+}
+
+model Site {
+  id    String  @id @default(cuid())
+  name  String?
+  orgId String
+
+  org Org @relation(fields: [orgId], references: [orgId], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tabs Tab[]
+
+  @@index([createdAt])
+}

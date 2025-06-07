@@ -1,0 +1,21 @@
+{
+    "name": "new-package-template",
+    "version": "0.0.0",
+    "description": "",
+    "repository": "https://github.com/remorses/",
+    "scripts": {
+        "build": "tsc ",
+        "watch": "tsc -w"
+    },
+    "files": [
+        "dist",
+        "src",
+        "esm"
+    ],
+    "keywords": [],
+    "author": "Tommaso De Rossi, morse <beats.by.morse@gmail.com>",
+    "license": "",
+    "devDependencies": {},
+    "dependencies": {},
+    "peerDependencies": {}
+}

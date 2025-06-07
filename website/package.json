@@ -1,0 +1,48 @@
+{
+  "name": "website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "doppler run --preserve-env -- react-router build",
+    "dev": "doppler run -- react-router dev",
+    "start": "doppler run -- node ./build/server/index.js",
+    "typecheck": "react-router typegen && tsc"
+  },
+  "exports": {
+    "./*": "./*"
+  },
+  "dependencies": {
+    "@radix-ui/react-slot": "^1.2.3",
+    "@react-router/fs-routes": "^7.6.2",
+    "@react-router/node": "^7.6.2",
+    "@sentry/node": "^9.27.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "isbot": "^5.1.28",
+    "lucide-react": "^0.513.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router": "^7.6.2",
+    "react-router-hono-server": "^2.13.0",
+    "sentries": "^0.2.2",
+    "tailwind-merge": "^3.3.0",
+    "tw-animate-css": "^1.3.4"
+  },
+  "devDependencies": {
+    "@react-router/dev": "^7.6.2",
+    "@tailwindcss/typography": "^0.5.16",
+    "@tailwindcss/vite": "^4.1.8",
+    "@types/node": "^22.15.30",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.6",
+    "@xmorse/deployment-utils": "^0.3.0",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.4",
+    "tailwindcss": "^4.1.8",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vite-plugin-environment": "^1.1.3",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.2.2"
+  }
+}
