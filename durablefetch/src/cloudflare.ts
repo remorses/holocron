@@ -11,6 +11,38 @@ export default {
                 302,
             )
         }
+
+        if (url.pathname === '/durablefetch-example-stream-sse') {
+            const n = parseInt(url.searchParams.get('n') || '10')
+
+            const stream = new ReadableStream({
+                start(controller) {
+                    let count = 0
+                    const interval = setInterval(() => {
+                        if (count >= n) {
+                            controller.enqueue(
+                                new TextEncoder().encode('data: [DONE]\n\n'),
+                            )
+                            controller.close()
+                            clearInterval(interval)
+                            return
+                        }
+
+                        const data = `data: ${JSON.stringify({ number: count + 1 })}\n\n`
+                        controller.enqueue(new TextEncoder().encode(data))
+                        count++
+                    }, 300)
+                },
+            })
+
+            return new Response(stream, {
+                headers: {
+                    'Content-Type': 'text/event-stream',
+                    'Cache-Control': 'no-cache',
+                    Connection: 'keep-alive',
+                },
+            })
+        }
         const { key, requestForDO } = await createDurableObjectRequest(url, req)
         const id = env.DURABLE_FETCH.idFromName(key)
         return env.DURABLE_FETCH.get(id).fetch(requestForDO)
@@ -74,7 +106,9 @@ export class DurableFetch extends DurableObject {
                     prefix: 'c:',
                 })
                 await Promise.all(
-                    [...storedChunks].map(([, value]) => writer.write(value)),
+                    [...storedChunks].map(([, value]) => {
+                        writer.write(value)
+                    }),
                 )
             })
             .finally(() => {

@@ -1,4 +1,4 @@
-const defaultDurablefetchHost = 'durablefetch.fumabase.com'
+export const defaultDurablefetchHost = 'durablefetch.fumabase.com'
 
 function isRelativePath(url: string): boolean {
     return (
