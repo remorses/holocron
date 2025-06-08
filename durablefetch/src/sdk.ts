@@ -54,6 +54,7 @@ export class DurableFetchClient {
 
     async isInProgress(url: string | URL): Promise<{
         inProgress: boolean
+        completed: boolean
         activeConnections: number
         chunksStored: number
     }> {

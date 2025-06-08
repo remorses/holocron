@@ -54,5 +54,5 @@ for (;;) {
 const status = await df.isInProgress(
     'https://api.openai.com/v1/chat/completions',
 )
-console.log(status) // { inProgress: true, activeConnections: 1, chunksStored: 42 }
+console.log(status) // { inProgress: true, activeConnections: 1, chunksStored: 42, completed: false }
 ```

@@ -85,8 +85,11 @@ export class DurableFetch extends DurableObject {
         if (req.method !== 'GET')
             return new Response('Only GET supported', { status: 405 })
 
+        // Check if fetch was already completed by checking storage
+        const isCompleted = await this.state.storage.get<boolean>('completed')
+        
         // Kick off upstream once (in background) - only if not already completed
-        if (!this.fetching && !this.completed) {
+        if (!this.fetching && !isCompleted) {
             this.fetching = true
             await this.state.storage.put('open', true) // persist flag
             const upstream = new URL(req.url)
@@ -123,6 +126,7 @@ export class DurableFetch extends DurableObject {
             console.log(`already fetching ${req.url}, resuming stream`)
             this.live.add(writer)
         } else {
+            // If completed or not started, close the writer
             writer.close()
         }
 
@@ -150,12 +154,14 @@ export class DurableFetch extends DurableObject {
         const inProgress = this.fetching
         const activeConnections = this.live.size
         const chunksStored = this.seq
+        const completed = await this.state.storage.get<boolean>('completed') ?? false
 
         return new Response(
             JSON.stringify({
                 inProgress,
                 activeConnections,
                 chunksStored,
+                completed,
             }),
             {
                 headers: { 'content-type': 'application/json' },
@@ -195,9 +201,11 @@ export class DurableFetch extends DurableObject {
                 }
             }
         } finally {
-            // Mark closed, close everyone
+            // Mark closed and completed, close everyone
             await this.state.storage.put('open', false)
+            await this.state.storage.put('completed', true)
             this.fetching = false
+            this.completed = true
             for (const w of this.live) {
                 try {
                     w.close()

@@ -15,7 +15,14 @@ describe(
         console.log(sseUrl)
         it('should check in-progress status', async () => {
             const status = await client.isInProgress(sseUrl)
-            expect(status.inProgress).toBe(false)
+            expect(status).toMatchInlineSnapshot(`
+              {
+                "activeConnections": 0,
+                "chunksStored": 0,
+                "completed": false,
+                "inProgress": false,
+              }
+            `)
         })
 
         it('should fetch a single event and match raw text response', async () => {
@@ -47,7 +54,14 @@ describe(
         })
         it('should check in-progress status', async () => {
             const status = await client.isInProgress(sseUrl)
-
+            expect(status).toMatchInlineSnapshot(`
+              {
+                "activeConnections": 1,
+                "chunksStored": 1,
+                "completed": false,
+                "inProgress": true,
+              }
+            `)
             expect(status.inProgress).toBe(true)
         })
 
@@ -68,6 +82,7 @@ describe(
               [
                 "{"number":1}",
                 "{"number":2}",
+                "{"number":3}",
               ]
             `)
         })
@@ -125,14 +140,21 @@ describe(
                 "{"number":4}",
                 "{"number":5}",
                 "[DONE]",
-                "{"number":1}",
-                "{"number":2}",
-                "{"number":3}",
-                "{"number":4}",
-                "{"number":5}",
-                "[DONE]",
               ]
             `)
+        })
+        it('should check in-progress status', async () => {
+            const status = await client.isInProgress(sseUrl)
+            expect(status).toMatchInlineSnapshot(`
+              {
+                "activeConnections": 0,
+                "chunksStored": 6,
+                "completed": true,
+                "inProgress": false,
+              }
+            `)
+            expect(status.inProgress).toBe(false)
+            expect(status.completed).toBe(true)
         })
     },
     30 * 1000,
