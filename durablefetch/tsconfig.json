@@ -1,0 +1,11 @@
+{
+    "extends": "../tsconfig.base.json",
+    "compilerOptions": {
+        "rootDir": "src",
+        "outDir": "dist",
+        "lib": ["ESNext", ],
+        "strict": true,
+        "types": ["@cloudflare/workers-types"]
+    },
+    "include": ["src"]
+}

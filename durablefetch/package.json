@@ -1,0 +1,28 @@
+{
+    "name": "durablefetch",
+    "version": "0.0.0",
+    "description": "",
+    "repository": "https://github.com/remorses/durablefetch",
+    "scripts": {
+        "deploy:prod": "tsc && wrangler publish",
+        "dev": "wrangler dev",
+        "deploy:preview": "tsc && wrangler publish --env preview",
+        "test": "doppler -c dev run -- vitest"
+    },
+    "main": "./src/sdk.ts",
+    "files": [
+        "dist",
+        "src",
+        "esm"
+    ],
+    "keywords": [],
+    "author": "Tommaso De Rossi, morse <beats.by.morse@gmail.com>",
+    "license": "",
+    "devDependencies": {
+        "@cloudflare/workers-types": "^4.20250429.0",
+        "wrangler": "^4.19.1"
+    },
+    "dependencies": {
+        "rfc4648": "^1.5.1"
+    }
+}
