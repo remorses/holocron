@@ -58,6 +58,8 @@ export class DurableFetch extends DurableObject {
     private seq = 0 // next chunk index
     private fetching = false // upstream started?
     private live = new Set<WritableStreamDefaultWriter>()
+    // Time To Live (TTL) in milliseconds
+    private timeToLiveMs = 60 * 60 * 1000 * 6
 
     constructor(private state: DurableObjectState) {
         super(state, {})
@@ -72,6 +74,9 @@ export class DurableFetch extends DurableObject {
 
     /* ------------------------------------------------------ */
     async fetch(req: Request): Promise<Response> {
+        // Extend the TTL immediately following every fetch request
+        await this.state.storage.setAlarm(Date.now() + this.timeToLiveMs)
+
         const url = new URL(req.url)
 
         // Handle /in-progress POST requests
@@ -239,6 +244,12 @@ export class DurableFetch extends DurableObject {
             }
             this.live.clear()
         }
+    }
+
+    /* ------------------------------------------------------ */
+    /** TTL alarm handler - clean up all stored data */
+    async alarm() {
+        await this.state.storage.deleteAll()
     }
 }
 
