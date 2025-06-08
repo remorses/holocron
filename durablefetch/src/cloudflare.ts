@@ -8,7 +8,7 @@ export default {
         if (url.pathname === '/') {
             return Response.redirect(
                 'https://github.com/remorses/durablefetch',
-                302,
+                307,
             )
         }
 
@@ -87,7 +87,7 @@ export class DurableFetch extends DurableObject {
 
         // Check if fetch was already completed by checking storage
         const isCompleted = await this.state.storage.get<boolean>('completed')
-        
+
         // Kick off upstream once (in background) - only if not already completed
         if (!this.fetching && !isCompleted) {
             this.fetching = true
@@ -154,7 +154,8 @@ export class DurableFetch extends DurableObject {
         const inProgress = this.fetching
         const activeConnections = this.live.size
         const chunksStored = this.seq
-        const completed = await this.state.storage.get<boolean>('completed') ?? false
+        const completed =
+            (await this.state.storage.get<boolean>('completed')) ?? false
 
         return new Response(
             JSON.stringify({
@@ -245,10 +246,10 @@ async function createDurableObjectRequest(url: URL, req: Request) {
         const upstreamUrl = new URL(req.url)
         upstreamUrl.host = host
         upstreamUrl.pathname = '/' + pathParts.join('/')
-        const durableObjectKey = upstreamUrl
 
-        const requestForDO = new Request(durableObjectKey.toString(), req)
-        const key = durableObjectKey.toString()
+        const requestForDO = new Request(upstreamUrl.toString(), req)
+        requestForDO.headers.set('host', upstreamUrl.host)
+        const key = upstreamUrl.toString()
         console.log(`Using DO with key: ${key}`)
 
         return { requestForDO, key }
