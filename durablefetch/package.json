@@ -20,6 +20,7 @@
     "license": "",
     "devDependencies": {
         "@cloudflare/workers-types": "^4.20250429.0",
+        "eventsource-parser": "^3.0.2",
         "wrangler": "^4.19.1"
     },
     "dependencies": {

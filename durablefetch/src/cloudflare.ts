@@ -2,32 +2,18 @@ import { DurableObject } from 'cloudflare:workers'
 
 export default {
     async fetch(req: Request, env: Env) {
+        const url = new URL(req.url)
+
         // Redirect root path to GitHub
-        if (new URL(req.url).pathname === '/') {
+        if (url.pathname === '/') {
             return Response.redirect(
                 'https://github.com/remorses/durablefetch',
                 302,
             )
         }
-
-        // URL (path+query) → durable-object name ⇒ same name = same instance
-        const url = new URL(req.url)
-        let durableObjectKey: URL
-        if (url.pathname === '/in-progress' && req.method === 'POST') {
-            const body = (await req.clone().json()) as any
-            durableObjectKey = new URL(body.url)
-        } else {
-            durableObjectKey = new URL(req.url)
-        }
-        const host = req.headers.get('x-real-host')
-        if (durableObjectKey && host) {
-            durableObjectKey.host = host
-        }
-
-        const key = durableObjectKey.toString()
-        console.log(`Using DO with key: ${key}`)
+        const { key, requestForDO } = await createDurableObjectRequest(url, req)
         const id = env.DURABLE_FETCH.idFromName(key)
-        return env.DURABLE_FETCH.get(id).fetch(req)
+        return env.DURABLE_FETCH.get(id).fetch(requestForDO)
     },
 }
 
@@ -39,6 +25,7 @@ export class DurableFetch extends DurableObject {
     private seq = 0 // next chunk index
     private fetching = false // upstream started?
     private live = new Set<WritableStreamDefaultWriter>()
+    private kvLock = Promise.resolve()
 
     constructor(private state: DurableObjectState) {
         super(state, {})
@@ -65,16 +52,9 @@ export class DurableFetch extends DurableObject {
 
         // Kick off upstream once (in background)
         if (!this.fetching) {
-            const host = req.headers.get('x-real-host')
-            if (!host)
-                return new Response('x-real-host header missing', {
-                    status: 400,
-                })
-
             this.fetching = true
             await this.state.storage.put('open', true) // persist flag
             const upstream = new URL(req.url)
-            upstream.host = host
             this.state.waitUntil(
                 this.pipeUpstream(upstream.toString(), req.clone()),
             )
@@ -83,15 +63,23 @@ export class DurableFetch extends DurableObject {
         // Build a new readable stream for this client
         const { readable, writable } = new TransformStream()
         const writer = writable.getWriter()
-
-        // 1️⃣ replay stored chunks
-        // TODO this should lock rwiting to storage until finished
-        const storedChunks = await this.state.storage.list<Uint8Array>({
-            prefix: 'c:',
+        let resolve: Function
+        this.kvLock = new Promise((r) => {
+            resolve = r
         })
-        for (const [, value] of storedChunks) {
-            writer.write(value)
-        }
+        // 1️⃣ replay stored chunks with storage lock
+        await this.state
+            .blockConcurrencyWhile(async () => {
+                const storedChunks = await this.state.storage.list<Uint8Array>({
+                    prefix: 'c:',
+                })
+                await Promise.all(
+                    [...storedChunks].map(([, value]) => writer.write(value)),
+                )
+            })
+            .finally(() => {
+                resolve()
+            })
 
         // 2️⃣ if upstream still open, keep streaming live
         if (this.fetching) {
@@ -156,6 +144,7 @@ export class DurableFetch extends DurableObject {
                 const { value, done } = await reader.read()
                 if (done) break
 
+                // await this.kvLock
                 // Persist raw bytes
                 await this.state.storage.put(`c:${this.seq}`, value)
                 this.seq++
@@ -179,5 +168,44 @@ export class DurableFetch extends DurableObject {
             }
             this.live.clear()
         }
+    }
+}
+
+export function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function createDurableObjectRequest(url: URL, req: Request) {
+    // For /in-progress, the upstream URL is in the body.
+    if (url.pathname === '/in-progress' && req.method === 'POST') {
+        const body = (await req.clone().json()) as any
+
+        const durableObjectKey = new URL(body.url)
+        const requestForDO = req
+        const key = durableObjectKey.toString()
+        console.log(`Using DO with key: ${key}`)
+
+        return { requestForDO, key }
+    } else {
+        // For other requests, extract host from path.
+        const pathParts = url.pathname.split('/').filter(Boolean)
+        const host = decodeURIComponent(pathParts.shift() || '')
+        if (!host) {
+            // This case should be handled by the root redirect but as a fallback.
+            throw new Response('host not specified in path', {
+                status: 400,
+            })
+        }
+
+        const upstreamUrl = new URL(req.url)
+        upstreamUrl.host = host
+        upstreamUrl.pathname = '/' + pathParts.join('/')
+        const durableObjectKey = upstreamUrl
+
+        const requestForDO = new Request(durableObjectKey.toString(), req)
+        const key = durableObjectKey.toString()
+        console.log(`Using DO with key: ${key}`)
+
+        return { requestForDO, key }
     }
 }

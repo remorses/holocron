@@ -44,16 +44,12 @@ export class DurableFetchClient {
     ): Promise<Response> {
         const url = this.resolveUrl(input)
         const realHost = url.host
+        const realPathname = url.pathname
         url.host = this.durablefetchHost
+        url.pathname = `/${realHost}${realPathname}`
 
         logger.log(`fetching ${url.toString()}`)
-        return fetch(url.toString(), {
-            headers: {
-                ...headersToObject(init?.headers),
-                'x-real-host': realHost,
-            },
-            ...init,
-        })
+        return fetch(url.toString(), init)
     }
 
     async isInProgress(url: string | URL): Promise<{
