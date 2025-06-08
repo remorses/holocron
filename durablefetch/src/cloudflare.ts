@@ -31,6 +31,13 @@ export class DurableFetch extends DurableObject {
 
     /* ------------------------------------------------------ */
     async fetch(req: Request): Promise<Response> {
+        const url = new URL(req.url)
+        
+        // Handle /in-progress POST requests
+        if (url.pathname === '/in-progress' && req.method === 'POST') {
+            return this.checkInProgress()
+        }
+        
         if (req.method !== 'GET')
             return new Response('Only GET supported', { status: 405 })
 
@@ -74,6 +81,22 @@ export class DurableFetch extends DurableObject {
 
         return new Response(readable, {
             headers: { 'cache-control': 'no-store' },
+        })
+    }
+
+    /* ------------------------------------------------------ */
+    /** Check if there's an in-progress stream */
+    private async checkInProgress(): Promise<Response> {
+        const inProgress = this.fetching
+        const activeConnections = this.live.size
+        const chunksStored = this.seq
+        
+        return new Response(JSON.stringify({
+            inProgress,
+            activeConnections,
+            chunksStored
+        }), {
+            headers: { 'content-type': 'application/json' }
         })
     }
 
