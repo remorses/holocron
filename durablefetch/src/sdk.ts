@@ -42,9 +42,16 @@ export class DurableFetchClient {
         init?: RequestInit,
     ): Promise<Response> {
         const url = this.resolveUrl(input)
+        const realHost = url.host
         url.host = this.durablefetchHost
 
-        return fetch(url.toString(), init)
+        return fetch(url.toString(), {
+            headers: {
+                ...headersToObject(init?.headers),
+                'x-real-host': realHost,
+            },
+            ...init,
+        })
     }
 
     async isInProgress(url: string | URL): Promise<{
@@ -58,13 +65,45 @@ export class DurableFetchClient {
             '/in-progress',
             `https://${this.durablefetchHost}`,
         )
-        checkUrl.pathname = urlObj.pathname + '/in-progress'
-        checkUrl.search = urlObj.search
 
         const response = await fetch(checkUrl.toString(), {
             method: 'POST',
+            body: JSON.stringify({
+                url: urlObj.toString(),
+            }),
         })
 
-        return response.json()
+        const text = await response.text()
+        try {
+            return JSON.parse(text)
+        } catch (e) {
+            throw new Error(
+                `/in-progress returned invalid JSON: ${text.slice(0, 1000)}`,
+            )
+        }
     }
+}
+
+function headersToObject(headers?: HeadersInit): Record<string, string> {
+    if (!headers) {
+        return {}
+    }
+
+    if (headers instanceof Headers) {
+        const obj: Record<string, string> = {}
+        headers.forEach((value, key) => {
+            obj[key] = value
+        })
+        return obj
+    }
+
+    if (Array.isArray(headers)) {
+        const obj: Record<string, string> = {}
+        for (const [key, value] of headers) {
+            obj[key] = value
+        }
+        return obj
+    }
+
+    return headers as Record<string, string>
 }

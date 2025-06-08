@@ -3,7 +3,7 @@
     "account_id": "103e73569e2f6d4aea0fb679ceb8709b",
     "compatibility_date": "2025-05-11",
 
-    "name": "durablefetch-production",
+    "name": "durablefetch-fumadocs-production",
 
     "compatibility_flags": ["nodejs_compat"],
 
@@ -29,7 +29,7 @@
 
     "env": {
         "preview": {
-            "name": "durablefetch-preview",
+            "name": "durablefetch-fumadocs-preview",
             "migrations": [
                 {
                     "tag": "v1",

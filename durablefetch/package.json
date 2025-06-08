@@ -4,9 +4,9 @@
     "description": "",
     "repository": "https://github.com/remorses/durablefetch",
     "scripts": {
-        "deploy:prod": "tsc && wrangler publish",
+        "deploy:prod": "tsc && wrangler deploy",
         "dev": "wrangler dev",
-        "deploy:preview": "tsc && wrangler publish --env preview",
+        "deploy:preview": "tsc && wrangler deploy --env preview",
         "test": "doppler -c dev run -- vitest"
     },
     "main": "./src/sdk.ts",
