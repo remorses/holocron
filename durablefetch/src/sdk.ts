@@ -7,6 +7,7 @@ function isRelativePath(url: string): boolean {
         !url.startsWith('//')
     )
 }
+const logger = console
 
 export class DurableFetchClient {
     constructor(private options: { durablefetchHost?: string } = {}) {
@@ -45,6 +46,7 @@ export class DurableFetchClient {
         const realHost = url.host
         url.host = this.durablefetchHost
 
+        logger.log(`fetching ${url.toString()}`)
         return fetch(url.toString(), {
             headers: {
                 ...headersToObject(init?.headers),
@@ -66,6 +68,7 @@ export class DurableFetchClient {
             `https://${this.durablefetchHost}`,
         )
 
+        logger.log(`fetching ${checkUrl.toString()}`)
         const response = await fetch(checkUrl.toString(), {
             method: 'POST',
             body: JSON.stringify({

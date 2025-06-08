@@ -14,19 +14,19 @@ export default {
         const url = new URL(req.url)
         let durableObjectKey: URL
         if (url.pathname === '/in-progress' && req.method === 'POST') {
-            const body = (await req.json()) as any
-            const targetUrl = new URL(body.url)
-            durableObjectKey = targetUrl
+            const body = (await req.clone().json()) as any
+            durableObjectKey = new URL(body.url)
         } else {
-            const keyUrl = new URL(req.url)
-            durableObjectKey = keyUrl
+            durableObjectKey = new URL(req.url)
         }
         const host = req.headers.get('x-real-host')
         if (durableObjectKey && host) {
             durableObjectKey.host = host
         }
 
-        const id = env.DURABLE_FETCH.idFromName(durableObjectKey.toString())
+        const key = durableObjectKey.toString()
+        console.log(`Using DO with key: ${key}`)
+        const id = env.DURABLE_FETCH.idFromName(key)
         return env.DURABLE_FETCH.get(id).fetch(req)
     },
 }
@@ -75,7 +75,9 @@ export class DurableFetch extends DurableObject {
             await this.state.storage.put('open', true) // persist flag
             const upstream = new URL(req.url)
             upstream.host = host
-            this.state.waitUntil(this.pipeUpstream(upstream.toString(), req))
+            this.state.waitUntil(
+                this.pipeUpstream(upstream.toString(), req.clone()),
+            )
         }
 
         // Build a new readable stream for this client
@@ -127,12 +129,15 @@ export class DurableFetch extends DurableObject {
 
     /* ------------------------------------------------------ */
     /** Background: fetch upstream once, store + fan-out */
-    private async pipeUpstream(url: string, req: Request) {
+    private async pipeUpstream(url: string, req: Request<any, any>) {
         try {
             const res = await fetch(url, {
                 method: req.method,
                 headers: req.headers,
-                body: req.body,
+                body:
+                    req.method === 'GET' || req.method === 'HEAD'
+                        ? undefined
+                        : req.body,
             })
             const reader = res.body!.getReader()
 
