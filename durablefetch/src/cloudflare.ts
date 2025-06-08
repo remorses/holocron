@@ -79,9 +79,13 @@ export class DurableFetch extends DurableObject {
         if (url.pathname === '/in-progress' && req.method === 'POST') {
             return this.checkInProgress()
         }
-
-        if (req.method !== 'GET')
-            return new Response('Only GET supported', { status: 405 })
+        // Handle case where path parts are less than 1 (empty or root path)
+        const pathParts = url.pathname.split('/').filter(Boolean)
+        if (pathParts.length < 1) {
+            return new Response('Invalid request: missing host in path', {
+                status: 400,
+            })
+        }
 
         // Check if fetch was already completed by checking storage
         const isCompleted = await this.state.storage.get<boolean>('completed')
@@ -89,9 +93,6 @@ export class DurableFetch extends DurableObject {
         let headers: Record<string, string> | undefined
         // Kick off upstream once (in background) - only if not already completed
         if (!this.fetching && !isCompleted) {
-            this.fetching = true
-            await this.state.storage.put('open', true) // persist flag
-
             const res = await fetch(url, {
                 method: req.method,
                 headers: req.headers,
@@ -103,6 +104,8 @@ export class DurableFetch extends DurableObject {
             if (!res.ok) {
                 return res
             }
+            this.fetching = true
+            await this.state.storage.put('open', true) // persist flag
             headers = headersToObject(res.headers)
 
             await this.state.storage.put('headers', headers)
