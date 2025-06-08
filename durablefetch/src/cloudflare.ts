@@ -56,6 +56,7 @@ interface Env {
 export class DurableFetch extends DurableObject {
     private seq = 0 // next chunk index
     private fetching = false // upstream started?
+    private completed = false // upstream finished successfully?
     private live = new Set<WritableStreamDefaultWriter>()
     private kvLock = Promise.resolve()
 
@@ -67,6 +68,8 @@ export class DurableFetch extends DurableObject {
             this.seq = (await this.state.storage.get<number>('seq')) ?? 0
             this.fetching =
                 (await this.state.storage.get<boolean>('open')) ?? false
+            this.completed =
+                (await this.state.storage.get<boolean>('completed')) ?? false
         })
     }
 
@@ -82,8 +85,8 @@ export class DurableFetch extends DurableObject {
         if (req.method !== 'GET')
             return new Response('Only GET supported', { status: 405 })
 
-        // Kick off upstream once (in background)
-        if (!this.fetching) {
+        // Kick off upstream once (in background) - only if not already completed
+        if (!this.fetching && !this.completed) {
             this.fetching = true
             await this.state.storage.put('open', true) // persist flag
             const upstream = new URL(req.url)
