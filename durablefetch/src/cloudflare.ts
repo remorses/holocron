@@ -58,8 +58,6 @@ export class DurableFetch extends DurableObject {
     private seq = 0 // next chunk index
     private fetching = false // upstream started?
     private live = new Set<WritableStreamDefaultWriter>()
-    private kvLock = Promise.resolve()
-    private resolveKvLock: (() => void) | null = null
 
     constructor(private state: DurableObjectState) {
         super(state, {})
@@ -135,33 +133,19 @@ export class DurableFetch extends DurableObject {
         const { readable, writable } = new TransformStream()
         const writer = writable.getWriter()
 
-        // Set up kvLock to prevent gap-chunk race condition
-        this.kvLock = new Promise((r) => {
-            this.resolveKvLock = r
-        })
-
         // 1️⃣ replay stored chunks with storage lock
-        await this.state
-            .blockConcurrencyWhile(async () => {
-                const storedChunks = await this.state.storage.list<Uint8Array>({
-                    prefix: 'c:',
-                })
-                // Sort chunks by key to ensure proper ordering
-                const sortedChunks = [...storedChunks].sort(([a], [b]) =>
-                    a.localeCompare(b),
-                )
-                for (const [, value] of sortedChunks) {
-
-                    writer.write(value)
-                }
+        await this.state.blockConcurrencyWhile(async () => {
+            const storedChunks = await this.state.storage.list<Uint8Array>({
+                prefix: 'c:',
             })
-            .finally(() => {
-                // Release the kvLock to allow pipeUpstream to continue
-                if (this.resolveKvLock) {
-                    this.resolveKvLock()
-                    this.resolveKvLock = null
-                }
-            })
+            // Sort chunks by key to ensure proper ordering
+            const sortedChunks = [...storedChunks].sort(([a], [b]) =>
+                a.localeCompare(b),
+            )
+            for (const [, value] of sortedChunks) {
+                writer.write(value)
+            }
+        })
 
         // 2️⃣ if upstream still open, keep streaming live
         if (this.fetching) {
@@ -227,8 +211,6 @@ export class DurableFetch extends DurableObject {
                 const { value, done } = await reader.read()
                 if (done) break
 
-                // Wait for any ongoing replay to finish to prevent gap-chunk race
-                // await this.kvLock
                 // Persist raw bytes with zero-padded key for proper ordering
                 await this.state.storage.put(
                     `c:${this.seq.toString().padStart(9, '0')}`,
