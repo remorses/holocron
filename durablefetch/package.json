@@ -7,7 +7,7 @@
         "deploy:prod": "tsc && wrangler deploy",
         "dev": "wrangler dev",
         "deploy:preview": "tsc && wrangler deploy --env preview",
-        "test": "doppler -c dev run -- vitest"
+        "test": "doppler -c dev run -u -- vitest"
     },
     "main": "./src/sdk.ts",
     "files": [
