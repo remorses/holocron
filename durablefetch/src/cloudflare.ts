@@ -85,6 +85,7 @@ export class DurableFetch extends DurableObject {
         const writer = writable.getWriter()
 
         // 1️⃣ replay stored chunks
+        // TODO this should lock rwiting to storage until finished
         const storedChunks = await this.state.storage.list<Uint8Array>({
             prefix: 'c:',
         })
@@ -94,16 +95,26 @@ export class DurableFetch extends DurableObject {
 
         // 2️⃣ if upstream still open, keep streaming live
         if (this.fetching) {
+            console.log(`already fetching ${req.url}, resuming stream`)
             this.live.add(writer)
-            readable
-                .pipeTo(new WritableStream()) // consume to detect close
-                .catch(() => {})
-                .finally(() => this.live.delete(writer))
         } else {
             writer.close()
         }
 
-        return new Response(readable, {
+        // Fork the readable stream into two branches
+        const [toClient, toDrain] = readable.tee()
+
+        // Pipe the drain-branch to detect when client disconnects
+        if (this.fetching) {
+            toDrain
+                .pipeTo(new WritableStream())
+                .catch((e) => {
+                    console.error(`readable stream error`, e)
+                })
+                .finally(() => this.live.delete(writer))
+        }
+
+        return new Response(toClient, {
             headers: { 'cache-control': 'no-store' },
         })
     }
@@ -146,10 +157,7 @@ export class DurableFetch extends DurableObject {
                 if (done) break
 
                 // Persist raw bytes
-                await this.state.storage.put(
-                    `c:${this.seq}`,
-                    value as Uint8Array,
-                )
+                await this.state.storage.put(`c:${this.seq}`, value)
                 this.seq++
                 await this.state.storage.put('seq', this.seq)
 
