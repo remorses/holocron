@@ -83,27 +83,3 @@ export class DurableFetchClient {
         }
     }
 }
-
-function headersToObject(headers?: HeadersInit): Record<string, string> {
-    if (!headers) {
-        return {}
-    }
-
-    if (headers instanceof Headers) {
-        const obj: Record<string, string> = {}
-        headers.forEach((value, key) => {
-            obj[key] = value
-        })
-        return obj
-    }
-
-    if (Array.isArray(headers)) {
-        const obj: Record<string, string> = {}
-        for (const [key, value] of headers) {
-            obj[key] = value
-        }
-        return obj
-    }
-
-    return headers as Record<string, string>
-}

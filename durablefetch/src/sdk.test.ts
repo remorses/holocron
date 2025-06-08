@@ -28,6 +28,7 @@ describe(
         it('should fetch a single event and match raw text response', async () => {
             const singleEventUrl = `https://${defaultDurablefetchHost}/durablefetch-example-stream-sse?n=1&randomId=${randomId}`
             const response = await client.fetch(singleEventUrl)
+            expect(response.headers.get('x-example')).toBe('test')
             const responseText = await response.text()
             expect(responseText).toMatchInlineSnapshot(`
               "data: {"number":1}
@@ -42,6 +43,7 @@ describe(
             const response1 = await client.fetch(sseUrl, {
                 signal: controller1.signal,
             })
+            expect(response1.headers.get('x-example')).toBe('test')
             const iterator1 = streamSseEvents(response1.body!)
             const events = await collectGeneratorUntil(
                 iterator1,
@@ -50,7 +52,11 @@ describe(
             console.log('aborting')
             controller1.abort()
 
-            expect(events.map((e) => e.data)).toMatchInlineSnapshot(`[]`)
+            expect(events.map((e) => e.data)).toMatchInlineSnapshot(`
+              [
+                "{"number":1}",
+              ]
+            `)
         })
         it('should check in-progress status', async () => {
             const status = await client.isInProgress(sseUrl)
@@ -70,6 +76,7 @@ describe(
             const response2 = await client.fetch(sseUrl, {
                 signal: controller2.signal,
             })
+            expect(response2.headers.get('x-example')).toBe('test')
             const iterator2 = streamSseEvents(response2.body!)
             const events = await collectGeneratorUntil(
                 iterator2,
@@ -92,6 +99,7 @@ describe(
             const response3 = await client.fetch(sseUrl, {
                 signal: controller3.signal,
             })
+            expect(response3.headers.get('x-example')).toBe('test')
             const iterator3 = streamSseEvents(response3.body!)
             const events = await collectGeneratorUntil(
                 iterator3,
@@ -112,6 +120,7 @@ describe(
 
         it('should continue resuming stream and get the last event 1', async () => {
             const response3 = await client.fetch(sseUrl, {})
+            expect(response3.headers.get('x-example')).toBe('test')
             const iterator3 = streamSseEvents(response3.body!)
             const events = await collectGeneratorUntil(iterator3, 1000 * 10)
 
@@ -129,6 +138,7 @@ describe(
 
         it('should continue resuming stream and get the last event 1', async () => {
             const response3 = await client.fetch(sseUrl, {})
+            expect(response3.headers.get('x-example')).toBe('test')
             const iterator3 = streamSseEvents(response3.body!)
             const events = await collectGeneratorUntil(iterator3, 1000 * 10)
 

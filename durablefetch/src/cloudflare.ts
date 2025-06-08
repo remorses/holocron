@@ -39,6 +39,7 @@ export default {
                 headers: {
                     'Content-Type': 'text/event-stream',
                     'Cache-Control': 'no-cache',
+                    'x-example': 'test',
                     Connection: 'keep-alive',
                 },
             })
@@ -56,7 +57,6 @@ interface Env {
 export class DurableFetch extends DurableObject {
     private seq = 0 // next chunk index
     private fetching = false // upstream started?
-    private completed = false // upstream finished successfully?
     private live = new Set<WritableStreamDefaultWriter>()
     private kvLock = Promise.resolve()
 
@@ -68,8 +68,6 @@ export class DurableFetch extends DurableObject {
             this.seq = (await this.state.storage.get<number>('seq')) ?? 0
             this.fetching =
                 (await this.state.storage.get<boolean>('open')) ?? false
-            this.completed =
-                (await this.state.storage.get<boolean>('completed')) ?? false
         })
     }
 
@@ -88,14 +86,33 @@ export class DurableFetch extends DurableObject {
         // Check if fetch was already completed by checking storage
         const isCompleted = await this.state.storage.get<boolean>('completed')
 
+        let headers: Record<string, string> | undefined
         // Kick off upstream once (in background) - only if not already completed
         if (!this.fetching && !isCompleted) {
             this.fetching = true
             await this.state.storage.put('open', true) // persist flag
-            const upstream = new URL(req.url)
-            this.state.waitUntil(
-                this.pipeUpstream(upstream.toString(), req.clone()),
-            )
+
+            const res = await fetch(url, {
+                method: req.method,
+                headers: req.headers,
+                body:
+                    req.method === 'GET' || req.method === 'HEAD'
+                        ? undefined
+                        : req.body,
+            })
+            if (!res.ok) {
+                return res
+            }
+            headers = headersToObject(res.headers)
+
+            await this.state.storage.put('headers', headers)
+            this.state.waitUntil(this.pipeUpstream(res))
+        }
+        if (!headers) {
+            headers = await this.state.storage.get('headers')
+        }
+        if (!headers) {
+            throw new Error(`Cannot find headers for ${url.toString()}`)
         }
 
         // Build a new readable stream for this client
@@ -144,7 +161,7 @@ export class DurableFetch extends DurableObject {
         }
 
         return new Response(toClient, {
-            headers: { 'cache-control': 'no-store' },
+            headers: { ...headers, 'cache-control': 'no-store' },
         })
     }
 
@@ -172,16 +189,8 @@ export class DurableFetch extends DurableObject {
 
     /* ------------------------------------------------------ */
     /** Background: fetch upstream once, store + fan-out */
-    private async pipeUpstream(url: string, req: Request<any, any>) {
+    private async pipeUpstream(res: Response) {
         try {
-            const res = await fetch(url, {
-                method: req.method,
-                headers: req.headers,
-                body:
-                    req.method === 'GET' || req.method === 'HEAD'
-                        ? undefined
-                        : req.body,
-            })
             const reader = res.body!.getReader()
 
             while (true) {
@@ -206,7 +215,7 @@ export class DurableFetch extends DurableObject {
             await this.state.storage.put('open', false)
             await this.state.storage.put('completed', true)
             this.fetching = false
-            this.completed = true
+            // this.completed = true
             for (const w of this.live) {
                 try {
                     w.close()
@@ -254,4 +263,28 @@ async function createDurableObjectRequest(url: URL, req: Request) {
 
         return { requestForDO, key }
     }
+}
+
+export function headersToObject(headers?: HeadersInit): Record<string, string> {
+    if (!headers) {
+        return {}
+    }
+
+    if (headers instanceof Headers) {
+        const obj: Record<string, string> = {}
+        headers.forEach((value, key) => {
+            obj[key] = value
+        })
+        return obj
+    }
+
+    if (Array.isArray(headers)) {
+        const obj: Record<string, string> = {}
+        for (const [key, value] of headers) {
+            obj[key] = value
+        }
+        return obj
+    }
+
+    return headers as Record<string, string>
 }
