@@ -2,9 +2,10 @@
     "$schema": "https://json.schemastore.org/tsconfig",
     "compilerOptions": {
         "target": "ES2022",
-        "module": "ESNext",
+        "module": "nodenext",
         "allowJs": false,
         "composite": true,
+        "noEmit": false,
         "outDir": "${configDir}/dist",
         "rootDir": "${configDir}/src",
         "moduleResolution": "nodenext",
@@ -26,5 +27,5 @@
         "jsx": "react-jsx",
         "skipLibCheck": true
     },
-    "exclude": ["**/node_modules", "**/.*/"]
+    "exclude": ["**/node_modules", "dist"]
 }

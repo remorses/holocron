@@ -1,7 +1,9 @@
 {
     "extends": "../tsconfig.base.json",
     "compilerOptions": {
-        "outDir": "dist"
+        "outDir": "dist",
+        "rootDir": "src"
     },
-    "include": ["*.ts", "*.tsx", "*.js", "*.jsx"]
+    "exclude": ["dist"]
+    // "include": ["src/**/*"]
 }
