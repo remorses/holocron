@@ -11,7 +11,7 @@ Send a long-running request (e.g. OpenAI streaming), close the tab, come back la
 
 ## Example
 
-To see how durablefetch works you can try visiting this url in the browser in different tabs: https://durablefetch.fumadocs.com/postman-echo.com/server-events/10?id=random
+To see how durablefetch works you can try visiting this url in the browser in different tabs: https://durablefetch.fumabase.com/postman-echo.com/server-events/20?randomId=xxxx
 
 ## Why?
 
