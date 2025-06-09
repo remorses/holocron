@@ -1,3 +1,10 @@
+
+
+autoInstallPeers: false
+neverBuiltDependencies: []
+
+
+
 packages:
     - ./*
     - fumadocs/packages/*

@@ -1,7 +1,7 @@
 lockfileVersion: '9.0'
 
 settings:
-  autoInstallPeers: true
+  autoInstallPeers: false
   excludeLinksFromLockfile: false
 
 importers:
@@ -56,7 +56,7 @@ importers:
         version: link:../fumadocs/packages/mdx-remote
       '@matejmazur/react-katex':
         specifier: ^3.1.3
-        version: 3.1.3(katex@0.16.22)(react@19.1.0)
+        version: 3.1.3(react@19.1.0)
       '@react-router/fs-routes':
         specifier: ^7.6.0
         version: 7.6.2(@react-router/dev@7.6.2(@react-router/serve@7.6.2(react-router@7.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@22.15.30)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.41.0)(tsx@4.19.4)(typescript@5.8.3)(vite@6.3.5(@types/node@22.15.30)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1))(wrangler@4.19.1(@cloudflare/workers-types@4.20250607.0))(yaml@2.6.1))(typescript@5.8.3)
@@ -317,7 +317,7 @@ importers:
         version: 0.8.2(typescript@5.8.3)
       '@content-collections/mdx':
         specifier: ^0.2.2
-        version: 0.2.2(@content-collections/core@0.8.2(typescript@5.8.3))(acorn@8.14.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 0.2.2(@content-collections/core@0.8.2(typescript@5.8.3))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@types/node':
         specifier: 22.15.17
         version: 22.15.17
@@ -366,12 +366,6 @@ importers:
       negotiator:
         specifier: ^1.0.0
         version: 1.0.0
-      react:
-        specifier: 18.x.x || 19.x.x
-        version: 19.1.0
-      react-dom:
-        specifier: 18.x.x || 19.x.x
-        version: 19.1.0(react@19.1.0)
       react-remove-scroll:
         specifier: ^2.6.3
         version: 2.7.1(@types/react@19.1.6)(react@19.1.0)
@@ -496,7 +490,7 @@ importers:
         version: 0.8.2(typescript@5.8.3)
       '@content-collections/mdx':
         specifier: ^0.2.2
-        version: 0.2.2(@content-collections/core@0.8.2(typescript@5.8.3))(acorn@8.14.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 0.2.2(@content-collections/core@0.8.2(typescript@5.8.3))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@content-collections/next':
         specifier: ^0.2.6
         version: 0.2.6(@content-collections/core@0.8.2(typescript@5.8.3))(next@15.3.2(@babel/core@7.27.4)(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))
@@ -520,7 +514,7 @@ importers:
         version: 1.120.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@tanstack/react-start':
         specifier: ^1.118.0
-        version: 1.120.18(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.120.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@types/node@22.15.17)(babel-plugin-macros@3.1.0)(db0@0.3.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(terser@5.41.0)(tsx@4.19.4)(vite@6.3.5(@types/node@22.15.17)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1))(webpack@5.99.9(esbuild@0.25.5))(yaml@2.6.1)
+        version: 1.120.18(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.120.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@types/node@22.15.17)(babel-plugin-macros@3.1.0)(db0@0.3.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(terser@5.41.0)(tsx@4.19.4)(vite@6.3.5(@types/node@22.15.17)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1))(webpack@5.99.9)(yaml@2.6.1)
       '@types/mdx':
         specifier: ^2.0.13
         version: 2.0.13
@@ -729,9 +723,6 @@ importers:
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3
-      react:
-        specifier: 18.x.x || 19.x.x
-        version: 19.1.0
       zod:
         specifier: ^3.24.3
         version: 3.25.56
@@ -811,12 +802,6 @@ importers:
       openapi-sampler:
         specifier: ^1.6.1
         version: 1.6.1
-      react:
-        specifier: 18.x.x || 19.x.x
-        version: 19.1.0
-      react-dom:
-        specifier: 18.x.x || 19.x.x
-        version: 19.1.0(react@19.1.0)
       react-hook-form:
         specifier: ^7.56.1
         version: 7.57.0(react@19.1.0)
@@ -920,9 +905,6 @@ importers:
       mdast-util-to-hast:
         specifier: ^13.2.0
         version: 13.2.0
-      react:
-        specifier: 18.x.x || 19.x.x
-        version: 19.1.0
       tailwind-merge:
         specifier: ^3.2.0
         version: 3.3.0
@@ -1069,12 +1051,6 @@ importers:
       postcss-selector-parser:
         specifier: ^7.1.0
         version: 7.1.0
-      react:
-        specifier: 18.x.x || 19.x.x
-        version: 19.1.0
-      react-dom:
-        specifier: 18.x.x || 19.x.x
-        version: 19.1.0(react@19.1.0)
       react-medium-image-zoom:
         specifier: ^5.2.14
         version: 5.2.14(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -5100,19 +5076,9 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.0.0
-    peerDependenciesMeta:
-      ajv:
-        optional: true
 
   ajv-formats@3.0.1:
     resolution: {integrity: sha512-8iUql50EUR+uUcdRQ3HDqa6EVyo3docL8g5WJ3FNcWmu62IbkGUue/pEyLBW8VGKKucTPgqeks4fIU1DA4yowQ==}
-    peerDependencies:
-      ajv: ^8.0.0
-    peerDependenciesMeta:
-      ajv:
-        optional: true
 
   ajv-keywords@5.1.0:
     resolution: {integrity: sha512-YCS/JNFAUyr5vAuhk1DWm1CBxRHW9LbJ2ozWeemrIqpbsqKjHVxYPyi5GC0rjZIT5JxJ3virVTS8wk4i/Z+krw==}
@@ -5570,10 +5536,6 @@ packages:
   commander@4.1.1:
     resolution: {integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==}
     engines: {node: '>= 6'}
-
-  commander@8.3.0:
-    resolution: {integrity: sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww==}
-    engines: {node: '>= 12'}
 
   commander@9.5.0:
     resolution: {integrity: sha512-KRs7WVDKg86PWiuAqhDrAQnTXZKraVcCc6vFdL14qrZ/DcWwuRo7VoiYXalXO7S5GKpqYiVEwCbgFDfxNHKJBQ==}
@@ -7258,10 +7220,6 @@ packages:
   jwt-decode@4.0.0:
     resolution: {integrity: sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==}
     engines: {node: '>=18'}
-
-  katex@0.16.22:
-    resolution: {integrity: sha512-XCHRdUw4lf3SKBaJe4EvgqIuWwkPSo9XoeO8GjQW94Bp7TWv9hNhzZjZ+OH9yf1UmLygb7DIT5GSFQiyt16zYg==}
-    hasBin: true
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
@@ -11066,11 +11024,11 @@ snapshots:
     dependencies:
       '@content-collections/core': 0.8.2(typescript@5.8.3)
 
-  '@content-collections/mdx@0.2.2(@content-collections/core@0.8.2(typescript@5.8.3))(acorn@8.14.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@content-collections/mdx@0.2.2(@content-collections/core@0.8.2(typescript@5.8.3))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@content-collections/core': 0.8.2(typescript@5.8.3)
       esbuild: 0.25.5
-      mdx-bundler: 10.1.1(acorn@8.14.1)(esbuild@0.25.5)
+      mdx-bundler: 10.1.1(esbuild@0.25.5)
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
       unified: 11.0.5
@@ -12011,12 +11969,11 @@ snapshots:
 
   '@marijn/find-cluster-break@1.0.2': {}
 
-  '@matejmazur/react-katex@3.1.3(katex@0.16.22)(react@19.1.0)':
+  '@matejmazur/react-katex@3.1.3(react@19.1.0)':
     dependencies:
-      katex: 0.16.22
       react: 19.1.0
 
-  '@mdx-js/esbuild@3.1.0(acorn@8.14.1)(esbuild@0.25.5)':
+  '@mdx-js/esbuild@3.1.0(esbuild@0.25.5)':
     dependencies:
       '@mdx-js/mdx': 3.1.0(acorn@8.14.1)
       '@types/unist': 3.0.3
@@ -13460,7 +13417,7 @@ snapshots:
     dependencies:
       ajv: 8.17.1
       ajv-draft-04: 1.0.0(ajv@8.17.1)
-      ajv-formats: 3.0.1(ajv@8.17.1)
+      ajv-formats: 3.0.1
       jsonpointer: 5.0.1
       leven: 4.0.0
       yaml: 2.6.1
@@ -13469,7 +13426,7 @@ snapshots:
     dependencies:
       ajv: 8.17.1
       ajv-draft-04: 1.0.0(ajv@8.17.1)
-      ajv-formats: 3.0.1(ajv@8.17.1)
+      ajv-formats: 3.0.1
       jsonpointer: 5.0.1
       leven: 4.0.0
       yaml: 2.6.1
@@ -13948,12 +13905,12 @@ snapshots:
       - xml2js
       - yaml
 
-  '@tanstack/react-start-config@1.120.18(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.120.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@types/node@22.15.17)(babel-plugin-macros@3.1.0)(db0@0.3.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(terser@5.41.0)(tsx@4.19.4)(vite@6.3.5(@types/node@22.15.17)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1))(webpack@5.99.9(esbuild@0.25.5))(yaml@2.6.1)':
+  '@tanstack/react-start-config@1.120.18(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.120.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@types/node@22.15.17)(babel-plugin-macros@3.1.0)(db0@0.3.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(terser@5.41.0)(tsx@4.19.4)(vite@6.3.5(@types/node@22.15.17)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1))(webpack@5.99.9)(yaml@2.6.1)':
     dependencies:
       '@tanstack/react-start-plugin': 1.120.17(@types/node@22.15.17)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1)
       '@tanstack/router-core': 1.120.17
       '@tanstack/router-generator': 1.120.18(@tanstack/react-router@1.120.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0))
-      '@tanstack/router-plugin': 1.120.18(@tanstack/react-router@1.120.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(vite@6.3.5(@types/node@22.15.17)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1))(webpack@5.99.9(esbuild@0.25.5))
+      '@tanstack/router-plugin': 1.120.18(@tanstack/react-router@1.120.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(vite@6.3.5(@types/node@22.15.17)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1))(webpack@5.99.9)
       '@tanstack/server-functions-plugin': 1.120.17(@types/node@22.15.17)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1)
       '@tanstack/start-server-functions-handler': 1.120.17
       '@vitejs/plugin-react': 4.5.1(vite@6.3.5(@types/node@22.15.17)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1))
@@ -14101,10 +14058,10 @@ snapshots:
       tiny-warning: 1.0.3
       unctx: 2.4.1
 
-  '@tanstack/react-start@1.120.18(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.120.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@types/node@22.15.17)(babel-plugin-macros@3.1.0)(db0@0.3.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(terser@5.41.0)(tsx@4.19.4)(vite@6.3.5(@types/node@22.15.17)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1))(webpack@5.99.9(esbuild@0.25.5))(yaml@2.6.1)':
+  '@tanstack/react-start@1.120.18(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.120.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@types/node@22.15.17)(babel-plugin-macros@3.1.0)(db0@0.3.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(terser@5.41.0)(tsx@4.19.4)(vite@6.3.5(@types/node@22.15.17)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1))(webpack@5.99.9)(yaml@2.6.1)':
     dependencies:
       '@tanstack/react-start-client': 1.120.18(@azure/storage-blob@12.27.0)(@types/node@22.15.17)(db0@0.3.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1)
-      '@tanstack/react-start-config': 1.120.18(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.120.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@types/node@22.15.17)(babel-plugin-macros@3.1.0)(db0@0.3.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(terser@5.41.0)(tsx@4.19.4)(vite@6.3.5(@types/node@22.15.17)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1))(webpack@5.99.9(esbuild@0.25.5))(yaml@2.6.1)
+      '@tanstack/react-start-config': 1.120.18(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.120.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@types/node@22.15.17)(babel-plugin-macros@3.1.0)(db0@0.3.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(terser@5.41.0)(tsx@4.19.4)(vite@6.3.5(@types/node@22.15.17)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1))(webpack@5.99.9)(yaml@2.6.1)
       '@tanstack/react-start-router-manifest': 1.120.17(@azure/storage-blob@12.27.0)(@types/node@22.15.17)(db0@0.3.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1)
       '@tanstack/react-start-server': 1.120.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@tanstack/start-api-routes': 1.120.17(@azure/storage-blob@12.27.0)(@types/node@22.15.17)(db0@0.3.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1)
@@ -14184,7 +14141,7 @@ snapshots:
     optionalDependencies:
       '@tanstack/react-router': 1.120.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
 
-  '@tanstack/router-plugin@1.120.18(@tanstack/react-router@1.120.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(vite@6.3.5(@types/node@22.15.17)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1))(webpack@5.99.9(esbuild@0.25.5))':
+  '@tanstack/router-plugin@1.120.18(@tanstack/react-router@1.120.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(vite@6.3.5(@types/node@22.15.17)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1))(webpack@5.99.9)':
     dependencies:
       '@babel/core': 7.27.4
       '@babel/plugin-syntax-jsx': 7.27.1(@babel/core@7.27.4)
@@ -14206,7 +14163,7 @@ snapshots:
     optionalDependencies:
       '@tanstack/react-router': 1.120.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       vite: 6.3.5(@types/node@22.15.17)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)(tsx@4.19.4)(yaml@2.6.1)
-      webpack: 5.99.9(esbuild@0.25.5)
+      webpack: 5.99.9
     transitivePeerDependencies:
       - supports-color
 
@@ -15050,12 +15007,12 @@ snapshots:
     optionalDependencies:
       ajv: 8.17.1
 
-  ajv-formats@2.1.1(ajv@8.17.1):
-    optionalDependencies:
+  ajv-formats@2.1.1:
+    dependencies:
       ajv: 8.17.1
 
-  ajv-formats@3.0.1(ajv@8.17.1):
-    optionalDependencies:
+  ajv-formats@3.0.1:
+    dependencies:
       ajv: 8.17.1
 
   ajv-keywords@5.1.0(ajv@8.17.1):
@@ -15587,8 +15544,6 @@ snapshots:
   commander@2.20.3: {}
 
   commander@4.1.1: {}
-
-  commander@8.3.0: {}
 
   commander@9.5.0: {}
 
@@ -17581,10 +17536,6 @@ snapshots:
 
   jwt-decode@4.0.0: {}
 
-  katex@0.16.22:
-    dependencies:
-      commander: 8.3.0
-
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
@@ -17973,12 +17924,12 @@ snapshots:
 
   mdast@3.0.0: {}
 
-  mdx-bundler@10.1.1(acorn@8.14.1)(esbuild@0.25.5):
+  mdx-bundler@10.1.1(esbuild@0.25.5):
     dependencies:
       '@babel/runtime': 7.27.6
       '@esbuild-plugins/node-resolve': 0.2.2(esbuild@0.25.5)
       '@fal-works/esbuild-plugin-global-externals': 2.1.2
-      '@mdx-js/esbuild': 3.1.0(acorn@8.14.1)(esbuild@0.25.5)
+      '@mdx-js/esbuild': 3.1.0(esbuild@0.25.5)
       esbuild: 0.25.5
       gray-matter: 4.0.3
       remark-frontmatter: 5.0.0
@@ -19767,7 +19718,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.17.1
-      ajv-formats: 2.1.1(ajv@8.17.1)
+      ajv-formats: 2.1.1
       ajv-keywords: 5.1.0(ajv@8.17.1)
 
   scroll-into-view-if-needed@3.1.0:
@@ -20289,6 +20240,16 @@ snapshots:
       webpack: 5.99.9(esbuild@0.25.5)
     optionalDependencies:
       esbuild: 0.25.5
+
+  terser-webpack-plugin@5.3.14(webpack@5.99.9):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.25
+      jest-worker: 27.5.1
+      schema-utils: 4.3.2
+      serialize-javascript: 6.0.2
+      terser: 5.41.0
+      webpack: 5.99.9
+    optional: true
 
   terser@5.41.0:
     dependencies:
@@ -21148,6 +21109,38 @@ snapshots:
   webpack-sources@3.3.2: {}
 
   webpack-virtual-modules@0.6.2: {}
+
+  webpack@5.99.9:
+    dependencies:
+      '@types/eslint-scope': 3.7.7
+      '@types/estree': 1.0.8
+      '@types/json-schema': 7.0.15
+      '@webassemblyjs/ast': 1.14.1
+      '@webassemblyjs/wasm-edit': 1.14.1
+      '@webassemblyjs/wasm-parser': 1.14.1
+      acorn: 8.14.1
+      browserslist: 4.25.0
+      chrome-trace-event: 1.0.4
+      enhanced-resolve: 5.18.1
+      es-module-lexer: 1.7.0
+      eslint-scope: 5.1.1
+      events: 3.3.0
+      glob-to-regexp: 0.4.1
+      graceful-fs: 4.2.11
+      json-parse-even-better-errors: 2.3.1
+      loader-runner: 4.3.0
+      mime-types: 2.1.35
+      neo-async: 2.6.2
+      schema-utils: 4.3.2
+      tapable: 2.2.2
+      terser-webpack-plugin: 5.3.14(webpack@5.99.9)
+      watchpack: 2.4.4
+      webpack-sources: 3.3.2
+    transitivePeerDependencies:
+      - '@swc/core'
+      - esbuild
+      - uglify-js
+    optional: true
 
   webpack@5.99.9(esbuild@0.25.5):
     dependencies:
