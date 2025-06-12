@@ -11,6 +11,8 @@ import { useState, useRef, useEffect } from 'react'
 import { UploadButton } from '../components/upload-button'
 import { useThrowingFn } from '../lib/hooks'
 import { ColorPicker } from '../components/color-picker'
+import Chat from '../components/chat'
+import { StateProvider } from '../components/state-provider'
 
 export async function loader({
     request,
@@ -74,78 +76,88 @@ export default function Page({
         updatePageProps({ logoUrl, color: color || undefined }, iframeRef)
     }, [color, logoUrl])
     return (
-        <div className='flex flex-col gap-6'>
-            <div className='text-3xl font-bold'>Customize</div>
-            <Block>
-                <div className='space-y-3'>
-                    <div className=''>Logo on top left</div>
-                    <UploadButton
-                        children='Upload Logo Image'
-                        onUploadFinished={({ src: logoUrl }) => {
-                            setLogoUrl(logoUrl)
-                        }}
-                    />
-                    <div className=''>Primary color</div>
-                    <ColorPicker
-                        children='color'
-                        value={color}
-                        defaultValue=''
-                        onChange={(color) => {
-                            if (color) {
-                                color = colord(color).toHslString()
-                                setColor(color)
-                            }
-                        }}
-                    />
-                    <div className='flex'>
-                        <div className='grow'></div>
-                        <Button
-                            color='primary'
-                            isLoading={isLoading}
-                            onClick={update}
-                            className=''
-                        >
-                            Save
-                        </Button>
-                    </div>
+        <StateProvider value={{ messages: [] }}>
+            <div className='flex gap-12'>
+                <div className='flex flex-col'>
+                    <Chat />
                 </div>
-            </Block>
-            <div className='flex min-h-[600px] flex-col'>
-                <BrowserWindow
-                    url={url}
-                    onRefresh={() => {
-                        const iframe = iframeRef.current
-                        if (iframe) {
-                            iframe.src += ''
-                        }
-                    }}
-                    className={cn(
-                        '!text-sm shrink-0 shadow rounded-xl justify-stretch',
-                        'items-stretch h-full flex-col flex-1 border',
-                        'bg-white lg:flex dark:bg-gray-800',
-                    )}
-                >
-                    <iframe
-                        ref={iframeRef}
-                        style={scaleDownElement(0.8)}
-                        className={cn(' inset-0 bg-transparent', 'absolute')}
-                        frameBorder={0}
-                        allowTransparency
-                        name='previewProps' // tell iframe preview props is enabled
-                        height='120%'
-                        width='100%'
-                        title='website preview'
-                        // onLoad={() => setLoaded(true)}
-                        src={url}
-                    ></iframe>
-                    {/* {!loaded && (
+                <div className='flex flex-col gap-6'>
+                    <div className='text-3xl font-bold'>Customize</div>
+                    <Block>
+                        <div className='space-y-3'>
+                            <div className=''>Logo on top left</div>
+                            <UploadButton
+                                children='Upload Logo Image'
+                                onUploadFinished={({ src: logoUrl }) => {
+                                    setLogoUrl(logoUrl)
+                                }}
+                            />
+                            <div className=''>Primary color</div>
+                            <ColorPicker
+                                children='color'
+                                value={color}
+                                defaultValue=''
+                                onChange={(color) => {
+                                    if (color) {
+                                        color = colord(color).toHslString()
+                                        setColor(color)
+                                    }
+                                }}
+                            />
+                            <div className='flex'>
+                                <div className='grow'></div>
+                                <Button
+                                    color='primary'
+                                    isLoading={isLoading}
+                                    onClick={update}
+                                    className=''
+                                >
+                                    Save
+                                </Button>
+                            </div>
+                        </div>
+                    </Block>
+                    <div className='flex min-h-[600px] flex-col'>
+                        <BrowserWindow
+                            url={url}
+                            onRefresh={() => {
+                                const iframe = iframeRef.current
+                                if (iframe) {
+                                    iframe.src += ''
+                                }
+                            }}
+                            className={cn(
+                                '!text-sm shrink-0 shadow rounded-xl justify-stretch',
+                                'items-stretch h-full flex-col flex-1 border',
+                                'bg-white lg:flex dark:bg-gray-800',
+                            )}
+                        >
+                            <iframe
+                                ref={iframeRef}
+                                style={scaleDownElement(0.8)}
+                                className={cn(
+                                    ' inset-0 bg-transparent',
+                                    'absolute',
+                                )}
+                                frameBorder={0}
+                                allowTransparency
+                                name='previewProps' // tell iframe preview props is enabled
+                                height='120%'
+                                width='100%'
+                                title='website preview'
+                                // onLoad={() => setLoaded(true)}
+                                src={url}
+                            ></iframe>
+                            {/* {!loaded && (
                         <div className='flex justify-center items-center inset-0 absolute'>
                             <Spinner className='text-gray-600 text-5xl'></Spinner>
                         </div>
                     )} */}
-                </BrowserWindow>
+                        </BrowserWindow>
+                    </div>
+                </div>
             </div>
-        </div>
+        </StateProvider>
     )
 }
 

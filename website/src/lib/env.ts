@@ -1,5 +1,5 @@
 export const env = {
-    //
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     PUBLIC_URL: process.env.PUBLIC_URL,
     NEXT_PUBLIC_URL: process.env.PUBLIC_URL,
     DATABASE_URL: process.env.DATABASE_URL,
