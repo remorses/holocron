@@ -210,8 +210,12 @@ model Site {
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  tabs    Tab[]
-  domains Domain[]
+  tabs                             Tab[]
+  domains                          Domain[]
+  trieveDatasetId                  String?
+  githubInstallation               GithubInstallation? @relation(fields: [githubInstallationInstallationId, githubInstallationOrgId], references: [installationId, orgId])
+  githubInstallationInstallationId Int?
+  githubInstallationOrgId          String?
 
   @@index([createdAt])
 }
@@ -230,4 +234,25 @@ model Domain {
 
   // isVercelVerified Boolean?
   // lastCheck        DateTime?
+}
+
+model GithubInstallation {
+  installationId   Int
+  accountLogin     String            @default("")
+  appId            String
+  accountAvatarUrl String            @default("")
+  createdAt        DateTime          @default(now())
+  orgId            String
+  oauthToken       String?
+  status           String            @default("active")
+  accountType      GithubAccountType @default(USER)
+  memberLogins     String[]          @default([])
+  Site             Site[]
+
+  @@id([installationId, orgId])
+}
+
+enum GithubAccountType {
+  USER
+  ORGANIZATION
 }

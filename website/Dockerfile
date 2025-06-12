@@ -11,7 +11,7 @@ RUN npm install
 COPY ./build /app/build
 COPY ./public /app/public
 
-ENV PORT=8040
+ENV PORT=7664
 
 EXPOSE $PORT
 

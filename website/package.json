@@ -4,25 +4,28 @@
     "type": "module",
     "scripts": {
         "build": "doppler run --preserve-env -- react-router build",
-        "dev": "doppler run -- react-router dev",
-        "start": "doppler run -- node ./build/server/index.js",
+        "dev": "doppler run -- react-router dev --port 7664",
+        "start": "doppler run -- node ./build/server/index.js --port 7664",
         "typecheck": "react-router typegen && tsc"
     },
     "exports": {
         "./*": "./*"
     },
     "dependencies": {
+        "@octokit/webhooks": "^14.0.2",
         "@radix-ui/react-slot": "^1.2.3",
         "@react-router/fs-routes": "^7.6.2",
         "@react-router/node": "^7.6.2",
         "@sentry/node": "^9.27.0",
         "async-sema": "^3.1.1",
+        "better-auth": "^1.2.9",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "db": "workspace:*",
         "docs-website": "workspace:*",
         "isbot": "^5.1.28",
         "lucide-react": "^0.513.0",
+        "octokit": "^5.0.3",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
         "react-router": "^7.6.2",

@@ -32,6 +32,7 @@
         "isbot": "^5.1.26",
         "js-yaml": "^4.1.0",
         "mdast": "^3.0.0",
+        "mdast-util-mdx-jsx": "^3.2.0",
         "mdast-util-to-string": "^4.0.0",
         "mdast-util-toc": "^7.1.0",
         "notion-types": "^7.3.0",
