@@ -1,28 +1,28 @@
 {
-  "include": ["src"],
-  "compilerOptions": {
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "types": ["@react-router/node", "vite/client", "@types/node"],
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "jsx": "react-jsx",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "resolveJsonModule": true,
-    "target": "ES2022",
-    "strict": true,
-    "allowJs": true,
-    "skipLibCheck": true,
-    "allowArbitraryExtensions": true,
-    "allowImportingTsExtensions": true,
-    "noImplicitAny": false,
-    "useUnknownInCatchVariables": false,
-    "forceConsistentCasingInFileNames": true,
-    "rootDirs": [".", "./.react-router/types"],
-    "baseUrl": ".",
-    "paths": {
-      "website/*": ["./*"]
+    "compilerOptions": {
+        "lib": ["DOM", "DOM.Iterable", "ES2022"],
+        "types": ["@react-router/node", "vite/client", "@types/node"],
+        "isolatedModules": true,
+        "esModuleInterop": true,
+        "jsx": "react-jsx",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "resolveJsonModule": true,
+        "target": "ES2022",
+        "strict": true,
+        "allowJs": true,
+        "skipLibCheck": true,
+        "allowArbitraryExtensions": true,
+        "allowImportingTsExtensions": true,
+        "noImplicitAny": false,
+        "useUnknownInCatchVariables": false,
+        "forceConsistentCasingInFileNames": true,
+        "rootDirs": [".", "./.react-router/types"],
+        "baseUrl": ".",
+        "paths": {
+            "website/*": ["./*"]
+        },
+        "noEmit": true
     },
-    "noEmit": true
-  }
+    "include": ["src", ".react-router/types/**/*"]
 }
