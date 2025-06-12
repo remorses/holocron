@@ -30,3 +30,6 @@ for (let k in env) {
         throw new Error(`Missing env var ${k}`)
     }
 }
+
+
+export const supportEmail = 'tommy@fumabase.com'

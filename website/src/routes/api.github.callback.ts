@@ -18,7 +18,7 @@ export type GithubState = {
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const url = new URL(request.url)
-    const { userId,  } = await getSupabaseSession({
+    const { userId } = await getSupabaseSession({
         request,
     })
     if (!userId) {
@@ -30,9 +30,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
         decodeURIComponent(stateStr),
     )
     // const userId = session?.user?.id
-    let afterFramerLoginUrl = state?.next
+    let afterInstallUrl = state?.next
 
-    if (!afterFramerLoginUrl) {
+    if (!afterInstallUrl) {
         return new Response('Missing `next` state param callback', {
             status: 400,
         })
@@ -128,7 +128,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         //     }),
     ])
 
-    let redirectUrl = new URL(afterFramerLoginUrl)
+    let redirectUrl = new URL(afterInstallUrl, env.PUBLIC_URL)
     let data: GithubLoginRequestData = {
         githubAccountLogin: accountLogin,
     }

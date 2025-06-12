@@ -19,6 +19,7 @@ import { env } from '../lib/env'
 import { getSupabaseSession } from '../lib/better-auth'
 import { Button } from '../components/ui/button'
 import { GithubState } from '../lib/types'
+import { SelectNative } from '../components/ui/select-native'
 
 enum FormNames {
     chooseAnother = '_chooseAnother',
@@ -42,20 +43,17 @@ export default function ChooseOrg() {
             : `https://github.com/settings/installations/${installation?.installationId}`
         : ''
     return (
-        <div className='w-full md:-mt-[100px] grow justify-center h-full gap-[60px] flex flex-col items-center'>
+        <div className='w-full p-16  grow justify-center min-h-full gap-[40px] flex flex-col items-center'>
             <div className='flex flex-col gap-4 text-center'>
-                <h1 className='text-2xl max-w-md text-center text-balance'>
-                    Choose a GitHub organization or account to connect to Framer
-                </h1>
                 <p className='opacity-70 max-w-md text-center text-medium text-balance'>
                     Choose which GitHub organization or account you want to
-                    connect to Framer. You can add more organizations later.
+                    connect to Fumabase
                 </p>
             </div>
-            <Form className='flex dark flex-col gap-6'>
-                <select
+            <Form className='flex  flex-col gap-6'>
+                <SelectNative
                     // value={selectedAccountLogin}
-                    className='rounded-md py-1 border-0 dark:bg-default-200'
+                    className=''
                     name={FormNames.chosenOrg}
                     onChange={(e) => {
                         const value = e.target.value
@@ -79,7 +77,7 @@ export default function ChooseOrg() {
                     <option value={FormNames.chooseAnother}>
                         add another organization
                     </option>
-                </select>
+                </SelectNative>
 
                 {!!selectedAccountLogin && (
                     <div className='flex flex-col gap-2'>
@@ -109,7 +107,7 @@ export default function ChooseOrg() {
                 })}
 
                 <Button
-                    color='primary'
+                    // color='primary'
                     className='font-semibold'
                     isLoading={isLoading}
                     type='submit'
@@ -122,7 +120,7 @@ export default function ChooseOrg() {
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-    const url = new URL(request.url)
+    const url = new URL(request.url, env.PUBLIC_URL)
     let afterFramerLoginUrl = url.searchParams.get('next') || ''
 
     const chosenOrg =
@@ -176,7 +174,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     ).filter(isTruthy)
 
     if (installations.some((x) => x.accountLogin === chosenOrg)) {
-        let url = new URL(afterFramerLoginUrl)
+        let url = new URL(afterFramerLoginUrl, env.PUBLIC_URL)
         let data: GithubLoginRequestData = { githubAccountLogin: chosenOrg }
         url.searchParams.set('data', JSON.stringify(data))
         return redirect(url.toString(), { headers })
