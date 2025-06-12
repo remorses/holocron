@@ -33,5 +33,5 @@ export async function loader({ request }: Route.LoaderArgs) {
         })
     }
     const orgId = org?.orgId || ''
-    return redirect(href('/onboarding/:orgId', { orgId }))
+    return redirect(href('/org/:orgId/onboarding', { orgId }))
 }

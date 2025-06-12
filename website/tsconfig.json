@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "lib": ["DOM", "DOM.Iterable", "ES2022"],
+        "lib": ["DOM", "DOM.Iterable", "ES2022", "ESNext"],
         "types": ["@react-router/node", "vite/client", "@types/node"],
         "isolatedModules": true,
         "esModuleInterop": true,

@@ -157,7 +157,7 @@ model Subscription {
 
 model Tab {
   tabId     String   @id @default(cuid())
-  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  site      Site     @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
   siteId    String
   title     String
   // enabled   Boolean    @default(true)
@@ -202,9 +202,9 @@ enum MarkdownExtension {
 }
 
 model Site {
-  id    String  @id @default(cuid())
-  name  String?
-  orgId String
+  siteId String  @id @default(cuid())
+  name   String?
+  orgId  String
 
   org Org @relation(fields: [orgId], references: [orgId], onDelete: Cascade)
 
@@ -213,11 +213,10 @@ model Site {
   trieveDatasetId  String?
   trieveReadApiKey String?
 
-  tabs                             Tab[]
-  domains                          Domain[]
-  githubInstallation               GithubInstallation? @relation(fields: [githubInstallationInstallationId, githubInstallationOrgId], references: [installationId, orgId])
-  githubInstallationInstallationId Int?
-  githubInstallationOrgId          String?
+  tabs               Tab[]
+  domains            Domain[]
+  githubInstallation GithubInstallation? @relation(fields: [installationId, orgId], references: [installationId, orgId])
+  installationId     Int?
 
   @@index([createdAt])
 }
@@ -232,7 +231,7 @@ model Domain {
   host       String     @unique
   siteId     String
   domainType DomainType
-  site       Site       @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  site       Site       @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
 
   // isVercelVerified Boolean?
   // lastCheck        DateTime?
@@ -249,7 +248,7 @@ model GithubInstallation {
   status           String            @default("active")
   accountType      GithubAccountType @default(USER)
   memberLogins     String[]          @default([])
-  sites             Site[]
+  sites            Site[]
 
   @@id([installationId, orgId])
 }

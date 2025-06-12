@@ -14,10 +14,11 @@ import {
 type Page = {
     pageInput: Omit<Prisma.MarkdownPageUncheckedCreateInput, 'tabId'>
     structuredData: StructuredData
+
     totalPages: number
 }
 
-export async function syncWebsiteDocsV2({
+export async function syncSite({
     siteId,
     internalHost,
     name,
@@ -37,10 +38,10 @@ export async function syncWebsiteDocsV2({
     // Ensure the site exists or create it if it doesn't
     console.log(`Upserting site with ID: ${siteId}, name: ${name}...`)
     const site = await prisma.site.upsert({
-        where: { id: siteId },
+        where: { siteId },
         update: { name }, // No updates needed if it exists
         create: {
-            id: siteId,
+            siteId,
             name,
             orgId,
         },
@@ -52,12 +53,10 @@ export async function syncWebsiteDocsV2({
             },
         },
     })
-    console.log(
-        `Site upsert complete: ${site.id} (${site.name}) `,
-    )
+    console.log(`Site upsert complete: ${siteId} (${site.name}) `)
 
     // Find existing domain or create a new one
-    console.log(`Looking for existing internal domain for site: ${site.id}...`)
+    console.log(`Looking for existing internal domain for site: ${siteId}...`)
     const existingDomain = site.domains.find((x) => x)
 
     if (existingDomain && existingDomain?.host !== internalHost) {
@@ -67,7 +66,7 @@ export async function syncWebsiteDocsV2({
         await prisma.domain.update({
             where: { id: existingDomain.id },
             data: {
-                siteId: site.id,
+                siteId,
                 domainType: 'internalDomain',
                 host: internalHost,
             },
@@ -81,14 +80,14 @@ export async function syncWebsiteDocsV2({
         const newDomain = await prisma.domain.create({
             data: {
                 host: internalHost,
-                siteId: site.id,
+                siteId,
                 domainType: 'internalDomain',
             },
         })
         console.log(`New domain created: ${newDomain.id}`)
     }
 
-    console.log(`Using site: ${site.id}`)
+    console.log(`Using site: ${siteId}`)
 
     // --- 1. Find or create the Tab ---
     // Use upsert to find or create the tab in a single operation
@@ -243,7 +242,7 @@ const mdxRegex = /\.mdx?$/
 export async function* pagesFromDirectory(
     dirPath: string,
     base = '',
-): AsyncGenerator<Page> {
+): AsyncGenerator<Page & { filePath: string; content: string }> {
     if (!base) {
         base = dirPath
     }
@@ -268,7 +267,7 @@ export async function* pagesFromDirectory(
             markdown: fileContent,
             extension: entry.name.split('.').pop() === 'mdx' ? 'mdx' : 'md',
         })
-        const page: Page | null = {
+        const page = {
             totalPages,
             pageInput: {
                 slug: entrySlug,
@@ -276,10 +275,11 @@ export async function* pagesFromDirectory(
                 markdown: fileContent,
                 frontmatter: data.frontmatter,
             },
+
             structuredData: data.structuredData,
-        }
+        } satisfies Page | null
         if (page) {
-            yield page
+            yield { ...page, content: fileContent, filePath: entryRelativePath }
         }
     }
 
@@ -305,7 +305,7 @@ export async function deletePages({
 
     // 1. Get the site to retrieve the Trieve dataset ID
     const site = await prisma.site.findUnique({
-        where: { id: siteId },
+        where: { siteId },
         select: { trieveDatasetId: true },
     })
 
@@ -510,7 +510,7 @@ async function createTrieveDataset({ siteId, name }) {
     trieve.datasetId = datasetId
     console.log(`Updating site record with Trieve dataset information...`)
     await prisma.site.update({
-        where: { id: siteId },
+        where: { siteId },
         data: {
             trieveDatasetId: datasetId,
             trieveReadApiKey: token.api_key,
