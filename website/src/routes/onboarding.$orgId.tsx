@@ -1,4 +1,4 @@
-import { href, Link, redirect, Form } from 'react-router'
+import { href, Link, redirect, Form, useLoaderData } from 'react-router'
 import { getSession } from '../lib/better-auth'
 import type { Route } from './+types/onboarding.$orgId'
 import {
@@ -16,7 +16,7 @@ import { createNewRepo, getOctokit } from '../lib/github.server'
 import { prisma } from 'db'
 import { Octokit } from 'octokit'
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request, params }: Route.LoaderArgs) {
     const { userId, redirectTo } = await getSession({ request })
     if (redirectTo) {
         throw redirect(redirectTo)
@@ -24,8 +24,8 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     const url = new URL(request.url)
     const currentStep = parseInt(url.searchParams.get('currentStep') || '0', 10)
-
-    return { currentStep }
+    const orgId = params.orgId
+    return { currentStep, orgId }
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
@@ -83,13 +83,15 @@ interface OnboardingStepperProps {
 }
 
 function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
+    const { orgId } = useLoaderData<typeof loader>()
     const githubInstallUrl = new URL(
         href('/api/github/install'),
         env.PUBLIC_URL,
     )
     githubInstallUrl.searchParams.set(
         'next',
-        `/?currentStep=${currentStep + 1}`,
+        href('/onboarding/:orgId', { orgId }) +
+            `?currentStep=${currentStep + 1}`,
     )
     return (
         <Stepper defaultValue={currentStep + 1} orientation='vertical'>

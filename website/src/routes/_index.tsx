@@ -23,6 +23,12 @@ export async function loader({ request }: Route.LoaderArgs) {
             data: {
                 orgId: userId,
                 name: 'Default',
+                users: {
+                    create: {
+                        userId,
+                        role: 'ADMIN',
+                    },
+                },
             },
         })
     }
