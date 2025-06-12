@@ -1,4 +1,4 @@
-import { Button } from '@heroui/react'
+
 import { prisma } from 'db'
 
 import { useState } from 'react'
@@ -18,6 +18,8 @@ import { isTruthy } from 'website/src/lib/utils'
 
 import { env } from '../lib/env'
 import { getSupabaseSession } from '../lib/better-auth'
+import { Button } from '../components/ui/button'
+import { GithubState } from '../lib/types'
 
 enum FormNames {
     chooseAnother = '_chooseAnother',

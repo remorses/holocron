@@ -10,10 +10,10 @@
     "devDependencies": {
         "@changesets/cli": "^2.29.4",
         "prettier": "^3.5.3",
-        "tsx": "^4.19.4",
+        "tsx": "^4.20.2",
         "typescript": "^5.8.3",
         "vite": "^6.3.5",
-        "vitest": "^3.2.2"
+        "vitest": "^3.2.3"
     },
     "repository": "https://github.com/remorses/",
     "author": "remorses <beats.by.morse@gmail.com>",

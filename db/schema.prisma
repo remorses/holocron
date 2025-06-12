@@ -210,9 +210,11 @@ model Site {
 
   createdAt DateTime @default(now()) @map("created_at")
 
+  trieveDatasetId  String?
+  trieveReadApiKey String?
+
   tabs                             Tab[]
   domains                          Domain[]
-  trieveDatasetId                  String?
   githubInstallation               GithubInstallation? @relation(fields: [githubInstallationInstallationId, githubInstallationOrgId], references: [installationId, orgId])
   githubInstallationInstallationId Int?
   githubInstallationOrgId          String?

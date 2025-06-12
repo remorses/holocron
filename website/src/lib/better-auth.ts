@@ -3,10 +3,12 @@ import { prisma } from 'db/'
 
 import { twoFactor } from 'better-auth/plugins'
 import { env } from './env'
+import { prismaAdapter } from 'better-auth/adapters/prisma'
 
 export const auth = betterAuth({
-    database: prisma,
-
+    database: prismaAdapter(prisma, {
+        provider: 'sqlite',
+    }),
     account: {
         modelName: 'Account',
     },
@@ -53,7 +55,7 @@ export const auth = betterAuth({
 
 export async function getSupabaseSession({ request }) {
     const headers = new Headers()
-    const data = await auth.api.getSession({  headers: request.headers })
+    const data = await auth.api.getSession({ headers: request.headers })
     if (!data) {
         return { userId: '', headers, redirectTo: '/login' }
     }

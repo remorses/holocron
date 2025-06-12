@@ -20,13 +20,14 @@
     "author": "remorses <beats.by.morse@gmail.com>",
     "license": "ISC",
     "dependencies": {
+        "@prisma/adapter-pg": "^6.9.0",
         "@prisma/client": "^6.9.0",
         "pg": "^8.16.0",
         "postgres": "^3.4.7",
         "prisma": "^6.9.0"
     },
     "devDependencies": {
-        "@types/node": "^22.15.30",
+        "@types/node": "^24.0.1",
         "supabase": "^2.24.3"
     }
 }
