@@ -1,13 +1,13 @@
-
-
 import { UploadIcon } from 'lucide-react'
 import { ComponentPropsWithoutRef, useState, useRef } from 'react'
 import { v4 } from 'uuid'
-import { UPLOADS_BASE_URL, uploadBucketName } from 'db/env'
+
 import { useThrowingFn } from 'website/src/lib/hooks'
 
-import { createUploadUrl } from 'website/src/pages/api/functions'
 import { Button } from './ui/button'
+import { apiClient } from '../lib/spiceflow-client'
+import { slugKebabCase } from '../lib/utils'
+import { env } from '../lib/env'
 
 export function UploadButton({
     accept = '*',
@@ -22,25 +22,36 @@ export function UploadButton({
 } & ComponentPropsWithoutRef<typeof Button>) {
     const [filename, setFilename] = useState('')
 
-    const inputRef = useRef<any>()
+    const inputRef = useRef<any>(undefined)
     const { fn: up, isLoading } = useThrowingFn({
         async fn(file) {
             const filename = encodeURIComponent(
                 slugKebabCase(`${v4()}-${file.name || 'image'}`),
             )
+            const contentType = file.type
+            const { error, data } =
+                await apiClient.api.createUploadSignedUrl.post({
+                    body: { key: filename, contentType },
+                })
+            if (error) throw error
 
-            const { signedUrl, token, path } = await createUploadUrl({
-                filename,
+            const { signedUrl, x } = data
+            // Do a PUT to the signed URL
+            const uploadResp = await fetch(signedUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': contentType,
+                },
+                body: file,
             })
-            const supabase = createPagesBrowserClient()
-            const { data, error } = await supabase.storage
-                .from(uploadBucketName)
-                .uploadToSignedUrl(path, token, file)
+            if (!uploadResp.ok) {
+                throw new Error('Failed to upload file to storage.')
+            }
             if (error) {
                 console.error(error)
                 throw new Error('Error uploading file')
             }
-            const src = new URL(data?.path!, UPLOADS_BASE_URL).toString()
+            const src = new URL(data?.path!, env.UPLOADS_BASE_URL).toString()
             onUploadFinished({ src })
         },
     })
@@ -64,13 +75,12 @@ export function UploadButton({
                 ref={inputRef}
                 style={{ display: 'none' }}
             />
-            {/* @ts-ignore */}
+
             <Button
                 onClick={() => {
                     inputRef.current.click()
                 }}
                 isLoading={isLoading}
-                endContent={<UploadIcon className='w-4' />}
                 className='my-4'
                 {...rest}
                 // isLoading={isLoading}

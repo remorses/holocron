@@ -27,6 +27,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 import { Route } from "./+types/root";
+import { useNProgress } from "./components/nprogress";
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   if (isRouteErrorResponse(error)) {
     return (
@@ -58,5 +59,6 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 }
 
 export default function App() {
+  useNProgress()
   return <Outlet />;
 }

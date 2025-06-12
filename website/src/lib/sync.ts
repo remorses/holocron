@@ -10,6 +10,7 @@ import {
     processMdx,
     StructuredData,
 } from 'docs-website/app/lib/mdx'
+import { env } from './env'
 
 type Page = {
     pageInput: Omit<Prisma.MarkdownPageUncheckedCreateInput, 'tabId'>
@@ -135,8 +136,8 @@ export async function syncPages({
     let chunksToSync: ChunkReqPayload[] = []
 
     const trieve = new TrieveSDK({
-        apiKey: process.env.TRIEVE_API_KEY!,
-        organizationId: process.env.TRIEVE_ORGANIZATION_ID!,
+        apiKey: env.TRIEVE_API_KEY!,
+        organizationId: env.TRIEVE_ORGANIZATION_ID!,
         datasetId: trieveDatasetId || undefined,
     })
     if (!trieveDatasetId) {
@@ -317,8 +318,8 @@ export async function deletePages({
     let trieve: TrieveSDK | undefined
     if (site.trieveDatasetId) {
         trieve = new TrieveSDK({
-            apiKey: process.env.TRIEVE_API_KEY!,
-            organizationId: process.env.TRIEVE_ORGANIZATION_ID!,
+            apiKey: env.TRIEVE_API_KEY!,
+            organizationId: env.TRIEVE_ORGANIZATION_ID!,
             datasetId: site.trieveDatasetId,
         })
         console.log(
@@ -465,8 +466,8 @@ function processForTrieve(page: DocumentRecord & { pageSlug: string }) {
 
 async function createTrieveDataset({ siteId, name }) {
     const trieve = new TrieveSDK({
-        apiKey: process.env.TRIEVE_API_KEY!,
-        organizationId: process.env.TRIEVE_ORGANIZATION_ID!,
+        apiKey: env.TRIEVE_API_KEY!,
+        organizationId: env.TRIEVE_ORGANIZATION_ID!,
     })
     console.log(
         `No Trieve dataset found for site ${siteId}, creating new dataset...`,

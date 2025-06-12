@@ -5,6 +5,7 @@ import {
     Form,
     useLoaderData,
     useActionData,
+    useNavigation,
 } from 'react-router'
 import { getSession } from '../lib/better-auth'
 import type { Route } from './+types/org.$orgId.onboarding'
@@ -19,7 +20,7 @@ import {
 } from '../components/ui/stepper'
 import { env, supportEmail } from '../lib/env'
 import { Button } from '../components/ui/button'
-import { createNewRepo, getOctokit } from '../lib/github.server'
+import { createNewRepo, doesRepoExist, getOctokit } from '../lib/github.server'
 import { prisma } from 'db'
 import { Octokit } from 'octokit'
 import { pagesFromDirectory, syncSite } from '../lib/sync'
@@ -65,22 +66,30 @@ export async function action({ request, params }: Route.ActionArgs) {
             )
         }
 
-        const repo = `example-docs-${Date.now()}`
+        const repo = `fumabase-starter`
         console.log('Creating repository...')
         const octokit = await getOctokit(githubInstallation)
         const pages = pagesFromDirectory(
             path.resolve('scripts/example-docs-site'),
         )
+        const owner = githubAccountLogin
+        const exists = await doesRepoExist({
+            octokit: octokit.rest,
+            owner,
+            repo,
+        })
         const [result, site] = await Promise.all([
-            createNewRepo({
-                files: await Array.fromAsync(pages),
-                isGithubOrg: githubInstallation.accountType === 'ORGANIZATION',
-                octokit: octokit.rest,
-                owner: githubAccountLogin,
-                oauthToken: githubInstallation.oauthToken!,
-                privateRepo: false,
-                repo,
-            }),
+            !exists &&
+                createNewRepo({
+                    files: await Array.fromAsync(pages),
+                    isGithubOrg:
+                        githubInstallation.accountType === 'ORGANIZATION',
+                    octokit: octokit.rest,
+                    owner,
+                    oauthToken: githubInstallation.oauthToken!,
+                    privateRepo: false,
+                    repo,
+                }),
             // Create a site for the newly created repository
             prisma.site.create({
                 data: {
@@ -93,6 +102,7 @@ export async function action({ request, params }: Route.ActionArgs) {
         ])
         const internalHost = `${githubAccountLogin}.${env.APPS_DOMAIN}`
         const siteId = site.siteId
+        console.log(`created site ${siteId}`)
         const tabId = 'main'
         await syncSite({
             pages,
@@ -102,6 +112,7 @@ export async function action({ request, params }: Route.ActionArgs) {
             siteId,
             name: `${githubAccountLogin} docs`,
         })
+        throw redirect(href('/org/:orgId/site/:siteId', { orgId, siteId }))
 
         return { siteId }
     }
@@ -125,6 +136,8 @@ function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
         href('/org/:orgId/onboarding', { orgId }) +
             `?currentStep=${currentStep + 1}`,
     )
+    const navigation = useNavigation()
+    const isLoading = navigation.state === 'submitting'
     return (
         <Stepper defaultValue={currentStep + 1} orientation='vertical'>
             <StepperItem
@@ -193,7 +206,7 @@ function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
                                         name='create-repo'
                                         value='true'
                                     />
-                                    <Button type='submit'>
+                                    <Button isLoading={isLoading} type='submit'>
                                         Create Example Repo
                                     </Button>
                                 </Form>
@@ -239,7 +252,7 @@ function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
 export default function Index({ loaderData }: Route.ComponentProps) {
     return (
         <div className='flex flex-col gap-12 max-w-2xl mx-auto p-8'>
-            <div className='text-center space-y-4'>
+            <div className='space-y-4'>
                 <div>
                     <h1 className='text-2xl font-bold text-white'>
                         Hello, test

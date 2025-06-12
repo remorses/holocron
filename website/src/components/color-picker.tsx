@@ -1,4 +1,5 @@
-import { ColorResult, SketchPicker } from 'react-color'
+import pkg, { ColorResult } from 'react-color'
+const { SketchPicker } = pkg
 
 import { Button } from './ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
