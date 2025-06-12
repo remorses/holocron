@@ -1,4 +1,3 @@
-
 import { prisma } from 'db'
 
 import { useState } from 'react'
@@ -140,19 +139,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
     if (!orgId) {
         throw new Error('Unauthorized')
     }
-    const githubLogin = await getGithubUserLogin({ userId })
 
     const [githubInstallations] = await Promise.all([
         prisma.githubInstallation.findMany({
             where: {
                 status: 'active',
                 appId: env.GITHUB_APP_ID,
-                memberLogins: { hasSome: [githubLogin] },
+                orgId,
             },
-        }),
-        prisma.user.update({
-            where: { id: userId },
-            data: { githubLogin: githubLogin },
         }),
     ])
     let installations = (

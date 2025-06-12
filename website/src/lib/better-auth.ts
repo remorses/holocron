@@ -7,7 +7,7 @@ import { prismaAdapter } from 'better-auth/adapters/prisma'
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
-        provider: 'sqlite',
+        provider: 'postgresql',
     }),
     account: {
         modelName: 'Account',
@@ -37,10 +37,9 @@ export const auth = betterAuth({
     },
     socialProviders: {
         google: {
-            clientId: process.env.GOOGLE_CLIENT_ID || '',
-            // prompt: 'consent',
-
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+            clientId: env.GOOGLE_ID || '',
+            clientSecret: env.GOOGLE_SECRET || '',
+            prompt: 'consent',
         },
         // github: {
         //     clientId: process.env.GITHUB_CLIENT_ID || '',
