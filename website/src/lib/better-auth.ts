@@ -52,7 +52,7 @@ export const auth = betterAuth({
     },
 })
 
-export async function getSupabaseSession({ request }) {
+export async function getSession({ request }) {
     const headers = new Headers()
     const data = await auth.api.getSession({ headers: request.headers })
     if (!data) {

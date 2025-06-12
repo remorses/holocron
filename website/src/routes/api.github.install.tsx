@@ -16,7 +16,7 @@ import {
 import { isTruthy } from 'website/src/lib/utils'
 
 import { env } from '../lib/env'
-import { getSupabaseSession } from '../lib/better-auth'
+import { getSession } from '../lib/better-auth'
 import { Button } from '../components/ui/button'
 import { GithubState } from '../lib/types'
 import { SelectNative } from '../components/ui/select-native'
@@ -121,15 +121,15 @@ export default function ChooseOrg() {
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const url = new URL(request.url, env.PUBLIC_URL)
-    let afterFramerLoginUrl = url.searchParams.get('next') || ''
+    let afterInstall = url.searchParams.get('next') || ''
 
     const chosenOrg =
         url.searchParams.get(FormNames.chosenOrg)?.toString() || ''
 
-    const { userId, headers } = await getSupabaseSession({
+    const { userId, headers } = await getSession({
         request,
     })
-    if (!afterFramerLoginUrl) {
+    if (!afterInstall) {
         throw new Error('URL is malformed, missing next param')
     }
 
@@ -174,9 +174,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
     ).filter(isTruthy)
 
     if (installations.some((x) => x.accountLogin === chosenOrg)) {
-        let url = new URL(afterFramerLoginUrl, env.PUBLIC_URL)
+        let url = new URL(afterInstall, env.PUBLIC_URL)
         let data: GithubLoginRequestData = { githubAccountLogin: chosenOrg }
         url.searchParams.set('data', JSON.stringify(data))
+        url.searchParams.set('githubAccountLogin', chosenOrg)
         return redirect(url.toString(), { headers })
     }
 
@@ -192,10 +193,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const githubInstallationUrl = new URL(
         `https://github.com/apps/${env.GITHUB_APP_NAME}/installations/new`,
     )
-    const redirectUri = new URL(
-        '/api/markdown-plugin/github/callback',
-        env.PUBLIC_URL,
-    )
+    const redirectUri = new URL('/api/github/callback', env.PUBLIC_URL)
     // redirectUri.searchParams.set('next', next)
 
     githubInstallationUrl.searchParams.set(
@@ -203,7 +201,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         redirectUri.toString(),
     )
     let state: GithubState = {
-        next: afterFramerLoginUrl,
+        next: afterInstall,
         // redirectToPath: after.toString()
     }
 

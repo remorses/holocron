@@ -8,7 +8,7 @@ import { notifyError } from 'website/src/lib/errors'
 
 const logger = console
 function getWebhooks() {
-    // https://tunnel.unframer.co/api/markdown-plugin/github/webhooks
+    // https://tunnel.unframer.co/api/github/webhooks
     const webhooks = new Webhooks({
         secret: env.SECRET!,
     })

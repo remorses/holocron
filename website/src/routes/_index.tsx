@@ -1,5 +1,5 @@
-import { href, Link, redirect } from 'react-router'
-import { getSupabaseSession } from '../lib/better-auth'
+import { href, Link, redirect, Form } from 'react-router'
+import { getSession } from '../lib/better-auth'
 import type { Route } from './+types/_index'
 import {
     Stepper,
@@ -11,9 +11,12 @@ import {
     StepperTrigger,
 } from '../components/ui/stepper'
 import { env, supportEmail } from '../lib/env'
+import { Button } from '../components/ui/button'
+import { createNewRepo } from '../lib/github.server'
+import { prisma } from 'db'
 
 export async function loader({ request }: Route.LoaderArgs) {
-    const { userId, redirectTo } = await getSupabaseSession({ request })
+    const { userId, redirectTo } = await getSession({ request })
     if (redirectTo) {
         throw redirect(redirectTo)
     }
@@ -22,6 +25,48 @@ export async function loader({ request }: Route.LoaderArgs) {
     const currentStep = parseInt(url.searchParams.get('currentStep') || '0', 10)
 
     return { currentStep }
+}
+
+export async function action({ request }: Route.ActionArgs) {
+    const formData = await request.formData()
+    const createRepo = formData.get('create-repo')
+    const url = new URL(request.url)
+
+    const { userId } = await getSession({ request })
+    if (createRepo) {
+        const githubAccountLogin = url.searchParams.get(
+            'githubAccountLogin',
+        ) as string
+        if (!githubAccountLogin) {
+            throw new Error(`missing githubAccountLogin`)
+        }
+        // Find the GitHub installation for the user's organization
+        const githubInstallation = await prisma.githubInstallation.findFirst({
+            where: {
+                orgId,
+            },
+        })
+
+        if (!githubInstallation) {
+            throw new Error('GitHub installation not found')
+        }
+
+        const repo = `example-docs-${Date.now()}`
+        console.log('Creating repository...')
+        await createNewRepo({
+            files: [
+                {
+                    filePath: 'README.md',
+                    content: `# Welcome to ${repo}`,
+                },
+            ],
+            github: githubInstallation,
+            privateRepo: true,
+            repo,
+        })
+    }
+
+    return null
 }
 interface OnboardingStepperProps {
     currentStep: number
@@ -96,6 +141,20 @@ function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
                             Your documentation content will be managed through
                             this repo
                         </StepperDescription>
+                        {currentStep >= 1 && (
+                            <div className='pt-4'>
+                                <Form method='post'>
+                                    <input
+                                        type='hidden'
+                                        name='create-repo'
+                                        value='true'
+                                    />
+                                    <Button type='submit'>
+                                        Create Example Repo
+                                    </Button>
+                                </Form>
+                            </div>
+                        )}
                     </div>
                 </StepperTrigger>
                 <StepperSeparator className='absolute inset-y-0 top-[calc(1.5rem+0.125rem)] left-3 -order-1 m-0 -translate-x-1/2 group-data-[orientation=horizontal]/stepper:w-[calc(100%-1.5rem-0.25rem)] group-data-[orientation=horizontal]/stepper:flex-none group-data-[orientation=vertical]/stepper:h-[calc(100%-1.5rem-0.25rem)]' />
@@ -139,10 +198,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 
                 <p className='text-gray-400 text-sm'>
                     Need help?{' '}
-                    <a
-                        href={`mailto:${supportEmail}`}
-                        className='text-green-400 hover:text-green-300'
-                    >
+                    <a className='text-primary' href={`mailto:${supportEmail}`}>
                         Contact support
                     </a>
                 </p>

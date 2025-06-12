@@ -10,7 +10,7 @@ import { env } from 'website/src/lib/env'
 import { safeJsonParse } from 'website/src/lib/utils'
 
 import { GithubAccountType, Prisma, prisma } from 'db'
-import { getSupabaseSession } from '../lib/better-auth'
+import { getSession } from '../lib/better-auth'
 
 export type GithubState = {
     next?: string
@@ -18,7 +18,7 @@ export type GithubState = {
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const url = new URL(request.url)
-    const { userId } = await getSupabaseSession({
+    const { userId } = await getSession({
         request,
     })
     if (!userId) {
@@ -133,5 +133,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
         githubAccountLogin: accountLogin,
     }
     redirectUrl.searchParams.set('data', JSON.stringify(data))
+    redirectUrl.searchParams.set('githubAccountLogin', accountLogin)
     return redirect(redirectUrl.toString())
 }
