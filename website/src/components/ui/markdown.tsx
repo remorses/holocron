@@ -1,5 +1,5 @@
 import { cn } from 'website/src/lib/utils'
-import { MarkdownRender } from 'docs-website/app/lib/safe-mdx'
+import { MarkdownRender } from 'docs-website/src/lib/safe-mdx'
 
 import { marked } from 'marked'
 import { memo, Suspense, useId, useMemo } from 'react'

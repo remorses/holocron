@@ -96,6 +96,9 @@ importers:
       dedent:
         specifier: ^1.6.0
         version: 1.6.0(babel-plugin-macros@3.1.0)
+      docs-website:
+        specifier: workspace:^
+        version: 'link:'
       fumadocs-core:
         specifier: workspace:*
         version: link:../fumadocs/packages/core

@@ -9,7 +9,7 @@ import {
     DocumentRecord,
     processMdx,
     StructuredData,
-} from 'docs-website/app/lib/mdx'
+} from 'docs-website/src/lib/mdx'
 import { env } from './env'
 
 type Page = {
