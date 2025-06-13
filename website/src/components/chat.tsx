@@ -19,10 +19,11 @@ export default function Chat({}) {
     return (
         <ScrollArea
             ref={scrollRef}
-            className='[&>div>div]:h-full [&>div]:!block max-h-full flex flex-col grow bg-background'
+            className='[&>div>div]:grow h-full flex flex-col grow bg-background'
         >
             {/* Chat */}
             <Messages ref={contentRef} />
+
             <Footer />
         </ScrollArea>
     )
@@ -34,7 +35,7 @@ function Messages({ ref }) {
     return (
         <div
             ref={ref}
-            className='relative h-full flex flex-col grow  mt-6 space-y-6'
+            className='relative h-full flex flex-col grow pr-4 mt-6 space-y-6'
         >
             {messages.map((x) => {
                 return <ChatMessage key={x.id} message={x} />
