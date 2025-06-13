@@ -3,8 +3,8 @@
 import { type ReactNode, useState } from 'react'
 import {
     SearchDialog,
+    SearchDialogList,
     SharedProps,
-    TagItem,
     TagsList,
 } from 'fumadocs-ui/components/dialog/search'
 import { TrieveSDK } from 'trieve-ts-sdk'
@@ -12,6 +12,7 @@ import { useTrieveSearch } from './search/client'
 import React from 'react'
 import { useOnChange } from 'fumadocs-core/utils/use-on-change'
 import { RootProvider } from 'fumadocs-ui/provider/base'
+import { TagItem } from 'fumadocs-ui/contexts/search'
 
 export interface TrieveSearchDialogProps extends SharedProps {
     trieveClient: TrieveSDK
@@ -59,25 +60,13 @@ export function TrieveSearchDialog({
             <SearchDialog
                 search={search}
                 onSearchChange={setSearch}
-                results={query.data ?? []}
                 isLoading={query.isLoading}
                 {...props}
-                footer={
-                    tags ? (
-                        <div className='flex items-center justify-between'>
-                            <TagsList
-                                tag={tag}
-                                onTagChange={setTag}
-                                items={tags}
-                                allowClear={allowClear}
-                            />
-                            {props.footer}
-                        </div>
-                    ) : (
-                        <>{props.footer}</>
-                    )
-                }
-            />
+            >
+                <SearchDialogList
+                    items={query.data !== 'empty' ? query.data : null}
+                />
+            </SearchDialog>
         </RootProvider>
     )
 }

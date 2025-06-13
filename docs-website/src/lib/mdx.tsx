@@ -1,29 +1,27 @@
-import remarkFrontmatter from 'remark-frontmatter'
 import memoize from 'micro-memoize'
+import remarkFrontmatter from 'remark-frontmatter'
 
 import YAML from 'js-yaml'
 import { remarkMarkAndUnravel } from 'safe-mdx'
 
-import { createStyleTransformer } from 'fumadocs-core/highlight'
-import * as mdxPluginsFumadocs from 'fumadocs-core/mdx-plugins'
-import { remark } from 'remark'
-import remarkMdx from 'remark-mdx'
-import { codeToHtml, createHighlighter, Highlighter } from 'shiki'
-import {} from 'js-yaml'
 import {
     transformerNotationDiff,
     transformerNotationHighlight,
     transformerNotationWordHighlight,
 } from '@shikijs/transformers'
-import { Root, Heading } from 'mdast'
-import { bundledLanguages } from 'shiki/langs' // every grammar object
+import * as mdxPluginsFumadocs from 'fumadocs-core/mdx-plugins'
+import { } from 'js-yaml'
+import { Heading, Root } from 'mdast'
+import { remark } from 'remark'
+import remarkMdx from 'remark-mdx'
+import { createHighlighter, Highlighter } from 'shiki'
+import { bundledLanguages } from 'shiki/langs'; // every grammar object
 
 import { visit } from 'unist-util-visit'
 import { remarkGitHubBlockquotes } from './github-blockquotes'
-import { notifyError } from './sentry'
 
-import { DocumentRecord } from 'fumadocs-core/search/algolia'
 import { StructuredData } from 'fumadocs-core/mdx-plugins'
+import { DocumentRecord } from 'fumadocs-core/search/algolia'
 
 export type { DocumentRecord, StructuredData }
 
@@ -40,9 +38,9 @@ const remarkCodeToHtml = (highlighter: Highlighter) => () => {
                     light: 'github-light',
                     dark: 'github-dark',
                 },
+                // experimentalJSEngine: false,
                 defaultColor: false,
                 transformers: [
-                    createStyleTransformer(),
                     transformerNotationHighlight({
                         matchAlgorithm: 'v3',
                     }),
@@ -52,6 +50,9 @@ const remarkCodeToHtml = (highlighter: Highlighter) => () => {
                     transformerNotationDiff({
                         matchAlgorithm: 'v3',
                     }),
+                    // transformerNotationFocus({
+                    //     matchAlgorithm: 'v3',
+                    // }),
                 ],
             })
 
@@ -108,25 +109,27 @@ export const getProcessor = memoize(async function getProcessor(
     })
 
     if (typeof extension === 'string' && extension.endsWith('mdx')) {
-        return remark()
-            .use(remarkMdx)
-            .use(remarkFrontmatter, ['yaml'])
-            .use(mdxPluginsFumadocs.remarkGfm)
-            .use(remarkGitHubBlockquotes)
-            .use(mdxPluginsFumadocs.remarkAdmonition)
-            .use(mdxPluginsFumadocs.remarkCodeTab)
-            .use(mdxPluginsFumadocs.remarkHeading)
-            // .use(mdxPluginsFumadocs.remarkImage)
-            .use(mdxPluginsFumadocs.remarkSteps)
-            .use(mdxPluginsFumadocs.remarkStructure)
-            .use(remarkMarkAndUnravel)
-            .use(remarkCodeToHtml(highlighter))
-            .use(remarkExtractFirstHeading)
-            .use(() => {
-                return (tree, file) => {
-                    file.data.ast = tree
-                }
-            })
+        return (
+            remark()
+                .use(remarkMdx)
+                .use(remarkFrontmatter, ['yaml'])
+                .use(mdxPluginsFumadocs.remarkGfm)
+                .use(remarkGitHubBlockquotes)
+                .use(mdxPluginsFumadocs.remarkAdmonition)
+                .use(mdxPluginsFumadocs.remarkCodeTab)
+                .use(mdxPluginsFumadocs.remarkHeading)
+                // .use(mdxPluginsFumadocs.remarkImage)
+                .use(mdxPluginsFumadocs.remarkSteps)
+                .use(mdxPluginsFumadocs.remarkStructure)
+                .use(remarkMarkAndUnravel)
+                .use(remarkCodeToHtml(highlighter))
+                .use(remarkExtractFirstHeading)
+                .use(() => {
+                    return (tree, file) => {
+                        file.data.ast = tree
+                    }
+                })
+        )
     } else {
         return (
             remark()

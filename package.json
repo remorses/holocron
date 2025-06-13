@@ -17,5 +17,8 @@
     },
     "repository": "https://github.com/remorses/",
     "author": "remorses <beats.by.morse@gmail.com>",
-    "license": ""
+    "license": "",
+    "dependencies": {
+        "@types/node": "^24.0.1"
+    }
 }
