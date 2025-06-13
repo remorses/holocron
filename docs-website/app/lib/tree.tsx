@@ -445,7 +445,7 @@ function updateOrAddPage(
 export interface PageDataForTree {
     slug: string
     title?: string
-    icon?: string
+    icon?: string | null
 }
 
 interface UpdateTreeParams {

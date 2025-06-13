@@ -38,7 +38,6 @@ export function generateToc(
             return
         }
 
-        // @ts-expect-error hProperties from mdast-util-to-hast
         const id = node.data?.hProperties?.id || title
         const url = `#${slugs.slug(id)}`
 

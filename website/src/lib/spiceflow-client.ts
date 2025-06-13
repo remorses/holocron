@@ -6,5 +6,3 @@ export const apiClient = createSpiceflowClient<SpiceflowApp>('/', {
         return { credentials: 'include' }
     },
 })
-
-type x = SpiceflowApp['_routes']['api']['createUploadSignedUrl']['post']['body']

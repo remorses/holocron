@@ -3,7 +3,9 @@ import clsx from 'clsx'
 
 import React, { lazy, Suspense } from 'react'
 
-const Katex = lazy(() => import('@matejmazur/react-katex'))
+const Katex = lazy(() =>
+    import('@matejmazur/react-katex').then((x) => x.default),
+)
 
 export const Math: React.FC<{
     math: string

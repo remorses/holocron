@@ -30,7 +30,7 @@ export function UploadButton({
             )
             const contentType = file.type
             const { error, data } =
-                await apiClient.api.createUploadSignedUrl.put({
+                await apiClient.api.createUploadSignedUrl.post({
                     key: filename,
                     contentType,
                 })

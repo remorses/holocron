@@ -175,7 +175,7 @@ model MarkdownPage {
   // id    String @unique @id
   tabId        String
   tab          Tab       @relation(fields: [tabId], references: [tabId], onDelete: Cascade)
-  title        String?   @db.Text
+  title        String    @db.Text
   markdown     String    @db.Text
   createdAt    DateTime  @default(now())
   // updatedAt DateTime @updatedAt
@@ -217,6 +217,7 @@ model Site {
   domains            Domain[]
   githubInstallation GithubInstallation? @relation(fields: [installationId, orgId], references: [installationId, orgId])
   installationId     Int?
+  customization      SiteCustomization?
 
   @@index([createdAt])
 }
@@ -256,4 +257,12 @@ model GithubInstallation {
 enum GithubAccountType {
   USER
   ORGANIZATION
+}
+
+model SiteCustomization {
+  siteId     String  @id
+  faviconUrl String?
+  logoUrl    String?
+  color      String?
+  site       Site    @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
 }

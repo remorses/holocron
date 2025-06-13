@@ -4,7 +4,7 @@ import { describe, expect } from 'vitest'
 import { remark } from 'remark'
 import { visit } from 'unist-util-visit'
 import { Root } from 'mdast'
-import { processorMd, processorMdx } from './mdx'
+import { processMdx } from './mdx'
 
 describe('GitHub Blockquotes Plugin', () => {
     test('transforms GitHub-style blockquotes correctly', async () => {
@@ -17,7 +17,7 @@ describe('GitHub Blockquotes Plugin', () => {
 
         `
 
-        const result = await processorMdx.process(markdown)
+        const result = await processMdx({ markdown, extension: 'mdx' })
         const data = result.data as { ast: Root }
 
         // Check the full output
@@ -28,5 +28,4 @@ describe('GitHub Blockquotes Plugin', () => {
           "
         `)
     })
-
 })

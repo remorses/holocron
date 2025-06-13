@@ -1,38 +1,33 @@
-import type { Route } from '.react-router/types/app/routes/+types/$'
-import { ReactPortal } from 'react'
-import fs from 'fs'
+import type { Route } from './+types/$'
 
 import { TrieveSDK } from 'trieve-ts-sdk'
-
-import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
 
 import { generateToc } from '@/lib/toc'
 import { prisma } from 'db'
 import { DocsLayout } from 'fumadocs-ui/layouts/docs'
 
-import defaultMdxComponents from 'fumadocs-ui/mdx'
 import {
     DocsBody,
     DocsDescription,
     DocsPage,
     DocsTitle,
 } from 'fumadocs-ui/page'
-import { SafeMdxRenderer, type CustomTransformer } from 'safe-mdx/src/safe-mdx'
 
 import { Suspense } from 'react'
 
 import { processMdx } from '@/lib/mdx'
 import { buildTree } from '@/lib/tree'
 import { TrieveSearchDialog } from '@/trieve/search-dialog-trieve'
+import { PageTree } from 'fumadocs-core/server'
 import { SharedProps } from 'fumadocs-ui/components/dialog/search'
 import { RootProvider } from 'fumadocs-ui/provider/base'
-import { mdxComponents } from '@/components/mdx-components'
-import { PageTree } from 'fumadocs-core/server'
+
 export function meta({ data }: Route.MetaArgs) {
+    if (!data) return {}
     const site = data.site
     const customization = site?.customization
-    const suffix = customization?.seoTitleSuffix || ''
-    const og = data.page.ogImage
+    const suffix = ''
+    const og = '' // TODO generate og image
     const favicon = customization?.faviconUrl
     return [
         {
@@ -75,8 +70,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                 take: 1,
             },
             customization: true,
-            analytics: true,
-            aiCustomization: true,
         },
     })
 
@@ -87,7 +80,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
     const tab = site.tabs[0]
     if (!tab) {
-        console.log('Tab not found for site:', site?.id)
+        console.log('Tab not found for site:', site?.siteId)
         throw new Response('Tab not found', { status: 404 })
     }
 
@@ -141,30 +134,23 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     const tree = buildTree(allPages)
     // console.log('tree', tree)
 
-
     // fs.writeFileSync('scripts/rendered-mdx.mdx', page.markdown)
     // fs.writeFileSync('scripts/rendered-mdx.jsonc', JSON.stringify(ast, null, 2))
 
-    const title = file.data.title || page.title || ''
-    const description =
-        file.data.description ||
-        // page.frontmatter?.description ||
-        page.description ||
-        ''
-
-    const tableOfContents = generateToc(ast)
+    const { data } = await processMdx({
+        extension: page.extension,
+        markdown: page.markdown,
+    })
+    const tableOfContents = generateToc(data.ast)
 
     return {
+        ...data,
         page,
-        ast,
-        title,
-        description,
         toc: tableOfContents,
         tree,
         site,
     }
 }
-
 
 let trieveClient: TrieveSDK
 
@@ -200,9 +186,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                         <DocsDescription>{description}</DocsDescription>
                     )}
                     <DocsBody>
-                        <Suspense fallback={<div>Loading...</div>}>
-
-                        </Suspense>
+                        <Suspense fallback={<div>Loading...</div>}></Suspense>
                     </DocsBody>
                 </DocsPage>
             </DocsLayout>

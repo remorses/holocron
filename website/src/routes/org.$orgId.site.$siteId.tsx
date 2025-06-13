@@ -34,6 +34,7 @@ export async function loader({
             org: true,
             domains: true,
             tabs: true,
+            customization: true,
         },
     })
 
@@ -90,16 +91,11 @@ export default function Page({
 }
 
 function Content() {
-    const { fn: update, isLoading } = useThrowingFn({
-        async fn() {
-            await updateSite({ siteId, logoUrl, color })
-        },
-    })
     const { site, host, url } = useLoaderData<typeof loader>()
-    const [logoUrl, setLogoUrl] = useState(site.logoUrl)
+    const [logoUrl, setLogoUrl] = useState(site.customization?.logoUrl)
     const iframeRef = useRef<HTMLIFrameElement>(null)
 
-    const [color, setColor] = useState(site.color || '')
+    const [color, setColor] = useState(site.customization?.color || '')
     useEffect(() => {
         updatePageProps({ logoUrl, color: color || undefined }, iframeRef)
     }, [color, logoUrl])

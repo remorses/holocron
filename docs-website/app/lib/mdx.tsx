@@ -16,7 +16,7 @@ import {
     transformerNotationWordHighlight,
 } from '@shikijs/transformers'
 import { Root, Heading } from 'mdast'
-import {bundledLanguages} from 'shiki/langs' // every grammar object
+import { bundledLanguages } from 'shiki/langs' // every grammar object
 
 import { visit } from 'unist-util-visit'
 import { remarkGitHubBlockquotes } from './github-blockquotes'
@@ -107,7 +107,7 @@ export const getProcessor = memoize(async function getProcessor(
         langs: Object.keys(bundledLanguages),
     })
 
-    if (extension === 'mdx') {
+    if (typeof extension === 'string' && extension.endsWith('mdx')) {
         return remark()
             .use(remarkMdx)
             .use(remarkFrontmatter, ['yaml'])
@@ -165,7 +165,7 @@ export async function processMdx({
     extension,
 }: {
     markdown: string
-    extension?: 'mdx' | 'md'
+    extension?: string
 }) {
     const processor = await getProcessor(extension)
     const file = processor.processSync(mdx)
@@ -188,6 +188,7 @@ export async function processMdx({
     return {
         data: {
             ...data,
+
             title,
             description,
             frontmatter,
