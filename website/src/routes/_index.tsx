@@ -33,5 +33,17 @@ export async function loader({ request }: Route.LoaderArgs) {
         })
     }
     const orgId = org?.orgId || ''
-    return redirect(href('/org/:orgId/onboarding', { orgId }))
+    const site = await prisma.site.findFirst({
+        where: {
+            orgId,
+        },
+        orderBy: {
+            createdAt: 'desc',
+        },
+    })
+    if (!site) {
+        return redirect(href('/org/:orgId/onboarding', { orgId }))
+    }
+    const siteId = site.siteId
+    return redirect(href('/org/:orgId/site/:siteId', { orgId, siteId }))
 }

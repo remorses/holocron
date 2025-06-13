@@ -20,8 +20,7 @@ jobs:
         with:
           version: 10
           run_install: false
-      - name: Install pnpm dependencies (with cache)
-        uses: covbot/pnpm-install-with-cache@v1
+      - run: pnpm install --frozen-lockfile=false
       # scripts
       - run: pnpm build
       - run: pnpm test
