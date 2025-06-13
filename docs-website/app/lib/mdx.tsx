@@ -1,4 +1,6 @@
 import remarkFrontmatter from 'remark-frontmatter'
+import memoize from 'micro-memoize'
+
 import YAML from 'js-yaml'
 import { remarkMarkAndUnravel } from 'safe-mdx'
 
@@ -6,7 +8,7 @@ import { createStyleTransformer } from 'fumadocs-core/highlight'
 import * as mdxPluginsFumadocs from 'fumadocs-core/mdx-plugins'
 import { remark } from 'remark'
 import remarkMdx from 'remark-mdx'
-import { codeToHtml } from 'shiki'
+import { codeToHtml, createHighlighter, Highlighter } from 'shiki'
 import {} from 'js-yaml'
 import {
     transformerNotationDiff,
@@ -23,14 +25,12 @@ import { StructuredData } from 'fumadocs-core/mdx-plugins'
 
 export type { DocumentRecord, StructuredData }
 
-const remarkCodeToHtml = () => {
-    return async (tree: Root) => {
-        const promises: Promise<void>[] = []
-
+const remarkCodeToHtml = (highlighter: Highlighter) => () => {
+    return (tree: Root) => {
         visit(tree, 'code', (node) => {
             const language = node.lang || 'text'
 
-            const promise = codeToHtml(node.value, {
+            const html = highlighter.codeToHtml(node.value, {
                 lang: language,
                 // theme: 'github-dark',
 
@@ -52,19 +52,11 @@ const remarkCodeToHtml = () => {
                     }),
                 ],
             })
-                .then((html) => {
-                    // node.value = html
-                    node.data ||= {}
-                    node.data.html = html
-                })
-                .catch((e) => {
-                    notifyError(e, 'shiki code html generation')
-                })
 
-            promises.push(promise)
+            node.data ||= {}
+            node.data.html = html
         })
 
-        await Promise.allSettled(promises)
         return tree
     }
 }
@@ -105,46 +97,66 @@ const remarkExtractFirstHeading = () => {
     }
 }
 
-export const processorMdx = remark()
-    .use(remarkMdx)
-    .use(remarkFrontmatter, ['yaml'])
-    .use(mdxPluginsFumadocs.remarkGfm)
-    .use(remarkGitHubBlockquotes)
-    .use(mdxPluginsFumadocs.remarkAdmonition)
-    .use(mdxPluginsFumadocs.remarkCodeTab)
-    .use(mdxPluginsFumadocs.remarkHeading)
-    .use(mdxPluginsFumadocs.remarkImage)
-    .use(mdxPluginsFumadocs.remarkSteps)
-    .use(mdxPluginsFumadocs.remarkStructure)
-    .use(remarkMarkAndUnravel)
-    .use(remarkCodeToHtml)
-    .use(remarkExtractFirstHeading)
-    .use(() => {
-        return (tree, file) => {
-            file.data.ast = tree
-        }
-    })
-export const processorMd = remark()
-    // .use(remarkMdx)
-    .use(remarkFrontmatter, ['yaml'])
-    .use(mdxPluginsFumadocs.remarkGfm)
-    // .use(remarkGitHubBlockquotes) // TODO remarkGitHubBlockquotes cannot be strigified later becaues the mdx ast nodes are not valid md
-    .use(mdxPluginsFumadocs.remarkAdmonition)
-    .use(mdxPluginsFumadocs.remarkCodeTab)
-    .use(mdxPluginsFumadocs.remarkHeading)
-    .use(mdxPluginsFumadocs.remarkImage)
-    .use(mdxPluginsFumadocs.remarkSteps)
-    .use(mdxPluginsFumadocs.remarkStructure)
-    // .use(remarkMarkAndUnravel)
-    .use(remarkCodeToHtml)
-
-    .use(remarkExtractFirstHeading)
-    .use(() => {
-        return (tree, file) => {
-            file.data.ast = tree
-        }
+export const getProcessor = memoize(async function getProcessor(
+    extension?: string,
+) {
+    const highlighter = await createHighlighter({
+        themes: ['github-dark', 'github-light'],
+        langs: [
+            'javascript',
+            'typescript',
+            'css',
+            'html',
+            'json',
+            'markdown',
+            'yaml',
+        ],
     })
 
+    if (extension === 'mdx') {
+        return remark()
+            .use(remarkMdx)
+            .use(remarkFrontmatter, ['yaml'])
+            .use(mdxPluginsFumadocs.remarkGfm)
+            .use(remarkGitHubBlockquotes)
+            .use(mdxPluginsFumadocs.remarkAdmonition)
+            .use(mdxPluginsFumadocs.remarkCodeTab)
+            .use(mdxPluginsFumadocs.remarkHeading)
+            .use(mdxPluginsFumadocs.remarkImage)
+            .use(mdxPluginsFumadocs.remarkSteps)
+            .use(mdxPluginsFumadocs.remarkStructure)
+            .use(remarkMarkAndUnravel)
+            .use(remarkCodeToHtml(highlighter))
+            .use(remarkExtractFirstHeading)
+            .use(() => {
+                return (tree, file) => {
+                    file.data.ast = tree
+                }
+            })
+    } else {
+        return (
+            remark()
+                // .use(remarkMdx)
+                .use(remarkFrontmatter, ['yaml'])
+                .use(mdxPluginsFumadocs.remarkGfm)
+                // .use(remarkGitHubBlockquotes) // TODO remarkGitHubBlockquotes cannot be stringified later because the mdx ast nodes are not valid md
+                .use(mdxPluginsFumadocs.remarkAdmonition)
+                .use(mdxPluginsFumadocs.remarkCodeTab)
+                .use(mdxPluginsFumadocs.remarkHeading)
+                .use(mdxPluginsFumadocs.remarkImage)
+                .use(mdxPluginsFumadocs.remarkSteps)
+                .use(mdxPluginsFumadocs.remarkStructure)
+                // .use(remarkMarkAndUnravel)
+                .use(remarkCodeToHtml(highlighter))
+                .use(remarkExtractFirstHeading)
+                .use(() => {
+                    return (tree, file) => {
+                        file.data.ast = tree
+                    }
+                })
+        )
+    }
+})
 type ProcessorData = {
     title?: string
     description?: string
@@ -161,8 +173,8 @@ export async function processMdx({
     markdown: string
     extension?: 'mdx' | 'md'
 }) {
-    const processor = extension === 'mdx' ? processorMdx : processorMd
-    const file = await processor.process(mdx)
+    const processor = await getProcessor(extension)
+    const file = processor.processSync(mdx)
     const data = file.data as ProcessorData
     const frontmatterYaml = data.ast?.children.find(
         (node) => node.type === 'yaml',

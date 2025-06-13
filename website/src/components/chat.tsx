@@ -1,33 +1,19 @@
 'use client'
 import {
-    RiAttachment2,
-    RiCodeSSlashLine,
-    RiLeafLine,
-    RiMicLine,
-    RiShareCircleLine,
-    RiShareLine,
-    RiShining2Line,
+    RiAttachment2
 } from '@remixicon/react'
 import { createIdGenerator, UIMessage } from 'ai'
 import { useState, useTransition } from 'react'
 import { ChatMessage } from 'website/src/components/chat-message'
 
-import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator,
-} from 'website/src/components/ui/breadcrumb'
 import { Button } from 'website/src/components/ui/button'
 import { ScrollArea } from 'website/src/components/ui/scroll-area'
 
 import { useStickToBottom } from 'use-stick-to-bottom'
 
 import { fullStreamToUIMessages } from '../lib/process-chat'
-import { chatStateContainer, useChatState } from '../lib/state'
 import { apiClient } from '../lib/spiceflow-client'
+import { chatStateContainer, useChatState } from '../lib/state'
 
 export default function Chat({}) {
     const { scrollRef, contentRef, scrollToBottom } = useStickToBottom()
@@ -35,7 +21,7 @@ export default function Chat({}) {
     return (
         <ScrollArea
             ref={scrollRef}
-            className='[&>div>div]:h-full max-h-full flex flex-col w-full grow md:rounded-s-[inherit] min-[1024px]:rounded-e-3xl bg-background'
+            className='[&>div>div]:h-full  max-h-full flex flex-col w-full grow md:rounded-s-[inherit] min-[1024px]:rounded-e-3xl bg-background'
         >
             {/* Chat */}
             <Messages ref={contentRef} />
@@ -84,20 +70,20 @@ function Footer() {
                     messages: allMessages,
                 })
             if (error) throw error
+            // Clear the input
+            setText('')
             for await (const newMessages of fullStreamToUIMessages({
                 fullStream: generator,
                 messages: allMessages,
                 generateId,
             })) {
-                // Clear the input
-                setText('')
                 chatStateContainer?.current?.setState({ messages: newMessages })
             }
         })
     }
 
     return (
-        <div className='sticky bottom-0 pt-4 md:pt-8 z-50'>
+        <div className='sticky bottom-0 pt-4 md:pt-8 pr-4 z-50 w-full'>
             <div className='max-w-3xl mx-auto bg-background rounded-[20px] '>
                 <div className='relative rounded-[20px] border border-transparent bg-muted transition-colors focus-within:bg-muted/50 focus-within:border-input has-[:disabled]:cursor-not-allowed  [&:has(input:is(:disabled))_*]:pointer-events-none'>
                     <textarea

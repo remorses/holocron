@@ -15,14 +15,6 @@ import {
 import { TeamSwitcher } from './team-switcher'
 import Chat from './chat'
 
-const data = {
-    user: {
-        name: 'Sofia Safier',
-        email: 'sofia@safier.com',
-        avatar: 'https://raw.githubusercontent.com/origin-space/origin-images/refs/heads/main/exp6/user-01_l4if9t.png',
-    },
-}
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return (
         <Sidebar
@@ -34,7 +26,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 className='grid grow h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
                 style={{ height: 'var(--sidebar-header-height, 64px)' }}
             >
-                <SidebarHeader className='p-0 row-span-1 flex items-center'>
+                <SidebarHeader className='p-0 row-span-1 flex items-center pr-4'>
                     <TeamSwitcher
                         teams={[
                             {
