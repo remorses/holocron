@@ -21,6 +21,7 @@ import { TrieveSearchDialog } from 'docs-website/src/trieve/search-dialog-trieve
 import { PageTree } from 'fumadocs-core/server'
 import { SharedProps } from 'fumadocs-ui/components/dialog/search'
 import { RootProvider } from 'fumadocs-ui/provider/base'
+import { MarkdownRender } from '../lib/safe-mdx'
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data) return {}
@@ -186,7 +187,9 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                         <DocsDescription>{description}</DocsDescription>
                     )}
                     <DocsBody>
-                        <Suspense fallback={<div>Loading...</div>}></Suspense>
+                        <Suspense fallback={<div>Loading...</div>}>
+                            <MarkdownRender ast={ast} />
+                        </Suspense>
                     </DocsBody>
                 </DocsPage>
             </DocsLayout>

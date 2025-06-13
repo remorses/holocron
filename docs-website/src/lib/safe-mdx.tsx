@@ -25,12 +25,16 @@ const customTransformer: CustomTransformer = (node, transform) => {
 
 export const MarkdownRender = memo(function MarkdownRender({
     content,
+    ast,
 }: {
-    content: string
+    content?: string
+    ast?: any
 }) {
-    const processor = use(getProcessor('mdx'))
-    const file = processor.processSync(content)
-    const ast = file.data.ast
+    if (!ast) {
+        const processor = use(getProcessor('mdx'))
+        const file = processor.processSync(content)
+        ast = file.data.ast
+    }
     return (
         <SafeMdxRenderer
             customTransformer={customTransformer}
