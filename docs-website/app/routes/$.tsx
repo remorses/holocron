@@ -2,7 +2,7 @@ import type { Route } from './+types/$'
 
 import { TrieveSDK } from 'trieve-ts-sdk'
 
-import { generateToc } from '@/lib/toc'
+import { generateToc } from 'docs-website/src/lib/toc'
 import { prisma } from 'db'
 import { DocsLayout } from 'fumadocs-ui/layouts/docs'
 
@@ -15,9 +15,9 @@ import {
 
 import { Suspense } from 'react'
 
-import { processMdx } from '@/lib/mdx'
-import { buildTree } from '@/lib/tree'
-import { TrieveSearchDialog } from '@/trieve/search-dialog-trieve'
+import { processMdx } from 'docs-website/src/lib/mdx'
+import { buildTree } from 'docs-website/src/lib/tree'
+import { TrieveSearchDialog } from 'docs-website/src/trieve/search-dialog-trieve'
 import { PageTree } from 'fumadocs-core/server'
 import { SharedProps } from 'fumadocs-ui/components/dialog/search'
 import { RootProvider } from 'fumadocs-ui/provider/base'

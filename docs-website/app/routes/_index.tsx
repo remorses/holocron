@@ -1,4 +1,4 @@
-import Page, { loader } from '@/routes/$'
+import Page, { loader } from 'docs-website/src/routes/$'
 
 export { loader }
 

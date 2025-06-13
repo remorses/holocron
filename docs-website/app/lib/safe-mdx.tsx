@@ -1,4 +1,4 @@
-import { mdxComponents } from '@/components/mdx-components'
+import { mdxComponents } from 'docs-website/src/components/mdx-components'
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
 import { CustomTransformer, SafeMdxRenderer } from 'safe-mdx'
 import { getProcessor, processMdx } from './mdx'
