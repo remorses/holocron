@@ -4,18 +4,29 @@ import { Spiceflow } from 'spiceflow'
 import { z } from 'zod'
 import { notifyError } from './errors'
 import { s3 } from './s3'
+import { env } from './env'
 
 // Create the main spiceflow app with comprehensive routes and features
 export const app = new Spiceflow({ basePath: '/api' })
     // Health check endpoint
-    .get('/health', () => ({
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-    }))
-    .post(
-        '/generateMessage',
-        async function* generator({ request }) {
+    .route({
+        method: 'GET',
+        path: '/health',
+        handler() {
+            return {
+                status: 'healthy',
+                timestamp: new Date().toISOString(),
+                uptime: process.uptime(),
+            }
+        },
+    })
+    .route({
+        method: 'POST',
+        path: '/generateMessage',
+        request: z.object({
+            messages: z.array(z.custom<UIMessage>()),
+        }),
+        async *handler({ request }) {
             const { messages } = await request.json()
             const result = streamText({
                 model: openai.responses('gpt-4.1-nano'),
@@ -80,34 +91,30 @@ export const app = new Spiceflow({ basePath: '/api' })
                 yield part
             }
         },
-        {
-            body: z.object({
-                messages: z.array(z.custom<UIMessage>()),
-            }),
-        },
-    )
-    .post(
-        '/createUploadSignedUrl',
-
-        async ({ request }) => {
+    })
+    .route({
+        method: 'POST',
+        path: '/createUploadSignedUrl',
+        request: z.object({
+            key: z.string().min(1, 'Key is required'),
+            contentType: z.string().optional(),
+        }),
+        async handler({ request }) {
             const body = await request.json()
 
             const signedUrl = s3.presign(body.key, {
                 method: 'PUT',
             })
+            const finalUrl = new URL(body.key, env.UPLOADS_BASE_URL).toString()
 
             return {
                 success: true,
+                path: body.key,
                 signedUrl,
+                finalUrl,
             }
         },
-        {
-            body: z.object({
-                key: z.string().min(1, 'Key is required'),
-                contentType: z.string().optional(),
-            }),
-        },
-    )
+    })
     // Error handling middleware
     .onError(({ error }) => {
         notifyError(error)

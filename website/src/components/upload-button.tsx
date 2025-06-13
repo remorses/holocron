@@ -30,13 +30,13 @@ export function UploadButton({
             )
             const contentType = file.type
             const { error, data } =
-                await apiClient.api.createUploadSignedUrl.post({
+                await apiClient.api.createUploadSignedUrl.put({
                     key: filename,
                     contentType,
                 })
             if (error) throw error
 
-            const { signedUrl, x } = data
+            const { signedUrl, finalUrl } = data
             // Do a PUT to the signed URL
             const uploadResp = await fetch(signedUrl, {
                 method: 'PUT',
@@ -52,8 +52,8 @@ export function UploadButton({
                 console.error(error)
                 throw new Error('Error uploading file')
             }
-            const src = new URL(data?.path!, env.UPLOADS_BASE_URL).toString()
-            onUploadFinished({ src })
+
+            onUploadFinished({ src: finalUrl })
         },
     })
     return (

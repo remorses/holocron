@@ -1228,8 +1228,8 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       spiceflow:
-        specifier: ^1.10.1
-        version: 1.10.1
+        specifier: ^1.11.3
+        version: 1.11.3
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.3.1
@@ -7458,9 +7458,6 @@ packages:
   lodash.castarray@4.4.0:
     resolution: {integrity: sha512-aVx8ztPv7/2ULbArGJ2Y42bG1mEQ5mGjpdvrbJcJFU3TbYybe+QlLS4pst9zV52ymy2in1KpFPiZnAOATxD4+Q==}
 
-  lodash.clonedeep@4.5.0:
-    resolution: {integrity: sha512-H5ZhCF25riFd9uB5UCkVKo61m3S/xZk1x4wA6yp/L3RFP6Z/eHH1ymQcGLo7J3GMPfm0V/7m1tryHuGVxpqEBQ==}
-
   lodash.debounce@4.0.8:
     resolution: {integrity: sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==}
 
@@ -9220,10 +9217,10 @@ packages:
   spdx-license-ids@3.0.21:
     resolution: {integrity: sha512-Bvg/8F5XephndSK3JffaRqdT+gyhfqIPwDHpX80tJrF8QQRYMo8sNMeaZ2Dp5+jhwKnUmIOyFFQfHRkjJm5nXg==}
 
-  spiceflow@1.10.1:
-    resolution: {integrity: sha512-4hG//4RETYUJi5gnaFEuEoW5Tcy2MQbwOw7lHY6z8Uon5P+oMFQ26UancJx7epSau5WMK37vG4ynOk1HkMD0Rg==}
+  spiceflow@1.11.3:
+    resolution: {integrity: sha512-SDTHVYcZoq9Nn4mVycpUrEKisr6JUoeukqE+y5zp8fSaeZvsbtfrJuBV7gKIyGMUGRdwj5Xe4nIIxBNjZVT7/Q==}
     peerDependencies:
-      '@modelcontextprotocol/sdk': ^1.0.4
+      '@modelcontextprotocol/sdk': '*'
     peerDependenciesMeta:
       '@modelcontextprotocol/sdk':
         optional: true
@@ -10377,6 +10374,9 @@ packages:
 
   zod@3.25.63:
     resolution: {integrity: sha512-3ttCkqhtpncYXfP0f6dsyabbYV/nEUW+Xlu89jiXbTBifUfjaSqXOG6JnQPLtqt87n7KAmnMqcjay6c0Wq0Vbw==}
+
+  zod@3.25.64:
+    resolution: {integrity: sha512-hbP9FpSZf7pkS7hRVUrOjhwKJNyampPgtXKc3AN6DsWtoHsg2Sb4SQaS4Tcay380zSwd2VPo9G9180emBACp5g==}
 
   zustand@5.0.5:
     resolution: {integrity: sha512-mILtRfKW9xM47hqxGIxCv12gXusoY/xTSHBYApXozR0HmQv299whhBeeAcRy+KrPPybzosvJBCOmVjq6x12fCg==}
@@ -17844,8 +17844,6 @@ snapshots:
 
   lodash.castarray@4.4.0: {}
 
-  lodash.clonedeep@4.5.0: {}
-
   lodash.debounce@4.0.8: {}
 
   lodash.defaults@4.2.0: {}
@@ -20242,15 +20240,16 @@ snapshots:
 
   spdx-license-ids@3.0.21: {}
 
-  spiceflow@1.10.1:
+  spiceflow@1.11.3:
     dependencies:
       '@medley/router': 0.2.1
+      '@standard-schema/spec': 1.0.0
+      copy-anything: 3.0.5
       eventsource-parser: 3.0.2
-      lodash.clonedeep: 4.5.0
       openapi-types: 12.1.3
       superjson: 2.2.2
-      zod: 3.25.63
-      zod-to-json-schema: 3.24.5(zod@3.25.63)
+      zod: 3.25.64
+      zod-to-json-schema: 3.24.5(zod@3.25.64)
 
   split2@4.2.0: {}
 
@@ -21519,9 +21518,15 @@ snapshots:
     dependencies:
       zod: 3.25.63
 
+  zod-to-json-schema@3.24.5(zod@3.25.64):
+    dependencies:
+      zod: 3.25.64
+
   zod@3.24.1: {}
 
   zod@3.25.63: {}
+
+  zod@3.25.64: {}
 
   zustand@5.0.5(@types/react@19.1.8)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0)):
     optionalDependencies:

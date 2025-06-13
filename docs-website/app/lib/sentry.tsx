@@ -1,5 +1,3 @@
-
-
 import React, { Fragment } from 'react'
 import * as Sentry from '@sentry/browser'
 import { ErrorBoundary as ReactErrorBoundary } from 'react-error-boundary'
@@ -17,7 +15,6 @@ export async function notifyError(error, msg?: string) {
     await Sentry.flush(1000) // delivery timeout in ms
 }
 
-
 function fallbackRender({ error, resetErrorBoundary }) {
     // Call resetErrorBoundary() to reset the error boundary and retry the render.
 
@@ -33,7 +30,7 @@ export const ErrorBoundary: any = ({ children }) => {
     return (
         <ReactErrorBoundary
             onError={(err, info) => {
-                notifyError(err, info.componentStack ||'')
+                notifyError(err, info.componentStack || '')
             }}
             fallbackRender={fallbackRender}
         >

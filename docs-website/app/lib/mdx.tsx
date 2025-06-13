@@ -21,7 +21,7 @@ import { notifyError } from './sentry'
 import { DocumentRecord } from 'fumadocs-core/search/algolia'
 import { StructuredData } from 'fumadocs-core/mdx-plugins'
 
-export { DocumentRecord, StructuredData }
+export type { DocumentRecord, StructuredData }
 
 const remarkCodeToHtml = () => {
     return async (tree: Root) => {
