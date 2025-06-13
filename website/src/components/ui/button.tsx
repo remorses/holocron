@@ -80,7 +80,7 @@ function Button({
             disabled={disabled || isLoading}
             {...props}
         >
-            {children}
+            {isLoading ? 'loading...' : children}
         </Comp>
     )
 }

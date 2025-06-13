@@ -100,24 +100,28 @@ export const app = new Spiceflow({ basePath: '/api' })
         path: '/githubSync',
         request: z.object({
             siteId: z.string().min(1, 'siteId is required'),
-            tabId: z.string().min(1, 'tabId is required'),
+            // tabId: z.string().min(1, 'tabId is required'),
         }),
         async handler({ request, state }) {
             const { userId } = await getSession({ request })
-            const { siteId, tabId } = await request.json()
+            const { siteId } = await request.json()
 
             if (!userId) {
                 throw new Error('Missing x-user-id header')
             }
             const site = await prisma.site.findFirst({
                 where: { siteId, org: { users: { some: { userId } } } },
-                include: {
-
-                }
+                include: { tabs: true },
             })
+
             if (!site) {
                 throw new Error('Site not found for this user')
             }
+            const tab = site.tabs.find((x) => x)
+            if (!tab) {
+                throw new Error('Tab not found for this site')
+            }
+            const tabId = tab.tabId
             const orgId = site.orgId
             const name = site.name
             const pages = pagesFromGithub({
@@ -131,6 +135,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 siteId,
                 tabId,
                 name: site.name || '',
+                trieveDatasetId: site.trieveDatasetId || undefined,
                 pages,
             })
             // Implement your sync logic here

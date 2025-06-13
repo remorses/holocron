@@ -78,7 +78,8 @@ export async function action({ request, params }: Route.ActionArgs) {
             owner,
             repo,
         })
-        const internalHost = `${githubAccountLogin}.${env.APPS_DOMAIN}`
+        const randomHash = Math.random().toString(36).substring(2, 10)
+        const internalHost = `${githubAccountLogin}-${randomHash}.${env.APPS_DOMAIN}`
 
         const [result, site] = await Promise.all([
             !exists &&
@@ -97,6 +98,8 @@ export async function action({ request, params }: Route.ActionArgs) {
                 data: {
                     name: repo,
                     orgId: orgId,
+                    githubOwner: owner,
+                    githubRepo: repo,
                     installationId: githubInstallation.installationId,
                     domains: {
                         create: {
@@ -114,7 +117,7 @@ export async function action({ request, params }: Route.ActionArgs) {
         const tabId = 'main'
         await syncSite({
             pages,
-
+            trieveDatasetId: site.trieveDatasetId || undefined,
             tabId,
             orgId,
             siteId,

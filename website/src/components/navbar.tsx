@@ -10,6 +10,9 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from 'website/src/components/ui/popover'
+import { useThrowingFn } from '../lib/hooks'
+import { apiClient } from '../lib/spiceflow-client'
+import { useParams } from 'react-router'
 
 // Navigation links array to be used in both desktop and mobile menus
 const navigationLinks = [
@@ -43,6 +46,15 @@ function Logo() {
 }
 
 export default function NavBar() {
+    const { siteId } = useParams()
+    const { fn: sync, isLoading } = useThrowingFn({
+        async fn() {
+            const { data, error } = await apiClient.api.githubSync.post({
+                siteId: siteId!,
+            })
+            if (error) throw error
+        },
+    })
     return (
         <header className=''>
             <div className='flex h-16 items-center justify-between gap-4'>
@@ -60,7 +72,11 @@ export default function NavBar() {
                         <NavigationMenu className='max-md:hidden'>
                             <NavigationMenuList className='gap-2'>
                                 <NavigationMenuItem>
-                                    <Button size={'sm'}>
+                                    <Button
+                                        isLoading={isLoading}
+                                        onClick={sync}
+                                        size={'sm'}
+                                    >
                                         Sync With GitHub
                                     </Button>
                                 </NavigationMenuItem>

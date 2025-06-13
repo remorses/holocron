@@ -30,14 +30,12 @@ type Page = {
 
 export async function syncSite({
     siteId,
-
-    name,
+    trieveDatasetId,
     tabId,
-    orgId,
     pages,
 }: {
     siteId: string
-
+    trieveDatasetId?: string
     name?: string
     tabId: string
     orgId: string
@@ -45,29 +43,8 @@ export async function syncSite({
 }) {
     console.log('Starting import script...')
 
-    // Ensure the site exists or create it if it doesn't
-    console.log(`Upserting site with ID: ${siteId}, name: ${name}...`)
-    const site = await prisma.site.upsert({
-        where: { siteId },
-        update: { name }, // No updates needed if it exists
-        create: {
-            siteId,
-            name,
-            orgId,
-        },
-        include: {
-            domains: {
-                where: {
-                    domainType: 'internalDomain',
-                },
-            },
-        },
-    })
-    console.log(`Site upsert complete: ${siteId} (${site.name}) `)
-
     // Find existing domain or create a new one
     console.log(`Looking for existing internal domain for site: ${siteId}...`)
-    const existingDomain = site.domains.find((x) => x)
 
     console.log(`Using site: ${siteId}`)
 
@@ -92,7 +69,7 @@ export async function syncSite({
     await syncPages({
         tabId,
         siteId,
-        trieveDatasetId: site.trieveDatasetId || undefined,
+        trieveDatasetId,
         pages,
     })
 }
@@ -281,7 +258,8 @@ export async function* pagesFromGithub({
     basePath = '',
     signal,
     urlLikeFrontmatterFields = [],
-    onlyGithubPaths = new Set<string>(),
+    onlyGithubPaths = new Set<string>(), // TODO probably not needed
+    forceFullSync = false,
 }): AsyncGenerator<Page> {
     if (!installationId) throw new Error('Installation ID is required')
     const octokit = await getOctokit({ installationId })
@@ -297,6 +275,10 @@ export async function* pagesFromGithub({
             where: {
                 tab: { site: { installationId } },
             },
+            select: {
+                githubSha: true,
+                slug: true,
+            },
         }),
     ])
     console.timeEnd(`${owner}/${repo} - repo checks ${timeId}`)
@@ -307,7 +289,7 @@ export async function* pagesFromGithub({
     let branch = repoResult.data.default_branch
     const existingShas = new Set(existingFiles.map((f) => f.githubSha))
     const existingSlugs = new Set(existingFiles.map((f) => f.slug))
-    let maxBlobFetches = 4000
+    let maxBlobFetches = 10_000
     let blobFetches = 0
 
     console.time(`${owner}/${repo} - fetch files ${timeId}`)
@@ -325,12 +307,12 @@ export async function* pagesFromGithub({
                 return false
             }
             if (onlyGithubPaths.size && file.path) {
-                // in case the item is not in Framer fetch it again
-                if (!onlyGithubPaths.has(file.path)) {
-                    return true
-                }
-                return false
+                return onlyGithubPaths.has(file.path)
             }
+            if (!forceFullSync && file.sha) {
+                return !existingShas.has(file.sha)
+            }
+
             blobFetches++
             return true
         },
