@@ -1,8 +1,12 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
+@import "docs-website/app/app.css";
 
 @custom-variant dark (&:is(.dark *));
+
+@source "docs-website";
+@source "fumadocs-ui";
 
 :root {
     --background: oklch(1 0 0);

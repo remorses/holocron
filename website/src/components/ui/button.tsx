@@ -80,10 +80,7 @@ function Button({
             disabled={disabled || isLoading}
             {...props}
         >
-            <>
-                {isLoading && !asChild && <LoadingSpinner />}
-                {children}
-            </>
+            {children}
         </Comp>
     )
 }

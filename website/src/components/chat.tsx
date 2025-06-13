@@ -1,7 +1,5 @@
 'use client'
-import {
-    RiAttachment2
-} from '@remixicon/react'
+import { RiAttachment2 } from '@remixicon/react'
 import { createIdGenerator, UIMessage } from 'ai'
 import { useState, useTransition } from 'react'
 import { ChatMessage } from 'website/src/components/chat-message'
@@ -21,7 +19,7 @@ export default function Chat({}) {
     return (
         <ScrollArea
             ref={scrollRef}
-            className='[&>div>div]:h-full  max-h-full flex flex-col w-full grow md:rounded-s-[inherit] min-[1024px]:rounded-e-3xl bg-background'
+            className='[&>div>div]:h-full [&>div]:!block max-h-full flex flex-col grow bg-background'
         >
             {/* Chat */}
             <Messages ref={contentRef} />
@@ -36,7 +34,7 @@ function Messages({ ref }) {
     return (
         <div
             ref={ref}
-            className='relative h-full flex flex-col grow max-w-3xl w-full pr-4 mx-auto mt-6 space-y-6'
+            className='relative h-full flex flex-col grow  mt-6 space-y-6'
         >
             {messages.map((x) => {
                 return <ChatMessage key={x.id} message={x} />
@@ -47,13 +45,13 @@ function Messages({ ref }) {
 
 function Footer() {
     const [text, setText] = useState('')
-    const [isPending, startTransition] = useTransition()
+    const isPending = useChatState((x) => x.isChatGenerating)
     const messages = useChatState((x) => x?.messages || [])
 
-    const handleSubmit = () => {
-        startTransition(async () => {
-            const generateId = createIdGenerator()
-
+    const handleSubmit = async () => {
+        const generateId = createIdGenerator()
+        useChatState.setState({ isChatGenerating: true })
+        try {
             // Create user message
             const userMessage: UIMessage = {
                 id: generateId(),
@@ -64,7 +62,7 @@ function Footer() {
 
             // Call generateMessage with current messages plus user message
             const allMessages = [...messages, userMessage]
-            chatStateContainer?.current?.setState({ messages: allMessages })
+            useChatState.setState({ messages: allMessages })
             const { data: generator, error } =
                 await apiClient.api.generateMessage.post({
                     messages: allMessages,
@@ -77,9 +75,11 @@ function Footer() {
                 messages: allMessages,
                 generateId,
             })) {
-                chatStateContainer?.current?.setState({ messages: newMessages })
+                useChatState.setState({ messages: newMessages })
             }
-        })
+        } finally {
+            useChatState.setState({ isChatGenerating: false })
+        }
     }
 
     return (

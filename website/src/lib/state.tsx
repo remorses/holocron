@@ -22,8 +22,10 @@ export function useChatState<U>(
     if (!useStore) {
         throw new Error('useChatState must be used within a StateProvider')
     }
+    useChatState.setState = useStore.setState
     return useStore(selector)
 }
+useChatState.setState = ((x: State) => {}) as StoreApi<State>['setState']
 
 export const zustandContext = createContext<
     UseBoundStore<StoreApi<State>> | undefined

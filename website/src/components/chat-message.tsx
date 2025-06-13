@@ -26,11 +26,11 @@ export const ChatMessage = memo(function ChatMessage({
     children,
 }: ChatMessageProps) {
     console.log(`rendering message ${message.id}`)
-    const isChatGenerating = useChatState(x => x.isChatGenerating)
+    const isChatGenerating = useChatState((x) => x.isChatGenerating)
     return (
         <article
             className={cn(
-                'flex items-start gap-4  leading-relaxed',
+                'flex items-start max-w-full gap-4 min-w-0 leading-relaxed',
                 message.role === 'user' && 'justify-end',
             )}
         >
@@ -38,7 +38,7 @@ export const ChatMessage = memo(function ChatMessage({
                 className={cn(
                     message.role === 'user'
                         ? 'bg-muted px-4 py-3 rounded-xl'
-                        : 'space-y-4',
+                        : 'space-y-4 max-w-full',
                 )}
             >
                 <div className=' prose text-sm dark:prose-invert'>

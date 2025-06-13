@@ -16,6 +16,8 @@ import {
     transformerNotationWordHighlight,
 } from '@shikijs/transformers'
 import { Root, Heading } from 'mdast'
+import {bundledLanguages} from 'shiki/langs' // every grammar object
+
 import { visit } from 'unist-util-visit'
 import { remarkGitHubBlockquotes } from './github-blockquotes'
 import { notifyError } from './sentry'
@@ -102,15 +104,7 @@ export const getProcessor = memoize(async function getProcessor(
 ) {
     const highlighter = await createHighlighter({
         themes: ['github-dark', 'github-light'],
-        langs: [
-            'javascript',
-            'typescript',
-            'css',
-            'html',
-            'json',
-            'markdown',
-            'yaml',
-        ],
+        langs: Object.keys(bundledLanguages),
     })
 
     if (extension === 'mdx') {

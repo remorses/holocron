@@ -44,9 +44,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         ]}
                     />
                 </SidebarHeader>
-                <SidebarFooter className='p-0 row-span-23 flex items-center'>
+                <div className='p-0 grow row-span-23 flex flex-col '>
                     <Chat />
-                </SidebarFooter>
+                </div>
             </div>
         </Sidebar>
     )
