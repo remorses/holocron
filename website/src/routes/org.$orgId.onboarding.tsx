@@ -78,6 +78,8 @@ export async function action({ request, params }: Route.ActionArgs) {
             owner,
             repo,
         })
+        const internalHost = `${githubAccountLogin}.${env.APPS_DOMAIN}`
+
         const [result, site] = await Promise.all([
             !exists &&
                 createNewRepo({
@@ -96,17 +98,23 @@ export async function action({ request, params }: Route.ActionArgs) {
                     name: repo,
                     orgId: orgId,
                     installationId: githubInstallation.installationId,
+                    domains: {
+                        create: {
+                            host: internalHost,
+                            domainType: 'internalDomain',
+                        },
+                    },
                     // installationId,
                 },
             }),
         ])
-        const internalHost = `${githubAccountLogin}.${env.APPS_DOMAIN}`
+
         const siteId = site.siteId
         console.log(`created site ${siteId}`)
         const tabId = 'main'
         await syncSite({
             pages,
-            internalHost,
+
             tabId,
             orgId,
             siteId,

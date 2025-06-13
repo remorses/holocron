@@ -5,6 +5,9 @@ import { z } from 'zod'
 import { notifyError } from './errors'
 import { s3 } from './s3'
 import { env } from './env'
+import { pagesFromGithub, syncSite } from './sync'
+import { prisma } from 'db'
+import { getSession } from './better-auth'
 
 // Create the main spiceflow app with comprehensive routes and features
 export const app = new Spiceflow({ basePath: '/api' })
@@ -89,6 +92,54 @@ export const app = new Spiceflow({ basePath: '/api' })
                 }
                 console.log(part)
                 yield part
+            }
+        },
+    })
+    .route({
+        method: 'POST',
+        path: '/githubSync',
+        request: z.object({
+            siteId: z.string().min(1, 'siteId is required'),
+            tabId: z.string().min(1, 'tabId is required'),
+        }),
+        async handler({ request, state }) {
+            const { userId } = await getSession({ request })
+            const { siteId, tabId } = await request.json()
+
+            if (!userId) {
+                throw new Error('Missing x-user-id header')
+            }
+            const site = await prisma.site.findFirst({
+                where: { siteId, org: { users: { some: { userId } } } },
+                include: {
+
+                }
+            })
+            if (!site) {
+                throw new Error('Site not found for this user')
+            }
+            const orgId = site.orgId
+            const name = site.name
+            const pages = pagesFromGithub({
+                installationId: site.installationId,
+                owner: site.githubOwner,
+                repo: site.githubRepo,
+                signal: request.signal,
+            })
+            await syncSite({
+                orgId,
+                siteId,
+                tabId,
+                name: site.name || '',
+                pages,
+            })
+            // Implement your sync logic here
+            // For now, just echo back the input
+            return {
+                success: true,
+                siteId,
+                tabId,
+                message: 'Sync route called successfully',
             }
         },
     })

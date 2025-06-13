@@ -128,14 +128,14 @@ export async function getRepoFiles({
         files.map(async (file) => {
             try {
                 await sema.acquire()
-                let pagePath = githubPathToPageSlug(file.path || '')
-                if (!pagePath) {
+                let pathWithFrontSlash = addInitialSlashToPath(file.path || '')
+                if (!pathWithFrontSlash) {
                     return
                 }
                 // console.log(`getting blob for ${file.path}`)
                 if (!fetchBlob(file)) {
                     return {
-                        pagePath,
+                        pathWithFrontSlash,
                         githubPath: file.path,
                         size: file.size,
                         sha: file.sha,
@@ -165,7 +165,7 @@ export async function getRepoFiles({
                 )
 
                 return {
-                    pagePath: pagePath,
+                    pathWithFrontSlash: pathWithFrontSlash,
                     content: contents! || '',
                     size: file.size,
                     sha: file.sha,
@@ -244,7 +244,7 @@ export async function upsertGithubFile({
     let url = `https://github.com/${owner}/${repo}/commit/${data.commit.sha}`
 }
 
-export function githubPathToPageSlug(path?: string) {
+export function addInitialSlashToPath(path?: string) {
     if (!path) {
         return ''
     }

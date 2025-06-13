@@ -182,14 +182,16 @@ model MarkdownPage {
   lastEditedAt DateTime?
 
   // ogImage      String?           @db.Text
-  description  String? @db.Text
+  description String? @db.Text
   // keywords     String?           @db.Text
-  icon         String?
+  icon        String?
   /// [FrontmatterJson]
-  frontmatter  Json?
-  notionPageId String?
+  frontmatter Json?
 
   extension MarkdownExtension @default(mdx)
+
+  githubSha  String
+  githubPath String
 
   @@unique([tabId, slug])
   @@index([tabId])
@@ -218,6 +220,8 @@ model Site {
   githubInstallation GithubInstallation? @relation(fields: [installationId, orgId], references: [installationId, orgId])
   installationId     Int?
   customization      SiteCustomization?
+  githubOwner        String
+  githubRepo         String
 
   @@index([createdAt])
 }

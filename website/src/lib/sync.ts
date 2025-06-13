@@ -1,6 +1,7 @@
 import { Sema } from 'async-sema'
+import crypto from 'crypto'
 import { execSync } from 'child_process'
-import { Prisma, prisma } from 'db'
+import { MarkdownExtension, Prisma, prisma } from 'db'
 import fs from 'fs'
 
 import path from 'path'
@@ -11,6 +12,14 @@ import {
     StructuredData,
 } from 'docs-website/src/lib/mdx'
 import { env } from './env'
+import {
+    checkGitHubIsInstalled,
+    getOctokit,
+    getRepoFiles,
+    addInitialSlashToPath as addFrontSlashToPath,
+    isMarkdown,
+} from './github.server'
+import { notifyError } from './errors'
 
 type Page = {
     pageInput: Omit<Prisma.MarkdownPageUncheckedCreateInput, 'tabId'>
@@ -21,14 +30,14 @@ type Page = {
 
 export async function syncSite({
     siteId,
-    internalHost,
+
     name,
     tabId,
     orgId,
     pages,
 }: {
     siteId: string
-    internalHost: string
+
     name?: string
     tabId: string
     orgId: string
@@ -59,34 +68,6 @@ export async function syncSite({
     // Find existing domain or create a new one
     console.log(`Looking for existing internal domain for site: ${siteId}...`)
     const existingDomain = site.domains.find((x) => x)
-
-    if (existingDomain && existingDomain?.host !== internalHost) {
-        console.log(
-            `Updating existing domain (${existingDomain.id}) with host: ${internalHost}...`,
-        )
-        await prisma.domain.update({
-            where: { id: existingDomain.id },
-            data: {
-                siteId,
-                domainType: 'internalDomain',
-                host: internalHost,
-            },
-        })
-        console.log(`Domain updated successfully: ${existingDomain.id}`)
-    }
-    if (!existingDomain) {
-        console.log(
-            `Creating new internal domain with host: ${internalHost}...`,
-        )
-        const newDomain = await prisma.domain.create({
-            data: {
-                host: internalHost,
-                siteId,
-                domainType: 'internalDomain',
-            },
-        })
-        console.log(`New domain created: ${newDomain.id}`)
-    }
 
     console.log(`Using site: ${siteId}`)
 
@@ -275,6 +256,8 @@ export async function* pagesFromDirectory(
                 title: data.title || '',
                 markdown: fileContent,
                 frontmatter: data.frontmatter,
+                githubPath: entryRelativePath,
+                githubSha: '',
             },
 
             structuredData: data.structuredData,
@@ -288,6 +271,225 @@ export async function* pagesFromDirectory(
     for (const entry of entries.filter((entry) => entry.isDirectory())) {
         const fullPath = path.join(dirPath, entry.name)
         yield* pagesFromDirectory(fullPath, base)
+    }
+}
+
+export async function* pagesFromGithub({
+    repo,
+    owner,
+    installationId,
+    basePath = '',
+    signal,
+    urlLikeFrontmatterFields = [],
+    onlyGithubPaths = new Set<string>(),
+}): AsyncGenerator<Page> {
+    if (!installationId) throw new Error('Installation ID is required')
+    const octokit = await getOctokit({ installationId })
+    const timeId = Date.now()
+    const [repoResult, ok, existingFiles] = await Promise.all([
+        octokit.rest.repos.get({
+            owner,
+            repo,
+            request: { signal },
+        }),
+        checkGitHubIsInstalled({ installationId }),
+        prisma.markdownPage.findMany({
+            where: {
+                tab: { site: { installationId } },
+            },
+        }),
+    ])
+    console.timeEnd(`${owner}/${repo} - repo checks ${timeId}`)
+
+    if (!ok) {
+        throw new Error('Github app no longer installed')
+    }
+    let branch = repoResult.data.default_branch
+    const existingShas = new Set(existingFiles.map((f) => f.githubSha))
+    const existingSlugs = new Set(existingFiles.map((f) => f.slug))
+    let maxBlobFetches = 4000
+    let blobFetches = 0
+
+    console.time(`${owner}/${repo} - fetch files ${timeId}`)
+    const files = await getRepoFiles({
+        fetchBlob(file) {
+            if (blobFetches > maxBlobFetches) {
+                return false
+            }
+            let pathWithFrontSlash = addFrontSlashToPath(file.path || '')
+            if (
+                !file.sha ||
+                !pathWithFrontSlash?.startsWith(basePath) ||
+                !isMarkdown(pathWithFrontSlash)
+            ) {
+                return false
+            }
+            if (onlyGithubPaths.size && file.path) {
+                // in case the item is not in Framer fetch it again
+                if (!onlyGithubPaths.has(file.path)) {
+                    return true
+                }
+                return false
+            }
+            blobFetches++
+            return true
+        },
+        branch: branch,
+        octokit: octokit.rest,
+        owner,
+        repo,
+        signal,
+    })
+    console.timeEnd(`${owner}/${repo} - fetch files ${timeId}`)
+
+    const allCurrentPagePaths = new Set(
+        files.map((x) => x.pathWithFrontSlash).filter(Boolean),
+    )
+    const toDelete = [...existingSlugs].filter(
+        (slug) => !allCurrentPagePaths.has(slug),
+    )
+
+    let allAssetPaths = files.map((x) => x.pathWithFrontSlash)
+    let onlyMarkdown = files.filter((x) => {
+        if (
+            x.content == null ||
+            !x?.pathWithFrontSlash?.startsWith(basePath) ||
+            !isMarkdown(x.pathWithFrontSlash)
+        ) {
+            return false
+        }
+        return true
+    })
+
+    console.log(
+        `found ${onlyMarkdown.length} files to sync, from ${files.filter((x) => x?.pathWithFrontSlash?.startsWith(basePath) && isMarkdown(x?.pathWithFrontSlash)).length} total files`,
+    )
+
+    let mapImageUrl = (imgPath) =>
+        publicFileMapUrl({ branch, imgPath, owner, repo })
+
+    if (repoResult.data.private) {
+        mapImageUrl = async (imgPath) => {
+            try {
+                const res = await octokit.rest.repos.getContent({
+                    owner,
+                    repo,
+                    path: imgPath,
+                    ref: branch,
+                    request: { signal },
+                })
+                if (!('download_url' in res.data)) {
+                    throw new Error('Could not get download url for image')
+                }
+                console.log('download url', res.data.download_url)
+                return res.data.download_url || ''
+            } catch (error) {
+                notifyError(error, 'error getting download url for image')
+                throw error
+            }
+        }
+    }
+
+    async function resolveUrlsInFrontmatter(frontmatter: Record<string, any>) {
+        if (!frontmatter) {
+            return frontmatter
+        }
+        if (typeof frontmatter !== 'object') {
+            return frontmatter
+        }
+        for (const field of urlLikeFrontmatterFields) {
+            const value = frontmatter[field]
+            if (!value) {
+                continue
+            }
+            const filePath = frontmatter[field]
+            if (isValidUrl(filePath)) {
+                continue
+            }
+            const resolved = findMatchInPaths({
+                filePath,
+                paths: allAssetPaths,
+            })
+            if (resolved) {
+                frontmatter[field] = await mapImageUrl(resolved)
+            } else {
+                delete frontmatter[field]
+            }
+        }
+        // TODO handle relative paths in frontmatter for some things
+        // // Handle rich text fields by converting markdown to HTML
+        // for (const field of richTextFields) {
+        //     try {
+        //         const value = frontmatter[field]
+        //         if (!value || typeof value !== 'string') {
+        //             continue
+        //         }
+        //         const { html } = await markdownToHtml(value, '.md')
+        //         frontmatter[field] = html
+        //     } catch (error) {
+        //         notifyError(
+        //             error,
+        //             `Error converting rich text field '${field}' to HTML`,
+        //         )
+        //         // Keep original value on error
+        //         continue
+        //     }
+        // }
+        return frontmatter
+    }
+
+    console.time(`${owner}/${repo} - process markdown ${timeId}`)
+    const slugsFound = new Set<string>()
+    let totalPages = onlyMarkdown.length
+    let pagesToSync = onlyMarkdown
+    if (onlyGithubPaths.size) {
+        pagesToSync = onlyMarkdown.filter((x) =>
+            onlyGithubPaths.has(x.pathWithFrontSlash),
+        )
+    }
+    for (const x of onlyMarkdown) {
+        if (x?.content == null) {
+            continue
+        }
+
+        const pathWithFrontSlash = x.pathWithFrontSlash
+        let content = x.content
+        let extension = path.extname(x.pathWithFrontSlash) as MarkdownExtension
+        const slug = generateSlugFromPath(pathWithFrontSlash, basePath)
+        if (slugsFound.has(slug)) {
+            console.log(
+                'duplicate slug found',
+                slug,
+                'in',
+                owner + '/' + repo,
+                'at',
+                pathWithFrontSlash,
+            )
+            continue
+        }
+        slugsFound.add(slug)
+        const { data } = await processMdx({
+            markdown: x.content,
+            extension,
+        })
+
+        let frontmatter = await resolveUrlsInFrontmatter(data.frontmatter)
+        let title = frontmatter?.title
+
+        yield {
+            pageInput: {
+                slug,
+                title: title || '',
+                markdown: content,
+                frontmatter: frontmatter,
+                githubSha: x.sha,
+                githubPath: x.githubPath,
+                description: data.description,
+                extension,
+            },
+            structuredData: data.structuredData,
+            totalPages,
+        }
     }
 }
 
@@ -519,4 +721,99 @@ async function createTrieveDataset({ siteId, name }) {
     })
     console.log(`Site record updated with Trieve dataset ID and API key`)
     return { datasetId: datasetId }
+}
+
+export async function publicFileMapUrl({
+    owner,
+    repo,
+    branch,
+    imgPath,
+}: {
+    owner: string
+    repo: string
+    branch: string
+    imgPath: string
+}) {
+    return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}${imgPath}`
+}
+
+function isValidUrl(string: string): boolean {
+    return string.startsWith('http://') || string.startsWith('https://')
+}
+
+export function findMatchInPaths({
+    filePath,
+    paths,
+}: {
+    paths: string[]
+    filePath: string
+}) {
+    // hashes are alright
+    if (!filePath) {
+        return ''
+    }
+    if (isAbsoluteUrl(filePath)) {
+        return filePath
+    }
+    const normalized = normalizeFilePathForSearch(filePath)
+    let found = paths.find((x) => {
+        if (x === normalized) {
+            return true
+        }
+        if (x.endsWith(normalized)) {
+            return true
+        }
+        return false
+    })
+    return found || ''
+}
+
+function normalizeFilePathForSearch(filePath: string) {
+    if (filePath.startsWith('/')) {
+        filePath = filePath.slice(1)
+    }
+    let parts = filePath.split('/').filter(Boolean)
+    // remove relative parts
+    parts = parts.filter((x) => {
+        if (x === '.') {
+            return false
+        }
+        if (x === '..') {
+            return false
+        }
+        return true
+    })
+    return parts.join('/')
+}
+
+function isAbsoluteUrl(url: string) {
+    if (!url) {
+        return false
+    }
+    let abs = [
+        '#',
+        'https://',
+        'http://',
+        'mailto:', //
+    ].some((x) => url.startsWith(x))
+    return abs
+}
+
+function generateSlugFromPath(pathWithFrontSlash: string, basePath) {
+    if (isAbsoluteUrl(pathWithFrontSlash)) {
+        return pathWithFrontSlash
+    }
+    if (pathWithFrontSlash.startsWith(basePath)) {
+        pathWithFrontSlash = pathWithFrontSlash.slice(basePath.length)
+    }
+    if (pathWithFrontSlash.startsWith('/')) {
+        pathWithFrontSlash = pathWithFrontSlash.slice(1)
+    }
+    let res =
+        '/' +
+        pathWithFrontSlash
+            .replace(/\.mdx?$/, '')
+            // .replace(/\/index$/, '')
+            .replace(/\//g, '-') // framer does not support folders inside CMS, you will need to create separate collections for each folderF
+    return res
 }
