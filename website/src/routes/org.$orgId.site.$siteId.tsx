@@ -1,4 +1,4 @@
-import { href, redirect } from 'react-router'
+import { href, redirect, useLoaderData } from 'react-router'
 import { colord, extend } from 'colord'
 import type { Route } from './+types/org.$orgId.site.$siteId'
 import { getSession } from '../lib/better-auth'
@@ -7,13 +7,16 @@ import { cn } from '../lib/utils'
 import { BrowserWindow } from '../components/browser-window'
 import { Button } from '../components/ui/button'
 import { SaveIcon } from 'lucide-react'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, CSSProperties } from 'react'
 import { UploadButton } from '../components/upload-button'
 import { useThrowingFn } from '../lib/hooks'
 import { ColorPicker } from '../components/color-picker'
 import Chat from '../components/chat'
 import { StateProvider } from '../components/state-provider'
 import NavBar from '../components/navbar'
+import { url } from 'inspector'
+import { AppSidebar } from '../components/app-sidebar'
+import { SidebarProvider, SidebarInset } from '../components/ui/sidebar'
 
 export async function loader({
     request,
@@ -64,11 +67,35 @@ export default function Page({
     loaderData: { site, host, url },
     params: { siteId, orgId },
 }: Route.ComponentProps) {
+    return (
+        <StateProvider value={{ messages: [] }}>
+            <SidebarProvider
+                className=''
+                style={
+                    {
+                        '--sidebar-width': '420px',
+                        '--sidebar-width-mobile': '20rem',
+                    } satisfies CSSProperties
+                }
+            >
+                <AppSidebar />
+                <SidebarInset>
+                    <div className='flex grow h-full flex-col gap-4 p-2 pt-0'>
+                        <Content />
+                    </div>
+                </SidebarInset>
+            </SidebarProvider>
+        </StateProvider>
+    )
+}
+
+function Content() {
     const { fn: update, isLoading } = useThrowingFn({
         async fn() {
             await updateSite({ siteId, logoUrl, color })
         },
     })
+    const { site, host, url } = useLoaderData<typeof loader>()
     const [logoUrl, setLogoUrl] = useState(site.logoUrl)
     const iframeRef = useRef<HTMLIFrameElement>(null)
 
@@ -77,56 +104,51 @@ export default function Page({
         updatePageProps({ logoUrl, color: color || undefined }, iframeRef)
     }, [color, logoUrl])
     return (
-        <StateProvider value={{ messages: [] }}>
-            <div className='flex flex-col gap-12'>
-                <NavBar />
-                <div className='flex gap-12'>
-                    <div className='flex w-[400px] flex-col'>
-                        <Chat />
-                    </div>
-                    <div className='flex flex-col grow gap-6'>
-                        <div className='flex grow  min-h-[600px] flex-col'>
-                            <BrowserWindow
-                                url={url}
-                                onRefresh={() => {
-                                    const iframe = iframeRef.current
-                                    if (iframe) {
-                                        iframe.src += ''
-                                    }
-                                }}
+        <div className='flex flex-col gap-4 px-6'>
+            <NavBar />
+            <div className='flex gap-12'>
+                <div className='flex flex-col grow gap-6'>
+                    <div className='flex grow  min-h-[600px] flex-col'>
+                        <BrowserWindow
+                            url={url}
+                            onRefresh={() => {
+                                const iframe = iframeRef.current
+                                if (iframe) {
+                                    iframe.src += ''
+                                }
+                            }}
+                            className={cn(
+                                '!text-sm shrink-0 shadow rounded-xl justify-stretch',
+                                'items-stretch h-full flex-col flex-1 border',
+                                'bg-white lg:flex dark:bg-gray-800',
+                            )}
+                        >
+                            <iframe
+                                ref={iframeRef}
+                                style={scaleDownElement(0.8)}
                                 className={cn(
-                                    '!text-sm shrink-0 shadow rounded-xl justify-stretch',
-                                    'items-stretch h-full flex-col flex-1 border',
-                                    'bg-white lg:flex dark:bg-gray-800',
+                                    ' inset-0 bg-transparent',
+                                    'absolute',
                                 )}
-                            >
-                                <iframe
-                                    ref={iframeRef}
-                                    style={scaleDownElement(0.8)}
-                                    className={cn(
-                                        ' inset-0 bg-transparent',
-                                        'absolute',
-                                    )}
-                                    frameBorder={0}
-                                    allowTransparency
-                                    name='previewProps' // tell iframe preview props is enabled
-                                    height='120%'
-                                    width='100%'
-                                    title='website preview'
-                                    // onLoad={() => setLoaded(true)}
-                                    src={url}
-                                ></iframe>
-                                {/* {!loaded && (
-                        <div className='flex justify-center items-center inset-0 absolute'>
-                            <Spinner className='text-gray-600 text-5xl'></Spinner>
-                        </div>
-                    )} */}
-                            </BrowserWindow>
-                        </div>
+                                frameBorder={0}
+                                allowTransparency
+                                name='previewProps' // tell iframe preview props is enabled
+                                height='120%'
+                                width='100%'
+                                title='website preview'
+                                // onLoad={() => setLoaded(true)}
+                                src={url}
+                            ></iframe>
+                            {/* {!loaded && (
+                      <div className='flex justify-center items-center inset-0 absolute'>
+                          <Spinner className='text-gray-600 text-5xl'></Spinner>
+                      </div>
+                  )} */}
+                        </BrowserWindow>
                     </div>
                 </div>
             </div>
-        </StateProvider>
+        </div>
     )
 }
 
