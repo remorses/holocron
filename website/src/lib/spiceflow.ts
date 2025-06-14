@@ -1,4 +1,5 @@
 import { openai, OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
+import { openapi } from 'spiceflow/openapi'
 import { coreMessageSchema, streamText, tool, UIMessage } from 'ai'
 import { Spiceflow } from 'spiceflow'
 import { z } from 'zod'
@@ -13,6 +14,7 @@ import { auth, getSession } from './better-auth'
 export const app = new Spiceflow({ basePath: '/api' })
     // .state('env', {} as Env)
     // Health check endpoint
+    .use(openapi())
     .route({
         method: 'GET',
         path: '/health',

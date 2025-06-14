@@ -1,17 +1,19 @@
 import { PrismaPg } from '@prisma/adapter-pg'
-export * from '@prisma/client'
-import { PrismaClient } from '@prisma/client'
+export * from './generated/index.js'
+import { PrismaClient } from './generated/index.js'
 
 const debugQueries = false
 
 export const pgAdapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL,
+    // max: 1,
 })
 
 export const prisma: PrismaClient =
     (global as any).prisma ||
     new PrismaClient({
         adapter: pgAdapter,
+
         log: debugQueries
             ? [
                   {

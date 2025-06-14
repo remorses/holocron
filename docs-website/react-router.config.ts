@@ -4,7 +4,5 @@ export default {
     ssr: true,
     appDirectory: 'src',
 
-    // async prerender({ getStaticPaths }) {
-    //     return [...getStaticPaths()]
-    // },
+    future: {},
 } satisfies Config

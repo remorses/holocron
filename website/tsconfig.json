@@ -9,7 +9,7 @@
         "types": [
             "@react-router/node",
             "vite/client",
-            "@types/node",
+            "@types/node"
             // "./worker-configuration.d.ts"
         ],
         "isolatedModules": true,
@@ -34,5 +34,5 @@
         },
         "noEmit": true
     },
-    "include": ["src", ".react-router/types/**/*", "./src/worker.ts"]
+    "include": ["src", "scripts", ".react-router/types/**/*", "./src/worker.ts"]
 }

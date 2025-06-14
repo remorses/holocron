@@ -4,7 +4,7 @@
     "name": "fumabase-docs-website-production",
 
     "assets": {
-        "directory": "build/client/assets/",
+        "directory": "build/client",
         "binding": "ASSETS",
     },
     "compatibility_flags": ["nodejs_compat"],
@@ -15,6 +15,21 @@
             "binding": "UPLOADS_BUCKET",
         },
     ],
+    "routes": [
+        //
+        { "zone_name": "fumabase.com", "pattern": "*.fumabase.com/*" },
+        { "zone_name": "fumabase.com", "custom_domain": true, "pattern": "example.fumabase.com"},
+    ],
+
     "compatibility_date": "2025-05-17",
     "main": "./src/worker.ts",
+    "observability": {
+        "enabled": true,
+        "logs": {
+            "enabled": true,
+            "head_sampling_rate": 1,
+        },
+        "head_sampling_rate": 1,
+    },
+    "placement": { "mode": "smart" },
 }

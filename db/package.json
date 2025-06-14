@@ -22,7 +22,7 @@
     "dependencies": {
         "@prisma/adapter-pg": "^6.9.0",
         "@prisma/client": "^6.9.0",
-        "pg": "^8.16.0",
+        "pg": "^8.13.1",
         "postgres": "^3.4.7",
         "prisma": "^6.9.0"
     },
