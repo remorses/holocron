@@ -18,6 +18,9 @@ importers:
       prettier:
         specifier: ^3.5.3
         version: 3.5.3
+      tsup:
+        specifier: 8.5.0
+        version: 8.5.0(jiti@2.4.2)(postcss@8.5.5)(tsx@4.20.2)(typescript@5.8.3)(yaml@2.8.0)
       tsx:
         specifier: ^4.20.2
         version: 4.20.2
@@ -178,6 +181,9 @@ importers:
       remark-frontmatter:
         specifier: ^5.0.0
         version: 5.0.0
+      remark-gfm:
+        specifier: ^4.0.1
+        version: 4.0.1
       remark-mdx:
         specifier: ^3.1.0
         version: 3.1.0

@@ -9,7 +9,15 @@ import {
     transformerNotationHighlight,
     transformerNotationWordHighlight,
 } from '@shikijs/transformers'
-import * as mdxPluginsFumadocs from 'fumadocs-core/mdx-plugins'
+import remarkGfm from 'remark-gfm'
+import { remarkAdmonition } from 'fumadocs-core/mdx-plugins/remark-admonition'
+import { remarkCodeTab } from 'fumadocs-core/mdx-plugins/remark-code-tab'
+import { remarkHeading } from 'fumadocs-core/mdx-plugins/remark-heading'
+import { remarkSteps } from 'fumadocs-core/mdx-plugins/remark-steps'
+import {
+    remarkStructure,
+    StructuredData,
+} from 'fumadocs-core/mdx-plugins/remark-structure'
 import {} from 'js-yaml'
 import { Heading, Root } from 'mdast'
 import { remark } from 'remark'
@@ -27,7 +35,6 @@ import { bundledLanguages } from 'shiki/langs' // every grammar object
 import { visit } from 'unist-util-visit'
 import { remarkGitHubBlockquotes } from './github-blockquotes'
 
-import { StructuredData } from 'fumadocs-core/mdx-plugins'
 import { DocumentRecord } from 'fumadocs-core/search/algolia'
 
 export type { DocumentRecord, StructuredData }
@@ -112,8 +119,6 @@ import githubLightTheme from '@shikijs/themes/github-light'
 export const getProcessor = memoize(async function getProcessor(
     extension?: string,
 ) {
-
-
     const highlighter = await createHighlighterCore({
         themes: [githubDarkTheme, githubLightTheme],
         langs: [
@@ -128,7 +133,7 @@ export const getProcessor = memoize(async function getProcessor(
             import('@shikijs/langs/jsx'),
             import('@shikijs/langs/md'),
         ],
-        engine: createJavaScriptRegexEngine()
+        engine: createJavaScriptRegexEngine(),
     })
 
     if (typeof extension === 'string' && extension.endsWith('mdx')) {
@@ -136,14 +141,14 @@ export const getProcessor = memoize(async function getProcessor(
             remark()
                 .use(remarkMdx)
                 .use(remarkFrontmatter, ['yaml'])
-                .use(mdxPluginsFumadocs.remarkGfm)
+                .use(remarkGfm)
                 .use(remarkGitHubBlockquotes)
-                .use(mdxPluginsFumadocs.remarkAdmonition)
-                .use(mdxPluginsFumadocs.remarkCodeTab)
-                .use(mdxPluginsFumadocs.remarkHeading)
+                .use(remarkAdmonition)
+                .use(remarkCodeTab)
+                .use(remarkHeading)
                 // .use(mdxPluginsFumadocs.remarkImage)
-                .use(mdxPluginsFumadocs.remarkSteps)
-                .use(mdxPluginsFumadocs.remarkStructure)
+                .use(remarkSteps)
+                .use(remarkStructure)
                 .use(remarkMarkAndUnravel)
                 .use(remarkCodeToHtml(highlighter))
                 .use(remarkExtractFirstHeading)
@@ -158,14 +163,14 @@ export const getProcessor = memoize(async function getProcessor(
             remark()
                 // .use(remarkMdx)
                 .use(remarkFrontmatter, ['yaml'])
-                .use(mdxPluginsFumadocs.remarkGfm)
+                .use(remarkGfm)
                 // .use(remarkGitHubBlockquotes) // TODO remarkGitHubBlockquotes cannot be stringified later because the mdx ast nodes are not valid md
-                .use(mdxPluginsFumadocs.remarkAdmonition)
-                .use(mdxPluginsFumadocs.remarkCodeTab)
-                .use(mdxPluginsFumadocs.remarkHeading)
+                .use(remarkAdmonition)
+                .use(remarkCodeTab)
+                .use(remarkHeading)
                 // .use(mdxPluginsFumadocs.remarkImage)
-                .use(mdxPluginsFumadocs.remarkSteps)
-                .use(mdxPluginsFumadocs.remarkStructure)
+                .use(remarkSteps)
+                .use(remarkStructure)
                 // .use(remarkMarkAndUnravel)
                 .use(remarkCodeToHtml(highlighter))
                 .use(remarkExtractFirstHeading)
@@ -183,7 +188,7 @@ type ProcessorData = {
     ast: Root
     frontmatter: Record<string, any>
     frontmatterYaml?: string
-    structuredData: mdxPluginsFumadocs.StructuredData
+    structuredData: StructuredData
 }
 
 export async function processMdx({

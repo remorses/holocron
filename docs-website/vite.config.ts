@@ -7,25 +7,21 @@ import { defineConfig } from 'vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig({
-
     clearScreen: false,
-    environments: {
-        ssr: {
-            resolve: {
-                // https://github.com/wooorm/decode-named-character-reference/pull/7
-                conditions: ['worker'],
-            },
-            build: {
-                rollupOptions: {
-                    external: ['shiki'],
-                },
-            },
-        },
-    },
+    // environments: {
+    //     ssr: {
+    //         resolve: {
+    //             // https://github.com/wooorm/decode-named-character-reference/pull/7
+    //             conditions: ['worker'],
+    //         },
+    //     },
+    // },
+
     plugins: [
-        // cloudflare({ viteEnvironment: { name: 'ssr' } }),
-        tailwindcss(),
+        !process.env.DISABLE_CLOUDFLARE_PLUGIN &&
+            cloudflare({ viteEnvironment: { name: 'ssr' } }),
         reactRouter(),
+        tailwindcss(),
         tsconfigPaths(),
         EnvironmentPlugin('all', { prefix: 'PUBLIC' }),
         EnvironmentPlugin('all', { prefix: 'NEXT_PUBLIC' }),

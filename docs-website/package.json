@@ -4,8 +4,9 @@
     "type": "module",
     "scripts": {
         "build": "react-router build",
-        "dev": "doppler run -- react-router dev --port 7777",
+        "dev": "DISABLE_CLOUDFLARE_PLUGIN=1 doppler run -- react-router dev --port 7777",
         "dev:wrangler": "doppler secrets download --format=env --no-file > .dev.vars && react-router dev --port 7777",
+        "deploy:prod": "pnpm build && wrangler deploy",
         "vercel-build": "pnpm --filter 'fumadocs-root' build && pnpm build",
         "test": "doppler run -- pnpm vitest",
         "secrets:preview": "doppler run --mount .env.preview --mount-format env -- wrangler secret bulk --env preview .env.preview",
@@ -54,6 +55,7 @@
         "react-router": "^7.6.2",
         "remark": "^15.0.1",
         "remark-frontmatter": "^5.0.0",
+        "remark-gfm": "^4.0.1",
         "remark-mdx": "^3.1.0",
         "remark-stringify": "^11.0.0",
         "safe-mdx": "latest",
