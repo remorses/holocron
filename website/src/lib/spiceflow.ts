@@ -11,7 +11,7 @@ import { auth, getSession } from './better-auth'
 
 // Create the main spiceflow app with comprehensive routes and features
 export const app = new Spiceflow({ basePath: '/api' })
-    .state('env', {} as Env)
+    // .state('env', {} as Env)
     // Health check endpoint
     .route({
         method: 'GET',
@@ -186,7 +186,30 @@ export const app = new Spiceflow({ basePath: '/api' })
     //         }
     //     },
     // })
-    // Error handling middleware
+    .route({
+        method: 'POST',
+        path: '/createUploadSignedUrl',
+        request: z.object({
+            key: z.string().min(1, 'Key is required'),
+            contentType: z.string().optional(),
+        }),
+        async handler({ request, state }) {
+            const body = await request.json()
+
+            const signedUrl = s3.presign(body.key, {
+                method: 'PUT',
+            })
+
+            const finalUrl = new URL(body.key, env.UPLOADS_BASE_URL).toString()
+
+            return {
+                success: true,
+                path: body.key,
+                signedUrl,
+                finalUrl,
+            }
+        },
+    })
     .onError(({ error }) => {
         notifyError(error)
     })

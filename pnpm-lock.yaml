@@ -58,6 +58,12 @@ importers:
 
   docs-website:
     dependencies:
+      '@cloudflare/vite-plugin':
+        specifier: ^1.6.0
+        version: 1.6.0(rollup@4.43.0)(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.2)(yaml@2.8.0))(workerd@1.20250604.0)(wrangler@4.20.0(@cloudflare/workers-types@4.20250614.0))
+      '@cloudflare/workers-types':
+        specifier: ^4.20250614.0
+        version: 4.20250614.0
       '@fumadocs/mdx-remote':
         specifier: workspace:^
         version: link:../fumadocs/packages/mdx-remote
@@ -76,6 +82,12 @@ importers:
       '@sentry/browser':
         specifier: ^9.28.1
         version: 9.28.1
+      '@shikijs/langs':
+        specifier: ^3.6.0
+        version: 3.6.0
+      '@shikijs/themes':
+        specifier: ^3.6.0
+        version: 3.6.0
       '@shikijs/transformers':
         specifier: ^3.6.0
         version: 3.6.0
@@ -224,6 +236,9 @@ importers:
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.2)(yaml@2.8.0))
+      wrangler:
+        specifier: ^4.20.0
+        version: 4.20.0(@cloudflare/workers-types@4.20250614.0)
 
   fumadocs:
     devDependencies:

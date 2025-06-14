@@ -4,9 +4,8 @@
     "type": "module",
     "scripts": {
         "build": "doppler run --preserve-env -- react-router build",
-        "dev": "doppler secrets download --format=env --no-file > .dev.vars && react-router dev --port 7664",
-        "secrets:preview": "doppler run --mount .env.preview --mount-format env -- wrangler secret bulk --env preview .env.preview",
-        "secrets:prod": "doppler run --mount .env.prod --mount-format env -- wrangler secret bulk .env.prod",
+        "dev": "doppler run -- react-router dev --port 7664",
+        "_dev_cloudflare": "doppler secrets download --format=env --no-file > .dev.vars && react-router dev --port 7664",
         "start": "doppler run -- node ./build/server/index.js --port 7664",
         "typecheck": "react-router typegen && tsc"
     },

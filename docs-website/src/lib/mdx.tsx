@@ -10,12 +10,19 @@ import {
     transformerNotationWordHighlight,
 } from '@shikijs/transformers'
 import * as mdxPluginsFumadocs from 'fumadocs-core/mdx-plugins'
-import { } from 'js-yaml'
+import {} from 'js-yaml'
 import { Heading, Root } from 'mdast'
 import { remark } from 'remark'
 import remarkMdx from 'remark-mdx'
-import { createHighlighter, Highlighter } from 'shiki'
-import { bundledLanguages } from 'shiki/langs'; // every grammar object
+import {
+    createHighlighter,
+    createHighlighterCore,
+    createJavaScriptRegexEngine,
+    Highlighter,
+    HighlighterCore,
+    loadWasm,
+} from 'shiki'
+import { bundledLanguages } from 'shiki/langs' // every grammar object
 
 import { visit } from 'unist-util-visit'
 import { remarkGitHubBlockquotes } from './github-blockquotes'
@@ -25,7 +32,7 @@ import { DocumentRecord } from 'fumadocs-core/search/algolia'
 
 export type { DocumentRecord, StructuredData }
 
-const remarkCodeToHtml = (highlighter: Highlighter) => () => {
+const remarkCodeToHtml = (highlighter: HighlighterCore) => () => {
     return (tree: Root) => {
         visit(tree, 'code', (node) => {
             const language = node.lang || 'text'
@@ -99,13 +106,29 @@ const remarkExtractFirstHeading = () => {
         return tree
     }
 }
+import githubDarkTheme from '@shikijs/themes/github-dark'
+import githubLightTheme from '@shikijs/themes/github-light'
 
 export const getProcessor = memoize(async function getProcessor(
     extension?: string,
 ) {
-    const highlighter = await createHighlighter({
-        themes: ['github-dark', 'github-light'],
-        langs: Object.keys(bundledLanguages),
+
+
+    const highlighter = await createHighlighterCore({
+        themes: [githubDarkTheme, githubLightTheme],
+        langs: [
+            import('@shikijs/langs/javascript'),
+            import('@shikijs/langs/css'),
+            import('@shikijs/langs/typescript'),
+            import('@shikijs/langs/tsx'),
+            import('@shikijs/langs/json'),
+            import('@shikijs/langs/html'),
+            import('@shikijs/langs/bash'),
+            import('@shikijs/langs/python'),
+            import('@shikijs/langs/jsx'),
+            import('@shikijs/langs/md'),
+        ],
+        engine: createJavaScriptRegexEngine()
     })
 
     if (typeof extension === 'string' && extension.endsWith('mdx')) {
