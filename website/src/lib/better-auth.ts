@@ -35,6 +35,9 @@ export const auth = betterAuth({
             console.log('Send email to reset password')
         },
     },
+    // advanced: {
+    //     crossSubDomainCookies: { enabled: false },
+    // },
     socialProviders: {
         google: {
             clientId: env.GOOGLE_ID || '',
