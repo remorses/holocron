@@ -1,14 +1,14 @@
+import { prisma } from 'db'
 import {
+    Form,
     href,
     Link,
     redirect,
-    Form,
-    useLoaderData,
     useActionData,
+    useLoaderData,
     useNavigation,
 } from 'react-router'
-import { getSession } from '../lib/better-auth'
-import type { Route } from './+types/org.$orgId.onboarding'
+import { Button } from '../components/ui/button'
 import {
     Stepper,
     StepperDescription,
@@ -18,13 +18,11 @@ import {
     StepperTitle,
     StepperTrigger,
 } from '../components/ui/stepper'
+import { getSession } from '../lib/better-auth'
 import { env, supportEmail } from '../lib/env'
-import { Button } from '../components/ui/button'
 import { createNewRepo, doesRepoExist, getOctokit } from '../lib/github.server'
-import { prisma } from 'db'
-import { Octokit } from 'octokit'
-import { pagesFromDirectory, syncSite } from '../lib/sync'
-import path from 'path'
+import { pagesFromExampleJson as pagesFromExampleDocsJson, syncSite } from '../lib/sync'
+import type { Route } from './+types/org.$orgId.onboarding'
 
 export async function loader({ request, params }: Route.LoaderArgs) {
     const { userId, redirectTo } = await getSession({ request })
@@ -69,9 +67,7 @@ export async function action({ request, params }: Route.ActionArgs) {
         const repo = `fumabase-starter`
         console.log('Creating repository...')
         const octokit = await getOctokit(githubInstallation)
-        const pages = pagesFromDirectory(
-            path.resolve('scripts/example-docs-site'),
-        )
+        const pages = pagesFromExampleDocsJson()
         const owner = githubAccountLogin
         const exists = await doesRepoExist({
             octokit: octokit.rest,

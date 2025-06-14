@@ -14,6 +14,7 @@
     "dependencies": {
         "@ai-sdk/openai": "^1.3.22",
         "@ai-sdk/ui-utils": "^1.2.11",
+        "@cloudflare/vite-plugin": "^1.6.0",
         "@octokit/webhooks": "^14.0.2",
         "@radix-ui/react-alert-dialog": "^1.1.14",
         "@radix-ui/react-avatar": "^1.1.10",
@@ -29,6 +30,7 @@
         "@radix-ui/react-slider": "^1.3.5",
         "@radix-ui/react-slot": "^1.2.3",
         "@radix-ui/react-tooltip": "^1.2.7",
+        "@react-router/cloudflare": "^7.6.2",
         "@react-router/fs-routes": "^7.6.2",
         "@react-router/node": "^7.6.2",
         "@remixicon/react": "^4.6.0",
@@ -62,6 +64,7 @@
         "spiceflow": "^1.11.3",
         "string-dedent": "^3.0.1",
         "tailwind-merge": "^3.3.1",
+        "tinyglobby": "^0.2.14",
         "trieve-ts-sdk": "^0.0.118",
         "tw-animate-css": "^1.3.4",
         "use-stick-to-bottom": "^1.1.1",
@@ -70,6 +73,7 @@
         "zustand": "^5.0.5"
     },
     "devDependencies": {
+        "@cloudflare/workers-types": "^4.20250614.0",
         "@react-router/dev": "^7.6.2",
         "@tailwindcss/typography": "^0.5.16",
         "@tailwindcss/vite": "^4.1.10",
@@ -84,6 +88,7 @@
         "vite": "^6.3.5",
         "vite-plugin-environment": "^1.1.3",
         "vite-tsconfig-paths": "^5.1.4",
-        "vitest": "^3.2.3"
+        "vitest": "^3.2.3",
+        "wrangler": "^4.20.0"
     }
 }

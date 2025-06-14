@@ -1,6 +1,6 @@
-import { ITXClientDenyList } from '@prisma/client/runtime/client'
-import { PrismaClient, Prisma } from './generated/index.js'
+
 import { PrismaPg } from '@prisma/adapter-pg'
+import { PrismaClient } from './generated/index.js'
 
 export * from './generated/index.js'
 
@@ -25,5 +25,3 @@ export const prisma: PrismaClient =
     })
 
 if (process.env.NODE_ENV !== 'production') (global as any).prisma = prisma
-
-export type PrismaTx = Omit<PrismaClient, ITXClientDenyList>

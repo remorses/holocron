@@ -30,3 +30,6 @@ export function slugKebabCase(str) {
         .replace(/-+/g, '-')
         .toLowerCase()
 }
+
+
+export const mdxRegex = /\.mdx?$/

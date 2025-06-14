@@ -1,0 +1,12 @@
+{
+    "$schema": "./node_modules/wrangler/config-schema.json",
+    "name": "fumabase-website-production",
+    "assets": {
+        "directory": "build/client/assets/",
+        "binding": "ASSETS",
+    },
+    "compatibility_flags": ["nodejs_compat"],
+
+    "compatibility_date": "2025-03-17",
+    "main": "./src/worker.ts",
+}

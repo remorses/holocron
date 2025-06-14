@@ -1,7 +1,12 @@
 {
     "compilerOptions": {
         "lib": ["DOM", "DOM.Iterable", "ES2022", "ESNext"],
-        "types": ["@react-router/node", "vite/client", "@types/node"],
+        "types": [
+            "@react-router/node",
+            "vite/client",
+            "@types/node",
+            // "@cloudflare/worker-types"
+        ],
         "isolatedModules": true,
         "esModuleInterop": true,
         "jsx": "react-jsx",

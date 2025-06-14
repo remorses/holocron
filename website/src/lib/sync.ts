@@ -1,27 +1,26 @@
 import { Sema } from 'async-sema'
-import crypto from 'crypto'
-import { execSync } from 'child_process'
 import { MarkdownExtension, Prisma, prisma } from 'db'
-import fs from 'fs'
+import exampleDocs from 'website/scripts/example-docs.json'
 
-import path from 'path'
-import { ChunkReqPayload, TrieveSDK } from 'trieve-ts-sdk'
 import {
     DocumentRecord,
     processMdx,
     StructuredData,
 } from 'docs-website/src/lib/mdx'
+import path from 'path'
+import { ChunkReqPayload, TrieveSDK } from 'trieve-ts-sdk'
 import { env } from './env'
+import { notifyError } from './errors'
 import {
+    addInitialSlashToPath as addFrontSlashToPath,
     checkGitHubIsInstalled,
     getOctokit,
     getRepoFiles,
-    addInitialSlashToPath as addFrontSlashToPath,
     isMarkdown,
 } from './github.server'
-import { notifyError } from './errors'
+import { mdxRegex } from './utils'
 
-type Page = {
+export type PageForSync = {
     pageInput: Omit<Prisma.MarkdownPageUncheckedCreateInput, 'tabId'>
     structuredData: StructuredData
 
@@ -39,7 +38,7 @@ export async function syncSite({
     name?: string
     tabId: string
     orgId: string
-    pages: AsyncIterable<Page>
+    pages: AsyncIterable<PageForSync>
 }) {
     console.log('Starting import script...')
 
@@ -74,6 +73,36 @@ export async function syncSite({
     })
 }
 
+export async function* pagesFromExampleJson(): AsyncGenerator<
+    PageForSync & { filePath: string; content: string }
+> {
+    const totalPages = exampleDocs.length
+    for (let doc of exampleDocs) {
+        const entryRelativePath = doc.relativePath
+        const entrySlug =
+            '/' + entryRelativePath.replace(/\\/g, '/').replace(mdxRegex, '')
+        const { data } = await processMdx({
+            markdown: doc.contents,
+            extension:
+                doc.relativePath.split('.').pop() === 'mdx' ? 'mdx' : 'md',
+        })
+        const page = {
+            totalPages,
+            pageInput: {
+                slug: entrySlug,
+                title: data.title || '',
+                markdown: doc.contents,
+                frontmatter: data.frontmatter,
+                githubPath: entryRelativePath,
+                githubSha: '',
+            },
+
+            structuredData: data.structuredData,
+        } satisfies PageForSync
+        yield { ...page, content: doc.contents, filePath: entryRelativePath }
+    }
+}
+
 export async function syncPages({
     tabId,
     siteId,
@@ -81,7 +110,7 @@ export async function syncPages({
     pages,
     name,
 }: {
-    pages: AsyncIterable<Page>
+    pages: AsyncIterable<PageForSync>
     tabId: string
     siteId: string
     trieveDatasetId?: string
@@ -196,61 +225,6 @@ function groupByN<T>(array: T[], n: number): T[][] {
     return result
 }
 
-const mdxRegex = /\.mdx?$/
-
-export async function* pagesFromDirectory(
-    dirPath: string,
-    base = '',
-): AsyncGenerator<Page & { filePath: string; content: string }> {
-    if (!base) {
-        base = dirPath
-    }
-    console.log(`Processing directory: ${path.relative(base, dirPath)}`)
-    const entries = await fs.promises.readdir(dirPath, {
-        withFileTypes: true,
-    })
-    const totalPages = 0
-
-    // Process files first
-    for (const entry of entries.filter(
-        (entry) => entry.isFile() && mdxRegex.test(entry.name),
-    )) {
-        const fullPath = path.join(dirPath, entry.name)
-        const entryRelativePath = path.relative(base, fullPath)
-        const entrySlug =
-            '/' + entryRelativePath.replace(/\\/g, '/').replace(mdxRegex, '')
-
-        const fileContent = await fs.promises.readFile(fullPath, 'utf8')
-
-        const { data } = await processMdx({
-            markdown: fileContent,
-            extension: entry.name.split('.').pop() === 'mdx' ? 'mdx' : 'md',
-        })
-        const page = {
-            totalPages,
-            pageInput: {
-                slug: entrySlug,
-                title: data.title || '',
-                markdown: fileContent,
-                frontmatter: data.frontmatter,
-                githubPath: entryRelativePath,
-                githubSha: '',
-            },
-
-            structuredData: data.structuredData,
-        } satisfies Page | null
-        if (page) {
-            yield { ...page, content: fileContent, filePath: entryRelativePath }
-        }
-    }
-
-    // Then process subdirectories
-    for (const entry of entries.filter((entry) => entry.isDirectory())) {
-        const fullPath = path.join(dirPath, entry.name)
-        yield* pagesFromDirectory(fullPath, base)
-    }
-}
-
 export async function* pagesFromGithub({
     repo,
     owner,
@@ -260,7 +234,7 @@ export async function* pagesFromGithub({
     urlLikeFrontmatterFields = [],
     onlyGithubPaths = new Set<string>(), // TODO probably not needed
     forceFullSync = false,
-}): AsyncGenerator<Page> {
+}): AsyncGenerator<PageForSync> {
     if (!installationId) throw new Error('Installation ID is required')
     const octokit = await getOctokit({ installationId })
     const timeId = Date.now()
