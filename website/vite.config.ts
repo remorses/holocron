@@ -15,7 +15,14 @@ export default defineConfig({
     define: {
         'process.env.NODE_ENV': NODE_ENV,
     },
-
+    environments: {
+        ssr: {
+            resolve: {
+                // https://github.com/wooorm/decode-named-character-reference/pull/7
+                conditions: ['worker'],
+            },
+        },
+    },
     test: {
         pool: 'threads',
         exclude: ['**/dist/**', '**/esm/**', '**/node_modules/**', '**/e2e/**'],
@@ -26,10 +33,10 @@ export default defineConfig({
         },
     },
     plugins: [
-        // cloudflare({ viteEnvironment: { name: 'ssr' } }),
+        cloudflare({ viteEnvironment: { name: 'ssr' } }),
         EnvironmentPlugin('all', { prefix: 'PUBLIC' }),
         EnvironmentPlugin('all', { prefix: 'NEXT_PUBLIC' }),
-        reactRouterHonoServer(),
+        // reactRouterHonoServer(),
         reactRouter(),
         tsconfigPaths(),
         viteExternalsPlugin({ externals: [] }),

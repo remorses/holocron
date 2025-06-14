@@ -3,7 +3,7 @@
     "version": "0.0.0",
     "private": true,
     "type": "module",
-    "main": "dist/prisma.js",
+    "main": "src/prisma.ts",
     "description": "db",
     "scripts": {
         "studio": "doppler run -- prisma studio",

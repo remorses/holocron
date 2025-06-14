@@ -1,7 +1,15 @@
 import { createRequestHandler } from 'react-router'
+import {
+    R2Bucket,
+    Request as CloudflareRequest,
+} from '@cloudflare/workers-types'
 
 declare global {
-    interface Env {}
+    interface Env {
+        UPLOADS_BUCKET: R2Bucket
+    }
+    // export interface Request extends CloudflareRequest {}
+
     interface CloudflareEnvironment extends Env {}
 }
 

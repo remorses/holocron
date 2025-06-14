@@ -1,8 +1,6 @@
-
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from './generated/index.js'
-
-export * from './generated/index.js'
+export * from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 
 const debugQueries = false
 

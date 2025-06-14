@@ -1,4 +1,4 @@
-import { Sema } from 'async-sema'
+import { Sema } from 'sema4'
 import { MarkdownExtension, Prisma, prisma } from 'db'
 import exampleDocs from 'website/scripts/example-docs.json'
 

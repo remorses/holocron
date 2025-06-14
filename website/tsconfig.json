@@ -1,11 +1,16 @@
 {
     "compilerOptions": {
-        "lib": ["DOM", "DOM.Iterable", "ES2022", "ESNext"],
+        "lib": [
+            "DOM", //
+            "DOM.Iterable",
+            "ES2022",
+            "ESNext"
+        ],
         "types": [
             "@react-router/node",
             "vite/client",
             "@types/node",
-            // "@cloudflare/worker-types"
+            // "./worker-configuration.d.ts"
         ],
         "isolatedModules": true,
         "esModuleInterop": true,
@@ -29,5 +34,5 @@
         },
         "noEmit": true
     },
-    "include": ["src", ".react-router/types/**/*"]
+    "include": ["src", ".react-router/types/**/*", "./src/worker.ts"]
 }

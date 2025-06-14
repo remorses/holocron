@@ -7,10 +7,11 @@ import { s3 } from './s3'
 import { env } from './env'
 import { pagesFromGithub, syncSite } from './sync'
 import { prisma } from 'db'
-import { getSession } from './better-auth'
+import { auth, getSession } from './better-auth'
 
 // Create the main spiceflow app with comprehensive routes and features
 export const app = new Spiceflow({ basePath: '/api' })
+    .state('env', {} as Env)
     // Health check endpoint
     .route({
         method: 'GET',
@@ -148,29 +149,43 @@ export const app = new Spiceflow({ basePath: '/api' })
             }
         },
     })
-    .route({
-        method: 'POST',
-        path: '/createUploadSignedUrl',
-        request: z.object({
-            key: z.string().min(1, 'Key is required'),
-            contentType: z.string().optional(),
-        }),
-        async handler({ request }) {
-            const body = await request.json()
+    // .route({
+    //     method: 'POST',
+    //     path: '/upload/*',
 
-            const signedUrl = s3.presign(body.key, {
-                method: 'PUT',
-            })
-            const finalUrl = new URL(body.key, env.UPLOADS_BASE_URL).toString()
+    //     async handler({ request, params: { '*': key }, state }) {
+    //         const bucket = state.env.UPLOADS_BUCKET
+    //         // TODO check that user can do this
+    //         await bucket.put(key, request.body as any, {
+    //             httpMetadata: request.headers as any,
+    //         })
+    //         return null
+    //     },
+    // })
+    // .route({
+    //     method: 'POST',
+    //     path: '/createUploadSignedUrl',
+    //     request: z.object({
+    //         key: z.string().min(1, 'Key is required'),
+    //         contentType: z.string().optional(),
+    //     }),
+    //     async handler({ request, state }) {
+    //         const body = await request.json()
 
-            return {
-                success: true,
-                path: body.key,
-                signedUrl,
-                finalUrl,
-            }
-        },
-    })
+    //         // const signedUrl = s3.presign(body.key, {
+    //         //     method: 'PUT',
+    //         // })
+    //         const signedUrl = this.safePath('/api/upload/*', { '*': body.key })
+    //         const finalUrl = new URL(body.key, env.UPLOADS_BASE_URL).toString()
+
+    //         return {
+    //             success: true,
+    //             path: body.key,
+    //             signedUrl,
+    //             finalUrl,
+    //         }
+    //     },
+    // })
     // Error handling middleware
     .onError(({ error }) => {
         notifyError(error)

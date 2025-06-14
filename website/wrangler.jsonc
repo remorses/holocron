@@ -7,6 +7,12 @@
     },
     "compatibility_flags": ["nodejs_compat"],
 
-    "compatibility_date": "2025-03-17",
+    "r2_buckets": [
+        {
+            "bucket_name": "fumabase-uploads",
+            "binding": "UPLOADS_BUCKET",
+        },
+    ],
+    "compatibility_date": "2025-05-17",
     "main": "./src/worker.ts",
 }

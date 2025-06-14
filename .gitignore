@@ -7,3 +7,5 @@ esm
 coverage
 .next
 .wrangler
+
+.dev.vars

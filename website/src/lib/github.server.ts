@@ -1,4 +1,4 @@
-import { Sema } from 'async-sema'
+import { Sema } from 'sema4'
 import { prisma } from 'db'
 import { App, Octokit } from 'octokit'
 import { AppError, notifyError } from 'website/src/lib/errors'

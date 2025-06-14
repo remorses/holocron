@@ -1,6 +1,6 @@
 generator client {
-  provider        = "prisma-client"
-  output          = "src/generated"
+  provider        = "prisma-client-js"
+  // output          = "src/generated"
   // binaryTargets   = ["native", "debian-openssl-3.0.x"]
   moduleFormat    = "esm"
   engineType      = "client"
