@@ -1,7 +1,11 @@
 import { prisma } from 'db'
 import { loader, VirtualFile } from 'fumadocs-core/source'
 
-export async function getFumadocsSource({ tabId }) {
+export async function getFumadocsSource({
+    tabId,
+    locales = [] as string[],
+    defaultLocale = 'en',
+}) {
     const [allPages, metaFiles] = await Promise.all([
         prisma.markdownPage.findMany({
             where: {
@@ -43,12 +47,16 @@ export async function getFumadocsSource({ tabId }) {
             }),
         )
 
+    const languages = locales
+    if (!languages.includes(defaultLocale)) {
+        languages.push(defaultLocale)
+    }
     const source = loader({
         source: { files },
-        baseUrl: '/',
+        baseUrl: '/', // TODO pass here the customer base path
         i18n: {
-            defaultLanguage: 'en',
-            languages: ['en', 'cn'],
+            defaultLanguage: defaultLocale,
+            languages,
             hideLocale: 'default-locale',
         },
         // icon(icon) {

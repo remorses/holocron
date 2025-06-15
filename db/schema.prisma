@@ -212,6 +212,8 @@ model Site {
   name   String?
   orgId  String
 
+  defaultLocale String @default("en")
+
   org Org @relation(fields: [orgId], references: [orgId], onDelete: Cascade)
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -227,6 +229,7 @@ model Site {
   githubOwner        String
   githubRepo         String
   mediaAssets        MediaAsset[]
+  locales            SiteEnabledLocale[]
 
   @@index([createdAt])
 }
@@ -244,10 +247,10 @@ model MediaAsset {
 }
 
 model MetaFile {
-  githubPath  String
-  tabId       String
-  jsonData Json
-  githubSha   String
+  githubPath String
+  tabId      String
+  jsonData   Json
+  githubSha  String
 
   tab Tab @relation(fields: [tabId], references: [tabId], onDelete: Cascade)
 
@@ -297,4 +300,12 @@ model SiteCustomization {
   logoUrl    String?
   color      String?
   site       Site    @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
+}
+
+model SiteEnabledLocale {
+  locale String
+  siteId String
+  site   Site   @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
+
+  @@id([locale, siteId])
 }

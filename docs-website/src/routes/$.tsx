@@ -22,7 +22,7 @@ import { PageTree } from 'fumadocs-core/server'
 import { SharedProps } from 'fumadocs-ui/components/dialog/search'
 import { RootProvider } from 'fumadocs-ui/provider/base'
 import { MarkdownRender } from '../lib/safe-mdx'
-import { getFumadocsSource } from '../lib/source'
+import { getFumadocsSource } from '../lib/source.server'
 import { LOCALE_LABELS } from '../lib/locales'
 
 export function meta({ data }: Route.MetaArgs) {
@@ -72,6 +72,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             tabs: {
                 take: 1,
             },
+            locales: true,
             customization: true,
         },
     })
@@ -86,7 +87,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         console.log('Tab not found for site:', site?.siteId)
         throw new Response('Tab not found', { status: 404 })
     }
-    const source = await getFumadocsSource({ tabId: tab.tabId })
+    const source = await getFumadocsSource({
+        defaultLocale: site.defaultLocale,
+        tabId: tab.tabId,
+        locales: site.locales.map((x) => x.locale),
+    })
 
     const slugs = params['*']?.split('/').filter((v) => v.length > 0) || []
     // const slug = '/' + slugs.join('/')
