@@ -23,7 +23,7 @@ import { SharedProps } from 'fumadocs-ui/components/dialog/search'
 import { RootProvider } from 'fumadocs-ui/provider/base'
 import { MarkdownRender } from '../lib/safe-mdx'
 import { getFumadocsSource } from '../lib/source.server'
-import { LOCALE_LABELS } from '../lib/locales'
+import { LOCALE_LABELS, LOCALES } from '../lib/locales'
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data) return {}
@@ -58,7 +58,7 @@ export function meta({ data }: Route.MetaArgs) {
 export async function loader({ params, request }: Route.LoaderArgs) {
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
-    const locale = 'en'
+
     const site = await prisma.site.findFirst({
         where: {
             domains: {
@@ -87,13 +87,20 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         console.log('Tab not found for site:', site?.siteId)
         throw new Response('Tab not found', { status: 404 })
     }
+    const locales = site.locales.map((x) => x.locale)
     const source = await getFumadocsSource({
         defaultLocale: site.defaultLocale,
         tabId: tab.tabId,
-        locales: site.locales.map((x) => x.locale),
+        locales,
     })
 
-    const slugs = params['*']?.split('/').filter((v) => v.length > 0) || []
+    let slugs = params['*']?.split('/').filter((v) => v.length > 0) || []
+
+    let locale = site.defaultLocale
+    if (slugs[0] && LOCALES.includes(slugs[0] as any)) {
+        locale = slugs[0]
+        slugs = slugs.slice(1)
+    }
     // const slug = '/' + slugs.join('/')
     const fumadocsPage = source.getPage(slugs, locale)
     if (!fumadocsPage) {
@@ -106,6 +113,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         prisma.markdownPage.findFirst({
             where: {
                 slug,
+
                 tabId: tab.tabId,
             },
         }),

@@ -19,6 +19,7 @@
         "@ai-sdk/ui-utils": "^1.2.11",
         "@bugsnag/cuid": "^3.2.1",
         "@cloudflare/vite-plugin": "^1.6.0",
+        "@iconify-json/lucide": "^1.2.49",
         "@octokit/webhooks": "^14.0.2",
         "@prisma/client": "*",
         "@radix-ui/react-alert-dialog": "^1.1.14",

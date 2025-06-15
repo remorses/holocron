@@ -1,5 +1,6 @@
 import { prisma } from 'db'
 import { loader, VirtualFile } from 'fumadocs-core/source'
+import { getIconJsx } from './icons.server'
 
 export async function getFumadocsSource({
     tabId,
@@ -59,9 +60,10 @@ export async function getFumadocsSource({
             languages,
             hideLocale: 'default-locale',
         },
-        // icon(icon) {
-        //     return null
-        // },
+        icon(icon) {
+            return getIconJsx({ key: icon })!
+        },
+
         // url: (slugs: string[], locale?: string) =>
         //     '/' + (locale ? locale + '/' : '') + slugs.join('/'),
     })
