@@ -202,6 +202,8 @@ export default function Page({ loaderData }: Route.ComponentProps) {
         <RootProvider
             search={{
                 SearchDialog: CustomSearchDialog,
+                options: {},
+
                 enabled: !!site.trieveDatasetId,
             }}
             i18n={{
