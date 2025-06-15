@@ -135,6 +135,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 repo: site.githubRepo,
                 signal: request.signal,
                 tabId,
+                // forceFullSync: true,
             })
             await syncSite({
                 orgId,

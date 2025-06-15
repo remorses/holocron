@@ -194,8 +194,9 @@ model MarkdownPage {
 
   extension MarkdownExtension @default(mdx)
 
-  githubSha  String
-  githubPath String
+  githubSha      String
+  githubPath     String
+  structuredData Json @default("{}")
 
   @@unique([tabId, slug])
   @@index([tabId])

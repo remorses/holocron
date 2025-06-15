@@ -17,7 +17,7 @@ import {
     getRepoFiles,
     isMarkdown,
 } from './github.server'
-import { inParallel, mdxRegex } from './utils'
+import { yieldTasksInParallel, mdxRegex } from './utils'
 import { isAbsoluteUrl } from 'docs-website/src/lib/utils'
 import {
     getCacheTagForMediaAsset,
@@ -396,6 +396,7 @@ export async function* pagesFromGithub({
             select: {
                 githubSha: true,
                 slug: true,
+                githubPath: true,
             },
         }),
         prisma.mediaAsset.findMany({
@@ -415,7 +416,14 @@ export async function* pagesFromGithub({
         throw new Error('Github app no longer installed')
     }
     let branch = repoResult.data.default_branch
-    const existingShas = new Set(existingPages.map((f) => f.githubSha))
+    const existingPathsPlusSha = new Set<string>(
+        existingPages
+            .map((f) => f.githubPath + f.githubSha)
+            .concat(
+                existingMetaFiles.map((f) => f.githubPath + f.githubSha),
+                existingMediaAssets.map((f) => f.githubPath + f.githubSha),
+            ),
+    )
     const existingSlugs = new Set(existingPages.map((f) => f.slug))
     let maxBlobFetches = 10_000
     let blobFetches = 0
@@ -423,23 +431,26 @@ export async function* pagesFromGithub({
     console.time(`${owner}/${repo} - fetch files ${timeId}`)
     const files = await getRepoFiles({
         fetchBlob(file) {
-            if (blobFetches > maxBlobFetches) {
-                return false
-            }
+
             let pathWithFrontSlash = addFrontSlashToPath(file.path || '')
-            if (
-                !file.sha ||
-                !pathWithFrontSlash?.startsWith(basePath) ||
-                !isMarkdown(pathWithFrontSlash) ||
-                !isMetaFile(pathWithFrontSlash)
-            ) {
-                return false
+            if (!file.sha) {
+                console.log(`Skipping file ${file.path} because sha is missing`);
+                return false;
             }
+            if (!pathWithFrontSlash?.startsWith(basePath)) {
+                console.log(`Skipping file ${file.path} because path does not start with basePath (${basePath})`);
+                return false;
+            }
+            if (!isMarkdown(pathWithFrontSlash) && !isMetaFile(pathWithFrontSlash)) {
+                console.log(`Skipping file ${file.path} because it is neither markdown nor meta file`);
+                return false;
+            }
+            if (forceFullSync) return true
             if (onlyGithubPaths.size && file.path) {
                 return onlyGithubPaths.has(file.path)
             }
-            if (!forceFullSync && file.sha) {
-                return !existingShas.has(file.sha)
+            if (file.sha && existingPathsPlusSha.has(file.path + file.sha)) {
+                return false
             }
 
             blobFetches++
@@ -452,12 +463,11 @@ export async function* pagesFromGithub({
         signal,
     })
     console.timeEnd(`${owner}/${repo} - fetch files ${timeId}`)
-
-    const mediaAssetsDownloads = inParallel(
+    // console.log(files)
+    const mediaAssetsDownloads = yieldTasksInParallel(
         6,
         files
             .filter((x) => {
-                if (forceFullSync) return true
                 return (
                     x?.pathWithFrontSlash?.startsWith(basePath) &&
                     mediaExtensions.some((ext) => {
@@ -465,15 +475,11 @@ export async function* pagesFromGithub({
                     })
                 )
             })
-            .filter(
-                (x) =>
-                    !existingMediaAssets.some(
-                        (ex) =>
-                            ex.githubPath === x.githubPath &&
-                            ex.githubSha === x.sha,
-                    ),
-            )
-            .map(async (x) => {
+            .filter((x) => {
+                if (forceFullSync) return true
+                return !existingPathsPlusSha.has(x.githubPath + x.sha)
+            })
+            .map((x) => async () => {
                 const slug = generateSlugFromPath(x.githubPath, basePath)
 
                 const res = await octokit.rest.repos.getContent({
@@ -501,16 +507,21 @@ export async function* pagesFromGithub({
     for await (let upload of mediaAssetsDownloads) {
         yield upload
     }
-    const onlyMetaFiles = files.filter((x) => {
-        if (
-            x.content == null ||
-            !x?.pathWithFrontSlash?.startsWith(basePath) ||
-            !isMetaFile(x.pathWithFrontSlash)
-        ) {
-            return false
-        }
-        return true
-    })
+    const onlyMetaFiles = files
+        .filter((x) => {
+            if (
+                x.content == null ||
+                !x?.pathWithFrontSlash?.startsWith(basePath) ||
+                !isMetaFile(x.pathWithFrontSlash)
+            ) {
+                return false
+            }
+            return true
+        })
+        .filter((x) => {
+            if (forceFullSync) return true
+            return !existingPathsPlusSha.has(x.githubPath + x.sha)
+        })
 
     for (let file of onlyMetaFiles) {
         const jsonData = safeJsonParse(file.content || '{}')
@@ -528,11 +539,20 @@ export async function* pagesFromGithub({
     }
 
     let onlyMarkdown = files.filter((x) => {
-        if (
-            x.content == null ||
-            !x?.pathWithFrontSlash?.startsWith(basePath) ||
-            !isMarkdown(x.pathWithFrontSlash)
-        ) {
+        if (x.content == null) {
+            console.log(`Skipping file ${x.githubPath} because content is null`)
+            return false
+        }
+        if (!x?.pathWithFrontSlash?.startsWith(basePath)) {
+            console.log(
+                `Skipping file ${x.githubPath} because path does not start with basePath (${basePath})`,
+            )
+            return false
+        }
+        if (!isMarkdown(x.pathWithFrontSlash)) {
+            console.log(
+                `Skipping file ${x.githubPath} because it is not a markdown file`,
+            )
             return false
         }
         return true
@@ -595,6 +615,8 @@ export async function* pagesFromGithub({
                 githubPath: x.githubPath,
                 description: data.description,
                 extension,
+                structuredData: data.structuredData as any,
+                // ast: data.ast
             },
             structuredData: data.structuredData,
             totalPages,

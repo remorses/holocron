@@ -33,7 +33,10 @@ export function slugKebabCase(str) {
 
 export const mdxRegex = /\.mdx?$/
 
-export async function* inParallel(concurrency = Infinity, tasks) {
+export async function* yieldTasksInParallel<T>(
+    concurrency = Infinity,
+    tasks: Array<() => Promise<T>>,
+) {
     const queue = tasks.slice() // ✓ don’t mutate caller’s array
     const pending = queue
         .splice(0, concurrency) // start the first batch
@@ -43,19 +46,22 @@ export async function* inParallel(concurrency = Infinity, tasks) {
         // tag the *current* pending list so we know which one wins the race
         const tagged = pending.map((p, i) =>
             p.then(
-                (value) => ({ i, value, ok: true }),
-                (err) => ({ i, err, ok: false }),
+                (value: T) => ({ i, value, ok: true as const }),
+                (err: any) => ({ i, err, ok: false as const }),
             ),
         )
 
-        const { i, value, err, ok } = await Promise.race(tagged)
+        const result = await Promise.race(tagged)
 
-        pending.splice(i, 1) // drop the finished promise
-        if (queue.length) pending.push(queue.shift()()) // top up to the limit
+        pending.splice(result.i, 1) // drop the finished promise
+        if (queue.length) {
+            const nextFn = queue.shift()
+            if (nextFn) pending.push(nextFn())
+        }
 
-        if (ok)
-            yield value // stream the value
-        else throw err // abort on first error
+        if (result.ok)
+            yield result.value // stream the value
+        else throw result.err // abort on first error
     }
 }
 

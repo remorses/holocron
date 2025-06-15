@@ -1,6 +1,8 @@
 import { prisma } from 'db'
-import { loader, VirtualFile } from 'fumadocs-core/source'
+import { loader, MetaData, PageData, VirtualFile } from 'fumadocs-core/source'
 import { getIconJsx } from './icons.server'
+import { I18nConfig } from 'fumadocs-core/i18n'
+import { StructuredData } from './mdx'
 
 export async function getFumadocsSource({
     tabId,
@@ -28,8 +30,9 @@ export async function getFumadocsSource({
 
     const files = allPages
         .map((x) => {
+            const structuredData = x.structuredData
             const res: VirtualFile = {
-                data: x.frontmatter,
+                data: { ...(x.frontmatter as any), structuredData },
                 path: x.githubPath,
                 type: 'page',
 
@@ -52,7 +55,15 @@ export async function getFumadocsSource({
     if (!languages.includes(defaultLocale)) {
         languages.push(defaultLocale)
     }
-    const source = loader({
+    const source = loader<
+        {
+            pageData: PageData & {
+                structuredData: StructuredData
+            }
+            metaData: MetaData
+        },
+        I18nConfig
+    >({
         source: { files },
         baseUrl: '/', // TODO pass here the customer base path
         i18n: {

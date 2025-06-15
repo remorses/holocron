@@ -87,9 +87,9 @@ export const ChatMessage = memo(function ChatMessage({
                         }
                     })}
                 </div>
-                {message.role !== 'user' && !isChatGenerating && (
+                {/* {message.role !== 'user' && !isChatGenerating && (
                     <MessageActions />
-                )}
+                )} */}
             </div>
         </article>
     )

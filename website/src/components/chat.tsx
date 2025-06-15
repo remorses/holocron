@@ -12,6 +12,9 @@ import { useStickToBottom } from 'use-stick-to-bottom'
 import { fullStreamToUIMessages } from '../lib/process-chat'
 import { apiClient } from '../lib/spiceflow-client'
 import { chatStateContainer, useChatState } from '../lib/state'
+import { Cards, Card } from 'fumadocs-ui/components/card'
+
+import { CpuIcon, PanelsTopLeft, Database, Terminal } from 'lucide-react'
 
 export default function Chat({}) {
     const { scrollRef, contentRef, scrollToBottom } = useStickToBottom()
@@ -19,13 +22,56 @@ export default function Chat({}) {
     return (
         <ScrollArea
             ref={scrollRef}
-            className='[&>div>div]:grow h-full flex flex-col grow bg-background'
+            className='[&>div>div]:grow max-w-full h-full flex flex-col grow bg-background'
         >
-            {/* Chat */}
             <Messages ref={contentRef} />
 
             <Footer />
         </ScrollArea>
+    )
+}
+
+type ChatCardItem = {
+    icon: React.ReactNode
+    title: string
+    description: string
+    className?: string
+}
+
+// Example data, could be moved outside or passed as props
+const chatCardItems: ChatCardItem[] = [
+    {
+        icon: <CpuIcon className='text-purple-300' />,
+        title: 'Fumadocs Core',
+        description:
+            'Handles logic like doc search and adapters.',
+        className: '@max-lg:col-span-1',
+    },
+    {
+        icon: <PanelsTopLeft className='text-blue-300' />,
+        title: 'Fumadocs UI',
+        description:
+            'A modern theme for docs and components.',
+        className: '@max-lg:col-span-1',
+    },
+]
+
+// The component
+function ChatCards({ items = chatCardItems }: { items?: ChatCardItem[] }) {
+    return (
+        <Cards className='mt-auto '>
+            {items.map((item, idx) => (
+                <Card
+
+                    key={item.title + idx}
+                    icon={item.icon}
+                    title={item.title}
+                    className={item.className}
+                >
+                    {item.description}
+                </Card>
+            ))}
+        </Cards>
     )
 }
 
@@ -40,6 +86,7 @@ function Messages({ ref }) {
             {messages.map((x) => {
                 return <ChatMessage key={x.id} message={x} />
             })}
+            <ChatCards />
         </div>
     )
 }

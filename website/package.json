@@ -49,6 +49,7 @@
         "clsx": "^2.1.1",
         "colord": "^2.9.3",
         "db": "workspace:*",
+        "fumadocs-ui": "workspace:*",
         "docs-website": "workspace:*",
         "hono": "^4.7.11",
         "isbot": "^5.1.28",
