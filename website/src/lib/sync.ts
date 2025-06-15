@@ -40,6 +40,12 @@ export type AssetForSync =
           downloadUrl: string
           githubPath: string
       }
+    | {
+          type: 'metaFile'
+          jsonData: any
+          githubPath: string
+          githubSha: string
+      }
 
 const mediaExtensions = [
     // Image extensions
@@ -180,6 +186,28 @@ export async function syncPages({
     for await (const asset of pages) {
         await semaphore.acquire() // Acquire permit for file processing
         try {
+            if (asset.type === 'metaFile') {
+                await prisma.metaFile.upsert({
+                    where: {
+                        githubPath_tabId: {
+                            githubPath: asset.githubPath,
+                            tabId,
+                        },
+                    },
+                    update: {
+                        githubSha: asset.githubSha,
+                        githubPath: asset.githubPath,
+                        jsonData: asset.jsonData,
+                        tabId,
+                    },
+                    create: {
+                        githubPath: asset.githubPath,
+                        jsonData: asset.jsonData,
+                        tabId,
+                        githubSha: asset.githubSha,
+                    },
+                })
+            }
             if (asset.type === 'mediaAsset') {
                 const slug = asset.slug
 
@@ -330,6 +358,11 @@ function groupByN<T>(array: T[], n: number): T[][] {
     return result
 }
 
+function isMetaFile(path: string) {
+    if (!path) return false
+    return path.endsWith('/meta.json') || path === 'meta.json'
+}
+
 export async function* pagesFromGithub({
     repo,
     owner,
@@ -343,37 +376,47 @@ export async function* pagesFromGithub({
     if (!installationId) throw new Error('Installation ID is required')
     const octokit = await getOctokit({ installationId })
     const timeId = Date.now()
-    const [repoResult, ok, existingFiles, existingMediaAssets] =
-        await Promise.all([
-            octokit.rest.repos.get({
-                owner,
-                repo,
-                request: { signal },
-            }),
-            checkGitHubIsInstalled({ installationId }),
-            prisma.markdownPage.findMany({
-                where: {
-                    tabId,
-                },
-                select: {
-                    githubSha: true,
-                    slug: true,
-                },
-            }),
-            prisma.mediaAsset.findMany({
-                where: {
-                    tabId,
-                },
-            }),
-        ])
+    const [
+        repoResult,
+        ok,
+        existingPages,
+        existingMediaAssets,
+        existingMetaFiles,
+    ] = await Promise.all([
+        octokit.rest.repos.get({
+            owner,
+            repo,
+            request: { signal },
+        }),
+        checkGitHubIsInstalled({ installationId }),
+        prisma.markdownPage.findMany({
+            where: {
+                tabId,
+            },
+            select: {
+                githubSha: true,
+                slug: true,
+            },
+        }),
+        prisma.mediaAsset.findMany({
+            where: {
+                tabId,
+            },
+        }),
+        prisma.metaFile.findMany({
+            where: {
+                tabId,
+            },
+        }),
+    ])
     console.timeEnd(`${owner}/${repo} - repo checks ${timeId}`)
 
     if (!ok) {
         throw new Error('Github app no longer installed')
     }
     let branch = repoResult.data.default_branch
-    const existingShas = new Set(existingFiles.map((f) => f.githubSha))
-    const existingSlugs = new Set(existingFiles.map((f) => f.slug))
+    const existingShas = new Set(existingPages.map((f) => f.githubSha))
+    const existingSlugs = new Set(existingPages.map((f) => f.slug))
     let maxBlobFetches = 10_000
     let blobFetches = 0
 
@@ -387,7 +430,8 @@ export async function* pagesFromGithub({
             if (
                 !file.sha ||
                 !pathWithFrontSlash?.startsWith(basePath) ||
-                !isMarkdown(pathWithFrontSlash)
+                !isMarkdown(pathWithFrontSlash) ||
+                !isMetaFile(pathWithFrontSlash)
             ) {
                 return false
             }
@@ -408,13 +452,6 @@ export async function* pagesFromGithub({
         signal,
     })
     console.timeEnd(`${owner}/${repo} - fetch files ${timeId}`)
-
-    const allCurrentPagePaths = new Set(
-        files.map((x) => x.pathWithFrontSlash).filter(Boolean),
-    )
-    const toDelete = [...existingSlugs].filter(
-        (slug) => !allCurrentPagePaths.has(slug),
-    )
 
     const mediaAssetsDownloads = inParallel(
         6,
@@ -464,6 +501,32 @@ export async function* pagesFromGithub({
     for await (let upload of mediaAssetsDownloads) {
         yield upload
     }
+    const onlyMetaFiles = files.filter((x) => {
+        if (
+            x.content == null ||
+            !x?.pathWithFrontSlash?.startsWith(basePath) ||
+            !isMetaFile(x.pathWithFrontSlash)
+        ) {
+            return false
+        }
+        return true
+    })
+
+    for (let file of onlyMetaFiles) {
+        const jsonData = safeJsonParse(file.content || '{}')
+        if (!jsonData) {
+            console.log('skipping meta file for invalid json', file.githubPath)
+            continue
+        }
+        const meta: AssetForSync = {
+            type: 'metaFile',
+            jsonData,
+            githubPath: file.githubPath,
+            githubSha: file.sha,
+        }
+        yield meta
+    }
+
     let onlyMarkdown = files.filter((x) => {
         if (
             x.content == null ||
@@ -802,4 +865,12 @@ function generateSlugFromPath(pathWithFrontSlash: string, basePath) {
         '/' + pathWithFrontSlash.replace(/\.mdx?$/, '').replace(/\/index$/, '')
 
     return res
+}
+
+function safeJsonParse(str: string, defaultValue: any = {}) {
+    try {
+        return JSON.parse(str)
+    } catch {
+        return defaultValue
+    }
 }

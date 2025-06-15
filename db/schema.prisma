@@ -231,10 +231,6 @@ model Site {
   @@index([createdAt])
 }
 
-// if a media asset exists it means that it was uploaded to the r2 bucket already.
-// to make sure you always get latest image, the image is re uploaded to r2 when sha changes
-// the url of the image in the bucket is /site/:siteId/tab/:tabId/:imagePath
-// images are found in the markdown by compiling it to html. then
 model MediaAsset {
   siteId     String
   tabId      String
@@ -245,6 +241,17 @@ model MediaAsset {
   githubPath String
 
   @@id([slug, tabId])
+}
+
+model MetaFile {
+  githubPath  String
+  tabId       String
+  jsonData Json
+  githubSha   String
+
+  tab Tab @relation(fields: [tabId], references: [tabId], onDelete: Cascade)
+
+  @@id([githubPath, tabId])
 }
 
 enum DomainType {
@@ -290,14 +297,4 @@ model SiteCustomization {
   logoUrl    String?
   color      String?
   site       Site    @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
-}
-
-model MetaFile {
-  githubPath  String
-  tabId       String
-  jsonContent Json
-
-  tab Tab @relation(fields: [tabId], references: [tabId], onDelete: Cascade)
-
-  @@id([githubPath, tabId])
 }
