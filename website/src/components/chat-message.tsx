@@ -34,7 +34,8 @@ export const ChatMessage = memo(function ChatMessage({
     const isChatGenerating = useChatState((x) => x.isChatGenerating)
     const isEmpty =
         message.parts.length === 0 ||
-        message.parts.every((x) => x.type === 'text' && !x.text.trim())
+        (message.parts.length <= 2 &&
+            message.parts.every((x) => x.type === 'text' && !x.text.trim()))
     if (isChatGenerating && isEmpty) {
         return <LoadingSpinner />
     }

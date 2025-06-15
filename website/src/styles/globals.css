@@ -151,3 +151,27 @@
         @apply bg-background text-foreground;
     }
 }
+
+
+@keyframes assistant-spinner-spin {
+    0%,
+    29.4% {
+        opacity: 0.5;
+        transform: rotate(45deg);
+    }
+
+    35.3% {
+        opacity: 0.5;
+        transform: rotate(45deg);
+    }
+
+    67.6% {
+        opacity: 1;
+    }
+
+    97.6%,
+    to {
+        opacity: 0.5;
+        transform: rotate(405deg);
+    }
+}
