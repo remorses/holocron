@@ -1,8 +1,9 @@
 import { mdxComponents } from 'docs-website/src/components/mdx-components'
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
+import { memo } from 'react'
 import { CustomTransformer, SafeMdxRenderer } from 'safe-mdx'
-import { getProcessor, processMdx } from './mdx'
-import { memo, use } from 'react'
+import { createHighlighter, Highlighter } from 'shiki'
+import { getProcessor } from './mdx'
 
 const customTransformer: CustomTransformer = (node, transform) => {
     if (node.type === 'code') {
@@ -23,6 +24,24 @@ const customTransformer: CustomTransformer = (node, transform) => {
     }
 }
 
+const onMissingLanguage = (highlighter, language) => {
+    throw highlighter.loadLoanguage(language)
+}
+
+function setHighlighter() {
+    if (highlighter) return
+    createHighlighter({
+        themes: ['github-dark', 'github-light'],
+        langs: ['text'],
+    }).then((x) => {
+        if (highlighter) return
+        highlighter = x
+    })
+}
+
+let highlighter: Highlighter | undefined
+setHighlighter()
+
 export const MarkdownRender = memo(function MarkdownRender({
     content,
     ast,
@@ -31,7 +50,14 @@ export const MarkdownRender = memo(function MarkdownRender({
     ast?: any
 }) {
     if (!ast) {
-        const processor = use(getProcessor('mdx'))
+        if (!highlighter) {
+            throw setHighlighter()
+        }
+        const processor = getProcessor({
+            extension: 'mdx',
+            onMissingLanguage,
+            highlighter,
+        })
         const file = processor.processSync(content)
         ast = file.data.ast
     }

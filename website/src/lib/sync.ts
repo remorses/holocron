@@ -1,12 +1,10 @@
 import { Sema } from 'sema4'
+import { findMatchInPaths } from 'docs-website/src/lib/html.server'
 import { MarkdownExtension, Prisma, prisma } from 'db'
 import exampleDocs from 'website/scripts/example-docs.json'
 
-import {
-    DocumentRecord,
-    processMdx,
-    StructuredData,
-} from 'docs-website/src/lib/mdx'
+import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
+import { DocumentRecord, StructuredData } from 'docs-website/src/lib/mdx'
 import path from 'path'
 import { ChunkReqPayload, TrieveSDK } from 'trieve-ts-sdk'
 import { env } from './env'
@@ -18,14 +16,49 @@ import {
     getRepoFiles,
     isMarkdown,
 } from './github.server'
-import { mdxRegex } from './utils'
+import { inParallel, mdxRegex } from './utils'
+import { isAbsoluteUrl } from 'docs-website/src/lib/utils'
+import { s3 } from './s3'
 
-export type PageForSync = {
-    pageInput: Omit<Prisma.MarkdownPageUncheckedCreateInput, 'tabId'>
-    structuredData: StructuredData
+export type AssetForSync =
+    | {
+          type: 'page'
+          totalPages: number
+          pageInput: Omit<Prisma.MarkdownPageUncheckedCreateInput, 'tabId'>
+          structuredData: StructuredData
+      }
+    | {
+          type: 'mediaAsset'
+          slug: string
+          sha: string
+      }
 
-    totalPages: number
-}
+const mediaExtensions = [
+    // Image extensions
+    'jpg',
+    'jpeg',
+    'png',
+    'gif',
+    'bmp',
+    'webp',
+    'svg',
+    'ico',
+    'tif',
+    'tiff',
+    'avif',
+    // Video extensions
+    'mp4',
+    'mov',
+    'avi',
+    'wmv',
+    'flv',
+    'webm',
+    'mkv',
+    'm4v',
+    '3gp',
+    'ogg',
+    'ogv',
+].map((x) => '.' + x)
 
 export async function syncSite({
     siteId,
@@ -38,7 +71,7 @@ export async function syncSite({
     name?: string
     tabId: string
     orgId: string
-    pages: AsyncIterable<PageForSync>
+    pages: AsyncIterable<AssetForSync>
 }) {
     console.log('Starting import script...')
 
@@ -74,19 +107,20 @@ export async function syncSite({
 }
 
 export async function* pagesFromExampleJson(): AsyncGenerator<
-    PageForSync & { filePath: string; content: string }
+    AssetForSync & { filePath: string; content: string }
 > {
     const totalPages = exampleDocs.length
     for (let doc of exampleDocs) {
         const entryRelativePath = doc.relativePath
         const entrySlug =
             '/' + entryRelativePath.replace(/\\/g, '/').replace(mdxRegex, '')
-        const { data } = await processMdx({
+        const { data } = await processMdxInServer({
             markdown: doc.contents,
             extension:
                 doc.relativePath.split('.').pop() === 'mdx' ? 'mdx' : 'md',
         })
         const page = {
+            type: 'page',
             totalPages,
             pageInput: {
                 slug: entrySlug,
@@ -98,7 +132,7 @@ export async function* pagesFromExampleJson(): AsyncGenerator<
             },
 
             structuredData: data.structuredData,
-        } satisfies PageForSync
+        } satisfies AssetForSync
         yield { ...page, content: doc.contents, filePath: entryRelativePath }
     }
 }
@@ -110,7 +144,7 @@ export async function syncPages({
     pages,
     name,
 }: {
-    pages: AsyncIterable<PageForSync>
+    pages: AsyncIterable<AssetForSync>
     tabId: string
     siteId: string
     trieveDatasetId?: string
@@ -134,63 +168,91 @@ export async function syncPages({
 
     const processedSlugs = new Set<string>()
     for await (const page of pages) {
-        const { slug, title } = page.pageInput
-        const structuredData = page.structuredData
-        if (processedSlugs.has(slug)) {
-            console.log(
-                `Skipping duplicate page with slug: ${slug}, title: ${title}`,
-            )
-            continue
+        if (page.type === 'mediaAsset') {
+            const slug = page.slug
+            await prisma.mediaAsset.upsert({
+                where: {
+                    slug_tabId: {
+                        tabId,
+                        slug,
+                    },
+                },
+                update: {
+                    siteId,
+                    slug,
+                    tabId,
+                },
+                create: {
+                    githubSha: page.sha,
+                    siteId,
+                    slug,
+                    tabId,
+                },
+            })
         }
-        await semaphore.acquire() // Acquire permit for file processing
-        try {
-            chunksToSync.push(
-                ...processForTrieve({
-                    _id: slug,
-                    title: title || slug,
-                    url: slug,
-                    structured: structuredData,
-                    pageSlug: slug,
-                }),
-            )
-
-            console.log(`Upserting page with slug: ${slug}, title: ${title}...`)
-            await Promise.all([
-                prisma.markdownPage
-                    .upsert({
-                        where: { tabId_slug: { tabId, slug } },
-                        update: page.pageInput,
-                        create: { ...page.pageInput, tabId },
-                    })
-                    .then((page) => {
-                        console.log(
-                            `Page upsert complete: ${page.pageId} (${page.title})`,
-                        )
-                    }),
-                chunksToSync.length >= chunkSize &&
-                    (async () => {
-                        console.log(`Syncing ${chunkSize} chunks to Trieve...`)
-                        await trieve.createChunk(
-                            chunksToSync.slice(0, chunkSize),
-                        )
-                        console.log('Chunks synced to Trieve successfully.')
-                        chunksToSync = chunksToSync.slice(chunkSize)
-                    })(),
-            ])
-            console.log(` -> Upserted page: ${title} (ID: ${slug})`)
-        } catch (e: any) {
-            if (
-                e.message.includes(
-                    'lone leading surrogate in hex escape at line ',
+        if (page.type === 'page') {
+            const { slug, title } = page.pageInput
+            const structuredData = page.structuredData
+            if (processedSlugs.has(slug)) {
+                console.log(
+                    `Skipping duplicate page with slug: ${slug}, title: ${title}`,
                 )
-            ) {
-                console.error(e)
-                return
+                continue
             }
-            throw e
-        } finally {
-            semaphore.release() // Release permit after file processing
-            processedSlugs.add(slug)
+            await semaphore.acquire() // Acquire permit for file processing
+            try {
+                chunksToSync.push(
+                    ...processForTrieve({
+                        _id: slug,
+                        title: title || slug,
+                        url: slug,
+                        structured: structuredData,
+                        pageSlug: slug,
+                    }),
+                )
+
+                console.log(
+                    `Upserting page with slug: ${slug}, title: ${title}...`,
+                )
+                await Promise.all([
+                    prisma.markdownPage
+                        .upsert({
+                            where: { tabId_slug: { tabId, slug } },
+                            update: page.pageInput,
+                            create: { ...page.pageInput, tabId },
+                        })
+                        .then((page) => {
+                            console.log(
+                                `Page upsert complete: ${page.pageId} (${page.title})`,
+                            )
+                        }),
+                    chunksToSync.length >= chunkSize &&
+                        (async () => {
+                            console.log(
+                                `Syncing ${chunkSize} chunks to Trieve...`,
+                            )
+                            await trieve.createChunk(
+                                chunksToSync.slice(0, chunkSize),
+                            )
+                            console.log('Chunks synced to Trieve successfully.')
+                            chunksToSync = chunksToSync.slice(chunkSize)
+                        })(),
+                ])
+                console.log(` -> Upserted page: ${title} (ID: ${slug})`)
+            } catch (e: any) {
+                if (
+                    e.message.includes(
+                        'lone leading surrogate in hex escape at line ',
+                    )
+                ) {
+                    console.error(e)
+                    return
+                }
+                throw e
+            } finally {
+                semaphore.release() // Release permit after file processing
+                processedSlugs.add(slug)
+            }
         }
     }
 
@@ -234,27 +296,33 @@ export async function* pagesFromGithub({
     urlLikeFrontmatterFields = [],
     onlyGithubPaths = new Set<string>(), // TODO probably not needed
     forceFullSync = false,
-}): AsyncGenerator<PageForSync> {
+}) {
     if (!installationId) throw new Error('Installation ID is required')
     const octokit = await getOctokit({ installationId })
     const timeId = Date.now()
-    const [repoResult, ok, existingFiles] = await Promise.all([
-        octokit.rest.repos.get({
-            owner,
-            repo,
-            request: { signal },
-        }),
-        checkGitHubIsInstalled({ installationId }),
-        prisma.markdownPage.findMany({
-            where: {
-                tab: { site: { installationId } },
-            },
-            select: {
-                githubSha: true,
-                slug: true,
-            },
-        }),
-    ])
+    const [repoResult, ok, existingFiles, existingMediaAssets] =
+        await Promise.all([
+            octokit.rest.repos.get({
+                owner,
+                repo,
+                request: { signal },
+            }),
+            checkGitHubIsInstalled({ installationId }),
+            prisma.markdownPage.findMany({
+                where: {
+                    tab: { site: { installationId } },
+                },
+                select: {
+                    githubSha: true,
+                    slug: true,
+                },
+            }),
+            prisma.mediaAsset.findMany({
+                where: {
+                    tab: { site: { installationId } },
+                },
+            }),
+        ])
     console.timeEnd(`${owner}/${repo} - repo checks ${timeId}`)
 
     if (!ok) {
@@ -306,6 +374,54 @@ export async function* pagesFromGithub({
     )
 
     let allAssetPaths = files.map((x) => x.pathWithFrontSlash)
+
+    const existingMediaShas = new Set(
+        existingMediaAssets.map((x) => x.githubSha),
+    )
+    const allMediaAssets = files
+        .filter((x) => {
+            return mediaExtensions.some((ext) => {
+                return x.githubPath.endsWith(ext)
+            })
+        })
+        .map((x) => {
+            const slug = generateSlugFromPath(x.githubPath, basePath)
+            const media: AssetForSync = {
+                type: 'mediaAsset',
+                slug,
+                sha: x.sha,
+            }
+            return media
+        })
+    const mediaAssetsToUpload = allMediaAssets.filter(
+        (x) => !existingMediaShas.has(x.sha),
+    )
+
+    const uploads = inParallel(
+        mediaAssetsToUpload.map(async (asset) => {
+            const res = await octokit.rest.repos.getContent({
+                owner,
+                repo,
+                path: asset.slug,
+                ref: branch,
+                request: { signal },
+            })
+            if (!('download_url' in res.data)) {
+                throw new Error('Could not get download url for image')
+            }
+            console.log('download url', res.data.download_url)
+            const downloadUrl = res.data.download_url || ''
+            const key = `assets/site/${siteId}/tab/${tabId}${asset.slug}`
+            const response = await fetch(downloadUrl, {})
+            if (!response.ok) {
+                throw new Error(`Failed to download asset ${asset.slug}`)
+            }
+            if (!response.body) {
+                throw new Error(`Failed to get body for asset ${asset.slug}`)
+            }
+            await s3.file(key).write(response.body)
+        }),
+    )
     let onlyMarkdown = files.filter((x) => {
         if (
             x.content == null ||
@@ -325,6 +441,7 @@ export async function* pagesFromGithub({
         publicFileMapUrl({ branch, imgPath, owner, repo })
 
     if (repoResult.data.private) {
+        // TODO remove this, media assets are fetched on the moment instead
         mapImageUrl = async (imgPath) => {
             try {
                 const res = await octokit.rest.repos.getContent({
@@ -424,8 +541,9 @@ export async function* pagesFromGithub({
             continue
         }
         slugsFound.add(slug)
-        const { data } = await processMdx({
+        const { data } = await processMdxInServer({
             markdown: x.content,
+
             extension,
         })
 
@@ -445,7 +563,8 @@ export async function* pagesFromGithub({
             },
             structuredData: data.structuredData,
             totalPages,
-        }
+            type: 'page',
+        } satisfies AssetForSync
     }
 }
 
@@ -695,64 +814,6 @@ export async function publicFileMapUrl({
 
 function isValidUrl(string: string): boolean {
     return string.startsWith('http://') || string.startsWith('https://')
-}
-
-export function findMatchInPaths({
-    filePath,
-    paths,
-}: {
-    paths: string[]
-    filePath: string
-}) {
-    // hashes are alright
-    if (!filePath) {
-        return ''
-    }
-    if (isAbsoluteUrl(filePath)) {
-        return filePath
-    }
-    const normalized = normalizeFilePathForSearch(filePath)
-    let found = paths.find((x) => {
-        if (x === normalized) {
-            return true
-        }
-        if (x.endsWith(normalized)) {
-            return true
-        }
-        return false
-    })
-    return found || ''
-}
-
-function normalizeFilePathForSearch(filePath: string) {
-    if (filePath.startsWith('/')) {
-        filePath = filePath.slice(1)
-    }
-    let parts = filePath.split('/').filter(Boolean)
-    // remove relative parts
-    parts = parts.filter((x) => {
-        if (x === '.') {
-            return false
-        }
-        if (x === '..') {
-            return false
-        }
-        return true
-    })
-    return parts.join('/')
-}
-
-function isAbsoluteUrl(url: string) {
-    if (!url) {
-        return false
-    }
-    let abs = [
-        '#',
-        'https://',
-        'http://',
-        'mailto:', //
-    ].some((x) => url.startsWith(x))
-    return abs
 }
 
 function generateSlugFromPath(pathWithFrontSlash: string, basePath) {

@@ -1,14 +1,14 @@
-import { processMdx } from 'docs-website/src/lib/mdx'
+import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import fs from 'fs'
 
 import path from 'path'
-import { PageForSync } from './sync'
+import { AssetForSync } from './sync'
 import { mdxRegex } from './utils'
 
 export async function* pagesFromDirectory(
     dirPath: string,
     base = '',
-): AsyncGenerator<PageForSync & { filePath: string; content: string }> {
+): AsyncGenerator<AssetForSync & { filePath: string; content: string }> {
     if (!base) {
         base = dirPath
     }
@@ -29,7 +29,7 @@ export async function* pagesFromDirectory(
 
         const fileContent = await fs.promises.readFile(fullPath, 'utf8')
 
-        const { data } = await processMdx({
+        const { data } = await processMdxInServer({
             markdown: fileContent,
             extension: entry.name.split('.').pop() === 'mdx' ? 'mdx' : 'md',
         })
@@ -43,9 +43,9 @@ export async function* pagesFromDirectory(
                 githubPath: entryRelativePath,
                 githubSha: '',
             },
-
+            type: 'page',
             structuredData: data.structuredData,
-        } satisfies PageForSync | null
+        } satisfies AssetForSync | null
         if (page) {
             yield { ...page, content: fileContent, filePath: entryRelativePath }
         }

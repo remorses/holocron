@@ -92,6 +92,9 @@ importers:
       '@matejmazur/react-katex':
         specifier: ^3.1.3
         version: 3.1.3(katex@0.16.22)(react@19.1.0)
+      '@prisma/client':
+        specifier: '*'
+        version: 6.9.0(prisma@6.9.0(typescript@5.8.3))(typescript@5.8.3)
       '@react-router/fs-routes':
         specifier: ^7.6.2
         version: 7.6.2(@react-router/dev@7.6.2(@react-router/serve@7.6.2(react-router@7.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.1)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.20.0(@cloudflare/workers-types@4.20250614.0))(yaml@2.8.0))(typescript@5.8.3)
@@ -140,6 +143,15 @@ importers:
       docs-website:
         specifier: workspace:^
         version: 'link:'
+      dom-serializer:
+        specifier: ^2.0.0
+        version: 2.0.0
+      domhandler:
+        specifier: ^5.0.3
+        version: 5.0.3
+      domutils:
+        specifier: ^3.2.2
+        version: 3.2.2
       fumadocs-core:
         specifier: workspace:*
         version: link:../fumadocs/packages/core
@@ -152,6 +164,9 @@ importers:
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3
+      htmlparser2:
+        specifier: ^10.0.0
+        version: 10.0.0
       isbot:
         specifier: ^5.1.28
         version: 5.1.28
@@ -1159,6 +1174,25 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
 
+  image-forwarder:
+    dependencies:
+      native-fetch:
+        specifier: ^4.0.2
+        version: 4.0.2(undici@6.21.3)
+      rfc4648:
+        specifier: ^1.5.1
+        version: 1.5.4
+      spiceflow:
+        specifier: ^1.12.2
+        version: 1.12.2
+      undici:
+        specifier: ^6.18.2
+        version: 6.21.3
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20250429.0
+        version: 4.20250614.0
+
   new-package-template: {}
 
   website:
@@ -1169,12 +1203,18 @@ importers:
       '@ai-sdk/ui-utils':
         specifier: ^1.2.11
         version: 1.2.11(zod@3.25.63)
+      '@bugsnag/cuid':
+        specifier: ^3.2.1
+        version: 3.2.1
       '@cloudflare/vite-plugin':
         specifier: ^1.6.0
         version: 1.6.0(rollup@4.43.0)(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(workerd@1.20250604.0)(wrangler@4.20.0(@cloudflare/workers-types@4.20250614.0))
       '@octokit/webhooks':
         specifier: ^14.0.2
         version: 14.0.2
+      '@prisma/client':
+        specifier: '*'
+        version: 6.9.0(prisma@6.9.0(typescript@5.8.3))(typescript@5.8.3)
       '@radix-ui/react-alert-dialog':
         specifier: ^1.1.14
         version: 1.1.14(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1323,8 +1363,8 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       spiceflow:
-        specifier: ^1.12.1
-        version: 1.12.1
+        specifier: ^1.12.2
+        version: 1.12.2
       string-dedent:
         specifier: ^3.0.1
         version: 3.0.1
@@ -1748,6 +1788,9 @@ packages:
     peerDependencies:
       react: ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@bugsnag/cuid@3.2.1':
+    resolution: {integrity: sha512-zpvN8xQ5rdRWakMd/BcVkdn2F8HKlDSbM3l7duueK590WmI1T0ObTLc1V/1e55r14WNjPd5AJTYX4yPEAFVi+Q==}
 
   '@changesets/apply-release-plan@7.0.12':
     resolution: {integrity: sha512-EaET7As5CeuhTzvXTQCRZeBUcisoYPDDcXvgTE/2jmmypKp0RC7LxKj/yzqeh/1qFTZI7oDGFcL1PHRuQuketQ==}
@@ -8376,6 +8419,11 @@ packages:
     resolution: {integrity: sha512-k1oiVNN4hDK8NcNERSZLQiMfRzEGtfnvZvdBvey3SQbgn8Dcrk0h1I6vpxApjb10PFUflZrgJ2WEZyJQ+5v7YQ==}
     engines: {node: ^18.0.0 || >=20.0.0}
 
+  native-fetch@4.0.2:
+    resolution: {integrity: sha512-4QcVlKFtv2EYVS5MBgsGX5+NWKtbDbIECdUXDBGDMAZXq3Jkv9zf+y8iS7Ub8fEdga3GpYeazp9gauNqXHJOCg==}
+    peerDependencies:
+      undici: '*'
+
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
@@ -9449,6 +9497,9 @@ packages:
     resolution: {integrity: sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw==}
     engines: {iojs: '>=1.0.0', node: '>=0.10.0'}
 
+  rfc4648@1.5.4:
+    resolution: {integrity: sha512-rRg/6Lb+IGfJqO05HZkN50UtY7K/JhxJag1kP23+zyMfrvoB0B7RWv06MbOzoc79RgCdNTiUaNsTT1AJZ7Z+cg==}
+
   rimraf@6.0.1:
     resolution: {integrity: sha512-9dkvaxAsk/xNXSJzMgFqqMCuFgt2+KsOFek3TMLfo8NCPfWpBmqwyNn5Y+NX56QUYfCtsyhF3ayiboEoUmJk/A==}
     engines: {node: 20 || >=22}
@@ -9708,8 +9759,8 @@ packages:
   spdx-license-ids@3.0.21:
     resolution: {integrity: sha512-Bvg/8F5XephndSK3JffaRqdT+gyhfqIPwDHpX80tJrF8QQRYMo8sNMeaZ2Dp5+jhwKnUmIOyFFQfHRkjJm5nXg==}
 
-  spiceflow@1.12.1:
-    resolution: {integrity: sha512-eQ1S+ok0qsax6YwbuozYbl7uElsAaBBmnWtat9MUnDdfg4VV1leTbI5RI/1yJOAbRgoLb2dmIsJTGXSLRQUHGQ==}
+  spiceflow@1.12.2:
+    resolution: {integrity: sha512-Lla6OfGpqSRusKl+SA+9Svjn+CKMvBLg08FPAjnY3A6XEWUzKeGLtQ/e4k5Bk4Jk8le+g1+SIWMLB1NbFMEUdw==}
     peerDependencies:
       '@modelcontextprotocol/sdk': '*'
     peerDependenciesMeta:
@@ -11447,6 +11498,8 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
       react-lifecycles-compat: 3.0.4
       warning: 3.0.0
+
+  '@bugsnag/cuid@3.2.1': {}
 
   '@changesets/apply-release-plan@7.0.12':
     dependencies:
@@ -19380,6 +19433,10 @@ snapshots:
 
   nanostores@0.11.4: {}
 
+  native-fetch@4.0.2(undici@6.21.3):
+    dependencies:
+      undici: 6.21.3
+
   natural-compare@1.4.0: {}
 
   negotiator@0.6.3: {}
@@ -20736,6 +20793,8 @@ snapshots:
 
   reusify@1.1.0: {}
 
+  rfc4648@1.5.4: {}
+
   rimraf@6.0.1:
     dependencies:
       glob: 11.0.2
@@ -21121,7 +21180,7 @@ snapshots:
 
   spdx-license-ids@3.0.21: {}
 
-  spiceflow@1.12.1:
+  spiceflow@1.12.2:
     dependencies:
       '@medley/router': 0.2.1
       '@standard-schema/spec': 1.0.0

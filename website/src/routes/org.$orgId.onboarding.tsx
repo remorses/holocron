@@ -1,4 +1,5 @@
 import { prisma } from 'db'
+import cuid from '@bugsnag/cuid'
 import {
     Form,
     href,
@@ -110,7 +111,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 
         const siteId = site.siteId
         console.log(`created site ${siteId}`)
-        const tabId = 'main'
+        const tabId = cuid()
         await syncSite({
             pages,
             trieveDatasetId: site.trieveDatasetId || undefined,

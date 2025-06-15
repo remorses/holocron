@@ -39,44 +39,71 @@ import { DocumentRecord } from 'fumadocs-core/search/algolia'
 
 export type { DocumentRecord, StructuredData }
 
-const remarkCodeToHtml = (highlighter: HighlighterCore) => () => {
-    return (tree: Root) => {
-        visit(tree, 'code', (node) => {
-            const language = node.lang || 'text'
+export type OnMissingLanguage = (h: Highlighter, lang: string) => any
 
-            const html = highlighter.codeToHtml(node.value, {
-                lang: language,
-                // theme: 'github-dark',
+const remarkCodeToHtml =
+    ({
+        highlighter,
+        onMissingLanguage,
+    }: {
+        highlighter: Highlighter
+        onMissingLanguage: OnMissingLanguage
+    }) =>
+    () => {
+        return (tree: Root) => {
+            visit(tree, 'code', (node) => {
+                const language = node.lang || 'text'
 
-                themes: {
-                    light: 'github-light',
-                    dark: 'github-dark',
-                },
-                // experimentalJSEngine: false,
-                defaultColor: false,
-                transformers: [
-                    transformerNotationHighlight({
-                        matchAlgorithm: 'v3',
-                    }),
-                    transformerNotationWordHighlight({
-                        matchAlgorithm: 'v3',
-                    }),
-                    transformerNotationDiff({
-                        matchAlgorithm: 'v3',
-                    }),
-                    // transformerNotationFocus({
-                    //     matchAlgorithm: 'v3',
-                    // }),
-                ],
+                if (!trySync(() => highlighter.getLanguage(language))?.data) {
+                    onMissingLanguage(highlighter, language)
+                }
+
+                let html = '\n'
+                try {
+                    html = highlighter.codeToHtml(node.value, {
+                        lang: language,
+                        // theme: 'github-dark',
+
+                        themes: {
+                            light: 'github-light',
+                            dark: 'github-dark',
+                        },
+
+                        // experimentalJSEngine: false,
+                        defaultColor: false,
+                        transformers: [
+                            transformerNotationHighlight({
+                                matchAlgorithm: 'v3',
+                            }),
+                            transformerNotationWordHighlight({
+                                matchAlgorithm: 'v3',
+                            }),
+                            transformerNotationDiff({
+                                matchAlgorithm: 'v3',
+                            }),
+                            // transformerNotationFocus({
+                            //     matchAlgorithm: 'v3',
+                            // }),
+                        ],
+                    })
+                } catch (e: any) {
+                    if (
+                        e.messages?.includes(
+                            `not found, you may need to load it first`,
+                        )
+                    ) {
+                        onMissingLanguage(highlighter, language)
+                    }
+                    throw e
+                }
+
+                node.data ||= {}
+                node.data.html = html
             })
 
-            node.data ||= {}
-            node.data.html = html
-        })
-
-        return tree
+            return tree
+        }
     }
-}
 
 declare module 'mdast' {
     interface CodeData {
@@ -113,29 +140,18 @@ const remarkExtractFirstHeading = () => {
         return tree
     }
 }
-import githubDarkTheme from '@shikijs/themes/github-dark'
-import githubLightTheme from '@shikijs/themes/github-light'
 
-export const getProcessor = memoize(async function getProcessor(
-    extension?: string,
-) {
-    const highlighter = await createHighlighterCore({
-        themes: [githubDarkTheme, githubLightTheme],
-        langs: [
-            import('@shikijs/langs/javascript'),
-            import('@shikijs/langs/css'),
-            import('@shikijs/langs/typescript'),
-            import('@shikijs/langs/tsx'),
-            import('@shikijs/langs/json'),
-            import('@shikijs/langs/html'),
-            import('@shikijs/langs/bash'),
-            import('@shikijs/langs/python'),
-            import('@shikijs/langs/jsx'),
-            import('@shikijs/langs/md'),
-        ],
-        engine: createJavaScriptRegexEngine(),
-    })
+import { trySync } from './utils'
 
+export const getProcessor = function getProcessor({
+    extension,
+    onMissingLanguage,
+    highlighter,
+}: {
+    extension: string | undefined
+    highlighter: Highlighter
+    onMissingLanguage: OnMissingLanguage
+}) {
     if (typeof extension === 'string' && extension.endsWith('mdx')) {
         return (
             remark()
@@ -150,7 +166,7 @@ export const getProcessor = memoize(async function getProcessor(
                 .use(remarkSteps)
                 .use(remarkStructure)
                 .use(remarkMarkAndUnravel)
-                .use(remarkCodeToHtml(highlighter))
+                .use(remarkCodeToHtml({ highlighter, onMissingLanguage }))
                 .use(remarkExtractFirstHeading)
                 .use(() => {
                     return (tree, file) => {
@@ -172,7 +188,7 @@ export const getProcessor = memoize(async function getProcessor(
                 .use(remarkSteps)
                 .use(remarkStructure)
                 // .use(remarkMarkAndUnravel)
-                .use(remarkCodeToHtml(highlighter))
+                .use(remarkCodeToHtml({ highlighter, onMissingLanguage }))
                 .use(remarkExtractFirstHeading)
                 .use(() => {
                     return (tree, file) => {
@@ -181,49 +197,12 @@ export const getProcessor = memoize(async function getProcessor(
                 })
         )
     }
-})
-type ProcessorData = {
+}
+export type ProcessorData = {
     title?: string
     description?: string
     ast: Root
     frontmatter: Record<string, any>
     frontmatterYaml?: string
     structuredData: StructuredData
-}
-
-export async function processMdx({
-    markdown: mdx,
-    extension,
-}: {
-    markdown: string
-    extension?: string
-}) {
-    const processor = await getProcessor(extension)
-    const file = processor.processSync(mdx)
-    const data = file.data as ProcessorData
-    const frontmatterYaml = data.ast?.children.find(
-        (node) => node.type === 'yaml',
-    )?.value
-    let frontmatter: Record<string, any> = {}
-    if (frontmatterYaml) {
-        frontmatter = YAML.load(frontmatterYaml) as any
-    }
-    let title = data.title
-    let description
-    if (typeof frontmatter.description === 'string') {
-        description = frontmatter.description
-    }
-    if (typeof frontmatter.title === 'string') {
-        title = frontmatter.title
-    }
-    return {
-        data: {
-            ...data,
-
-            title,
-            description,
-            frontmatter,
-            frontmatterYaml: frontmatterYaml || '',
-        },
-    }
 }

@@ -1,9 +1,9 @@
 generator client {
-  provider        = "prisma-client"
-  output          = "src/generated"
+  provider = "prisma-client"
+  output   = "src/generated"
 
-  moduleFormat    = "esm"
-  engineType      = "client"
+  moduleFormat = "esm"
+  engineType   = "client"
 
   previewFeatures = ["driverAdapters", "queryCompiler"]
 }
@@ -165,9 +165,8 @@ model Tab {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  pages MarkdownPage[]
-
-  @@index([siteId])
+  pages       MarkdownPage[]
+  mediaAssets MediaAsset[]
 }
 
 model MarkdownPage {
@@ -223,8 +222,25 @@ model Site {
   customization      SiteCustomization?
   githubOwner        String
   githubRepo         String
+  mediaAssets        MediaAsset[]
 
   @@index([createdAt])
+}
+
+// if a media asset exists it means that it was uploaded to the r2 bucket already.
+// to make sure you always get latest image, the image is re uploaded to r2 when sha changes
+// the url of the image in the bucket is /site/:siteId/tab/:tabId/:imagePath
+// images are found in the markdown by compiling it to html. then
+model MediaAsset {
+  siteId     String
+  tabId      String
+  slug       String
+  tab        Tab    @relation(fields: [tabId], references: [tabId], onDelete: Cascade)
+  githubSha  String
+  site       Site   @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
+  githubPath String
+
+  @@id([slug, tabId])
 }
 
 enum DomainType {

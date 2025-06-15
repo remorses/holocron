@@ -40,6 +40,22 @@ export class CustomHostsService {
         }
         return res.json()
     }
+
+    async invalidateCacheTags(
+        tags: string[],
+    ): Promise<{
+        result: any
+        success: boolean
+        errors: any[]
+        messages: any[]
+    }> {
+        return this.fetch('/purge_cache', {
+            method: 'POST',
+            body: JSON.stringify({
+                tags,
+            }),
+        })
+    }
     async create(domainRoute: DomainRoute) {
         return this.fetch('/custom_hostnames', {
             method: 'POST',

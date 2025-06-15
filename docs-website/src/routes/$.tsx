@@ -15,7 +15,7 @@ import {
 
 import { Suspense } from 'react'
 
-import { processMdx } from 'docs-website/src/lib/mdx'
+import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { buildTree } from 'docs-website/src/lib/tree'
 import { TrieveSearchDialog } from 'docs-website/src/trieve/search-dialog-trieve'
 import { PageTree } from 'fumadocs-core/server'
@@ -138,7 +138,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     // fs.writeFileSync('scripts/rendered-mdx.mdx', page.markdown)
     // fs.writeFileSync('scripts/rendered-mdx.jsonc', JSON.stringify(ast, null, 2))
 
-    const { data } = await processMdx({
+    const { data } = await processMdxInServer({
         extension: page.extension,
         markdown: page.markdown,
     })
