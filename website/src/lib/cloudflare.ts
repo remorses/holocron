@@ -1,5 +1,6 @@
 import { env } from './env'
 import { AppError } from './errors.js'
+import { groupByN } from './utils.js'
 
 const { CLOUDFLARE_API_TOKEN, CLOUDFLARE_ZONE_ID } = env
 
@@ -19,7 +20,7 @@ export interface DomainRoute {
     resourceId: string
 }
 
-export class CustomHostsService {
+export class CloudflareClient {
     private fetch = async (path: string, init?: RequestInit): Promise<any> => {
         const res = await fetch(
             `https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}${path}`,
@@ -41,20 +42,31 @@ export class CustomHostsService {
         return res.json()
     }
 
-    async invalidateCacheTags(
-        tags: string[],
-    ): Promise<{
-        result: any
-        success: boolean
-        errors: any[]
-        messages: any[]
-    }> {
-        return this.fetch('/purge_cache', {
-            method: 'POST',
-            body: JSON.stringify({
-                tags,
-            }),
-        })
+    async invalidateCacheTags(tags: string[]): Promise<
+        {
+            result: any
+            success: boolean
+            errors: any[]
+            messages: any[]
+        }[]
+    > {
+        const batches: string[][] = groupByN<string>(tags, 100)
+        const results: {
+            result: any
+            success: boolean
+            errors: any[]
+            messages: any[]
+        }[] = []
+        for (const batch of batches) {
+            const res = await this.fetch('/purge_cache', {
+                method: 'POST',
+                body: JSON.stringify({
+                    tags: batch,
+                }),
+            })
+            results.push(res)
+        }
+        return results
     }
     async create(domainRoute: DomainRoute) {
         return this.fetch('/custom_hostnames', {
@@ -156,4 +168,4 @@ export class CustomHostsService {
     }
 }
 
-export const customHosts = new CustomHostsService()
+export const cloudflareClient = new CloudflareClient()

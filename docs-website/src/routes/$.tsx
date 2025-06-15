@@ -1,4 +1,5 @@
 import type { Route } from './+types/$'
+import { s3, getKeyForMediaAsset, getCacheTagForMediaAsset } from '../lib/s3'
 
 import { TrieveSDK } from 'trieve-ts-sdk'
 
@@ -88,12 +89,40 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     const slugs = params['*']?.split('/').filter((v) => v.length > 0) || []
     const slug = '/' + slugs.join('/')
 
-    let page = await prisma.markdownPage.findFirst({
-        where: {
+    let [page, mediaAsset] = await Promise.all([
+        prisma.markdownPage.findFirst({
+            where: {
+                slug,
+                tabId: tab.tabId,
+            },
+        }),
+        prisma.mediaAsset.findFirst({
+            where: {
+                slug,
+                tabId: tab.tabId,
+            },
+        }),
+    ])
+
+    if (!page && mediaAsset) {
+        const siteId = site.siteId
+        const tabId = tab.tabId
+        const key = getKeyForMediaAsset({
+            siteId,
             slug,
-            tabId: tab.tabId,
-        },
-    })
+            tabId,
+        })
+        const file = s3.file(key)
+        const [stat, blob] = await Promise.all([file.stat(), file.blob()])
+        throw new Response(blob, {
+            headers: {
+                'Content-Type': stat.type,
+                'Cache-Control': 'public, max-age=31536000, immutable',
+                'Cache-Tag': getCacheTagForMediaAsset({ siteId, slug, tabId }),
+                'Content-Length': stat.size.toString(),
+            },
+        })
+    }
 
     if (!page) {
         // try to find index page if no page found

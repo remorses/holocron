@@ -1,4 +1,5 @@
 import { Sema } from 'sema4'
+import { request } from 'undici'
 import { findMatchInPaths } from 'docs-website/src/lib/html.server'
 import { MarkdownExtension, Prisma, prisma } from 'db'
 import exampleDocs from 'website/scripts/example-docs.json'
@@ -18,7 +19,12 @@ import {
 } from './github.server'
 import { inParallel, mdxRegex } from './utils'
 import { isAbsoluteUrl } from 'docs-website/src/lib/utils'
-import { s3 } from './s3'
+import {
+    getCacheTagForMediaAsset,
+    getKeyForMediaAsset,
+    s3,
+} from 'docs-website/src/lib/s3'
+import { cloudflareClient } from './cloudflare'
 
 export type AssetForSync =
     | {
@@ -31,6 +37,8 @@ export type AssetForSync =
           type: 'mediaAsset'
           slug: string
           sha: string
+          downloadUrl: string
+          githubPath: string
       }
 
 const mediaExtensions = [
@@ -143,12 +151,14 @@ export async function syncPages({
     trieveDatasetId,
     pages,
     name,
+    signal,
 }: {
     pages: AsyncIterable<AssetForSync>
     tabId: string
     siteId: string
     trieveDatasetId?: string
     name?: string
+    signal?: AbortSignal
 }) {
     const concurrencyLimit = 10
     const semaphore = new Sema(concurrencyLimit)
@@ -165,42 +175,72 @@ export async function syncPages({
         const { datasetId } = await createTrieveDataset({ siteId, name })
         trieve.datasetId = datasetId
     }
-
+    const cacheTagsToInvalidate = [] as string[]
     const processedSlugs = new Set<string>()
-    for await (const page of pages) {
-        if (page.type === 'mediaAsset') {
-            const slug = page.slug
-            await prisma.mediaAsset.upsert({
-                where: {
-                    slug_tabId: {
-                        tabId,
+    for await (const asset of pages) {
+        await semaphore.acquire() // Acquire permit for file processing
+        try {
+            if (asset.type === 'mediaAsset') {
+                const slug = asset.slug
+
+                const downloadUrl = asset.downloadUrl
+
+                async function upload() {
+                    const response = await request(downloadUrl, { signal })
+                    const ok =
+                        response.statusCode >= 200 && response.statusCode < 300
+                    if (!ok) {
+                        throw new Error(
+                            `Failed to download asset ${response.statusCode} ${slug}`,
+                        )
+                    }
+                    if (!response.body) {
+                        throw new Error(`Failed to get body for asset ${slug}`)
+                    }
+                    const key = getKeyForMediaAsset({ siteId, slug, tabId })
+                    await s3.file(key).write(response.body)
+                    const cacheTag = getCacheTagForMediaAsset({
+                        siteId,
                         slug,
-                    },
-                },
-                update: {
-                    siteId,
-                    slug,
-                    tabId,
-                },
-                create: {
-                    githubSha: page.sha,
-                    siteId,
-                    slug,
-                    tabId,
-                },
-            })
-        }
-        if (page.type === 'page') {
-            const { slug, title } = page.pageInput
-            const structuredData = page.structuredData
-            if (processedSlugs.has(slug)) {
-                console.log(
-                    `Skipping duplicate page with slug: ${slug}, title: ${title}`,
-                )
-                continue
+                        tabId,
+                    })
+                    cacheTagsToInvalidate.push(cacheTag)
+                }
+                console.log(`uploading media asset ${asset.githubPath}`)
+                await Promise.all([
+                    upload(),
+                    prisma.mediaAsset.upsert({
+                        where: {
+                            slug_tabId: {
+                                tabId,
+                                slug,
+                            },
+                        },
+                        update: {
+                            siteId,
+                            slug,
+                            tabId,
+                        },
+                        create: {
+                            githubSha: asset.sha,
+                            siteId,
+                            slug,
+                            githubPath: asset.githubPath,
+                            tabId,
+                        },
+                    }),
+                ])
             }
-            await semaphore.acquire() // Acquire permit for file processing
-            try {
+            if (asset.type === 'page') {
+                const { slug, title } = asset.pageInput
+                const structuredData = asset.structuredData
+                if (processedSlugs.has(slug)) {
+                    console.log(
+                        `Skipping duplicate page with slug: ${slug}, title: ${title}`,
+                    )
+                    continue
+                }
+
                 chunksToSync.push(
                     ...processForTrieve({
                         _id: slug,
@@ -218,8 +258,8 @@ export async function syncPages({
                     prisma.markdownPage
                         .upsert({
                             where: { tabId_slug: { tabId, slug } },
-                            update: page.pageInput,
-                            create: { ...page.pageInput, tabId },
+                            update: asset.pageInput,
+                            create: { ...asset.pageInput, tabId },
                         })
                         .then((page) => {
                             console.log(
@@ -238,22 +278,25 @@ export async function syncPages({
                             chunksToSync = chunksToSync.slice(chunkSize)
                         })(),
                 ])
-                console.log(` -> Upserted page: ${title} (ID: ${slug})`)
-            } catch (e: any) {
-                if (
-                    e.message.includes(
-                        'lone leading surrogate in hex escape at line ',
-                    )
-                ) {
-                    console.error(e)
-                    return
-                }
-                throw e
-            } finally {
-                semaphore.release() // Release permit after file processing
                 processedSlugs.add(slug)
+                console.log(` -> Upserted page: ${title} (ID: ${slug})`)
             }
+        } catch (e: any) {
+            if (
+                e.message.includes(
+                    'lone leading surrogate in hex escape at line ',
+                )
+            ) {
+                console.error(e)
+                return
+            }
+            throw e
+        } finally {
+            semaphore.release() // Release permit after file processing
         }
+    }
+    if (cacheTagsToInvalidate.length) {
+        await cloudflareClient.invalidateCacheTags(cacheTagsToInvalidate)
     }
 
     if (chunksToSync.length > 0) {
@@ -293,7 +336,6 @@ export async function* pagesFromGithub({
     installationId,
     basePath = '',
     signal,
-    urlLikeFrontmatterFields = [],
     onlyGithubPaths = new Set<string>(), // TODO probably not needed
     forceFullSync = false,
 }) {
@@ -319,7 +361,7 @@ export async function* pagesFromGithub({
             }),
             prisma.mediaAsset.findMany({
                 where: {
-                    tab: { site: { installationId } },
+                    siteId,
                 },
             }),
         ])
@@ -373,55 +415,54 @@ export async function* pagesFromGithub({
         (slug) => !allCurrentPagePaths.has(slug),
     )
 
-    let allAssetPaths = files.map((x) => x.pathWithFrontSlash)
-
-    const existingMediaShas = new Set(
-        existingMediaAssets.map((x) => x.githubSha),
-    )
-    const allMediaAssets = files
-        .filter((x) => {
-            return mediaExtensions.some((ext) => {
-                return x.githubPath.endsWith(ext)
+    const mediaAssetsDownloads = inParallel(
+        6,
+        files
+            .filter((x) => {
+                if (forceFullSync) return true
+                return (
+                    x?.pathWithFrontSlash?.startsWith(basePath) &&
+                    mediaExtensions.some((ext) => {
+                        return x.githubPath.endsWith(ext)
+                    })
+                )
             })
-        })
-        .map((x) => {
-            const slug = generateSlugFromPath(x.githubPath, basePath)
-            const media: AssetForSync = {
-                type: 'mediaAsset',
-                slug,
-                sha: x.sha,
-            }
-            return media
-        })
-    const mediaAssetsToUpload = allMediaAssets.filter(
-        (x) => !existingMediaShas.has(x.sha),
-    )
+            .filter(
+                (x) =>
+                    !existingMediaAssets.some(
+                        (ex) =>
+                            ex.githubPath === x.githubPath &&
+                            ex.githubSha === x.sha,
+                    ),
+            )
+            .map(async (x) => {
+                const slug = generateSlugFromPath(x.githubPath, basePath)
 
-    const uploads = inParallel(
-        mediaAssetsToUpload.map(async (asset) => {
-            const res = await octokit.rest.repos.getContent({
-                owner,
-                repo,
-                path: asset.slug,
-                ref: branch,
-                request: { signal },
-            })
-            if (!('download_url' in res.data)) {
-                throw new Error('Could not get download url for image')
-            }
-            console.log('download url', res.data.download_url)
-            const downloadUrl = res.data.download_url || ''
-            const key = `assets/site/${siteId}/tab/${tabId}${asset.slug}`
-            const response = await fetch(downloadUrl, {})
-            if (!response.ok) {
-                throw new Error(`Failed to download asset ${asset.slug}`)
-            }
-            if (!response.body) {
-                throw new Error(`Failed to get body for asset ${asset.slug}`)
-            }
-            await s3.file(key).write(response.body)
-        }),
+                const res = await octokit.rest.repos.getContent({
+                    owner,
+                    repo,
+                    path: x.githubPath,
+                    ref: branch,
+                    request: { signal },
+                })
+                if (!('download_url' in res.data)) {
+                    throw new Error('Could not get download url for image')
+                }
+                console.log('download url', res.data.download_url)
+                const downloadUrl = res.data.download_url || ''
+                const asset: AssetForSync = {
+                    type: 'mediaAsset',
+                    slug,
+                    sha: x.sha,
+                    githubPath: x.githubPath,
+                    downloadUrl,
+                }
+                return asset
+            }),
     )
+    for await (let upload of mediaAssetsDownloads) {
+        yield upload
+    }
     let onlyMarkdown = files.filter((x) => {
         if (
             x.content == null ||
@@ -437,80 +478,6 @@ export async function* pagesFromGithub({
         `found ${onlyMarkdown.length} files to sync, from ${files.filter((x) => x?.pathWithFrontSlash?.startsWith(basePath) && isMarkdown(x?.pathWithFrontSlash)).length} total files`,
     )
 
-    let mapImageUrl = (imgPath) =>
-        publicFileMapUrl({ branch, imgPath, owner, repo })
-
-    if (repoResult.data.private) {
-        // TODO remove this, media assets are fetched on the moment instead
-        mapImageUrl = async (imgPath) => {
-            try {
-                const res = await octokit.rest.repos.getContent({
-                    owner,
-                    repo,
-                    path: imgPath,
-                    ref: branch,
-                    request: { signal },
-                })
-                if (!('download_url' in res.data)) {
-                    throw new Error('Could not get download url for image')
-                }
-                console.log('download url', res.data.download_url)
-                return res.data.download_url || ''
-            } catch (error) {
-                notifyError(error, 'error getting download url for image')
-                throw error
-            }
-        }
-    }
-
-    async function resolveUrlsInFrontmatter(frontmatter: Record<string, any>) {
-        if (!frontmatter) {
-            return frontmatter
-        }
-        if (typeof frontmatter !== 'object') {
-            return frontmatter
-        }
-        for (const field of urlLikeFrontmatterFields) {
-            const value = frontmatter[field]
-            if (!value) {
-                continue
-            }
-            const filePath = frontmatter[field]
-            if (isValidUrl(filePath)) {
-                continue
-            }
-            const resolved = findMatchInPaths({
-                filePath,
-                paths: allAssetPaths,
-            })
-            if (resolved) {
-                frontmatter[field] = await mapImageUrl(resolved)
-            } else {
-                delete frontmatter[field]
-            }
-        }
-        // TODO handle relative paths in frontmatter for some things
-        // // Handle rich text fields by converting markdown to HTML
-        // for (const field of richTextFields) {
-        //     try {
-        //         const value = frontmatter[field]
-        //         if (!value || typeof value !== 'string') {
-        //             continue
-        //         }
-        //         const { html } = await markdownToHtml(value, '.md')
-        //         frontmatter[field] = html
-        //     } catch (error) {
-        //         notifyError(
-        //             error,
-        //             `Error converting rich text field '${field}' to HTML`,
-        //         )
-        //         // Keep original value on error
-        //         continue
-        //     }
-        // }
-        return frontmatter
-    }
-
     console.time(`${owner}/${repo} - process markdown ${timeId}`)
     const slugsFound = new Set<string>()
     let totalPages = onlyMarkdown.length
@@ -520,7 +487,7 @@ export async function* pagesFromGithub({
             onlyGithubPaths.has(x.pathWithFrontSlash),
         )
     }
-    for (const x of onlyMarkdown) {
+    for (const x of pagesToSync) {
         if (x?.content == null) {
             continue
         }
@@ -547,7 +514,7 @@ export async function* pagesFromGithub({
             extension,
         })
 
-        let frontmatter = await resolveUrlsInFrontmatter(data.frontmatter)
+        let frontmatter = data.frontmatter
         let title = frontmatter?.title
 
         yield {
@@ -827,10 +794,7 @@ function generateSlugFromPath(pathWithFrontSlash: string, basePath) {
         pathWithFrontSlash = pathWithFrontSlash.slice(1)
     }
     let res =
-        '/' +
-        pathWithFrontSlash
-            .replace(/\.mdx?$/, '')
-            // .replace(/\/index$/, '')
-            .replace(/\//g, '-') // framer does not support folders inside CMS, you will need to create separate collections for each folderF
+        '/' + pathWithFrontSlash.replace(/\.mdx?$/, '').replace(/\/index$/, '')
+
     return res
 }

@@ -33,7 +33,7 @@ export function slugKebabCase(str) {
 
 export const mdxRegex = /\.mdx?$/
 
-export async function* inParallel(tasks, concurrency = Infinity) {
+export async function* inParallel(concurrency = Infinity, tasks) {
     const queue = tasks.slice() // ✓ don’t mutate caller’s array
     const pending = queue
         .splice(0, concurrency) // start the first batch
@@ -57,4 +57,19 @@ export async function* inParallel(tasks, concurrency = Infinity) {
             yield value // stream the value
         else throw err // abort on first error
     }
+}
+
+/**
+ * Splits an array into groups of size N.
+ * @param arr The input array.
+ * @param n The size of each group.
+ * @returns An array of arrays, each of which is at most length n.
+ */
+export function groupByN<T>(arr: T[], n: number): T[][] {
+    if (n <= 0) throw new Error('n must be greater than 0')
+    const result: T[][] = []
+    for (let i = 0; i < arr.length; i += n) {
+        result.push(arr.slice(i, i + n))
+    }
+    return result
 }
