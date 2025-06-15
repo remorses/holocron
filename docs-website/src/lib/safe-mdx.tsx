@@ -24,8 +24,8 @@ const customTransformer: CustomTransformer = (node, transform) => {
     }
 }
 
-const onMissingLanguage = (highlighter, language) => {
-    throw highlighter.loadLoanguage(language)
+const onMissingLanguage = (highlighter: Highlighter, language) => {
+    throw highlighter.loadLanguage(language)
 }
 
 function setHighlighter() {

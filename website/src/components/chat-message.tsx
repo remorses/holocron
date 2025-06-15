@@ -20,6 +20,11 @@ type ChatMessageProps = {
     message: UIMessage
     children?: React.ReactNode
 }
+function LoadingSpinner() {
+    return (
+        <div className='mt-2 ml-2 w-3 h-3 bg-white opacity-0 rotate-45 animate-[assistant-spinner-spin_1.7s_ease-in-out_infinite]'></div>
+    )
+}
 
 export const ChatMessage = memo(function ChatMessage({
     message,
@@ -27,6 +32,13 @@ export const ChatMessage = memo(function ChatMessage({
 }: ChatMessageProps) {
     console.log(`rendering message ${message.id}`)
     const isChatGenerating = useChatState((x) => x.isChatGenerating)
+    const isEmpty =
+        message.parts.length === 0 ||
+        message.parts.every((x) => x.type === 'text' && !x.text.trim())
+    if (isChatGenerating && isEmpty) {
+        return <LoadingSpinner />
+    }
+    // return <LoadingSpinner />
     return (
         <article
             className={cn(

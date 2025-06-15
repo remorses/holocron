@@ -62,7 +62,18 @@ function Footer() {
             }
 
             // Call generateMessage with current messages plus user message
-            const allMessages = [...messages, userMessage]
+            const allMessages: UIMessage[] = [
+                ...messages,
+                userMessage,
+                {
+                    parts: [],
+                    role: 'assistant',
+                    content: '',
+                    id: generateId(),
+                    createdAt: new Date(),
+                },
+            ]
+            setText('')
             useChatState.setState({ messages: allMessages })
             const { data: generator, error } =
                 await apiClient.api.generateMessage.post({
@@ -70,7 +81,7 @@ function Footer() {
                 })
             if (error) throw error
             // Clear the input
-            setText('')
+
             for await (const newMessages of fullStreamToUIMessages({
                 fullStream: generator,
                 messages: allMessages,

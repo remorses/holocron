@@ -9,6 +9,7 @@ import { env } from './env'
 import { pagesFromGithub, syncSite } from './sync'
 import { prisma } from 'db'
 import { auth, getSession } from './better-auth'
+import { sleep } from './utils'
 
 // Create the main spiceflow app with comprehensive routes and features
 export const app = new Spiceflow({ basePath: '/api' })
@@ -34,6 +35,7 @@ export const app = new Spiceflow({ basePath: '/api' })
         }),
         async *handler({ request }) {
             const { messages } = await request.json()
+            await sleep(1000)
             const result = streamText({
                 model: openai.responses('gpt-4.1-nano'),
                 messages,
