@@ -241,11 +241,5 @@ export default function Page({ loaderData }: Route.ComponentProps) {
 }
 
 function CustomSearchDialog(props: SharedProps) {
-    return (
-        <TrieveSearchDialog
-            showTrieve={false}
-            trieveClient={trieveClient}
-            {...props}
-        />
-    )
+    return <TrieveSearchDialog trieveClient={trieveClient} {...props} />
 }
