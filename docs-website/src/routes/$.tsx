@@ -23,6 +23,7 @@ import { SharedProps } from 'fumadocs-ui/components/dialog/search'
 import { RootProvider } from 'fumadocs-ui/provider/base'
 import { MarkdownRender } from '../lib/safe-mdx'
 import { getFumadocsSource } from '../lib/source'
+import { LOCALE_LABELS } from '../lib/locales'
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data) return {}
@@ -57,7 +58,7 @@ export function meta({ data }: Route.MetaArgs) {
 export async function loader({ params, request }: Route.LoaderArgs) {
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
-
+    const locale = 'en'
     const site = await prisma.site.findFirst({
         where: {
             domains: {
@@ -89,7 +90,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
     const slugs = params['*']?.split('/').filter((v) => v.length > 0) || []
     // const slug = '/' + slugs.join('/')
-    const fumadocsPage = source.getPage(slugs)
+    const fumadocsPage = source.getPage(slugs, locale)
     if (!fumadocsPage) {
         throw new Response('Page not found', { status: 404 })
     }
@@ -157,8 +158,8 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         throw new Response('Page not found', { status: 404 })
     }
 
-    const tree = source.pageTree
-    // console.log('tree', tree)
+    const tree = source.getPageTree(locale)
+    console.log('tree', tree)
 
     // fs.writeFileSync('scripts/rendered-mdx.mdx', page.markdown)
     // fs.writeFileSync('scripts/rendered-mdx.jsonc', JSON.stringify(ast, null, 2))
@@ -171,6 +172,8 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
     return {
         ...data,
+        locale,
+        i18n: source._i18n,
         page,
         toc: tableOfContents,
         tree,
@@ -181,7 +184,8 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 let trieveClient: TrieveSDK
 
 export default function Page({ loaderData }: Route.ComponentProps) {
-    const { page, ast, toc, tree, site, title, description } = loaderData
+    const { i18n, locale, ast, toc, tree, site, title, description } =
+        loaderData
     if (!trieveClient && site.trieveReadApiKey) {
         trieveClient = new TrieveSDK({
             apiKey: site.trieveReadApiKey!,
@@ -195,13 +199,20 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                 SearchDialog: CustomSearchDialog,
                 enabled: !!site.trieveDatasetId,
             }}
+            i18n={{
+                locale,
+                locales: i18n?.languages.map((locale) => {
+                    return { locale, name: LOCALE_LABELS[locale] || '' }
+                }),
+            }}
         >
             <DocsLayout
                 nav={{
                     title: site.name || 'Documentation',
                 }}
+                i18n={i18n}
                 // tabMode='navbar'
-                tree={tree as PageTree.Root}
+                tree={tree as any}
             >
                 <DocsPage
                     tableOfContentPopover={{ style: 'clerk' }}

@@ -35,7 +35,7 @@ export async function getFumadocsSource({ tabId }) {
         .concat(
             metaFiles.map((x) => {
                 const res: VirtualFile = {
-                    data: x.jsonContent,
+                    data: x.jsonData,
                     path: x.githubPath,
                     type: 'meta',
                 }
@@ -46,6 +46,14 @@ export async function getFumadocsSource({ tabId }) {
     const source = loader({
         source: { files },
         baseUrl: '/',
+        i18n: {
+            defaultLanguage: 'en',
+            languages: ['en', 'cn'],
+            hideLocale: 'default-locale',
+        },
+        // icon(icon) {
+        //     return null
+        // },
         // url: (slugs: string[], locale?: string) =>
         //     '/' + (locale ? locale + '/' : '') + slugs.join('/'),
     })

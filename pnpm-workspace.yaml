@@ -8,4 +8,5 @@ neverBuiltDependencies: []
 packages:
     - ./*
     - fumadocs/packages/*
+    - fumadocs/apps/react-router-18n
     - fumadocs/
