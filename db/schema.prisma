@@ -161,15 +161,16 @@ model Tab {
   site      Site     @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
   siteId    String
   title     String
-  slug      String
+  // slug      String
   // enabled   Boolean    @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   pages       MarkdownPage[]
   mediaAssets MediaAsset[]
+  metaFiles   MetaFile[]
 
-  @@unique([siteId, slug])
+  // @@unique([siteId, slug])
 }
 
 model MarkdownPage {
@@ -289,4 +290,14 @@ model SiteCustomization {
   logoUrl    String?
   color      String?
   site       Site    @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
+}
+
+model MetaFile {
+  githubPath  String
+  tabId       String
+  jsonContent Json
+
+  tab Tab @relation(fields: [tabId], references: [tabId], onDelete: Cascade)
+
+  @@id([githubPath, tabId])
 }

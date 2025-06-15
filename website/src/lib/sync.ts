@@ -334,6 +334,7 @@ export async function* pagesFromGithub({
     repo,
     owner,
     installationId,
+    tabId,
     basePath = '',
     signal,
     onlyGithubPaths = new Set<string>(), // TODO probably not needed
@@ -352,7 +353,7 @@ export async function* pagesFromGithub({
             checkGitHubIsInstalled({ installationId }),
             prisma.markdownPage.findMany({
                 where: {
-                    tab: { site: { installationId } },
+                    tabId,
                 },
                 select: {
                     githubSha: true,
@@ -361,7 +362,7 @@ export async function* pagesFromGithub({
             }),
             prisma.mediaAsset.findMany({
                 where: {
-                    siteId,
+                    tabId,
                 },
             }),
         ])
@@ -494,7 +495,11 @@ export async function* pagesFromGithub({
 
         const pathWithFrontSlash = x.pathWithFrontSlash
         let content = x.content
-        let extension = path.extname(x.pathWithFrontSlash) as MarkdownExtension
+        let extension: MarkdownExtension = path
+            .extname(x.pathWithFrontSlash)
+            ?.endsWith('mdx')
+            ? 'mdx'
+            : 'md'
         const slug = generateSlugFromPath(pathWithFrontSlash, basePath)
         if (slugsFound.has(slug)) {
             console.log(

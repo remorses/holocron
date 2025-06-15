@@ -4,7 +4,7 @@ import { coreMessageSchema, streamText, tool, UIMessage } from 'ai'
 import { Spiceflow } from 'spiceflow'
 import { z } from 'zod'
 import { notifyError } from './errors'
-import { s3 } from './s3'
+import { s3 } from 'docs-website/src/lib/s3'
 import { env } from './env'
 import { pagesFromGithub, syncSite } from './sync'
 import { prisma } from 'db'
@@ -132,6 +132,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 owner: site.githubOwner,
                 repo: site.githubRepo,
                 signal: request.signal,
+                tabId,
             })
             await syncSite({
                 orgId,

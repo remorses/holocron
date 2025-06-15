@@ -1,10 +1,10 @@
+import { getCacheTagForMediaAsset, getKeyForMediaAsset, s3 } from '../lib/s3'
 import type { Route } from './+types/$'
-import { s3, getKeyForMediaAsset, getCacheTagForMediaAsset } from '../lib/s3'
 
 import { TrieveSDK } from 'trieve-ts-sdk'
 
-import { generateToc } from 'docs-website/src/lib/toc'
 import { prisma } from 'db'
+import { generateToc } from 'docs-website/src/lib/toc'
 import { DocsLayout } from 'fumadocs-ui/layouts/docs'
 
 import {
@@ -17,12 +17,12 @@ import {
 import { Suspense } from 'react'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
-import { buildTree } from 'docs-website/src/lib/tree'
 import { TrieveSearchDialog } from 'docs-website/src/trieve/search-dialog-trieve'
 import { PageTree } from 'fumadocs-core/server'
 import { SharedProps } from 'fumadocs-ui/components/dialog/search'
 import { RootProvider } from 'fumadocs-ui/provider/base'
 import { MarkdownRender } from '../lib/safe-mdx'
+import { getFumadocsSource } from '../lib/source'
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data) return {}
@@ -85,9 +85,16 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         console.log('Tab not found for site:', site?.siteId)
         throw new Response('Tab not found', { status: 404 })
     }
+    const source = await getFumadocsSource({ tabId: tab.tabId })
 
     const slugs = params['*']?.split('/').filter((v) => v.length > 0) || []
-    const slug = '/' + slugs.join('/')
+    // const slug = '/' + slugs.join('/')
+    const fumadocsPage = source.getPage(slugs)
+    if (!fumadocsPage) {
+        throw new Response('Page not found', { status: 404 })
+    }
+    console.log({ fumadocsPage })
+    const slug = fumadocsPage.url
 
     let [page, mediaAsset] = await Promise.all([
         prisma.markdownPage.findFirst({
@@ -150,18 +157,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         throw new Response('Page not found', { status: 404 })
     }
 
-    const allPages = await prisma.markdownPage.findMany({
-        where: {
-            tabId: tab.tabId,
-        },
-        omit: {
-            frontmatter: true,
-            markdown: true,
-            description: true,
-        },
-    })
-
-    const tree = buildTree(allPages)
+    const tree = source.pageTree
     // console.log('tree', tree)
 
     // fs.writeFileSync('scripts/rendered-mdx.mdx', page.markdown)
