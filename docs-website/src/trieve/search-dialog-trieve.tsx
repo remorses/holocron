@@ -15,12 +15,13 @@ import {
     TagsList,
 } from 'fumadocs-ui/components/dialog/search'
 import { TrieveSDK } from 'trieve-ts-sdk'
-import { useTrieveSearch } from './search/client'
+
 import React from 'react'
 import { useOnChange } from 'fumadocs-core/utils/use-on-change'
 import { RootProvider } from 'fumadocs-ui/provider/base'
 import { TagItem } from 'fumadocs-ui/contexts/search'
 import { useI18n } from 'fumadocs-ui/contexts/i18n'
+import { useTrieveSearch } from './trieve-client'
 
 export interface TrieveSearchDialogProps extends SharedProps {
     trieveClient: TrieveSDK
