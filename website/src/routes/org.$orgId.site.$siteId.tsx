@@ -59,7 +59,11 @@ export async function loader({
         (x) => x.domainType === 'internalDomain',
     )?.host
 
-    const url = `https://${host}`
+    const url = new URL(`https://${host}`)
+    if (host?.endsWith('.localhost')) {
+        url.protocol = 'http:'
+        url.port = '7777'
+    }
 
     return { site, url, host }
 }
@@ -120,7 +124,7 @@ function Content() {
                 >
                     <iframe
                         ref={iframeRef}
-                        style={scaleDownElement(0.8)}
+                        style={scaleDownElement(0.9)}
                         className={cn(' inset-0 bg-transparent', 'absolute')}
                         frameBorder={0}
                         allowTransparency
@@ -129,7 +133,7 @@ function Content() {
 
                         title='website preview'
                         // onLoad={() => setLoaded(true)}
-                        src={url}
+                        src={url.toString()}
                     ></iframe>
                     {/* {!loaded && (
                       <div className='flex justify-center items-center inset-0 absolute'>
