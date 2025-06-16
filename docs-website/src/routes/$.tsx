@@ -1,4 +1,6 @@
 import { getCacheTagForMediaAsset, getKeyForMediaAsset, s3 } from '../lib/s3'
+import { useShallow } from 'zustand/react/shallow'
+
 import 'docs-website/src/lib/docs-spiceflow-server'
 import type { Route } from './+types/$'
 
@@ -25,6 +27,7 @@ import { RootProvider } from 'fumadocs-ui/provider/base'
 import { MarkdownRender } from '../lib/safe-mdx'
 import { getFumadocsSource } from '../lib/source.server'
 import { LOCALE_LABELS, LOCALES } from '../lib/locales'
+import { DocsStateProvider, useDocsState } from '../lib/docs-state'
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data) return {}
@@ -196,10 +199,22 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 }
 
 let trieveClient: TrieveSDK
-
 export default function Page({ loaderData }: Route.ComponentProps) {
-    const { i18n, locale, ast, toc, tree, site, title, description } =
-        loaderData
+    return (
+        <Providers loaderData={loaderData}>
+            <MainDocsPage loaderData={loaderData} />
+        </Providers>
+    )
+}
+
+function Providers({
+    loaderData,
+    children,
+}: {
+    loaderData: Route.ComponentProps['loaderData']
+    children: React.ReactNode
+}) {
+    const { i18n, tree, locale, site } = loaderData
     if (!trieveClient && site.trieveReadApiKey) {
         trieveClient = new TrieveSDK({
             apiKey: site.trieveReadApiKey!,
@@ -208,43 +223,62 @@ export default function Page({ loaderData }: Route.ComponentProps) {
     }
 
     return (
-        <RootProvider
-            search={{
-                // SearchDialog: CustomSearchDialog,
-                options: {},
-                enabled: !!site.trieveDatasetId,
-            }}
-            i18n={{
-                locale,
-                locales: i18n?.languages.map((locale) => {
-                    return { locale, name: LOCALE_LABELS[locale] || '' }
-                }),
-            }}
-        >
-            <DocsLayout
-                nav={{
-                    title: site.name || 'Documentation',
+        <DocsStateProvider initialValue={{ tree: tree as any }}>
+            <RootProvider
+                search={{
+                    // SearchDialog: CustomSearchDialog,
+                    options: {},
+                    enabled: !!site.trieveDatasetId,
                 }}
-                i18n={i18n}
-                // tabMode='navbar'
-                tree={tree as any}
+                i18n={{
+                    locale,
+                    locales: i18n?.languages.map((locale) => {
+                        return { locale, name: LOCALE_LABELS[locale] || '' }
+                    }),
+                }}
             >
-                <DocsPage
-                    tableOfContentPopover={{ style: 'clerk' }}
-                    toc={toc as any}
-                >
-                    {title && <DocsTitle>{title}</DocsTitle>}
-                    {description && (
-                        <DocsDescription>{description}</DocsDescription>
-                    )}
-                    <DocsBody>
-                        <Suspense fallback={<div>Loading...</div>}>
-                            <MarkdownRender ast={ast} />
-                        </Suspense>
-                    </DocsBody>
-                </DocsPage>
-            </DocsLayout>
-        </RootProvider>
+                {children}
+            </RootProvider>
+        </DocsStateProvider>
+    )
+}
+function MainDocsPage({
+    loaderData,
+}: {
+    loaderData: Route.ComponentProps['loaderData']
+}) {
+    const { ast, toc, title, description, i18n, site } = loaderData
+    const { tree } = useDocsState(
+        useShallow((x) => {
+            const { tree } = x
+            return { tree }
+        }),
+    )
+
+    return (
+        <DocsLayout
+            nav={{
+                title: site.name || 'Documentation',
+            }}
+            i18n={i18n}
+            // tabMode='navbar'
+            tree={tree as any}
+        >
+            <DocsPage
+                tableOfContentPopover={{ style: 'clerk' }}
+                toc={toc as any}
+            >
+                {title && <DocsTitle>{title}</DocsTitle>}
+                {description && (
+                    <DocsDescription>{description}</DocsDescription>
+                )}
+                <DocsBody>
+                    <Suspense fallback={<div>Loading...</div>}>
+                        <MarkdownRender ast={ast} />
+                    </Suspense>
+                </DocsBody>
+            </DocsPage>
+        </DocsLayout>
     )
 }
 

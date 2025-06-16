@@ -12,7 +12,7 @@ import { UploadButton } from '../components/upload-button'
 import { useThrowingFn } from '../lib/hooks'
 import { ColorPicker } from '../components/color-picker'
 import Chat from '../components/chat'
-import { StateProvider } from '../components/state-provider'
+import { StateProvider } from '../lib/state'
 import NavBar from '../components/navbar'
 import { url } from 'inspector'
 import { AppSidebar } from '../components/app-sidebar'
@@ -77,7 +77,7 @@ export default function Page({
     params: { siteId, orgId },
 }: Route.ComponentProps) {
     return (
-        <StateProvider value={{ messages: [] }}>
+        <StateProvider initialValue={{ messages: [] }}>
             <SidebarProvider
                 className=''
                 style={

@@ -11,7 +11,7 @@ import { useStickToBottom } from 'use-stick-to-bottom'
 
 import { fullStreamToUIMessages } from '../lib/process-chat'
 import { apiClient } from '../lib/spiceflow-client'
-import { chatStateContainer, useChatState } from '../lib/state'
+import { useChatState } from '../lib/state'
 import { Cards, Card } from 'fumadocs-ui/components/card'
 
 import { CpuIcon, PanelsTopLeft, Database, Terminal } from 'lucide-react'
