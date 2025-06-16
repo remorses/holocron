@@ -3,7 +3,7 @@ import { colord, extend } from 'colord'
 import type { Route } from './+types/org.$orgId.site.$siteId'
 import { getSession } from '../lib/better-auth'
 import { prisma } from 'db'
-import { cn } from '../lib/utils'
+import { cn, sleep } from '../lib/utils'
 import { BrowserWindow } from '../components/browser-window'
 import { Button } from '../components/ui/button'
 import { SaveIcon } from 'lucide-react'
@@ -17,6 +17,10 @@ import NavBar from '../components/navbar'
 import { url } from 'inspector'
 import { AppSidebar } from '../components/app-sidebar'
 import { SidebarProvider, SidebarInset } from '../components/ui/sidebar'
+import {
+    createIframeRpcClient,
+    SpiceflowDocsClient,
+} from 'docs-website/src/lib/docs-spiceflow-client'
 
 export async function loader({
     request,
@@ -94,6 +98,8 @@ export default function Page({
     )
 }
 
+let docsSpiceflowClient: SpiceflowDocsClient | undefined
+
 function Content() {
     const { site, host, url } = useLoaderData<typeof loader>()
     const [logoUrl, setLogoUrl] = useState(site.customization?.logoUrl)
@@ -104,7 +110,7 @@ function Content() {
         updatePageProps({ logoUrl, color: color || undefined }, iframeRef)
     }, [color, logoUrl])
     return (
-        <div className='flex flex-col h-full gap-4 px-4 pb-4'>
+        <div className='flex flex-col h-full gap-2 px-3 pb-3'>
             <NavBar />
 
             <div className='flex grow flex-col'>
@@ -119,11 +125,25 @@ function Content() {
                     className={cn(
                         'text-sm shrink-0 shadow rounded-xl justify-stretch',
                         'items-stretch h-full flex-col flex-1 border',
-                        'bg-white lg:flex dark:bg-gray-800',
+                        ' lg:flex dark:bg-gray-800',
                     )}
                 >
                     <iframe
-                        ref={iframeRef}
+                        ref={(el) => {
+                            iframeRef.current = el
+                            const { cleanup, client } = createIframeRpcClient({
+                                iframeRef,
+                            })
+                            docsSpiceflowClient = client
+                            sleep(1000 * 2).then(() => {
+                                docsSpiceflowClient!.health
+                                    .get()
+                                    .then((res) => {
+                                        console.log('got health', res.data)
+                                    })
+                            })
+                            return cleanup
+                        }}
                         style={scaleDownElement(0.9)}
                         className={cn(' inset-0 bg-transparent', 'absolute')}
                         frameBorder={0}

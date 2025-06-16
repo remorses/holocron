@@ -253,6 +253,9 @@ importers:
       shiki:
         specifier: ^3.6.0
         version: 3.6.0
+      spiceflow:
+        specifier: ^1.12.2
+        version: 1.12.2
       trieve-ts-sdk:
         specifier: ^0.0.118
         version: 0.0.118

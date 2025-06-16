@@ -40,4 +40,9 @@ for (let k in env) {
     }
 }
 
+if (typeof window !== 'undefined') {
+    // Attach env to window for browser usage
+    ;(window as any).env = env
+}
+
 export const supportEmail = 'tommy@fumabase.com'

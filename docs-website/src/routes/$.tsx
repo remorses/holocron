@@ -1,4 +1,5 @@
 import { getCacheTagForMediaAsset, getKeyForMediaAsset, s3 } from '../lib/s3'
+import 'docs-website/src/lib/docs-spiceflow-server'
 import type { Route } from './+types/$'
 
 import { TrieveSDK } from 'trieve-ts-sdk'

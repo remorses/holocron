@@ -74,6 +74,7 @@
         "safe-mdx": "latest",
         "sentries": "^0.2.2",
         "shiki": "^3.6.0",
+        "spiceflow": "^1.12.2",
         "trieve-ts-sdk": "^0.0.118",
         "unist-util-visit": "^5.0.0",
         "vite-plugin-environment": "^1.1.3",

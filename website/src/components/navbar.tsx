@@ -56,60 +56,53 @@ export default function NavBar() {
         },
     })
     return (
-        <header className=''>
-            <div className='flex h-16 items-center justify-between gap-4'>
-                {/* Left side */}
-                <div className='flex items-center gap-2'>
-                    {/* Main nav */}
-                    <div className='flex items-center gap-6'>
-                        {/* <a
+        <header className='flex h-16 items-center justify-between gap-4'>
+            {/* Left side */}
+            <div className='flex items-center gap-2'>
+                {/* Main nav */}
+                <div className='flex items-center gap-6'>
+                    {/* <a
                             href='#'
                             className='text-primary hover:text-primary/90'
                         >
                             <Logo />
                         </a> */}
-                        {/* Navigation menu */}
-                        <NavigationMenu className='max-md:hidden'>
-                            <NavigationMenuList className='gap-2'>
-                                <NavigationMenuItem>
-                                    <Button
-                                        isLoading={isLoading}
-                                        onClick={sync}
-                                        size={'sm'}
-                                    >
-                                        Sync With GitHub
-                                    </Button>
-                                </NavigationMenuItem>
+                    {/* Navigation menu */}
+                    <NavigationMenu className='max-md:hidden'>
+                        <NavigationMenuList className='gap-2'>
+                            <NavigationMenuItem>
+                                <Button
+                                    isLoading={isLoading}
+                                    onClick={sync}
+                                    size={'sm'}
+                                >
+                                    Sync With GitHub
+                                </Button>
+                            </NavigationMenuItem>
 
-                                {navigationLinks.map((link, index) => (
-                                    <NavigationMenuItem key={index}>
-                                        <NavigationMenuLink
-                                            // active={link.active}
-                                            href={link.href}
-                                            className='text-muted-foreground hover:text-primary py-1.5 font-medium'
-                                        >
-                                            {link.label}
-                                        </NavigationMenuLink>
-                                    </NavigationMenuItem>
-                                ))}
-                            </NavigationMenuList>
-                        </NavigationMenu>
-                    </div>
+                            {navigationLinks.map((link, index) => (
+                                <NavigationMenuItem key={index}>
+                                    <NavigationMenuLink
+                                        // active={link.active}
+                                        href={link.href}
+                                        className='text-muted-foreground hover:text-primary py-1.5 font-medium'
+                                    >
+                                        {link.label}
+                                    </NavigationMenuLink>
+                                </NavigationMenuItem>
+                            ))}
+                        </NavigationMenuList>
+                    </NavigationMenu>
                 </div>
-                {/* Right side */}
-                <div className='flex items-center gap-2'>
-                    <Button
-                        asChild
-                        variant='ghost'
-                        size='sm'
-                        className='text-sm'
-                    >
-                        <a href='#'>Sign In</a>
-                    </Button>
-                    <Button asChild size='sm' className='text-sm'>
-                        <a href='#'>Get Started</a>
-                    </Button>
-                </div>
+            </div>
+            {/* Right side */}
+            <div className='flex items-center gap-2'>
+                <Button asChild variant='ghost' size='sm' className='text-sm'>
+                    <a href='#'>Sign In</a>
+                </Button>
+                <Button asChild size='sm' className='text-sm'>
+                    <a href='#'>Get Started</a>
+                </Button>
             </div>
         </header>
     )
