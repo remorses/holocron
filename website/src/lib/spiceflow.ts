@@ -1,24 +1,25 @@
 import { openai, OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
-import { dedent } from 'string-dedent'
+import dedent from 'string-dedent'
+
 import { anthropic } from '@ai-sdk/anthropic'
-import { openapi } from 'spiceflow/openapi'
-import { coreMessageSchema, streamText, tool, UIMessage } from 'ai'
-import { Spiceflow } from 'spiceflow'
-import { z } from 'zod'
-import { notifyError } from './errors'
-import { s3 } from 'docs-website/src/lib/s3'
-import { env } from './env'
-import { pagesFromGithub, syncSite } from './sync'
+import { streamText, tool, UIMessage } from 'ai'
 import { prisma } from 'db'
-import { auth, getSession } from './better-auth'
+import { s3 } from 'docs-website/src/lib/s3'
+import { Spiceflow } from 'spiceflow'
+import { openapi } from 'spiceflow/openapi'
+import { z } from 'zod'
+import { getSession } from './better-auth'
+import { env } from './env'
+import { notifyError } from './errors'
+import { pagesFromGithub, syncSite } from './sync'
 import { sleep } from './utils'
 
-import {
-    createEditExecute,
-    editToolParamsSchema,
-    PageUpdate,
-} from './edit-tool'
 import { printDirectoryTree } from '../components/directory-tree'
+import {
+  createEditExecute,
+  editToolParamsSchema,
+  PageUpdate,
+} from './edit-tool'
 
 // Create the main spiceflow app with comprehensive routes and features
 export const app = new Spiceflow({ basePath: '/api' })

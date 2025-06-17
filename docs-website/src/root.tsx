@@ -1,3 +1,4 @@
+import { useNProgress } from 'docs-website/src/lib/nprogress'
 import { ReactRouterProvider } from 'fumadocs-core/framework/react-router'
 import {
     isRouteErrorResponse,
@@ -9,7 +10,6 @@ import {
 } from 'react-router'
 import type { Route } from './+types/root'
 import './app.css'
-import { useNProgress } from 'docs-website/src/lib/nprogress'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -24,7 +24,11 @@ export const links: Route.LinksFunction = () => [
     },
 ]
 
+
 export function Layout({ children }: { children: React.ReactNode }) {
+    // Assume useDocsState is available in scope and returns the whole state
+    // (This should be defined/imported above)
+
     useNProgress()
     return (
         <html lang='en' suppressHydrationWarning>

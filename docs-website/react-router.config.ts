@@ -4,5 +4,7 @@ export default {
     ssr: true,
     appDirectory: 'src',
 
-    future: {},
+    future: {
+        unstable_optimizeDeps: true,
+    },
 } satisfies Config

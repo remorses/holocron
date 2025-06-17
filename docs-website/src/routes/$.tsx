@@ -1,7 +1,7 @@
-import { getCacheTagForMediaAsset, getKeyForMediaAsset, s3 } from '../lib/s3'
 import { useShallow } from 'zustand/react/shallow'
+import { getCacheTagForMediaAsset, getKeyForMediaAsset, s3 } from '../lib/s3'
 
-import 'docs-website/src/lib/docs-spiceflow-server'
+import { onParentPostMessage } from 'docs-website/src/lib/docs-state'
 import type { Route } from './+types/$'
 
 import { TrieveSDK } from 'trieve-ts-sdk'
@@ -11,23 +11,27 @@ import { prisma } from 'db'
 import { DocsLayout } from 'fumadocs-ui/layouts/docs'
 
 import {
-    DocsBody,
-    DocsDescription,
-    DocsPage,
-    DocsTitle,
+  DocsBody,
+  DocsDescription,
+  DocsPage,
+  DocsTitle,
 } from 'fumadocs-ui/page'
 
-import { Suspense, useMemo } from 'react'
+import { Suspense } from 'react'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { TrieveSearchDialog } from 'docs-website/src/trieve/search-dialog-trieve'
-import { PageTree } from 'fumadocs-core/server'
 import { SharedProps } from 'fumadocs-ui/components/dialog/search'
 import { RootProvider } from 'fumadocs-ui/provider/base'
+import { DocsStateProvider, useDocsState } from '../lib/docs-state'
+import { usSyncWithDocsStateSlug } from '../lib/hooks'
+import { LOCALE_LABELS, LOCALES } from '../lib/locales'
 import { Markdown } from '../lib/safe-mdx'
 import { getFumadocsSource } from '../lib/source.server'
-import { LOCALE_LABELS, LOCALES } from '../lib/locales'
-import { DocsStateProvider, useDocsState } from '../lib/docs-state'
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('message', onParentPostMessage)
+}
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data) return {}
@@ -255,6 +259,7 @@ function MainDocsPage({
 }: {
     loaderData: Route.ComponentProps['loaderData']
 }) {
+    usSyncWithDocsStateSlug()
     const { title, description, i18n, githubPath, site, slug } = loaderData
     const { tree, ast, toc, markdown } = useDocsState(
         useShallow((x) => {
@@ -264,7 +269,7 @@ function MainDocsPage({
                 return { ast: undefined, toc, ...override }
             }
 
-            return { tree, ast, toc, markdown: undefined }
+            return { ast: loaderData.ast, tree, toc, markdown: undefined }
         }),
     )
 

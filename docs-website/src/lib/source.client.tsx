@@ -1,4 +1,3 @@
-import { prisma } from 'db'
 import {
     loader,
     LoaderOutput,
@@ -35,9 +34,8 @@ export async function getFumadocsClientSource(
         source: { files },
         baseUrl: '/', // TODO pass here the customer base path
         i18n: serverSource._i18n,
-        icon(icon) {
-            // TODO return image that links icon in the server
-        },
+        // TODO return image that links icon in the server
+        // icon(icon) {},
 
         // url: (slugs: string[], locale?: string) =>
         //     '/' + (locale ? locale + '/' : '') + slugs.join('/'),
