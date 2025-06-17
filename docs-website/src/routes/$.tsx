@@ -110,7 +110,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     if (!fumadocsPage) {
         throw new Response('Page not found', { status: 404 })
     }
-    console.log({ fumadocsPage })
     const slug = fumadocsPage.url
 
     let [page, mediaAsset] = await Promise.all([
@@ -189,6 +188,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
     return {
         ...data,
+        slug,
         locale,
         i18n: source._i18n,
         page,
@@ -223,7 +223,13 @@ function Providers({
     }
 
     return (
-        <DocsStateProvider initialValue={{ tree: tree as any }}>
+        <DocsStateProvider
+            initialValue={{
+                tree: tree as any,
+                deletedPages: [],
+                updatedPages: [],
+            }}
+        >
             <RootProvider
                 search={{
                     // SearchDialog: CustomSearchDialog,
@@ -242,16 +248,19 @@ function Providers({
         </DocsStateProvider>
     )
 }
+
 function MainDocsPage({
     loaderData,
 }: {
     loaderData: Route.ComponentProps['loaderData']
 }) {
-    const { ast, toc, title, description, i18n, site } = loaderData
-    const { tree } = useDocsState(
+    const { title, description, i18n, site, slug } = loaderData
+    const { tree, ast, toc } = useDocsState(
         useShallow((x) => {
-            const { tree } = x
-            return { tree }
+            const { tree, updatedPages } = x
+            const override = updatedPages.find((x) => x.slug === slug)
+            const { ast, toc } = loaderData
+            return { ast, toc, ...override, tree }
         }),
     )
 

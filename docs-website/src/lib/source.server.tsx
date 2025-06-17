@@ -55,15 +55,7 @@ export async function getFumadocsSource({
     if (!languages.includes(defaultLocale)) {
         languages.push(defaultLocale)
     }
-    const source = loader<
-        {
-            pageData: PageData & {
-                structuredData: StructuredData
-            }
-            metaData: MetaData
-        },
-        I18nConfig
-    >({
+    const source = loader<SourceData, I18nConfig>({
         source: { files },
         baseUrl: '/', // TODO pass here the customer base path
         i18n: {
@@ -79,4 +71,11 @@ export async function getFumadocsSource({
         //     '/' + (locale ? locale + '/' : '') + slugs.join('/'),
     })
     return source
+}
+
+export type SourceData = {
+    pageData: PageData & {
+        structuredData: StructuredData
+    }
+    metaData: MetaData
 }

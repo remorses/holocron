@@ -60,6 +60,7 @@ export const ChatMessage = memo(function ChatMessage({
                     </p>
                     {message.parts.map((part, index) => {
                         if (part.type === 'tool-invocation') {
+                            // part.toolInvocation.state
                             return (
                                 <pre key={index}>
                                     {JSON.stringify(

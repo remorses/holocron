@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from 'react'
 import type { StoreApi, UseBoundStore } from 'zustand'
+
 export const createZustandContext = <TInitial,>(
     getStore: (initial: TInitial) => UseBoundStore<StoreApi<TInitial>>,
 ) => {

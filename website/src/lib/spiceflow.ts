@@ -1,4 +1,5 @@
 import { openai, OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
+import { anthropic } from '@ai-sdk/anthropic'
 import { openapi } from 'spiceflow/openapi'
 import { coreMessageSchema, streamText, tool, UIMessage } from 'ai'
 import { Spiceflow } from 'spiceflow'
@@ -46,31 +47,29 @@ export const app = new Spiceflow({ basePath: '/api' })
                     } satisfies OpenAIResponsesProviderOptions,
                 },
                 tools: {
-                    getWeather: tool({
-                        description:
-                            'Get current weather information for a location',
-                        parameters: z.object({
-                            location: z
-                                .string()
-                                .describe(
-                                    'The city and state/country to get weather for',
-                                ),
-                        }),
-                        execute: async ({ location }) => {
-                            // Mock weather data - in a real app you'd call a weather API
-                            const weatherData = {
-                                location,
-                                temperature:
-                                    Math.floor(Math.random() * 30) + 10,
-                                condition: [
-                                    'sunny',
-                                    'cloudy',
-                                    'rainy',
-                                    'snowy',
-                                ][Math.floor(Math.random() * 4)],
-                                humidity: Math.floor(Math.random() * 50) + 30,
+                    str_replace_editor: anthropic.tools.textEditor_20241022({
+                        async execute({ command, path, old_str, new_str }) {
+                            let editorContent = ''
+                            switch (command) {
+                                case 'view': {
+                                    return editorContent
+                                }
+                                case 'create': {
+                                    editorContent = new_str!
+                                    return editorContent
+                                }
+                                case 'str_replace': {
+                                    editorContent = editorContent.replace(
+                                        old_str!,
+                                        new_str!,
+                                    )
+                                    return editorContent
+                                }
+                                case 'insert': {
+                                    editorContent = new_str!
+                                    return editorContent
+                                }
                             }
-                            return `Weather in ${location}: ${weatherData.temperature}°C, ${weatherData.condition}, ${weatherData.humidity}% humidity`
                         },
                     }),
                 },
@@ -216,6 +215,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             }
         },
     })
+
     .onError(({ error }) => {
         notifyError(error)
     })

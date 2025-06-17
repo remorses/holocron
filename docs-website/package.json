@@ -17,6 +17,7 @@
         "typecheck": "react-router typegen && tsc"
     },
     "dependencies": {
+        "@ai-sdk/anthropic": "^1.2.12",
         "@cloudflare/vite-plugin": "^1.6.0",
         "@cloudflare/workers-types": "^4.20250614.0",
         "@fumadocs/mdx-remote": "workspace:^",
@@ -79,6 +80,7 @@
         "unist-util-visit": "^5.0.0",
         "vite-plugin-environment": "^1.1.3",
         "website": "workspace:^",
+        "zod": "^3.25.64",
         "zustand": "^5.0.5"
     },
     "devDependencies": {
