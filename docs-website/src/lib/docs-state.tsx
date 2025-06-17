@@ -6,12 +6,15 @@ import { create } from 'zustand'
 
 export type State = {
     tree: PageTree.Root
-    updatedPages: Array<{
-        markdown: string
-        slug: string
-        ast: any
-        toc: TOCItemType[]
-    }>
+    updatedPages: Map<
+        string,
+        {
+            markdown: string
+            slug: string
+            ast: any
+            toc: TOCItemType[]
+        }
+    >
     deletedPages: Array<{
         slug: string
     }>

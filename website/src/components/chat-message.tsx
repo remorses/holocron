@@ -15,6 +15,7 @@ import { UIMessage } from 'ai'
 import { memo } from 'react'
 import { Markdown } from './ui/markdown'
 import { useChatState } from '../lib/state'
+import { EditToolParamSchema } from '../lib/schemas'
 
 type ChatMessageProps = {
     message: UIMessage
@@ -61,6 +62,16 @@ export const ChatMessage = memo(function ChatMessage({
                     {message.parts.map((part, index) => {
                         if (part.type === 'tool-invocation') {
                             // part.toolInvocation.state
+                            if (
+                                part.toolInvocation.toolName ===
+                                'str_replace_editor'
+                            ) {
+                                return (
+                                    <EditorMessagePreview
+                                        {...part.toolInvocation}
+                                    />
+                                )
+                            }
                             return (
                                 <pre key={index}>
                                     {JSON.stringify(
@@ -143,3 +154,17 @@ const MessageActions = memo(function MessageActions() {
         </div>
     )
 })
+
+function EditorMessagePreview({
+    args,
+    state,
+    toolCallId,
+}: {
+    state: 'partial-call' | 'call' | 'result'
+    result?: string | { error?: string; success?: false }
+    step?: number
+    toolCallId: any
+    args?: Partial<EditToolParamSchema>
+}) {
+
+}
