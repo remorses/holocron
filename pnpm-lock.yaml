@@ -1315,6 +1315,9 @@ importers:
       docs-website:
         specifier: workspace:*
         version: link:../docs-website
+      fumadocs-core:
+        specifier: workspace:*
+        version: link:../fumadocs/packages/core
       fumadocs-ui:
         specifier: workspace:*
         version: link:../fumadocs/packages/ui
