@@ -7,8 +7,13 @@ import {
     MarkdownRendererProps,
 } from './safe-mdx'
 import { createHighlighter, Highlighter } from 'shiki'
-import { getProcessor } from './mdx'
+import { getProcessor, ProcessorData } from './mdx'
 import React from 'react'
+
+function stripYamlFrontmatter(markdown: string): string {
+    // Remove YAML frontmatter if present (--- ... --- or --- ... ---\r\n)
+    return markdown.replace(/^---\s*\r?\n[\s\S]*?\r?\n---\s*\r?\n?/, '')
+}
 
 export function MarkdownRuntimeComponent({
     markdown,
@@ -19,7 +24,7 @@ export function MarkdownRuntimeComponent({
     const blockId = id ?? generatedId
     const blocks = useMemo(() => {
         try {
-            return marked.lexer(markdown || '')
+            return marked.lexer(stripYamlFrontmatter(markdown || ''))
         } catch (err) {
             console.error('Markdown lexing error:', err)
             return []
@@ -67,30 +72,30 @@ setHighlighter()
 
 let processors = new Map<string, any>()
 
+export function processMdxInClient({ extension, markdown = 'mdx' }) {
+    if (!highlighter) {
+        throw setHighlighter()
+    }
+    let processor = processors.get(extension)
+    if (!processor) {
+        processor = getProcessor({
+            extension,
+            onMissingLanguage,
+            highlighter,
+        })
+        processors.set(extension, processor)
+    }
+
+    const file = processor.processSync(markdown)
+    let ast = file.data.ast
+    return file.data as ProcessorData
+}
+
 const MarkdownRuntimeItem = memo(
     ({ markdown, extension }: { markdown; extension }) => {
-        if (!highlighter) {
-            throw setHighlighter()
-        }
+        const { ast } = processMdxInClient({ extension, markdown })
 
-        let processor = processors.get(extension)
-        if (!processor) {
-            processor = getProcessor({
-                extension,
-                onMissingLanguage,
-                highlighter,
-            })
-            processors.set(extension, processor)
-        }
-
-        try {
-            const file = processor.processSync(markdown)
-            let ast = file.data.ast
-            return <MarkdownAstRenderer ast={ast} />
-        } catch (e) {
-            console.error(e)
-            return null
-        }
+        return <MarkdownAstRenderer ast={ast} />
     },
 )
 

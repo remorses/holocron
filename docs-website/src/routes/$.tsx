@@ -28,6 +28,7 @@ import { usSyncWithDocsStateSlug } from '../lib/hooks'
 import { LOCALE_LABELS, LOCALES } from '../lib/locales'
 import { Markdown } from '../lib/safe-mdx'
 import { getFumadocsSource } from '../lib/source.server'
+import { processMdxInClient } from '../lib/markdown-runtime'
 
 if (typeof window !== 'undefined') {
     // Add a listener to handle postMessages from parent when running in browser
@@ -42,9 +43,9 @@ if (typeof window !== 'undefined') {
     // Without both, especially if only dispose is used, if the module gets re-imported in certain
     // orders/ways, duplicate listeners may persist or a stale reference may be left.
     if (import.meta.hot) {
-        import.meta.hot.accept(() => {
-            window.removeEventListener('message', onParentPostMessage)
-        })
+        // import.meta.hot.accept(() => {
+        //     window.removeEventListener('message', onParentPostMessage)
+        // })
         import.meta.hot.dispose(() => {
             window.removeEventListener('message', onParentPostMessage)
         })
@@ -277,18 +278,36 @@ function MainDocsPage({
     loaderData: Route.ComponentProps['loaderData']
 }) {
     usSyncWithDocsStateSlug()
-    const { title, description, i18n, githubPath, site, slug } = loaderData
-    const { tree, ast, toc, markdown } = useDocsState(
-        useShallow((x) => {
-            const { tree, toc, updatedPages } = x
-            const override = updatedPages[githubPath]
-            if (override) {
-                return { tree, ast: undefined, toc, ...override }
-            }
+    const { i18n, site, slug } = loaderData
+    let { tree, title, description, ast, toc, markdown, githubPath } =
+        useDocsState(
+            useShallow((x) => {
+                const { tree, toc, updatedPages } = x
+                const override = updatedPages[loaderData.githubPath]
+                console.log(updatedPages)
+                if (override) {
+                    return {
+                        ...loaderData,
+                        tree,
+                        toc,
+                        ...override,
+                        ast: undefined,
+                    }
+                }
 
-            return { ast: loaderData.ast, tree, toc, markdown: undefined }
-        }),
-    )
+                return { ...loaderData, tree, toc }
+            }),
+        )
+
+    if (!ast) {
+        const extension = githubPath.split('.').pop()
+        try {
+            const data = processMdxInClient({ extension, markdown })
+            ast = data.ast
+        } catch (e) {
+            console.error('cannot generate ast for page', e)
+        }
+    }
 
     return (
         <DocsLayout
@@ -309,8 +328,7 @@ function MainDocsPage({
                 )}
                 <DocsBody>
                     <Markdown
-                        key={markdown ? 'markdown' : 'ast'}
-                        markdown={markdown}
+                        // markdown={markdown}
                         ast={ast}
                     />
                 </DocsBody>

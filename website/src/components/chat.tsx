@@ -140,7 +140,7 @@ function Footer() {
             if (error) throw error
             // Clear the input
             //
-            const updatedPages: Record<string, PageUpdate> = {}
+            const updatedPagesState: Record<string, PageUpdate> = {}
             const getPageContent = memoize(
                 async function getPageContent(x) {
                     const { data, error } =
@@ -154,7 +154,7 @@ function Footer() {
                 { transformKey: (x) => x.map((l) => JSON.stringify(l)) },
             )
             const execute = createEditExecute({
-                updatedPages,
+                updatedPages: updatedPagesState,
                 getPageContent,
             })
             for await (const newMessages of fullStreamToUIMessages({
@@ -178,18 +178,23 @@ function Footer() {
                         if (!isParameterComplete(args)) {
                             continue
                         }
-                        const result = await execute(toolInvocation.args)
-                        // TODO create new tree too, the tree must be recreated when
-                        // - an icon is added to a page, meaning frontmatter changes
-                        // - a page is created
-                        // - a page is deleted
-                        // creating a tree is slow, this means it should be done not too often.
-                        // creating a toc is slow too. it should be done max every second, with debounce
-                        console.log(`updating docs pages: `)
-                        console.log(updatedPages)
-                        docsRpcClient.setDocsState({
-                            updatedPages,
-                        })
+
+                        if (toolInvocation.state === 'partial-call') {
+                            let updatedPagesCopy = { ...updatedPagesState }
+                            const execute = createEditExecute({
+                                updatedPages: updatedPagesCopy,
+                                getPageContent,
+                            })
+                            await execute(toolInvocation.args)
+                            docsRpcClient.setDocsState({
+                                updatedPages: updatedPagesCopy,
+                            })
+                        } else if (toolInvocation.state === 'result') {
+                            await execute(toolInvocation.args)
+                            docsRpcClient.setDocsState({
+                                updatedPages: updatedPagesState,
+                            })
+                        }
                     }
                 }
 
