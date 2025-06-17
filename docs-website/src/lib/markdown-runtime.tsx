@@ -11,7 +11,7 @@ import { getProcessor } from './mdx'
 
 export function MarkdownRuntimeComponent({
     markdown,
-    extension,
+    extension = 'mdx',
     id,
 }: MarkdownRendererProps) {
     const generatedId = useId()
@@ -35,12 +35,15 @@ export function MarkdownRuntimeComponent({
 }
 
 const onMissingLanguage = (highlighter: Highlighter, language) => {
-    throw highlighter.loadLanguage(language)
+    let promise = highlighter.loadLanguage(language)
+    if (promise instanceof Promise) {
+        throw promise
+    }
 }
 
 function setHighlighter() {
-    if (highlighter) return
-    createHighlighter({
+    if (highlighter) return Promise.resolve()
+    return createHighlighter({
         themes: ['github-dark', 'github-light'],
         langs: ['text'],
     }).then((x) => {

@@ -142,7 +142,9 @@ function Footer() {
             const updatedPages: Record<string, PageUpdate> = {}
             const execute = createEditExecute({
                 updatedPages,
-                async getPageContent() {},
+                async getPageContent() {
+                    return ''
+                },
             })
             for await (const newMessages of fullStreamToUIMessages({
                 fullStream: generator,
@@ -159,7 +161,7 @@ function Footer() {
                     if (toolInvocation.toolName === 'str_replace_editor') {
                         const args: Partial<EditToolParamSchema> =
                             toolInvocation.args
-                        if (!isParameterComplete(args)) return
+                        if (!isParameterComplete(args)) continue
                         const result = await execute(toolInvocation.args)
                         // TODO create new tree too, the tree must be recreated when
                         // - an icon is added to a page, meaning frontmatter changes
@@ -167,15 +169,13 @@ function Footer() {
                         // - a page is deleted
                         // creating a tree is slow, this means it should be done not too often.
                         // creating a toc is slow too. it should be done max every second, with debounce
+                        console.log(`updating docs pages: `)
+                        console.log(updatedPages)
                         docsRpcClient.setDocsState({
                             updatedPages,
                         })
                     }
                 }
-                useChatState.setState((x) => {
-                    const docsState = x.docsState
-                    return { docsState }
-                })
 
                 useChatState.setState({ messages: newMessages })
             }

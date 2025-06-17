@@ -16,9 +16,9 @@ import { sleep } from './utils'
 
 import { printDirectoryTree } from '../components/directory-tree'
 import {
-  createEditExecute,
-  editToolParamsSchema,
-  PageUpdate,
+    createEditExecute,
+    editToolParamsSchema,
+    PageUpdate,
 } from './edit-tool'
 
 // Create the main spiceflow app with comprehensive routes and features
@@ -49,7 +49,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             const { messages, tabId, siteId } = await request.json()
             await sleep(1000)
             const updatedPages: Record<string, PageUpdate> = {}
-            const model = openai.responses('gpt-4.1-nano')
+            const model = openai.responses('gpt-4.1')
             const execute = createEditExecute({
                 updatedPages,
                 async getPageContent({ githubPath: path }) {
@@ -88,11 +88,12 @@ export const app = new Spiceflow({ basePath: '/api' })
                     },
                 }),
             ])
-            const allFilePaths = [pages, metaFiles, mediaAssets]
-                .flat()
-                .map((x) => {
-                    return x.githubPath
-                })
+            const allFiles = [
+                ...pages.map((x) => ({ ...x, type: 'page' }) as const),
+                ...metaFiles.map((x) => ({ ...x, type: 'meta' }) as const),
+                ...mediaAssets.map((x) => ({ ...x, type: 'media' }) as const),
+            ].flat()
+
             const str_replace_editor = model.modelId.includes('anthropic')
                 ? anthropic.tools.textEditor_20241022({
                       execute: execute as any,
@@ -110,9 +111,6 @@ export const app = new Spiceflow({ basePath: '/api' })
                         content: dedent`
                         This is a documentation website using .md and .mdx files
 
-                        Here is the current project files:
-                        ${printDirectoryTree({ filePaths: allFilePaths })}
-
                         You are a professional content writer with the task of improving this documentation website and follow the user tasks
                         `,
                     },
@@ -128,6 +126,24 @@ export const app = new Spiceflow({ basePath: '/api' })
                 toolCallStreaming: true,
                 tools: {
                     str_replace_editor,
+
+                    get_project_files: tool({
+                        description:
+                            'Returns a directory tree diagram of the current project files as plain text. Useful for giving an overview or locating files.',
+                        parameters: z.object({}),
+                        execute: async () => {
+                            return printDirectoryTree({
+                                filePaths: allFiles.map((x) => {
+                                    const path = x.githubPath
+                                    let title = ''
+                                    if (x.type === 'page') {
+                                        title = x.title
+                                    }
+                                    return { path, title }
+                                }),
+                            })
+                        },
+                    }),
                 },
                 async onFinish({ response }) {},
                 // tools: {

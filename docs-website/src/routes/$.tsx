@@ -11,10 +11,10 @@ import { prisma } from 'db'
 import { DocsLayout } from 'fumadocs-ui/layouts/docs'
 
 import {
-  DocsBody,
-  DocsDescription,
-  DocsPage,
-  DocsTitle,
+    DocsBody,
+    DocsDescription,
+    DocsPage,
+    DocsTitle,
 } from 'fumadocs-ui/page'
 
 import { Suspense } from 'react'
@@ -266,7 +266,7 @@ function MainDocsPage({
             const { tree, toc, updatedPages } = x
             const override = updatedPages[githubPath]
             if (override) {
-                return { ast: undefined, toc, ...override }
+                return { tree, ast: undefined, toc, ...override }
             }
 
             return { ast: loaderData.ast, tree, toc, markdown: undefined }

@@ -2,19 +2,20 @@
 
 interface TreeNode {
     path: string
+    title?: string
     children: TreeNode[]
 }
 
 export function printDirectoryTree({
     filePaths,
 }: {
-    filePaths: string[]
+    filePaths: { path: string, title: string }[]
 }): string {
-    function buildTree(paths: string[]): TreeNode[] {
+    function buildTree(pathsWithTitles: { path: string, title: string }[]): TreeNode[] {
         const root: TreeNode[] = []
         const nodeMap = new Map<string, TreeNode>()
 
-        for (const path of paths) {
+        for (const { path, title } of pathsWithTitles) {
             const parts = path.split('/').filter(part => part !== '')
             let currentPath = ''
             let currentLevel = root
@@ -29,8 +30,17 @@ export function printDirectoryTree({
                         path: currentPath,
                         children: []
                     }
+                    // Only assign title on the final part of the path
+                    if (i === parts.length - 1) {
+                        node.title = title
+                    }
                     nodeMap.set(currentPath, node)
                     currentLevel.push(node)
+                } else {
+                    // If this is the last part and the node is new or title is missing, set title
+                    if (i === parts.length - 1 && !node.title) {
+                        node.title = title
+                    }
                 }
 
                 currentLevel = node.children
@@ -53,14 +63,15 @@ export function printDirectoryTree({
     ): string {
         const lines: string[] = []
         const name = getName(node)
+        const titleSuffix = node.title ? ` # "${node.title}"` : ''
 
         if (isRoot) {
             // Root level - no prefix
-            lines.push(name)
+            lines.push(`${name}${titleSuffix}`)
         } else {
             // Child level - add tree connector
             const connector = isLast ? '└── ' : '├── '
-            lines.push(prefix + connector + name)
+            lines.push(prefix + connector + name + titleSuffix)
         }
 
         // Process children
@@ -68,7 +79,7 @@ export function printDirectoryTree({
             node.children.forEach((child, idx) => {
                 const childIsLast = idx === node.children.length - 1
                 let nextPrefix = ''
-                
+
                 if (isRoot) {
                     // Direct children of root get no prefix for their connectors
                     nextPrefix = ''
@@ -76,7 +87,7 @@ export function printDirectoryTree({
                     // Nested children get extended prefix
                     nextPrefix = prefix + (isLast ? '    ' : '│   ')
                 }
-                
+
                 const childOutput = printNode(child, nextPrefix, childIsLast, false)
                 lines.push(childOutput)
             })
@@ -86,7 +97,7 @@ export function printDirectoryTree({
     }
 
     const tree = buildTree(filePaths)
-    
+
     if (tree.length === 0) {
         return ''
     }

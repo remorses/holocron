@@ -4,38 +4,38 @@ import { loader, VirtualFile } from 'fumadocs-core/source'
 
 describe('printDirectoryTree', () => {
     it('prints tree for a simple mock FS', () => {
-        const filePaths: string[] = [
-            'file1.mdx',
-            'dirA/file2.mdx',
-            'dirA/meta.json',
-            'file3.mdx',
-            'docs/page.mdx',
-            'docs/meta.json',
-            'tutorial/step1.mdx',
-            'tutorial/step2.mdx',
-            'tutorial/steps/meta.json',
-            'tutorial/nested/another.mdx',
+        const filePaths: { path: string; title: string }[] = [
+            { path: 'file1.mdx', title: 'file1' },
+            { path: 'dirA/file2.mdx', title: 'file2' },
+            { path: 'dirA/meta.json', title: 'meta' },
+            { path: 'file3.mdx', title: 'file3' },
+            { path: 'docs/page.mdx', title: 'page' },
+            { path: 'docs/meta.json', title: 'meta' },
+            { path: 'tutorial/step1.mdx', title: 'step1' },
+            { path: 'tutorial/step2.mdx', title: 'step2' },
+            { path: 'tutorial/steps/meta.json', title: 'meta' },
+            { path: 'tutorial/nested/another.mdx', title: 'another' },
         ]
 
         const tree = printDirectoryTree({
             filePaths,
         })
         expect(tree).toMatchInlineSnapshot(`
-          "file1.mdx
+          "file1.mdx # "file1"
           dirA
-          ├── file2.mdx
-          └── meta.json
-          file3.mdx
+          ├── file2.mdx # "file2"
+          └── meta.json # "meta"
+          file3.mdx # "file3"
           docs
-          ├── page.mdx
-          └── meta.json
+          ├── page.mdx # "page"
+          └── meta.json # "meta"
           tutorial
-          ├── step1.mdx
-          ├── step2.mdx
+          ├── step1.mdx # "step1"
+          ├── step2.mdx # "step2"
           ├── steps
-          │   └── meta.json
+          │   └── meta.json # "meta"
           └── nested
-              └── another.mdx"
+              └── another.mdx # "another""
         `)
     })
 
@@ -48,39 +48,43 @@ describe('printDirectoryTree', () => {
 
     it('handles single file', () => {
         const tree = printDirectoryTree({
-            filePaths: ['single.txt'],
+            filePaths: [{ path: 'single.txt', title: 'single' }],
         })
-        expect(tree).toMatchInlineSnapshot(`"single.txt"`)
+        expect(tree).toMatchInlineSnapshot(`"single.txt # "single""`)
     })
 
     it('handles single directory with one file', () => {
         const tree = printDirectoryTree({
-            filePaths: ['folder/file.txt'],
+            filePaths: [{ path: 'folder/file.txt', title: 'file' }],
         })
         expect(tree).toMatchInlineSnapshot(`
           "folder
-          └── file.txt"
+          └── file.txt # "file""
         `)
     })
 
     it('handles multiple files in root', () => {
         const tree = printDirectoryTree({
-            filePaths: ['file1.txt', 'file2.txt', 'file3.txt'],
+            filePaths: [
+                { path: 'file1.txt', title: 'file1' },
+                { path: 'file2.txt', title: 'file2' },
+                { path: 'file3.txt', title: 'file3' },
+            ],
         })
         expect(tree).toMatchInlineSnapshot(`
-          "file1.txt
-          file2.txt
-          file3.txt"
+          "file1.txt # "file1"
+          file2.txt # "file2"
+          file3.txt # "file3""
         `)
     })
 
     it('handles deeply nested structure', () => {
         const tree = printDirectoryTree({
             filePaths: [
-                'a/b/c/d/e/deep.txt',
-                'a/b/c/other.txt',
-                'a/b/sibling.txt',
-                'a/another.txt',
+                { path: 'a/b/c/d/e/deep.txt', title: 'deep' },
+                { path: 'a/b/c/other.txt', title: 'other' },
+                { path: 'a/b/sibling.txt', title: 'sibling' },
+                { path: 'a/another.txt', title: 'another' },
             ],
         })
         expect(tree).toMatchInlineSnapshot(`
@@ -89,73 +93,84 @@ describe('printDirectoryTree', () => {
           │   ├── c
           │   │   ├── d
           │   │   │   └── e
-          │   │   │       └── deep.txt
-          │   │   └── other.txt
-          │   └── sibling.txt
-          └── another.txt"
+          │   │   │       └── deep.txt # "deep"
+          │   │   └── other.txt # "other"
+          │   └── sibling.txt # "sibling"
+          └── another.txt # "another""
         `)
     })
 
     it('handles files with special characters in names', () => {
         const tree = printDirectoryTree({
             filePaths: [
-                'special chars/file with spaces.txt',
-                'special chars/file-with-dashes.txt',
-                'special chars/file_with_underscores.txt',
-                'special chars/file.with.dots.txt',
+                {
+                    path: 'special chars/file with spaces.txt',
+                    title: 'file with spaces',
+                },
+                {
+                    path: 'special chars/file-with-dashes.txt',
+                    title: 'file-with-dashes',
+                },
+                {
+                    path: 'special chars/file_with_underscores.txt',
+                    title: 'file_with_underscores',
+                },
+                {
+                    path: 'special chars/file.with.dots.txt',
+                    title: 'file.with.dots',
+                },
             ],
         })
         expect(tree).toMatchInlineSnapshot(`
           "special chars
-          ├── file with spaces.txt
-          ├── file-with-dashes.txt
-          ├── file_with_underscores.txt
-          └── file.with.dots.txt"
+          ├── file with spaces.txt # "file with spaces"
+          ├── file-with-dashes.txt # "file-with-dashes"
+          ├── file_with_underscores.txt # "file_with_underscores"
+          └── file.with.dots.txt # "file.with.dots""
         `)
     })
 
     it('handles mixed file and directory structure', () => {
         const tree = printDirectoryTree({
             filePaths: [
-                'root-file1.txt',
-                'folder1/file1.txt',
-                'root-file2.txt',
-                'folder2/subfolder/nested.txt',
-                'folder1/file2.txt',
-                'root-file3.txt',
+                { path: 'root-file1.txt', title: 'root-file1' },
+                { path: 'folder1/file1.txt', title: 'file1' },
+                { path: 'root-file2.txt', title: 'root-file2' },
+                { path: 'folder2/subfolder/nested.txt', title: 'nested' },
+                { path: 'folder1/file2.txt', title: 'file2' },
+                { path: 'root-file3.txt', title: 'root-file3' },
             ],
         })
         expect(tree).toMatchInlineSnapshot(`
-          "root-file1.txt
+          "root-file1.txt # "root-file1"
           folder1
-          ├── file1.txt
-          └── file2.txt
-          root-file2.txt
+          ├── file1.txt # "file1"
+          └── file2.txt # "file2"
+          root-file2.txt # "root-file2"
           folder2
           └── subfolder
-              └── nested.txt
-          root-file3.txt"
+              └── nested.txt # "nested"
+          root-file3.txt # "root-file3""
         `)
     })
 
     it('handles duplicate path segments', () => {
         const tree = printDirectoryTree({
             filePaths: [
-                'docs/docs/readme.md',
-                'docs/api/docs.md',
-                'test/test/test.js',
+                { path: 'docs/docs/readme.md', title: 'readme' },
+                { path: 'docs/api/docs.md', title: 'docs' },
+                { path: 'test/test/test.js', title: 'test' },
             ],
         })
         expect(tree).toMatchInlineSnapshot(`
           "docs
           ├── docs
-          │   └── readme.md
+          │   └── readme.md # "readme"
           └── api
-              └── docs.md
+              └── docs.md # "docs"
           test
           └── test
-              └── test.js"
+              └── test.js # "test""
         `)
     })
-
 })

@@ -100,7 +100,7 @@ export function createEditExecute({
                 return content
             }
             case 'create': {
-                if (!file_text) {
+                if (file_text == null) {
                     return {
                         success: false,
                         error: '`file_text` is required for create command.',
@@ -113,11 +113,20 @@ export function createEditExecute({
                 return file_text
             }
             case 'str_replace': {
-                const override = updatedPages[path]
+                let override = updatedPages[path]
                 if (!override) {
-                    return {
-                        success: false,
-                        error: `Page not found for path: ${path}`,
+                    const content = await getPageContent({
+                        githubPath: path,
+                    })
+                    if (typeof content !== 'string') {
+                        return {
+                            success: false,
+                            error: `Page not found for path: ${path}`,
+                        }
+                    }
+                    override = {
+                        githubPath: path,
+                        markdown: content,
                     }
                 }
 
@@ -162,11 +171,20 @@ export function createEditExecute({
                 return replacedContent
             }
             case 'insert': {
-                const override = updatedPages[path]
+                let override = updatedPages[path]
                 if (!override) {
-                    return {
-                        success: false,
-                        error: `Page not found for path: ${path}`,
+                    const content = await getPageContent({
+                        githubPath: path,
+                    })
+                    if (typeof content !== 'string') {
+                        return {
+                            success: false,
+                            error: `Page not found for path: ${path}`,
+                        }
+                    }
+                    override = {
+                        githubPath: path,
+                        markdown: content,
                     }
                 }
 
@@ -228,7 +246,6 @@ export function createEditExecute({
         }
     }
 }
-
 export const editToolParamsSchema = z.object({
     /**
      * The commands to run. Allowed options are: `view`, `create`, `str_replace`, `insert`, `undo_edit`.
@@ -243,8 +260,6 @@ export const editToolParamsSchema = z.object({
      */
     path: z
         .string()
-        .min(1)
-        .max(1000)
         .describe(
             'Absolute path to file or directory, e.g. `/repo/file.py` or `/repo`.',
         ),
@@ -253,52 +268,48 @@ export const editToolParamsSchema = z.object({
      */
     file_text: z
         .string()
-        .min(1)
-        .max(100000)
-        .optional()
         .describe(
             'Required parameter of `create` command, with the content of the file to be created.',
-        ),
+        )
+        .nullable(),
     /**
      * Required parameter of `insert` command. The `new_str` will be inserted AFTER the line `insert_line` of `path`.
      */
     insert_line: z
         .number()
         .int()
-        .min(1)
-        .optional()
         .describe(
             'Required parameter of `insert` command. The `new_str` will be inserted AFTER the line `insert_line` of `path`.',
-        ),
+        )
+        .nullable(),
     /**
      * Optional parameter of `str_replace` command containing the new string (if not given, no string will be added). Required parameter of `insert` command containing the string to insert.
      */
     new_str: z
         .string()
-        .min(1)
-        .max(100000)
-        .optional()
+
         .describe(
             'Optional parameter of `str_replace` command containing the new string (if not given, no string will be added). Required parameter of `insert` command containing the string to insert.',
-        ),
+        )
+        .nullable(),
     /**
      * Required parameter of `str_replace` command containing the string in `path` to replace.
      */
     old_str: z
         .string()
-        .min(1)
-        .max(100000)
-        .optional()
         .describe(
             'Required parameter of `str_replace` command containing the string in `path` to replace.',
-        ),
+        )
+        .nullable(),
     /**
      * Optional parameter of `view` command when `path` points to a file. If none is given, the full file is shown. If provided, the file will be shown in the indicated line number range, e.g. [11, 12] will show lines 11 and 12. Indexing at 1 to start. Setting `[start_line, -1]` shows all lines from `start_line` to the end of the file.
      */
     view_range: z
-        .tuple([z.number().int(), z.number().int()])
-        .optional()
+        .array(z.number())
+        .length(2)
+
         .describe(
             'Optional parameter of `view` command when `path` points to a file. If none is given, the full file is shown. If provided, the file will be shown in the indicated line number range, e.g. [11, 12] will show lines 11 and 12. Indexing at 1 to start. Setting `[start_line, -1]` shows all lines from `start_line` to the end of the file.',
-        ),
+        )
+        .nullable(),
 })

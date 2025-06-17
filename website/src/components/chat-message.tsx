@@ -17,6 +17,7 @@ import { Markdown } from 'docs-website/src/lib/safe-mdx'
 
 import { useChatState } from '../lib/state'
 import { EditToolParamSchema } from '../lib/edit-tool'
+import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
 
 type ChatMessageProps = {
     message: UIMessage
@@ -27,48 +28,85 @@ function LoadingSpinner() {
         <div className='mt-2 ml-2 w-3 h-3 bg-white opacity-0 rotate-45 animate-[assistant-spinner-spin_1.7s_ease-in-out_infinite]'></div>
     )
 }
+function isMessageAlmostEmpty(message: UIMessage) {
+    if (message.parts.length === 0) {
+        return true
+    }
+    if (message.parts.length >= 3) {
+        return false
+    }
+    const allText = message.parts.every(
+        (x) => x.type === 'text' || x.type === 'step-start',
+    )
 
-export const ChatMessage = memo(function ChatMessage({
+    if (!allText) {
+        return false
+    }
+    const content = message.parts.reduce(
+        (acc, part) => acc + (part['text'] || ''),
+        '',
+    )
+    if (content.length < 10) {
+        return true
+    }
+
+    return false
+}
+
+export const ChatMessage = function ChatMessage({
     message,
     children,
 }: ChatMessageProps) {
-    console.log(`rendering message ${message.id}`)
+    // console.log(`rendering message ${message.id}`)
     const isChatGenerating = useChatState((x) => x.isChatGenerating)
-    const isEmpty =
-        message.parts.length === 0 ||
-        (message.parts.length <= 2 &&
-            message.parts.every((x) => x.type === 'text' && !x.text.trim()))
-    if (isChatGenerating && isEmpty) {
+
+    // Add isLastMessage
+    const isLastAssistantMessage = useChatState(
+        (x) =>
+            x.messages.length > 0 &&
+            x.messages[x.messages.length - 1]?.id === message.id &&
+            message.role === 'assistant',
+    )
+    if (
+        isLastAssistantMessage &&
+        isChatGenerating &&
+        isMessageAlmostEmpty(message)
+    ) {
         return <LoadingSpinner />
     }
     // return <LoadingSpinner />
     return (
         <article
             className={cn(
-                'flex items-start max-w-full gap-4 min-w-0 leading-relaxed',
+                'flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed',
                 message.role === 'user' && 'justify-end',
             )}
         >
             <div
                 className={cn(
+                    'w-full',
                     message.role === 'user'
                         ? 'bg-muted px-4 py-3 rounded-xl'
                         : 'space-y-4 max-w-full',
                 )}
             >
-                <div className=' prose text-sm dark:prose-invert'>
+                <div className='prose text-sm w-full max-w-full dark:prose-invert'>
                     <p className='sr-only'>
                         {message.role === 'user' ? 'You' : 'Bart'} said:
                     </p>
                     {message.parts.map((part, index) => {
                         if (part.type === 'tool-invocation') {
-                            // part.toolInvocation.state
-                            if (
-                                part.toolInvocation.toolName ===
-                                'str_replace_editor'
-                            ) {
+                            const toolName = part.toolInvocation.toolName
+                            if (toolName === 'str_replace_editor') {
                                 return (
-                                    <EditorMessagePreview
+                                    <EditorToolPreview
+                                        {...part.toolInvocation}
+                                    />
+                                )
+                            }
+                            if (toolName === 'get_project_files') {
+                                return (
+                                    <FilesTreePreview
                                         {...part.toolInvocation}
                                     />
                                 )
@@ -107,7 +145,7 @@ export const ChatMessage = memo(function ChatMessage({
             </div>
         </article>
     )
-})
+}
 
 type ActionButtonProps = {
     icon: React.ReactNode
@@ -157,7 +195,7 @@ const MessageActions = memo(function MessageActions() {
     )
 })
 
-function EditorMessagePreview({
+function EditorToolPreview({
     args,
     state,
     toolCallId,
@@ -169,5 +207,78 @@ function EditorMessagePreview({
     toolCallId: any
     args?: Partial<EditToolParamSchema>
 }) {
-    return null
+    const code = args?.new_str || ''
+    const command = args?.command
+    if (command === 'view') {
+        return (
+            <ToolPreviewContainer>
+                reading {args?.path} {args?.view_range || ''}
+            </ToolPreviewContainer>
+        )
+    }
+    if (command === 'create') {
+        return (
+            <ToolPreviewContainer>
+                <div>
+                    <strong>Create file:</strong> {args?.path}
+                    <Pre className='mt-2'>{args?.path}</Pre>
+                </div>
+            </ToolPreviewContainer>
+        )
+    }
+
+    if (command === 'undo_edit') {
+        return (
+            <ToolPreviewContainer>
+                <div>
+                    <strong>Undo last edit in:</strong> {args?.path}
+                </div>
+            </ToolPreviewContainer>
+        )
+    }
+
+    if (!code) return null
+    const markdown =
+        '```mdx' + ` title="${command} ${args?.path || ''}" \n` + code + '\n```'
+    return (
+        <ToolPreviewContainer className='py-0'>
+            <Markdown markdown={markdown} />
+        </ToolPreviewContainer>
+    )
+}
+
+function FilesTreePreview({
+    args,
+    state,
+    toolCallId,
+    result,
+}: {
+    state: 'partial-call' | 'call' | 'result'
+    result?: string | { error?: string; success?: false }
+    step?: number
+    toolCallId: any
+    args?: any
+}) {
+    const code = result || '\n'
+    if (!code) return null
+    const markdown = '```sh' + ` title="file tree" \n` + code + '\n```'
+    return (
+        <ToolPreviewContainer className='py-0'>
+            <Markdown markdown={markdown} />
+        </ToolPreviewContainer>
+    )
+}
+
+function ToolPreviewContainer({ className = '', children, ...props }) {
+    return (
+        <div
+            className={cn(
+                'border p-2 py-2 my-6 bg-muted rounded-lg flex flex-col w-full',
+                className,
+            )}
+            {...props}
+        >
+            {children}
+        </div>
+    )
 }

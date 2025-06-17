@@ -42,7 +42,7 @@ export type MarkdownRendererProps = {
 export const Markdown = memo(function MarkdownRender(
     props: MarkdownRendererProps,
 ) {
-    const { markdown, ast, extension } = props
+    const { markdown, ast,  } = props
     if (!ast) {
         return <MarkdownRuntimeComponent {...props} />
     }
