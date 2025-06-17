@@ -1,18 +1,22 @@
 'use client'
+import { UNSAFE_createBrowserHistory } from 'react-router/'
 import type { PageTree, TOCItemType } from 'fumadocs-core/server'
 
 import { createZustandContext } from 'docs-website/src/lib/zustand-context'
 import { create } from 'zustand'
+import { env } from './env'
 
-export type State = {
+export type DocsState = {
     tree: PageTree.Root
-    updatedPages: Map<
+    toc: TOCItemType[]
+    currentSlug?: string
+    updatedPages: Record<
         string,
         {
             markdown: string
-            slug: string
-            ast: any
-            toc: TOCItemType[]
+            githubPath: string
+            // ast: any
+            // toc: TOCItemType[]
         }
     >
     deletedPages: Array<{
@@ -20,6 +24,51 @@ export type State = {
     }>
 }
 
-export const [DocsStateProvider, useDocsState] = createZustandContext<State>(
-    (initial) => create((set) => ({ ...initial })),
-)
+export const [DocsStateProvider, useDocsState] =
+    createZustandContext<DocsState>((initial) =>
+        create((set) => ({ ...initial })),
+    )
+
+const history = UNSAFE_createBrowserHistory()
+
+useDocsState.subscribe((state, prev) => {
+    if (state.currentSlug && state.currentSlug !== prev?.currentSlug) {
+        console.log(`Current slug changed to ${state.currentSlug}`)
+        history.push(state.currentSlug)
+    }
+})
+
+export type IframeRpcMessage = {
+    id: string
+    state?: DocsState
+    error?: string
+}
+
+const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, '')]
+
+const onMessage = async (e: MessageEvent) => {
+    // e.origin is a string representing the origin of the message, e.g., "https://example.com"
+    if (!allowedOrigins.includes(e.origin)) {
+        console.warn(`Blocked message from disallowed origin: ${e.origin}`)
+        return
+    }
+    const data = e.data as IframeRpcMessage
+    const { id, state } = data || {}
+    try {
+        if (state) useDocsState.setState(state)
+        // e.source!.postMessage(
+        //     {
+        //         id,
+        //     } satisfies IframeRpcMessage,
+        //     { targetOrigin: '*' },
+        // )
+    } catch (err) {
+        e.source!.postMessage(
+            { id, error: (err as Error).message } satisfies IframeRpcMessage,
+            { targetOrigin: '*' },
+        )
+    }
+}
+if (typeof window !== 'undefined') {
+    window.addEventListener('message', onMessage)
+}

@@ -8,7 +8,7 @@ const highlighter = await createHighlighter({
 })
 
 export async function processMdxInServer({
-    markdown: mdx,
+    markdown,
     extension,
 }: {
     markdown: string
@@ -21,31 +21,13 @@ export async function processMdxInServer({
             // throw new Error(`Language ${lang} for shiki not found`)
         },
     })
-    const file = processor.processSync(mdx)
+    const file = processor.processSync(markdown)
     const data = file.data as ProcessorData
-    const frontmatterYaml = data.ast?.children.find(
-        (node) => node.type === 'yaml',
-    )?.value
-    let frontmatter: Record<string, any> = {}
-    if (frontmatterYaml) {
-        frontmatter = YAML.load(frontmatterYaml) as any
-    }
-    let title = data.title
-    let description
-    if (typeof frontmatter.description === 'string') {
-        description = frontmatter.description
-    }
-    if (typeof frontmatter.title === 'string') {
-        title = frontmatter.title
-    }
+
     return {
         data: {
             ...data,
-
-            title,
-            description,
-            frontmatter,
-            frontmatterYaml: frontmatterYaml || '',
+            markdown,
         },
     }
 }

@@ -1,9 +1,18 @@
 import { mdxComponents } from 'docs-website/src/components/mdx-components'
+
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
-import { memo } from 'react'
+import { memo, Suspense, useId, useMemo } from 'react'
 import { CustomTransformer, SafeMdxRenderer } from 'safe-mdx'
 import { createHighlighter, Highlighter } from 'shiki'
 import { getProcessor } from './mdx'
+import { lazy } from 'react'
+
+
+const MarkdownRuntimeComponent = lazy(() =>
+    import('./markdown-runtime').then((mod) => ({
+        default: mod.MarkdownRuntimeComponent,
+    })),
+)
 
 const customTransformer: CustomTransformer = (node, transform) => {
     if (node.type === 'code') {
@@ -24,43 +33,24 @@ const customTransformer: CustomTransformer = (node, transform) => {
     }
 }
 
-const onMissingLanguage = (highlighter: Highlighter, language) => {
-    throw highlighter.loadLanguage(language)
-}
-
-function setHighlighter() {
-    if (highlighter) return
-    createHighlighter({
-        themes: ['github-dark', 'github-light'],
-        langs: ['text'],
-    }).then((x) => {
-        if (highlighter) return
-        highlighter = x
-    })
-}
-
-let highlighter: Highlighter | undefined
-setHighlighter()
-
-export const MarkdownRender = memo(function MarkdownRender({
-    content,
-    ast,
-}: {
-    content?: string
+export type MarkdownRendererProps = {
+    markdown?: string
     ast?: any
-}) {
+    id?: any
+    extension?: any
+}
+
+export const MarkdownRender = memo(function MarkdownRender(
+    props: MarkdownRendererProps,
+) {
+    const { markdown, ast, extension } = props
     if (!ast) {
-        if (!highlighter) {
-            throw setHighlighter()
-        }
-        const processor = getProcessor({
-            extension: 'mdx',
-            onMissingLanguage,
-            highlighter,
-        })
-        const file = processor.processSync(content)
-        ast = file.data.ast
+        return <MarkdownRuntimeComponent {...props} />
     }
+    return <MarkdownAstRenderer ast={ast} />
+})
+
+export const MarkdownAstRenderer = ({ ast }) => {
     return (
         <SafeMdxRenderer
             customTransformer={customTransformer}
@@ -68,7 +58,7 @@ export const MarkdownRender = memo(function MarkdownRender({
             mdast={ast}
         />
     )
-})
+}
 
 MarkdownRender.displayName = 'MemoizedMarkdownBlock'
 

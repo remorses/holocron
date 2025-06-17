@@ -12,10 +12,12 @@ import {
     RiCheckLine,
 } from '@remixicon/react'
 import { UIMessage } from 'ai'
-import { memo } from 'react'
+import { memo, useEffect } from 'react'
 import { Markdown } from './ui/markdown'
 import { useChatState } from '../lib/state'
 import { EditToolParamSchema } from '../lib/schemas'
+import { useDebouncedEffect } from '../lib/hooks'
+import { docsRpcClient } from '../lib/docs-setstate'
 
 type ChatMessageProps = {
     message: UIMessage
@@ -159,6 +161,7 @@ function EditorMessagePreview({
     args,
     state,
     toolCallId,
+    result,
 }: {
     state: 'partial-call' | 'call' | 'result'
     result?: string | { error?: string; success?: false }

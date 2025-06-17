@@ -1,26 +1,16 @@
-import { href, redirect, useLoaderData } from 'react-router'
-import { colord, extend } from 'colord'
-import type { Route } from './+types/org.$orgId.site.$siteId'
-import { getSession } from '../lib/better-auth'
 import { prisma } from 'db'
-import { cn, sleep } from '../lib/utils'
-import { BrowserWindow } from '../components/browser-window'
-import { Button } from '../components/ui/button'
-import { SaveIcon } from 'lucide-react'
-import { useState, useRef, useEffect, CSSProperties } from 'react'
-import { UploadButton } from '../components/upload-button'
-import { useThrowingFn } from '../lib/hooks'
-import { ColorPicker } from '../components/color-picker'
-import Chat from '../components/chat'
-import { StateProvider } from '../lib/state'
-import NavBar from '../components/navbar'
-import { url } from 'inspector'
+import { DocsState } from 'docs-website/src/lib/docs-state'
+import { useEffect, useRef, useState } from 'react'
+import { redirect, useLoaderData } from 'react-router'
 import { AppSidebar } from '../components/app-sidebar'
-import { SidebarProvider, SidebarInset } from '../components/ui/sidebar'
-import {
-    createIframeRpcClient,
-    SpiceflowDocsClient,
-} from 'docs-website/src/lib/docs-spiceflow-client'
+import { BrowserWindow } from '../components/browser-window'
+import NavBar from '../components/navbar'
+import { SidebarInset, SidebarProvider } from '../components/ui/sidebar'
+import { getSession } from '../lib/better-auth'
+import { createIframeRpcClient } from '../lib/docs-setstate'
+import { StateProvider } from '../lib/state'
+import { cn } from '../lib/utils'
+import type { Route } from './+types/org.$orgId.site.$siteId'
 
 export async function loader({
     request,
@@ -77,7 +67,7 @@ export default function Page({
     params: { siteId, orgId },
 }: Route.ComponentProps) {
     return (
-        <StateProvider initialValue={{ messages: [] }}>
+        <StateProvider initialValue={{ messages: [], isChatGenerating: false }}>
             <SidebarProvider
                 className=''
                 style={
@@ -97,8 +87,6 @@ export default function Page({
         </StateProvider>
     )
 }
-
-let docsSpiceflowClient: SpiceflowDocsClient | undefined
 
 function Content() {
     const { site, host, url } = useLoaderData<typeof loader>()
@@ -131,18 +119,11 @@ function Content() {
                     <iframe
                         ref={(el) => {
                             iframeRef.current = el
-                            const { cleanup, client } = createIframeRpcClient({
+                            const docsRpcClient_ = createIframeRpcClient({
                                 iframeRef,
                             })
-                            docsSpiceflowClient = client
-                            sleep(1000 * 2).then(() => {
-                                docsSpiceflowClient!.health
-                                    .get()
-                                    .then((res) => {
-                                        console.log('got health', res.data)
-                                    })
-                            })
-                            return cleanup
+
+                            return docsRpcClient_.cleanup
                         }}
                         style={scaleDownElement(0.9)}
                         className={cn(' inset-0 bg-transparent', 'absolute')}

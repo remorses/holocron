@@ -15,6 +15,13 @@ import { useChatState } from '../lib/state'
 import { Cards, Card } from 'fumadocs-ui/components/card'
 
 import { CpuIcon, PanelsTopLeft, Database, Terminal } from 'lucide-react'
+import {
+    createEditExecute,
+    EditToolParamSchema,
+    isParameterComplete,
+    PageUpdate,
+} from '../lib/edit-tool'
+import { docsRpcClient } from '../lib/docs-setstate'
 
 export default function Chat({}) {
     const { scrollRef, contentRef, scrollToBottom } = useStickToBottom()
@@ -43,15 +50,13 @@ const chatCardItems: ChatCardItem[] = [
     {
         icon: <CpuIcon className='text-purple-300' />,
         title: 'Fumadocs Core',
-        description:
-            'Handles logic like doc search and adapters.',
+        description: 'Handles logic like doc search and adapters.',
         className: '@max-lg:col-span-1',
     },
     {
         icon: <PanelsTopLeft className='text-blue-300' />,
         title: 'Fumadocs UI',
-        description:
-            'A modern theme for docs and components.',
+        description: 'A modern theme for docs and components.',
         className: '@max-lg:col-span-1',
     },
 ]
@@ -62,7 +67,6 @@ function ChatCards({ items = chatCardItems }: { items?: ChatCardItem[] }) {
         <Cards className='mt-auto '>
             {items.map((item, idx) => (
                 <Card
-
                     key={item.title + idx}
                     icon={item.icon}
                     title={item.title}
@@ -128,12 +132,47 @@ function Footer() {
                 })
             if (error) throw error
             // Clear the input
-
+            //
+            const updatedPages: Record<string, PageUpdate> = {}
+            const execute = createEditExecute({
+                updatedPages,
+                async getPageContent({ githubPath: path }) {
+                    return ''
+                },
+            })
             for await (const newMessages of fullStreamToUIMessages({
                 fullStream: generator,
                 messages: allMessages,
                 generateId,
             })) {
+                const lastMessage = newMessages[newMessages.length - 1]
+                const lastPart = lastMessage.parts[lastMessage.parts.length - 1]
+                if (
+                    lastMessage.role === 'assistant' &&
+                    lastPart?.type === 'tool-invocation'
+                ) {
+                    const toolInvocation = lastPart.toolInvocation
+                    if (toolInvocation.toolName === 'str_replace_editor') {
+                        const args: Partial<EditToolParamSchema> =
+                            toolInvocation.args
+                        if (!isParameterComplete(args)) return
+                        const result = await execute(toolInvocation.args)
+                        // TODO create new tree too, the tree must be recreated when
+                        // - an icon is added to a page, meaning frontmatter changes
+                        // - a page is created
+                        // - a page is deleted
+                        // creating a tree is slow, this means it should be done not too often.
+                        // creating a toc is slow too. it should be done max every second, with debounce
+                        docsRpcClient.setDocsState({
+                            updatedPages,
+                        })
+                    }
+                }
+                useChatState.setState((x) => {
+                    const docsState = x.docsState
+                    return { docsState }
+                })
+
                 useChatState.setState({ messages: newMessages })
             }
         } finally {

@@ -7,7 +7,7 @@ import type { Route } from './+types/$'
 import { TrieveSDK } from 'trieve-ts-sdk'
 
 import { prisma } from 'db'
-import { generateToc } from 'docs-website/src/lib/toc'
+
 import { DocsLayout } from 'fumadocs-ui/layouts/docs'
 
 import {
@@ -17,7 +17,7 @@ import {
     DocsTitle,
 } from 'fumadocs-ui/page'
 
-import { Suspense } from 'react'
+import { Suspense, useMemo } from 'react'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { TrieveSearchDialog } from 'docs-website/src/trieve/search-dialog-trieve'
@@ -184,7 +184,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         extension: page.extension,
         markdown: page.markdown,
     })
-    const tableOfContents = generateToc(data.ast)
 
     return {
         ...data,
@@ -193,7 +192,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         i18n: source._i18n,
         page,
         githubPath: page.githubPath,
-        toc: tableOfContents,
+
         tree,
         site,
     }
@@ -215,7 +214,7 @@ function Providers({
     loaderData: Route.ComponentProps['loaderData']
     children: React.ReactNode
 }) {
-    const { i18n, tree, locale, site } = loaderData
+    const { i18n, tree, toc, locale, site } = loaderData
     if (!trieveClient && site.trieveReadApiKey) {
         trieveClient = new TrieveSDK({
             apiKey: site.trieveReadApiKey!,
@@ -227,6 +226,7 @@ function Providers({
         <DocsStateProvider
             initialValue={{
                 tree: tree as any,
+                toc: toc as any,
                 deletedPages: [],
                 updatedPages: {},
             }}
@@ -256,12 +256,15 @@ function MainDocsPage({
     loaderData: Route.ComponentProps['loaderData']
 }) {
     const { title, description, i18n, githubPath, site, slug } = loaderData
-    const { tree, ast, toc } = useDocsState(
+    const { tree, ast, toc, markdown } = useDocsState(
         useShallow((x) => {
-            const { tree, updatedPages } = x
+            const { tree, toc, updatedPages } = x
             const override = updatedPages[githubPath]
-            const { ast, toc } = loaderData
-            return { ast: override.ast, toc: override.toc, tree }
+            if (override) {
+                return { ast: undefined, toc, ...override }
+            }
+
+            return { tree, ast, toc, markdown: undefined }
         }),
     )
 
@@ -284,7 +287,7 @@ function MainDocsPage({
                 )}
                 <DocsBody>
                     <Suspense fallback={<div>Loading...</div>}>
-                        <MarkdownRender ast={ast} />
+                        <MarkdownRender markdown={markdown} ast={ast} />
                     </Suspense>
                 </DocsBody>
             </DocsPage>

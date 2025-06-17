@@ -142,6 +142,30 @@ const remarkExtractFirstHeading = () => {
 }
 
 import { trySync } from './utils'
+import { TOCItemType } from 'fumadocs-core/server'
+
+const injectData = () => {
+    return (tree, file) => {
+        if (!file.data) file.data = {}
+        const data: ProcessorData = file.data
+        data.ast = tree
+        const frontmatterYaml = data.ast?.children.find(
+            (node) => node.type === 'yaml',
+        )?.value
+        let frontmatter: Record<string, any> = {}
+        if (frontmatterYaml) {
+            frontmatter = YAML.load(frontmatterYaml) as any
+            data.frontmatter = frontmatter
+        }
+
+        if (typeof frontmatter.description === 'string') {
+            data.description = frontmatter.description
+        }
+        if (typeof frontmatter.title === 'string') {
+            data.title = frontmatter.title
+        }
+    }
+}
 
 export const getProcessor = function getProcessor({
     extension,
@@ -168,11 +192,7 @@ export const getProcessor = function getProcessor({
                 .use(remarkMarkAndUnravel)
                 .use(remarkCodeToHtml({ highlighter, onMissingLanguage }))
                 .use(remarkExtractFirstHeading)
-                .use(() => {
-                    return (tree, file) => {
-                        file.data.ast = tree
-                    }
-                })
+                .use(injectData)
         )
     } else {
         return (
@@ -190,11 +210,7 @@ export const getProcessor = function getProcessor({
                 // .use(remarkMarkAndUnravel)
                 .use(remarkCodeToHtml({ highlighter, onMissingLanguage }))
                 .use(remarkExtractFirstHeading)
-                .use(() => {
-                    return (tree, file) => {
-                        file.data.ast = tree
-                    }
-                })
+                .use(injectData)
         )
     }
 }
@@ -202,6 +218,7 @@ export type ProcessorData = {
     title?: string
     description?: string
     ast: Root
+    toc: TOCItemType[]
     frontmatter: Record<string, any>
     frontmatterYaml?: string
     structuredData: StructuredData
