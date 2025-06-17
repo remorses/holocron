@@ -18,8 +18,9 @@ function createEditTool({
     modelId,
 }: {
     modelId: string
-    updatedPages: Map<string, PageUpdate>
+    updatedPages: Record<string, PageUpdate>
 }) {
+    const previousEdits: PageUpdate[] = []
     async function execute(params: EditToolParamSchema) {
         const {
             command,
@@ -33,7 +34,7 @@ function createEditTool({
 
         switch (command) {
             case 'view': {
-                const override = updatedPages.get(path)
+                const override = updatedPages[path]
                 let content: string | null = null
 
                 if (override) {
@@ -76,20 +77,26 @@ function createEditTool({
                         error: '`file_text` is required for create command.',
                     }
                 }
-                updatedPages.set(path, {
+                updatedPages[path] = {
                     githubPath: path,
                     markdown: file_text,
-                })
+                }
                 return file_text
             }
             case 'str_replace': {
-                const override = updatedPages.get(path)
+                const override = updatedPages[path]
                 if (!override) {
                     return {
                         success: false,
                         error: `Page not found for path: ${path}`,
                     }
                 }
+                
+                // Store current state before editing
+                previousEdits.push({
+                    githubPath: path,
+                    markdown: override.markdown,
+                })
                 if (typeof old_str !== 'string' || old_str.length === 0) {
                     return {
                         success: false,
@@ -119,20 +126,26 @@ function createEditTool({
                     old_str,
                     new_str,
                 )
-                updatedPages.set(path, {
+                updatedPages[path] = {
                     githubPath: path,
                     markdown: replacedContent,
-                })
+                }
                 return replacedContent
             }
             case 'insert': {
-                const override = updatedPages.get(path)
+                const override = updatedPages[path]
                 if (!override) {
                     return {
                         success: false,
                         error: `Page not found for path: ${path}`,
                     }
                 }
+                
+                // Store current state before editing
+                previousEdits.push({
+                    githubPath: path,
+                    markdown: override.markdown,
+                })
                 if (typeof insert_line !== 'number' || insert_line < 1) {
                     return {
                         success: false,
@@ -150,17 +163,31 @@ function createEditTool({
                 const insertAt = Math.min(insert_line, lines.length)
                 lines.splice(insertAt, 0, new_str)
                 const newContent = lines.join('\n')
-                updatedPages.set(path, {
+                updatedPages[path] = {
                     githubPath: path,
                     markdown: newContent,
-                })
+                }
                 return newContent
             }
             case 'undo_edit': {
-                // Not implemented, return error
+                const previous = previousEdits.pop()
+                if (!previous) {
+                    return {
+                        success: false,
+                        error: `No previous edit found for path: ${path}. Cannot undo.`,
+                    }
+                }
+                
+                // Restore the previous content
+                updatedPages[path] = {
+                    githubPath: path,
+                    markdown: previous.markdown,
+                }
+                
                 return {
-                    success: false,
-                    error: '`undo_edit` is not implemented.',
+                    success: true,
+                    message: `Successfully reverted ${path} to previous state.`,
+                    content: previous.markdown,
                 }
             }
             default: {
@@ -211,7 +238,7 @@ export const app = new Spiceflow({ basePath: '/api' })
         async *handler({ request }) {
             const { messages } = await request.json()
             await sleep(1000)
-            const updatedPages = new Map<string, PageUpdate>()
+            const updatedPages: Record<string, PageUpdate> = {}
             const model = openai.responses('gpt-4.1-nano')
             const result = streamText({
                 model,

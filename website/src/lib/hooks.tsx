@@ -1,5 +1,5 @@
-import React, { useEffect } from "react"
-import { toast } from "sonner"
+import React, { useEffect } from 'react'
+import { toast } from 'sonner'
 
 export function useThrowingFn({
     fn: fnToWrap,
@@ -41,4 +41,21 @@ export function useThrowingFn({
         isLoading,
         fn,
     }
+}
+
+export function useDebouncedEffect(
+    effect: () => void | (() => void),
+    deps: any[],
+    delay: number,
+) {
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            effect()
+        }, delay)
+
+        return () => {
+            clearTimeout(handler)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [...deps, delay])
 }
