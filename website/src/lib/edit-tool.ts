@@ -253,7 +253,7 @@ export const editToolParamsSchema = z.object({
     command: z
         .enum(['view', 'create', 'str_replace', 'insert', 'undo_edit'])
         .describe(
-            'The commands to run. Allowed options are: `view`, `create`, `str_replace`, `insert`, `undo_edit`.',
+            'The commands to run. This field should always come first',
         ),
     /**
      * Absolute path to file or directory, e.g. `/repo/file.py` or `/repo`.
@@ -261,7 +261,7 @@ export const editToolParamsSchema = z.object({
     path: z
         .string()
         .describe(
-            'Absolute path to file or directory, e.g. `/repo/file.py` or `/repo`.',
+            'Absolute path to file or directory, e.g. `repo/file.py` or `repo`. This field should always come second, after command.',
         ),
     /**
      * Required parameter of `create` command, with the content of the file to be created.

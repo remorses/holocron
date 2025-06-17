@@ -1,4 +1,5 @@
 'use client'
+import memoize from 'micro-memoize'
 import { RiAttachment2 } from '@remixicon/react'
 import { createIdGenerator, UIMessage } from 'ai'
 import { useState, useTransition } from 'react'
@@ -92,7 +93,7 @@ function Messages({ ref }) {
             {messages.map((x) => {
                 return <ChatMessage key={x.id} message={x} />
             })}
-            <ChatCards />
+            {!messages.length && <ChatCards />}
         </div>
     )
 }
@@ -140,11 +141,21 @@ function Footer() {
             // Clear the input
             //
             const updatedPages: Record<string, PageUpdate> = {}
+            const getPageContent = memoize(
+                async function getPageContent(x) {
+                    const { data, error } =
+                        await apiClient.api.getPageContent.post({
+                            tabId,
+                            githubPath: x.githubPath,
+                        })
+                    if (error) return ''
+                    return data?.content
+                },
+                { transformKey: (x) => x.map((l) => JSON.stringify(l)) },
+            )
             const execute = createEditExecute({
                 updatedPages,
-                async getPageContent() {
-                    return ''
-                },
+                getPageContent,
             })
             for await (const newMessages of fullStreamToUIMessages({
                 fullStream: generator,
@@ -161,7 +172,12 @@ function Footer() {
                     if (toolInvocation.toolName === 'str_replace_editor') {
                         const args: Partial<EditToolParamSchema> =
                             toolInvocation.args
-                        if (!isParameterComplete(args)) continue
+                        if (args?.command === 'view') {
+                            continue
+                        }
+                        if (!isParameterComplete(args)) {
+                            continue
+                        }
                         const result = await execute(toolInvocation.args)
                         // TODO create new tree too, the tree must be recreated when
                         // - an icon is added to a page, meaning frontmatter changes

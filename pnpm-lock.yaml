@@ -1339,6 +1339,9 @@ importers:
       marked:
         specifier: ^15.0.12
         version: 15.0.12
+      micro-memoize:
+        specifier: ^4.1.3
+        version: 4.1.3
       nprogress:
         specifier: ^0.2.0
         version: 0.2.0

@@ -53,7 +53,7 @@ function isMessageAlmostEmpty(message: UIMessage) {
     return false
 }
 
-export const ChatMessage = function ChatMessage({
+export const ChatMessage = memo(function ChatMessage({
     message,
     children,
 }: ChatMessageProps) {
@@ -84,10 +84,10 @@ export const ChatMessage = function ChatMessage({
         >
             <div
                 className={cn(
-                    'w-full',
+                    'max-w-full',
                     message.role === 'user'
                         ? 'bg-muted px-4 py-3 rounded-xl'
-                        : 'space-y-4 max-w-full',
+                        : 'space-y-4  w-full',
                 )}
             >
                 <div className='prose text-sm w-full max-w-full dark:prose-invert'>
@@ -145,7 +145,7 @@ export const ChatMessage = function ChatMessage({
             </div>
         </article>
     )
-}
+})
 
 type ActionButtonProps = {
     icon: React.ReactNode

@@ -18,3 +18,14 @@ export function isAbsoluteUrl(url: string) {
     ].some((x) => url.startsWith(x))
     return abs
 }
+
+export function debounce<T extends (...args: any[]) => any>(
+    delay: number,
+    fn: T,
+) {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+    return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
+        if (timeoutId) clearTimeout(timeoutId)
+        timeoutId = setTimeout(() => fn.apply(this, args), delay)
+    }
+}

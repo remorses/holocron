@@ -39,15 +39,13 @@ export type MarkdownRendererProps = {
     extension?: any
 }
 
-export const Markdown = memo(function MarkdownRender(
-    props: MarkdownRendererProps,
-) {
-    const { markdown, ast,  } = props
+export const Markdown = function MarkdownRender(props: MarkdownRendererProps) {
+    const { markdown, ast } = props
     if (!ast) {
         return <MarkdownRuntimeComponent {...props} />
     }
     return <MarkdownAstRenderer ast={ast} />
-})
+}
 
 export const MarkdownAstRenderer = ({ ast }) => {
     return (

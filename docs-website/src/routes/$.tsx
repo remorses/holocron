@@ -30,7 +30,25 @@ import { Markdown } from '../lib/safe-mdx'
 import { getFumadocsSource } from '../lib/source.server'
 
 if (typeof window !== 'undefined') {
+    // Add a listener to handle postMessages from parent when running in browser
     window.addEventListener('message', onParentPostMessage)
+
+    // Handle Hot Module Replacement (HMR) in development.
+    // We need both accept and dispose because:
+    // - dispose: Runs before the module is replaced. Removes the message event listener so
+    //   we don't accumulate listeners as modules are reloaded.
+    // - accept: Runs after the module is replaced. Here, for safety, we ensure that we remove
+    //   the previous listener so that only the current version of onParentPostMessage is attached.
+    // Without both, especially if only dispose is used, if the module gets re-imported in certain
+    // orders/ways, duplicate listeners may persist or a stale reference may be left.
+    if (import.meta.hot) {
+        import.meta.hot.accept(() => {
+            window.removeEventListener('message', onParentPostMessage)
+        })
+        import.meta.hot.dispose(() => {
+            window.removeEventListener('message', onParentPostMessage)
+        })
+    }
 }
 
 export function meta({ data }: Route.MetaArgs) {
@@ -179,7 +197,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     }
 
     const tree = source.getPageTree(locale)
-    console.log('tree', tree)
 
     // fs.writeFileSync('scripts/rendered-mdx.mdx', page.markdown)
     // fs.writeFileSync('scripts/rendered-mdx.jsonc', JSON.stringify(ast, null, 2))
@@ -291,9 +308,11 @@ function MainDocsPage({
                     <DocsDescription>{description}</DocsDescription>
                 )}
                 <DocsBody>
-                    <Suspense fallback={<div>Loading...</div>}>
-                        <Markdown markdown={markdown} ast={ast} />
-                    </Suspense>
+                    <Markdown
+                        key={markdown ? 'markdown' : 'ast'}
+                        markdown={markdown}
+                        ast={ast}
+                    />
                 </DocsBody>
             </DocsPage>
         </DocsLayout>

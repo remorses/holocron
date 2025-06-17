@@ -1,5 +1,6 @@
 import { createSpiceflowClient, SpiceflowClient } from 'spiceflow/client'
 import { DocsState, IframeRpcMessage } from 'docs-website/src/lib/docs-state'
+import { debounce } from './utils'
 
 export function createIframeRpcClient({
     iframeRef,
@@ -10,7 +11,7 @@ export function createIframeRpcClient({
     targetOrigin?: string
     defaultTimeout?: number
 }) {
-    docsRpcClient.setDocsState = (state: DocsState) => {
+    docsRpcClient.setDocsState = debounce(50, (state: DocsState) => {
         // contentWindow is accessible even for cross-origin iframes, but you cannot access *properties* of the window if it's cross-origin.
         // Here, we just need to postMessage, which is allowed on cross-origin frames.
         const w = iframeRef.current?.contentWindow
@@ -26,7 +27,7 @@ export function createIframeRpcClient({
         w.postMessage(message, {
             targetOrigin: '*',
         })
-    }
+    })
 
     function onMessage(e: MessageEvent) {
         if (targetOrigin && e.origin !== targetOrigin) return

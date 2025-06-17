@@ -79,3 +79,14 @@ export function groupByN<T>(arr: T[], n: number): T[][] {
     }
     return result
 }
+
+export function debounce<T extends (...args: any[]) => any>(
+    delay: number,
+    fn: T,
+) {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+    return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
+        if (timeoutId) clearTimeout(timeoutId)
+        timeoutId = setTimeout(() => fn.apply(this, args), delay)
+    }
+}

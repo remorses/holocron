@@ -4,6 +4,7 @@ import type { PageTree, TOCItemType } from 'fumadocs-core/server'
 import { createZustandContext } from 'docs-website/src/lib/zustand-context'
 import { create } from 'zustand'
 import { env } from './env'
+import { debounce } from './utils'
 
 export type DocsState = {
     tree: PageTree.Root
@@ -36,7 +37,7 @@ export type IframeRpcMessage = {
 
 const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, '')]
 
-export const onParentPostMessage = async (e: MessageEvent) => {
+export const onParentPostMessage = debounce(50, async (e: MessageEvent) => {
     // e.origin is a string representing the origin of the message, e.g., "https://example.com"
     if (!allowedOrigins.includes(e.origin)) {
         console.warn(`Blocked message from disallowed origin: ${e.origin}`)
@@ -58,4 +59,4 @@ export const onParentPostMessage = async (e: MessageEvent) => {
             { targetOrigin: '*' },
         )
     }
-}
+})

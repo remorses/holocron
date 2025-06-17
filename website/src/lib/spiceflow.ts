@@ -25,6 +25,11 @@ import {
 export const app = new Spiceflow({ basePath: '/api' })
     // .state('env', {} as Env)
     // Health check endpoint
+    .state('userId', '')
+    .use(async ({ request, state }) => {
+        const session = await getSession({ request })
+        state.userId = session?.userId
+    })
     .use(openapi())
     .route({
         method: 'GET',
@@ -39,6 +44,64 @@ export const app = new Spiceflow({ basePath: '/api' })
     })
     .route({
         method: 'POST',
+        path: '/getPageContent',
+        request: z.object({
+            tabId: z.string(),
+            githubPath: z.string(),
+        }),
+        async handler({ request, state: { userId } }) {
+            let { tabId, githubPath } = await request.json()
+            // Remove leading slash from githubPath, if present
+            if (githubPath.startsWith('/')) {
+                githubPath = githubPath.slice(1)
+            }
+            // First, check if the user can access the requested tab
+            const tab = await prisma.tab.findFirst({
+                where: {
+                    tabId,
+                    site: {
+                        org: {
+                            users: {
+                                some: {
+                                    userId,
+                                },
+                            },
+                        },
+                    },
+                },
+            })
+            if (!tab) {
+                throw new Error('You do not have access to this tab')
+            }
+
+            const [page, metaFile] = await Promise.all([
+                prisma.markdownPage.findFirst({
+                    where: {
+                        tabId,
+                        githubPath,
+                    },
+                }),
+                prisma.metaFile.findFirst({
+                    where: {
+                        tabId,
+                        githubPath,
+                    },
+                }),
+            ])
+            if (!page && !metaFile) {
+                throw new Error(`Cannot find page in ${githubPath}`)
+            }
+            return {
+                success: true,
+                content:
+                    page?.markdown ||
+                    JSON.stringify(metaFile?.jsonData, null, 2) ||
+                    '',
+            }
+        },
+    })
+    .route({
+        method: 'POST',
         path: '/generateMessage',
         request: z.object({
             messages: z.array(z.custom<UIMessage>()),
@@ -47,9 +110,8 @@ export const app = new Spiceflow({ basePath: '/api' })
         }),
         async *handler({ request }) {
             const { messages, tabId, siteId } = await request.json()
-            await sleep(1000)
             const updatedPages: Record<string, PageUpdate> = {}
-            const model = openai.responses('gpt-4.1')
+            const model = openai.responses('gpt-4.1-mini')
             const execute = createEditExecute({
                 updatedPages,
                 async getPageContent({ githubPath: path }) {
@@ -64,35 +126,6 @@ export const app = new Spiceflow({ basePath: '/api' })
                     return page.markdown || ''
                 },
             })
-            const [pages, metaFiles, mediaAssets] = await Promise.all([
-                prisma.markdownPage.findMany({
-                    where: {
-                        tabId,
-                    },
-                    omit: {
-                        markdown: true,
-                        structuredData: true,
-                    },
-                }),
-                prisma.metaFile.findMany({
-                    where: {
-                        tabId,
-                    },
-                    omit: {
-                        jsonData: true,
-                    },
-                }),
-                prisma.mediaAsset.findMany({
-                    where: {
-                        tabId,
-                    },
-                }),
-            ])
-            const allFiles = [
-                ...pages.map((x) => ({ ...x, type: 'page' }) as const),
-                ...metaFiles.map((x) => ({ ...x, type: 'meta' }) as const),
-                ...mediaAssets.map((x) => ({ ...x, type: 'media' }) as const),
-            ].flat()
 
             const str_replace_editor = model.modelId.includes('anthropic')
                 ? anthropic.tools.textEditor_20241022({
@@ -132,6 +165,43 @@ export const app = new Spiceflow({ basePath: '/api' })
                             'Returns a directory tree diagram of the current project files as plain text. Useful for giving an overview or locating files.',
                         parameters: z.object({}),
                         execute: async () => {
+                            const [pages, metaFiles, mediaAssets] =
+                                await Promise.all([
+                                    prisma.markdownPage.findMany({
+                                        where: {
+                                            tabId,
+                                        },
+                                        omit: {
+                                            markdown: true,
+                                            structuredData: true,
+                                        },
+                                    }),
+                                    prisma.metaFile.findMany({
+                                        where: {
+                                            tabId,
+                                        },
+                                        omit: {
+                                            jsonData: true,
+                                        },
+                                    }),
+                                    prisma.mediaAsset.findMany({
+                                        where: {
+                                            tabId,
+                                        },
+                                    }),
+                                ])
+                            const allFiles = [
+                                ...pages.map(
+                                    (x) => ({ ...x, type: 'page' }) as const,
+                                ),
+                                ...metaFiles.map(
+                                    (x) => ({ ...x, type: 'meta' }) as const,
+                                ),
+                                ...mediaAssets.map(
+                                    (x) => ({ ...x, type: 'media' }) as const,
+                                ),
+                            ].flat()
+
                             return printDirectoryTree({
                                 filePaths: allFiles.map((x) => {
                                     const path = x.githubPath
