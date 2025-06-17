@@ -37,7 +37,7 @@ export type IframeRpcMessage = {
 
 const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, '')]
 
-export const onParentPostMessage = debounce(50, async (e: MessageEvent) => {
+export const onParentPostMessage = async (e: MessageEvent) => {
     // e.origin is a string representing the origin of the message, e.g., "https://example.com"
     if (!allowedOrigins.includes(e.origin)) {
         console.warn(`Blocked message from disallowed origin: ${e.origin}`)
@@ -45,18 +45,15 @@ export const onParentPostMessage = debounce(50, async (e: MessageEvent) => {
     }
     const data = e.data as IframeRpcMessage
     const { id, state } = data || {}
-    try {
-        if (state) useDocsState.setState(state)
-        // e.source!.postMessage(
-        //     {
-        //         id,
-        //     } satisfies IframeRpcMessage,
-        //     { targetOrigin: '*' },
-        // )
-    } catch (err) {
-        e.source!.postMessage(
-            { id, error: (err as Error).message } satisfies IframeRpcMessage,
-            { targetOrigin: '*' },
-        )
-    }
-})
+
+    if (state) useDocsState.setState(state)
+    e.source!.postMessage({ id } satisfies IframeRpcMessage, {
+        targetOrigin: '*',
+    })
+    // e.source!.postMessage(
+    //     {
+    //         id,
+    //     } satisfies IframeRpcMessage,
+    //     { targetOrigin: '*' },
+    // )
+}

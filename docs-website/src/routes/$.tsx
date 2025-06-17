@@ -284,7 +284,7 @@ function MainDocsPage({
             useShallow((x) => {
                 const { tree, toc, updatedPages } = x
                 const override = updatedPages[loaderData.githubPath]
-                console.log(updatedPages)
+
                 if (override) {
                     return {
                         ...loaderData,

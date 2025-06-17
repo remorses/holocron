@@ -90,3 +90,69 @@ export function debounce<T extends (...args: any[]) => any>(
         timeoutId = setTimeout(() => fn.apply(this, args), delay)
     }
 }
+
+// teeAsync.ts
+// Requires the DOM lib for `ReadableStream` types (e.g. `tsconfig.json` → `"lib": ["esnext", "dom"]`).
+
+/**
+ * Turn a WHATWG ReadableStream<T> into an AsyncIterableIterator<T>.
+ * Keeps the “reader” hidden so callers only see the iterator interface.
+ */
+export function streamToAsyncIterator<T>(
+    stream: ReadableStream<T>,
+): AsyncIterableIterator<T> {
+    const reader = stream.getReader()
+
+    return {
+        async next(): Promise<IteratorResult<T>> {
+            return reader.read() as Promise<IteratorResult<T>>
+        },
+        async return(value?: unknown): Promise<IteratorResult<T>> {
+            await reader.cancel()
+            return { value, done: true }
+        },
+        async throw(err: unknown): Promise<never> {
+            await reader.cancel(err)
+            throw err
+        },
+        [Symbol.asyncIterator]() {
+            return this
+        },
+    }
+}
+
+/**
+ * teeAsync(iterable) → [cloneA, cloneB]
+ * -------------------------------------
+ * Clones any AsyncIterable<T> using ReadableStream.tee().
+ */
+export function teeAsyncIterable<T>(
+    iterable: AsyncIterable<T>,
+): [AsyncIterableIterator<T>, AsyncIterableIterator<T>] {
+    const srcIter = iterable[Symbol.asyncIterator]()
+
+    // Wrap the source iterator in a stream.
+    const srcStream = new ReadableStream<T>({
+        async pull(ctrl) {
+            try {
+                const { value, done } = await srcIter.next()
+                done ? ctrl.close() : ctrl.enqueue(value as T)
+            } catch (err) {
+                ctrl.error(err)
+            }
+        },
+        async cancel() {
+            if (typeof srcIter.return === 'function') {
+                try {
+                    await srcIter.return()
+                } catch {
+                    /* ignore */
+                }
+            }
+        },
+    })
+
+    // Duplicate the stream and convert each branch back into an iterator.
+    const [s1, s2] = srcStream.tee()
+    return [streamToAsyncIterator(s1), streamToAsyncIterator(s2)]
+}

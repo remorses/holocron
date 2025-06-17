@@ -2,6 +2,7 @@ import { icons } from '@iconify-json/lucide'
 import { createElement, ReactSVGElement } from 'react'
 
 export function getIconJsx({ key }) {
+    if (!key) return null
     const alias = icons.aliases?.[key]?.parent
     const icon = icons[key || alias]
     if (!icon) {

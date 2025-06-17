@@ -25,6 +25,7 @@ import {
 import { docsRpcClient } from '../lib/docs-setstate'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId'
 import { useLoaderData } from 'react-router'
+import { teeAsyncIterable } from '../lib/utils'
 
 export default function Chat({}) {
     const { scrollRef, contentRef, scrollToBottom } = useStickToBottom()
@@ -157,47 +158,60 @@ function Footer() {
                 updatedPages: updatedPagesState,
                 getPageContent,
             })
-            for await (const newMessages of fullStreamToUIMessages({
-                fullStream: generator,
-                messages: allMessages,
-                generateId,
-            })) {
-                const lastMessage = newMessages[newMessages.length - 1]
-                const lastPart = lastMessage.parts[lastMessage.parts.length - 1]
-                if (
-                    lastMessage.role === 'assistant' &&
-                    lastPart?.type === 'tool-invocation'
-                ) {
-                    const toolInvocation = lastPart.toolInvocation
-                    if (toolInvocation.toolName === 'str_replace_editor') {
-                        const args: Partial<EditToolParamSchema> =
-                            toolInvocation.args
-                        if (args?.command === 'view') {
-                            continue
-                        }
-                        if (!isParameterComplete(args)) {
-                            continue
-                        }
+            // Split the async iterator into two: one for docs edit, one for state updates
+            const [editIter, stateIter] = teeAsyncIterable(
+                fullStreamToUIMessages({
+                    fullStream: generator,
+                    messages: allMessages,
+                    generateId,
+                }),
+            )
 
-                        if (toolInvocation.state === 'partial-call') {
-                            let updatedPagesCopy = { ...updatedPagesState }
-                            const execute = createEditExecute({
-                                updatedPages: updatedPagesCopy,
-                                getPageContent,
-                            })
-                            await execute(toolInvocation.args)
-                            docsRpcClient.setDocsState({
-                                updatedPages: updatedPagesCopy,
-                            })
-                        } else if (toolInvocation.state === 'result') {
-                            await execute(toolInvocation.args)
-                            docsRpcClient.setDocsState({
-                                updatedPages: updatedPagesState,
-                            })
+            // First iteration: handle docs/edit-tool logic
+            async function updateDocsSite() {
+                for await (const newMessages of editIter) {
+                    const lastMessage = newMessages[newMessages.length - 1]
+                    const lastPart =
+                        lastMessage.parts[lastMessage.parts.length - 1]
+                    if (
+                        lastMessage.role === 'assistant' &&
+                        lastPart?.type === 'tool-invocation'
+                    ) {
+                        const toolInvocation = lastPart.toolInvocation
+                        if (toolInvocation.toolName === 'str_replace_editor') {
+                            const args: Partial<EditToolParamSchema> =
+                                toolInvocation.args
+                            if (args?.command === 'view') {
+                                continue
+                            }
+                            if (!isParameterComplete(args)) {
+                                continue
+                            }
+
+                            if (toolInvocation.state === 'partial-call') {
+                                let updatedPagesCopy = { ...updatedPagesState }
+                                const execute = createEditExecute({
+                                    updatedPages: updatedPagesCopy,
+                                    getPageContent,
+                                })
+                                await execute(toolInvocation.args)
+                                await docsRpcClient.setDocsState({
+                                    updatedPages: updatedPagesCopy,
+                                })
+                            } else if (toolInvocation.state === 'result') {
+                                await execute(toolInvocation.args)
+                                await docsRpcClient.setDocsState({
+                                    updatedPages: updatedPagesState,
+                                })
+                            }
                         }
                     }
                 }
+            }
+            updateDocsSite()
 
+            // Second iteration: update chat state
+            for await (const newMessages of stateIter) {
                 useChatState.setState({ messages: newMessages })
             }
         } finally {

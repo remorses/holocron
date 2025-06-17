@@ -91,9 +91,6 @@ export const ChatMessage = memo(function ChatMessage({
                 )}
             >
                 <div className='prose text-sm w-full max-w-full dark:prose-invert'>
-                    <p className='sr-only'>
-                        {message.role === 'user' ? 'You' : 'Bart'} said:
-                    </p>
                     {message.parts.map((part, index) => {
                         if (part.type === 'tool-invocation') {
                             const toolName = part.toolInvocation.toolName
@@ -124,7 +121,12 @@ export const ChatMessage = memo(function ChatMessage({
 
                         if (part.type === 'text') {
                             if (message.role === 'user') {
-                                return part.text
+                                return (
+                                    <Markdown
+                                        key={index}
+                                        markdown={part.text}
+                                    />
+                                )
                             }
                             return <Markdown key={index} markdown={part.text} />
                         }
@@ -210,9 +212,15 @@ function EditorToolPreview({
     const code = args?.new_str || ''
     const command = args?.command
     if (command === 'view') {
+        let linesText = ''
+        if (args?.view_range?.length === 2) {
+            const [start, end] = args?.view_range
+            linesText = `:${start}:${end}`
+        }
+
         return (
             <ToolPreviewContainer>
-                reading {args?.path} {args?.view_range || ''}
+                <Markdown markdown={`Reading \`${args?.path}${linesText}\` `} />
             </ToolPreviewContainer>
         )
     }
@@ -238,8 +246,14 @@ function EditorToolPreview({
     }
 
     if (!code) return null
-    const markdown =
-        '```mdx' + ` title="${command} ${args?.path || ''}" \n` + code + '\n```'
+    let markdown = ''
+    if (command === 'insert') {
+        markdown += `Inserting content into \`${args?.path}\`\n`
+    } else if (command === 'str_replace') {
+        markdown += `Replacing content into \`${args?.path}\`\n`
+    }
+
+    markdown += '```mdx' + ` title=" ${args?.path || ''}" \n` + code + '\n```'
     return (
         <ToolPreviewContainer className='py-0'>
             <Markdown markdown={markdown} />
@@ -271,13 +285,7 @@ function FilesTreePreview({
 
 function ToolPreviewContainer({ className = '', children, ...props }) {
     return (
-        <div
-            className={cn(
-                'border p-2 py-2 my-6 bg-muted rounded-lg flex flex-col w-full',
-                className,
-            )}
-            {...props}
-        >
+        <div className={cn('flex flex-col w-full', className)} {...props}>
             {children}
         </div>
     )
