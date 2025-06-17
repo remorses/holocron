@@ -78,6 +78,7 @@ export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
     } else {
       message.parts.push({
         type: "tool-invocation",
+
         toolInvocation: invocation,
       });
     }

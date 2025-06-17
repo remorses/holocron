@@ -1,23 +1,22 @@
-import { cn } from 'website/src/lib/utils'
 import {
-    TooltipProvider,
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from 'website/src/components/ui/tooltip'
-import {
-    RiCodeSSlashLine,
     RiBookLine,
-    RiLoopRightFill,
     RiCheckLine,
+    RiCodeSSlashLine,
+    RiLoopRightFill,
 } from '@remixicon/react'
 import { UIMessage } from 'ai'
-import { memo, useEffect } from 'react'
-import { Markdown } from './ui/markdown'
+import { memo } from 'react'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from 'website/src/components/ui/tooltip'
+import { cn } from 'website/src/lib/utils'
+import { Markdown } from 'docs-website/src/lib/safe-mdx'
+
 import { useChatState } from '../lib/state'
-import { EditToolParamSchema } from '../lib/schemas'
-import { useDebouncedEffect } from '../lib/hooks'
-import { docsRpcClient } from '../lib/docs-setstate'
+import { EditToolParamSchema } from '../lib/edit-tool'
 
 type ChatMessageProps = {
     message: UIMessage
@@ -89,14 +88,15 @@ export const ChatMessage = memo(function ChatMessage({
                             if (message.role === 'user') {
                                 return part.text
                             }
-                            return <Markdown key={index}>{part.text}</Markdown>
+                            return <Markdown key={index} markdown={part.text} />
                         }
 
                         if (part.type === 'reasoning') {
                             return (
-                                <Markdown className='opacity-70' key={index}>
-                                    {'thinking:' + part.reasoning}
-                                </Markdown>
+                                <Markdown
+                                    key={index}
+                                    markdown={'thinking:' + part.reasoning}
+                                />
                             )
                         }
                     })}
@@ -169,5 +169,5 @@ function EditorMessagePreview({
     toolCallId: any
     args?: Partial<EditToolParamSchema>
 }) {
-
+    return null
 }

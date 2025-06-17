@@ -42,7 +42,9 @@ export function createEditExecute({
     getPageContent,
 }: {
     updatedPages: Record<string, PageUpdate>
-    getPageContent: (x: { githubPath: string }) => Promise<string>
+    getPageContent: (x: {
+        githubPath: string
+    }) => Promise<string | undefined | void>
 }) {
     const previousEdits = [] as PageUpdate[]
     return async function execute(params: EditToolParamSchema) {
@@ -70,7 +72,7 @@ export function createEditExecute({
                         })
                         updatedPages[path] = {
                             githubPath: path,
-                            markdown: content,
+                            markdown: content || '',
                         }
                         return content
                     } catch (e) {

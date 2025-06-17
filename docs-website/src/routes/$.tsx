@@ -24,7 +24,7 @@ import { TrieveSearchDialog } from 'docs-website/src/trieve/search-dialog-trieve
 import { PageTree } from 'fumadocs-core/server'
 import { SharedProps } from 'fumadocs-ui/components/dialog/search'
 import { RootProvider } from 'fumadocs-ui/provider/base'
-import { MarkdownRender } from '../lib/safe-mdx'
+import { Markdown } from '../lib/safe-mdx'
 import { getFumadocsSource } from '../lib/source.server'
 import { LOCALE_LABELS, LOCALES } from '../lib/locales'
 import { DocsStateProvider, useDocsState } from '../lib/docs-state'
@@ -287,7 +287,7 @@ function MainDocsPage({
                 )}
                 <DocsBody>
                     <Suspense fallback={<div>Loading...</div>}>
-                        <MarkdownRender markdown={markdown} ast={ast} />
+                        <Markdown markdown={markdown} ast={ast} />
                     </Suspense>
                 </DocsBody>
             </DocsPage>

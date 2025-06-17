@@ -22,6 +22,8 @@ import {
     PageUpdate,
 } from '../lib/edit-tool'
 import { docsRpcClient } from '../lib/docs-setstate'
+import { Route } from '../routes/+types/org.$orgId.site.$siteId'
+import { useLoaderData } from 'react-router'
 
 export default function Chat({}) {
     const { scrollRef, contentRef, scrollToBottom } = useStickToBottom()
@@ -98,6 +100,8 @@ function Messages({ ref }) {
 function Footer() {
     const [text, setText] = useState('')
     const isPending = useChatState((x) => x.isChatGenerating)
+    const { siteId, tabId } =
+        useLoaderData() as Route.ComponentProps['loaderData']
     const messages = useChatState((x) => x?.messages || [])
 
     const handleSubmit = async () => {
@@ -129,6 +133,8 @@ function Footer() {
             const { data: generator, error } =
                 await apiClient.api.generateMessage.post({
                     messages: allMessages,
+                    siteId,
+                    tabId,
                 })
             if (error) throw error
             // Clear the input
@@ -136,9 +142,7 @@ function Footer() {
             const updatedPages: Record<string, PageUpdate> = {}
             const execute = createEditExecute({
                 updatedPages,
-                async getPageContent({ githubPath: path }) {
-                    return ''
-                },
+                async getPageContent() {},
             })
             for await (const newMessages of fullStreamToUIMessages({
                 fullStream: generator,

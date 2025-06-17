@@ -1,4 +1,5 @@
 import { openai, OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
+import { dedent } from 'string-dedent'
 import { anthropic } from '@ai-sdk/anthropic'
 import { openapi } from 'spiceflow/openapi'
 import { coreMessageSchema, streamText, tool, UIMessage } from 'ai'
@@ -17,6 +18,7 @@ import {
     editToolParamsSchema,
     PageUpdate,
 } from './edit-tool'
+import { printDirectoryTree } from '../components/directory-tree'
 
 // Create the main spiceflow app with comprehensive routes and features
 export const app = new Spiceflow({ basePath: '/api' })
@@ -39,9 +41,11 @@ export const app = new Spiceflow({ basePath: '/api' })
         path: '/generateMessage',
         request: z.object({
             messages: z.array(z.custom<UIMessage>()),
+            siteId: z.string(),
+            tabId: z.string(),
         }),
         async *handler({ request }) {
-            const { messages } = await request.json()
+            const { messages, tabId, siteId } = await request.json()
             await sleep(1000)
             const updatedPages: Record<string, PageUpdate> = {}
             const model = openai.responses('gpt-4.1-nano')
@@ -59,6 +63,35 @@ export const app = new Spiceflow({ basePath: '/api' })
                     return page.markdown || ''
                 },
             })
+            const [pages, metaFiles, mediaAssets] = await Promise.all([
+                prisma.markdownPage.findMany({
+                    where: {
+                        tabId,
+                    },
+                    omit: {
+                        markdown: true,
+                        structuredData: true,
+                    },
+                }),
+                prisma.metaFile.findMany({
+                    where: {
+                        tabId,
+                    },
+                    omit: {
+                        jsonData: true,
+                    },
+                }),
+                prisma.mediaAsset.findMany({
+                    where: {
+                        tabId,
+                    },
+                }),
+            ])
+            const allFilePaths = [pages, metaFiles, mediaAssets]
+                .flat()
+                .map((x) => {
+                    return x.githubPath
+                })
             const str_replace_editor = model.modelId.includes('anthropic')
                 ? anthropic.tools.textEditor_20241022({
                       execute: execute as any,
@@ -67,9 +100,23 @@ export const app = new Spiceflow({ basePath: '/api' })
                       parameters: editToolParamsSchema,
                       execute,
                   })
+
             const result = streamText({
                 model,
-                messages,
+                messages: [
+                    {
+                        role: 'system',
+                        content: dedent`
+                        This is a documentation website using .md and .mdx files
+
+                        Here is the current project files:
+                        ${printDirectoryTree({ filePaths: allFilePaths })}
+
+                        You are a professional content writer with the task of improving this documentation website and follow the user tasks
+                        `,
+                    },
+                    ...messages.filter((x) => x.role !== 'system'),
+                ],
                 maxSteps: 100,
 
                 experimental_providerMetadata: {

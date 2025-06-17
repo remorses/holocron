@@ -3,7 +3,7 @@ import { marked } from 'marked'
 
 import {
     MarkdownAstRenderer,
-    MarkdownRender,
+    Markdown,
     MarkdownRendererProps,
 } from './safe-mdx'
 import { createHighlighter, Highlighter } from 'shiki'

@@ -7,7 +7,6 @@ import { createHighlighter, Highlighter } from 'shiki'
 import { getProcessor } from './mdx'
 import { lazy } from 'react'
 
-
 const MarkdownRuntimeComponent = lazy(() =>
     import('./markdown-runtime').then((mod) => ({
         default: mod.MarkdownRuntimeComponent,
@@ -40,7 +39,7 @@ export type MarkdownRendererProps = {
     extension?: any
 }
 
-export const MarkdownRender = memo(function MarkdownRender(
+export const Markdown = memo(function MarkdownRender(
     props: MarkdownRendererProps,
 ) {
     const { markdown, ast, extension } = props
@@ -60,7 +59,7 @@ export const MarkdownAstRenderer = ({ ast }) => {
     )
 }
 
-MarkdownRender.displayName = 'MemoizedMarkdownBlock'
+Markdown.displayName = 'MemoizedMarkdownBlock'
 
 function parseMetaString(
     meta: string | null | undefined,

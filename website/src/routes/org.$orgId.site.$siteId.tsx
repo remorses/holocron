@@ -59,7 +59,9 @@ export async function loader({
         url.port = '7777'
     }
 
-    return { site, url, host }
+    const tabId = site.tabs[0].tabId
+
+    return { site, url, host, siteId, tabId }
 }
 
 export default function Page({

@@ -196,7 +196,7 @@ model MarkdownPage {
 
   githubSha      String
   githubPath     String
-  structuredData Json @default("{}")
+  structuredData Json   @default("{}")
 
   @@unique([tabId, slug])
   @@index([tabId])
@@ -309,4 +309,52 @@ model SiteEnabledLocale {
   site   Site   @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
 
   @@id([locale, siteId])
+}
+
+// ─── ENUMS ─────────────────────────────────────────────────────────────
+
+enum ChatMessageRole {
+  system
+  user
+  assistant
+}
+
+enum ChatMessagePartType {
+  text
+  reasoning
+  tool_invocation
+  source
+  file
+  // `step_start` removed – see note below
+}
+
+// ─── MODELS ────────────────────────────────────────────────────────────
+
+model Chat {
+  chatId    String        @id @default(cuid())
+  title     String?
+  messages  ChatMessage[]
+  createdAt DateTime      @default(now())
+}
+
+model ChatMessage {
+  id        String            @id @default(cuid())
+  chat      Chat              @relation(fields: [chatId], references: [chatId], onDelete: Cascade)
+  chatId    String
+  role      ChatMessageRole
+  parts     ChatMessagePart[]
+  // metadata  Json?
+  createdAt DateTime          @default(now())
+}
+
+model ChatMessagePart {
+  id        String      @id @default(cuid())
+  message   ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  messageId String
+
+  index Int
+
+  type ChatMessagePartType
+  text String?             @db.Text
+  data Json? // structured payloads
 }
