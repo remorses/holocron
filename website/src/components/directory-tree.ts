@@ -1,78 +1,98 @@
 'use strict'
 
-import { PageTree } from 'fumadocs-core/server'
-
-type Node = PageTree.Node
+interface TreeNode {
+    path: string
+    children: TreeNode[]
+}
 
 export function printDirectoryTree({
-    pageTree,
+    filePaths,
 }: {
-    pageTree: PageTree.Root
+    filePaths: string[]
 }): string {
-    function getName(node: PageTree.Root | Node): string {
-        if (typeof node.name === 'string') return node.name
-        if (typeof node.name === 'number') return node.name.toString()
-        return ''
+    function buildTree(paths: string[]): TreeNode[] {
+        const root: TreeNode[] = []
+        const nodeMap = new Map<string, TreeNode>()
+
+        for (const path of paths) {
+            const parts = path.split('/').filter(part => part !== '')
+            let currentPath = ''
+            let currentLevel = root
+
+            for (let i = 0; i < parts.length; i++) {
+                const part = parts[i]
+                currentPath = currentPath ? `${currentPath}/${part}` : part
+
+                let node = nodeMap.get(currentPath)
+                if (!node) {
+                    node = {
+                        path: currentPath,
+                        children: []
+                    }
+                    nodeMap.set(currentPath, node)
+                    currentLevel.push(node)
+                }
+
+                currentLevel = node.children
+            }
+        }
+
+        return root
+    }
+
+    function getName(node: TreeNode): string {
+        const parts = node.path.split('/')
+        return parts[parts.length - 1] || node.path
     }
 
     function printNode(
-        node: Node | PageTree.Root,
-        prefix: string = '',
-        isLast: boolean = true,
+        node: TreeNode,
+        prefix: string,
+        isLast: boolean,
+        isRoot: boolean = false
     ): string {
-        if ('type' in node && node.type === 'separator') {
-            // skip separator for printout
-            return ''
-        }
-
         const lines: string[] = []
         const name = getName(node)
 
-        // ForPageTree.Root node with empty name, skip printing thePageTree.Root itself
-        if (prefix === '' && !('type' in node) && !name) {
-            //PageTree.Root node with no name - just process children directly
-        } else if (prefix === '' && !('type' in node)) {
-            //PageTree.Root node with name
+        if (isRoot) {
+            // Root level - no prefix
             lines.push(name)
         } else {
-            // For non-root nodes, add connector
+            // Child level - add tree connector
             const connector = isLast ? '└── ' : '├── '
             lines.push(prefix + connector + name)
         }
 
-        const hasChildren =
-            ('type' in node && node.type === 'folder') ||
-            //PageTree.Root may not have `type`, but check children
-            (!('type' in node) &&
-                'children' in node &&
-                Array.isArray(node.children))
-
-        if (hasChildren) {
-            const children: Node[] = 'children' in node ? node.children : []
-            const filteredChildren = children.filter(
-                (child) => child.type !== 'separator',
-            )
-
-            filteredChildren.forEach((child, idx) => {
-                const childIsLast = idx === filteredChildren.length - 1
-                // Calculate next prefix based on current node
+        // Process children
+        if (node.children.length > 0) {
+            node.children.forEach((child, idx) => {
+                const childIsLast = idx === node.children.length - 1
                 let nextPrefix = ''
-                if (prefix === '' && !('type' in node)) {
-                    //PageTree.Root node - children get no prefix (top level)
+                
+                if (isRoot) {
+                    // Direct children of root get no prefix for their connectors
                     nextPrefix = ''
                 } else {
-                    // Folder node - children get indented prefix
+                    // Nested children get extended prefix
                     nextPrefix = prefix + (isLast ? '    ' : '│   ')
                 }
-                const childOutput = printNode(child, nextPrefix, childIsLast)
-                if (childOutput) {
-                    lines.push(childOutput)
-                }
+                
+                const childOutput = printNode(child, nextPrefix, childIsLast, false)
+                lines.push(childOutput)
             })
         }
 
-        return lines.filter((line) => line !== '').join('\n')
+        return lines.join('\n')
     }
 
-    return printNode(pageTree)
+    const tree = buildTree(filePaths)
+    
+    if (tree.length === 0) {
+        return ''
+    }
+
+    return tree.map((node, idx) => {
+        const isLast = idx === tree.length - 1
+        return printNode(node, '', isLast, true)
+    }).join('\n')
 }
