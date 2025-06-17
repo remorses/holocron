@@ -1,59 +1,89 @@
 'use strict'
 
 import nodePath from 'path'
+
+interface FileSystemAPI {
+    readdirSync(path: string): string[]
+    statSync(path: string): Stats
+    lstatSync(path: string): Stats
+}
+
+interface Stats {
+    isFile(): boolean
+    isDirectory(): boolean
+    isSymbolicLink(): boolean
+    size: number
+    ino: number
+    [key: string]: any
+}
+
 const constants = {
     DIRECTORY: 'directory',
     FILE: 'file',
+} as const
+
+interface DirectoryTreeOptions {
+    depth?: number
+    attributes?: string[]
+    exclude?: RegExp | RegExp[]
+    extensions?: RegExp
+    normalizePath?: boolean
 }
 
-export function printDirectoryTree({ FS }) {
-    function safeReadDirSync(path) {
-        let dirData = {}
+interface DirectoryTreeItem {
+    path: string
+    name: string
+    type?: typeof constants.DIRECTORY | typeof constants.FILE
+    extension?: string
+    size?: number
+    isSymbolicLink?: boolean
+    children?: DirectoryTreeItem[]
+    [key: string]: any
+}
+
+type OnEachFileCallback = (
+    item: DirectoryTreeItem,
+    path: string,
+    stats: Stats,
+) => void
+type OnEachDirectoryCallback = (
+    item: DirectoryTreeItem,
+    path: string,
+    stats: Stats,
+) => void
+
+export function printDirectoryTree({
+    FS,
+}: {
+    FS: FileSystemAPI
+}): DirectoryTreeItem | null {
+    function safeReadDirSync(path: string): string[] | null {
+        let dirData: string[] = []
         try {
             dirData = FS.readdirSync(path)
-        } catch (ex) {
+        } catch (ex: any) {
             if (ex.code == 'EACCES' || ex.code == 'EPERM') {
-                //User does not have permissions, ignore directory
                 return null
             } else throw ex
         }
         return dirData
     }
 
-    /**
-     * Normalizes Windows style paths by replacing double backslashes with single forward slashes (UNIX style).
-     * @param  {string} path
-     * @return {string}
-     */
-    function normalizePath(path) {
+    function normalizePath(path: string): string {
         return path.replace(/\\/g, '/')
     }
 
-    /**
-     * Tests if the supplied parameter is of type RegExp
-     * @param  {any}  regExp
-     * @return {Boolean}
-     */
-    function isRegExp(regExp) {
+    function isRegExp(regExp: any): regExp is RegExp {
         return typeof regExp === 'object' && regExp.constructor == RegExp
     }
 
-    /**
-     * Collects the files and folders for a directory path into an Object, subject
-     * to the options supplied, and invoking optional
-     * @param  {String} path
-     * @param  {Object} options
-     * @param  {function} onEachFile
-     * @param  {function} onEachDirectory
-     * @return {Object}
-     */
     function directoryTree(
-        path,
-        options,
-        onEachFile,
-        onEachDirectory,
-        currentDepth = 0,
-    ) {
+        path: string,
+        options?: DirectoryTreeOptions,
+        onEachFile?: OnEachFileCallback,
+        onEachDirectory?: OnEachDirectoryCallback,
+        currentDepth: number = 0,
+    ): DirectoryTreeItem | null {
         options = options || {}
 
         if (
@@ -67,10 +97,12 @@ export function printDirectoryTree({ FS }) {
         }
 
         const name = nodePath.basename(path)
-        path = options.normalizePath ? normalizePath(path) : path
-        const item = { path, name }
-        let stats
-        let lstat
+        const normalizedPath = options.normalizePath
+            ? normalizePath(path)
+            : path
+        const item: DirectoryTreeItem = { path: normalizedPath, name }
+        let stats: Stats
+        let lstat: Stats
 
         try {
             stats = FS.statSync(path)
@@ -79,7 +111,6 @@ export function printDirectoryTree({ FS }) {
             return null
         }
 
-        // Skip if it matches the exclude regex
         if (options.exclude) {
             const excludes = isRegExp(options.exclude)
                 ? [options.exclude]
@@ -89,24 +120,9 @@ export function printDirectoryTree({ FS }) {
             }
         }
 
-        if (lstat.isSymbolicLink()) {
-            item.isSymbolicLink = true
-            // Skip if symbolic links should not be followed
-            if (options.followSymlinks === false) return null
-            // Initialize the symbolic links array to avoid infinite loops
-            if (!options.symlinks) options = { ...options, symlinks: [] }
-            // Skip if a cyclic symbolic link has been found
-            if (options.symlinks.find((ino) => ino === lstat.ino)) {
-                return null
-            } else {
-                options.symlinks.push(lstat.ino)
-            }
-        }
-
         if (stats.isFile()) {
             const ext = nodePath.extname(path).toLowerCase()
 
-            // Skip if it does not match the extension regex
             if (options.extensions && !options.extensions.test(ext)) return null
 
             if (options.attributes) {
@@ -129,7 +145,7 @@ export function printDirectoryTree({ FS }) {
                 onEachFile(item, path, stats)
             }
         } else if (stats.isDirectory()) {
-            let dirData = safeReadDirSync(path)
+            const dirData = safeReadDirSync(path)
             if (dirData === null) return null
 
             if (options.depth === undefined || options.depth > currentDepth) {
@@ -143,17 +159,18 @@ export function printDirectoryTree({ FS }) {
                             currentDepth + 1,
                         ),
                     )
-                    .filter((e) => !!e)
+                    .filter((e): e is DirectoryTreeItem => !!e)
             }
 
             if (options.attributes) {
                 options.attributes.forEach((attribute) => {
                     switch (attribute) {
                         case 'size':
-                            item.size = item.children.reduce(
-                                (prev, cur) => prev + cur.size,
-                                0,
-                            )
+                            item.size =
+                                item.children?.reduce(
+                                    (prev, cur) => prev + (cur.size || 0),
+                                    0,
+                                ) || 0
                             break
                         case 'type':
                             item.type = constants.DIRECTORY
@@ -171,7 +188,7 @@ export function printDirectoryTree({ FS }) {
                 onEachDirectory(item, path, stats)
             }
         } else {
-            return null // Or set item.size = 0 for devices, FIFO and sockets ?
+            return null
         }
         return item
     }
