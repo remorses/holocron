@@ -192,6 +192,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         locale,
         i18n: source._i18n,
         page,
+        githubPath: page.githubPath,
         toc: tableOfContents,
         tree,
         site,
@@ -227,7 +228,7 @@ function Providers({
             initialValue={{
                 tree: tree as any,
                 deletedPages: [],
-                updatedPages: [],
+                updatedPages: {},
             }}
         >
             <RootProvider
@@ -254,13 +255,13 @@ function MainDocsPage({
 }: {
     loaderData: Route.ComponentProps['loaderData']
 }) {
-    const { title, description, i18n, site, slug } = loaderData
+    const { title, description, i18n, githubPath, site, slug } = loaderData
     const { tree, ast, toc } = useDocsState(
         useShallow((x) => {
             const { tree, updatedPages } = x
-            const override = updatedPages.find((x) => x.slug === slug)
+            const override = updatedPages[githubPath]
             const { ast, toc } = loaderData
-            return { ast, toc, ...override, tree }
+            return { ast: override.ast, toc: override.toc, tree }
         }),
     )
 
