@@ -1,5 +1,5 @@
 import z from 'zod'
-import { diffLines } from 'diff'
+import { diffLines, createPatch } from 'diff'
 
 export type EditToolParamSchema = z.infer<typeof editToolParamsSchema>
 
@@ -227,7 +227,10 @@ export function createEditExecute({
                     githubPath: path,
                     markdown: replacedContent,
                 }
-                return replacedContent
+                
+                const patch = createPatch(path, override.markdown, replacedContent, '', '')
+                const cleanPatch = patch.replace(/\\ No newline at end of file\n?/g, '')
+                return `Here is the diff of the changes made:\n\n${cleanPatch}`
             }
             case 'insert': {
                 let override = updatedPages[path]
@@ -292,7 +295,10 @@ export function createEditExecute({
                     githubPath: path,
                     markdown: newContent,
                 }
-                return newContent
+                
+                const patch = createPatch(path, override.markdown, newContent, '', '')
+                const cleanPatch = patch.replace(/\\ No newline at end of file\n?/g, '')
+                return `Here is the diff of the changes made:\n\n${cleanPatch}`
             }
             case 'undo_edit': {
                 const previous = previousEdits.pop()
@@ -411,21 +417,3 @@ export const editToolParamsSchema = z.object({
         )
         .nullable(),
 })
-
-/**
- * Return a unified-style diff with “+” and “-” prefixes.
- * Unchanged lines keep a leading space so the output
- * can be piped straight into `patch` if you want.
- */
-export function printLineDiff(oldText: string, newText: string): string {
-    const parts = diffLines(oldText, newText)
-    return parts
-        .flatMap(({ added, removed, value }) => {
-            const prefix = added ? '+' : removed ? '-' : ' '
-            // keep trailing newline behaviour identical to the source
-            return value
-                .split('\n')
-                .map((line) => (line ? prefix + line : line))
-        })
-        .join('\n')
-}
