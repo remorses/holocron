@@ -1,4 +1,5 @@
 import z from 'zod'
+import { diffLines } from 'diff'
 
 export type EditToolParamSchema = z.infer<typeof editToolParamsSchema>
 
@@ -36,6 +37,7 @@ export function isParameterComplete(args: Partial<EditToolParamSchema>) {
             return false
     }
 }
+
 export function createEditExecute({
     updatedPages,
     getPageContent,
@@ -68,14 +70,14 @@ export function createEditExecute({
                     content = override.markdown
                 } else {
                     try {
-                        const content = await getPageContent({
+                        const fetchedContent = await getPageContent({
                             githubPath: path,
                         })
+                        content = fetchedContent || ''
                         updatedPages[path] = {
                             githubPath: path,
-                            markdown: content || '',
+                            markdown: content,
                         }
-                        return content
                     } catch (e) {
                         return {
                             success: false,
@@ -84,21 +86,39 @@ export function createEditExecute({
                     }
                 }
 
+                if (!content) {
+                    return content
+                }
+
+                const lines = content.split('\n')
+
                 if (
                     view_range &&
                     Array.isArray(view_range) &&
-                    view_range.length === 2 &&
-                    content
+                    view_range.length === 2
                 ) {
                     const [start, end] = view_range
-                    const lines = content.split('\n')
                     const startIdx = Math.max(start - 1, 0)
                     const endIdx =
                         end === -1 ? lines.length : Math.min(end, lines.length)
-                    return lines.slice(startIdx, endIdx).join('\n')
+                    const selectedLines = lines.slice(startIdx, endIdx)
+
+                    // Add line numbers for the selected range
+                    return selectedLines
+                        .map((line, index) => {
+                            const lineNumber = startIdx + index + 1
+                            return `${lineNumber.toString()}: ${line}`
+                        })
+                        .join('\n')
                 }
 
-                return content
+                // Add line numbers to all lines
+                return lines
+                    .map((line, index) => {
+                        const lineNumber = index + 1
+                        return `${lineNumber.toString()}: ${line}`
+                    })
+                    .join('\n')
             }
             case 'create': {
                 if (file_text == null) {
@@ -323,6 +343,9 @@ export function createEditExecute({
         }
     }
 }
+
+export const editToolDescription = `Update files. Notice that the view command will return text with lines prefixes, these should not be referenced in the str_replace commands or others.`
+
 export const editToolParamsSchema = z.object({
     /**
      * The commands to run. Allowed options are: `view`, `create`, `str_replace`, `insert`, `undo_edit`.
@@ -388,3 +411,21 @@ export const editToolParamsSchema = z.object({
         )
         .nullable(),
 })
+
+/**
+ * Return a unified-style diff with “+” and “-” prefixes.
+ * Unchanged lines keep a leading space so the output
+ * can be piped straight into `patch` if you want.
+ */
+export function printLineDiff(oldText: string, newText: string): string {
+    const parts = diffLines(oldText, newText)
+    return parts
+        .flatMap(({ added, removed, value }) => {
+            const prefix = added ? '+' : removed ? '-' : ' '
+            // keep trailing newline behaviour identical to the source
+            return value
+                .split('\n')
+                .map((line) => (line ? prefix + line : line))
+        })
+        .join('\n')
+}

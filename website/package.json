@@ -51,6 +51,7 @@
         "clsx": "^2.1.1",
         "colord": "^2.9.3",
         "db": "workspace:*",
+        "diff": "^8.0.2",
         "docs-website": "workspace:*",
         "fumadocs-core": "workspace:*",
         "fumadocs-ui": "workspace:*",

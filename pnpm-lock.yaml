@@ -255,7 +255,7 @@ importers:
         version: 11.0.0
       safe-mdx:
         specifier: latest
-        version: 0.1.0(react@19.1.0)
+        version: 0.2.0(react@19.1.0)
       sentries:
         specifier: ^0.2.2
         version: 0.2.2(@cloudflare/workers-types@4.20250614.0)
@@ -1315,6 +1315,9 @@ importers:
       db:
         specifier: workspace:*
         version: link:../db
+      diff:
+        specifier: ^8.0.2
+        version: 8.0.2
       docs-website:
         specifier: workspace:*
         version: link:../docs-website
@@ -9643,6 +9646,11 @@ packages:
 
   safe-mdx@0.1.0:
     resolution: {integrity: sha512-U0BW0kGNuVj69Lsj8LpqSaLQ9uNaD+jAM/JPY9HGUsapunL8dr+0tnS0wQPpj+dkNScAL4GJ3/ICQ2sigmnunw==}
+    peerDependencies:
+      react: '*'
+
+  safe-mdx@0.2.0:
+    resolution: {integrity: sha512-SmdW6UScEG7tgXV+SMQrbhh3PsiJ4+BlVr3HCvulfwpEg/3Anhj0R++soPxleltlgDyWhYV3Fi9qEyB2N9qVYA==}
     peerDependencies:
       react: '*'
 
@@ -21039,6 +21047,20 @@ snapshots:
   safe-buffer@5.2.1: {}
 
   safe-mdx@0.1.0(react@19.1.0):
+    dependencies:
+      collapse-white-space: 2.1.0
+      html-to-jsx-transform: 1.2.1
+      react: 19.1.0
+      remark: 15.0.1
+      remark-frontmatter: 5.0.0
+      remark-gfm: 4.0.1
+      remark-mdx: 3.1.0
+      unified: 11.0.5
+      unist-util-visit: 5.0.0
+    transitivePeerDependencies:
+      - supports-color
+
+  safe-mdx@0.2.0(react@19.1.0):
     dependencies:
       collapse-white-space: 2.1.0
       html-to-jsx-transform: 1.2.1

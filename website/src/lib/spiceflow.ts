@@ -1,4 +1,5 @@
 import { openai, OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
+
 import dedent from 'string-dedent'
 
 import { anthropic } from '@ai-sdk/anthropic'
@@ -116,7 +117,8 @@ export const app = new Spiceflow({ basePath: '/api' })
         async *handler({ request }) {
             const { messages, tabId, updatedPages } = await request.json()
 
-            const model = openai.responses('gpt-4.1-mini')
+            let model = openai.responses('gpt-4.1-mini')
+            model = anthropic('claude-3-5-haiku-latest')
             const editFilesExecute = createEditExecute({
                 updatedPages,
                 async validateNewContent(x) {
@@ -140,7 +142,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 },
             })
 
-            const str_replace_editor = model.modelId.includes('anthropic')
+            const str_replace_editor = model.modelId.includes('claude')
                 ? anthropic.tools.textEditor_20241022({
                       execute: editFilesExecute as any,
                   })
