@@ -20,6 +20,8 @@ Tests should strive to be as simple as possible, the best test is a simple `.toM
 
 Try to use only describe and test in your tests. Do not use beforeAll, before, etc if not strictly required.
 
+NEVER write tests for React components or React hooks.
+
 Sometimes tests work directly on database data, using prisma. To run these tests you have to use the package.json script, which will call `doppler run -- vitest` or similar. Never run doppler cli yourself as you could delete or update production data. Tests generally use a staging database instead.
 
 Never write tests yourself that call prisma or interact with database or emails. For these asks the user to write them for you.

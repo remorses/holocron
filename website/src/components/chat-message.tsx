@@ -1,11 +1,15 @@
+import { flushSync } from 'react-dom'
 import {
     RiBookLine,
     RiCheckLine,
     RiCodeSSlashLine,
     RiLoopRightFill,
+    RiEditLine,
+    RiCheckLine as RiSaveLine,
+    RiCloseLine,
 } from '@remixicon/react'
 import { UIMessage } from 'ai'
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import {
     Tooltip,
     TooltipContent,
@@ -18,6 +22,7 @@ import { Markdown } from 'docs-website/src/lib/safe-mdx'
 import { useChatState } from '../lib/state'
 import { EditToolParamSchema } from '../lib/edit-tool'
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
+import { Button } from './ui/button'
 
 type ChatMessageProps = {
     message: UIMessage
@@ -59,6 +64,10 @@ export const ChatMessage = memo(function ChatMessage({
 }: ChatMessageProps) {
     // console.log(`rendering message ${message.id}`)
     const isChatGenerating = useChatState((x) => x.isChatGenerating)
+    const editingMessageId = useChatState((x) => x.editingMessageId)
+    const [editText, setEditText] = useState('')
+
+    const isEditing = editingMessageId === message.id
 
     // Add isLastMessage
     const isLastAssistantMessage = useChatState(
@@ -74,6 +83,55 @@ export const ChatMessage = memo(function ChatMessage({
     ) {
         return <LoadingSpinner />
     }
+
+    const handleEditStart = () => {
+        const textContent = message.parts
+            .filter((part) => part.type === 'text')
+            .map((part) => part['text'])
+            .join('')
+        setEditText(textContent)
+        useChatState.setState({ editingMessageId: message.id })
+    }
+
+    const handleEditSave = () => {
+        // Update the message with new text
+        const messages = useChatState.getState().messages || []
+        const updatedMessages = messages.map((msg) => {
+            if (msg.id === message.id) {
+                return {
+                    ...msg,
+                    parts: msg.parts.map((part) =>
+                        part.type === 'text'
+                            ? { ...part, text: editText }
+                            : part,
+                    ),
+                    content: editText, // Also update content field
+                }
+            }
+            return msg
+        })
+
+        // Remove all messages after this one (since we're editing)
+        const messageIndex = updatedMessages.findIndex(
+            (msg) => msg.id === message.id,
+        )
+        const messagesUpToEdit = updatedMessages.slice(0, messageIndex + 1)
+
+        flushSync(() => {
+            useChatState.setState({
+                messages: messagesUpToEdit,
+                editingMessageId: undefined,
+            })
+        })
+        const event = new CustomEvent('chatRegenerate')
+        window.dispatchEvent(event)
+    }
+
+    const handleEditCancel = () => {
+        useChatState.setState({ editingMessageId: undefined })
+        setEditText('')
+    }
+
     // return <LoadingSpinner />
     return (
         <article
@@ -84,12 +142,36 @@ export const ChatMessage = memo(function ChatMessage({
         >
             <div
                 className={cn(
-                    'max-w-full',
+                    'max-w-full relative group/message',
+                    isEditing && 'grow',
                     message.role === 'user'
                         ? 'bg-muted px-4 py-3 rounded-xl'
-                        : 'space-y-4  w-full',
+                        : 'space-y-4 w-full',
                 )}
             >
+                {message.role === 'user' && !isEditing && (
+                    <div className='absolute hidden group-hover/message:block -top-2 -right-2'>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant='outline'
+                                    size='icon'
+                                    className='rounded-full size-6 border-none bg-background shadow-md hover:bg-muted'
+                                    onClick={handleEditStart}
+                                >
+                                    <RiEditLine className='size-3' />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent
+                                side='top'
+                                className='px-2 py-1 text-xs'
+                            >
+                                <p>Edit message</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </div>
+                )}
+
                 <div className='prose text-sm w-full max-w-full dark:prose-invert'>
                     {message.parts.map((part, index) => {
                         if (part.type === 'tool-invocation') {
@@ -97,6 +179,7 @@ export const ChatMessage = memo(function ChatMessage({
                             if (toolName === 'str_replace_editor') {
                                 return (
                                     <EditorToolPreview
+                                        key={index}
                                         {...part.toolInvocation}
                                     />
                                 )
@@ -104,6 +187,7 @@ export const ChatMessage = memo(function ChatMessage({
                             if (toolName === 'get_project_files') {
                                 return (
                                     <FilesTreePreview
+                                        key={index}
                                         {...part.toolInvocation}
                                     />
                                 )
@@ -120,6 +204,45 @@ export const ChatMessage = memo(function ChatMessage({
                         }
 
                         if (part.type === 'text') {
+                            if (isEditing) {
+                                return (
+                                    <div key={index} className='space-y-2 w-full'>
+                                        <textarea
+                                            value={editText}
+                                            onChange={(e) =>
+                                                setEditText(e.target.value)
+                                            }
+                                            onKeyDown={(e) => {
+                                                if (
+                                                    e.key === 'Enter' &&
+                                                    (e.metaKey || e.ctrlKey)
+                                                ) {
+                                                    e.preventDefault()
+                                                    if (editText.trim()) {
+                                                        handleEditSave()
+                                                    }
+                                                }
+                                                if (e.key === 'Escape') {
+                                                    e.preventDefault()
+                                                    handleEditCancel()
+                                                }
+                                            }}
+                                            className='w-full min-h-0 min-w-[100px]  p-px focus-visible:outline-none bg-transparent rounded-md  text-sm resize-none focus:outline-none '
+                                            autoFocus
+                                        />
+                                        <div className='flex items-center gap-2 justify-end'>
+                                            <Button
+                                                size='sm'
+                                                onClick={handleEditSave}
+
+                                                disabled={!editText.trim()}
+                                            >
+                                                Save
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )
+                            }
                             if (message.role === 'user') {
                                 return (
                                     <Markdown

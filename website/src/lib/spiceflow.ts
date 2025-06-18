@@ -118,7 +118,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             const { messages, tabId, updatedPages } = await request.json()
 
             let model = openai.responses('gpt-4.1-mini')
-            model = anthropic('claude-3-5-haiku-latest')
+            // model = anthropic('claude-3-5-haiku-latest')
             const editFilesExecute = createEditExecute({
                 updatedPages,
                 async validateNewContent(x) {
@@ -143,7 +143,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             })
 
             const str_replace_editor = model.modelId.includes('claude')
-                ? anthropic.tools.textEditor_20241022({
+                ? anthropic.tools.textEditor_20250124({
                       execute: editFilesExecute as any,
                   })
                 : tool({

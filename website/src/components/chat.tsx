@@ -1,8 +1,8 @@
 'use client'
 import memoize from 'micro-memoize'
-import { RiAttachment2 } from '@remixicon/react'
+import { RiAttachment2, RiRefreshLine } from '@remixicon/react'
 import { createIdGenerator, UIMessage } from 'ai'
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { ChatMessage } from 'website/src/components/chat-message'
 
 import { Button } from 'website/src/components/ui/button'
@@ -85,6 +85,7 @@ function ChatCards({ items = chatCardItems }: { items?: ChatCardItem[] }) {
 
 function Messages({ ref }) {
     const messages = useChatState((x) => x?.messages)
+    const lastError = useChatState((x) => x?.lastError)
 
     return (
         <div
@@ -94,7 +95,50 @@ function Messages({ ref }) {
             {messages.map((x) => {
                 return <ChatMessage key={x.id} message={x} />
             })}
+            {lastError && <ErrorMessage error={lastError} />}
             {!messages.length && <ChatCards />}
+        </div>
+    )
+}
+
+function ErrorMessage({
+    error,
+}: {
+    error: { messageId: string; error: string; userInput: string }
+}) {
+    const handleRetry = () => {
+        // Clear the error and retry - the user message is already in the messages
+        useChatState.setState({ lastError: undefined })
+        // Trigger retry without user input since message is already there
+        const event = new CustomEvent('chatRegenerate')
+        window.dispatchEvent(event)
+    }
+
+    return (
+        <div className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed'>
+            <div className='space-y-4 w-full'>
+                <div className='bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800/50 rounded-lg p-4'>
+                    <div className='flex items-start gap-3'>
+                        <div className='flex-1'>
+                            <h4 className='text-sm font-medium text-red-800 dark:text-red-200 mb-1'>
+                                Failed to generate response
+                            </h4>
+                            <p className='text-sm text-red-700 dark:text-red-300'>
+                                {error.error}
+                            </p>
+                        </div>
+                        <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={handleRetry}
+                            className='border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/50'
+                        >
+                            <RiRefreshLine className='w-4 h-4 mr-1' />
+                            Retry
+                        </Button>
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }
@@ -106,31 +150,55 @@ function Footer() {
         useLoaderData() as Route.ComponentProps['loaderData']
     const messages = useChatState((x) => x?.messages || [])
 
-    const handleSubmit = async () => {
+    const handleSubmit = async ({ inputText }: { inputText?: string } = {}) => {
+        const messages = useChatState.getState()?.messages
+        const submitText = inputText || text
+        if (!submitText.trim() && messages.length === 0) return
         const generateId = createIdGenerator()
-        useChatState.setState({ isChatGenerating: true })
+        useChatState.setState({ isChatGenerating: true, lastError: undefined })
+
+        const assistantMessageId = generateId()
+        const userMessageId = generateId()
+
         try {
-            // Create user message
-            const userMessage: UIMessage = {
-                id: generateId(),
-                content: '',
-                role: 'user',
-                parts: [{ type: 'text', text }],
+            let allMessages: UIMessage[]
+            // Get fresh messages state for edit regeneration
+
+            if (!submitText.trim()) {
+                // For regenerate, use existing messages and just add new assistant message
+                allMessages = [
+                    ...messages,
+                    {
+                        parts: [],
+                        role: 'assistant',
+                        content: '',
+                        id: assistantMessageId,
+                        createdAt: new Date(),
+                    },
+                ]
+            } else {
+                // Create user message for new requests
+                const userMessage: UIMessage = {
+                    id: userMessageId,
+                    content: '',
+                    role: 'user',
+                    parts: [{ type: 'text', text: submitText }],
+                }
+
+                allMessages = [
+                    ...messages,
+                    userMessage,
+                    {
+                        parts: [],
+                        role: 'assistant',
+                        content: '',
+                        id: assistantMessageId,
+                        createdAt: new Date(),
+                    },
+                ]
+                setText('') // Clear input for new requests
             }
 
-            // Call generateMessage with current messages plus user message
-            const allMessages: UIMessage[] = [
-                ...messages,
-                userMessage,
-                {
-                    parts: [],
-                    role: 'assistant',
-                    content: '',
-                    id: generateId(),
-                    createdAt: new Date(),
-                },
-            ]
-            setText('')
             const updatedPages = useChatState.getState()?.updatedPages || {}
             useChatState.setState({ messages: allMessages })
 
@@ -218,10 +286,39 @@ function Footer() {
             for await (const newMessages of stateIter) {
                 useChatState.setState({ messages: newMessages })
             }
+        } catch (error) {
+            // Remove only the failed assistant message, keep user message
+            const currentMessages = useChatState.getState().messages || []
+            const messagesWithoutAssistant = currentMessages.filter(
+                (msg) => msg.id !== assistantMessageId,
+            )
+            useChatState.setState({
+                messages: messagesWithoutAssistant,
+                lastError: {
+                    messageId: assistantMessageId,
+                    error:
+                        error instanceof Error
+                            ? error.message
+                            : 'An unexpected error occurred',
+                    userInput: submitText,
+                },
+            })
         } finally {
             useChatState.setState({ isChatGenerating: false })
         }
     }
+    // Listen for regenerate events
+    useEffect(() => {
+        const handleChatRegenerate = () => {
+            // Generate a new assistant response
+            handleSubmit()
+        }
+
+        window.addEventListener('chatRegenerate', handleChatRegenerate)
+        return () => {
+            window.removeEventListener('chatRegenerate', handleChatRegenerate)
+        }
+    }, [handleSubmit])
 
     return (
         <div className='sticky bottom-0 pt-4 md:pt-8 pr-4 z-50 w-full'>
@@ -262,7 +359,7 @@ function Footer() {
                         <div className='flex items-center gap-2'>
                             <Button
                                 className='rounded-full h-8'
-                                onClick={handleSubmit}
+                                onClick={() => handleSubmit()}
                                 disabled={isPending || !text.trim()}
                             >
                                 {isPending ? 'Loading...' : 'Generate'}

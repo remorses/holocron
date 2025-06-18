@@ -10,6 +10,12 @@ export type State = {
     docsState?: DocsState
     isChatGenerating?: boolean
     updatedPages: Record<string, PageUpdate>
+    lastError?: {
+        messageId: string
+        error: string
+        userInput: string
+    }
+    editingMessageId?: string
 }
 
 export const [StateProvider, useChatState] = createZustandContext<State>(
