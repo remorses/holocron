@@ -19,6 +19,39 @@ describe('marked.lexer', () => {
             `)
     })
 
+    it('tokenizes mdx JSX blocks', () => {
+        const markdown = dedent(`
+          # Example MDX
+
+          <Alert type="info">
+
+            <Nested>
+              This is an info alert!
+              <Child>
+                Even more nested.
+              </Child>
+            </Nested>
+
+          </Alert>
+
+          <Inline/>
+
+          > This is a paragraph <Inline/>
+      `)
+        const tokens = marked.lexer(markdown)
+        expect(tokens.map((token) => JSON.stringify(token.raw)))
+            .toMatchInlineSnapshot(`
+              [
+                ""# Example MDX\\n\\n"",
+                ""<Alert type=\\"info\\">\\n\\n"",
+                ""  <Nested>\\n    This is an info alert!\\n    <Child>\\n      Even more nested.\\n    </Child>\\n  </Nested>\\n\\n"",
+                ""</Alert>\\n\\n"",
+                ""<Inline/>\\n\\n"",
+                ""> This is a paragraph <Inline/>"",
+              ]
+            `)
+    })
+
     it('tokenizes lists and links', () => {
         const markdown = dedent(`
           # Here is a list

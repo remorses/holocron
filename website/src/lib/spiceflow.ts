@@ -12,7 +12,7 @@ import { getSession } from './better-auth'
 import { env } from './env'
 import { notifyError } from './errors'
 import { pagesFromGithub, syncSite } from './sync'
-import { sleep } from './utils'
+import { mdxRegex, sleep } from './utils'
 
 import { printDirectoryTree } from '../components/directory-tree'
 import {
@@ -20,6 +20,8 @@ import {
     editToolParamsSchema,
     PageUpdate,
 } from './edit-tool'
+import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
+import path from 'path'
 
 // Create the main spiceflow app with comprehensive routes and features
 export const app = new Spiceflow({ basePath: '/api' })
@@ -107,13 +109,24 @@ export const app = new Spiceflow({ basePath: '/api' })
             messages: z.array(z.custom<UIMessage>()),
             siteId: z.string(),
             tabId: z.string(),
+            updatedPages: z.record(
+                z.object({ githubPath: z.string(), markdown: z.string() }),
+            ),
         }),
         async *handler({ request }) {
-            const { messages, tabId, siteId } = await request.json()
-            const updatedPages: Record<string, PageUpdate> = {}
+            const { messages, tabId, updatedPages } = await request.json()
+
             const model = openai.responses('gpt-4.1-mini')
-            const execute = createEditExecute({
+            const editFilesExecute = createEditExecute({
                 updatedPages,
+                async validateNewContent(x) {
+                    if (mdxRegex.test(x.githubPath)) {
+                        await processMdxInServer({
+                            markdown: x.content,
+                            extension: path.extname(x.githubPath),
+                        })
+                    }
+                },
                 async getPageContent({ githubPath: path }) {
                     const page = await prisma.markdownPage.findFirst({
                         where: {
@@ -129,11 +142,11 @@ export const app = new Spiceflow({ basePath: '/api' })
 
             const str_replace_editor = model.modelId.includes('anthropic')
                 ? anthropic.tools.textEditor_20241022({
-                      execute: execute as any,
+                      execute: editFilesExecute as any,
                   })
                 : tool({
                       parameters: editToolParamsSchema,
-                      execute,
+                      execute: editFilesExecute,
                   })
 
             const result = streamText({

@@ -275,7 +275,9 @@ function FilesTreePreview({
 }) {
     const code = result || '\n'
     if (!code) return null
-    const markdown = '```sh' + ` title="file tree" \n` + code + '\n```'
+    let markdown = ''
+    markdown += 'Reading project structure\n'
+    markdown += '```sh' + ` \n` + code + '\n```'
     return (
         <ToolPreviewContainer className='py-0'>
             <Markdown markdown={markdown} />

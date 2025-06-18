@@ -3,12 +3,13 @@ import { UIMessage } from 'ai'
 import { DocsState } from 'docs-website/src/lib/docs-state'
 import { createZustandContext } from 'docs-website/src/lib/zustand-context'
 import { create } from 'zustand'
+import { PageUpdate } from './edit-tool'
 
 export type State = {
     messages: UIMessage[]
     docsState?: DocsState
     isChatGenerating?: boolean
-
+    updatedPages: Record<string, PageUpdate>
 }
 
 export const [StateProvider, useChatState] = createZustandContext<State>(

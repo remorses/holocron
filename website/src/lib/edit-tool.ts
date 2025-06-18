@@ -36,11 +36,12 @@ export function isParameterComplete(args: Partial<EditToolParamSchema>) {
             return false
     }
 }
-
 export function createEditExecute({
     updatedPages,
     getPageContent,
+    validateNewContent,
 }: {
+    validateNewContent?: (x: { githubPath: string; content: string }) => any
     updatedPages: Record<string, PageUpdate>
     getPageContent: (x: {
         githubPath: string
@@ -106,6 +107,25 @@ export function createEditExecute({
                         error: '`file_text` is required for create command.',
                     }
                 }
+                if (validateNewContent) {
+                    try {
+                        const result = await validateNewContent({
+                            githubPath: path,
+                            content: file_text,
+                        })
+                        if (result && result.error) {
+                            return {
+                                success: false,
+                                error: `result content is invalid: create: ${result.error}`,
+                            }
+                        }
+                    } catch (e: any) {
+                        return {
+                            success: false,
+                            error: e && e.message ? e.message : String(e),
+                        }
+                    }
+                }
                 updatedPages[path] = {
                     githubPath: path,
                     markdown: file_text,
@@ -164,6 +184,25 @@ export function createEditExecute({
                     old_str,
                     new_str,
                 )
+                if (validateNewContent) {
+                    try {
+                        const result = await validateNewContent({
+                            githubPath: path,
+                            content: replacedContent,
+                        })
+                        if (result && result.error) {
+                            return {
+                                success: false,
+                                error: `result content is invalid: str_replace: ${result.error}`,
+                            }
+                        }
+                    } catch (e: any) {
+                        return {
+                            success: false,
+                            error: e && e.message ? e.message : String(e),
+                        }
+                    }
+                }
                 updatedPages[path] = {
                     githubPath: path,
                     markdown: replacedContent,
@@ -210,6 +249,25 @@ export function createEditExecute({
                 const insertAt = Math.min(insert_line, lines.length)
                 lines.splice(insertAt, 0, new_str)
                 const newContent = lines.join('\n')
+                if (validateNewContent) {
+                    try {
+                        const result = await validateNewContent({
+                            githubPath: path,
+                            content: newContent,
+                        })
+                        if (result && result.error) {
+                            return {
+                                success: false,
+                                error: `result content is invalid: insert: ${result.error}`,
+                            }
+                        }
+                    } catch (e: any) {
+                        return {
+                            success: false,
+                            error: e && e.message ? e.message : String(e),
+                        }
+                    }
+                }
                 updatedPages[path] = {
                     githubPath: path,
                     markdown: newContent,
@@ -226,6 +284,25 @@ export function createEditExecute({
                 }
 
                 // Restore the previous content
+                if (validateNewContent) {
+                    try {
+                        const result = await validateNewContent({
+                            githubPath: path,
+                            content: previous.markdown,
+                        })
+                        if (result && result.error) {
+                            return {
+                                success: false,
+                                error: `result content is invalid: undo_edit: ${result.error}`,
+                            }
+                        }
+                    } catch (e: any) {
+                        return {
+                            success: false,
+                            error: e && e.message ? e.message : String(e),
+                        }
+                    }
+                }
                 updatedPages[path] = {
                     githubPath: path,
                     markdown: previous.markdown,
@@ -252,9 +329,7 @@ export const editToolParamsSchema = z.object({
      */
     command: z
         .enum(['view', 'create', 'str_replace', 'insert', 'undo_edit'])
-        .describe(
-            'The commands to run. This field should always come first',
-        ),
+        .describe('The commands to run. This field should always come first'),
     /**
      * Absolute path to file or directory, e.g. `/repo/file.py` or `/repo`.
      */

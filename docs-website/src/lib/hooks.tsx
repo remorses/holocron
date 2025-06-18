@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
-import { useDocsState } from './docs-state';
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router'
+import { useDocsState } from './docs-state'
 
 export function useDebounce<T>(value: T, delayMs = 1000): T {
     const [debouncedValue, setDebouncedValue] = useState(value)
@@ -36,4 +36,15 @@ export function usSyncWithDocsStateSlug() {
             setPrevSlug(currentSlug)
         }
     }, [currentSlug, prevSlug])
+}
+
+export function usePrevious<T>(value: T): T | undefined {
+    const ref = useRef<T>(undefined)
+
+    useEffect(() => {
+        if (!value) return
+        ref.current = value
+    }, [value])
+
+    return ref.current
 }

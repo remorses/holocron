@@ -69,7 +69,13 @@ export default function Page({
     params: { siteId, orgId },
 }: Route.ComponentProps) {
     return (
-        <StateProvider initialValue={{ messages: [], isChatGenerating: false }}>
+        <StateProvider
+            initialValue={{
+                messages: [],
+                isChatGenerating: false,
+                updatedPages: {}, // TODO take updated pages from persistent state, so that an update can be in progress
+            }}
+        >
             <SidebarProvider
                 className=''
                 style={

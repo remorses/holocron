@@ -20,37 +20,40 @@ export function createIframeRpcClient({
         }
     >()
 
-    docsRpcClient.setDocsState = (state: DocsState): Promise<any> => {
-        console.log(`sending state to docs iframe`)
-        // contentWindow is accessible even for cross-origin iframes, but you cannot access *properties* of the window if it's cross-origin.
-        // Here, we just need to postMessage, which is allowed on cross-origin frames.
-        const w = iframeRef.current?.contentWindow
-        if (!w) throw new Error('iframe not ready')
+    docsRpcClient.setDocsState = debounce(
+        100,
+        (state: DocsState): Promise<any> => {
+            console.log(`sending state to docs iframe`)
+            // contentWindow is accessible even for cross-origin iframes, but you cannot access *properties* of the window if it's cross-origin.
+            // Here, we just need to postMessage, which is allowed on cross-origin frames.
+            const w = iframeRef.current?.contentWindow
+            if (!w) throw new Error('iframe not ready')
 
-        const id = crypto.randomUUID()
+            const id = crypto.randomUUID()
 
-        const message: IframeRpcMessage = {
-            id,
-            state,
-        }
+            const message: IframeRpcMessage = {
+                id,
+                state,
+            }
 
-        return new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
-                pendingRequests.delete(id)
-                reject(
-                    new Error(
-                        `Request ${id} timed out after ${defaultTimeout}ms`,
-                    ),
-                )
-            }, defaultTimeout)
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    pendingRequests.delete(id)
+                    reject(
+                        new Error(
+                            `Request ${id} timed out after ${defaultTimeout}ms`,
+                        ),
+                    )
+                }, defaultTimeout)
 
-            pendingRequests.set(id, { resolve, reject, timeout })
+                pendingRequests.set(id, { resolve, reject, timeout })
 
-            w.postMessage(message, {
-                targetOrigin: '*',
+                w.postMessage(message, {
+                    targetOrigin: '*',
+                })
             })
-        })
-    }
+        },
+    )
     function onMessage(e: MessageEvent) {
         if (targetOrigin && e.origin !== targetOrigin) return
         const { id, state, error } = (e.data ?? {}) as IframeRpcMessage

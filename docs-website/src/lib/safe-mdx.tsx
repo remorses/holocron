@@ -35,7 +35,7 @@ const customTransformer: CustomTransformer = (node, transform) => {
 export type MarkdownRendererProps = {
     markdown?: string
     ast?: any
-    id?: any
+    renderPreviousMarkdownOnError?: boolean
     extension?: any
 }
 

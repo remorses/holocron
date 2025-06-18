@@ -83,12 +83,23 @@ export function groupByN<T>(arr: T[], n: number): T[][] {
 export function debounce<T extends (...args: any[]) => any>(
     delay: number,
     fn: T,
-) {
+): T {
     let timeoutId: ReturnType<typeof setTimeout> | undefined
+    let pendingPromise: Promise<any> | null = null
     return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
         if (timeoutId) clearTimeout(timeoutId)
-        timeoutId = setTimeout(() => fn.apply(this, args), delay)
-    }
+        if (pendingPromise) return pendingPromise
+        pendingPromise = new Promise<any>((resolve, reject) => {
+            timeoutId = setTimeout(() => {
+                Promise.resolve(fn.apply(this, args))
+                    .then(resolve, reject)
+                    .finally(() => {
+                        pendingPromise = null
+                    })
+            }, delay)
+        })
+        return pendingPromise
+    } as any
 }
 
 // teeAsync.ts

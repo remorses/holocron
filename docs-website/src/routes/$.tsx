@@ -17,14 +17,14 @@ import {
     DocsTitle,
 } from 'fumadocs-ui/page'
 
-import { Suspense } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { TrieveSearchDialog } from 'docs-website/src/trieve/search-dialog-trieve'
 import { SharedProps } from 'fumadocs-ui/components/dialog/search'
 import { RootProvider } from 'fumadocs-ui/provider/base'
 import { DocsStateProvider, useDocsState } from '../lib/docs-state'
-import { usSyncWithDocsStateSlug } from '../lib/hooks'
+import { usePrevious, usSyncWithDocsStateSlug } from '../lib/hooks'
 import { LOCALE_LABELS, LOCALES } from '../lib/locales'
 import { Markdown } from '../lib/safe-mdx'
 import { getFumadocsSource } from '../lib/source.server'
@@ -298,16 +298,7 @@ function MainDocsPage({
                 return { ...loaderData, tree, toc }
             }),
         )
-
-    if (!ast) {
-        const extension = githubPath.split('.').pop()
-        try {
-            const data = processMdxInClient({ extension, markdown })
-            ast = data.ast
-        } catch (e) {
-            console.error('cannot generate ast for page', e)
-        }
-    }
+    const previousAst = useRef<any>(undefined)
 
     return (
         <DocsLayout
@@ -328,7 +319,8 @@ function MainDocsPage({
                 )}
                 <DocsBody>
                     <Markdown
-                        // markdown={markdown}
+                        renderPreviousMarkdownOnError
+                        markdown={markdown}
                         ast={ast}
                     />
                 </DocsBody>

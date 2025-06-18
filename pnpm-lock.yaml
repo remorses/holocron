@@ -20,7 +20,7 @@ importers:
         version: 3.5.3
       tsup:
         specifier: 8.5.0
-        version: 8.5.0(jiti@2.4.2)(postcss@8.5.5)(tsx@4.20.3)(typescript@5.8.3)(yaml@2.8.0)
+        version: 8.5.0(jiti@2.4.2)(postcss@8.5.6)(tsx@4.20.3)(typescript@5.8.3)(yaml@2.8.0)
       tsx:
         specifier: ^4.20.3
         version: 4.20.3
@@ -139,6 +139,9 @@ importers:
       '@xmorse/deployment-utils':
         specifier: ^0.3.0
         version: 0.3.0(@types/node@24.0.1)(lightningcss@1.30.1)(terser@5.42.0)
+      '@xmorse/markdown-rs':
+        specifier: ^0.0.3
+        version: 0.0.3
       async-sema:
         specifier: ^3.1.1
         version: 3.1.1
@@ -355,7 +358,7 @@ importers:
         version: 6.0.1
       tsup:
         specifier: 8.5.0
-        version: 8.5.0(jiti@2.4.2)(postcss@8.5.5)(tsx@4.20.3)(typescript@5.8.3)(yaml@2.8.0)
+        version: 8.5.0(jiti@2.4.2)(postcss@8.5.6)(tsx@4.20.3)(typescript@5.8.3)(yaml@2.8.0)
       turbo:
         specifier: 2.5.4
         version: 2.5.4
@@ -5568,6 +5571,59 @@ packages:
   '@xmorse/deployment-utils@0.3.0':
     resolution: {integrity: sha512-V3OyOfU2Nj9JGQUIyEz9nVJIRKiEI/d9fLbpO6YMrHuDC0hgvACPZ0wI6D4aR8t3qwS8A3+cDnqZkxN0blT3Nw==}
 
+  '@xmorse/markdown-rs-binding-darwin-arm64@0.0.3':
+    resolution: {integrity: sha512-odUfHkoz1TXZFr5hrpo30sPiQ67SF1tjVVzZP3Y8GgTpyqy4UaJUWbxKPvlVcPkwGln1D8zOPA4YJFNH7e/G5w==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@xmorse/markdown-rs-binding-darwin-x64@0.0.3':
+    resolution: {integrity: sha512-fTHP81Jk4gS7oNg1O2KJ1Ig3O9weqtnwhETyAr94IA/L/4rLExrR+Tz+pAo6vFCvz04Txigl8jfwFxvjKsF/2A==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@xmorse/markdown-rs-binding-linux-arm-gnueabihf@0.0.3':
+    resolution: {integrity: sha512-7kK80wbiL/D9JXpEotC0EGw0EZ/li7m2EDg2h/RIuXsbzbeHXVxVWMS+me1EgPGx8yJlEYqfyevYo+jS7nDd9w==}
+    cpu: [arm]
+    os: [linux]
+
+  '@xmorse/markdown-rs-binding-linux-arm64-gnu@0.0.3':
+    resolution: {integrity: sha512-9t6QS9YK04myesY9Awp/L82FbLLYUEKKlGS1QzK5tjYSRZS84dWiLO89zF7kJWfQ0IQp+VaY/5LewFxoZQE6ow==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@xmorse/markdown-rs-binding-linux-arm64-musl@0.0.3':
+    resolution: {integrity: sha512-HiCMhTPEmOKe3KyzyDctmUwcqXvTyiOM53/E6+yOnL3PIDsEcX8B1Z+LBo+jx46/SNyQE3h65Au11/XSfJh8jg==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@xmorse/markdown-rs-binding-linux-riscv64-gnu@0.0.3':
+    resolution: {integrity: sha512-A9Sgohuc32i03kfHVN3Opk8xhw3t4h4VZaadUu3UBKDiMEXFsFo7/FccpXndDza8orBCBlJC6Sc/agA3M+5n/g==}
+    cpu: [riscv64]
+    os: [linux]
+
+  '@xmorse/markdown-rs-binding-linux-s390x-gnu@0.0.3':
+    resolution: {integrity: sha512-j2PFcS+dDU/wNBgsyxVKSEm0msvXXQFBcwc3lmkGLZ71vb7IlWWZAOLb+kcpB7Qy1tv0yKzpUaeraqmnoWeiMQ==}
+    cpu: [s390x]
+    os: [linux]
+
+  '@xmorse/markdown-rs-binding-linux-x64-gnu@0.0.3':
+    resolution: {integrity: sha512-7QnzFwpE/iinTstGoHdkbqFBiggrqF6l23fztQ5Qosx3cgtgl3U32ItRlFLw647BboQ17BrOort1lUEIk7Us2w==}
+    cpu: [x64]
+    os: [linux]
+
+  '@xmorse/markdown-rs-binding-linux-x64-musl@0.0.3':
+    resolution: {integrity: sha512-N3mcqwsI5Z/aVronyV9B6pko6aRVmwAiYl3gkXNm/4vFmmLwkLzZxtwhsUt7uV0KD0wAjERqQOMJXeiqDJT0Jw==}
+    cpu: [x64]
+    os: [linux]
+
+  '@xmorse/markdown-rs-binding-wasm32-wasi@0.0.3':
+    resolution: {integrity: sha512-9MBLExB0d+7J4zumkRTZ2mckBT1mGnnv9m72FPRNmySPRECsVTBZWGZU0PhlevZjen0eTzZw6EzcJxtHVQpWwQ==}
+    engines: {node: '>=14.0.0'}
+    cpu: [wasm32]
+
+  '@xmorse/markdown-rs@0.0.3':
+    resolution: {integrity: sha512-MHMiNpOvb/1yScy/m98ec9SME3CE5uy2l9IuM/4VhNshNR+kSshO5GFLe7JyjJK5VLOcWdDofuPGGLTiznjPaQ==}
+
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
 
@@ -9029,6 +9085,10 @@ packages:
 
   postcss@8.5.5:
     resolution: {integrity: sha512-d/jtm+rdNT8tpXuHY5MMtcbJFBkhXE6593XVR9UoGCH8jSFGci7jGvMGH5RYd5PBJW+00NZQt6gf7CbagJCrhg==}
+    engines: {node: ^10 || ^12 || >=14}
+
+  postcss@8.5.6:
+    resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
 
   postgres-array@2.0.0:
@@ -15810,7 +15870,7 @@ snapshots:
       '@vue/shared': 3.5.16
       estree-walker: 2.0.2
       magic-string: 0.30.17
-      postcss: 8.5.5
+      postcss: 8.5.6
       source-map-js: 1.2.1
 
   '@vue/compiler-ssr@3.5.16':
@@ -16023,6 +16083,51 @@ snapshots:
       - sugarss
       - supports-color
       - terser
+
+  '@xmorse/markdown-rs-binding-darwin-arm64@0.0.3':
+    optional: true
+
+  '@xmorse/markdown-rs-binding-darwin-x64@0.0.3':
+    optional: true
+
+  '@xmorse/markdown-rs-binding-linux-arm-gnueabihf@0.0.3':
+    optional: true
+
+  '@xmorse/markdown-rs-binding-linux-arm64-gnu@0.0.3':
+    optional: true
+
+  '@xmorse/markdown-rs-binding-linux-arm64-musl@0.0.3':
+    optional: true
+
+  '@xmorse/markdown-rs-binding-linux-riscv64-gnu@0.0.3':
+    optional: true
+
+  '@xmorse/markdown-rs-binding-linux-s390x-gnu@0.0.3':
+    optional: true
+
+  '@xmorse/markdown-rs-binding-linux-x64-gnu@0.0.3':
+    optional: true
+
+  '@xmorse/markdown-rs-binding-linux-x64-musl@0.0.3':
+    optional: true
+
+  '@xmorse/markdown-rs-binding-wasm32-wasi@0.0.3':
+    dependencies:
+      '@napi-rs/wasm-runtime': 0.2.11
+    optional: true
+
+  '@xmorse/markdown-rs@0.0.3':
+    optionalDependencies:
+      '@xmorse/markdown-rs-binding-darwin-arm64': 0.0.3
+      '@xmorse/markdown-rs-binding-darwin-x64': 0.0.3
+      '@xmorse/markdown-rs-binding-linux-arm-gnueabihf': 0.0.3
+      '@xmorse/markdown-rs-binding-linux-arm64-gnu': 0.0.3
+      '@xmorse/markdown-rs-binding-linux-arm64-musl': 0.0.3
+      '@xmorse/markdown-rs-binding-linux-riscv64-gnu': 0.0.3
+      '@xmorse/markdown-rs-binding-linux-s390x-gnu': 0.0.3
+      '@xmorse/markdown-rs-binding-linux-x64-gnu': 0.0.3
+      '@xmorse/markdown-rs-binding-linux-x64-musl': 0.0.3
+      '@xmorse/markdown-rs-binding-wasm32-wasi': 0.0.3
 
   '@xtuc/ieee754@1.2.0': {}
 
@@ -20127,6 +20232,15 @@ snapshots:
       tsx: 4.20.3
       yaml: 2.8.0
 
+  postcss-load-config@6.0.1(jiti@2.4.2)(postcss@8.5.6)(tsx@4.20.3)(yaml@2.8.0):
+    dependencies:
+      lilconfig: 3.1.3
+    optionalDependencies:
+      jiti: 2.4.2
+      postcss: 8.5.6
+      tsx: 4.20.3
+      yaml: 2.8.0
+
   postcss-selector-parser@6.0.10:
     dependencies:
       cssesc: 3.0.0
@@ -20153,6 +20267,12 @@ snapshots:
       source-map-js: 1.2.1
 
   postcss@8.5.5:
+    dependencies:
+      nanoid: 3.3.11
+      picocolors: 1.1.1
+      source-map-js: 1.2.1
+
+  postcss@8.5.6:
     dependencies:
       nanoid: 3.3.11
       picocolors: 1.1.1
@@ -21667,6 +21787,34 @@ snapshots:
       - tsx
       - yaml
 
+  tsup@8.5.0(jiti@2.4.2)(postcss@8.5.6)(tsx@4.20.3)(typescript@5.8.3)(yaml@2.8.0):
+    dependencies:
+      bundle-require: 5.1.0(esbuild@0.25.5)
+      cac: 6.7.14
+      chokidar: 4.0.3
+      consola: 3.4.2
+      debug: 4.4.1
+      esbuild: 0.25.5
+      fix-dts-default-cjs-exports: 1.0.1
+      joycon: 3.1.1
+      picocolors: 1.1.1
+      postcss-load-config: 6.0.1(jiti@2.4.2)(postcss@8.5.6)(tsx@4.20.3)(yaml@2.8.0)
+      resolve-from: 5.0.0
+      rollup: 4.43.0
+      source-map: 0.8.0-beta.0
+      sucrase: 3.35.0
+      tinyexec: 0.3.2
+      tinyglobby: 0.2.14
+      tree-kill: 1.2.2
+    optionalDependencies:
+      postcss: 8.5.6
+      typescript: 5.8.3
+    transitivePeerDependencies:
+      - jiti
+      - supports-color
+      - tsx
+      - yaml
+
   tsx@4.20.3:
     dependencies:
       esbuild: 0.25.5
@@ -22161,7 +22309,7 @@ snapshots:
       esbuild: 0.25.5
       fdir: 6.4.6(picomatch@4.0.2)
       picomatch: 4.0.2
-      postcss: 8.5.5
+      postcss: 8.5.6
       rollup: 4.43.0
       tinyglobby: 0.2.14
     optionalDependencies:

@@ -131,17 +131,20 @@ function Footer() {
                 },
             ]
             setText('')
+            const updatedPages = useChatState.getState()?.updatedPages || {}
             useChatState.setState({ messages: allMessages })
+
             const { data: generator, error } =
                 await apiClient.api.generateMessage.post({
                     messages: allMessages,
                     siteId,
                     tabId,
+                    updatedPages,
                 })
             if (error) throw error
             // Clear the input
             //
-            const updatedPagesState: Record<string, PageUpdate> = {}
+
             const getPageContent = memoize(
                 async function getPageContent(x) {
                     const { data, error } =
@@ -155,7 +158,7 @@ function Footer() {
                 { transformKey: (x) => x.map((l) => JSON.stringify(l)) },
             )
             const execute = createEditExecute({
-                updatedPages: updatedPagesState,
+                updatedPages: updatedPages,
                 getPageContent,
             })
             // Split the async iterator into two: one for docs edit, one for state updates
@@ -189,7 +192,7 @@ function Footer() {
                             }
 
                             if (toolInvocation.state === 'partial-call') {
-                                let updatedPagesCopy = { ...updatedPagesState }
+                                let updatedPagesCopy = { ...updatedPages }
                                 const execute = createEditExecute({
                                     updatedPages: updatedPagesCopy,
                                     getPageContent,
@@ -201,8 +204,9 @@ function Footer() {
                             } else if (toolInvocation.state === 'result') {
                                 await execute(toolInvocation.args)
                                 await docsRpcClient.setDocsState({
-                                    updatedPages: updatedPagesState,
+                                    updatedPages: updatedPages,
                                 })
+                                useChatState.setState({ updatedPages })
                             }
                         }
                     }

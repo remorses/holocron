@@ -8,42 +8,52 @@ import {
 } from './safe-mdx'
 import { createHighlighter, Highlighter } from 'shiki'
 import { getProcessor, ProcessorData } from './mdx'
+import markdownRs from '@xmorse/markdown-rs'
 import React from 'react'
-
-function stripYamlFrontmatter(markdown: string): string {
-    // Remove YAML frontmatter if present (--- ... --- or --- ... ---\r\n)
-    return markdown.replace(/^---\s*\r?\n[\s\S]*?\r?\n---\s*\r?\n?/, '')
-}
 
 export function MarkdownRuntimeComponent({
     markdown,
     extension = 'mdx',
-    id,
+    renderPreviousMarkdownOnError = true,
 }: MarkdownRendererProps) {
-    const generatedId = useId()
-    const blockId = id ?? generatedId
+    const previousBlocksRef = React.useRef<any[]>([])
+
     const blocks = useMemo(() => {
+        if (!markdown) return []
         try {
-            return marked.lexer(stripYamlFrontmatter(markdown || ''))
+            const { ast } = processMdxInClient({ extension, markdown })
+            // Add a `raw` field to each child by using its `position` to extract from the markdown text.
+            const newBlocks = ast.children.map((child) => {
+                if (!child.position) {
+                    console.error(`markdown ast has no position: ${child}`)
+                    return { ...child, raw: '' }
+                }
+                return {
+                    ...child,
+                    raw: markdown.slice(
+                        child.position.start.offset,
+                        child.position.end.offset,
+                    ),
+                }
+            })
+            previousBlocksRef.current = newBlocks
+            return newBlocks
         } catch (err) {
+            if (err instanceof Promise) throw err
             console.error('Markdown lexing error:', err)
+            // TODO add a way to return valid prefixes for old markdown
+            if (renderPreviousMarkdownOnError) {
+                return previousBlocksRef.current
+            }
             return []
         }
-    }, [markdown])
+    }, [markdown, extension, renderPreviousMarkdownOnError])
 
     return (
         <Suspense>
             {blocks.map((block, index) => {
-                if (block.type === 'space') return block.raw
-                return (
-                    <PreserveUIBoundary>
-                        <MarkdownRuntimeItem
-                            key={index}
-                            extension={extension}
-                            markdown={block.raw}
-                        />
-                    </PreserveUIBoundary>
-                )
+                // if (block.type === 'space') return block.raw
+                return <MarkdownAstRenderer key={index} ast={block} />
             })}
         </Suspense>
     )
