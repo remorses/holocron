@@ -32,6 +32,9 @@ export function usSyncWithDocsStateSlug() {
 
     useEffect(() => {
         if (currentSlug && currentSlug !== prevSlug) {
+            console.log(
+                `navigating to ${currentSlug} because of state a docs state change`,
+            )
             navigate(currentSlug)
             setPrevSlug(currentSlug)
         }
@@ -47,4 +50,18 @@ export function usePrevious<T>(value: T): T | undefined {
     }, [value])
 
     return ref.current
+}
+
+
+/**
+ * This hook sets up a window 'message' event listener using the provided handler function.
+ * It will automatically remove the listener when the component is unmounted or handler changes.
+ */
+export function useParentPostMessage(onParentPostMessage: (event: MessageEvent) => void) {
+    useEffect(() => {
+        window.addEventListener('message', onParentPostMessage)
+        return () => {
+            window.removeEventListener('message', onParentPostMessage)
+        }
+    }, [onParentPostMessage])
 }

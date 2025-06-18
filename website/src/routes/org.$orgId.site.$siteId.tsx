@@ -112,6 +112,10 @@ function Content() {
             <div className='flex grow flex-col'>
                 <BrowserWindow
                     url={url}
+                    onSearchBarClick={() => {
+                        const iframe = iframeRef.current
+                        window.open(iframe?.src, '_blank')
+                    }}
                     onRefresh={() => {
                         const iframe = iframeRef.current
                         if (iframe) {
@@ -133,10 +137,11 @@ function Content() {
 
                             return docsRpcClient_.cleanup
                         }}
+                        key='iframe'
                         style={scaleDownElement(0.9)}
                         className={cn(' inset-0 bg-transparent', 'absolute')}
                         frameBorder={0}
-                        allowTransparency
+                        allowTransparency={true}
                         name='previewProps' // tell iframe preview props is enabled
                         // height='120%'
 

@@ -26,6 +26,7 @@ import { docsRpcClient } from '../lib/docs-setstate'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId'
 import { useLoaderData } from 'react-router'
 import { teeAsyncIterable } from '../lib/utils'
+import { generateSlugFromPath } from 'docs-website/src/lib/utils'
 
 export default function Chat({}) {
     const { scrollRef, contentRef, scrollToBottom } = useStickToBottom()
@@ -239,6 +240,7 @@ function Footer() {
             )
 
             // First iteration: handle docs/edit-tool logic
+            let isPostMessageBusy = false
             async function updateDocsSite() {
                 for await (const newMessages of editIter) {
                     const lastMessage = newMessages[newMessages.length - 1]
@@ -266,14 +268,36 @@ function Footer() {
                                     getPageContent,
                                 })
                                 await execute(toolInvocation.args)
-                                await docsRpcClient.setDocsState({
-                                    updatedPages: updatedPagesCopy,
-                                })
+                                if (isPostMessageBusy) continue
+
+                                isPostMessageBusy = true
+                                docsRpcClient
+                                    .setDocsState({
+                                        updatedPages: updatedPagesCopy,
+                                        currentSlug: generateSlugFromPath(
+                                            args.path || '',
+                                            '/',
+                                        ),
+                                    })
+                                    .then(() => {
+                                        isPostMessageBusy = false
+                                    })
                             } else if (toolInvocation.state === 'result') {
                                 await execute(toolInvocation.args)
-                                await docsRpcClient.setDocsState({
-                                    updatedPages: updatedPages,
-                                })
+                                console.log(
+                                    `applying the setState update to the docs site`,
+                                    toolInvocation,
+                                )
+                                await docsRpcClient.setDocsState(
+                                    {
+                                        updatedPages: updatedPages,
+                                        currentSlug: generateSlugFromPath(
+                                            args.path || '',
+                                            '/',
+                                        ),
+                                    },
+                                    toolInvocation.toolCallId,
+                                )
                                 useChatState.setState({ updatedPages })
                             }
                         }

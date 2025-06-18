@@ -7,8 +7,8 @@ import { env } from './env'
 import { debounce } from './utils'
 
 export type DocsState = {
-    tree: PageTree.Root
-    toc: TOCItemType[]
+    tree?: PageTree.Root
+    toc?: TOCItemType[]
     currentSlug?: string
     updatedPages: Record<
         string,
@@ -24,10 +24,32 @@ export type DocsState = {
     }>
 }
 
-export const [DocsStateProvider, useDocsState] =
-    createZustandContext<DocsState>((initial) =>
-        create((set) => ({ ...initial })),
-    )
+const stateKey = 'docsState'
+
+const initialState: DocsState =
+    JSON.parse(
+        typeof window !== 'undefined'
+            ? localStorage.getItem(stateKey) || 'null'
+            : 'null',
+    ) ||
+    ({
+        updatedPages: {},
+        deletedPages: [],
+    } satisfies DocsState)
+
+export const useDocsState = create<DocsState>(() => initialState)
+
+const storeState = debounce(500, (state) => {
+    localStorage.setItem(stateKey, JSON.stringify(state))
+})
+if (typeof window !== 'undefined') {
+    const unsub = useDocsState.subscribe(storeState)
+    if (import.meta.hot) {
+        import.meta.hot.dispose(() => {
+            unsub()
+        })
+    }
+}
 
 export type IframeRpcMessage = {
     id: string

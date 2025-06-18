@@ -1,7 +1,6 @@
 import { useShallow } from 'zustand/react/shallow'
 import { getCacheTagForMediaAsset, getKeyForMediaAsset, s3 } from '../lib/s3'
 
-import { onParentPostMessage } from 'docs-website/src/lib/docs-state'
 import type { Route } from './+types/$'
 
 import { TrieveSDK } from 'trieve-ts-sdk'
@@ -17,40 +16,18 @@ import {
     DocsTitle,
 } from 'fumadocs-ui/page'
 
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { TrieveSearchDialog } from 'docs-website/src/trieve/search-dialog-trieve'
 import { SharedProps } from 'fumadocs-ui/components/dialog/search'
 import { RootProvider } from 'fumadocs-ui/provider/base'
-import { DocsStateProvider, useDocsState } from '../lib/docs-state'
-import { usePrevious, usSyncWithDocsStateSlug } from '../lib/hooks'
+import { useDocsState } from '../lib/docs-state'
+import { usSyncWithDocsStateSlug } from '../lib/hooks'
 import { LOCALE_LABELS, LOCALES } from '../lib/locales'
 import { Markdown } from '../lib/safe-mdx'
 import { getFumadocsSource } from '../lib/source.server'
-import { processMdxInClient } from '../lib/markdown-runtime'
-
-if (typeof window !== 'undefined') {
-    // Add a listener to handle postMessages from parent when running in browser
-    window.addEventListener('message', onParentPostMessage)
-
-    // Handle Hot Module Replacement (HMR) in development.
-    // We need both accept and dispose because:
-    // - dispose: Runs before the module is replaced. Removes the message event listener so
-    //   we don't accumulate listeners as modules are reloaded.
-    // - accept: Runs after the module is replaced. Here, for safety, we ensure that we remove
-    //   the previous listener so that only the current version of onParentPostMessage is attached.
-    // Without both, especially if only dispose is used, if the module gets re-imported in certain
-    // orders/ways, duplicate listeners may persist or a stale reference may be left.
-    if (import.meta.hot) {
-        // import.meta.hot.accept(() => {
-        //     window.removeEventListener('message', onParentPostMessage)
-        // })
-        import.meta.hot.dispose(() => {
-            window.removeEventListener('message', onParentPostMessage)
-        })
-    }
-}
+import { useLoaderData } from 'react-router'
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data) return {}
@@ -245,33 +222,23 @@ function Providers({
     }
 
     return (
-        <DocsStateProvider
-            initialValue={{
-                tree: tree as any,
-                toc: toc as any,
-                deletedPages: [],
-                updatedPages: {},
+        <RootProvider
+            search={{
+                // SearchDialog: CustomSearchDialog,
+                options: {},
+                enabled: !!site.trieveDatasetId,
+            }}
+            i18n={{
+                locale,
+                locales: i18n?.languages.map((locale) => {
+                    return { locale, name: LOCALE_LABELS[locale] || '' }
+                }),
             }}
         >
-            <RootProvider
-                search={{
-                    // SearchDialog: CustomSearchDialog,
-                    options: {},
-                    enabled: !!site.trieveDatasetId,
-                }}
-                i18n={{
-                    locale,
-                    locales: i18n?.languages.map((locale) => {
-                        return { locale, name: LOCALE_LABELS[locale] || '' }
-                    }),
-                }}
-            >
-                {children}
-            </RootProvider>
-        </DocsStateProvider>
+            {children}
+        </RootProvider>
     )
 }
-
 function MainDocsPage({
     loaderData,
 }: {
@@ -279,26 +246,14 @@ function MainDocsPage({
 }) {
     usSyncWithDocsStateSlug()
     const { i18n, site, slug } = loaderData
-    let { tree, title, description, ast, toc, markdown, githubPath } =
-        useDocsState(
-            useShallow((x) => {
-                const { tree, toc, updatedPages } = x
-                const override = updatedPages[loaderData.githubPath]
-
-                if (override) {
-                    return {
-                        ...loaderData,
-                        tree,
-                        toc,
-                        ...override,
-                        ast: undefined,
-                    }
-                }
-
-                return { ...loaderData, tree, toc }
-            }),
-        )
-    const previousAst = useRef<any>(undefined)
+    let { tree, title, description, toc } = useDocsState(
+        useShallow((state) => {
+            const { title, description } = loaderData
+            const tree = state.tree || loaderData.tree
+            const toc = state.toc || loaderData.toc
+            return { title, description, tree, toc }
+        }),
+    )
 
     return (
         <DocsLayout
@@ -318,15 +273,33 @@ function MainDocsPage({
                     <DocsDescription>{description}</DocsDescription>
                 )}
                 <DocsBody>
-                    <Markdown
-                        renderPreviousMarkdownOnError
-                        markdown={markdown}
-                        ast={ast}
-                    />
+                    <DocsMarkdown />
                 </DocsBody>
             </DocsPage>
         </DocsLayout>
     )
+}
+
+function DocsMarkdown() {
+    const loaderData = useLoaderData<typeof loader>()
+    let { ast, markdown } = useDocsState(
+        useShallow((x) => {
+            const { updatedPages } = x
+
+            const override = updatedPages[loaderData.githubPath]
+
+            if (override) {
+                return {
+                    markdown: override.markdown,
+                    ast: undefined,
+                }
+            }
+
+            return { ast: loaderData.ast, markdown: '' }
+        }),
+    )
+
+    return <Markdown markdown={markdown} ast={ast} />
 }
 
 function CustomSearchDialog(props: SharedProps) {

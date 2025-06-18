@@ -70,6 +70,7 @@ export async function getFumadocsSource({
         // url: (slugs: string[], locale?: string) =>
         //     '/' + (locale ? locale + '/' : '') + slugs.join('/'),
     })
+
     return source
 }
 

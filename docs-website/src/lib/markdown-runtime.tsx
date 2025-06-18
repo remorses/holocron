@@ -1,4 +1,12 @@
-import { useId, useMemo, Suspense, memo } from 'react'
+import {
+    useId,
+    useMemo,
+    Suspense,
+    memo,
+    useState,
+    useEffect,
+    startTransition,
+} from 'react'
 import { marked } from 'marked'
 
 import {
@@ -14,40 +22,34 @@ import React from 'react'
 export function MarkdownRuntimeComponent({
     markdown,
     extension = 'mdx',
-    renderPreviousMarkdownOnError = true,
 }: MarkdownRendererProps) {
     const previousBlocksRef = React.useRef<any[]>([])
+    const [blocks, setBlocks] = useState<any[]>([])
 
-    const blocks = useMemo(() => {
-        if (!markdown) return []
-        try {
-            const { ast } = processMdxInClient({ extension, markdown })
-            // Add a `raw` field to each child by using its `position` to extract from the markdown text.
-            const newBlocks = ast.children.map((child) => {
-                if (!child.position) {
-                    console.error(`markdown ast has no position: ${child}`)
-                    return { ...child, raw: '' }
-                }
-                return {
-                    ...child,
-                    raw: markdown.slice(
-                        child.position.start.offset,
-                        child.position.end.offset,
-                    ),
-                }
-            })
-            previousBlocksRef.current = newBlocks
-            return newBlocks
-        } catch (err) {
-            if (err instanceof Promise) throw err
-            console.error('Markdown lexing error:', err)
-            // TODO add a way to return valid prefixes for old markdown
-            if (renderPreviousMarkdownOnError) {
-                return previousBlocksRef.current
-            }
-            return []
+    useEffect(() => {
+        if (!markdown) {
+            setBlocks([])
+
+            return
         }
-    }, [markdown, extension, renderPreviousMarkdownOnError])
+
+        startTransition(async function processMarkdown() {
+            try {
+                const { ast } = processMdxInClient({ extension, markdown })
+                // Add a `raw` field to each child by using its `position` to extract from the markdown text.
+                const newBlocks = ast.children
+                previousBlocksRef.current = newBlocks
+                setBlocks(newBlocks)
+            } catch (err) {
+                if (err instanceof Promise) {
+                    await err
+                    await processMarkdown()
+                    return
+                }
+                console.error('Markdown lexing error:', err)
+            }
+        })
+    }, [markdown, extension])
 
     return (
         <Suspense>

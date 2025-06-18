@@ -35,7 +35,7 @@ const customTransformer: CustomTransformer = (node, transform) => {
 export type MarkdownRendererProps = {
     markdown?: string
     ast?: any
-    renderPreviousMarkdownOnError?: boolean
+
     extension?: any
 }
 
@@ -47,7 +47,7 @@ export const Markdown = function MarkdownRender(props: MarkdownRendererProps) {
     return <MarkdownAstRenderer ast={ast} />
 }
 
-export const MarkdownAstRenderer = ({ ast }) => {
+export const MarkdownAstRenderer = memo(({ ast }: { ast: any }) => {
     return (
         <SafeMdxRenderer
             customTransformer={customTransformer}
@@ -55,7 +55,7 @@ export const MarkdownAstRenderer = ({ ast }) => {
             mdast={ast}
         />
     )
-}
+})
 
 Markdown.displayName = 'MemoizedMarkdownBlock'
 

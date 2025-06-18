@@ -18,7 +18,7 @@ import {
     isMarkdown,
 } from './github.server'
 import { yieldTasksInParallel, mdxRegex } from './utils'
-import { isAbsoluteUrl } from 'docs-website/src/lib/utils'
+import { generateSlugFromPath, isAbsoluteUrl } from 'docs-website/src/lib/utils'
 import {
     getCacheTagForMediaAsset,
     getKeyForMediaAsset,
@@ -431,19 +431,25 @@ export async function* pagesFromGithub({
     console.time(`${owner}/${repo} - fetch files ${timeId}`)
     const files = await getRepoFiles({
         fetchBlob(file) {
-
             let pathWithFrontSlash = addFrontSlashToPath(file.path || '')
             if (!file.sha) {
-                console.log(`Skipping file ${file.path} because sha is missing`);
-                return false;
+                console.log(`Skipping file ${file.path} because sha is missing`)
+                return false
             }
             if (!pathWithFrontSlash?.startsWith(basePath)) {
-                console.log(`Skipping file ${file.path} because path does not start with basePath (${basePath})`);
-                return false;
+                console.log(
+                    `Skipping file ${file.path} because path does not start with basePath (${basePath})`,
+                )
+                return false
             }
-            if (!isMarkdown(pathWithFrontSlash) && !isMetaFile(pathWithFrontSlash)) {
-                console.log(`Skipping file ${file.path} because it is neither markdown nor meta file`);
-                return false;
+            if (
+                !isMarkdown(pathWithFrontSlash) &&
+                !isMetaFile(pathWithFrontSlash)
+            ) {
+                console.log(
+                    `Skipping file ${file.path} because it is neither markdown nor meta file`,
+                )
+                return false
             }
             if (forceFullSync) return true
             if (onlyGithubPaths.size && file.path) {
@@ -873,21 +879,6 @@ function isValidUrl(string: string): boolean {
     return string.startsWith('http://') || string.startsWith('https://')
 }
 
-function generateSlugFromPath(pathWithFrontSlash: string, basePath) {
-    if (isAbsoluteUrl(pathWithFrontSlash)) {
-        return pathWithFrontSlash
-    }
-    if (pathWithFrontSlash.startsWith(basePath)) {
-        pathWithFrontSlash = pathWithFrontSlash.slice(basePath.length)
-    }
-    if (pathWithFrontSlash.startsWith('/')) {
-        pathWithFrontSlash = pathWithFrontSlash.slice(1)
-    }
-    let res =
-        '/' + pathWithFrontSlash.replace(/\.mdx?$/, '').replace(/\/index$/, '')
-
-    return res
-}
 
 function safeJsonParse(str: string, defaultValue: any = {}) {
     try {

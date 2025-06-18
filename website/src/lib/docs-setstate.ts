@@ -1,7 +1,6 @@
 import { createSpiceflowClient, SpiceflowClient } from 'spiceflow/client'
 import { DocsState, IframeRpcMessage } from 'docs-website/src/lib/docs-state'
 import { debounce } from './utils'
-
 export function createIframeRpcClient({
     iframeRef,
     targetOrigin,
@@ -19,41 +18,50 @@ export function createIframeRpcClient({
             timeout: NodeJS.Timeout
         }
     >()
+    const usedIdempotenceIds = new Set<string>()
 
-    docsRpcClient.setDocsState = debounce(
-        100,
-        (state: DocsState): Promise<any> => {
-            console.log(`sending state to docs iframe`)
-            // contentWindow is accessible even for cross-origin iframes, but you cannot access *properties* of the window if it's cross-origin.
-            // Here, we just need to postMessage, which is allowed on cross-origin frames.
-            const w = iframeRef.current?.contentWindow
-            if (!w) throw new Error('iframe not ready')
+    docsRpcClient.setDocsState = (
+        state: DocsState,
+        idempotenceId?: string,
+    ): Promise<any> => {
+        // If idempotenceId is specified and already used, return resolved promise immediately
+        if (idempotenceId && usedIdempotenceIds.has(idempotenceId)) {
+            console.log(`Idempotence ID ${idempotenceId} already used, skipping docs state set state`)
+            return Promise.resolve(undefined)
+        }
+        if (idempotenceId) {
+            usedIdempotenceIds.add(idempotenceId)
+        }
+        console.log(`sending state to docs iframe`)
+        // contentWindow is accessible even for cross-origin iframes, but you cannot access *properties* of the window if it's cross-origin.
+        // Here, we just need to postMessage, which is allowed on cross-origin frames.
+        const w = iframeRef.current?.contentWindow
+        if (!w) throw new Error('iframe not ready')
 
-            const id = crypto.randomUUID()
+        const id = crypto.randomUUID()
 
-            const message: IframeRpcMessage = {
-                id,
-                state,
-            }
+        const message: IframeRpcMessage = {
+            id,
+            state,
+        }
 
-            return new Promise((resolve, reject) => {
-                const timeout = setTimeout(() => {
-                    pendingRequests.delete(id)
-                    reject(
-                        new Error(
-                            `Request ${id} timed out after ${defaultTimeout}ms`,
-                        ),
-                    )
-                }, defaultTimeout)
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                pendingRequests.delete(id)
+                reject(
+                    new Error(
+                        `Request ${id} timed out after ${defaultTimeout}ms`,
+                    ),
+                )
+            }, defaultTimeout)
 
-                pendingRequests.set(id, { resolve, reject, timeout })
+            pendingRequests.set(id, { resolve, reject, timeout })
 
-                w.postMessage(message, {
-                    targetOrigin: '*',
-                })
+            w.postMessage(message, {
+                targetOrigin: '*',
             })
-        },
-    )
+        })
+    }
     function onMessage(e: MessageEvent) {
         if (targetOrigin && e.origin !== targetOrigin) return
         const { id, state, error } = (e.data ?? {}) as IframeRpcMessage
@@ -82,12 +90,16 @@ export function createIframeRpcClient({
             pending.reject(new Error('RPC client cleanup'))
         }
         pendingRequests.clear()
+        usedIdempotenceIds.clear()
     }
     return docsRpcClient
 }
 
 export let docsRpcClient = {
-    async setDocsState(state: Partial<DocsState>): Promise<any> {
+    async setDocsState(
+        state: Partial<DocsState>,
+        idempotenceId?: string,
+    ): Promise<any> {
         console.error(new Error(`docs rpc client still not initialized`))
         return Promise.reject(
             new Error(`docs rpc client still not initialized`),

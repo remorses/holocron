@@ -206,7 +206,10 @@ export const ChatMessage = memo(function ChatMessage({
                         if (part.type === 'text') {
                             if (isEditing) {
                                 return (
-                                    <div key={index} className='space-y-2 w-full'>
+                                    <div
+                                        key={index}
+                                        className='space-y-2 w-full'
+                                    >
                                         <textarea
                                             value={editText}
                                             onChange={(e) =>
@@ -234,7 +237,6 @@ export const ChatMessage = memo(function ChatMessage({
                                             <Button
                                                 size='sm'
                                                 onClick={handleEditSave}
-
                                                 disabled={!editText.trim()}
                                             >
                                                 Save
@@ -332,7 +334,7 @@ function EditorToolPreview({
     toolCallId: any
     args?: Partial<EditToolParamSchema>
 }) {
-    const code = args?.new_str || ''
+    const code = args?.new_str || args?.file_text || ''
     const command = args?.command
     if (command === 'view') {
         let linesText = ''
@@ -348,6 +350,10 @@ function EditorToolPreview({
         )
     }
     if (command === 'create') {
+        let markdown = ''
+        markdown += `Inserting content into \`${args?.path}\`\n`
+        markdown +=
+            '```mdx' + ` title=" ${args?.path || ''}" \n` + code + '\n```'
         return (
             <ToolPreviewContainer>
                 <div>
@@ -369,13 +375,37 @@ function EditorToolPreview({
     }
 
     if (!code) return null
-    let markdown = ''
     if (command === 'insert') {
-        markdown += `Inserting content into \`${args?.path}\`\n`
-    } else if (command === 'str_replace') {
-        markdown += `Replacing content into \`${args?.path}\`\n`
+        let markdown = ''
+        markdown += `Inserting content into \`${args?.path}:${args?.insert_line || 0}\`\n`
+        // Prefix each line of code content with '+ '
+        const codeWithPrefix = code
+            .split('\n')
+            .map((line) => '+ ' + line)
+            .join('\n')
+        markdown +=
+            '```diff' +
+            ` title=" ${args?.path || ''}:${args?.insert_line || 0}" \n` +
+            codeWithPrefix +
+            '\n```'
+        return (
+            <ToolPreviewContainer className='py-0'>
+                <Markdown markdown={markdown} />
+            </ToolPreviewContainer>
+        )
     }
-
+    let markdown = ''
+    markdown += `Replacing content into \`${args?.path}\`\n`
+    if (state === 'result') {
+        let diff = String(result)
+        markdown +=
+            '```diff' + ` title=" ${args?.path || ''}" \n` + diff + '\n```'
+        return (
+            <ToolPreviewContainer className='py-0'>
+                <Markdown markdown={markdown} />
+            </ToolPreviewContainer>
+        )
+    }
     markdown += '```mdx' + ` title=" ${args?.path || ''}" \n` + code + '\n```'
     return (
         <ToolPreviewContainer className='py-0'>

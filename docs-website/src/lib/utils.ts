@@ -29,3 +29,22 @@ export function debounce<T extends (...args: any[]) => any>(
         timeoutId = setTimeout(() => fn.apply(this, args), delay)
     }
 }
+
+export function generateSlugFromPath(
+    pathWithFrontSlash: string,
+    basePath: string,
+) {
+    if (isAbsoluteUrl(pathWithFrontSlash)) {
+        return pathWithFrontSlash
+    }
+    if (pathWithFrontSlash.startsWith(basePath)) {
+        pathWithFrontSlash = pathWithFrontSlash.slice(basePath.length)
+    }
+    if (pathWithFrontSlash.startsWith('/')) {
+        pathWithFrontSlash = pathWithFrontSlash.slice(1)
+    }
+    let res =
+        '/' + pathWithFrontSlash.replace(/\.mdx?$/, '').replace(/\/index$/, '')
+
+    return res || '/'
+}

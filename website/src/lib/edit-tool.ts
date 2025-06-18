@@ -194,12 +194,12 @@ export function createEditExecute({
                         error: `No match found for replacement. Old string "${old_str}" not found in the document.`,
                     }
                 }
-                if (occurrences > 1) {
-                    return {
-                        success: false,
-                        error: `Old string "${old_str}" found more than once in the document.`,
-                    }
-                }
+                // if (occurrences > 1) {
+                //     return {
+                //         success: false,
+                //         error: `Old string "${old_str}" found more than once in the document.`,
+                //     }
+                // }
                 const replacedContent = override.markdown.replace(
                     old_str,
                     new_str,
@@ -227,10 +227,24 @@ export function createEditExecute({
                     githubPath: path,
                     markdown: replacedContent,
                 }
-                
-                const patch = createPatch(path, override.markdown, replacedContent, '', '')
-                const cleanPatch = patch.replace(/\\ No newline at end of file\n?/g, '')
-                return `Here is the diff of the changes made:\n\n${cleanPatch}`
+
+                const patch = createPatch(
+                    path,
+                    override.markdown,
+                    replacedContent,
+                    '',
+                    '',
+                )
+                const cleanPatch = patch.replace(
+                    /\\ No newline at end of file\n?/g,
+                    '',
+                )
+                let result = `Here is the diff of the changes made`
+                if (occurrences > 1) {
+                    result += `, notice that you replaced more than one match, if that was not desired undo the change or add back the old content you want to keep`
+                }
+                result += `\n\n${cleanPatch}`
+                return result
             }
             case 'insert': {
                 let override = updatedPages[path]
@@ -295,9 +309,18 @@ export function createEditExecute({
                     githubPath: path,
                     markdown: newContent,
                 }
-                
-                const patch = createPatch(path, override.markdown, newContent, '', '')
-                const cleanPatch = patch.replace(/\\ No newline at end of file\n?/g, '')
+
+                const patch = createPatch(
+                    path,
+                    override.markdown,
+                    newContent,
+                    '',
+                    '',
+                )
+                const cleanPatch = patch.replace(
+                    /\\ No newline at end of file\n?/g,
+                    '',
+                )
                 return `Here is the diff of the changes made:\n\n${cleanPatch}`
             }
             case 'undo_edit': {

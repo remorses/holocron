@@ -5,7 +5,7 @@ export function BrowserWindow({
     children,
     className = '',
     onRefresh,
-
+    onSearchBarClick,
     url,
 }) {
     const host = new URL(url).host
@@ -36,6 +36,7 @@ export function BrowserWindow({
                 </div>
                 <a
                     href={url}
+                    onClick={onSearchBarClick}
                     target='_blank'
                     className={cn(
                         'truncate text-gray-200 rounded px-40 mx-auto',
