@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: false
   excludeLinksFromLockfile: false
 
+overrides:
+  unframer: link:../../../.local/share/pnpm/global/5/node_modules/unframer
+
 importers:
 
   .:
@@ -11,6 +14,9 @@ importers:
       '@types/node':
         specifier: ^24.0.1
         version: 24.0.1
+      unframer:
+        specifier: link:../../../.local/share/pnpm/global/5/node_modules/unframer
+        version: link:../../../.local/share/pnpm/global/5/node_modules/unframer
     devDependencies:
       '@changesets/cli':
         specifier: ^2.29.4
@@ -1424,8 +1430,8 @@ importers:
         specifier: ^7.10.0
         version: 7.10.0
       unframer:
-        specifier: ^2.26.0
-        version: 2.26.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: link:../../../../.local/share/pnpm/global/5/node_modules/unframer
+        version: link:../../../../.local/share/pnpm/global/5/node_modules/unframer
       use-stick-to-bottom:
         specifier: ^1.1.1
         version: 1.1.1(react@19.1.0)
@@ -1834,23 +1840,6 @@ packages:
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [darwin]
-
-  '@biomejs/js-api@0.7.1':
-    resolution: {integrity: sha512-VFdgFFZWcyCQxZcAasyv8Enpexn4CblMdWmr6izLYHTLcbd+z9x/LuKU71qnmClABfnYqZjiY7c8DKTVri3Ajw==}
-    peerDependencies:
-      '@biomejs/wasm-bundler': ^1.9.2
-      '@biomejs/wasm-nodejs': ^1.9.2
-      '@biomejs/wasm-web': ^1.9.2
-    peerDependenciesMeta:
-      '@biomejs/wasm-bundler':
-        optional: true
-      '@biomejs/wasm-nodejs':
-        optional: true
-      '@biomejs/wasm-web':
-        optional: true
-
-  '@biomejs/wasm-nodejs@1.9.4':
-    resolution: {integrity: sha512-ZqNlhKcZW6MW1LxWIOfh9YVrBykvzyFad3bOh6JJFraDnNa3NXboRDiaI8dmrbb0ZHXCU1Tsq6WQsKV2Vpp5dw==}
 
   '@bkrem/react-transition-group@1.3.5':
     resolution: {integrity: sha512-lbBYhC42sxAeFEopxzd9oWdkkV0zirO5E9WyeOBxOrpXsf7m30Aj8vnbayZxFOwD9pvUQ2Pheb1gO79s0Qap3Q==}
@@ -3039,9 +3028,6 @@ packages:
 
   '@jsdevtools/ono@7.1.3':
     resolution: {integrity: sha512-4JQNk+3mVzK3xh2rqd6RB4J46qUR19azEHBneZyTZM+c456qOrbbM/5xcR8huNCCcbVt7+UmizG6GuUvPvKUYg==}
-
-  '@jspm/core@2.1.0':
-    resolution: {integrity: sha512-3sRl+pkyFY/kLmHl0cgHiFp2xEqErA8N3ECjMs7serSUBmoJ70lBa0PG5t0IM6WJgdZNyyI0R8YFfi5wM8+mzg==}
 
   '@levischuck/tiny-cbor@0.2.11':
     resolution: {integrity: sha512-llBRm4dT4Z89aRsm6u2oEZ8tfwL/2l6BwpZ7JcyieouniDECM5AqNgr/y08zalEIvW3RSK4upYyybDcmjXqAow==}
@@ -6855,12 +6841,6 @@ packages:
   esast-util-from-js@2.0.1:
     resolution: {integrity: sha512-8Ja+rNJ0Lt56Pcf3TAmpBZjmx8ZcK5Ts4cAzIOjsjevg9oSXJnl6SUQ2EevU8tv3h6ZLWmoKL5H4fgWvdvfETw==}
 
-  esbuild-plugins-node-modules-polyfill@1.7.1:
-    resolution: {integrity: sha512-IEaUhaS1RukGGcatDzqJmR+AzUWJ2upTJZP2i7FzR37Iw5Lk0LReCTnWnPMWnGG9lO4MWTGKEGGLWEOPegTRJA==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      esbuild: '>=0.14.0 <=0.25.x'
-
   esbuild@0.21.5:
     resolution: {integrity: sha512-mg3OPMV4hXywwpoDxu3Qda5xCKQi+vCTZq8S9J/EpkhB2HzKXq4SNFZE3+NK93JYxc8VMSep+lOUSC/RVKaBqw==}
     engines: {node: '>=12'}
@@ -8622,9 +8602,6 @@ packages:
     engines: {node: ^18 || >=20}
     hasBin: true
 
-  nanospinner@1.2.2:
-    resolution: {integrity: sha512-Zt/AmG6qRU3e+WnzGGLuMCEAO/dAu45stNbHY223tUxldaDAeE+FxSPsd9Q+j+paejmm0ZbrNVs5Sraqy3dRxA==}
-
   nanostores@0.11.4:
     resolution: {integrity: sha512-k1oiVNN4hDK8NcNERSZLQiMfRzEGtfnvZvdBvey3SQbgn8Dcrk0h1I6vpxApjb10PFUflZrgJ2WEZyJQ+5v7YQ==}
     engines: {node: ^18.0.0 || >=20.0.0}
@@ -9684,10 +9661,6 @@ packages:
   resolve-pkg-maps@1.0.0:
     resolution: {integrity: sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==}
 
-  resolve.exports@2.0.3:
-    resolution: {integrity: sha512-OcXjMsGdhL4XnbShKpAcSqPMzQoYkYyhbEaeSko47MjRP9NfEQMhZkXL1DoFlt9LWQn4YttrdnV6X2OiyzBi+A==}
-    engines: {node: '>=10'}
-
   resolve@1.22.10:
     resolution: {integrity: sha512-NPRy+/ncIMeDlTAsuqwKIiferiawhefFJtkNSW0qZJEqMEb+qBt/77B/jGeeek+F0uOeN05CDa6HXbbIgtVX4w==}
     engines: {node: '>= 0.4'}
@@ -10530,14 +10503,6 @@ packages:
 
   unenv@2.0.0-rc.17:
     resolution: {integrity: sha512-B06u0wXkEd+o5gOCMl/ZHl5cfpYbDZKAT+HWTL+Hws6jWu7dCiqBBXXXzMFcFVJb8D4ytAnYmxJA83uwOQRSsg==}
-
-  unframer@2.26.0:
-    resolution: {integrity: sha512-WtI4jsgdOoFhIDnR7zIO5wYGVz8SSi2kXz3amvGyD5S62u5G+SNMPFbJJpWegaGTKsIeAzDaQkUChllIjkg//A==}
-    engines: {node: '>=18.0.0'}
-    hasBin: true
-    peerDependencies:
-      react: '*'
-      react-dom: '*'
 
   unicorn-magic@0.1.0:
     resolution: {integrity: sha512-lRfVq8fE8gz6QMBuDM6a+LO3IAzTi05H6gCVaUpir2E1Rwpo4ZUog45KpNXKC/Mn3Yb9UDuHumeFTo9iV/D9FQ==}
@@ -11730,12 +11695,6 @@ snapshots:
   '@biomejs/cli-darwin-arm64@1.9.4':
     optional: true
 
-  '@biomejs/js-api@0.7.1(@biomejs/wasm-nodejs@1.9.4)':
-    optionalDependencies:
-      '@biomejs/wasm-nodejs': 1.9.4
-
-  '@biomejs/wasm-nodejs@1.9.4': {}
-
   '@bkrem/react-transition-group@1.3.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       chain-function: 1.0.1
@@ -12856,8 +12815,6 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.0
 
   '@jsdevtools/ono@7.1.3': {}
-
-  '@jspm/core@2.1.0': {}
 
   '@levischuck/tiny-cbor@0.2.11': {}
 
@@ -17597,13 +17554,6 @@ snapshots:
       esast-util-from-estree: 2.0.0
       vfile-message: 4.0.2
 
-  esbuild-plugins-node-modules-polyfill@1.7.1(esbuild@0.25.5):
-    dependencies:
-      '@jspm/core': 2.1.0
-      esbuild: 0.25.5
-      local-pkg: 1.1.1
-      resolve.exports: 2.0.3
-
   esbuild@0.21.5:
     optionalDependencies:
       '@esbuild/aix-ppc64': 0.21.5
@@ -19859,10 +19809,6 @@ snapshots:
 
   nanoid@5.1.5: {}
 
-  nanospinner@1.2.2:
-    dependencies:
-      picocolors: 1.1.1
-
   nanostores@0.11.4: {}
 
   natural-compare@1.4.0: {}
@@ -21215,8 +21161,6 @@ snapshots:
 
   resolve-pkg-maps@1.0.0: {}
 
-  resolve.exports@2.0.3: {}
-
   resolve@1.22.10:
     dependencies:
       is-core-module: 2.16.1
@@ -22243,30 +22187,6 @@ snapshots:
       ohash: 2.0.11
       pathe: 2.0.3
       ufo: 1.6.1
-
-  unframer@2.26.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
-    dependencies:
-      '@babel/core': 7.27.4
-      '@biomejs/js-api': 0.7.1(@biomejs/wasm-nodejs@1.9.4)
-      '@biomejs/wasm-nodejs': 1.9.4
-      async-sema: 3.1.1
-      cac: 6.7.14
-      esbuild: 0.25.5
-      esbuild-plugins-node-modules-polyfill: 1.7.1(esbuild@0.25.5)
-      nanospinner: 1.2.2
-      picocolors: 1.1.1
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
-      real-framer-motion: framer-motion@12.18.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      spiceflow: 1.12.2
-      string-dedent: 3.0.1
-      undici: 7.10.0
-    transitivePeerDependencies:
-      - '@biomejs/wasm-bundler'
-      - '@biomejs/wasm-web'
-      - '@emotion/is-prop-valid'
-      - '@modelcontextprotocol/sdk'
-      - supports-color
 
   unicorn-magic@0.1.0: {}
 

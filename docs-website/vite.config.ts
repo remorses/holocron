@@ -24,11 +24,13 @@ export default defineConfig({
             },
         },
     },
-    // build: {
-    //     rollupOptions: {
-    //         external: ['pg'],
-    //     },
-    // },
+    build: {
+        sourcemap: true,
+        // rollupOptions: {
+        //     external: ['pg'],
+        // },
+    },
+
     plugins: [
         // cloudflare({ viteEnvironment: { name: 'ssr' } }),
         EnvironmentPlugin('all', { prefix: 'PUBLIC' }),

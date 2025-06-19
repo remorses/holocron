@@ -13,6 +13,7 @@ import MetricsSectionFramerComponent from 'website/src/framer/metrics-section'
 import PricingSectionFramerComponent from 'website/src/framer/pricing-section'
 import TestimonialsSectionFramerComponent from 'website/src/framer/testimonials-section'
 import FaqSectionFramerComponent from 'website/src/framer/faq-section'
+import React, { Suspense } from 'react'
 
 export async function loader({ request }: Route.LoaderArgs) {
     const { userId, redirectTo } = await getSession({ request })

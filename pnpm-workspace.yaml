@@ -1,12 +1,12 @@
-
+packages:
+  - ./*
+  - fumadocs/packages/*
+  - fumadocs/apps/react-router-18n
+  - fumadocs/
 
 autoInstallPeers: false
+
 neverBuiltDependencies: []
 
-
-
-packages:
-    - ./*
-    - fumadocs/packages/*
-    - fumadocs/apps/react-router-18n
-    - fumadocs/
+overrides:
+  unframer: link:../../../.local/share/pnpm/global/5/node_modules/unframer

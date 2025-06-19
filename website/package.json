@@ -87,7 +87,7 @@
         "trieve-ts-sdk": "^0.0.118",
         "tw-animate-css": "^1.3.4",
         "undici": "^7.10.0",
-        "unframer": "^2.26.0",
+        "unframer": "latest",
         "use-stick-to-bottom": "^1.1.1",
         "uuid": "^11.1.0",
         "zod": "^3.25.63",

@@ -20,6 +20,7 @@
     "author": "remorses <beats.by.morse@gmail.com>",
     "license": "",
     "dependencies": {
-        "@types/node": "^24.0.1"
+        "@types/node": "^24.0.1",
+        "unframer": "link:../../../.local/share/pnpm/global/5/node_modules/unframer"
     }
 }
