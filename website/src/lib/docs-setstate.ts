@@ -1,10 +1,13 @@
 import { createSpiceflowClient, SpiceflowClient } from 'spiceflow/client'
 import { DocsState, IframeRpcMessage } from 'docs-website/src/lib/docs-state'
 import { debounce } from './utils'
+
+
+
 export function createIframeRpcClient({
     iframeRef,
     targetOrigin,
-    defaultTimeout = 5000,
+    defaultTimeout = 3000,
 }: {
     iframeRef: React.RefObject<HTMLIFrameElement | null>
     targetOrigin?: string

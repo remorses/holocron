@@ -11,8 +11,12 @@ export const createZustandContext = <TInitial,>(
         children?: React.ReactNode
         initialValue: TInitial
     }) => {
-        const [store] = useState(() => getStore(props.initialValue))
-        Object.assign(useStore, store)
+        const [store] = useState(() => {
+            let store = getStore(props.initialValue)
+            Object.assign(useStore, store)
+            return store
+        })
+
         return (
             <Context.Provider value={store}>{props.children}</Context.Provider>
         )

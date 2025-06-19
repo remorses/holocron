@@ -2,7 +2,7 @@
 import memoize from 'micro-memoize'
 import { RiAttachment2, RiRefreshLine } from '@remixicon/react'
 import { createIdGenerator, UIMessage } from 'ai'
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition, useEffect, startTransition } from 'react'
 import { ChatMessage } from 'website/src/components/chat-message'
 
 import { Button } from 'website/src/components/ui/button'
@@ -27,6 +27,7 @@ import { Route } from '../routes/+types/org.$orgId.site.$siteId'
 import { useLoaderData } from 'react-router'
 import { teeAsyncIterable } from '../lib/utils'
 import { generateSlugFromPath } from 'docs-website/src/lib/utils'
+import { flushSync } from 'react-dom'
 
 export default function Chat({}) {
     const { scrollRef, contentRef, scrollToBottom } = useStickToBottom()
@@ -156,7 +157,12 @@ function Footer() {
         const submitText = inputText || text
         if (!submitText.trim() && messages.length === 0) return
         const generateId = createIdGenerator()
-        useChatState.setState({ isChatGenerating: true, lastError: undefined })
+        flushSync(() => {
+            useChatState.setState({
+                isChatGenerating: true,
+                lastError: undefined,
+            })
+        })
 
         const assistantMessageId = generateId()
         const userMessageId = generateId()
@@ -201,6 +207,7 @@ function Footer() {
             }
 
             const updatedPages = useChatState.getState()?.updatedPages || {}
+
             useChatState.setState({ messages: allMessages })
 
             const { data: generator, error } =
@@ -262,14 +269,13 @@ function Footer() {
                             }
 
                             if (toolInvocation.state === 'partial-call') {
+                                if (isPostMessageBusy) continue
                                 let updatedPagesCopy = { ...updatedPages }
                                 const execute = createEditExecute({
                                     updatedPages: updatedPagesCopy,
                                     getPageContent,
                                 })
                                 await execute(toolInvocation.args)
-                                if (isPostMessageBusy) continue
-
                                 isPostMessageBusy = true
                                 docsRpcClient
                                     .setDocsState({
@@ -278,6 +284,7 @@ function Footer() {
                                             args.path || '',
                                             '/',
                                         ),
+                                        isMarkdownStreaming: true,
                                     })
                                     .then(() => {
                                         isPostMessageBusy = false
@@ -291,6 +298,7 @@ function Footer() {
                                 await docsRpcClient.setDocsState(
                                     {
                                         updatedPages: updatedPages,
+                                        isMarkdownStreaming: false,
                                         currentSlug: generateSlugFromPath(
                                             args.path || '',
                                             '/',
@@ -308,7 +316,9 @@ function Footer() {
 
             // Second iteration: update chat state
             for await (const newMessages of stateIter) {
-                useChatState.setState({ messages: newMessages })
+                startTransition(() => {
+                    useChatState.setState({ messages: newMessages })
+                })
             }
         } catch (error) {
             // Remove only the failed assistant message, keep user message

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { RefObject, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 
 export function useThrowingFn({
@@ -58,4 +58,24 @@ export function useDebouncedEffect(
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [...deps, delay])
+}
+
+export function useClickOutside<T extends HTMLElement>(
+    ref: RefObject<T | null>,
+    onAway: (e: MouseEvent | TouchEvent) => void,
+) {
+    useEffect(() => {
+        const listener = (e: MouseEvent | TouchEvent) => {
+            if (!ref.current || ref.current.contains(e.target as Node)) return
+            onAway(e)
+        }
+
+        document.addEventListener('mousedown', listener)
+        document.addEventListener('touchstart', listener)
+
+        return () => {
+            document.removeEventListener('mousedown', listener)
+            document.removeEventListener('touchstart', listener)
+        }
+    }, [ref, onAway])
 }

@@ -62,6 +62,7 @@ const remarkCodeToHtml =
                 try {
                     html = highlighter.codeToHtml(node.value, {
                         lang: language,
+
                         // theme: 'github-dark',
 
                         themes: {
@@ -94,6 +95,14 @@ const remarkCodeToHtml =
                     ) {
                         onMissingLanguage(highlighter, language)
                     }
+                    html = highlighter.codeToHtml(node.value, {
+                        lang: 'plaintext',
+                        themes: {
+                            light: 'github-light',
+                            dark: 'github-dark',
+                        },
+                        defaultColor: false,
+                    })
                     throw e
                 }
 

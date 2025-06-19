@@ -131,6 +131,7 @@ function Content() {
                     <iframe
                         ref={(el) => {
                             iframeRef.current = el
+                            console.log(`docs iframe is being replaced`)
                             const docsRpcClient_ = createIframeRpcClient({
                                 iframeRef,
                             })
@@ -142,11 +143,8 @@ function Content() {
                         className={cn(' inset-0 bg-transparent', 'absolute')}
                         frameBorder={0}
                         allowTransparency={true}
-                        name='previewProps' // tell iframe preview props is enabled
-                        // height='120%'
-
+                        name='preview' // tell iframe preview props is enabled
                         title='website preview'
-                        // onLoad={() => setLoaded(true)}
                         src={url.toString()}
                     ></iframe>
                     {/* {!loaded && (

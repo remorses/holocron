@@ -6,6 +6,7 @@ import {
     useState,
     useEffect,
     startTransition,
+    useDeferredValue,
 } from 'react'
 import { marked } from 'marked'
 
@@ -19,51 +20,75 @@ import { getProcessor, ProcessorData } from './mdx'
 import markdownRs from '@xmorse/markdown-rs'
 import React from 'react'
 
-export function MarkdownRuntimeComponent({
-    markdown,
-    extension = 'mdx',
-}: MarkdownRendererProps) {
-    const previousBlocksRef = React.useRef<any[]>([])
-    const [blocks, setBlocks] = useState<any[]>([])
+export const StreamingMarkdownRuntimeComponent = memo(
+    function MarkdownRuntimeComponent({
+        markdown: _markdown,
+        extension = 'mdx',
+        isStreaming: _isStreaming,
+    }: MarkdownRendererProps) {
+        const previousBlocksRef = React.useRef<any[]>([])
+        const markdown = _markdown
+        const isStreaming = _isStreaming
 
-    useEffect(() => {
-        if (!markdown) {
-            setBlocks([])
+        const blocks = useMemo(
+            function getMarkdownBlocks() {
+                let localBlocks = previousBlocksRef.current
+                try {
+                    const { ast } = processMdxInClient({ extension, markdown })
+                    // Add a `raw` field to each child by using its `position` to extract from the markdown text.
+                    localBlocks = ast.children
+                    previousBlocksRef.current = localBlocks
+                    return localBlocks
+                } catch (err) {
+                    if (err instanceof Promise) {
+                        throw err
+                    }
+                    if (!isStreaming) {
+                        console.log(
+                            `no streaming markdown right now, throwing error for invalid markdown`,
+                            markdown,
+                        )
+                        throw err
+                    }
+                    console.error(
+                        'Markdown lexing error, showing previous markdown content:',
+                        err,
+                    )
+                    return localBlocks
+                }
+            },
+            [extension, markdown, isStreaming],
+        )
+        if (!markdown) return null
+        return (blocks || []).map((block, index) => {
+            // if (block.type === 'space') return block.raw
+            return <MarkdownAstRenderer key={index} ast={block} />
+        })
+    },
+)
 
+const missingLanguagePromises = new Map<string, Promise<any> | null>()
+
+const onMissingLanguage = (highlighter: Highlighter, language: string) => {
+    if (missingLanguagePromises.has(language)) {
+        const p = missingLanguagePromises.get(language)
+        if (p instanceof Promise) {
             return
         }
-
-        startTransition(async function processMarkdown() {
-            try {
-                const { ast } = processMdxInClient({ extension, markdown })
-                // Add a `raw` field to each child by using its `position` to extract from the markdown text.
-                const newBlocks = ast.children
-                previousBlocksRef.current = newBlocks
-                setBlocks(newBlocks)
-            } catch (err) {
-                if (err instanceof Promise) {
-                    await err
-                    await processMarkdown()
-                    return
-                }
-                console.error('Markdown lexing error:', err)
-            }
-        })
-    }, [markdown, extension])
-
-    return (
-        <Suspense>
-            {blocks.map((block, index) => {
-                // if (block.type === 'space') return block.raw
-                return <MarkdownAstRenderer key={index} ast={block} />
-            })}
-        </Suspense>
-    )
-}
-
-const onMissingLanguage = (highlighter: Highlighter, language) => {
-    let promise = highlighter.loadLanguage(language)
+        console.warn(
+            `suspending markdown processing because of missing language ${language}`,
+        )
+        throw p
+    }
+    let promise = highlighter.loadLanguage(language as any).finally(() => {
+        // console.error(`could not load shiki language ${language}`, e)
+        missingLanguagePromises.set(language, null)
+    })
     if (promise instanceof Promise) {
+        console.warn(
+            `suspending markdown processing because of missing language ${language}`,
+        )
+        missingLanguagePromises.set(language, promise)
         throw promise
     }
 }
@@ -72,7 +97,7 @@ function setHighlighter() {
     if (highlighter) return Promise.resolve()
     return createHighlighter({
         themes: ['github-dark', 'github-light'],
-        langs: ['text'],
+        langs: ['plaintext'],
     }).then((x) => {
         if (highlighter) return
         highlighter = x
@@ -84,8 +109,11 @@ setHighlighter()
 
 let processors = new Map<string, any>()
 
-export function processMdxInClient({ extension, markdown = 'mdx' }) {
+export function processMdxInClient({ extension = 'mdx', markdown }) {
     if (!highlighter) {
+        console.warn(
+            `suspending markdown processing because of missing highlighter`,
+        )
         throw setHighlighter()
     }
     let processor = processors.get(extension)
@@ -98,52 +126,13 @@ export function processMdxInClient({ extension, markdown = 'mdx' }) {
         processors.set(extension, processor)
     }
 
-    const file = processor.processSync(markdown)
-    let ast = file.data.ast
-    return file.data as ProcessorData
-}
-
-const MarkdownRuntimeItem = memo(
-    ({ markdown, extension }: { markdown; extension }) => {
-        const { ast } = processMdxInClient({ extension, markdown })
-
-        return <MarkdownAstRenderer ast={ast} />
-    },
-)
-
-export class PreserveUIBoundary extends React.Component<
-    { children: React.ReactNode },
-    { hasError: boolean; lastGoodChildren: React.ReactNode | null }
-> {
-    state = { hasError: false, lastGoodChildren: null }
-
-    // 1️⃣ Capture last good children whenever props change and no error yet
-    static getDerivedStateFromProps(
-        props: Readonly<{ children: React.ReactNode }>,
-        state: Readonly<{ hasError: boolean }>,
-    ) {
-        if (!state.hasError) {
-            return { lastGoodChildren: props.children }
-        }
-        return null
-    }
-
-    // 2️⃣ Trip the error flag
-    static getDerivedStateFromError() {
-        return { hasError: true }
-    }
-
-    componentDidCatch(err: unknown, info: unknown) {
-        // optional: log
-        console.error('Render error caught by boundary:', err, info)
-    }
-
-    reset = () => this.setState({ hasError: false })
-
-    render() {
-        if (this.state.hasError && this.state.lastGoodChildren) {
-            return <>{this.state.lastGoodChildren}</> // show previous UI
-        }
-        return this.props.children // normal path
+    console.time(`${extension} processSync`)
+    // console.trace('processSync')
+    try {
+        const file = processor.processSync(markdown)
+        let ast = file.data.ast
+        return file.data as ProcessorData
+    } finally {
+        console.timeEnd(`${extension} processSync`)
     }
 }

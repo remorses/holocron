@@ -114,10 +114,27 @@ export const app = new Spiceflow({ basePath: '/api' })
                 z.object({ githubPath: z.string(), markdown: z.string() }),
             ),
         }),
-        async *handler({ request }) {
+        async *handler({ request, state: { userId } }) {
             const { messages, tabId, updatedPages } = await request.json()
-
-            let model = openai.responses('gpt-4.1-mini')
+            // First, check if the user can access the requested tab
+            const tab = await prisma.tab.findFirst({
+                where: {
+                    tabId,
+                    site: {
+                        org: {
+                            users: {
+                                some: {
+                                    userId,
+                                },
+                            },
+                        },
+                    },
+                },
+            })
+            if (!tab) {
+                throw new Error('You do not have access to this tab')
+            }
+            let model = openai.responses('gpt-4.1')
             // model = anthropic('claude-3-5-haiku-latest')
             const editFilesExecute = createEditExecute({
                 updatedPages,

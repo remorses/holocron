@@ -44,7 +44,11 @@ export function generateSlugFromPath(
         pathWithFrontSlash = pathWithFrontSlash.slice(1)
     }
     let res =
-        '/' + pathWithFrontSlash.replace(/\.mdx?$/, '').replace(/\/index$/, '')
+        '/' +
+        pathWithFrontSlash
+            .replace(/\.mdx?$/, '')
+            .replace(/\/index$/, '')
+            .replace(/^index$/, '')
 
     return res || '/'
 }

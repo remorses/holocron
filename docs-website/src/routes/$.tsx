@@ -16,18 +16,16 @@ import {
     DocsTitle,
 } from 'fumadocs-ui/page'
 
-import { useRef } from 'react'
-
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { TrieveSearchDialog } from 'docs-website/src/trieve/search-dialog-trieve'
 import { SharedProps } from 'fumadocs-ui/components/dialog/search'
 import { RootProvider } from 'fumadocs-ui/provider/base'
+import { useLoaderData } from 'react-router'
 import { useDocsState } from '../lib/docs-state'
-import { usSyncWithDocsStateSlug } from '../lib/hooks'
+
 import { LOCALE_LABELS, LOCALES } from '../lib/locales'
 import { Markdown } from '../lib/safe-mdx'
 import { getFumadocsSource } from '../lib/source.server'
-import { useLoaderData } from 'react-router'
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data) return {}
@@ -244,7 +242,6 @@ function MainDocsPage({
 }: {
     loaderData: Route.ComponentProps['loaderData']
 }) {
-    usSyncWithDocsStateSlug()
     const { i18n, site, slug } = loaderData
     let { tree, title, description, toc } = useDocsState(
         useShallow((state) => {
@@ -282,24 +279,25 @@ function MainDocsPage({
 
 function DocsMarkdown() {
     const loaderData = useLoaderData<typeof loader>()
-    let { ast, markdown } = useDocsState(
+    let { ast, markdown, isStreaming } = useDocsState(
         useShallow((x) => {
-            const { updatedPages } = x
+            const { updatedPages, isMarkdownStreaming: isStreaming } = x
 
             const override = updatedPages[loaderData.githubPath]
 
             if (override) {
                 return {
                     markdown: override.markdown,
+                    isStreaming,
                     ast: undefined,
                 }
             }
 
-            return { ast: loaderData.ast, markdown: '' }
+            return { isStreaming, ast: loaderData.ast, markdown: '' }
         }),
     )
 
-    return <Markdown markdown={markdown} ast={ast} />
+    return <Markdown isStreaming={isStreaming} markdown={markdown} ast={ast} />
 }
 
 function CustomSearchDialog(props: SharedProps) {

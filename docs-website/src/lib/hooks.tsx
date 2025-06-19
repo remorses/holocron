@@ -20,27 +20,6 @@ export function useDebounce<T>(value: T, delayMs = 1000): T {
     return debouncedValue
 }
 
-/**
- * This hook navigates to the docs state current slug if it changes,
- * to sync with parent window state.
- */
-export function usSyncWithDocsStateSlug() {
-    const navigate = useNavigate()
-    const currentSlug = useDocsState((state) => state.currentSlug)
-
-    const [prevSlug, setPrevSlug] = useState<string | undefined>(currentSlug)
-
-    useEffect(() => {
-        if (currentSlug && currentSlug !== prevSlug) {
-            console.log(
-                `navigating to ${currentSlug} because of state a docs state change`,
-            )
-            navigate(currentSlug)
-            setPrevSlug(currentSlug)
-        }
-    }, [currentSlug, prevSlug])
-}
-
 export function usePrevious<T>(value: T): T | undefined {
     const ref = useRef<T>(undefined)
 

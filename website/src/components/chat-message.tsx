@@ -9,7 +9,7 @@ import {
     RiCloseLine,
 } from '@remixicon/react'
 import { UIMessage } from 'ai'
-import { memo, useState } from 'react'
+import { memo, useRef, useState } from 'react'
 import {
     Tooltip,
     TooltipContent,
@@ -23,6 +23,7 @@ import { useChatState } from '../lib/state'
 import { EditToolParamSchema } from '../lib/edit-tool'
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
 import { Button } from './ui/button'
+import { useClickOutside } from '../lib/hooks'
 
 type ChatMessageProps = {
     message: UIMessage
@@ -66,8 +67,13 @@ export const ChatMessage = memo(function ChatMessage({
     const isChatGenerating = useChatState((x) => x.isChatGenerating)
     const editingMessageId = useChatState((x) => x.editingMessageId)
     const [editText, setEditText] = useState('')
-
+    const editingBox = useRef<HTMLDivElement>(null)
     const isEditing = editingMessageId === message.id
+    useClickOutside(editingBox, () => {
+        if (isEditing) {
+            useChatState.setState({ editingMessageId: undefined })
+        }
+    })
 
     // Add isLastMessage
     const isLastAssistantMessage = useChatState(
@@ -208,6 +214,7 @@ export const ChatMessage = memo(function ChatMessage({
                                 return (
                                     <div
                                         key={index}
+                                        ref={editingBox}
                                         className='space-y-2 w-full'
                                     >
                                         <textarea
@@ -249,17 +256,25 @@ export const ChatMessage = memo(function ChatMessage({
                                 return (
                                     <Markdown
                                         key={index}
+                                        isStreaming={isChatGenerating}
                                         markdown={part.text}
                                     />
                                 )
                             }
-                            return <Markdown key={index} markdown={part.text} />
+                            return (
+                                <Markdown
+                                    isStreaming={isChatGenerating}
+                                    key={index}
+                                    markdown={part.text}
+                                />
+                            )
                         }
 
                         if (part.type === 'reasoning') {
                             return (
                                 <Markdown
                                     key={index}
+                                    isStreaming={isChatGenerating}
                                     markdown={'thinking:' + part.reasoning}
                                 />
                             )
@@ -334,7 +349,11 @@ function EditorToolPreview({
     toolCallId: any
     args?: Partial<EditToolParamSchema>
 }) {
-    const code = args?.new_str || args?.file_text || ''
+    const isChatGenerating = useChatState((x) => x.isChatGenerating)
+    let code = args?.new_str || args?.file_text || ''
+    if (code && typeof code === 'object') {
+        code = code?.['error'] || JSON.stringify(code, null, 2)
+    }
     const command = args?.command
     if (command === 'view') {
         let linesText = ''
@@ -345,21 +364,18 @@ function EditorToolPreview({
 
         return (
             <ToolPreviewContainer>
-                <Markdown markdown={`Reading \`${args?.path}${linesText}\` `} />
+                <Markdown isStreaming={isChatGenerating} markdown={`Reading \`${args?.path}${linesText}\` `} />
             </ToolPreviewContainer>
         )
     }
     if (command === 'create') {
         let markdown = ''
-        markdown += `Inserting content into \`${args?.path}\`\n`
+        markdown += `Creating \`${args?.path}\`\n`
         markdown +=
             '```mdx' + ` title=" ${args?.path || ''}" \n` + code + '\n```'
         return (
             <ToolPreviewContainer>
-                <div>
-                    <strong>Create file:</strong> {args?.path}
-                    <Pre className='mt-2'>{args?.path}</Pre>
-                </div>
+                <Markdown isStreaming={isChatGenerating} markdown={markdown} />
             </ToolPreviewContainer>
         )
     }
@@ -390,26 +406,30 @@ function EditorToolPreview({
             '\n```'
         return (
             <ToolPreviewContainer className='py-0'>
-                <Markdown markdown={markdown} />
+                <Markdown isStreaming={isChatGenerating} markdown={markdown} />
             </ToolPreviewContainer>
         )
     }
     let markdown = ''
     markdown += `Replacing content into \`${args?.path}\`\n`
     if (state === 'result') {
-        let diff = String(result)
+        let diff = result || ''
+
+        if (result && typeof result === 'object') {
+            diff = result?.error || JSON.stringify(result, null, 2)
+        }
         markdown +=
             '```diff' + ` title=" ${args?.path || ''}" \n` + diff + '\n```'
         return (
             <ToolPreviewContainer className='py-0'>
-                <Markdown markdown={markdown} />
+                <Markdown isStreaming={isChatGenerating} markdown={markdown} />
             </ToolPreviewContainer>
         )
     }
     markdown += '```mdx' + ` title=" ${args?.path || ''}" \n` + code + '\n```'
     return (
         <ToolPreviewContainer className='py-0'>
-            <Markdown markdown={markdown} />
+            <Markdown isStreaming={isChatGenerating} markdown={markdown} />
         </ToolPreviewContainer>
     )
 }
@@ -426,6 +446,7 @@ function FilesTreePreview({
     toolCallId: any
     args?: any
 }) {
+    const isChatGenerating = useChatState((x) => x.isChatGenerating)
     const code = result || '\n'
     if (!code) return null
     let markdown = ''
@@ -433,7 +454,7 @@ function FilesTreePreview({
     markdown += '```sh' + ` \n` + code + '\n```'
     return (
         <ToolPreviewContainer className='py-0'>
-            <Markdown markdown={markdown} />
+            <Markdown isStreaming={isChatGenerating} markdown={markdown} />
         </ToolPreviewContainer>
     )
 }

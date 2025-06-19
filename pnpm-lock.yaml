@@ -39,12 +39,12 @@ importers:
   containers-example:
     dependencies:
       '@cloudflare/containers':
-        specifier: ^0.0.4
-        version: 0.0.4(@cloudflare/workers-types@4.20250614.0)
+        specifier: ^0.0.7
+        version: 0.0.7
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: ^0.8.19
-        version: 0.8.38(@cloudflare/workers-types@4.20250614.0)(@vitest/runner@3.2.3)(@vitest/snapshot@3.2.3)(vitest@3.2.3(@types/debug@4.1.12)(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))
+        version: 0.8.38(@vitest/runner@3.2.3)(@vitest/snapshot@3.2.3)(vitest@3.2.3(@types/debug@4.1.12)(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))
       typescript:
         specifier: ^5.5.2
         version: 5.8.3
@@ -53,7 +53,7 @@ importers:
         version: 3.2.3(@types/debug@4.1.12)(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)
       wrangler:
         specifier: 4.20.3
-        version: 4.20.3(@cloudflare/workers-types@4.20250614.0)
+        version: 4.20.3
 
   db:
     dependencies:
@@ -181,6 +181,9 @@ importers:
       htmlparser2:
         specifier: ^10.0.0
         version: 10.0.0
+      idb-keyval:
+        specifier: ^6.2.2
+        version: 6.2.2
       isbot:
         specifier: ^5.1.28
         version: 5.1.28
@@ -607,7 +610,7 @@ importers:
         version: 1.121.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@tanstack/react-start':
         specifier: ^1.121.7
-        version: 1.121.11(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@vitejs/plugin-react@4.5.2(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)
+        version: 1.121.11(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@vitejs/plugin-react@4.5.2(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)))(idb-keyval@6.2.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)
       '@types/mdx':
         specifier: ^2.0.13
         version: 2.0.13
@@ -661,7 +664,7 @@ importers:
         version: 5.8.3
       vinxi:
         specifier: ^0.5.7
-        version: 0.5.7(@azure/storage-blob@12.27.0)(@types/node@24.0.1)(db0@0.3.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)
+        version: 0.5.7(@azure/storage-blob@12.27.0)(@types/node@24.0.1)(db0@0.3.2)(idb-keyval@6.2.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)
       vite:
         specifier: ^6.3.5
         version: 6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)
@@ -922,7 +925,7 @@ importers:
     devDependencies:
       '@scalar/api-client-react':
         specifier: ^1.3.10
-        version: 1.3.10(jwt-decode@4.0.0)(nprogress@0.2.0)(react@19.1.0)(tailwindcss@4.1.10)(typescript@5.8.3)
+        version: 1.3.10(idb-keyval@6.2.2)(jwt-decode@4.0.0)(nprogress@0.2.0)(react@19.1.0)(tailwindcss@4.1.10)(typescript@5.8.3)
       '@types/js-yaml':
         specifier: ^4.0.9
         version: 4.0.9
@@ -1893,8 +1896,8 @@ packages:
   '@clack/prompts@0.11.0':
     resolution: {integrity: sha512-pMN5FcrEw9hUkZA4f+zLlzivQSeQf5dRGJjSUbvVYDLvpKCdQx5OaknvKzgbtXOizhP+SJJJjqEbOe55uKKfAw==}
 
-  '@cloudflare/containers@0.0.4':
-    resolution: {integrity: sha512-pVbW10aqpqeVek6AqlX67aopkAHNvKyfa/n9kt7H40v2dDxKU2LTOnnKHsXZYXyKzsMZ/6zn+Q5tWot7iIAnow==}
+  '@cloudflare/containers@0.0.7':
+    resolution: {integrity: sha512-zAWFtoU1MQYbC3WZm2w/0H0YFLRqAHUHjNnpUFoAvbxnn83x2RCpKUjXrqde2M9U9gNH6tRrbkF2qTgk04R3PA==}
 
   '@cloudflare/kv-asset-handler@0.4.0':
     resolution: {integrity: sha512-+tv3z+SPp+gqTIcImN9o0hqE9xyfQjI1XD9pL6NuKjua9B1y7mNYv0S9cP+QEbA4ppVgGZEmKOvHX5G5Ei1CVA==}
@@ -7531,6 +7534,9 @@ packages:
     resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
     engines: {node: '>=0.10.0'}
 
+  idb-keyval@6.2.2:
+    resolution: {integrity: sha512-yjD9nARJ/jb1g+CvD0tlhUHOrJ9Sy0P8T9MF3YaLlHnSRpwPfpTX0XIvpmw3gAJUmEu3FiICLBDPXVwyEvrleg==}
+
   ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
 
@@ -8952,11 +8958,6 @@ packages:
   parseurl@1.3.3:
     resolution: {integrity: sha512-CiyeOxFT/JZyN5m0z9PfXw4SCBJ6Sygz1Dpl0wqjlhDEGGBP1GnsUVEL0p63hoG1fcj3fHynXi9NYO4nWOL+qQ==}
     engines: {node: '>= 0.8'}
-
-  partyserver@0.0.68:
-    resolution: {integrity: sha512-LdYuxyhFmu8M5Mx7+rTAAo9lfk22LUfbjXnaKUCXhwSABpgM66LNIjW8F1i2x/CSra1fzF3tIZFD5ojr3KeSQg==}
-    peerDependencies:
-      '@cloudflare/workers-types': ^4.20240729.0
 
   path-browserify@1.0.1:
     resolution: {integrity: sha512-b7uo2UCUOYZcnF/3ID0lulOJi/bafxa1xPe7ZPsammBSpjSWQkjNxlt635YGS2MiR9GjvuXCtz2emr3jbsz98g==}
@@ -11824,11 +11825,7 @@ snapshots:
       picocolors: 1.1.1
       sisteransi: 1.0.5
 
-  '@cloudflare/containers@0.0.4(@cloudflare/workers-types@4.20250614.0)':
-    dependencies:
-      partyserver: 0.0.68(@cloudflare/workers-types@4.20250614.0)
-    transitivePeerDependencies:
-      - '@cloudflare/workers-types'
+  '@cloudflare/containers@0.0.7': {}
 
   '@cloudflare/kv-asset-handler@0.4.0':
     dependencies:
@@ -11871,7 +11868,7 @@ snapshots:
       - utf-8-validate
       - workerd
 
-  '@cloudflare/vitest-pool-workers@0.8.38(@cloudflare/workers-types@4.20250614.0)(@vitest/runner@3.2.3)(@vitest/snapshot@3.2.3)(vitest@3.2.3(@types/debug@4.1.12)(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))':
+  '@cloudflare/vitest-pool-workers@0.8.38(@vitest/runner@3.2.3)(@vitest/snapshot@3.2.3)(vitest@3.2.3(@types/debug@4.1.12)(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))':
     dependencies:
       '@vitest/runner': 3.2.3
       '@vitest/snapshot': 3.2.3
@@ -14564,7 +14561,7 @@ snapshots:
     optionalDependencies:
       '@react-router/serve': 7.6.2(react-router@7.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3)
       typescript: 5.8.3
-      wrangler: 4.20.3(@cloudflare/workers-types@4.20250614.0)
+      wrangler: 4.20.3
     transitivePeerDependencies:
       - '@types/node'
       - babel-plugin-macros
@@ -14755,9 +14752,9 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.43.0':
     optional: true
 
-  '@scalar/api-client-react@1.3.10(jwt-decode@4.0.0)(nprogress@0.2.0)(react@19.1.0)(tailwindcss@4.1.10)(typescript@5.8.3)':
+  '@scalar/api-client-react@1.3.10(idb-keyval@6.2.2)(jwt-decode@4.0.0)(nprogress@0.2.0)(react@19.1.0)(tailwindcss@4.1.10)(typescript@5.8.3)':
     dependencies:
-      '@scalar/api-client': 2.5.5(jwt-decode@4.0.0)(nprogress@0.2.0)(tailwindcss@4.1.10)(typescript@5.8.3)
+      '@scalar/api-client': 2.5.5(idb-keyval@6.2.2)(jwt-decode@4.0.0)(nprogress@0.2.0)(tailwindcss@4.1.10)(typescript@5.8.3)
       '@scalar/types': 0.2.2
       react: 19.1.0
       vue: 3.5.16(typescript@5.8.3)
@@ -14777,7 +14774,7 @@ snapshots:
       - typescript
       - universal-cookie
 
-  '@scalar/api-client@2.5.5(jwt-decode@4.0.0)(nprogress@0.2.0)(tailwindcss@4.1.10)(typescript@5.8.3)':
+  '@scalar/api-client@2.5.5(idb-keyval@6.2.2)(jwt-decode@4.0.0)(nprogress@0.2.0)(tailwindcss@4.1.10)(typescript@5.8.3)':
     dependencies:
       '@headlessui/tailwindcss': 0.2.2(tailwindcss@4.1.10)
       '@headlessui/vue': 1.7.23(vue@3.5.16(typescript@5.8.3))
@@ -14799,7 +14796,7 @@ snapshots:
       '@scalar/use-toasts': 0.8.0(typescript@5.8.3)
       '@scalar/use-tooltip': 1.1.0(typescript@5.8.3)
       '@vueuse/core': 10.11.1(vue@3.5.16(typescript@5.8.3))
-      '@vueuse/integrations': 11.3.0(focus-trap@7.6.5)(fuse.js@7.1.0)(jwt-decode@4.0.0)(nprogress@0.2.0)(vue@3.5.16(typescript@5.8.3))
+      '@vueuse/integrations': 11.3.0(focus-trap@7.6.5)(fuse.js@7.1.0)(idb-keyval@6.2.2)(jwt-decode@4.0.0)(nprogress@0.2.0)(vue@3.5.16(typescript@5.8.3))
       focus-trap: 7.6.5
       fuse.js: 7.1.0
       microdiff: 1.5.0
@@ -15317,10 +15314,10 @@ snapshots:
       tiny-invariant: 1.3.3
       tiny-warning: 1.0.3
 
-  '@tanstack/react-start-plugin@1.121.11(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@vitejs/plugin-react@4.5.2(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)))(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)':
+  '@tanstack/react-start-plugin@1.121.11(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@vitejs/plugin-react@4.5.2(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)))(idb-keyval@6.2.2)(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)':
     dependencies:
       '@tanstack/router-utils': 1.121.0
-      '@tanstack/start-plugin-core': 1.121.11(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)
+      '@tanstack/start-plugin-core': 1.121.11(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(idb-keyval@6.2.2)(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)
       '@vitejs/plugin-react': 4.5.2(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))
       vite: 6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)
       zod: 3.25.64
@@ -15372,10 +15369,10 @@ snapshots:
       tiny-warning: 1.0.3
       unctx: 2.4.1
 
-  '@tanstack/react-start@1.121.11(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@vitejs/plugin-react@4.5.2(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)':
+  '@tanstack/react-start@1.121.11(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@vitejs/plugin-react@4.5.2(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)))(idb-keyval@6.2.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)':
     dependencies:
       '@tanstack/react-start-client': 1.121.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@tanstack/react-start-plugin': 1.121.11(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@vitejs/plugin-react@4.5.2(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)))(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)
+      '@tanstack/react-start-plugin': 1.121.11(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@vitejs/plugin-react@4.5.2(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)))(idb-keyval@6.2.2)(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)
       '@tanstack/react-start-server': 1.121.10(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@tanstack/start-server-functions-client': 1.121.2(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))
       '@tanstack/start-server-functions-server': 1.121.0(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))
@@ -15504,7 +15501,7 @@ snapshots:
       tiny-invariant: 1.3.3
       tiny-warning: 1.0.3
 
-  '@tanstack/start-plugin-core@1.121.11(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)':
+  '@tanstack/start-plugin-core@1.121.11(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(idb-keyval@6.2.2)(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)':
     dependencies:
       '@babel/code-frame': 7.26.2
       '@babel/core': 7.27.4
@@ -15520,7 +15517,7 @@ snapshots:
       babel-dead-code-elimination: 1.0.10
       cheerio: 1.1.0
       h3: 1.13.0
-      nitropack: 2.11.12(@azure/storage-blob@12.27.0)
+      nitropack: 2.11.12(@azure/storage-blob@12.27.0)(idb-keyval@6.2.2)
       pathe: 2.0.3
       ufo: 1.6.1
       vite: 6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)
@@ -16057,7 +16054,7 @@ snapshots:
       - '@vue/composition-api'
       - vue
 
-  '@vueuse/integrations@11.3.0(focus-trap@7.6.5)(fuse.js@7.1.0)(jwt-decode@4.0.0)(nprogress@0.2.0)(vue@3.5.16(typescript@5.8.3))':
+  '@vueuse/integrations@11.3.0(focus-trap@7.6.5)(fuse.js@7.1.0)(idb-keyval@6.2.2)(jwt-decode@4.0.0)(nprogress@0.2.0)(vue@3.5.16(typescript@5.8.3))':
     dependencies:
       '@vueuse/core': 11.3.0(vue@3.5.16(typescript@5.8.3))
       '@vueuse/shared': 11.3.0(vue@3.5.16(typescript@5.8.3))
@@ -16065,6 +16062,7 @@ snapshots:
     optionalDependencies:
       focus-trap: 7.6.5
       fuse.js: 7.1.0
+      idb-keyval: 6.2.2
       jwt-decode: 4.0.0
       nprogress: 0.2.0
     transitivePeerDependencies:
@@ -18504,6 +18502,8 @@ snapshots:
     dependencies:
       safer-buffer: 2.1.2
 
+  idb-keyval@6.2.2: {}
+
   ieee754@1.2.1: {}
 
   ignore@5.3.2: {}
@@ -19788,7 +19788,7 @@ snapshots:
       - '@babel/core'
       - babel-plugin-macros
 
-  nitropack@2.11.12(@azure/storage-blob@12.27.0):
+  nitropack@2.11.12(@azure/storage-blob@12.27.0)(idb-keyval@6.2.2):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.0
       '@netlify/functions': 3.1.10(rollup@4.43.0)
@@ -19856,7 +19856,7 @@ snapshots:
       unenv: 2.0.0-rc.17
       unimport: 5.0.1
       unplugin-utils: 0.2.4
-      unstorage: 1.16.0(@azure/storage-blob@12.27.0)(db0@0.3.2)(ioredis@5.6.1)
+      unstorage: 1.16.0(@azure/storage-blob@12.27.0)(db0@0.3.2)(idb-keyval@6.2.2)(ioredis@5.6.1)
       untyped: 2.0.0
       unwasm: 0.3.9
       youch: 4.1.0-beta.8
@@ -20247,11 +20247,6 @@ snapshots:
       entities: 6.0.1
 
   parseurl@1.3.3: {}
-
-  partyserver@0.0.68(@cloudflare/workers-types@4.20250614.0):
-    dependencies:
-      '@cloudflare/workers-types': 4.20250614.0
-      nanoid: 5.1.5
 
   path-browserify@1.0.1: {}
 
@@ -22213,7 +22208,7 @@ snapshots:
       picomatch: 4.0.2
       webpack-virtual-modules: 0.6.2
 
-  unstorage@1.16.0(@azure/storage-blob@12.27.0)(db0@0.3.2)(ioredis@5.6.1):
+  unstorage@1.16.0(@azure/storage-blob@12.27.0)(db0@0.3.2)(idb-keyval@6.2.2)(ioredis@5.6.1):
     dependencies:
       anymatch: 3.1.3
       chokidar: 4.0.3
@@ -22226,6 +22221,7 @@ snapshots:
     optionalDependencies:
       '@azure/storage-blob': 12.27.0
       db0: 0.3.2
+      idb-keyval: 6.2.2
       ioredis: 5.6.1
 
   untun@0.1.3:
@@ -22328,7 +22324,7 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.2
 
-  vinxi@0.5.7(@azure/storage-blob@12.27.0)(@types/node@24.0.1)(db0@0.3.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0):
+  vinxi@0.5.7(@azure/storage-blob@12.27.0)(@types/node@24.0.1)(db0@0.3.2)(idb-keyval@6.2.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0):
     dependencies:
       '@babel/core': 7.27.4
       '@babel/plugin-syntax-jsx': 7.27.1(@babel/core@7.27.4)
@@ -22349,7 +22345,7 @@ snapshots:
       hookable: 5.5.3
       http-proxy: 1.18.1
       micromatch: 4.0.8
-      nitropack: 2.11.12(@azure/storage-blob@12.27.0)
+      nitropack: 2.11.12(@azure/storage-blob@12.27.0)(idb-keyval@6.2.2)
       node-fetch-native: 1.6.6
       path-to-regexp: 6.3.0
       pathe: 1.1.2
@@ -22361,7 +22357,7 @@ snapshots:
       ufo: 1.6.1
       unctx: 2.4.1
       unenv: 1.10.0
-      unstorage: 1.16.0(@azure/storage-blob@12.27.0)(db0@0.3.2)(ioredis@5.6.1)
+      unstorage: 1.16.0(@azure/storage-blob@12.27.0)(db0@0.3.2)(idb-keyval@6.2.2)(ioredis@5.6.1)
       vite: 6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)
       zod: 3.25.64
     transitivePeerDependencies:
@@ -22753,7 +22749,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  wrangler@4.20.3(@cloudflare/workers-types@4.20250614.0):
+  wrangler@4.20.3:
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.0
       '@cloudflare/unenv-preset': 2.3.3(unenv@2.0.0-rc.17)(workerd@1.20250617.0)
@@ -22764,7 +22760,6 @@ snapshots:
       unenv: 2.0.0-rc.17
       workerd: 1.20250617.0
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20250614.0
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil

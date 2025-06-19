@@ -50,6 +50,7 @@
         "github-slugger": "^2.0.0",
         "gray-matter": "^4.0.3",
         "htmlparser2": "^10.0.0",
+        "idb-keyval": "^6.2.2",
         "isbot": "^5.1.28",
         "js-yaml": "^4.1.0",
         "katex": "^0.16.22",

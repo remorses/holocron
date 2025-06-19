@@ -7,11 +7,14 @@ import {
     Outlet,
     Scripts,
     ScrollRestoration,
+    useNavigate,
 } from 'react-router'
 import type { Route } from './+types/root'
 import './app.css'
 import { useParentPostMessage } from './lib/hooks'
-import { onParentPostMessage } from './lib/docs-state'
+import { env } from './lib/env'
+import { startTransition } from 'react'
+import { IframeRpcMessage, useDocsState } from './lib/docs-state'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -26,11 +29,44 @@ export const links: Route.LinksFunction = () => [
     },
 ]
 
-
+const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, '')]
 export function Layout({ children }: { children: React.ReactNode }) {
     // Assume useDocsState is available in scope and returns the whole state
     // (This should be defined/imported above)
-    useParentPostMessage(onParentPostMessage)
+    const navigate = useNavigate()
+
+    useParentPostMessage(async (e: MessageEvent) => {
+        // e.origin is a string representing the origin of the message, e.g., "https://example.com"
+        try {
+            // if (!allowedOrigins.includes(e.origin)) {
+            //     console.warn(`Blocked message from disallowed origin: ${e.origin}`)
+            //     return
+            // }
+            const data = e.data as IframeRpcMessage
+            const { id, state } = data || {}
+
+            if (state) {
+                const prevState = useDocsState.getState()
+                if (
+                    state.currentSlug &&
+                    prevState.currentSlug !== state.currentSlug
+                ) {
+                    await startTransition(() => {
+                        useDocsState.setState(state)
+                        return navigate(state.currentSlug!)
+                    })
+                }
+            }
+            console.log(`setting docs-state inside iframe`, state)
+        } finally {
+            e.source!.postMessage(
+                { id: e?.data?.id } satisfies IframeRpcMessage,
+                {
+                    targetOrigin: '*',
+                },
+            )
+        }
+    })
     useNProgress()
     return (
         <html lang='en' suppressHydrationWarning>
@@ -41,6 +77,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     content='width=device-width, initial-scale=1'
                 />
                 <Meta />
+                <script
+                    crossOrigin='anonymous'
+                    src='//unpkg.com/react-scan/dist/auto.global.js'
+                />
                 <Links />
             </head>
             <body>
