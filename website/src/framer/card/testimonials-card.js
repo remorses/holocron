@@ -4,10 +4,10 @@
 "use client";
 import {
   stdin_default
-} from "../chunks/chunk-IX6WEZ3M.js";
+} from "../chunks/chunk-YFRDSQBD.js";
 import "../chunks/chunk-KRWE7EDW.js";
-import "../chunks/chunk-SNH2M5FY.js";
 import "../chunks/chunk-WLP5URBW.js";
+import "../chunks/chunk-SNH2M5FY.js";
 
 // virtual:card/testimonials-card
 import { Fragment } from "react";

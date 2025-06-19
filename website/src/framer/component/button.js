@@ -4,9 +4,9 @@
 "use client";
 import {
   stdin_default
-} from "../chunks/chunk-AZRWJO64.js";
+} from "../chunks/chunk-IETFVNRG.js";
 import "../chunks/chunk-BTSBQWPZ.js";
-import "../chunks/chunk-WLP5URBW.js";
+import "../chunks/chunk-EWWPQ2JC.js";
 
 // virtual:component/button
 import { Fragment } from "react";

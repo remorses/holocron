@@ -4,8 +4,8 @@
 "use client";
 import {
   stdin_default
-} from "./chunks/chunk-7UHKOPKS.js";
-import "./chunks/chunk-WLP5URBW.js";
+} from "./chunks/chunk-AGU7MRZZ.js";
+import "./chunks/chunk-EWWPQ2JC.js";
 
 // virtual:badge
 import { Fragment } from "react";

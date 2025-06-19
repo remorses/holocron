@@ -4,23 +4,23 @@
 "use client";
 import {
   stdin_default as stdin_default2
-} from "./chunks/chunk-IX6WEZ3M.js";
+} from "./chunks/chunk-YFRDSQBD.js";
 import "./chunks/chunk-KRWE7EDW.js";
+import "./chunks/chunk-WLP5URBW.js";
+import "./chunks/chunk-SNH2M5FY.js";
 import {
   className as className2,
   css as css2,
   fonts as fonts2
 } from "./chunks/chunk-YL4V4VZK.js";
-import "./chunks/chunk-SNH2M5FY.js";
-import "./chunks/chunk-WLP5URBW.js";
+import {
+  stdin_default
+} from "./chunks/chunk-EHCTMXQN.js";
 import {
   className,
   css,
   fonts
 } from "./chunks/chunk-KYATNZPG.js";
-import {
-  stdin_default
-} from "./chunks/chunk-EHCTMXQN.js";
 
 // virtual:testimonials-section
 import { Fragment as Fragment2 } from "react";
