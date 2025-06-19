@@ -18,10 +18,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     content='width=device-width, initial-scale=1'
                 />
                 <Meta />
-                <script
-                    crossOrigin='anonymous'
-                    src='//unpkg.com/react-scan/dist/auto.global.js'
-                />
+                {process.env.NODE_ENV === 'development' && (
+                    <script
+                        crossOrigin='anonymous'
+                        src='//unpkg.com/react-scan/dist/auto.global.js'
+                    />
+                )}
                 <Links />
             </head>
             <body className='h-full dark flex flex-col grow'>

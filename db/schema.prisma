@@ -243,6 +243,8 @@ model MediaAsset {
   githubSha  String
   site       Site   @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
   githubPath String
+  width      Int?
+  height     Int?
 
   @@id([slug, tabId])
 }
@@ -331,10 +333,11 @@ enum ChatMessagePartType {
 // ─── MODELS ────────────────────────────────────────────────────────────
 
 model Chat {
-  chatId    String        @id @default(cuid())
-  title     String?
-  messages  ChatMessage[]
-  createdAt DateTime      @default(now())
+  chatId             String        @id @default(cuid())
+  title              String?
+  messages           ChatMessage[]
+  createdAt          DateTime      @default(now())
+  fileUpdatesInDraft Json          @default("{}")
 }
 
 model ChatMessage {
