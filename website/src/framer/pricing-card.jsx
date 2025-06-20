@@ -25,11 +25,20 @@ stdin_default.Responsive = ({ locale, ...rest }) => {
 	return (
 		<ContextProviders
 			routes={{
+				AxDvfLnyv: {
+					path: "/page",
+				},
 				augiA20Il: {
 					path: "/",
 				},
+				i9xm_305L: {
+					path: "/page-2",
+				},
 				k9spuiW9M: {
 					path: "/404",
+				},
+				p4p9Y1lWb: {
+					path: "/login",
 				},
 			}}
 			framerSiteId={
@@ -50,11 +59,20 @@ function ComponentWithRoot({ locale, ...rest }) {
 	return (
 		<ContextProviders
 			routes={{
+				AxDvfLnyv: {
+					path: "/page",
+				},
 				augiA20Il: {
 					path: "/",
 				},
+				i9xm_305L: {
+					path: "/page-2",
+				},
 				k9spuiW9M: {
 					path: "/404",
+				},
+				p4p9Y1lWb: {
+					path: "/login",
 				},
 			}}
 			framerSiteId={

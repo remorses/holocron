@@ -18,7 +18,7 @@ import { stdin_default as stdin_default3 } from "./chunks/chunk-EHCTMXQN.js";
 import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/GewZlRgyyKnS6tZuvfr5/eo97FeJK7.js
+// /:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/GPcVN9gMK2zcWfUMjM3i/eo97FeJK7.js
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
@@ -30,10 +30,12 @@ import {
 	getFontsFromSharedStyle,
 	getLoadingLazyAtYPosition,
 	Image,
+	ResolveLinks,
 	RichText,
 	SmartComponentScopedContainer,
 	useComponentViewport,
 	useLocaleInfo,
+	useRouter,
 	useVariantState,
 	withCSS,
 	withFX,
@@ -305,7 +307,7 @@ var css3 = [
 ];
 var className3 = "framer-cfhJf";
 
-// /:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/GewZlRgyyKnS6tZuvfr5/eo97FeJK7.js
+// /:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/GPcVN9gMK2zcWfUMjM3i/eo97FeJK7.js
 var BadgeFonts = getFonts(stdin_default2);
 var SmartComponentScopedContainerWithFXWithOptimizedAppearEffect =
 	withOptimizedAppearEffect(withFX(SmartComponentScopedContainer));
@@ -323,7 +325,7 @@ var ImageWithFXWithOptimizedAppearEffect = withOptimizedAppearEffect(
 );
 var GridFonts = getFonts(stdin_default3);
 var cycleOrder = ["DLscFvTjv", "vT5GKuegs", "M1TBpoN2c"];
-var serializationHash = "framer-WWKP4";
+var serializationHash = "framer-U4ypk";
 var variantClassNames = {
 	DLscFvTjv: "framer-v-1ju9km5",
 	M1TBpoN2c: "framer-v-ct8w98",
@@ -679,6 +681,7 @@ var animation18 = {
 	x: 0,
 	y: -450,
 };
+var transformTemplate2 = (_, t) => `translateX(-50%) ${t}`;
 var transition17 = {
 	bounce: 0,
 	delay: 0,
@@ -793,6 +796,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 	const layoutDependency = createLayoutDependency(props, variants);
 	const sharedStyleClassNames = [className3, className2, className];
 	const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames);
+	const router = useRouter();
 	return (
 		<LayoutGroup id={layoutId ?? defaultLayoutId}>
 			<Variants animate={variants} initial={false}>
@@ -845,7 +849,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									y={
 										(componentViewport?.y || 0) +
 										80 +
-										(((componentViewport?.height || 800) - 80 - 449.8) / 2 +
+										(((componentViewport?.height || 800) - 80 - 382.8) / 2 +
 											0 +
 											0) +
 										0 +
@@ -933,7 +937,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 										{_jsx(stdin_default2, {
 											height: "100%",
 											id: "yRPfOD4GF",
-											JYBYjvMjT: "Fumadocs",
+											JYBYjvMjT: "Fumabase",
 											layoutId: "yRPfOD4GF",
 											width: "100%",
 										})}
@@ -1030,9 +1034,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 													className={"framer-styles-preset-m4awkb"}
 													data-styles-preset={"YqcGXulro"}
 												>
-													{
-														"Build excellent documentation site with less effort"
-													}
+													{"Build excellent documentation site with no effort"}
 												</motion.p>
 											</React.Fragment>
 										</RichTextWithFX>
@@ -1043,238 +1045,295 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 										layoutDependency={layoutDependency}
 										layoutId={"Q_eRvdSPB"}
 									>
-										<ComponentViewportProvider
-											height={40}
-											y={
-												(componentViewport?.y || 0) +
-												80 +
-												(((componentViewport?.height || 800) - 80 - 449.8) / 2 +
-													0 +
-													0) +
-												0 +
-												0 +
-												0 +
-												46 +
-												0 +
-												236 +
-												0
-											}
-											{...addPropertyOverrides(
+										<ResolveLinks
+											links={[
 												{
-													M1TBpoN2c: {
-														y:
-															(componentViewport?.y || 0) +
-															0 +
-															(((componentViewport?.height || 844) -
-																0 -
-																(Math.max(
-																	0,
-																	((componentViewport?.height || 844) - 0 - 0) /
-																		1,
-																) *
-																	1 +
-																	0)) /
-																2 +
-																0 +
-																0) +
-															0 +
-															((Math.max(
-																0,
-																((componentViewport?.height || 844) - 0 - 0) /
-																	1,
-															) *
-																1 -
-																10 -
-																374.8) /
-																2 +
-																0 +
-																0) +
-															0 +
-															47 +
-															0 +
-															230 +
-															0,
+													href: {
+														webPageId: "p4p9Y1lWb",
 													},
-													vT5GKuegs: {
-														y:
-															(componentViewport?.y || 0) +
-															0 +
-															(((componentViewport?.height || 1080) -
-																0 -
-																439.8) /
-																2 +
-																0 +
-																0) +
-															0 +
-															0 +
-															0 +
-															48 +
-															0 +
-															260 +
-															0,
-													},
+													implicitPathVariables: void 0,
 												},
-												baseVariant,
-												gestureVariant,
-											)}
-										>
-											<SmartComponentScopedContainerWithFXWithOptimizedAppearEffect
-												__perspectiveFX={false}
-												__smartComponentFX={true}
-												__targetOpacity={1}
-												animate={animation8}
-												className={"framer-cdcok3-container"}
-												data-framer-appear-id={"cdcok3"}
-												initial={animation9}
-												layoutDependency={layoutDependency}
-												layoutId={"r0G2sVIZo-container"}
-												nodeId={"r0G2sVIZo"}
-												optimized={true}
-												rendersWithMotion={true}
-												scopeId={"eo97FeJK7"}
-												{...addPropertyOverrides(
-													{
-														M1TBpoN2c: {
-															animate: animation10,
-														},
+												{
+													href: {
+														webPageId: "p4p9Y1lWb",
 													},
-													baseVariant,
-													gestureVariant,
-												)}
-											>
-												{_jsx(stdin_default, {
-													b7sws2Xmf: true,
-													gDhgzsvqf: "https://www.framer.com?via=green13",
-													height: "100%",
-													id: "r0G2sVIZo",
-													layoutId: "r0G2sVIZo",
-													nx2tuureE: "Getting Started",
-													variant: "z1bsEAxC0",
-													width: "100%",
-													...addPropertyOverrides(
+													implicitPathVariables: void 0,
+												},
+											]}
+										>
+											{(resolvedLinks) => (
+												<ComponentViewportProvider
+													height={40}
+													y={
+														(componentViewport?.y || 0) +
+														80 +
+														(((componentViewport?.height || 800) - 80 - 382.8) /
+															2 +
+															0 +
+															0) +
+														0 +
+														0 +
+														0 +
+														46 +
+														0 +
+														236 +
+														0
+													}
+													{...addPropertyOverrides(
 														{
 															M1TBpoN2c: {
-																variant: "h_czR0__J",
+																y:
+																	(componentViewport?.y || 0) +
+																	0 +
+																	(((componentViewport?.height || 844) -
+																		0 -
+																		(Math.max(
+																			0,
+																			((componentViewport?.height || 844) -
+																				0 -
+																				0) /
+																				1,
+																		) *
+																			1 +
+																			0)) /
+																		2 +
+																		0 +
+																		0) +
+																	0 +
+																	((Math.max(
+																		0,
+																		((componentViewport?.height || 844) -
+																			0 -
+																			0) /
+																			1,
+																	) *
+																		1 -
+																		10 -
+																		374.8) /
+																		2 +
+																		0 +
+																		0) +
+																	0 +
+																	47 +
+																	0 +
+																	230 +
+																	0,
+															},
+															vT5GKuegs: {
+																y:
+																	(componentViewport?.y || 0) +
+																	0 +
+																	(((componentViewport?.height || 1080) -
+																		0 -
+																		439.8) /
+																		2 +
+																		0 +
+																		0) +
+																	0 +
+																	0 +
+																	0 +
+																	48 +
+																	0 +
+																	260 +
+																	0,
 															},
 														},
 														baseVariant,
 														gestureVariant,
-													),
-												})}
-											</SmartComponentScopedContainerWithFXWithOptimizedAppearEffect>
-										</ComponentViewportProvider>
-										<ComponentViewportProvider
-											height={40}
-											y={
-												(componentViewport?.y || 0) +
-												80 +
-												(((componentViewport?.height || 800) - 80 - 449.8) / 2 +
-													0 +
-													0) +
-												0 +
-												0 +
-												0 +
-												46 +
-												0 +
-												236 +
-												0
-											}
-											{...addPropertyOverrides(
-												{
-													M1TBpoN2c: {
-														y:
-															(componentViewport?.y || 0) +
-															0 +
-															(((componentViewport?.height || 844) -
-																0 -
-																(Math.max(
-																	0,
-																	((componentViewport?.height || 844) - 0 - 0) /
-																		1,
-																) *
-																	1 +
-																	0)) /
-																2 +
-																0 +
-																0) +
-															0 +
-															((Math.max(
-																0,
-																((componentViewport?.height || 844) - 0 - 0) /
-																	1,
-															) *
-																1 -
-																10 -
-																374.8) /
-																2 +
-																0 +
-																0) +
-															0 +
-															47 +
-															0 +
-															230 +
-															0,
-													},
-													vT5GKuegs: {
-														y:
-															(componentViewport?.y || 0) +
-															0 +
-															(((componentViewport?.height || 1080) -
-																0 -
-																439.8) /
-																2 +
-																0 +
-																0) +
-															0 +
-															0 +
-															0 +
-															48 +
-															0 +
-															260 +
-															0,
-													},
-												},
-												baseVariant,
-												gestureVariant,
+													)}
+												>
+													<SmartComponentScopedContainerWithFXWithOptimizedAppearEffect
+														__perspectiveFX={false}
+														__smartComponentFX={true}
+														__targetOpacity={1}
+														animate={animation8}
+														className={"framer-cdcok3-container"}
+														data-framer-appear-id={"cdcok3"}
+														initial={animation9}
+														layoutDependency={layoutDependency}
+														layoutId={"r0G2sVIZo-container"}
+														nodeId={"r0G2sVIZo"}
+														optimized={true}
+														rendersWithMotion={true}
+														scopeId={"eo97FeJK7"}
+														{...addPropertyOverrides(
+															{
+																M1TBpoN2c: {
+																	animate: animation10,
+																},
+															},
+															baseVariant,
+															gestureVariant,
+														)}
+													>
+														{_jsx(stdin_default, {
+															b7sws2Xmf: false,
+															gDhgzsvqf: resolvedLinks[0],
+															height: "100%",
+															id: "r0G2sVIZo",
+															layoutId: "r0G2sVIZo",
+															nx2tuureE: "Getting Started",
+															variant: "z1bsEAxC0",
+															width: "100%",
+															...addPropertyOverrides(
+																{
+																	M1TBpoN2c: {
+																		gDhgzsvqf:
+																			"https://www.framer.com?via=green13",
+																		variant: "h_czR0__J",
+																	},
+																	vT5GKuegs: {
+																		gDhgzsvqf: resolvedLinks[1],
+																	},
+																},
+																baseVariant,
+																gestureVariant,
+															),
+														})}
+													</SmartComponentScopedContainerWithFXWithOptimizedAppearEffect>
+												</ComponentViewportProvider>
 											)}
+										</ResolveLinks>
+										<ResolveLinks
+											links={[
+												{
+													href: {
+														webPageId: "p4p9Y1lWb",
+													},
+													implicitPathVariables: void 0,
+												},
+												{
+													href: {
+														webPageId: "p4p9Y1lWb",
+													},
+													implicitPathVariables: void 0,
+												},
+											]}
 										>
-											<SmartComponentScopedContainerWithFXWithOptimizedAppearEffect
-												__perspectiveFX={false}
-												__smartComponentFX={true}
-												__targetOpacity={1}
-												animate={animation11}
-												className={"framer-1db3772-container"}
-												data-framer-appear-id={"1db3772"}
-												initial={animation9}
-												layoutDependency={layoutDependency}
-												layoutId={"dNpt5BbBw-container"}
-												nodeId={"dNpt5BbBw"}
-												optimized={true}
-												rendersWithMotion={true}
-												scopeId={"eo97FeJK7"}
-											>
-												{_jsx(stdin_default, {
-													b7sws2Xmf: true,
-													gDhgzsvqf: "https://www.framer.com?via=green13",
-													height: "100%",
-													id: "dNpt5BbBw",
-													layoutId: "dNpt5BbBw",
-													nx2tuureE: "Open Demo",
-													variant: "feWXGq4P4",
-													width: "100%",
-													...addPropertyOverrides(
+											{(resolvedLinks1) => (
+												<ComponentViewportProvider
+													height={40}
+													y={
+														(componentViewport?.y || 0) +
+														80 +
+														(((componentViewport?.height || 800) - 80 - 382.8) /
+															2 +
+															0 +
+															0) +
+														0 +
+														0 +
+														0 +
+														46 +
+														0 +
+														236 +
+														0
+													}
+													{...addPropertyOverrides(
 														{
 															M1TBpoN2c: {
-																gDhgzsvqf: "https://easyframe.framer.website/",
-																variant: "F7eWAlrXR",
+																y:
+																	(componentViewport?.y || 0) +
+																	0 +
+																	(((componentViewport?.height || 844) -
+																		0 -
+																		(Math.max(
+																			0,
+																			((componentViewport?.height || 844) -
+																				0 -
+																				0) /
+																				1,
+																		) *
+																			1 +
+																			0)) /
+																		2 +
+																		0 +
+																		0) +
+																	0 +
+																	((Math.max(
+																		0,
+																		((componentViewport?.height || 844) -
+																			0 -
+																			0) /
+																			1,
+																	) *
+																		1 -
+																		10 -
+																		374.8) /
+																		2 +
+																		0 +
+																		0) +
+																	0 +
+																	47 +
+																	0 +
+																	230 +
+																	0,
+															},
+															vT5GKuegs: {
+																y:
+																	(componentViewport?.y || 0) +
+																	0 +
+																	(((componentViewport?.height || 1080) -
+																		0 -
+																		439.8) /
+																		2 +
+																		0 +
+																		0) +
+																	0 +
+																	0 +
+																	0 +
+																	48 +
+																	0 +
+																	260 +
+																	0,
 															},
 														},
 														baseVariant,
 														gestureVariant,
-													),
-												})}
-											</SmartComponentScopedContainerWithFXWithOptimizedAppearEffect>
-										</ComponentViewportProvider>
+													)}
+												>
+													<SmartComponentScopedContainerWithFXWithOptimizedAppearEffect
+														__perspectiveFX={false}
+														__smartComponentFX={true}
+														__targetOpacity={1}
+														animate={animation11}
+														className={"framer-1db3772-container"}
+														data-framer-appear-id={"1db3772"}
+														initial={animation9}
+														layoutDependency={layoutDependency}
+														layoutId={"dNpt5BbBw-container"}
+														nodeId={"dNpt5BbBw"}
+														optimized={true}
+														rendersWithMotion={true}
+														scopeId={"eo97FeJK7"}
+													>
+														{_jsx(stdin_default, {
+															b7sws2Xmf: true,
+															gDhgzsvqf: resolvedLinks1[0],
+															height: "100%",
+															id: "dNpt5BbBw",
+															layoutId: "dNpt5BbBw",
+															nx2tuureE: "Open Demo",
+															variant: "feWXGq4P4",
+															width: "100%",
+															...addPropertyOverrides(
+																{
+																	M1TBpoN2c: {
+																		gDhgzsvqf:
+																			"https://easyframe.framer.website/",
+																		variant: "F7eWAlrXR",
+																	},
+																	vT5GKuegs: {
+																		gDhgzsvqf: resolvedLinks1[1],
+																	},
+																},
+																baseVariant,
+																gestureVariant,
+															),
+														})}
+													</SmartComponentScopedContainerWithFXWithOptimizedAppearEffect>
+												</ComponentViewportProvider>
+											)}
+										</ResolveLinks>
 									</motion.div>
 								</motion.div>
 							</motion.div>
@@ -1304,12 +1363,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											loading: getLoadingLazyAtYPosition(
 												(componentViewport?.y || 0) +
 													80 +
-													(((componentViewport?.height || 800) - 80 - 449.8) /
+													(((componentViewport?.height || 800) - 80 - 382.8) /
 														2 +
 														0 +
 														0) +
 													0 +
-													433 +
+													366 +
 													8.4 +
 													-14,
 											),
@@ -1423,12 +1482,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											loading: getLoadingLazyAtYPosition(
 												(componentViewport?.y || 0) +
 													80 +
-													(((componentViewport?.height || 800) - 80 - 449.8) /
+													(((componentViewport?.height || 800) - 80 - 382.8) /
 														2 +
 														0 +
 														0) +
 													0 +
-													433 +
+													366 +
 													8.4 +
 													-14,
 											),
@@ -1549,12 +1608,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											loading: getLoadingLazyAtYPosition(
 												(componentViewport?.y || 0) +
 													80 +
-													(((componentViewport?.height || 800) - 80 - 449.8) /
+													(((componentViewport?.height || 800) - 80 - 382.8) /
 														2 +
 														0 +
 														0) +
 													0 +
-													433 +
+													366 +
 													8.4 +
 													-14,
 											),
@@ -1662,12 +1721,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											loading: getLoadingLazyAtYPosition(
 												(componentViewport?.y || 0) +
 													80 +
-													(((componentViewport?.height || 800) - 80 - 449.8) /
+													(((componentViewport?.height || 800) - 80 - 382.8) /
 														2 +
 														0 +
 														0) +
 													0 +
-													433 +
+													366 +
 													8.4 +
 													-14,
 											),
@@ -1775,12 +1834,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											loading: getLoadingLazyAtYPosition(
 												(componentViewport?.y || 0) +
 													80 +
-													(((componentViewport?.height || 800) - 80 - 449.8) /
+													(((componentViewport?.height || 800) - 80 - 382.8) /
 														2 +
 														0 +
 														0) +
 													0 +
-													433 +
+													366 +
 													8.4 +
 													-14,
 											),
@@ -1987,6 +2046,16 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 							data-framer-name={"Visual Container"}
 							layoutDependency={layoutDependency}
 							layoutId={"SOosltvuo"}
+							transformTemplate={transformTemplate2}
+							{...addPropertyOverrides(
+								{
+									vT5GKuegs: {
+										transformTemplate: void 0,
+									},
+								},
+								baseVariant,
+								gestureVariant,
+							)}
 						>
 							<ImageWithFXWithOptimizedAppearEffect
 								__perspectiveFX={false}
@@ -2016,7 +2085,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 								layoutId={"EUXuBXmHe"}
 								optimized={true}
 								style={{
+									filter: "hue-rotate(348deg)",
 									mask: "linear-gradient(0deg, rgba(0, 0, 0, 0) 7.000000000000001%, rgba(0, 0, 0, 1) 12%, rgba(0, 0, 0, 1) 92%, rgba(0, 0, 0, 0) 98%) add",
+									WebkitFilter: "hue-rotate(348deg)",
 									WebkitMask:
 										"linear-gradient(0deg, rgba(0, 0, 0, 0) 7.000000000000001%, rgba(0, 0, 0, 1) 12%, rgba(0, 0, 0, 1) 92%, rgba(0, 0, 0, 0) 98%) add",
 								}}
@@ -2112,56 +2183,55 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 });
 var css4 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-WWKP4.framer-1tk4vcq, .framer-WWKP4 .framer-1tk4vcq { display: block; }",
-	".framer-WWKP4.framer-1ju9km5 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 11px; height: 800px; justify-content: center; overflow: hidden; padding: 80px 0px 0px 0px; position: relative; width: 1200px; }",
-	".framer-WWKP4 .framer-4unfev { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 111px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-WWKP4 .framer-kcmu88 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 15px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-WWKP4 .framer-vll604-container { flex: none; height: auto; position: relative; width: auto; z-index: 2; }",
-	".framer-WWKP4 .framer-1af0tnz { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; max-width: 800px; overflow: visible; padding: 0px; position: relative; width: 800px; z-index: 2; }",
-	".framer-WWKP4 .framer-14lj2mo { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-WWKP4 .framer-bkpwdd { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; z-index: 1; }",
-	".framer-WWKP4 .framer-1uk34jx { flex: none; height: auto; max-width: 85%; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; z-index: 1; }",
-	".framer-WWKP4 .framer-1jc27pn { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 7px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
-	".framer-WWKP4 .framer-cdcok3-container { flex: none; height: auto; position: relative; width: auto; }",
-	".framer-WWKP4 .framer-1db3772-container { flex: none; height: auto; position: relative; width: auto; z-index: 3; }",
-	".framer-WWKP4 .framer-1bhe5y { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 15px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
-	".framer-WWKP4 .framer-elw1j5 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; min-height: 28px; min-width: 115px; overflow: hidden; padding: 0px; position: relative; width: min-content; }",
-	".framer-WWKP4 .framer-1wo8obo { flex: none; height: 28px; left: calc(12.500000000000021% - 28px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 28px / 2); width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
-	".framer-WWKP4 .framer-opum0o { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 31%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
-	".framer-WWKP4 .framer-1kppgrc { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 51%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
-	".framer-WWKP4 .framer-1rq7k0 { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 69%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
-	".framer-WWKP4 .framer-q5wh5f { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 88%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
-	".framer-WWKP4 .framer-18v5tzb { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
-	".framer-WWKP4 .framer-9jo1y3 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; left: calc(50.00000000000002% - min(1200px, 100%) / 2); max-width: 1200px; overflow: hidden; padding: 0px 35px 0px 35px; position: absolute; top: calc(50.00000000000002% - 800px / 2); width: 100%; z-index: 1; }",
-	".framer-WWKP4 .framer-hx1jle { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 1px; }",
-	".framer-WWKP4 .framer-5s020z { bottom: 100px; flex: none; height: 100px; left: calc(0.08928571428573649% - 2px / 2); overflow: hidden; position: absolute; width: 2px; z-index: 1; }",
-	".framer-WWKP4 .framer-f196iw { flex: none; height: 200px; left: calc(99.90291262135923% - 2px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 200px / 2); width: 2px; z-index: 1; }",
-	".framer-WWKP4 .framer-ju2czo { flex: none; height: 50px; left: calc(9.017857142857165% - 2px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 50px / 2); width: 2px; z-index: 1; }",
-	".framer-WWKP4 .framer-1ytjer { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; left: calc(50.00000000000002% - 100% / 2); overflow: hidden; padding: 0px; position: absolute; top: 0px; width: 100%; z-index: 0; }",
-	".framer-WWKP4 .framer-1vpwjt1 { aspect-ratio: 1.3125 / 1; flex: none; gap: 10px; height: 100%; overflow: visible; position: relative; width: var(--framer-aspect-ratio-supported, 1050px); z-index: 0; }",
-	".framer-WWKP4 .framer-u2413q { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 1; }",
-	".framer-WWKP4 .framer-nwzasc-container { flex: none; height: 800px; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 1; }",
-	".framer-WWKP4.framer-v-1k2jmim.framer-1ju9km5 { height: 1080px; padding: 0px; width: 810px; }",
-	".framer-WWKP4.framer-v-1k2jmim .framer-4unfev { gap: 75px; }",
-	".framer-WWKP4.framer-v-1k2jmim .framer-kcmu88 { gap: 17px; order: 0; }",
-	".framer-WWKP4.framer-v-1k2jmim .framer-1af0tnz { gap: 49px; max-width: 730px; width: 100%; }",
-	".framer-WWKP4.framer-v-1k2jmim .framer-1bhe5y { order: 1; }",
-	".framer-WWKP4.framer-v-1k2jmim .framer-9jo1y3 { padding: 0px 40px 0px 40px; }",
-	".framer-WWKP4.framer-v-1k2jmim .framer-1ytjer { height: calc(var(--framer-viewport-height, 100vh) * 1); padding: 0px 0px 80px 0px; }",
-	".framer-WWKP4.framer-v-1k2jmim .framer-1vpwjt1 { aspect-ratio: unset; height: calc(var(--framer-viewport-height, 100vh) * 1); left: 1px; order: 0; position: absolute; top: calc(50.00000000000002% - 100vh / 2); width: 100%; }",
-	".framer-WWKP4.framer-v-ct8w98.framer-1ju9km5 { height: 844px; padding: 0px; width: 390px; }",
-	".framer-WWKP4.framer-v-ct8w98 .framer-4unfev { flex: 1 0 0px; gap: 41px; height: 1px; padding: 0px 20px 10px 20px; }",
-	".framer-WWKP4.framer-v-ct8w98 .framer-kcmu88 { gap: 16px; }",
-	".framer-WWKP4.framer-v-ct8w98 .framer-1af0tnz { gap: 17px; width: 100%; }",
-	".framer-WWKP4.framer-v-ct8w98 .framer-14lj2mo { gap: 12px; }",
-	".framer-WWKP4.framer-v-ct8w98 .framer-bkpwdd { max-width: 580px; }",
-	".framer-WWKP4.framer-v-ct8w98 .framer-1uk34jx { max-width: 500px; }",
-	".framer-WWKP4.framer-v-ct8w98 .framer-1vpwjt1 { width: var(--framer-aspect-ratio-supported, 263px); }",
+	".framer-U4ypk.framer-1tk4vcq, .framer-U4ypk .framer-1tk4vcq { display: block; }",
+	".framer-U4ypk.framer-1ju9km5 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 11px; height: 800px; justify-content: center; overflow: hidden; padding: 80px 0px 0px 0px; position: relative; width: 1200px; }",
+	".framer-U4ypk .framer-4unfev { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 44px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-U4ypk .framer-kcmu88 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 15px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-U4ypk .framer-vll604-container { flex: none; height: auto; position: relative; width: auto; z-index: 2; }",
+	".framer-U4ypk .framer-1af0tnz { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; max-width: 800px; overflow: visible; padding: 0px; position: relative; width: 800px; z-index: 2; }",
+	".framer-U4ypk .framer-14lj2mo { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-U4ypk .framer-bkpwdd { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; z-index: 1; }",
+	".framer-U4ypk .framer-1uk34jx { flex: none; height: auto; max-width: 85%; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; z-index: 1; }",
+	".framer-U4ypk .framer-1jc27pn { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 7px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
+	".framer-U4ypk .framer-cdcok3-container { flex: none; height: auto; position: relative; width: auto; }",
+	".framer-U4ypk .framer-1db3772-container { flex: none; height: auto; position: relative; width: auto; z-index: 3; }",
+	".framer-U4ypk .framer-1bhe5y { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 15px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
+	".framer-U4ypk .framer-elw1j5 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; min-height: 28px; min-width: 115px; overflow: hidden; padding: 0px; position: relative; width: min-content; }",
+	".framer-U4ypk .framer-1wo8obo { flex: none; height: 28px; left: calc(12.500000000000021% - 28px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 28px / 2); width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
+	".framer-U4ypk .framer-opum0o { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 31%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
+	".framer-U4ypk .framer-1kppgrc { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 51%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
+	".framer-U4ypk .framer-1rq7k0 { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 69%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
+	".framer-U4ypk .framer-q5wh5f { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 88%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
+	".framer-U4ypk .framer-18v5tzb { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
+	".framer-U4ypk .framer-9jo1y3 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; left: calc(50.00000000000002% - min(1200px, 100%) / 2); max-width: 1200px; overflow: hidden; padding: 0px 35px 0px 35px; position: absolute; top: calc(50.00000000000002% - 800px / 2); width: 100%; z-index: 1; }",
+	".framer-U4ypk .framer-hx1jle { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 1px; }",
+	".framer-U4ypk .framer-5s020z { bottom: 100px; flex: none; height: 100px; left: calc(0.08928571428573649% - 2px / 2); overflow: hidden; position: absolute; width: 2px; z-index: 1; }",
+	".framer-U4ypk .framer-f196iw { flex: none; height: 200px; left: calc(99.90291262135923% - 2px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 200px / 2); width: 2px; z-index: 1; }",
+	".framer-U4ypk .framer-ju2czo { flex: none; height: 50px; left: calc(9.017857142857165% - 2px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 50px / 2); width: 2px; z-index: 1; }",
+	".framer-U4ypk .framer-1ytjer { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; left: 50%; overflow: hidden; padding: 0px; position: absolute; top: 0px; width: 100%; z-index: 0; }",
+	".framer-U4ypk .framer-1vpwjt1 { flex: none; gap: 10px; height: 800px; overflow: visible; position: relative; width: 1050px; z-index: 0; }",
+	".framer-U4ypk .framer-u2413q { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 1; }",
+	".framer-U4ypk .framer-nwzasc-container { flex: none; height: 800px; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 1; }",
+	".framer-U4ypk.framer-v-1k2jmim.framer-1ju9km5 { height: 1080px; padding: 0px; width: 810px; }",
+	".framer-U4ypk.framer-v-1k2jmim .framer-4unfev { gap: 75px; }",
+	".framer-U4ypk.framer-v-1k2jmim .framer-kcmu88 { gap: 17px; order: 0; }",
+	".framer-U4ypk.framer-v-1k2jmim .framer-1af0tnz { gap: 49px; max-width: 730px; width: 100%; }",
+	".framer-U4ypk.framer-v-1k2jmim .framer-1bhe5y { order: 1; }",
+	".framer-U4ypk.framer-v-1k2jmim .framer-9jo1y3 { padding: 0px 40px 0px 40px; }",
+	".framer-U4ypk.framer-v-1k2jmim .framer-1ytjer { height: calc(var(--framer-viewport-height, 100vh) * 1); left: calc(50.00000000000002% - 100% / 2); padding: 0px 0px 80px 0px; }",
+	".framer-U4ypk.framer-v-1k2jmim .framer-1vpwjt1 { height: calc(var(--framer-viewport-height, 100vh) * 1); left: 1px; order: 0; position: absolute; top: calc(50.00000000000002% - 100vh / 2); width: 100%; }",
+	".framer-U4ypk.framer-v-ct8w98.framer-1ju9km5 { height: 844px; padding: 0px; width: 390px; }",
+	".framer-U4ypk.framer-v-ct8w98 .framer-4unfev { flex: 1 0 0px; gap: 41px; height: 1px; padding: 0px 20px 10px 20px; }",
+	".framer-U4ypk.framer-v-ct8w98 .framer-kcmu88 { gap: 16px; }",
+	".framer-U4ypk.framer-v-ct8w98 .framer-1af0tnz { gap: 17px; width: 100%; }",
+	".framer-U4ypk.framer-v-ct8w98 .framer-14lj2mo { gap: 12px; }",
+	".framer-U4ypk.framer-v-ct8w98 .framer-bkpwdd { max-width: 580px; }",
+	".framer-U4ypk.framer-v-ct8w98 .framer-1uk34jx { max-width: 500px; }",
 	...css3,
 	...css2,
 	...css,
 ];
-var Framereo97FeJK7 = withCSS(Component, css4, "framer-WWKP4");
+var Framereo97FeJK7 = withCSS(Component, css4, "framer-U4ypk");
 var stdin_default4 = Framereo97FeJK7;
 Framereo97FeJK7.displayName = "Hero Section";
 Framereo97FeJK7.defaultProps = {
@@ -2269,11 +2339,20 @@ stdin_default4.Responsive = ({ locale, ...rest }) => {
 	return (
 		<ContextProviders
 			routes={{
+				AxDvfLnyv: {
+					path: "/page",
+				},
 				augiA20Il: {
 					path: "/",
 				},
+				i9xm_305L: {
+					path: "/page-2",
+				},
 				k9spuiW9M: {
 					path: "/404",
+				},
+				p4p9Y1lWb: {
+					path: "/login",
 				},
 			}}
 			framerSiteId={
@@ -2294,11 +2373,20 @@ function ComponentWithRoot({ locale, ...rest }) {
 	return (
 		<ContextProviders
 			routes={{
+				AxDvfLnyv: {
+					path: "/page",
+				},
 				augiA20Il: {
 					path: "/",
 				},
+				i9xm_305L: {
+					path: "/page-2",
+				},
 				k9spuiW9M: {
 					path: "/404",
+				},
+				p4p9Y1lWb: {
+					path: "/login",
 				},
 			}}
 			framerSiteId={

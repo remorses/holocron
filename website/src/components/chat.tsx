@@ -23,7 +23,7 @@ import {
     PageUpdate,
 } from '../lib/edit-tool'
 import { docsRpcClient } from '../lib/docs-setstate'
-import { Route } from '../routes/+types/org.$orgId.site.$siteId'
+import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import { useLoaderData } from 'react-router'
 import { teeAsyncIterable } from '../lib/utils'
 import { generateSlugFromPath } from 'docs-website/src/lib/utils'

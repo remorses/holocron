@@ -27,6 +27,7 @@ model User {
   accounts         Account[]
   twofactors       TwoFactor[]
   orgs             OrgsUsers[]
+  chats            Chat[]
 
   @@unique([email])
   @@unique([username])
@@ -231,6 +232,7 @@ model Site {
   githubRepo         String
   mediaAssets        MediaAsset[]
   locales            SiteEnabledLocale[]
+  chats               Chat[]
 
   @@index([createdAt])
 }
@@ -336,6 +338,11 @@ model Chat {
   chatId             String        @id @default(cuid())
   title              String?
   messages           ChatMessage[]
+  siteId             String
+  site               Site          @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
+  // a chat is different for each user, this is to prevent the case where 2 users are updating the same chat, causing data loos and override. instead each user sees a different set of chats so they cannot possibly override each other chats.
+  userId             String
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt          DateTime      @default(now())
   fileUpdatesInDraft Json          @default("{}")
 }

@@ -22,7 +22,10 @@ import {
 import { getSession } from '../lib/better-auth'
 import { env, supportEmail } from '../lib/env'
 import { createNewRepo, doesRepoExist, getOctokit } from '../lib/github.server'
-import { pagesFromExampleJson as pagesFromExampleDocsJson, syncSite } from '../lib/sync'
+import {
+    pagesFromExampleJson as pagesFromExampleDocsJson,
+    syncSite,
+} from '../lib/sync'
 import type { Route } from './+types/org.$orgId.onboarding'
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -92,6 +95,9 @@ export async function action({ request, params }: Route.ActionArgs) {
                 }),
             // Create a site for the newly created repository
             prisma.site.create({
+                include: {
+                    chats: true,
+                },
                 data: {
                     name: repo,
                     orgId: orgId,
@@ -104,7 +110,11 @@ export async function action({ request, params }: Route.ActionArgs) {
                             domainType: 'internalDomain',
                         },
                     },
-                    // installationId,
+                    chats: {
+                        create: {
+                            userId,
+                        },
+                    },
                 },
             }),
         ])
@@ -120,9 +130,15 @@ export async function action({ request, params }: Route.ActionArgs) {
             siteId,
             name: `${githubAccountLogin} docs`,
         })
-        throw redirect(href('/org/:orgId/site/:siteId', { orgId, siteId }))
-
-        return { siteId }
+        const chatId = site.chats?.find((x) => x)?.chatId
+        if (!chatId) throw new Error('Chat for site not found')
+        throw redirect(
+            href('/org/:orgId/site/:siteId/chat/:chatId', {
+                orgId,
+                siteId,
+                chatId,
+            }),
+        )
     }
 
     return null
@@ -138,7 +154,7 @@ function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
         env.PUBLIC_URL,
     )
     const actionData = useActionData<typeof action>()
-    const siteId = actionData?.siteId
+
     githubInstallUrl.searchParams.set(
         'next',
         href('/org/:orgId/onboarding', { orgId }) +
@@ -225,7 +241,7 @@ function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
                 <StepperSeparator className='absolute inset-y-0 top-[calc(1.5rem+0.125rem)] left-3 -order-1 m-0 -translate-x-1/2 group-data-[orientation=horizontal]/stepper:w-[calc(100%-1.5rem-0.25rem)] group-data-[orientation=horizontal]/stepper:flex-none group-data-[orientation=vertical]/stepper:h-[calc(100%-1.5rem-0.25rem)]' />
             </StepperItem>
 
-            <StepperItem
+            {/* <StepperItem
                 step={3}
                 className='relative items-start not-last:flex-1'
             >
@@ -238,21 +254,12 @@ function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
                         </StepperDescription>
                         {currentStep >= 2 && (
                             <div className='pt-4'>
-                                <Link
-                                    to={href('/org/:orgId/site/:siteId', {
-                                        orgId,
-                                        siteId: siteId!,
-                                    })}
-                                >
-                                    <Button type='button'>
-                                        Go to Dashboard
-                                    </Button>
-                                </Link>
+                                <Button type='button'>Go to Dashboard</Button>
                             </div>
                         )}
                     </div>
                 </StepperTrigger>
-            </StepperItem>
+            </StepperItem> */}
         </Stepper>
     )
 }

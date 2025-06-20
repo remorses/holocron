@@ -16,11 +16,11 @@ export interface Props {
     "variant"?: 'Desktop' | 'Tablet' | 'Phone'
 }
 
-const FeatureSectionFramerComponent = (props: Props) => any
+const FeatuersWithQuestionsFramerComponent = (props: Props) => any
 
 type VariantsMap = Partial<Record<UnframerBreakpoint, Props['variant']>> & { base: Props['variant'] }
 
-FeatureSectionFramerComponent.Responsive = (props: Omit<Props, 'variant'> & {variants?: VariantsMap}) => any
+FeatuersWithQuestionsFramerComponent.Responsive = (props: Omit<Props, 'variant'> & {variants?: VariantsMap}) => any
 
-export default FeatureSectionFramerComponent
+export default FeatuersWithQuestionsFramerComponent
 

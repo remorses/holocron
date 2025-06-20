@@ -10,30 +10,47 @@ import { getSession } from '../lib/better-auth'
 import { createIframeRpcClient } from '../lib/docs-setstate'
 import { StateProvider } from '../lib/state'
 import { cn } from '../lib/utils'
-import type { Route } from './+types/org.$orgId.site.$siteId'
+import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
 
 export async function loader({
     request,
-    params: { orgId, siteId },
+    params: { orgId, siteId, chatId },
 }: Route.LoaderArgs) {
     const { userId, redirectTo } = await getSession({ request })
     if (redirectTo) {
         throw redirect(redirectTo)
     }
-    const site = await prisma.site.findUnique({
-        where: {
-            siteId: siteId,
-        },
-        include: {
-            org: true,
-            domains: true,
-            tabs: true,
-            customization: true,
-        },
-    })
+    const [site, chat] = await Promise.all([
+        prisma.site.findUnique({
+            where: {
+                siteId: siteId,
+                org: {
+                    users: {
+                        some: { userId },
+                    },
+                },
+            },
+            include: {
+                org: true,
+                domains: true,
+                tabs: true,
+                customization: true,
+            },
+        }),
+        prisma.chat.findUnique({
+            where: {
+                chatId: chatId,
+                siteId,
+                userId,
+            },
+        }),
+    ])
 
     if (!site) {
         throw new Error('Site not found')
+    }
+    if (!chat) {
+        throw new Error('Chat not found')
     }
 
     // Check if user has access to this site through org membership
@@ -61,7 +78,7 @@ export async function loader({
 
     const tabId = site.tabs[0].tabId
 
-    return { site, url, host, siteId, tabId }
+    return { site, url, host, siteId, tabId, chat }
 }
 
 export default function Page({

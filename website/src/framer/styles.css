@@ -1059,7 +1059,7 @@ NavigationContainer
     font-weight: 400;
 }
 
-/* used by cta.js, feature-section.js, hero-section.js */
+/* used by cta.js, hero-section.js */
 
 @font-face {
     font-family: 'Inter';
@@ -1287,7 +1287,7 @@ NavigationContainer
     unicodeRange: U+0370-03FF;
 }
 
-/* used by badge.js, benefit-card.js, benefit-section.js, bento-section.js, button.js, cta.js, faq-section.js, faq.js, feature-section.js, footer.js, hero-section.js, intro-section.js, metrics-section.js, metrics.js, nav-bar.js, pricing-card.js, pricing-item.js, pricing-section.js, testimonials-card.js, testimonials-section.js */
+/* used by badge.js, benefit-card.js, benefit-section.js, bento-section.js, button.js, cta.js, faq-section.js, faq.js, featuers-with-questions.js, footer.js, hero-section.js, intro-section.js, metrics-section.js, metrics.js, nav-bar.js, pricing-card.js, pricing-item.js, pricing-section.js, testimonials-card.js, testimonials-section.js */
 
 @font-face {
     font-family: 'Inter';
@@ -1513,7 +1513,7 @@ NavigationContainer
     unicodeRange: U+1F00-1FFF;
 }
 
-/* used by benefit-card.js, benefit-section.js, bento-section.js, cta.js, faq-section.js, feature-section.js, intro-section.js, metrics-section.js, nav-bar.js, pricing-card.js, pricing-section.js, testimonials-card.js, testimonials-section.js */
+/* used by benefit-card.js, benefit-section.js, bento-section.js, cta.js, faq-section.js, featuers-with-questions.js, intro-section.js, metrics-section.js, nav-bar.js, pricing-card.js, pricing-section.js, testimonials-card.js, testimonials-section.js */
 
 @font-face {
     font-family: 'Inter';
@@ -1571,7 +1571,7 @@ NavigationContainer
     unicodeRange: U+1F00-1FFF;
 }
 
-/* used by benefit-card.js, benefit-section.js, bento-section.js, faq-section.js, feature-section.js, intro-section.js, metrics-section.js, nav-bar.js, pricing-card.js, pricing-section.js, testimonials-card.js, testimonials-section.js */
+/* used by benefit-card.js, benefit-section.js, bento-section.js, faq-section.js, featuers-with-questions.js, intro-section.js, metrics-section.js, nav-bar.js, pricing-card.js, pricing-section.js, testimonials-card.js, testimonials-section.js */
 
 @font-face {
     font-family: 'Inter';

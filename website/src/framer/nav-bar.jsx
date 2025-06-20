@@ -11,7 +11,7 @@ import { className, css, fonts } from "./chunks/chunk-EWWPQ2JC.js";
 import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/unzxdmKe6alAWeRiMMxz/XmsKfRWHg.js
+// /:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/req8YhBN5EJaNAgryWFM/XmsKfRWHg.js
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
@@ -22,12 +22,14 @@ import {
 	getFonts,
 	getFontsFromSharedStyle,
 	Link,
+	ResolveLinks,
 	RichText,
 	SmartComponentScopedContainer,
 	SVG,
 	useActiveVariantCallback,
 	useComponentViewport,
 	useLocaleInfo,
+	useRouter,
 	useVariantState,
 	withCSS,
 } from "unframer";
@@ -309,7 +311,7 @@ var css3 = [
 ];
 var className3 = "framer-94E7e";
 
-// /:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/unzxdmKe6alAWeRiMMxz/XmsKfRWHg.js
+// /:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/req8YhBN5EJaNAgryWFM/XmsKfRWHg.js
 var ComponentButtonFonts = getFonts(stdin_default);
 var cycleOrder = [
 	"c6mQiEUZR",
@@ -318,7 +320,7 @@ var cycleOrder = [
 	"lTFPk57AC",
 	"FSWJCj0iy",
 ];
-var serializationHash = "framer-4PbAe";
+var serializationHash = "framer-to1aw";
 var variantClassNames = {
 	c6mQiEUZR: "framer-v-1d9x1ba",
 	FSWJCj0iy: "framer-v-1e176yj",
@@ -454,6 +456,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 		if (["oVqk5DKpt", "lTFPk57AC"].includes(baseVariant)) return false;
 		return true;
 	};
+	const router = useRouter();
 	return (
 		<LayoutGroup id={layoutId ?? defaultLayoutId}>
 			<Variants animate={variants} initial={false}>
@@ -616,7 +619,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														className={"framer-styles-preset-b7mi5l"}
 														data-styles-preset={"cq4N7Obrm"}
 													>
-														{"Aset"}
+														{"Fumabase"}
 													</motion.p>
 												</React.Fragment>
 											</RichText>
@@ -754,46 +757,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																>
 																	<Link
 																		href={{
-																			hash: ":DLscFvTjv",
-																			webPageId: "augiA20Il",
+																			webPageId: "p4p9Y1lWb",
 																		}}
 																		motionChild={true}
 																		nodeId={"JK0nOAyJp"}
 																		openInNewTab={false}
-																		scopeId={"XmsKfRWHg"}
-																		smoothScroll={true}
-																	>
-																		<motion.a
-																			className={"framer-styles-preset-1i37dfc"}
-																			data-styles-preset={"uT5gCl_8P"}
-																		>
-																			{"Home"}
-																		</motion.a>
-																	</Link>
-																</motion.p>
-															</React.Fragment>
-														),
-														onTap: onTap1vap3b3,
-													},
-													ypBE0GADG: {
-														"data-highlight": true,
-														children: (
-															<React.Fragment>
-																<motion.p
-																	className={"framer-styles-preset-1x4srpb"}
-																	data-styles-preset={"WGktsHNSh"}
-																	style={{
-																		"--framer-text-alignment": "start",
-																	}}
-																>
-																	<Link
-																		href={{
-																			hash: ":DLscFvTjv",
-																			webPageId: "augiA20Il",
-																		}}
-																		motionChild={true}
-																		nodeId={"JK0nOAyJp"}
-																		openInNewTab={false}
+																		relValues={[]}
 																		scopeId={"XmsKfRWHg"}
 																		smoothScroll={false}
 																	>
@@ -801,7 +770,42 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																			className={"framer-styles-preset-1i37dfc"}
 																			data-styles-preset={"uT5gCl_8P"}
 																		>
-																			{"Home"}
+																			{"Dashboard"}
+																		</motion.a>
+																	</Link>
+																</motion.p>
+															</React.Fragment>
+														),
+														onTap: onTap1vap3b3,
+													},
+													ypBE0GADG: {
+														"data-highlight": true,
+														children: (
+															<React.Fragment>
+																<motion.p
+																	className={"framer-styles-preset-1x4srpb"}
+																	data-styles-preset={"WGktsHNSh"}
+																	style={{
+																		"--framer-text-alignment": "start",
+																	}}
+																>
+																	<Link
+																		href={{
+																			hash: ":DLscFvTjv",
+																			webPageId: "augiA20Il",
+																		}}
+																		motionChild={true}
+																		nodeId={"JK0nOAyJp"}
+																		openInNewTab={false}
+																		relValues={[]}
+																		scopeId={"XmsKfRWHg"}
+																		smoothScroll={false}
+																	>
+																		<motion.a
+																			className={"framer-styles-preset-1i37dfc"}
+																			data-styles-preset={"uT5gCl_8P"}
+																		>
+																			{"Dashboard"}
 																		</motion.a>
 																	</Link>
 																</motion.p>
@@ -821,238 +825,20 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												>
 													<Link
 														href={{
-															hash: ":DLscFvTjv",
-															webPageId: "augiA20Il",
+															webPageId: "p4p9Y1lWb",
 														}}
 														motionChild={true}
 														nodeId={"JK0nOAyJp"}
 														openInNewTab={false}
+														relValues={[]}
 														scopeId={"XmsKfRWHg"}
-														smoothScroll={true}
+														smoothScroll={false}
 													>
 														<motion.a
 															className={"framer-styles-preset-1i37dfc"}
 															data-styles-preset={"uT5gCl_8P"}
 														>
-															{"Home"}
-														</motion.a>
-													</Link>
-												</motion.p>
-											</React.Fragment>
-										</RichText>
-										<RichText
-											__fromCanvasComponent={true}
-											className={"framer-jsv231"}
-											fonts={["Inter"]}
-											layoutDependency={layoutDependency}
-											layoutId={"zuB42U0Rw"}
-											verticalAlignment={"top"}
-											withExternalLayout={true}
-											{...addPropertyOverrides(
-												{
-													FSWJCj0iy: {
-														"data-highlight": true,
-														children: (
-															<React.Fragment>
-																<motion.p
-																	className={"framer-styles-preset-1x4srpb"}
-																	data-styles-preset={"WGktsHNSh"}
-																	style={{
-																		"--framer-text-alignment": "start",
-																	}}
-																>
-																	<Link
-																		href={{
-																			hash: ":YCffmP9Vu",
-																			webPageId: "augiA20Il",
-																		}}
-																		motionChild={true}
-																		nodeId={"zuB42U0Rw"}
-																		openInNewTab={false}
-																		scopeId={"XmsKfRWHg"}
-																		smoothScroll={true}
-																	>
-																		<motion.a
-																			className={"framer-styles-preset-1i37dfc"}
-																			data-styles-preset={"uT5gCl_8P"}
-																		>
-																			{"Feature"}
-																		</motion.a>
-																	</Link>
-																</motion.p>
-															</React.Fragment>
-														),
-														onTap: onTap1vap3b3,
-													},
-													ypBE0GADG: {
-														"data-highlight": true,
-														children: (
-															<React.Fragment>
-																<motion.p
-																	className={"framer-styles-preset-1x4srpb"}
-																	data-styles-preset={"WGktsHNSh"}
-																	style={{
-																		"--framer-text-alignment": "start",
-																	}}
-																>
-																	<Link
-																		href={{
-																			hash: ":YCffmP9Vu",
-																			webPageId: "augiA20Il",
-																		}}
-																		motionChild={true}
-																		nodeId={"zuB42U0Rw"}
-																		openInNewTab={false}
-																		scopeId={"XmsKfRWHg"}
-																		smoothScroll={true}
-																	>
-																		<motion.a
-																			className={"framer-styles-preset-1i37dfc"}
-																			data-styles-preset={"uT5gCl_8P"}
-																		>
-																			{"Feature"}
-																		</motion.a>
-																	</Link>
-																</motion.p>
-															</React.Fragment>
-														),
-														onTap: onTap19yqw1v,
-													},
-												},
-												baseVariant,
-												gestureVariant,
-											)}
-										>
-											<React.Fragment>
-												<motion.p
-													className={"framer-styles-preset-1x4srpb"}
-													data-styles-preset={"WGktsHNSh"}
-												>
-													<Link
-														href={{
-															hash: ":YCffmP9Vu",
-															webPageId: "augiA20Il",
-														}}
-														motionChild={true}
-														nodeId={"zuB42U0Rw"}
-														openInNewTab={false}
-														scopeId={"XmsKfRWHg"}
-														smoothScroll={true}
-													>
-														<motion.a
-															className={"framer-styles-preset-1i37dfc"}
-															data-styles-preset={"uT5gCl_8P"}
-														>
-															{"Feature"}
-														</motion.a>
-													</Link>
-												</motion.p>
-											</React.Fragment>
-										</RichText>
-										<RichText
-											__fromCanvasComponent={true}
-											className={"framer-1besb79"}
-											fonts={["Inter"]}
-											layoutDependency={layoutDependency}
-											layoutId={"ckXR2nvRX"}
-											verticalAlignment={"top"}
-											withExternalLayout={true}
-											{...addPropertyOverrides(
-												{
-													FSWJCj0iy: {
-														"data-highlight": true,
-														children: (
-															<React.Fragment>
-																<motion.p
-																	className={"framer-styles-preset-1x4srpb"}
-																	data-styles-preset={"WGktsHNSh"}
-																	style={{
-																		"--framer-text-alignment": "start",
-																	}}
-																>
-																	<Link
-																		href={{
-																			hash: ":zISvybPEk",
-																			webPageId: "augiA20Il",
-																		}}
-																		motionChild={true}
-																		nodeId={"ckXR2nvRX"}
-																		openInNewTab={false}
-																		scopeId={"XmsKfRWHg"}
-																		smoothScroll={true}
-																	>
-																		<motion.a
-																			className={"framer-styles-preset-1i37dfc"}
-																			data-styles-preset={"uT5gCl_8P"}
-																		>
-																			{"Benefit"}
-																		</motion.a>
-																	</Link>
-																</motion.p>
-															</React.Fragment>
-														),
-														onTap: onTap1vap3b3,
-													},
-													ypBE0GADG: {
-														"data-highlight": true,
-														children: (
-															<React.Fragment>
-																<motion.p
-																	className={"framer-styles-preset-1x4srpb"}
-																	data-styles-preset={"WGktsHNSh"}
-																	style={{
-																		"--framer-text-alignment": "start",
-																	}}
-																>
-																	<Link
-																		href={{
-																			hash: ":zISvybPEk",
-																			webPageId: "augiA20Il",
-																		}}
-																		motionChild={true}
-																		nodeId={"ckXR2nvRX"}
-																		openInNewTab={false}
-																		scopeId={"XmsKfRWHg"}
-																		smoothScroll={true}
-																	>
-																		<motion.a
-																			className={"framer-styles-preset-1i37dfc"}
-																			data-styles-preset={"uT5gCl_8P"}
-																		>
-																			{"Benefit"}
-																		</motion.a>
-																	</Link>
-																</motion.p>
-															</React.Fragment>
-														),
-														onTap: onTap19yqw1v,
-													},
-												},
-												baseVariant,
-												gestureVariant,
-											)}
-										>
-											<React.Fragment>
-												<motion.p
-													className={"framer-styles-preset-1x4srpb"}
-													data-styles-preset={"WGktsHNSh"}
-												>
-													<Link
-														href={{
-															hash: ":zISvybPEk",
-															webPageId: "augiA20Il",
-														}}
-														motionChild={true}
-														nodeId={"ckXR2nvRX"}
-														openInNewTab={false}
-														scopeId={"XmsKfRWHg"}
-														smoothScroll={true}
-													>
-														<motion.a
-															className={"framer-styles-preset-1i37dfc"}
-															data-styles-preset={"uT5gCl_8P"}
-														>
-															{"Benefit"}
+															{"Dashboard"}
 														</motion.a>
 													</Link>
 												</motion.p>
@@ -1087,6 +873,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																		motionChild={true}
 																		nodeId={"JWEb3Hk1x"}
 																		openInNewTab={false}
+																		relValues={[]}
 																		scopeId={"XmsKfRWHg"}
 																		smoothScroll={true}
 																	>
@@ -1121,6 +908,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																		motionChild={true}
 																		nodeId={"JWEb3Hk1x"}
 																		openInNewTab={false}
+																		relValues={[]}
 																		scopeId={"XmsKfRWHg"}
 																		smoothScroll={true}
 																	>
@@ -1154,6 +942,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														motionChild={true}
 														nodeId={"JWEb3Hk1x"}
 														openInNewTab={false}
+														relValues={[]}
 														scopeId={"XmsKfRWHg"}
 														smoothScroll={true}
 													>
@@ -1196,6 +985,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																		motionChild={true}
 																		nodeId={"fJK0SWjQL"}
 																		openInNewTab={false}
+																		relValues={[]}
 																		scopeId={"XmsKfRWHg"}
 																		smoothScroll={true}
 																	>
@@ -1230,6 +1020,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																		motionChild={true}
 																		nodeId={"fJK0SWjQL"}
 																		openInNewTab={false}
+																		relValues={[]}
 																		scopeId={"XmsKfRWHg"}
 																		smoothScroll={true}
 																	>
@@ -1263,6 +1054,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														motionChild={true}
 														nodeId={"fJK0SWjQL"}
 														openInNewTab={false}
+														relValues={[]}
 														scopeId={"XmsKfRWHg"}
 														smoothScroll={true}
 													>
@@ -1305,6 +1097,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																		motionChild={true}
 																		nodeId={"HZTKo9ndN"}
 																		openInNewTab={false}
+																		relValues={[]}
 																		scopeId={"XmsKfRWHg"}
 																		smoothScroll={true}
 																	>
@@ -1339,6 +1132,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																		motionChild={true}
 																		nodeId={"HZTKo9ndN"}
 																		openInNewTab={false}
+																		relValues={[]}
 																		scopeId={"XmsKfRWHg"}
 																		smoothScroll={true}
 																	>
@@ -1372,6 +1166,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														motionChild={true}
 														nodeId={"HZTKo9ndN"}
 														openInNewTab={false}
+														relValues={[]}
 														scopeId={"XmsKfRWHg"}
 														smoothScroll={true}
 													>
@@ -1389,80 +1184,111 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 								</motion.div>
 							)}
 							{isDisplayed2() && (
-								<ComponentViewportProvider
-									height={40}
-									y={
-										(componentViewport?.y || 0) +
-										(0 + ((componentViewport?.height || 70) - 0 - 40) / 2) +
-										0
-									}
-									{...addPropertyOverrides(
+								<ResolveLinks
+									links={[
 										{
-											FSWJCj0iy: {
-												width: `max(${componentViewport?.width || "100vw"} - 40px, 1px)`,
-												y:
-													(componentViewport?.y || 0) +
-													(18 +
-														((componentViewport?.height || 384) - 36 - 344.8) /
-															2) +
-													0 +
-													304.8,
+											href: {
+												webPageId: "p4p9Y1lWb",
 											},
-											ypBE0GADG: {
-												width: `max(${componentViewport?.width || "100vw"} - 80px, 1px)`,
-												y:
-													(componentViewport?.y || 0) +
-													(18 +
-														((componentViewport?.height || 400) - 36 - 349.8) /
-															2) +
-													0 +
-													309.8,
-											},
+											implicitPathVariables: void 0,
 										},
-										baseVariant,
-										gestureVariant,
-									)}
+										{
+											href: {
+												webPageId: "p4p9Y1lWb",
+											},
+											implicitPathVariables: void 0,
+										},
+										{
+											href: {
+												webPageId: "p4p9Y1lWb",
+											},
+											implicitPathVariables: void 0,
+										},
+									]}
 								>
-									<SmartComponentScopedContainer
-										className={"framer-ndiw3d-container"}
-										layoutDependency={layoutDependency}
-										layoutId={"lFQdgHFZB-container"}
-										nodeId={"lFQdgHFZB"}
-										rendersWithMotion={true}
-										scopeId={"XmsKfRWHg"}
-									>
-										{_jsx(stdin_default, {
-											b7sws2Xmf: true,
-											gDhgzsvqf: "https://www.framer.com?via=green13",
-											height: "100%",
-											id: "lFQdgHFZB",
-											layoutId: "lFQdgHFZB",
-											nx2tuureE: "Get Started",
-											variant: "feWXGq4P4",
-											width: "100%",
-											...addPropertyOverrides(
+									{(resolvedLinks) => (
+										<ComponentViewportProvider
+											height={40}
+											y={
+												(componentViewport?.y || 0) +
+												(0 + ((componentViewport?.height || 70) - 0 - 40) / 2) +
+												0
+											}
+											{...addPropertyOverrides(
 												{
 													FSWJCj0iy: {
-														LPw9Av7yM: void 0,
-														style: {
-															width: "100%",
-														},
-														variant: "h_czR0__J",
+														width: `max(${componentViewport?.width || "100vw"} - 40px, 1px)`,
+														y:
+															(componentViewport?.y || 0) +
+															(18 +
+																((componentViewport?.height || 384) -
+																	36 -
+																	281.2) /
+																	2) +
+															0 +
+															241.2,
 													},
 													ypBE0GADG: {
-														LPw9Av7yM: LPw9Av7yM19yqw1v,
-														style: {
-															width: "100%",
-														},
-														variant: "dpEXmejGI",
+														width: `max(${componentViewport?.width || "100vw"} - 80px, 1px)`,
+														y:
+															(componentViewport?.y || 0) +
+															(18 +
+																((componentViewport?.height || 336) -
+																	36 -
+																	286.2) /
+																	2) +
+															0 +
+															246.2,
 													},
 												},
 												baseVariant,
 												gestureVariant,
-											),
-										})}
-									</SmartComponentScopedContainer>
-								</ComponentViewportProvider>
+											)}
+										>
+											<SmartComponentScopedContainer
+												className={"framer-ndiw3d-container"}
+												layoutDependency={layoutDependency}
+												layoutId={"lFQdgHFZB-container"}
+												nodeId={"lFQdgHFZB"}
+												rendersWithMotion={true}
+												scopeId={"XmsKfRWHg"}
+											>
+												{_jsx(stdin_default, {
+													b7sws2Xmf: false,
+													gDhgzsvqf: resolvedLinks[0],
+													height: "100%",
+													id: "lFQdgHFZB",
+													layoutId: "lFQdgHFZB",
+													nx2tuureE: "Get Started",
+													variant: "feWXGq4P4",
+													width: "100%",
+													...addPropertyOverrides(
+														{
+															FSWJCj0iy: {
+																gDhgzsvqf: resolvedLinks[2],
+																LPw9Av7yM: void 0,
+																style: {
+																	width: "100%",
+																},
+																variant: "h_czR0__J",
+															},
+															ypBE0GADG: {
+																gDhgzsvqf: resolvedLinks[1],
+																LPw9Av7yM: LPw9Av7yM19yqw1v,
+																style: {
+																	width: "100%",
+																},
+																variant: "dpEXmejGI",
+															},
+														},
+														baseVariant,
+														gestureVariant,
+													),
+												})}
+											</SmartComponentScopedContainer>
+										</ComponentViewportProvider>
+									)}
+								</ResolveLinks>
 							)}
 						</motion.div>
 					</motion.nav>
@@ -1473,45 +1299,43 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 });
 var css4 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-4PbAe.framer-c615or, .framer-4PbAe .framer-c615or { display: block; }",
-	".framer-4PbAe.framer-1d9x1ba { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 20px; height: 70px; justify-content: center; overflow: visible; padding: 0px 40px 0px 40px; position: relative; width: 1200px; }",
-	".framer-4PbAe .framer-nmzyuu { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; height: min-content; justify-content: space-between; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 1px; }",
-	".framer-4PbAe .framer-ydgisg { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-4PbAe .framer-1t7g6pl { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; text-decoration: none; width: min-content; }",
-	".framer-4PbAe .framer-j724qj { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-4PbAe .framer-13ta3b5 { flex: none; height: 15px; position: relative; width: 27px; }",
-	".framer-4PbAe .framer-5fmjo5, .framer-4PbAe .framer-uh0ias, .framer-4PbAe .framer-jsv231, .framer-4PbAe .framer-1besb79, .framer-4PbAe .framer-18dt6r6, .framer-4PbAe .framer-11f69aq, .framer-4PbAe .framer-vcuy02 { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
-	".framer-4PbAe .framer-1outej8 { align-content: center; align-items: center; aspect-ratio: 1 / 1; cursor: pointer; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 6px; height: var(--framer-aspect-ratio-supported, 34px); justify-content: flex-start; overflow: visible; padding: 8px 2px 2px 2px; position: relative; width: 34px; }",
-	".framer-4PbAe .framer-10jqita, .framer-4PbAe .framer-1xx0lo2, .framer-4PbAe .framer-cuneb5 { flex: none; height: 2px; overflow: hidden; position: relative; width: 100%; will-change: var(--framer-will-change-override, transform); }",
-	".framer-4PbAe .framer-l7mfmx, .framer-4PbAe .framer-wz2tj0 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-4PbAe .framer-ndiw3d-container { flex: none; height: auto; position: relative; width: auto; }",
-	".framer-4PbAe.framer-v-1xrbkc6.framer-1d9x1ba { width: 810px; }",
-	".framer-4PbAe.framer-v-1xrbkc6 .framer-nmzyuu, .framer-4PbAe.framer-v-1a1l0re .framer-nmzyuu { max-width: unset; }",
-	".framer-4PbAe.framer-v-1xrbkc6 .framer-ydgisg, .framer-4PbAe.framer-v-1a1l0re .framer-ydgisg { flex: 1 0 0px; gap: unset; justify-content: space-between; width: 1px; }",
-	".framer-4PbAe.framer-v-1n2x4j7.framer-1d9x1ba { height: min-content; padding: 18px 40px 18px 40px; width: 810px; }",
-	".framer-4PbAe.framer-v-1n2x4j7 .framer-nmzyuu, .framer-4PbAe.framer-v-1e176yj .framer-nmzyuu { align-content: flex-start; align-items: flex-start; flex-direction: column; gap: 50px; justify-content: flex-start; max-width: unset; }",
-	".framer-4PbAe.framer-v-1n2x4j7 .framer-ydgisg, .framer-4PbAe.framer-v-1e176yj .framer-ydgisg { gap: unset; justify-content: space-between; width: 100%; }",
-	".framer-4PbAe.framer-v-1n2x4j7 .framer-1t7g6pl, .framer-4PbAe.framer-v-1e176yj .framer-1t7g6pl { cursor: pointer; }",
-	".framer-4PbAe.framer-v-1n2x4j7 .framer-1xx0lo2, .framer-4PbAe.framer-v-1n2x4j7 .framer-cuneb5 { left: calc(50.00000000000002% - 30px / 2); position: absolute; top: calc(50.00000000000002% - 2px / 2); width: 30px; z-index: 1; }",
-	".framer-4PbAe.framer-v-1n2x4j7 .framer-l7mfmx, .framer-4PbAe.framer-v-1e176yj .framer-l7mfmx { align-content: flex-start; align-items: flex-start; flex-direction: column; }",
-	".framer-4PbAe.framer-v-1n2x4j7 .framer-wz2tj0, .framer-4PbAe.framer-v-1e176yj .framer-wz2tj0 { align-content: flex-start; align-items: flex-start; align-self: stretch; flex-direction: column; gap: 15px; width: auto; }",
-	".framer-4PbAe.framer-v-1n2x4j7 .framer-uh0ias, .framer-4PbAe.framer-v-1e176yj .framer-uh0ias { cursor: pointer; order: 0; }",
-	".framer-4PbAe.framer-v-1n2x4j7 .framer-jsv231, .framer-4PbAe.framer-v-1e176yj .framer-jsv231 { cursor: pointer; order: 1; }",
-	".framer-4PbAe.framer-v-1n2x4j7 .framer-1besb79, .framer-4PbAe.framer-v-1e176yj .framer-1besb79 { cursor: pointer; order: 2; }",
-	".framer-4PbAe.framer-v-1n2x4j7 .framer-18dt6r6, .framer-4PbAe.framer-v-1e176yj .framer-18dt6r6 { cursor: pointer; order: 3; }",
-	".framer-4PbAe.framer-v-1n2x4j7 .framer-11f69aq, .framer-4PbAe.framer-v-1e176yj .framer-11f69aq { cursor: pointer; order: 4; }",
-	".framer-4PbAe.framer-v-1n2x4j7 .framer-vcuy02, .framer-4PbAe.framer-v-1e176yj .framer-vcuy02 { cursor: pointer; order: 5; }",
-	".framer-4PbAe.framer-v-1n2x4j7 .framer-ndiw3d-container { width: 100%; z-index: 0; }",
-	".framer-4PbAe.framer-v-1a1l0re.framer-1d9x1ba, .framer-4PbAe.framer-v-1e176yj.framer-1d9x1ba { height: min-content; padding: 18px 20px 18px 20px; width: 390px; }",
-	".framer-4PbAe.framer-v-1a1l0re .framer-1outej8 { gap: 4px; height: var(--framer-aspect-ratio-supported, 28px); justify-content: center; padding: 0px 0px 2px 0px; width: 28px; }",
-	".framer-4PbAe.framer-v-1e176yj .framer-1outej8 { height: var(--framer-aspect-ratio-supported, 28px); justify-content: center; padding: 0px 0px 2px 0px; width: 28px; }",
-	".framer-4PbAe.framer-v-1e176yj .framer-1xx0lo2, .framer-4PbAe.framer-v-1e176yj .framer-cuneb5 { left: calc(50.00000000000002% - 26px / 2); position: absolute; top: calc(50.00000000000002% - 2px / 2); width: 26px; z-index: 1; }",
-	".framer-4PbAe.framer-v-1e176yj .framer-ndiw3d-container { width: 100%; z-index: 2; }",
+	".framer-to1aw.framer-c615or, .framer-to1aw .framer-c615or { display: block; }",
+	".framer-to1aw.framer-1d9x1ba { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 20px; height: 70px; justify-content: center; overflow: visible; padding: 0px 40px 0px 40px; position: relative; width: 1200px; }",
+	".framer-to1aw .framer-nmzyuu { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; height: min-content; justify-content: space-between; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 1px; }",
+	".framer-to1aw .framer-ydgisg { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-to1aw .framer-1t7g6pl { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; text-decoration: none; width: min-content; }",
+	".framer-to1aw .framer-j724qj { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-to1aw .framer-13ta3b5 { flex: none; height: 15px; position: relative; width: 27px; }",
+	".framer-to1aw .framer-5fmjo5, .framer-to1aw .framer-uh0ias, .framer-to1aw .framer-18dt6r6, .framer-to1aw .framer-11f69aq, .framer-to1aw .framer-vcuy02 { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
+	".framer-to1aw .framer-1outej8 { align-content: center; align-items: center; aspect-ratio: 1 / 1; cursor: pointer; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 6px; height: var(--framer-aspect-ratio-supported, 34px); justify-content: flex-start; overflow: visible; padding: 8px 2px 2px 2px; position: relative; width: 34px; }",
+	".framer-to1aw .framer-10jqita, .framer-to1aw .framer-1xx0lo2, .framer-to1aw .framer-cuneb5 { flex: none; height: 2px; overflow: hidden; position: relative; width: 100%; will-change: var(--framer-will-change-override, transform); }",
+	".framer-to1aw .framer-l7mfmx, .framer-to1aw .framer-wz2tj0 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-to1aw .framer-ndiw3d-container { flex: none; height: auto; position: relative; width: auto; }",
+	".framer-to1aw.framer-v-1xrbkc6.framer-1d9x1ba { width: 810px; }",
+	".framer-to1aw.framer-v-1xrbkc6 .framer-nmzyuu, .framer-to1aw.framer-v-1a1l0re .framer-nmzyuu { max-width: unset; }",
+	".framer-to1aw.framer-v-1xrbkc6 .framer-ydgisg, .framer-to1aw.framer-v-1a1l0re .framer-ydgisg { flex: 1 0 0px; gap: unset; justify-content: space-between; width: 1px; }",
+	".framer-to1aw.framer-v-1n2x4j7.framer-1d9x1ba { height: min-content; padding: 18px 40px 18px 40px; width: 810px; }",
+	".framer-to1aw.framer-v-1n2x4j7 .framer-nmzyuu, .framer-to1aw.framer-v-1e176yj .framer-nmzyuu { align-content: flex-start; align-items: flex-start; flex-direction: column; gap: 50px; justify-content: flex-start; max-width: unset; }",
+	".framer-to1aw.framer-v-1n2x4j7 .framer-ydgisg, .framer-to1aw.framer-v-1e176yj .framer-ydgisg { gap: unset; justify-content: space-between; width: 100%; }",
+	".framer-to1aw.framer-v-1n2x4j7 .framer-1t7g6pl, .framer-to1aw.framer-v-1e176yj .framer-1t7g6pl { cursor: pointer; }",
+	".framer-to1aw.framer-v-1n2x4j7 .framer-1xx0lo2, .framer-to1aw.framer-v-1n2x4j7 .framer-cuneb5 { left: calc(50.00000000000002% - 30px / 2); position: absolute; top: calc(50.00000000000002% - 2px / 2); width: 30px; z-index: 1; }",
+	".framer-to1aw.framer-v-1n2x4j7 .framer-l7mfmx, .framer-to1aw.framer-v-1e176yj .framer-l7mfmx { align-content: flex-start; align-items: flex-start; flex-direction: column; }",
+	".framer-to1aw.framer-v-1n2x4j7 .framer-wz2tj0, .framer-to1aw.framer-v-1e176yj .framer-wz2tj0 { align-content: flex-start; align-items: flex-start; align-self: stretch; flex-direction: column; gap: 15px; width: auto; }",
+	".framer-to1aw.framer-v-1n2x4j7 .framer-uh0ias, .framer-to1aw.framer-v-1e176yj .framer-uh0ias { cursor: pointer; order: 0; }",
+	".framer-to1aw.framer-v-1n2x4j7 .framer-18dt6r6, .framer-to1aw.framer-v-1e176yj .framer-18dt6r6 { cursor: pointer; order: 1; }",
+	".framer-to1aw.framer-v-1n2x4j7 .framer-11f69aq, .framer-to1aw.framer-v-1e176yj .framer-11f69aq { cursor: pointer; order: 2; }",
+	".framer-to1aw.framer-v-1n2x4j7 .framer-vcuy02, .framer-to1aw.framer-v-1e176yj .framer-vcuy02 { cursor: pointer; order: 3; }",
+	".framer-to1aw.framer-v-1n2x4j7 .framer-ndiw3d-container { width: 100%; z-index: 0; }",
+	".framer-to1aw.framer-v-1a1l0re.framer-1d9x1ba, .framer-to1aw.framer-v-1e176yj.framer-1d9x1ba { height: min-content; padding: 18px 20px 18px 20px; width: 390px; }",
+	".framer-to1aw.framer-v-1a1l0re .framer-1outej8 { gap: 4px; height: var(--framer-aspect-ratio-supported, 28px); justify-content: center; padding: 0px 0px 2px 0px; width: 28px; }",
+	".framer-to1aw.framer-v-1e176yj .framer-1outej8 { height: var(--framer-aspect-ratio-supported, 28px); justify-content: center; padding: 0px 0px 2px 0px; width: 28px; }",
+	".framer-to1aw.framer-v-1e176yj .framer-1xx0lo2, .framer-to1aw.framer-v-1e176yj .framer-cuneb5 { left: calc(50.00000000000002% - 26px / 2); position: absolute; top: calc(50.00000000000002% - 2px / 2); width: 26px; z-index: 1; }",
+	".framer-to1aw.framer-v-1e176yj .framer-ndiw3d-container { width: 100%; z-index: 2; }",
 	...css2,
 	...css,
 	...css3,
 ];
-var FramerXmsKfRWHg = withCSS(Component, css4, "framer-4PbAe");
+var FramerXmsKfRWHg = withCSS(Component, css4, "framer-to1aw");
 var stdin_default2 = FramerXmsKfRWHg;
 FramerXmsKfRWHg.displayName = "Nav Bar";
 FramerXmsKfRWHg.defaultProps = {
@@ -1614,16 +1438,29 @@ addFonts(
 import { WithFramerBreakpoints } from "unframer";
 import { jsx } from "react/jsx-runtime";
 var locales = [];
-var defaultResponsiveVariants = {};
+var defaultResponsiveVariants = {
+	base: "lTFPk57AC",
+	md: "oVqk5DKpt",
+	xl: "c6mQiEUZR",
+};
 stdin_default2.Responsive = ({ locale, ...rest }) => {
 	return (
 		<ContextProviders
 			routes={{
+				AxDvfLnyv: {
+					path: "/page",
+				},
 				augiA20Il: {
 					path: "/",
 				},
+				i9xm_305L: {
+					path: "/page-2",
+				},
 				k9spuiW9M: {
 					path: "/404",
+				},
+				p4p9Y1lWb: {
+					path: "/login",
 				},
 			}}
 			framerSiteId={
@@ -1644,11 +1481,20 @@ function ComponentWithRoot({ locale, ...rest }) {
 	return (
 		<ContextProviders
 			routes={{
+				AxDvfLnyv: {
+					path: "/page",
+				},
 				augiA20Il: {
 					path: "/",
 				},
+				i9xm_305L: {
+					path: "/page-2",
+				},
 				k9spuiW9M: {
 					path: "/404",
+				},
+				p4p9Y1lWb: {
+					path: "/login",
 				},
 			}}
 			framerSiteId={
