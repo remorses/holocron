@@ -31,17 +31,16 @@ export const links: Route.LinksFunction = () => [
 
 const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, '')]
 export function Layout({ children }: { children: React.ReactNode }) {
-    // Assume useDocsState is available in scope and returns the whole state
-    // (This should be defined/imported above)
     const navigate = useNavigate()
 
     useParentPostMessage(async (e: MessageEvent) => {
-        // e.origin is a string representing the origin of the message, e.g., "https://example.com"
         try {
-            // if (!allowedOrigins.includes(e.origin)) {
-            //     console.warn(`Blocked message from disallowed origin: ${e.origin}`)
-            //     return
-            // }
+            if (!allowedOrigins.includes(e.origin)) {
+                console.warn(
+                    `Blocked message from disallowed origin: ${e.origin}`,
+                )
+                return
+            }
             const data = e.data as IframeRpcMessage
             const { id, state } = data || {}
 
@@ -51,10 +50,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     state.currentSlug &&
                     prevState.currentSlug !== state.currentSlug
                 ) {
-                    await startTransition(() => {
-                        useDocsState.setState(state)
-                        return navigate(state.currentSlug!)
-                    })
+                    useDocsState.setState(state)
+                    return await navigate(state.currentSlug!)
                 }
             }
             console.log(`setting docs-state inside iframe`, state)

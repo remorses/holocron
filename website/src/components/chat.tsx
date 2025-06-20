@@ -148,7 +148,8 @@ function ErrorMessage({
 function Footer() {
     const [text, setText] = useState('')
     const isPending = useChatState((x) => x.isChatGenerating)
-    const { siteId, tabId } =
+
+    const { siteId, chat, tabId } =
         useLoaderData() as Route.ComponentProps['loaderData']
     const messages = useChatState((x) => x?.messages || [])
 
@@ -169,7 +170,7 @@ function Footer() {
 
         try {
             let allMessages: UIMessage[]
-            // Get fresh messages state for edit regeneration
+            const now = new Date()
 
             if (!submitText.trim()) {
                 // For regenerate, use existing messages and just add new assistant message
@@ -180,7 +181,7 @@ function Footer() {
                         role: 'assistant',
                         content: '',
                         id: assistantMessageId,
-                        createdAt: new Date(),
+                        createdAt: now,
                     },
                 ]
             } else {
@@ -189,6 +190,7 @@ function Footer() {
                     id: userMessageId,
                     content: '',
                     role: 'user',
+                    createdAt: new Date(now.getTime() - 1),
                     parts: [{ type: 'text', text: submitText }],
                 }
 
@@ -200,14 +202,15 @@ function Footer() {
                         role: 'assistant',
                         content: '',
                         id: assistantMessageId,
-                        createdAt: new Date(),
+                        createdAt: now,
                     },
                 ]
                 setText('') // Clear input for new requests
             }
 
-            const filesInDraft = useChatState.getState()?.filesInDraft || {}
-
+            const docsState = useChatState.getState()?.docsState
+            const filesInDraft = docsState?.filesInDraft || {}
+            const currentSlug = docsState?.currentSlug || ''
             useChatState.setState({ messages: allMessages })
 
             const { data: generator, error } =
@@ -215,7 +218,9 @@ function Footer() {
                     messages: allMessages,
                     siteId,
                     tabId,
+                    currentSlug,
                     filesInDraft,
+                    chatId: chat.chatId,
                 })
             if (error) throw error
             // Clear the input
@@ -267,7 +272,10 @@ function Footer() {
                             if (!isParameterComplete(args)) {
                                 continue
                             }
-
+                            const currentSlug = generateSlugFromPath(
+                                args.path || '',
+                                '/',
+                            )
                             if (toolInvocation.state === 'partial-call') {
                                 if (isPostMessageBusy) continue
                                 let updatedPagesCopy = { ...filesInDraft }
@@ -280,10 +288,7 @@ function Footer() {
                                 docsRpcClient
                                     .setDocsState({
                                         filesInDraft: updatedPagesCopy,
-                                        currentSlug: generateSlugFromPath(
-                                            args.path || '',
-                                            '/',
-                                        ),
+                                        currentSlug,
                                         isMarkdownStreaming: true,
                                     })
                                     .then(() => {
@@ -295,18 +300,18 @@ function Footer() {
                                     `applying the setState update to the docs site`,
                                     toolInvocation,
                                 )
+
                                 await docsRpcClient.setDocsState(
                                     {
                                         filesInDraft: filesInDraft,
                                         isMarkdownStreaming: false,
-                                        currentSlug: generateSlugFromPath(
-                                            args.path || '',
-                                            '/',
-                                        ),
+                                        currentSlug,
                                     },
                                     toolInvocation.toolCallId,
                                 )
-                                useChatState.setState({ filesInDraft })
+                                useChatState.setState({
+                                    docsState: { filesInDraft, currentSlug },
+                                })
                             }
                         }
                     }

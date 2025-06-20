@@ -11,6 +11,7 @@ import { createIframeRpcClient } from '../lib/docs-setstate'
 import { StateProvider } from '../lib/state'
 import { cn } from '../lib/utils'
 import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
+import { UIMessage } from 'ai'
 
 export async function loader({
     request,
@@ -42,6 +43,17 @@ export async function loader({
                 chatId: chatId,
                 siteId,
                 userId,
+            },
+
+            include: {
+                messages: {
+                    orderBy: { createdAt: 'asc' },
+                    include: {
+                        parts: {
+                            orderBy: { index: 'asc' },
+                        },
+                    },
+                },
             },
         }),
     ])
@@ -82,15 +94,26 @@ export async function loader({
 }
 
 export default function Page({
-    loaderData: { site, host, url },
+    loaderData: { chat, site, host, url },
     params: { siteId, orgId },
 }: Route.ComponentProps) {
     return (
         <StateProvider
             initialValue={{
-                messages: [],
+                messages: chat.messages.map((x) => {
+                    const message: UIMessage = {
+                        ...x,
+                        content: '',
+                        parts: x.parts as any,
+                    }
+                    return message
+                }),
+
                 isChatGenerating: false,
-                filesInDraft: {}, // TODO take updated pages from persistent state, so that an update can be in progress
+                docsState: {
+                    filesInDraft: chat.filesInDraft as any,
+                    currentSlug: chat.currentSlug || undefined,
+                },
             }}
         >
             <SidebarProvider
@@ -114,7 +137,7 @@ export default function Page({
 }
 
 function Content() {
-    const { site, host, url } = useLoaderData<typeof loader>()
+    const { site, host, chat, url } = useLoaderData<typeof loader>()
     const [logoUrl, setLogoUrl] = useState(site.customization?.logoUrl)
     const iframeRef = useRef<HTMLIFrameElement>(null)
 
@@ -149,11 +172,16 @@ function Content() {
                         ref={(el) => {
                             iframeRef.current = el
                             console.log(`docs iframe is being replaced`)
-                            const docsRpcClient_ = createIframeRpcClient({
+                            const docsRpcClient = createIframeRpcClient({
                                 iframeRef,
                             })
+                            docsRpcClient.setDocsState({
+                                currentSlug: chat.currentSlug || undefined,
 
-                            return docsRpcClient_.cleanup
+                                filesInDraft: (chat.filesInDraft as any) || {},
+                            })
+
+                            return docsRpcClient.cleanup
                         }}
                         key='iframe'
                         style={scaleDownElement(0.9)}

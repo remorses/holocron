@@ -326,10 +326,10 @@ enum ChatMessageRole {
 enum ChatMessagePartType {
   text
   reasoning
-  tool_invocation
+  // TODO use enum instead of string when prisma fixes https://github.com/prisma/prisma/issues/8446
+  tool_invocation @map("tool-invocation")
   source
   file
-  // `step_start` removed – see note below
 }
 
 // ─── MODELS ────────────────────────────────────────────────────────────
@@ -344,6 +344,7 @@ model Chat {
   userId       String
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt    DateTime      @default(now())
+  currentSlug  String?
   filesInDraft Json          @default("{}")
 }
 
@@ -364,7 +365,7 @@ model ChatMessagePart {
 
   index Int
 
-  type ChatMessagePartType
-  text String?             @db.Text
+  type String
+  text String? @db.Text
   data Json? // structured payloads
 }

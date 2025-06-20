@@ -7,9 +7,9 @@ import { PageUpdate } from './edit-tool'
 
 export type State = {
     messages: UIMessage[]
-    docsState?: DocsState
+    docsState?: Pick<DocsState, 'currentSlug' | 'filesInDraft'>
     isChatGenerating?: boolean
-    filesInDraft: Record<string, PageUpdate>
+
     lastError?: {
         messageId: string
         error: string

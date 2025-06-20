@@ -3,7 +3,7 @@ import { openai, OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
 import dedent from 'string-dedent'
 
 import { anthropic } from '@ai-sdk/anthropic'
-import { streamText, tool, UIMessage } from 'ai'
+import { appendResponseMessages, streamText, tool, UIMessage } from 'ai'
 import { prisma } from 'db'
 import { s3 } from 'docs-website/src/lib/s3'
 import { Spiceflow } from 'spiceflow'
@@ -109,13 +109,22 @@ export const app = new Spiceflow({ basePath: '/api' })
         request: z.object({
             messages: z.array(z.custom<UIMessage>()),
             siteId: z.string(),
+            chatId: z.string(),
             tabId: z.string(),
+            currentSlug: z.string(),
             filesInDraft: z.record(
                 z.object({ githubPath: z.string(), markdown: z.string() }),
             ),
         }),
         async *handler({ request, state: { userId } }) {
-            const { messages, tabId, filesInDraft } = await request.json()
+            const {
+                messages,
+                currentSlug,
+                chatId,
+                siteId,
+                tabId,
+                filesInDraft,
+            } = await request.json()
             // First, check if the user can access the requested tab
             const tab = await prisma.tab.findFirst({
                 where: {
@@ -247,7 +256,96 @@ export const app = new Spiceflow({ basePath: '/api' })
                         },
                     }),
                 },
-                async onFinish({ response }) {},
+                async onFinish({ response }) {
+                    const resultMessages = appendResponseMessages({
+                        messages,
+                        responseMessages: response.messages,
+                    })
+                    console.log(resultMessages)
+                    await prisma.$transaction(async (tx) => {
+                        const prevChat = await tx.chat.delete({
+                            where: { chatId },
+                        })
+
+                        const chatRow = await tx.chat.create({
+                            data: {
+                                ...prevChat,
+                                chatId,
+                                createdAt: prevChat.createdAt,
+                                userId,
+                                siteId,
+                                currentSlug,
+                                filesInDraft: filesInDraft || {},
+                                title: null,
+                            },
+                        })
+
+                        for (const [msgIdx, msg] of resultMessages.entries()) {
+                            const parts = msg.parts || []
+
+                            if (
+                                msg.role !== 'assistant' &&
+                                msg.role !== 'user'
+                            ) {
+                                console.log(
+                                    `ignoring message with role ${msg.role}`,
+                                )
+                                msg.role
+                                continue
+                            }
+                            const chatMessage = await tx.chatMessage.create({
+                                data: {
+                                    chatId: chatRow.chatId,
+                                    createdAt: msg.createdAt,
+                                    id: msg.id,
+                                    role: msg.role ?? 'user',
+                                },
+                            })
+                            for (const [index, part] of parts.entries()) {
+                                // Handle only 'text', 'reasoning', and 'tool-invocation' types for now
+                                if (part.type === 'text') {
+                                    // ChatMessagePart: { type: 'text', text: string }
+                                    await tx.chatMessagePart.create({
+                                        data: {
+                                            messageId: chatMessage.id,
+                                            type: 'text',
+
+                                            index,
+                                            text: part.text,
+                                        },
+                                    })
+                                } else if (part.type === 'reasoning') {
+                                    // ChatMessagePart: { type: 'reasoning', text: string }
+                                    await tx.chatMessagePart.create({
+                                        data: {
+                                            messageId: chatMessage.id,
+                                            type: 'reasoning',
+
+                                            text: part.reasoning,
+                                            index,
+                                        },
+                                    })
+                                } else if (part.type === 'tool-invocation') {
+                                    // ChatMessagePart: { type: 'tool-invocation', json: any }
+                                    await tx.chatMessagePart.create({
+                                        data: {
+                                            index,
+                                            messageId: chatMessage.id,
+                                            type: part.type,
+                                            text: null,
+                                        },
+                                    })
+                                } else {
+                                    console.log(
+                                        `skipping message of type ${part.type} in the database`,
+                                    )
+                                    part.type
+                                }
+                                // Ignore all other part types for now
+                            }
+                        }
+                    })
+                },
                 // tools: {
                 //   some: tool({
                 //     description: "A sample tool",
