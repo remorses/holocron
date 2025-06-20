@@ -122,3 +122,152 @@ Try to reuse these available components when you can, for example for buttons, t
 always try use use react-router `useNavigate` or `Link` instead of doing window.location.href update.
 
 so that internal navigation are done client side and are faster. notice that navigate only accepts a relative path and not a full url, so if you have a full url you should do new URL(url).pathname. only use navigate if you know the url is relative to the app.
+
+## calling the server from the client
+
+for simple routes that only have one interaction in the page, for example a form page, you should use react-router forms and actions to interact with the server.
+
+but when you do interactions from a component that can be rendered from multiple routes, or simply is not implemented inside a route page, you should use spiceflow client instead.
+
+the website exposes an API via Spiceflow. here is spiceflow docs: https://getspiceflow.com/
+
+> ALWAYS use the fetch tool to get the latest docs if you need to implement a new route in a Spiceflow API app server or need to add a new rpc call with a spiceflow api client!
+
+Spiceflow has support for client side type safe rpc, use this client when you need to interact with the server from the client, for example for a settings save deep inside a component. here is example usage of it
+
+> SUPER IMPORTANT! if you add a new route to a spiceflow app, use the spiceflow app state like `userId` to add authorization to the route. If there is no state then you can use functions like `getSession({request})` or similar.
+> Make sure the current userId has access to the fetched or updated rows. This can be done by checking that the parent row or current row has a relation with the current userId. For example `prisma.site.findFirst({where: {users: {some: {userId }}}})`
+
+```ts
+import { createSpiceflowClient } from 'spiceflow/client'
+import { Spiceflow } from 'spiceflow'
+import { z } from 'zod' // zod v4 is also supported if app uses that version
+
+// Define the app with multiple routes and features
+const app = new Spiceflow({ basePath: '/api' })
+    .route({
+        method: 'GET',
+        path: '/hello/:id',
+        handler({ params }) {
+            return `Hello, ${params.id}!`
+        },
+    })
+    .route({
+        method: 'POST',
+        path: '/users',
+        async handler({ request }) {
+            const body = await request.json() // here body has type { name?: string, email?: string }
+            return `Created user: ${body.name}`
+        },
+        request: z.object({
+            name: z.string().optional(),
+            email: z.string().email().optional(),
+        }),
+    })
+    .route({
+        method: 'GET',
+        path: '/stream',
+        async *handler() {
+            yield 'Start'
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+            yield 'Middle'
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+            yield 'End'
+        },
+    })
+
+// Create the client
+const client = createSpiceflowClient<typeof app>('http://localhost:3000')
+
+// Example usage of the client
+async function exampleUsage() {
+    // GET request
+    const { data: helloData, error: helloError } = await client.api
+        .hello({ id: 'World' })
+        .get()
+    if (helloError) {
+        console.error('Error fetching hello:', helloError)
+    } else {
+        console.log('Hello response:', helloData)
+    }
+
+    // POST request
+    const { data: userData, error: userError } = await client.api.users.post({
+        name: 'John Doe',
+        email: 'john.doe@example.com',
+    })
+    if (userError) {
+        console.error('Error creating user:', userError)
+    } else {
+        console.log('User creation response:', userData)
+    }
+
+    // Async generator (streaming) request
+    const { data: streamData, error: streamError } =
+        await client.api.stream.get()
+    if (streamError) {
+        console.error('Error fetching stream:', streamError)
+    } else {
+        for await (const chunk of streamData) {
+            console.log('Stream chunk:', chunk)
+        }
+    }
+}
+```
+
+## interacting with the database
+
+this project uses prisma to interact with the database. if you need to add new queries always read the schema.prisma inside the db folder first so you understand the shape of the tables in the database.
+
+never add new tables to the prisma schema, instead ask me to do so.
+
+prisma upsert calls are preferable over updates, so that you also handle the case where the row is missing.
+
+for complex mutations that involve a lot of tables realted together, for example a Chat with ChatMessages and ChatMessagePath, you should use transaction instead of a super complex single query:
+
+- start a transaction
+- delete the parent table, the one with cascade deletes, so that the related tables are also deleted
+- recreate all the tables again, reuse the old existing rows data when you don't have all the fields available
+- make sure to create all the rows in the related tables. use for loops if necessary
+
+## concurrency
+
+when doing prisma queries or other async operations try to parallelize them using Promise.all
+
+this will speed up operations that can be done concurrently.
+
+this is especially important in react-router loaders
+
+## security
+
+All loaders, actions and Spiceflow routes of the project should have authorization checks.
+
+These checks should check that the current user, identified by userId, has access to the fetched and updated rows.
+
+This simply mean to always include a check in prisma queries to make sure that the user has access to the updated or queries rows, for example:
+
+```typescript
+const resource = await prisma.resource.findFirst({
+    where: { resourceId, parentResource: { users: { some: { userId } } } },
+})
+if (!resource) {
+    throw new AppError(`cannot find resource`)
+}
+```
+
+## errors
+
+if you throw an error that is not unexpected you should use the `AppError` class, this way I can skip sending these errors to Sentry in the `notifyError` function
+
+For example for cases where a resource is not found or user has no subscription.
+
+you can even throw response errors, for example:
+
+```typescript
+if (!user.subscription) {
+    throw new ResponseError(
+        403,
+        JSON.stringify({ message: `user has no subscription` }),
+    )
+}
+```

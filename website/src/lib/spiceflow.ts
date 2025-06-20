@@ -494,6 +494,67 @@ export const app = new Spiceflow({ basePath: '/api' })
             }
         },
     })
+    .route({
+        method: 'POST',
+        path: '/newChat',
+        request: z.object({
+            siteId: z.string(),
+            orgId: z.string(),
+        }),
+        async handler({ request, state: { userId } }) {
+            const { siteId, orgId } = await request.json()
+
+            if (!userId) {
+                throw new Error('User not authenticated')
+            }
+
+            // Check if user has access to this site through org membership
+            const orgUser = await prisma.orgsUsers.findUnique({
+                where: {
+                    userId_orgId: {
+                        userId,
+                        orgId,
+                    },
+                },
+            })
+
+            if (!orgUser) {
+                throw new Error('You do not have access to this organization')
+            }
+
+            // Verify the site exists and user has access
+            const site = await prisma.site.findUnique({
+                where: {
+                    siteId,
+                    org: {
+                        users: {
+                            some: { userId },
+                        },
+                    },
+                },
+            })
+
+            if (!site) {
+                throw new Error('Site not found or access denied')
+            }
+
+            // Create a new chat
+            const newChat = await prisma.chat.create({
+                data: {
+                    siteId,
+                    userId,
+                    title: null,
+                    currentSlug: null,
+                    filesInDraft: {},
+                },
+            })
+
+            return {
+                success: true,
+                chatId: newChat.chatId,
+            }
+        },
+    })
 
     .onError(({ error }) => {
         notifyError(error)

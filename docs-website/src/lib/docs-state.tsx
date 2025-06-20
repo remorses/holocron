@@ -1,12 +1,7 @@
 'use client'
 import type { PageTree, TOCItemType } from 'fumadocs-core/server'
 
-import { createZustandContext } from 'docs-website/src/lib/zustand-context'
 import { create } from 'zustand'
-import { env } from './env'
-import { debounce } from './utils'
-import { get, set } from 'idb-keyval'
-import { startTransition } from 'react'
 
 export type DocsState = {
     tree?: PageTree.Root

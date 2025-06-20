@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useMemo } from 'react'
 import type { StoreApi, UseBoundStore } from 'zustand'
 
 export const createZustandContext = <TInitial,>(
@@ -11,11 +11,11 @@ export const createZustandContext = <TInitial,>(
         children?: React.ReactNode
         initialValue: TInitial
     }) => {
-        const [store] = useState(() => {
-            let store = getStore(props.initialValue)
-            Object.assign(useStore, store)
-            return store
-        })
+      const store = useMemo(() => {
+          let store = getStore(props.initialValue)
+          Object.assign(useStore, store)
+          return store
+      }, [props.initialValue])
 
         return (
             <Context.Provider value={store}>{props.children}</Context.Provider>

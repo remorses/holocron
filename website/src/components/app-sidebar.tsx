@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { HistoryIcon, PlusIcon } from 'lucide-react'
+import { HistoryIcon, PlusIcon, Loader2 } from 'lucide-react'
 
 import { NavUser } from 'website/src/components/nav-user'
 import {
@@ -23,6 +23,7 @@ import { Combobox } from './ui/combobox'
 import { useRouteLoaderData, useParams, useNavigate } from 'react-router'
 import { href } from 'react-router'
 import type { Route } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId'
+import { apiClient } from 'website/src/lib/spiceflow-client'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const loaderData = useRouteLoaderData(
@@ -32,6 +33,41 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const navigate = useNavigate()
     const { orgId, siteId, chatId } = params
     const { chatHistory } = loaderData
+    const [isCreatingChat, setIsCreatingChat] = React.useState(false)
+
+    const handleNewChat = async () => {
+        if (!orgId || !siteId || isCreatingChat) return
+
+        setIsCreatingChat(true)
+
+        try {
+            const { data, error } = await apiClient.api.newChat.post({
+                orgId,
+                siteId,
+            })
+
+            if (error) {
+                console.error('Error creating new chat:', error)
+                // You could add a toast notification here
+                return
+            }
+
+            if (data?.success && data.chatId) {
+                navigate(
+                    href('/org/:orgId/site/:siteId/chat/:chatId', {
+                        orgId,
+                        siteId,
+                        chatId: data.chatId,
+                    }),
+                )
+            }
+        } catch (error) {
+            console.error('Failed to create new chat:', error)
+            // You could add a toast notification here
+        } finally {
+            setIsCreatingChat(false)
+        }
+    }
 
     const chatHistoryItems = chatHistory.map((chat) => ({
         value: chat.chatId,
@@ -94,11 +130,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button variant='secondary' size='icon'>
-                                    <PlusIcon />
+                                <Button
+                                    variant='secondary'
+                                    size='icon'
+                                    onClick={handleNewChat}
+                                    disabled={isCreatingChat}
+                                >
+                                    {isCreatingChat ? (
+                                        <Loader2 className='h-4 w-4 animate-spin' />
+                                    ) : (
+                                        <PlusIcon />
+                                    )}
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent>New chat</TooltipContent>
+                            <TooltipContent>
+                                {isCreatingChat
+                                    ? 'Creating new chat...'
+                                    : 'New chat'}
+                            </TooltipContent>
                         </Tooltip>
                     </div>
                 </div>

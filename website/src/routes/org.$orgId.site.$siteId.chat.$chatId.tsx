@@ -1,6 +1,6 @@
 import { prisma } from 'db'
 import { DocsState } from 'docs-website/src/lib/docs-state'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { redirect, useLoaderData } from 'react-router'
 import { AppSidebar } from '../components/app-sidebar'
 import { BrowserWindow } from '../components/browser-window'
@@ -8,7 +8,7 @@ import NavBar from '../components/navbar'
 import { SidebarInset, SidebarProvider } from '../components/ui/sidebar'
 import { getSession } from '../lib/better-auth'
 import { createIframeRpcClient } from '../lib/docs-setstate'
-import { StateProvider } from '../lib/state'
+import { State, StateProvider } from '../lib/state'
 import { cn } from '../lib/utils'
 import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
 
@@ -117,28 +117,30 @@ export async function loader({
 }
 
 export default function Page({
-    loaderData: { chat, site, host },
+    loaderData,
     params: { siteId, orgId },
 }: Route.ComponentProps) {
+    const { chat, site, host } = loaderData
+    const initialState = useMemo<State>(
+        () => ({
+            messages: chat.messages.map((x) => {
+                const message: UIMessage = {
+                    ...x,
+                    content: '',
+                    parts: x.parts as any,
+                }
+                return message
+            }),
+            isChatGenerating: false,
+            docsState: {
+                filesInDraft: chat.filesInDraft as any,
+                currentSlug: chat.currentSlug || undefined,
+            },
+        }),
+        [loaderData],
+    )
     return (
-        <StateProvider
-            initialValue={{
-                messages: chat.messages.map((x) => {
-                    const message: UIMessage = {
-                        ...x,
-                        content: '',
-                        parts: x.parts as any,
-                    }
-                    return message
-                }),
-
-                isChatGenerating: false,
-                docsState: {
-                    filesInDraft: chat.filesInDraft as any,
-                    currentSlug: chat.currentSlug || undefined,
-                },
-            }}
-        >
+        <StateProvider initialValue={initialState}>
             <SidebarProvider
                 className=''
                 style={
