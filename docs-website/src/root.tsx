@@ -33,17 +33,6 @@ const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, '')]
 export function Layout({ children }: { children: React.ReactNode }) {
     const navigate = useNavigate()
 
-    useEffect(() => {
-        if (typeof window !== 'undefined' && window.parent) {
-            window.parent?.postMessage?.(
-                { type: 'ready' },
-                {
-                    targetOrigin: '*',
-                },
-            )
-        }
-    }, [])
-
     useParentPostMessage(async (e: MessageEvent) => {
         try {
             if (!allowedOrigins.includes(e.origin)) {
@@ -61,11 +50,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     state.currentSlug &&
                     prevState.currentSlug !== state.currentSlug
                 ) {
-                    useDocsState.setState(state)
                     return await navigate(state.currentSlug!)
                 }
+                console.log(`setting docs-state inside iframe`, state)
+                useDocsState.setState(state)
             }
-            console.log(`setting docs-state inside iframe`, state)
         } finally {
             e.source!.postMessage(
                 { id: e?.data?.id } satisfies IframeRpcMessage,

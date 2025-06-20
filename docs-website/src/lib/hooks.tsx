@@ -31,14 +31,23 @@ export function usePrevious<T>(value: T): T | undefined {
     return ref.current
 }
 
-
 /**
  * This hook sets up a window 'message' event listener using the provided handler function.
  * It will automatically remove the listener when the component is unmounted or handler changes.
  */
-export function useParentPostMessage(onParentPostMessage: (event: MessageEvent) => void) {
+export function useParentPostMessage(
+    onParentPostMessage: (event: MessageEvent) => void,
+) {
     useEffect(() => {
         window.addEventListener('message', onParentPostMessage)
+        if (typeof window !== 'undefined' && window.parent) {
+            window.parent?.postMessage?.(
+                { type: 'ready' },
+                {
+                    targetOrigin: '*',
+                },
+            )
+        }
         return () => {
             window.removeEventListener('message', onParentPostMessage)
         }

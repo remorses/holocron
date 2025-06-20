@@ -22,8 +22,6 @@ export type DocsState = {
     }>
 }
 
-const stateKey = 'docsState'
-
 const defaultState: DocsState = {
     filesInDraft: {},
     deletedPages: [],

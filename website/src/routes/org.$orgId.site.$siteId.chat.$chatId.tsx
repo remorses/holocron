@@ -239,7 +239,7 @@ function Content() {
 
                             return docsRpcClient.cleanup
                         }}
-                        key='iframe'
+                        key={chat.chatId}
                         style={scaleDownElement(0.9)}
                         className={cn(' inset-0 bg-transparent', 'absolute')}
                         frameBorder={0}
