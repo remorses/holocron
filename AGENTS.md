@@ -10,7 +10,9 @@ do not add useless comments if the code is self descriptive. only add comments i
 
 Use vitest to run tests. Tests should be run from the current package directory and not root, try using the test script instead of vitest directly. Additional vitest flags can be added at the end, like --run to disable watch mode or -u to update snapshots.
 
-To understand how the code you are writing works you should add inline snapshots in the test files with expect().toMatchInlineSnapshot(), then run the test with `pnpm test -u` or `pnpm vitest -u` to update the snapshot in the file, then read the file again to inspect the result. If the result is not expected, update the code and repeat until the snapshot matches your expectations. Never write the inline snapshots in test files yourself. Just leave them empty and run `pnpm test -u` to update them.
+To understand how the code you are writing works you should add inline snapshots in the test files with expect().toMatchInlineSnapshot(), then run the test with `pnpm test -u --run` or `pnpm vitest -u --run` to update the snapshot in the file, then read the file again to inspect the result. If the result is not expected, update the code and repeat until the snapshot matches your expectations. Never write the inline snapshots in test files yourself. Just leave them empty and run `pnpm test -u --run` to update them.
+
+> Always call `pnpm vitest` or `pnpm test` with `--run` or they will hang forever waiting for changes!
 
 Never test client React components. Only server code that runs on the server.
 
@@ -20,7 +22,7 @@ Tests should strive to be as simple as possible, the best test is a simple `.toM
 
 Try to use only describe and test in your tests. Do not use beforeAll, before, etc if not strictly required.
 
-NEVER write tests for React components or React hooks.
+NEVER write tests for React components or React hooks. NEVER write tests for React components. You will be fired if you do.
 
 Sometimes tests work directly on database data, using prisma. To run these tests you have to use the package.json script, which will call `doppler run -- vitest` or similar. Never run doppler cli yourself as you could delete or update production data. Tests generally use a staging database instead.
 
@@ -46,7 +48,7 @@ The default export (not always required for API routes) is the jsx component tha
 
 Notice that the `json` utils was removed from `react-router`, instead there is a function `data` which is very similar and accepts a second argument to add headers and status like `json` does, but it supports more data types than json, like generators, async generators, dates, map, sets, etc.
 
-## type safety
+## Route type safety
 
 react-router exports a `Route` namespace with types like `Route.LoaderArgs`, `Route.ActionArgs` and `Route.ComponentProps`
 
@@ -60,21 +62,38 @@ You can use the Route types even to type other components that rely on `useRoute
 
 Here is an example to get the loader data type safely from a component:
 
+> useRouteLoaderData return type is `Route.componentProps['loaderData']`
 
 ```ts
-import type { Route } from 'website/routes/root'
+import type { Route } from 'website/src/routes/root'
 
-const { userId } = useRouteLoaderData('root') as Route['componentProps']
+const { userId } = useRouteLoaderData('root') as Route.componentProps['loaderData']
 ```
 
 ```ts
 // this path should export Route first. make sure of that
-import type { Route } from 'website/routes/org.$orgId'
+import type { Route } from 'website/src/routes/org.$orgId'
 
-const { userId } = useRouteLoaderData('routes/org.$orgId') as Route['componentProps']
+const { userId } = useRouteLoaderData(
+    'routes/org.$orgId',
+) as Route.componentProps['loaderData']
 ```
 
-You can do the same thing with action data, using `Route['actionData']`
+You can do the same thing with action data, using `Route.componentProps['actionData']`
+
+## links type safety
+
+ALWAYS use the react-router href function to create links, it works as follow
+
+```ts
+import { href } from 'react-router'
+
+const path = href('/org/:orgId', { orgId })
+```
+
+If you need to have an absolute url you can do `new URL(href('/some/path'), env.PUBLIC_URL)`
+
+The only case where you should not use href is for urls outside of current app or routes like  `routes/$.tsx`, basically routes that match all paths.
 
 ## typescript
 

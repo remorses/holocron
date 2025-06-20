@@ -19,9 +19,19 @@ import { TeamSwitcher } from './team-switcher'
 import Chat from './chat'
 import { Button } from './ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+import { ChatHistory } from './chat-history'
+import { useRouteLoaderData, useParams } from 'react-router'
+import { href } from 'react-router'
 import type { Route } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+    const loaderData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId.chat.$chatId',
+    ) as Route.ComponentProps['loaderData']
+    const params = useParams()
+    const { orgId, siteId } = params
+    const { viewChatHistory } = loaderData || {}
+
     return (
         <Sidebar
             variant='inset'
@@ -59,11 +69,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     variant='secondary'
                                     size='icon'
                                     className='size-8'
+                                    asChild
                                 >
-                                    <HistoryIcon />
+                                    <a
+                                        href={`
+                                          ${href(
+                                              '/org/:orgId/site/:siteId/chat/:chatId',
+                                              {
+                                                  orgId: orgId!,
+                                                  siteId: siteId!,
+                                                  chatId: params.chatId!,
+                                              },
+                                          )}${viewChatHistory ? '' : '?viewChatHistory=true'}
+                                      `}
+                                    >
+                                        <HistoryIcon />
+                                    </a>
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent>History</TooltipContent>
+                            <TooltipContent>
+                                {viewChatHistory ? 'Back to Chat' : 'History'}
+                            </TooltipContent>
                         </Tooltip>
 
                         <Tooltip>
@@ -82,7 +108,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </div>
 
                 <div className='p-0 grow row-span-23 flex flex-col '>
-                    <Chat />
+                    {viewChatHistory ? <ChatHistory /> : <Chat />}
                 </div>
             </div>
         </Sidebar>
