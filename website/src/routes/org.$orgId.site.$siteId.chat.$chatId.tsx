@@ -213,11 +213,29 @@ function Content() {
                             const docsRpcClient = createIframeRpcClient({
                                 iframeRef,
                             })
-                            docsRpcClient.setDocsState({
-                                currentSlug: chat.currentSlug || undefined,
 
-                                filesInDraft: (chat.filesInDraft as any) || {},
-                            })
+                            const waitForFirstMessage = (event) => {
+                                if (
+                                    iframeRef.current &&
+                                    event.source ===
+                                        iframeRef.current.contentWindow
+                                ) {
+                                    docsRpcClient.setDocsState({
+                                        currentSlug:
+                                            chat.currentSlug || undefined,
+                                        filesInDraft:
+                                            (chat.filesInDraft as any) || {},
+                                    })
+                                    window.removeEventListener(
+                                        'message',
+                                        waitForFirstMessage,
+                                    )
+                                }
+                            }
+                            window.addEventListener(
+                                'message',
+                                waitForFirstMessage,
+                            )
 
                             return docsRpcClient.cleanup
                         }}

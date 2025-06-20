@@ -13,7 +13,7 @@ import type { Route } from './+types/root'
 import './app.css'
 import { useParentPostMessage } from './lib/hooks'
 import { env } from './lib/env'
-import { startTransition } from 'react'
+import { startTransition, useEffect } from 'react'
 import { IframeRpcMessage, useDocsState } from './lib/docs-state'
 
 export const links: Route.LinksFunction = () => [
@@ -32,6 +32,17 @@ export const links: Route.LinksFunction = () => [
 const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, '')]
 export function Layout({ children }: { children: React.ReactNode }) {
     const navigate = useNavigate()
+
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.parent) {
+            window.parent?.postMessage?.(
+                { type: 'ready' },
+                {
+                    targetOrigin: '*',
+                },
+            )
+        }
+    }, [])
 
     useParentPostMessage(async (e: MessageEvent) => {
         try {
