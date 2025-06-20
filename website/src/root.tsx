@@ -37,37 +37,43 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 import { Route } from './+types/root'
 import { useNProgress } from './components/nprogress'
+
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+    const containerClass =
+        'flex flex-col items-center justify-center min-h-screen px-6 py-12 text-center bg-background text-foreground';
+    const titleClass =
+        'text-3xl font-semibold mb-3 text-primary';
+    const messageClass =
+        'text-base mb-2 text-muted-foreground';
+    const preClass =
+        'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2';
     if (isRouteErrorResponse(error)) {
         return (
-            <div className='flex flex-col items-center justify-center min-h-screen p-8 text-center'>
-                <h1 className='text-4xl font-bold mb-4'>
+            <div className={containerClass}>
+                <h1 className={titleClass}>
                     {error.status} {error.statusText}
                 </h1>
-                <p className='text-lg text-gray-600'>{error.data}</p>
+                <p className={messageClass}>{error.data}</p>
             </div>
-        )
+        );
     } else if (error instanceof Error) {
         return (
-            <div className='flex flex-col items-center justify-center min-h-screen p-8 text-center max-w-4xl mx-auto'>
-                <h1 className='text-4xl font-bold mb-4'>Error</h1>
-                <p className='text-lg text-gray-600 mb-6'>{error.message}</p>
-                <p className='text-sm text-gray-500 mb-2'>
-                    The stack trace is:
-                </p>
-                <pre className='bg-gray-100 p-4 rounded-lg text-xs text-left overflow-auto max-w-full border'>
+            <div className={containerClass}>
+                <h1 className={titleClass}>Error</h1>
+                <p className={messageClass}>{error.message}</p>
+                <pre className={preClass}>
                     {error.stack}
                 </pre>
             </div>
-        )
+        );
     } else {
         return (
-            <div className='flex items-center justify-center min-h-screen'>
-                <h1 className='text-4xl font-bold text-center'>
+            <div className={containerClass}>
+                <h1 className={titleClass}>
                     Unknown Error
                 </h1>
             </div>
-        )
+        );
     }
 }
 
