@@ -11,7 +11,10 @@ import { createIframeRpcClient } from '../lib/docs-setstate'
 import { StateProvider } from '../lib/state'
 import { cn } from '../lib/utils'
 import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
+
 import { UIMessage } from 'ai'
+
+export type { Route }
 
 export async function loader({
     request,
@@ -21,7 +24,22 @@ export async function loader({
     if (redirectTo) {
         throw redirect(redirectTo)
     }
-    const [site, chat] = await Promise.all([
+    // Check if user has access to this site through org membership
+    const orgUser = await prisma.orgsUsers.findUnique({
+        where: {
+            userId_orgId: {
+                userId: userId!,
+                orgId: orgId,
+            },
+        },
+    })
+
+    if (!orgUser) {
+        throw redirect('/dashboard')
+    }
+    const url = new URL(request.url)
+    const viewChatHistory = Boolean(url.searchParams.get('viewChatHistory'))
+    const [site, chat, chatHistory] = await Promise.all([
         prisma.site.findUnique({
             where: {
                 siteId: siteId,
@@ -56,6 +74,15 @@ export async function loader({
                 },
             },
         }),
+        viewChatHistory
+            ? prisma.chat.findMany({
+                  where: {
+                      siteId,
+                      userId,
+                  },
+                  orderBy: { createdAt: 'desc' },
+              })
+            : [],
     ])
 
     if (!site) {
@@ -65,24 +92,11 @@ export async function loader({
         throw new Error('Chat not found')
     }
 
-    // Check if user has access to this site through org membership
-    const orgUser = await prisma.orgsUsers.findUnique({
-        where: {
-            userId_orgId: {
-                userId: userId!,
-                orgId: orgId,
-            },
-        },
-    })
-
-    if (!orgUser) {
-        throw redirect('/dashboard')
-    }
     const host = site.domains.find(
         (x) => x.domainType === 'internalDomain',
     )?.host
 
-    const url = new URL(`https://${host}`)
+    const iframeUrl = new URL(`https://${host}`)
     if (host?.endsWith('.localhost')) {
         url.protocol = 'http:'
         url.port = '7777'
@@ -90,11 +104,20 @@ export async function loader({
 
     const tabId = site.tabs[0].tabId
 
-    return { site, url, host, siteId, tabId, chat }
+    return {
+        site,
+        iframeUrl,
+        host,
+        siteId,
+        tabId,
+        chat,
+        viewChatHistory,
+        chatHistory,
+    }
 }
 
 export default function Page({
-    loaderData: { chat, site, host, url },
+    loaderData: { chat, site, host },
     params: { siteId, orgId },
 }: Route.ComponentProps) {
     return (
@@ -137,7 +160,7 @@ export default function Page({
 }
 
 function Content() {
-    const { site, host, chat, url } = useLoaderData<typeof loader>()
+    const { site, host, chat, iframeUrl } = useLoaderData<typeof loader>()
     const [logoUrl, setLogoUrl] = useState(site.customization?.logoUrl)
     const iframeRef = useRef<HTMLIFrameElement>(null)
 
@@ -151,7 +174,7 @@ function Content() {
 
             <div className='flex grow flex-col'>
                 <BrowserWindow
-                    url={url}
+                    url={iframeUrl}
                     onSearchBarClick={() => {
                         const iframe = iframeRef.current
                         window.open(iframe?.src, '_blank')
@@ -190,7 +213,7 @@ function Content() {
                         allowTransparency={true}
                         name='preview' // tell iframe preview props is enabled
                         title='website preview'
-                        src={url.toString()}
+                        src={iframeUrl.toString()}
                     ></iframe>
                     {/* {!loaded && (
                       <div className='flex justify-center items-center inset-0 absolute'>

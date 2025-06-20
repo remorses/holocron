@@ -54,6 +54,28 @@ these types can be used for the main route exports, they must be imported from `
 
 For example if the current file is `src/routes/home.tsx` you can import `import { Route } from './+types/home'`.
 
+When using loader data in components it is preferable to use useRouteLoaderData instead of just useLoaderData, so that if the route data is not accessible a error is thrown instead of silently fail with the wrong data.
+
+You can use the Route types even to type other components that rely on `useRouteLoaderData`. But to do this you cannot import from `+types`, only routes files can do that. Instead you should export the Route type from the route file and let the component file import from the route.
+
+Here is an example to get the loader data type safely from a component:
+
+
+```ts
+import type { Route } from 'website/routes/root'
+
+const { userId } = useRouteLoaderData('root') as Route['componentProps']
+```
+
+```ts
+// this path should export Route first. make sure of that
+import type { Route } from 'website/routes/org.$orgId'
+
+const { userId } = useRouteLoaderData('routes/org.$orgId') as Route['componentProps']
+```
+
+You can do the same thing with action data, using `Route['actionData']`
+
 ## typescript
 
 Always try to use non relative imports, each package has a absolute import with the package name, for example paths inside website can be imported from website. Notice these paths also need to include the src directory.

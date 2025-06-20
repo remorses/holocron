@@ -19,6 +19,7 @@ import { TeamSwitcher } from './team-switcher'
 import Chat from './chat'
 import { Button } from './ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+import type { Route } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return (
@@ -54,24 +55,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <div className='flex gap-2'>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button variant="secondary" size="icon" className="size-8">
+                                <Button
+                                    variant='secondary'
+                                    size='icon'
+                                    className='size-8'
+                                >
                                     <HistoryIcon />
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent>
-                                History
-                            </TooltipContent>
+                            <TooltipContent>History</TooltipContent>
                         </Tooltip>
 
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button variant="secondary" size="icon" className="size-8">
+                                <Button
+                                    variant='secondary'
+                                    size='icon'
+                                    className='size-8'
+                                >
                                     <PlusIcon />
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent>
-                                New chat
-                            </TooltipContent>
+                            <TooltipContent>New chat</TooltipContent>
                         </Tooltip>
                     </div>
                 </div>
