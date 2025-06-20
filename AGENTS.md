@@ -67,7 +67,9 @@ Here is an example to get the loader data type safely from a component:
 ```ts
 import type { Route } from 'website/src/routes/root'
 
-const { userId } = useRouteLoaderData('root') as Route.componentProps['loaderData']
+const { userId } = useRouteLoaderData(
+    'root',
+) as Route.componentProps['loaderData']
 ```
 
 ```ts
@@ -93,7 +95,7 @@ const path = href('/org/:orgId', { orgId })
 
 If you need to have an absolute url you can do `new URL(href('/some/path'), env.PUBLIC_URL)`
 
-The only case where you should not use href is for urls outside of current app or routes like  `routes/$.tsx`, basically routes that match all paths.
+The only case where you should not use href is for urls outside of current app or routes like `routes/$.tsx`, basically routes that match all paths.
 
 ## typescript
 
@@ -108,3 +110,15 @@ always use tailwind for styling, prefer using simple styles using flex and gap. 
 Use shadcn theme colors instead of tailwind default colors.
 
 Try to keep styles as simple as possible, for breakpoint too.
+
+## components
+
+This project uses shadcn components placed in the website/src/components/ui folder. never add a new shadcn component yourself writing code, instead use the shadcn cli installed locally instead.
+
+Try to reuse these available components when you can, for example for buttons, tooltips, scroll areas, etc.
+
+## navigating
+
+always try use use react-router `useNavigate` or `Link` instead of doing window.location.href update.
+
+so that internal navigation are done client side and are faster. notice that navigate only accepts a relative path and not a full url, so if you have a full url you should do new URL(url).pathname. only use navigate if you know the url is relative to the app.

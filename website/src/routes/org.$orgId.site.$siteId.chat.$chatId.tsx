@@ -37,8 +37,6 @@ export async function loader({
     if (!orgUser) {
         throw redirect('/dashboard')
     }
-    const url = new URL(request.url)
-    const viewChatHistory = Boolean(url.searchParams.get('viewChatHistory'))
     const [site, chat, chatHistory] = await Promise.all([
         prisma.site.findUnique({
             where: {
@@ -74,15 +72,18 @@ export async function loader({
                 },
             },
         }),
-        viewChatHistory
-            ? prisma.chat.findMany({
-                  where: {
-                      siteId,
-                      userId,
-                  },
-                  orderBy: { createdAt: 'desc' },
-              })
-            : [],
+        prisma.chat.findMany({
+            where: {
+                siteId,
+                userId,
+            },
+            select: {
+                chatId: true,
+                title: true,
+                createdAt: true,
+            },
+            orderBy: { createdAt: 'desc' },
+        }),
     ])
 
     if (!site) {
@@ -98,8 +99,8 @@ export async function loader({
 
     const iframeUrl = new URL(`https://${host}`)
     if (host?.endsWith('.localhost')) {
-        url.protocol = 'http:'
-        url.port = '7777'
+        iframeUrl.protocol = 'http:'
+        iframeUrl.port = '7777'
     }
 
     const tabId = site.tabs[0].tabId
@@ -111,7 +112,6 @@ export async function loader({
         siteId,
         tabId,
         chat,
-        viewChatHistory,
         chatHistory,
     }
 }

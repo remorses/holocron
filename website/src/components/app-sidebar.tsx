@@ -19,8 +19,8 @@ import { TeamSwitcher } from './team-switcher'
 import Chat from './chat'
 import { Button } from './ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
-import { ChatHistory } from './chat-history'
-import { useRouteLoaderData, useParams } from 'react-router'
+import { Combobox } from './ui/combobox'
+import { useRouteLoaderData, useParams, useNavigate } from 'react-router'
 import { href } from 'react-router'
 import type { Route } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId'
 
@@ -29,8 +29,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         'routes/org.$orgId.site.$siteId.chat.$chatId',
     ) as Route.ComponentProps['loaderData']
     const params = useParams()
-    const { orgId, siteId } = params
-    const { viewChatHistory } = loaderData || {}
+    const navigate = useNavigate()
+    const { orgId, siteId, chatId } = params
+    const { chatHistory } = loaderData
+
+    const chatHistoryItems = chatHistory.map((chat) => ({
+        value: chat.chatId,
+        label: chat.title || 'Untitled Chat',
+    }))
 
     return (
         <Sidebar
@@ -63,42 +69,32 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
                     <div className='grow'></div>
                     <div className='flex gap-2'>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant='secondary'
-                                    size='icon'
-                                    className='size-8'
-                                    asChild
-                                >
-                                    <a
-                                        href={`
-                                          ${href(
-                                              '/org/:orgId/site/:siteId/chat/:chatId',
-                                              {
-                                                  orgId: orgId!,
-                                                  siteId: siteId!,
-                                                  chatId: params.chatId!,
-                                              },
-                                          )}${viewChatHistory ? '' : '?viewChatHistory=true'}
-                                      `}
-                                    >
-                                        <HistoryIcon />
-                                    </a>
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                {viewChatHistory ? 'Back to Chat' : 'History'}
-                            </TooltipContent>
-                        </Tooltip>
+                        <Combobox
+                            value={chatId}
+                            onValueChange={(value) => {
+                                if (value && value !== chatId) {
+                                    navigate(
+                                        href(
+                                            '/org/:orgId/site/:siteId/chat/:chatId',
+                                            {
+                                                orgId: orgId!,
+                                                siteId: siteId!,
+                                                chatId: value,
+                                            },
+                                        ),
+                                    )
+                                }
+                            }}
+                            placeholder='Select chat...'
+                            searchPlaceholder='Search chats...'
+                            emptyText='No chats found.'
+                            className='w-40'
+                            items={chatHistoryItems}
+                        />
 
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button
-                                    variant='secondary'
-                                    size='icon'
-                                    className='size-8'
-                                >
+                                <Button variant='secondary' size='icon'>
                                     <PlusIcon />
                                 </Button>
                             </TooltipTrigger>
@@ -108,7 +104,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </div>
 
                 <div className='p-0 grow row-span-23 flex flex-col '>
-                    {viewChatHistory ? <ChatHistory /> : <Chat />}
+                    <Chat />
                 </div>
             </div>
         </Sidebar>
