@@ -293,11 +293,17 @@ export const app = new Spiceflow({ basePath: '/api' })
                                 msg.role
                                 continue
                             }
+                            const content =
+                                msg.content ||
+                                parts
+                                    .filter((x) => x.type === 'text')
+                                    .reduce((acc, cur) => acc + cur.text, '\n')
                             const chatMessage = await tx.chatMessage.create({
                                 data: {
                                     chatId: chatRow.chatId,
                                     createdAt: msg.createdAt,
                                     id: msg.id,
+                                    content,
                                     role: msg.role ?? 'user',
                                 },
                             })
@@ -332,7 +338,8 @@ export const app = new Spiceflow({ basePath: '/api' })
                                             index,
                                             messageId: chatMessage.id,
                                             type: part.type,
-                                            text: null,
+                                            toolInvocation:
+                                                part.toolInvocation as any,
                                         },
                                     })
                                 } else {

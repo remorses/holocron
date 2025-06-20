@@ -354,7 +354,8 @@ model ChatMessage {
   chatId    String
   role      ChatMessageRole
   parts     ChatMessagePart[]
-  // metadata  Json?
+  // preview for simple text message parts
+  content   String            @default("") @db.Text
   createdAt DateTime          @default(now())
 }
 
@@ -365,7 +366,7 @@ model ChatMessagePart {
 
   index Int
 
-  type String
-  text String? @db.Text
-  data Json? // structured payloads
+  type           String
+  text           String? @db.Text
+  toolInvocation Json?
 }
