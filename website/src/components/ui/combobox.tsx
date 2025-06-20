@@ -50,15 +50,17 @@ export function Combobox({
                     variant='secondary'
                     role='combobox'
                     aria-expanded={open}
-                    className={cn('justify-between', className)}
+                    className={cn('justify-between max-w-full', className)}
                 >
-                    {value
-                        ? items.find((item) => item.value === value)?.label
-                        : placeholder}
+                    <span className='truncate'>
+                        {value
+                            ? items.find((item) => item.value === value)?.label
+                            : placeholder}
+                    </span>
                     <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className='p-0' align='start'>
+            <PopoverContent className='p-0 max-w-full' align='start'>
                 <Command>
                     <CommandInput
                         placeholder={searchPlaceholder}
@@ -79,11 +81,12 @@ export function Combobox({
                                         )
                                         setOpen(false)
                                     }}
+                                    className='max-w-full'
                                 >
-                                    {item.label}
+                                    <span className='truncate'>{item.label}</span>
                                     <Check
                                         className={cn(
-                                            'ml-auto h-4 w-4',
+                                            'ml-auto h-4 w-4 shrink-0',
                                             value === item.value
                                                 ? 'opacity-100'
                                                 : 'opacity-0',

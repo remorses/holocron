@@ -97,30 +97,31 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     />
 
                     <div className='grow'></div>
-                    <div className='flex gap-2'>
-                        <Combobox
-                            value={chatId}
-                            onValueChange={(value) => {
-                                if (value && value !== chatId) {
-                                    navigate(
-                                        href(
-                                            '/org/:orgId/site/:siteId/chat/:chatId',
-                                            {
-                                                orgId: orgId!,
-                                                siteId: siteId!,
-                                                chatId: value,
-                                            },
-                                        ),
-                                    )
-                                }
-                            }}
-                            placeholder='Select chat...'
-                            searchPlaceholder='Search chats...'
-                            emptyText='No chats found.'
-                            className='w-40'
-                            items={chatHistoryItems}
-                        />
-
+                    <div className='grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-2'>
+                        <div className=''>
+                            <Combobox
+                                value={chatId}
+                                onValueChange={(value) => {
+                                    if (value && value !== chatId) {
+                                        navigate(
+                                            href(
+                                                '/org/:orgId/site/:siteId/chat/:chatId',
+                                                {
+                                                    orgId: orgId!,
+                                                    siteId: siteId!,
+                                                    chatId: value,
+                                                },
+                                            ),
+                                        )
+                                    }
+                                }}
+                                placeholder='Select chat...'
+                                searchPlaceholder='Search chats...'
+                                emptyText='No chats found.'
+                                className='max-w-[200px]'
+                                items={chatHistoryItems}
+                            />
+                        </div>
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button
