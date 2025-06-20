@@ -38,13 +38,19 @@ Never write tests yourself that call prisma or interact with database or emails.
 
 this project uses Doppler to manage secrets, with a single project with 3 envs: dev, preview and production. dev is the env already selected and implicing in doppler calls.
 
-# website
+# react router v7
 
 the website uses react-router v7.
 
 React-router framework is the successor of Remix, it is basically the same framework and it uses loaders and actions as core features.
 
 react-router follows all the conventions of remix but all imports must be updated to point to `react-router` instead of `@remix-run/react` or `@remix-run/node`.
+
+## website routes
+
+website routes use the flat routes filesystem routes, inside src/routes. these files encode the routing logic in the filename, using $id for params and dot . for slashes.
+
+if 2 routes share the same prefix then the loader of both routes is run on a request and the route with the shorter routename is called a layout. a layout can also use <Outlet /> to render the child route inside it. for example /org/x/site will run loaders in `org.$orgid` and `org.$orgid.site`. if you want instead to create a route that is not a layout route, where the loader does not run for routes that share the prefix, append _index to the filename, for example `org.$orgid._index` in the example before.
 
 ## route file exports
 
