@@ -184,7 +184,7 @@ function Content() {
         updatePageProps({ logoUrl, color: color || undefined }, iframeRef)
     }, [color, logoUrl])
     return (
-        <div className='flex flex-col h-full gap-2 px-3 pb-3'>
+        <div className='flex flex-col h-full gap-4'>
             <NavBar />
 
             <div className='flex grow flex-col'>

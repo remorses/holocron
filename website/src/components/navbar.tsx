@@ -56,7 +56,7 @@ export default function NavBar() {
         },
     })
     return (
-        <header className='flex h-16 items-center justify-between gap-4'>
+        <header className='flex  items-center justify-between gap-4 max-lg:pt-3 pt-4'>
             {/* Left side */}
             <div className='flex items-center gap-2'>
                 {/* Main nav */}
