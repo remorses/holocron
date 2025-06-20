@@ -632,7 +632,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 										}}
 										__framer__animateOnce={true}
 										__framer__enter={animation1}
-										__framer__styleAppearEffectEnabled={true}
+										__framer__styleAppearEffectEnabled={false}
 										__framer__threshold={0.5}
 										__fromCanvasComponent={true}
 										__perspectiveFX={false}
@@ -683,7 +683,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									__framer__animate={{
 										transition: transition3,
 									}}
-									__framer__animateOnce={true}
+									__framer__animateOnce={false}
 									__framer__enter={animation2}
 									__framer__styleAppearEffectEnabled={true}
 									__framer__targets={[
@@ -740,7 +740,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											}}
 											__framer__animateOnce={true}
 											__framer__enter={animation1}
-											__framer__styleAppearEffectEnabled={true}
+											__framer__styleAppearEffectEnabled={false}
 											__framer__threshold={0.5}
 											__perspectiveFX={false}
 											__smartComponentFX={true}
@@ -822,7 +822,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											}}
 											__framer__animateOnce={true}
 											__framer__enter={animation2}
-											__framer__styleAppearEffectEnabled={true}
+											__framer__styleAppearEffectEnabled={false}
 											__framer__threshold={0}
 											__perspectiveFX={false}
 											__smartComponentFX={true}
@@ -876,7 +876,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 													}}
 													__framer__animateOnce={true}
 													__framer__enter={animation4}
-													__framer__styleAppearEffectEnabled={true}
+													__framer__styleAppearEffectEnabled={false}
 													__framer__threshold={0.5}
 													__perspectiveFX={false}
 													__smartComponentFX={true}
@@ -966,7 +966,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									}}
 									__framer__animateOnce={true}
 									__framer__enter={animation2}
-									__framer__styleAppearEffectEnabled={true}
+									__framer__styleAppearEffectEnabled={false}
 									__framer__threshold={0.5}
 									__perspectiveFX={false}
 									__smartComponentFX={true}
@@ -1014,7 +1014,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											}}
 											__framer__animateOnce={true}
 											__framer__enter={animation1}
-											__framer__styleAppearEffectEnabled={true}
+											__framer__styleAppearEffectEnabled={false}
 											__framer__targets={[
 												{
 													ref: ref1,
@@ -1103,7 +1103,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											}}
 											__framer__animateOnce={true}
 											__framer__enter={animation2}
-											__framer__styleAppearEffectEnabled={true}
+											__framer__styleAppearEffectEnabled={false}
 											__framer__threshold={0}
 											__perspectiveFX={false}
 											__smartComponentFX={true}
@@ -1241,7 +1241,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									}}
 									__framer__animateOnce={true}
 									__framer__enter={animation2}
-									__framer__styleAppearEffectEnabled={true}
+									__framer__styleAppearEffectEnabled={false}
 									__framer__threshold={0.5}
 									__perspectiveFX={false}
 									__smartComponentFX={true}
@@ -1289,7 +1289,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											}}
 											__framer__animateOnce={true}
 											__framer__enter={animation1}
-											__framer__styleAppearEffectEnabled={true}
+											__framer__styleAppearEffectEnabled={false}
 											__framer__targets={[
 												{
 													ref: ref1,
@@ -1378,7 +1378,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											}}
 											__framer__animateOnce={true}
 											__framer__enter={animation2}
-											__framer__styleAppearEffectEnabled={true}
+											__framer__styleAppearEffectEnabled={false}
 											__framer__threshold={0}
 											__perspectiveFX={false}
 											__smartComponentFX={true}
@@ -1412,7 +1412,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 													}}
 													__framer__animateOnce={true}
 													__framer__enter={animation6}
-													__framer__styleAppearEffectEnabled={true}
+													__framer__styleAppearEffectEnabled={false}
 													__framer__threshold={0}
 													__perspectiveFX={false}
 													__smartComponentFX={true}
@@ -1529,7 +1529,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									}}
 									__framer__animateOnce={true}
 									__framer__enter={animation2}
-									__framer__styleAppearEffectEnabled={true}
+									__framer__styleAppearEffectEnabled={false}
 									__framer__threshold={0.5}
 									__perspectiveFX={false}
 									__smartComponentFX={true}
@@ -1577,7 +1577,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											}}
 											__framer__animateOnce={true}
 											__framer__enter={animation1}
-											__framer__styleAppearEffectEnabled={true}
+											__framer__styleAppearEffectEnabled={false}
 											__framer__targets={[
 												{
 													ref: ref1,
@@ -1666,7 +1666,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											}}
 											__framer__animateOnce={true}
 											__framer__enter={animation2}
-											__framer__styleAppearEffectEnabled={true}
+											__framer__styleAppearEffectEnabled={false}
 											__framer__threshold={0}
 											__perspectiveFX={false}
 											__smartComponentFX={true}
@@ -1694,7 +1694,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												}}
 												__framer__animateOnce={true}
 												__framer__enter={animation2}
-												__framer__styleAppearEffectEnabled={true}
+												__framer__styleAppearEffectEnabled={false}
 												__framer__threshold={0}
 												__perspectiveFX={false}
 												__smartComponentFX={true}
@@ -1744,7 +1744,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 													}}
 													__framer__animateOnce={true}
 													__framer__enter={animation7}
-													__framer__styleAppearEffectEnabled={true}
+													__framer__styleAppearEffectEnabled={false}
 													__framer__threshold={0}
 													__perspectiveFX={false}
 													__smartComponentFX={true}
@@ -1784,7 +1784,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 													}}
 													__framer__animateOnce={true}
 													__framer__enter={animation7}
-													__framer__styleAppearEffectEnabled={true}
+													__framer__styleAppearEffectEnabled={false}
 													__framer__threshold={0}
 													__perspectiveFX={false}
 													__smartComponentFX={true}
