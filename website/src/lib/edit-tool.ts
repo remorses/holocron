@@ -39,12 +39,12 @@ export function isParameterComplete(args: Partial<EditToolParamSchema>) {
 }
 
 export function createEditExecute({
-    updatedPages,
+    filesInDraft,
     getPageContent,
     validateNewContent,
 }: {
     validateNewContent?: (x: { githubPath: string; content: string }) => any
-    updatedPages: Record<string, PageUpdate>
+    filesInDraft: Record<string, PageUpdate>
     getPageContent: (x: {
         githubPath: string
     }) => Promise<string | undefined | void>
@@ -63,7 +63,7 @@ export function createEditExecute({
 
         switch (command) {
             case 'view': {
-                const override = updatedPages[path]
+                const override = filesInDraft[path]
                 let content: string | null = null
 
                 if (override) {
@@ -74,7 +74,7 @@ export function createEditExecute({
                             githubPath: path,
                         })
                         content = fetchedContent || ''
-                        updatedPages[path] = {
+                        filesInDraft[path] = {
                             githubPath: path,
                             markdown: content,
                         }
@@ -146,14 +146,14 @@ export function createEditExecute({
                         }
                     }
                 }
-                updatedPages[path] = {
+                filesInDraft[path] = {
                     githubPath: path,
                     markdown: file_text,
                 }
                 return file_text
             }
             case 'str_replace': {
-                let override = updatedPages[path]
+                let override = filesInDraft[path]
                 if (!override) {
                     const content = await getPageContent({
                         githubPath: path,
@@ -223,7 +223,7 @@ export function createEditExecute({
                         }
                     }
                 }
-                updatedPages[path] = {
+                filesInDraft[path] = {
                     githubPath: path,
                     markdown: replacedContent,
                 }
@@ -247,7 +247,7 @@ export function createEditExecute({
                 return result
             }
             case 'insert': {
-                let override = updatedPages[path]
+                let override = filesInDraft[path]
                 if (!override) {
                     const content = await getPageContent({
                         githubPath: path,
@@ -305,7 +305,7 @@ export function createEditExecute({
                         }
                     }
                 }
-                updatedPages[path] = {
+                filesInDraft[path] = {
                     githubPath: path,
                     markdown: newContent,
                 }
@@ -352,7 +352,7 @@ export function createEditExecute({
                         }
                     }
                 }
-                updatedPages[path] = {
+                filesInDraft[path] = {
                     githubPath: path,
                     markdown: previous.markdown,
                 }

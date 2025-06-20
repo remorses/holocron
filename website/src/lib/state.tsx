@@ -9,7 +9,7 @@ export type State = {
     messages: UIMessage[]
     docsState?: DocsState
     isChatGenerating?: boolean
-    updatedPages: Record<string, PageUpdate>
+    filesInDraft: Record<string, PageUpdate>
     lastError?: {
         messageId: string
         error: string

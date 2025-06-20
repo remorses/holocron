@@ -110,12 +110,12 @@ export const app = new Spiceflow({ basePath: '/api' })
             messages: z.array(z.custom<UIMessage>()),
             siteId: z.string(),
             tabId: z.string(),
-            updatedPages: z.record(
+            filesInDraft: z.record(
                 z.object({ githubPath: z.string(), markdown: z.string() }),
             ),
         }),
         async *handler({ request, state: { userId } }) {
-            const { messages, tabId, updatedPages } = await request.json()
+            const { messages, tabId, filesInDraft } = await request.json()
             // First, check if the user can access the requested tab
             const tab = await prisma.tab.findFirst({
                 where: {
@@ -137,7 +137,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             let model = openai.responses('gpt-4.1')
             // model = anthropic('claude-3-5-haiku-latest')
             const editFilesExecute = createEditExecute({
-                updatedPages,
+                filesInDraft,
                 async validateNewContent(x) {
                     if (mdxRegex.test(x.githubPath)) {
                         await processMdxInServer({

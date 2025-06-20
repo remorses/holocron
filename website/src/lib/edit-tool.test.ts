@@ -5,7 +5,7 @@ import {
     type PageUpdate
 } from './edit-tool'
 
-const updatedPages: Record<string, PageUpdate> = {}
+const filesInDraft: Record<string, PageUpdate> = {}
 
 const mockGetPageContent = async ({ githubPath }: { githubPath: string }) => {
     const mockFiles: Record<string, string> = {
@@ -17,7 +17,7 @@ const mockGetPageContent = async ({ githubPath }: { githubPath: string }) => {
 }
 
 const execute = createEditExecute({
-    updatedPages,
+    filesInDraft,
     getPageContent: mockGetPageContent,
 })
 
@@ -72,7 +72,7 @@ describe('edit-tool commands', () => {
       With multiple lines
       Created by test"
     `)
-        expect(updatedPages['new-file.md']).toMatchInlineSnapshot(`
+        expect(filesInDraft['new-file.md']).toMatchInlineSnapshot(`
       {
         "githubPath": "new-file.md",
         "markdown": "This is a new file
@@ -97,8 +97,8 @@ describe('edit-tool commands', () => {
 
           Index: test.md
           ===================================================================
-          --- test.md	
-          +++ test.md	
+          --- test.md
+          +++ test.md
           @@ -1,4 +1,4 @@
            line 1
           -line 2
@@ -107,7 +107,7 @@ describe('edit-tool commands', () => {
            line 4
           "
         `)
-        expect(updatedPages['test.md']).toMatchInlineSnapshot(`
+        expect(filesInDraft['test.md']).toMatchInlineSnapshot(`
       {
         "githubPath": "test.md",
         "markdown": "line 1
@@ -133,8 +133,8 @@ describe('edit-tool commands', () => {
 
           Index: example.txt
           ===================================================================
-          --- example.txt	
-          +++ example.txt	
+          --- example.txt
+          +++ example.txt
           @@ -1,3 +1,4 @@
            Hello World
           +Inserted line after line 1
@@ -142,7 +142,7 @@ describe('edit-tool commands', () => {
            End of file
           "
         `)
-        expect(updatedPages['example.txt']).toMatchInlineSnapshot(`
+        expect(filesInDraft['example.txt']).toMatchInlineSnapshot(`
       {
         "githubPath": "example.txt",
         "markdown": "Hello World

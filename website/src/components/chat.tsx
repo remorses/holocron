@@ -206,7 +206,7 @@ function Footer() {
                 setText('') // Clear input for new requests
             }
 
-            const updatedPages = useChatState.getState()?.updatedPages || {}
+            const filesInDraft = useChatState.getState()?.filesInDraft || {}
 
             useChatState.setState({ messages: allMessages })
 
@@ -215,7 +215,7 @@ function Footer() {
                     messages: allMessages,
                     siteId,
                     tabId,
-                    updatedPages,
+                    filesInDraft,
                 })
             if (error) throw error
             // Clear the input
@@ -234,7 +234,7 @@ function Footer() {
                 { transformKey: (x) => x.map((l) => JSON.stringify(l)) },
             )
             const execute = createEditExecute({
-                updatedPages: updatedPages,
+                filesInDraft: filesInDraft,
                 getPageContent,
             })
             // Split the async iterator into two: one for docs edit, one for state updates
@@ -270,16 +270,16 @@ function Footer() {
 
                             if (toolInvocation.state === 'partial-call') {
                                 if (isPostMessageBusy) continue
-                                let updatedPagesCopy = { ...updatedPages }
+                                let updatedPagesCopy = { ...filesInDraft }
                                 const execute = createEditExecute({
-                                    updatedPages: updatedPagesCopy,
+                                    filesInDraft: updatedPagesCopy,
                                     getPageContent,
                                 })
                                 await execute(toolInvocation.args)
                                 isPostMessageBusy = true
                                 docsRpcClient
                                     .setDocsState({
-                                        updatedPages: updatedPagesCopy,
+                                        filesInDraft: updatedPagesCopy,
                                         currentSlug: generateSlugFromPath(
                                             args.path || '',
                                             '/',
@@ -297,7 +297,7 @@ function Footer() {
                                 )
                                 await docsRpcClient.setDocsState(
                                     {
-                                        updatedPages: updatedPages,
+                                        filesInDraft: filesInDraft,
                                         isMarkdownStreaming: false,
                                         currentSlug: generateSlugFromPath(
                                             args.path || '',
@@ -306,7 +306,7 @@ function Footer() {
                                     },
                                     toolInvocation.toolCallId,
                                 )
-                                useChatState.setState({ updatedPages })
+                                useChatState.setState({ filesInDraft })
                             }
                         }
                     }

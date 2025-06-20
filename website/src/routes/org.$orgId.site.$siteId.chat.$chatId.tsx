@@ -90,7 +90,7 @@ export default function Page({
             initialValue={{
                 messages: [],
                 isChatGenerating: false,
-                updatedPages: {}, // TODO take updated pages from persistent state, so that an update can be in progress
+                filesInDraft: {}, // TODO take updated pages from persistent state, so that an update can be in progress
             }}
         >
             <SidebarProvider

@@ -281,9 +281,9 @@ function DocsMarkdown() {
     const loaderData = useLoaderData<typeof loader>()
     let { ast, markdown, isStreaming } = useDocsState(
         useShallow((x) => {
-            const { updatedPages, isMarkdownStreaming: isStreaming } = x
+            const { filesInDraft, isMarkdownStreaming: isStreaming } = x
 
-            const override = updatedPages[loaderData.githubPath]
+            const override = filesInDraft[loaderData.githubPath]
 
             if (override) {
                 return {

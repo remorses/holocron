@@ -12,7 +12,7 @@ export type DocsState = {
     tree?: PageTree.Root
     toc?: TOCItemType[]
     currentSlug?: string
-    updatedPages: Record<
+    filesInDraft: Record<
         string,
         {
             markdown: string
@@ -30,7 +30,7 @@ export type DocsState = {
 const stateKey = 'docsState'
 
 const defaultState: DocsState = {
-    updatedPages: {},
+    filesInDraft: {},
     deletedPages: [],
 }
 
