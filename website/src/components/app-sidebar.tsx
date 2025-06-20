@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { HistoryIcon, PlusIcon } from 'lucide-react'
 
 import { NavUser } from 'website/src/components/nav-user'
 import {
@@ -11,9 +12,13 @@ import {
     SidebarGroupContent,
     SidebarGroupLabel,
     SidebarHeader,
+    SidebarMenu,
+    SidebarMenuItem,
 } from 'website/src/components/ui/sidebar'
 import { TeamSwitcher } from './team-switcher'
 import Chat from './chat'
+import { Button } from './ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return (
@@ -26,8 +31,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 className='grid grow h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
                 style={{ height: 'var(--sidebar-header-height, 64px)' }}
             >
-                <SidebarHeader className='p-0 row-span-1 flex items-center pr-4'>
+                <div className='p-0 row-span-1 w-full flex items-center pr-4'>
                     <TeamSwitcher
+                        className='w-auto'
                         teams={[
                             {
                                 name: 'ArkDigital',
@@ -43,7 +49,33 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                             },
                         ]}
                     />
-                </SidebarHeader>
+
+                    <div className='grow'></div>
+                    <div className='flex gap-2'>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="secondary" size="icon" className="size-8">
+                                    <HistoryIcon />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                History
+                            </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="secondary" size="icon" className="size-8">
+                                    <PlusIcon />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                New chat
+                            </TooltipContent>
+                        </Tooltip>
+                    </div>
+                </div>
+
                 <div className='p-0 grow row-span-23 flex flex-col '>
                     <Chat />
                 </div>

@@ -54,6 +54,16 @@ these types can be used for the main route exports, they must be imported from `
 
 For example if the current file is `src/routes/home.tsx` you can import `import { Route } from './+types/home'`.
 
+## typescript
+
+Always try to use non relative imports, each package has a absolute import with the package name, for example paths inside website can be imported from website. Notice these paths also need to include the src directory.
+
+This is preferable other aliases like @/ because i can easily move the code from one package to another without changing the import paths. This way you can even move a file and import paths do not change much.
+
 ## styling
 
-always use tailwind for styling, prefer using simple styles using flex and gap. Try to use the built in tailwind colors like gray, red, green, etc. Margins should be avoided, instead use flexbox gaps, grid gaps, or separate spacing divs.
+always use tailwind for styling, prefer using simple styles using flex and gap. Margins should be avoided, instead use flexbox gaps, grid gaps, or separate spacing divs.
+
+Use shadcn theme colors instead of tailwind default colors.
+
+Try to keep styles as simple as possible, for breakpoint too.

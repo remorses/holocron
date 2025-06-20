@@ -38,7 +38,6 @@ export default function Chat({}) {
             className='[&>div>div]:grow max-w-full h-full flex flex-col grow bg-background'
         >
             <Messages ref={contentRef} />
-
             <Footer />
         </ScrollArea>
     )
