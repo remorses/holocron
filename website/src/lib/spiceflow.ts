@@ -3,7 +3,13 @@ import { openai, OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
 import dedent from 'string-dedent'
 
 import { anthropic } from '@ai-sdk/anthropic'
-import { appendResponseMessages, streamText, tool, UIMessage } from 'ai'
+import {
+    appendResponseMessages,
+    generateText,
+    streamText,
+    tool,
+    UIMessage,
+} from 'ai'
 import { prisma } from 'db'
 import { s3 } from 'docs-website/src/lib/s3'
 import { Spiceflow } from 'spiceflow'
@@ -116,7 +122,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 z.object({ githubPath: z.string(), markdown: z.string() }),
             ),
         }),
-        async *handler({ request, state: { userId } }) {
+        async *handler({ request, waitUntil, state: { userId } }) {
             const {
                 messages,
                 currentSlug,
@@ -262,6 +268,81 @@ export const app = new Spiceflow({ basePath: '/api' })
                         responseMessages: response.messages,
                     })
                     console.log(resultMessages)
+
+                    // Generate chat title from all text messages and update in DB
+                    async function generateAndSaveChatTitle(params: {
+                        resultMessages: typeof resultMessages
+                        chatId: string
+                        userId: string
+                        siteId: string
+                        currentSlug: string
+                        filesInDraft: any
+                    }): Promise<string | null> {
+                        // Extract conversation text
+                        const textMessages = params.resultMessages
+                            .filter(
+                                (msg) =>
+                                    msg.role === 'user' ||
+                                    msg.role === 'assistant',
+                            )
+                            .map((msg) => {
+                                const content =
+                                    msg.content ||
+                                    (msg.parts || [])
+                                        .filter((part) => part.type === 'text')
+                                        .map((part) => part.text)
+                                        .join('\n')
+                                return `${msg.role}: ${content}`
+                            })
+                            .join('\n\n')
+
+                        let chatTitle: string | null = null
+                        if (textMessages.trim()) {
+                            try {
+                                const titleResponse = await generateText({
+                                    model: openai('gpt-4o-mini'),
+                                    messages: [
+                                        {
+                                            role: 'system',
+                                            content:
+                                                'Generate a very short, descriptive title for this chat conversation. The title should be 2-6 words that capture the main topic or purpose. Do not use quotes or special formatting.',
+                                        },
+                                        {
+                                            role: 'user',
+                                            content: `Here is the chat conversation:\n\n${textMessages}`,
+                                        },
+                                    ],
+                                    maxTokens: 20,
+                                })
+                                chatTitle = titleResponse.text.trim()
+                            } catch (error) {
+                                console.error(
+                                    'Failed to generate chat title:',
+                                    error,
+                                )
+                            }
+                        }
+                        // Save to DB
+                        await prisma.chat.update({
+                            where: { chatId: params.chatId, userId },
+                            data: {
+                                title: chatTitle,
+                            },
+                        })
+                        return chatTitle
+                    }
+
+                    waitUntil(
+                        generateAndSaveChatTitle({
+                            resultMessages,
+                            chatId,
+                            userId,
+                            siteId,
+                            currentSlug,
+                            filesInDraft,
+                        }),
+                    )
+
                     await prisma.$transaction(async (tx) => {
                         const prevChat = await tx.chat.delete({
                             where: { chatId },
@@ -276,7 +357,6 @@ export const app = new Spiceflow({ basePath: '/api' })
                                 siteId,
                                 currentSlug,
                                 filesInDraft: filesInDraft || {},
-                                title: null,
                             },
                         })
 

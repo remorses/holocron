@@ -1,10 +1,16 @@
+# package manager: pnpm with workspace
+
 This project uses pnpm workspaces to manage dependencies. Important scripts are in the root package.json or various packages package.json
+
+try to run commands inside the package folder that you are working on. for example you should never run `pnpm test` from the root
+
+# typescript
 
 Try to use object arguments for new typescript functions if the function would accept more than one argument, this way you can use the object as a sort of named argument feature, where order of arguments does not matter and it's easier to discover parameters.
 
-try to use early returns and breaks, try nesting code as little as possible, follow the go best practice of if statements: avoid else, nest as little as possible, use top level ifs. minimize nesting.
+do not add useless comments if the code is self descriptive. only add comments if requested or if this was a change that i asked for, meaning it is not obvious code and needs some inline documentation.
 
-do not add useless comments if the code is self descriptive. only add comments if requested.
+try to use early returns and breaks, try nesting code as little as possible, follow the go best practice of if statements: avoid else, nest as little as possible, use top level ifs. minimize nesting.
 
 # testing
 
@@ -97,6 +103,16 @@ If you need to have an absolute url you can do `new URL(href('/some/path'), env.
 
 The only case where you should not use href is for urls outside of current app or routes like `routes/$.tsx`, basically routes that match all paths.
 
+> if you cannot use `href` simply because the route you would like to link to does not exist you should do the following: list all the files in the src/routes folder first, to see if it already exists but not with the name you would expect. If still you can't find one, create a simple placeholder react-router route with a simple Page component and a simple loader that does what you would expect. do not write too much code. you can improve on it in later messages.
+
+## missing routes you would like to redirect to
+
+never redirect or link to a route that does not exist, instead create a simple placeholder route with a simple loader and component instead. then redirect there using type safe path with `href`
+
+if instead it's not clear where to redirect because an user resource is missing, check if an onboarding route exists for that resource or a generic onboarding route. redirect there instead
+
+also keep in mind it's preferable to throw redirects in loaders instead of returning responses, so loader keeps type safety.
+
 ## typescript
 
 Always try to use non relative imports, each package has a absolute import with the package name, for example paths inside website can be imported from website. Notice these paths also need to include the src directory.
@@ -117,7 +133,7 @@ This project uses shadcn components placed in the website/src/components/ui fold
 
 Try to reuse these available components when you can, for example for buttons, tooltips, scroll areas, etc.
 
-## navigating
+## client side navigation is preferred
 
 always try use use react-router `useNavigate` or `Link` instead of doing window.location.href update.
 
@@ -138,84 +154,8 @@ Spiceflow has support for client side type safe rpc, use this client when you ne
 > SUPER IMPORTANT! if you add a new route to a spiceflow app, use the spiceflow app state like `userId` to add authorization to the route. If there is no state then you can use functions like `getSession({request})` or similar.
 > Make sure the current userId has access to the fetched or updated rows. This can be done by checking that the parent row or current row has a relation with the current userId. For example `prisma.site.findFirst({where: {users: {some: {userId }}}})`
 
-```ts
-import { createSpiceflowClient } from 'spiceflow/client'
-import { Spiceflow } from 'spiceflow'
-import { z } from 'zod' // zod v4 is also supported if app uses that version
 
-// Define the app with multiple routes and features
-const app = new Spiceflow({ basePath: '/api' })
-    .route({
-        method: 'GET',
-        path: '/hello/:id',
-        handler({ params }) {
-            return `Hello, ${params.id}!`
-        },
-    })
-    .route({
-        method: 'POST',
-        path: '/users',
-        async handler({ request }) {
-            const body = await request.json() // here body has type { name?: string, email?: string }
-            return `Created user: ${body.name}`
-        },
-        request: z.object({
-            name: z.string().optional(),
-            email: z.string().email().optional(),
-        }),
-    })
-    .route({
-        method: 'GET',
-        path: '/stream',
-        async *handler() {
-            yield 'Start'
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-            yield 'Middle'
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-            yield 'End'
-        },
-    })
-
-// Create the client
-const client = createSpiceflowClient<typeof app>('http://localhost:3000')
-
-// Example usage of the client
-async function exampleUsage() {
-    // GET request
-    const { data: helloData, error: helloError } = await client.api
-        .hello({ id: 'World' })
-        .get()
-    if (helloError) {
-        console.error('Error fetching hello:', helloError)
-    } else {
-        console.log('Hello response:', helloData)
-    }
-
-    // POST request
-    const { data: userData, error: userError } = await client.api.users.post({
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-    })
-    if (userError) {
-        console.error('Error creating user:', userError)
-    } else {
-        console.log('User creation response:', userData)
-    }
-
-    // Async generator (streaming) request
-    const { data: streamData, error: streamError } =
-        await client.api.stream.get()
-    if (streamError) {
-        console.error('Error fetching stream:', streamError)
-    } else {
-        for await (const chunk of streamData) {
-            console.log('Stream chunk:', chunk)
-        }
-    }
-}
-```
-
-## interacting with the database
+## interacting with the database, prisma
 
 this project uses prisma to interact with the database. if you need to add new queries always read the schema.prisma inside the db folder first so you understand the shape of the tables in the database.
 
@@ -223,12 +163,24 @@ never add new tables to the prisma schema, instead ask me to do so.
 
 prisma upsert calls are preferable over updates, so that you also handle the case where the row is missing.
 
-for complex mutations that involve a lot of tables realted together, for example a Chat with ChatMessages and ChatMessagePath, you should use transaction instead of a super complex single query:
+## prisma transactions for complex relations inserts
+
+for very complex updates or inserts that involve more than 3 related tables, for example a Chat with ChatMessages and ChatMessagePath, you should use transaction instead of a super complex single query:
 
 - start a transaction
 - delete the parent table, the one with cascade deletes, so that the related tables are also deleted
 - recreate all the tables again, reuse the old existing rows data when you don't have all the fields available
 - make sure to create all the rows in the related tables. use for loops if necessary
+
+## always make sure use has access to prisma tables
+
+> IMPORTANT! always read the schema.prisma file before adding a new prisma query, to understand how to structure it
+
+try to never write sql by hand, user prisma
+
+if a query becomes too complex because fetching too deeply into related tables (more than 1 `include` nesting), use different queries instead, put them in a Promise.all
+
+##
 
 ## concurrency
 

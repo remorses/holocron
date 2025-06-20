@@ -1,6 +1,8 @@
 'use client'
 
 import * as React from 'react'
+import { useNavigate, useParams } from 'react-router'
+import { href } from 'react-router'
 
 import {
     DropdownMenu,
@@ -25,10 +27,16 @@ export function TeamSwitcher({
     teams: {
         name: string
         logo: string
+        orgId?: string
     }[]
     className?: string
 }) {
-    const [activeTeam, setActiveTeam] = React.useState(teams[0] ?? null)
+    const navigate = useNavigate()
+    const params = useParams()
+    const { orgId: currentOrgId } = params
+
+    const activeTeam =
+        teams.find((team) => team.orgId === currentOrgId) || teams[0] || null
 
     if (!teams.length) return null
 
@@ -72,8 +80,12 @@ export function TeamSwitcher({
                 </DropdownMenuLabel>
                 {teams.map((team, index) => (
                     <DropdownMenuItem
-                        key={team.name}
-                        onClick={() => setActiveTeam(team)}
+                        key={team.orgId || team.name}
+                        onClick={() => {
+                            if (team.orgId && team.orgId !== currentOrgId) {
+                                navigate(href('/org/:orgId', { orgId: team.orgId }))
+                            }
+                        }}
                         className='gap-2 p-2'
                     >
                         <div className='flex size-6 items-center justify-center rounded-md overflow-hidden'>

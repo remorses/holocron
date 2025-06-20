@@ -32,7 +32,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const params = useParams()
     const navigate = useNavigate()
     const { orgId, siteId, chatId } = params
-    const { chatHistory } = loaderData
+    const { chatHistory, userOrgs } = loaderData
     const [isCreatingChat, setIsCreatingChat] = React.useState(false)
 
     const handleNewChat = async () => {
@@ -87,20 +87,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <div className='p-0 row-span-1 w-full flex items-center pr-4'>
                     <TeamSwitcher
                         className='w-auto'
-                        teams={[
-                            {
-                                name: 'ArkDigital',
-                                logo: 'https://raw.githubusercontent.com/origin-space/origin-images/refs/heads/main/exp2/logo-01_upxvqe.png',
-                            },
-                            {
-                                name: 'Acme Corp.',
-                                logo: 'https://raw.githubusercontent.com/origin-space/origin-images/refs/heads/main/exp2/logo-01_upxvqe.png',
-                            },
-                            {
-                                name: 'Evil Corp.',
-                                logo: 'https://raw.githubusercontent.com/origin-space/origin-images/refs/heads/main/exp2/logo-01_upxvqe.png',
-                            },
-                        ]}
+                        teams={userOrgs.map((org) => ({
+                            name: org.name,
+                            logo:
+                                org.image ||
+                                `https://avatar.vercel.sh/${encodeURIComponent(org.name)}?gradient=linear`,
+                            orgId: org.orgId,
+                        }))}
                     />
 
                     <div className='grow'></div>

@@ -126,6 +126,7 @@ model OrgInviteLink {
 model Org {
   orgId            String   @id @default(cuid())
   name             String   @default("")
+  image            String?  @db.Text
   createdAt        DateTime @default(now())
   updatedAt        DateTime @default(now()) @updatedAt
   stripeCustomerId String?
