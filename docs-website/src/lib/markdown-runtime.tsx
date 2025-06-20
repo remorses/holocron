@@ -19,6 +19,7 @@ import { createHighlighter, Highlighter } from 'shiki'
 import { getProcessor, ProcessorData } from './mdx'
 import markdownRs from '@xmorse/markdown-rs'
 import React from 'react'
+import memoize from 'micro-memoize'
 
 export const StreamingMarkdownRuntimeComponent = memo(
     function MarkdownRuntimeComponent({
@@ -66,45 +67,45 @@ export const StreamingMarkdownRuntimeComponent = memo(
         })
     },
 )
+const failedLanguages = new Set<string>()
 
-const missingLanguagePromises = new Map<string, Promise<any> | null>()
+const loadLanguageMemo = memoize(
+    (highlighter: Highlighter, language: string) => {
+        return highlighter.loadLanguage(language as any).catch((e) => {
+            console.error(e)
+            failedLanguages.add(language)
+        })
+    },
+)
 
 const onMissingLanguage = (highlighter: Highlighter, language: string) => {
-    if (missingLanguagePromises.has(language)) {
-        const p = missingLanguagePromises.get(language)
-        if (p instanceof Promise) {
-            return
-        }
+    if (failedLanguages.has(language)) {
         console.warn(
-            `suspending markdown processing because of missing language ${language}`,
+            `Skipping language loading for previously failed language ${language}`,
         )
-        throw p
+        return
     }
-    let promise = highlighter.loadLanguage(language as any).finally(() => {
-        // console.error(`could not load shiki language ${language}`, e)
-        missingLanguagePromises.set(language, null)
-    })
+    const promise = loadLanguageMemo(highlighter, language)
     if (promise instanceof Promise) {
         console.warn(
             `suspending markdown processing because of missing language ${language}`,
         )
-        missingLanguagePromises.set(language, promise)
         throw promise
     }
 }
 
-function setHighlighter() {
-    if (highlighter) return Promise.resolve()
+let highlighter: Highlighter | undefined
+
+const setHighlighter = memoize(() => {
     return createHighlighter({
         themes: ['github-dark', 'github-light'],
         langs: ['plaintext'],
     }).then((x) => {
-        if (highlighter) return
         highlighter = x
+        return x
     })
-}
+})
 
-let highlighter: Highlighter | undefined
 setHighlighter()
 
 let processors = new Map<string, any>()

@@ -332,17 +332,6 @@ export const app = new Spiceflow({ basePath: '/api' })
                         return chatTitle
                     }
 
-                    waitUntil(
-                        generateAndSaveChatTitle({
-                            resultMessages,
-                            chatId,
-                            userId,
-                            siteId,
-                            currentSlug,
-                            filesInDraft,
-                        }),
-                    )
-
                     await prisma.$transaction(async (tx) => {
                         const prevChat = await tx.chat.delete({
                             where: { chatId },
@@ -432,6 +421,16 @@ export const app = new Spiceflow({ basePath: '/api' })
                             }
                         }
                     })
+                    waitUntil(
+                        generateAndSaveChatTitle({
+                            resultMessages,
+                            chatId,
+                            userId,
+                            siteId,
+                            currentSlug,
+                            filesInDraft,
+                        }).catch(notifyError),
+                    )
                 },
                 // tools: {
                 //   some: tool({
