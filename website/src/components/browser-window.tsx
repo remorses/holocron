@@ -21,7 +21,7 @@ export function BrowserWindow({
             <div
                 className={cn(
                     'rounded-t-md relative py-2 pl-24 items-center',
-                    'flex bg-gray-800 dark:bg-gray-700',
+                    'flex bg-muted dark:bg-muted',
                 )}
             >
                 <div
@@ -30,18 +30,18 @@ export function BrowserWindow({
                         '[&>span]:w-3 [&>span]:h-3',
                     )}
                 >
-                    <span className=' bg-gray-600 rounded-full dark:bg-gray-600' />
-                    <span className=' bg-gray-600 rounded-full dark:bg-gray-600' />
-                    <span className=' bg-gray-600 rounded-full dark:bg-gray-600' />
+                    <span className=' bg-muted-foreground/40 rounded-full dark:bg-muted-foreground/40' />
+                    <span className=' bg-muted-foreground/40 rounded-full dark:bg-muted-foreground/40' />
+                    <span className=' bg-muted-foreground/40 rounded-full dark:bg-muted-foreground/40' />
                 </div>
                 <a
                     href={url}
                     onClick={onSearchBarClick}
                     target='_blank'
                     className={cn(
-                        'truncate text-gray-200 rounded px-40 mx-auto',
-                        'justify-center items-center h-full flex bg-gray-700',
-                        'appereance-none dark:bg-gray-600',
+                        'truncate text-muted-foreground rounded px-40 mx-auto',
+                        'justify-center items-center h-full flex bg-secondary',
+                        'appereance-none dark:bg-secondary',
                     )}
                 >
                     {host}
@@ -51,7 +51,7 @@ export function BrowserWindow({
                     aria-label='refresh'
                     onClick={onRefresh}
                     className={cn(
-                        'text-white rounded ring-gray-500 p-px opacity-70',
+                        'text-muted-foreground rounded ring-border p-px opacity-70',
                         'appereance-none hover:ring-1 active:opacity-30',
                     )}
                     children={<RefreshCwIcon className='h-4' />}
