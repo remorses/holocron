@@ -117,6 +117,11 @@ export async function loader({
 
     const tabId = site.tabs[0].tabId
 
+    // Create PR URL if chat has a PR number
+    const prUrl = chat.prNumber
+        ? `https://github.com/${site.githubOwner}/${site.githubRepo}/pull/${chat.prNumber}`
+        : undefined
+
     return {
         site,
         iframeUrl,
@@ -127,6 +132,7 @@ export async function loader({
         chat,
         chatHistory,
         userOrgs,
+        prUrl,
     }
 }
 

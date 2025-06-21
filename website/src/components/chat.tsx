@@ -51,7 +51,7 @@ import {
 } from '../lib/edit-tool'
 import { docsRpcClient } from '../lib/docs-setstate'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
-import { useLoaderData } from 'react-router'
+import { useLoaderData, useRevalidator } from 'react-router'
 import { teeAsyncIterable } from '../lib/utils'
 import { generateSlugFromPath } from 'docs-website/src/lib/utils'
 import { flushSync } from 'react-dom'
@@ -176,7 +176,7 @@ function Footer() {
     const [text, setText] = useState('')
     const isPending = useChatState((x) => x.isChatGenerating)
 
-    const { siteId, chat, tabId } =
+    const { siteId, chat, tabId, prUrl } =
         useLoaderData() as Route.ComponentProps['loaderData']
     const messages = useChatState((x) => x?.messages || [])
 
@@ -406,6 +406,16 @@ function Footer() {
                         {showCreatePR && (
                             <DiffStats filesInDraft={filesInDraft} />
                         )}
+                        {prUrl && (
+                            <a
+                                href={prUrl}
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                className='text-xs text-accent-foreground underline'
+                            >
+                                view pr
+                            </a>
+                        )}
                         <div className='grow'></div>
                         {showCreatePR && (
                             <div className='flex justify-end'>
@@ -469,8 +479,8 @@ function Footer() {
 function PrButton() {
     const [isLoading, setIsLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
-    const [githubResultUrl, setPrUrl] = useState<string>('')
-    const { siteId, chatId } =
+
+    const { siteId, prUrl, chatId, chat } =
         useLoaderData() as Route.ComponentProps['loaderData']
 
     const filesInDraft = useChatState((x) => x.docsState?.filesInDraft || {})
@@ -479,6 +489,8 @@ function PrButton() {
     useEffect(() => {
         if (isChatGenerating) setPrUrl('')
     }, [isChatGenerating])
+
+    const revalidator = useRevalidator()
 
     const handleCreatePr = async () => {
         setIsLoading(true)
@@ -497,7 +509,7 @@ function PrButton() {
             })
             if (result.error) throw result.error
 
-            setPrUrl(result.data.prUrl)
+            await revalidator.revalidate()
         } catch (error) {
             console.error('Failed to create PR:', error)
             const message =
@@ -518,54 +530,29 @@ function PrButton() {
             >
                 <PopoverTrigger>
                     <DropdownMenu>
-                        {githubResultUrl ? (
-                            <a
-                                href={githubResultUrl}
-                                target='_blank'
-                                rel='noopener noreferrer'
-                            >
-                                <Button
-                                    variant='default'
-                                    size={'sm'}
-                                    className='bg-purple-600 hover:bg-purple-700 text-white'
-                                >
-                                    <div className='flex items-center gap-2'>
-                                        <GitBranch className='size-4' />
-                                        {githubResultUrl.includes('/commit/')
-                                            ? 'View Commit'
-                                            : 'View PR'}
-                                    </div>
-                                </Button>
-                            </a>
-                        ) : (
-                            <Button
-                                variant='default'
-                                disabled={
-                                    isLoading ||
-                                    isChatGenerating ||
-                                    !!errorMessage
-                                }
-                                size={'sm'}
-                                className='bg-purple-600 hover:bg-purple-700 text-white'
-                            >
-                                <div className='flex items-center gap-2'>
-                                    <GitBranch className='size-4' />
-                                    {isLoading
-                                        ? 'loading...'
-                                        : 'Create Github PR'}
-                                </div>
-                                {/* <ChevronDown className='size-4 ml-1' /> */}
-                            </Button>
-                        )}
+                        <Button
+                            variant='default'
+                            onClick={handleCreatePr}
+                            disabled={
+                                isLoading || isChatGenerating || !!errorMessage
+                            }
+                            size={'sm'}
+                            className='bg-purple-600 hover:bg-purple-700 text-white'
+                        >
+                            <div className='flex items-center gap-2'>
+                                <GitBranch className='size-4' />
+                                {isLoading
+                                    ? 'loading...'
+                                    : chat.prNumber
+                                      ? `Push to PR #${chat.prNumber}`
+                                      : 'Create Github PR'}
+                            </div>
+                            {/* <ChevronDown className='size-4 ml-1' /> */}
+                        </Button>
                         <DropdownMenuContent
                             align='end'
                             className='min-w-[200px]'
-                        >
-                            <DropdownMenuItem
-                                onClick={handleCreatePr}
-                                disabled={isLoading}
-                            ></DropdownMenuItem>
-                        </DropdownMenuContent>
+                        ></DropdownMenuContent>
                     </DropdownMenu>
                 </PopoverTrigger>
 
