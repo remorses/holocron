@@ -275,12 +275,12 @@ export const app = new Spiceflow({ basePath: '/api' })
                     })
                     console.log(resultMessages)
 
-                    await prisma.$transaction(async (tx) => {
-                        const prevChat = await tx.chat.delete({
+                    await prisma.$transaction(async (prisma) => {
+                        const prevChat = await prisma.chat.delete({
                             where: { chatId },
                         })
 
-                        const chatRow = await tx.chat.create({
+                        const chatRow = await prisma.chat.create({
                             data: {
                                 chatId,
                                 createdAt: prevChat.createdAt,
@@ -296,7 +296,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                         })
 
                         for (const [msgIdx, msg] of resultMessages.entries()) {
-                            const parts = (msg as any).parts || []
+                            const parts = msg.parts || []
 
                             if (
                                 msg.role !== 'assistant' &&
@@ -317,20 +317,22 @@ export const app = new Spiceflow({ basePath: '/api' })
                                             acc + cur.text,
                                         '\n',
                                     )
-                            const chatMessage = await tx.chatMessage.create({
-                                data: {
-                                    chatId: chatRow.chatId,
-                                    createdAt: msg.createdAt,
-                                    id: msg.id,
-                                    content,
-                                    role: msg.role ?? 'user',
+                            const chatMessage = await prisma.chatMessage.create(
+                                {
+                                    data: {
+                                        chatId: chatRow.chatId,
+                                        createdAt: msg.createdAt,
+                                        id: msg.id,
+                                        content,
+                                        role: msg.role ?? 'user',
+                                    },
                                 },
-                            })
+                            )
                             for (const [index, part] of parts.entries()) {
                                 // Handle only 'text', 'reasoning', and 'tool-invocation' types for now
                                 if (part.type === 'text') {
                                     // ChatMessagePart: { type: 'text', text: string }
-                                    await tx.chatMessagePart.create({
+                                    await prisma.chatMessagePart.create({
                                         data: {
                                             messageId: chatMessage.id,
                                             type: 'text',
@@ -341,7 +343,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                                     })
                                 } else if (part.type === 'reasoning') {
                                     // ChatMessagePart: { type: 'reasoning', text: string }
-                                    await tx.chatMessagePart.create({
+                                    await prisma.chatMessagePart.create({
                                         data: {
                                             messageId: chatMessage.id,
                                             type: 'reasoning',
@@ -352,7 +354,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                                     })
                                 } else if (part.type === 'tool-invocation') {
                                     // ChatMessagePart: { type: 'tool-invocation', json: any }
-                                    await tx.chatMessagePart.create({
+                                    await prisma.chatMessagePart.create({
                                         data: {
                                             index,
                                             messageId: chatMessage.id,
