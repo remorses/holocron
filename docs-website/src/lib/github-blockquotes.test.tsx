@@ -22,11 +22,105 @@ describe('GitHub Blockquotes Plugin', () => {
         const data = result.data as { ast: Root }
 
         // Check the full output
-        expect(String(result)).toMatchInlineSnapshot(`
-          "<Callout type="note">
-            Useful information that users should know, even when skimming content.
-          </Callout>
-          "
+        expect((result)).toMatchInlineSnapshot(`
+          {
+            "data": {
+              "ast": {
+                "children": [
+                  {
+                    "attributes": [
+                      {
+                        "name": "type",
+                        "type": "mdxJsxAttribute",
+                        "value": "note",
+                      },
+                    ],
+                    "children": [
+                      {
+                        "children": [
+                          {
+                            "type": "text",
+                            "value": "Useful information that users should know, even when skimming content.",
+                          },
+                        ],
+                        "position": {
+                          "end": {
+                            "column": 73,
+                            "line": 4,
+                            "offset": 91,
+                          },
+                          "start": {
+                            "column": 3,
+                            "line": 3,
+                            "offset": 11,
+                          },
+                        },
+                        "type": "paragraph",
+                      },
+                    ],
+                    "data": undefined,
+                    "name": "Callout",
+                    "position": {
+                      "end": {
+                        "column": 73,
+                        "line": 4,
+                        "offset": 91,
+                      },
+                      "start": {
+                        "column": 1,
+                        "line": 3,
+                        "offset": 9,
+                      },
+                    },
+                    "type": "mdxJsxFlowElement",
+                  },
+                ],
+                "position": {
+                  "end": {
+                    "column": 73,
+                    "line": 4,
+                    "offset": 91,
+                  },
+                  "start": {
+                    "column": 1,
+                    "line": 1,
+                    "offset": 0,
+                  },
+                },
+                "type": "root",
+              },
+              "markdown": "# hello
+
+          > [!NOTE]
+          > Useful information that users should know, even when skimming content.",
+              "structuredData": {
+                "contents": [
+                  {
+                    "content": "type: note",
+                    "heading": "hello",
+                  },
+                  {
+                    "content": "Useful information that users should know, even when skimming content.",
+                    "heading": "hello",
+                  },
+                ],
+                "headings": [
+                  {
+                    "content": "hello",
+                    "id": "hello",
+                  },
+                ],
+              },
+              "title": "hello",
+              "toc": [
+                {
+                  "depth": 1,
+                  "title": "hello",
+                  "url": "#hello",
+                },
+              ],
+            },
+          }
         `)
     })
 })

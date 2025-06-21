@@ -276,3 +276,12 @@ if (!user.subscription) {
 - when using useRef with a generic type always add undefined in the call, for example `useRef<number>(undefined)`. this is required by the rect types definitions
 
 - when using && in jsx make sure that the result type is no of type number, in that case add Boolean() wrapper. This way jsx will not show zeros when the value is falsy.
+
+
+## ai sdk
+
+I use the vercel ai sdk to interact with LLMs, also know as the npm package `ai`. never use the openai sdk or provider specific sdks, always use the vercel ai sdk, npm package `ai`. streamText is preferred over generateText, unless the model used is very small and fast and the current code doesn't care about streaming tokens or showing a preview to the user. `streamObject` is also preferred over generateObject.
+
+ALWAYS fetch the latest docs for the ai sdk using this url with @fetch tool: https://context7.com/ai-sdk.dev/llmstxt/llms.txt?topic=streamText&tokens=10000
+
+You can swap out the topic with text you want to search docs for. You can also limit the total results returned with the param token to limit the tokens that will be added to the context window

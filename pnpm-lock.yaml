@@ -91,6 +91,9 @@ importers:
       '@ai-sdk/anthropic':
         specifier: ^1.2.12
         version: 1.2.12(zod@3.25.67)
+      '@ai-sdk/openai':
+        specifier: ^1.3.22
+        version: 1.3.22(zod@3.25.67)
       '@cloudflare/vite-plugin':
         specifier: ^1.6.0
         version: 1.6.0(rollup@4.43.0)(vite@6.3.5(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(workerd@1.20250617.0)(wrangler@4.20.0(@cloudflare/workers-types@4.20250614.0))
@@ -148,6 +151,9 @@ importers:
       '@xmorse/markdown-rs':
         specifier: ^0.0.3
         version: 0.0.3
+      ai:
+        specifier: ^4.3.16
+        version: 4.3.16(react@19.1.0)(zod@3.25.67)
       async-sema:
         specifier: ^3.1.1
         version: 3.1.1

@@ -36,7 +36,7 @@ export default defineConfig({
         EnvironmentPlugin('all', { prefix: 'PUBLIC' }),
         EnvironmentPlugin('all', { prefix: 'NEXT_PUBLIC' }),
         reactRouterHonoServer(),
-        reactRouter(),
+        !process.env.VITEST && reactRouter(),
         tsconfigPaths(),
         viteExternalsPlugin({ externals: ['pg'] }),
         tailwindcss(),

@@ -4,30 +4,6 @@ _(Use **plain CSS only – no PostCSS, no @apply, no nesting**)_
 
 ---
 
-- **Goal**
-
-    - Produce / update a single `styles.css` file that overrides the default look-and-feel of a Fumadocs site.
-
-- **Environment**
-
-    - There is **no** file-system access, package manager, or `node_modules` folder; only a root-level `styles.css` can be written or replaced.
-    - Fumadocs already imports a base theme in `app/layout.tsx`, e.g.
-        ```ts
-        import 'fumadocs-ui/css/neutral.css' // base
-        import './styles.css' // your overrides (to be generated)
-        ```
-
-- **What you must do**
-    - Scan the online **theme CSS** shipped by Fumadocs (`neutral.css`, `black.css`, `dusk.css`, etc.).
-      They contain every custom property in the design system; all start with `--color-fd-` or `--fd-`.
-    - Enumerate each variable, copy its default value, and annotate its purpose.
-    - Redefine only those variables that need branding changes; leave the rest commented out for future reference.
-    - Respect both color modes by mirroring overrides inside the `.dark` selector when necessary.
-    - Keep the file 100 % valid vanilla CSS (no Tailwind directives, no `@layer`).
-    - End the file with a “cheat-sheet” comment that lists the final values.
-
----
-
 ## 📚 Quick reference of documented variables
 
 - `--fd-layout-width` — max readable width of the docs column.
@@ -116,10 +92,3 @@ Dark  :  --color-fd-background      hsl(0 0% 4%)
 ```
 
 ---
-
-## 💡 Notes for the agent
-
-- Parsing any one theme file is enough to discover **all** available variables; each theme shares the same list, only values differ.
-- Leave any unused variable commented (with its original value) so future maintainers know it exists.
-- The user can stack additional selectors (`[dir="rtl"]`, media queries, etc.) after your overrides if they need finer control.
-- Remember: output **only** the CSS file content – do not echo explanations once the file is written.
