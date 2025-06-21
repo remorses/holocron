@@ -274,3 +274,5 @@ if (!user.subscription) {
 - do not consider local state truthful when interactive with server. when interacting with the server with rpc or api calls never use state from the render function as input for the api call. This state can easily become stale or not get updated in the closure context. instead prefer using Zustand `useStore.getState().stateValue`. Notice that useLoaderData or useParams should be fine in this case.
 
 - when using useRef with a generic type always add undefined in the call, for example `useRef<number>(undefined)`. this is required by the rect types definitions
+
+- when using && in jsx make sure that the result type is no of type number, in that case add Boolean() wrapper. This way jsx will not show zeros when the value is falsy.

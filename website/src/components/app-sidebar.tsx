@@ -82,16 +82,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         >
             <div
                 className='grid grow h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
-                style={{ height: 'var(--sidebar-header-height, 64px)' }}
+                // style={{ height: 'var(--sidebar-header-height, 64px)' }}
             >
-                <div className='p-0 row-span-1 gap-2 w-full flex items-center pr-4'>
-                    <TeamSwitcher
-                        className='w-auto grow-0'
-                        sites={userSites}
-                    />
+                <div className='p-0 justify-between row-span-1 gap-2 w-full flex   pr-4'>
+                    <TeamSwitcher className='w-auto grow-0' sites={userSites} />
 
 
-                    <div className='grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-2'>
+                    <div className='grid  grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-2'>
                         <div className=''>
                             <Combobox
                                 value={chatId}

@@ -200,9 +200,9 @@ function Content() {
         updatePageProps({ logoUrl, color: color || undefined }, iframeRef)
     }, [color, logoUrl])
     return (
-        <div className='flex flex-col h-full gap-4'>
-            <NavBar />
-
+        <div className='flex flex-col h-full gap-3'>
+            {/* <NavBar /> */}
+            <div className=''></div>
             <div className='flex grow flex-col'>
                 <BrowserWindow
                     url={iframeUrl}

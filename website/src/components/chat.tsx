@@ -405,7 +405,7 @@ function Footer() {
             0,
         )
     }, [filesInDraft])
-    const showCreatePR = updatedLines && hasFilesInDraft
+    const showCreatePR = updatedLines > 0 && hasFilesInDraft
 
     return (
         <div className='sticky bottom-0 pt-4 md:pt-8 pr-4 z-50 w-full'>
