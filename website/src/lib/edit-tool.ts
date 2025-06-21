@@ -3,7 +3,7 @@ import { diffLines, createPatch } from 'diff'
 
 export type EditToolParamSchema = z.infer<typeof editToolParamsSchema>
 
-export type PageUpdate = { githubPath: string; markdown: string }
+export type PageUpdate = { githubPath: string; content: string }
 
 export function isParameterComplete(args: Partial<EditToolParamSchema>) {
     if (!args) return false
@@ -67,7 +67,7 @@ export function createEditExecute({
                 let content: string | null = null
 
                 if (override) {
-                    content = override.markdown
+                    content = override.content
                 } else {
                     try {
                         const fetchedContent = await getPageContent({
@@ -76,7 +76,7 @@ export function createEditExecute({
                         content = fetchedContent || ''
                         filesInDraft[path] = {
                             githubPath: path,
-                            markdown: content,
+                            content: content,
                         }
                     } catch (e) {
                         return {
@@ -148,7 +148,7 @@ export function createEditExecute({
                 }
                 filesInDraft[path] = {
                     githubPath: path,
-                    markdown: file_text,
+                    content: file_text,
                 }
                 return file_text
             }
@@ -166,14 +166,14 @@ export function createEditExecute({
                     }
                     override = {
                         githubPath: path,
-                        markdown: content,
+                        content: content,
                     }
                 }
 
                 // Store current state before editing
                 previousEdits.push({
                     githubPath: path,
-                    markdown: override.markdown,
+                    content: override.content,
                 })
                 if (typeof old_str !== 'string' || old_str.length === 0) {
                     return {
@@ -187,7 +187,7 @@ export function createEditExecute({
                         error: '`new_str` is required for str_replace command.',
                     }
                 }
-                const occurrences = override.markdown.split(old_str).length - 1
+                const occurrences = override.content.split(old_str).length - 1
                 if (occurrences === 0) {
                     return {
                         success: false,
@@ -200,7 +200,7 @@ export function createEditExecute({
                 //         error: `Old string "${old_str}" found more than once in the document.`,
                 //     }
                 // }
-                const replacedContent = override.markdown.replace(
+                const replacedContent = override.content.replace(
                     old_str,
                     new_str,
                 )
@@ -225,12 +225,12 @@ export function createEditExecute({
                 }
                 filesInDraft[path] = {
                     githubPath: path,
-                    markdown: replacedContent,
+                    content: replacedContent,
                 }
 
                 const patch = createPatch(
                     path,
-                    override.markdown,
+                    override.content,
                     replacedContent,
                     '',
                     '',
@@ -260,14 +260,14 @@ export function createEditExecute({
                     }
                     override = {
                         githubPath: path,
-                        markdown: content,
+                        content: content,
                     }
                 }
 
                 // Store current state before editing
                 previousEdits.push({
                     githubPath: path,
-                    markdown: override.markdown,
+                    content: override.content,
                 })
                 if (typeof insert_line !== 'number' || insert_line < 1) {
                     return {
@@ -281,7 +281,7 @@ export function createEditExecute({
                         error: '`new_str` is required for insert command.',
                     }
                 }
-                const lines = override.markdown.split('\n')
+                const lines = override.content.split('\n')
                 // insert_line is 1-based, insert after the specified line
                 const insertAt = Math.min(insert_line, lines.length)
                 lines.splice(insertAt, 0, new_str)
@@ -307,12 +307,12 @@ export function createEditExecute({
                 }
                 filesInDraft[path] = {
                     githubPath: path,
-                    markdown: newContent,
+                    content: newContent,
                 }
 
                 const patch = createPatch(
                     path,
-                    override.markdown,
+                    override.content,
                     newContent,
                     '',
                     '',
@@ -337,7 +337,7 @@ export function createEditExecute({
                     try {
                         const result = await validateNewContent({
                             githubPath: path,
-                            content: previous.markdown,
+                            content: previous.content,
                         })
                         if (result && result.error) {
                             return {
@@ -354,13 +354,13 @@ export function createEditExecute({
                 }
                 filesInDraft[path] = {
                     githubPath: path,
-                    markdown: previous.markdown,
+                    content: previous.content,
                 }
 
                 return {
                     success: true,
                     message: `Successfully reverted ${path} to previous state.`,
-                    content: previous.markdown,
+                    content: previous.content,
                 }
             }
             default: {

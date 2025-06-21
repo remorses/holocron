@@ -160,6 +160,11 @@ Spiceflow has support for client side type safe rpc, use this client when you ne
 > SUPER IMPORTANT! if you add a new route to a spiceflow app, use the spiceflow app state like `userId` to add authorization to the route. If there is no state then you can use functions like `getSession({request})` or similar.
 > Make sure the current userId has access to the fetched or updated rows. This can be done by checking that the parent row or current row has a relation with the current userId. For example `prisma.site.findFirst({where: {users: {some: {userId }}}})`
 
+## getting spiceflow docs
+
+spiceflow is a little known api framework. If you add server routes to a file that includes spiceflow in the name or you are using the apiClient rpc you always need to fetch the Spiceflow docs first, using the @fetch tool on https://getspiceflow.com/
+
+This url returns a single long documentation that covers your use case, always fetch this document so you know how to use Spiceflow. Spiceflow is different than hono and other api frameworks, that's why you should ALWAYS fetch the docs first before using it
 
 ## interacting with the database, prisma
 

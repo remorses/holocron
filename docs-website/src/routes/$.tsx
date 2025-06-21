@@ -287,7 +287,7 @@ function DocsMarkdown() {
 
             if (override) {
                 return {
-                    markdown: override.markdown,
+                    markdown: override.content,
                     isStreaming,
                     ast: undefined,
                 }

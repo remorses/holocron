@@ -439,29 +439,93 @@ function Footer() {
 }
 
 function PrButton() {
+    const [isLoading, setIsLoading] = useState(false)
+    const [pushToMainDisabled, setPushToMainDisabled] = useState(false)
+
+    const { siteId } = useLoaderData() as Route.ComponentProps['loaderData']
+
+    const filesInDraft = useChatState((x) => x.docsState?.filesInDraft || {})
+    const isChatGenerating = useChatState((x) => x.isChatGenerating)
+
+    const handleCreatePr = async () => {
+        setIsLoading(true)
+        try {
+            const files = Object.entries(filesInDraft).map(
+                ([filePath, { content }]) => ({
+                    filePath,
+                    content: content || '',
+                }),
+            )
+
+            const result = await apiClient.api.createPrSuggestion.post({
+                siteId,
+                files,
+            })
+
+            if (result.data?.prUrl) {
+                window.open(result.data.prUrl, '_blank')
+            }
+        } catch (error) {
+            console.error('Failed to create PR:', error)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handlePushToMain = async () => {
+        setIsLoading(true)
+        try {
+            const files = Object.entries(filesInDraft).map(
+                ([filePath, { content }]) => ({
+                    filePath,
+                    content: content || '',
+                }),
+            )
+
+            const result = await apiClient.api.commitChangesToRepo.post({
+                siteId,
+                files,
+            })
+
+            if (result.data?.commitUrl) {
+                window.open(result.data.commitUrl, '_blank')
+            }
+        } catch (error) {
+            console.error('Failed to push to main:', error)
+            setPushToMainDisabled(true)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger disabled={isChatGenerating} asChild>
                 <Button
                     variant='default'
                     size={'sm'}
                     className='bg-purple-600 hover:bg-purple-700 text-white'
+                    disabled={isLoading || isChatGenerating}
                 >
                     <div className='flex items-center gap-2'>
                         <GitBranch className='size-4' />
-                        Create Github PR
+                        {isLoading ? 'Processing...' : 'Create Github PR'}
                     </div>
                     <ChevronDown className='size-4 ml-1' />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end' className='min-w-[200px]'>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleCreatePr} disabled={isLoading}>
                     <GitBranch className='size-4 mr-2' />
                     Create PR to main
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem
+                    onClick={handlePushToMain}
+                    disabled={isLoading || pushToMainDisabled}
+                >
                     <GitBranch className='size-4 mr-2' />
                     Push to main
+                    {pushToMainDisabled && ' (unavailable)'}
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

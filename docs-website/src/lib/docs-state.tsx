@@ -10,7 +10,7 @@ export type DocsState = {
     filesInDraft: Record<
         string,
         {
-            markdown: string
+            content: string
             githubPath: string
             // ast: any
             // toc: TOCItemType[]

@@ -1150,12 +1150,44 @@ export async function pushToPrOrBranch({
             owner,
             repo,
             ref: `heads/${branch}`,
-            force: true, // or errors with Update is not a fast forward
+            // force: true, // or errors with Update is not a fast forward
             sha: newCommit.sha,
         })
-    } catch (error) {
-        console.log('updateRef failed', error)
-        throw error
+    } catch (e) {
+        const fastForwardErr =
+            e instanceof RequestError &&
+            (e.status === 422 || e.status === 409) &&
+            /fast forward/i.test(e.message)
+
+        if (!fastForwardErr) throw e // different problem → bubble up
+
+        // 1️⃣  fetch new tip
+        const { commitSha: latest } = await getCurrentCommit({
+            octokit: octokit.rest,
+            owner,
+            repo,
+            branch,
+        })
+
+        // 2️⃣  re-create commit with latest as parent
+        const { data: rebased } = await octokit.rest.git.createCommit({
+            owner,
+            repo,
+            message: getCommitMessage({
+                filePaths: files.map((f) => f.filePath),
+            }),
+            tree: newTree.sha, // same tree you already built
+            parents: [latest], // NEW parent!
+            committer,
+        })
+
+        // 3️⃣  fast-forward now succeeds
+        await octokit.rest.git.updateRef({
+            owner,
+            repo,
+            ref: `heads/${branch}`,
+            sha: rebased.sha,
+        })
     }
     await octokit.rest.git
         .deleteRef({
