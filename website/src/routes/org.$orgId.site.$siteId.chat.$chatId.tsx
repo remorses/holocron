@@ -213,7 +213,7 @@ function Content() {
                     className={cn(
                         'text-sm shrink-0 shadow rounded-xl justify-stretch',
                         'items-stretch h-full flex-col flex-1 border',
-                        ' lg:flex dark:bg-gray-800',
+                        ' lg:flex bg-background',
                     )}
                 >
                     <iframe
