@@ -402,7 +402,7 @@ function Footer() {
         <div className='sticky bottom-0 pt-4 md:pt-8 pr-4 z-50 w-full'>
             <div className='max-w-3xl mx-auto space-y-3'>
                 <div className='flex flex-col gap-2 '>
-                    <div className='flex gap-1 items-center'>
+                    <div className='flex gap-1 items-center bg-background p-1 rounded-md'>
                         {showCreatePR && (
                             <DiffStats filesInDraft={filesInDraft} />
                         )}
@@ -430,10 +430,7 @@ function Footer() {
                             aria-label='Enter your prompt'
                             value={text}
                             onKeyDown={(e) => {
-                                if (
-                                    e.key === 'Enter' &&
-                                    (e.metaKey || e.ctrlKey)
-                                ) {
+                                if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault()
                                     if (!isPending && text.trim()) {
                                         handleSubmit()
@@ -486,9 +483,6 @@ function PrButton() {
     const filesInDraft = useChatState((x) => x.docsState?.filesInDraft || {})
     const isChatGenerating = useChatState((x) => x.isChatGenerating)
     // Reset githubResultUrl when a new chat generation starts
-    useEffect(() => {
-        if (isChatGenerating) setPrUrl('')
-    }, [isChatGenerating])
 
     const revalidator = useRevalidator()
 

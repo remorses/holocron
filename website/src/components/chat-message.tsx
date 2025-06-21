@@ -225,7 +225,7 @@ export const ChatMessage = memo(function ChatMessage({
                                             onKeyDown={(e) => {
                                                 if (
                                                     e.key === 'Enter' &&
-                                                    (e.metaKey || e.ctrlKey)
+                                                    !e.shiftKey
                                                 ) {
                                                     e.preventDefault()
                                                     if (editText.trim()) {
@@ -364,7 +364,10 @@ function EditorToolPreview({
 
         return (
             <ToolPreviewContainer>
-                <Markdown isStreaming={isChatGenerating} markdown={`Reading \`${args?.path}${linesText}\` `} />
+                <Markdown
+                    isStreaming={isChatGenerating}
+                    markdown={`Reading \`${args?.path}${linesText}\` `}
+                />
             </ToolPreviewContainer>
         )
     }
