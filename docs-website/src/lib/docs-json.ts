@@ -228,7 +228,9 @@ const NavigationLanguageItem = z
         language: z
             .string()
             .min(1)
-            .describe('The language code (ISO 639-1) for this section, e.g., "en", "fr", "es"'),
+            .describe(
+                'The language code (ISO 639-1) for this section, e.g., "en", "fr", "es"',
+            ),
         default: z
             .boolean()
             .optional()
@@ -244,7 +246,7 @@ const NavigationLanguageItem = z
             .describe('URL or root path for this language variant'),
     })
     .strict()
-    .describe('Language item within navigation');
+    .describe('Language item within navigation')
 
 const NavigationVersionItem = z
     .object({
@@ -267,16 +269,16 @@ const NavigationVersionItem = z
             .describe('URL or root path for this version'),
     })
     .strict()
-    .describe('Version item within navigation');
+    .describe('Version item within navigation')
 
 const NavigationTabItem = z
     .object({
-        tab: z
-            .string()
-            .min(1)
-            .describe('Tab name or label'),
+        tab: z.string().min(1).describe('Tab name or label'),
         icon: IconSchema.optional().describe('Optional icon for the tab'),
-        hidden: z.boolean().optional().describe('Whether the tab is hidden by default'),
+        hidden: z
+            .boolean()
+            .optional()
+            .describe('Whether the tab is hidden by default'),
         href: z
             .string()
             .url()
@@ -284,21 +286,21 @@ const NavigationTabItem = z
             .describe('URL or root path for this tab'),
     })
     .strict()
-    .describe('Tab item for organizing navigation');
+    .describe('Tab item for organizing navigation')
 
 const NavigationDropdownItem = z
     .object({
-        dropdown: z
-            .string()
-            .min(1)
-            .describe('Dropdown name or label'),
+        dropdown: z.string().min(1).describe('Dropdown name or label'),
         icon: IconSchema.optional().describe('Optional icon for the dropdown'),
         color: ColorMode.optional().describe('Optional custom color'),
         description: z
             .string()
             .optional()
             .describe('Text description shown for dropdown'),
-        hidden: z.boolean().optional().describe('Whether the dropdown is hidden by default'),
+        hidden: z
+            .boolean()
+            .optional()
+            .describe('Whether the dropdown is hidden by default'),
         href: z
             .string()
             .url()
@@ -306,7 +308,7 @@ const NavigationDropdownItem = z
             .describe('Optional URL linked from the dropdown'),
     })
     .strict()
-    .describe('Dropdown item for navigation groups');
+    .describe('Dropdown item for navigation groups')
 
 const NavigationAnchorItem = z
     .object({
@@ -327,38 +329,42 @@ const NavigationAnchorItem = z
             .describe('Optional link or path for this anchor'),
     })
     .strict()
-    .describe('Anchor item for navigation');
+    .describe('Anchor item for navigation')
 
 const NavigationPages = z
     .array(z.string().min(1).describe('Path to a documentation page'))
-    .describe('List of page paths in navigation');
+    .describe('List of page paths in navigation')
 
-const NavigationGroupItem = z
-    .object({
-        group: z
-            .string()
-            .min(1)
-            .describe('Name of the navigation group'),
-        icon: IconSchema.optional().describe('Group section icon'),
-        hidden: z.boolean().optional().describe('Whether this group is hidden by default'),
-        root: z
-            .string()
-            .optional()
-            .describe('Path to the root page of this group'),
-        tag: z
-            .string()
-            .optional()
-            .describe('Optional tag for this group'),
-        // Groups may nest anchors or pages/groups
-        pages: z
-            .array(
-                z.union([z.string().min(1), z.lazy(() => NavigationGroupItem)])
-            )
-            .optional()
-            .describe('Nested list of page paths or group objects'),
-    })
-    .strict()
-    .describe('Navigation group, can contain nested pages or groups');
+// --- NavigationGroupItem definition
+const NavigationGroupItem: z.ZodType<any> = z.lazy(() =>
+    z
+        .object({
+            group: z.string().min(1).describe('Name of the navigation group'),
+            icon: IconSchema.optional().describe('Group section icon'),
+            hidden: z
+                .boolean()
+                .optional()
+                .describe('Whether this group is hidden by default'),
+            root: z
+                .string()
+                .optional()
+                .describe('Path to the root page of this group'),
+            tag: z.string().optional().describe('Optional tag for this group'),
+            // Groups may nest anchors or pages/groups
+            pages: z
+                .array(
+                    z.union([
+                        z.string().min(1),
+                        // Use a lazy reference for recursion, but mark with type 'any'
+                        z.lazy(() => NavigationGroupItem),
+                    ]),
+                )
+                .optional()
+                .describe('Nested list of page paths or group objects'),
+        })
+        .strict()
+        .describe('Navigation group, can contain nested pages or groups'),
+)
 
 // --- Patterns for navigation root ---
 
@@ -378,64 +384,102 @@ const NavigationGroupItem = z
 const NavigationSchema = z
     .union([
         // Organize content by language
-        z.object({
-            global: GlobalLinks.optional().describe('External/global links shown site-wide'),
-            languages: z
-                .array(NavigationLanguageItem)
-                .min(1)
-                .describe('Organize navigation by language (for multi-language sites)'),
-        }).strict(),
+        z
+            .object({
+                global: GlobalLinks.optional().describe(
+                    'External/global links shown site-wide',
+                ),
+                languages: z
+                    .array(NavigationLanguageItem)
+                    .min(1)
+                    .describe(
+                        'Organize navigation by language (for multi-language sites)',
+                    ),
+            })
+            .strict(),
 
         // Organize by docs version
-        z.object({
-            global: GlobalLinks.optional().describe('External/global links shown site-wide'),
-            versions: z
-                .array(NavigationVersionItem)
-                .min(1)
-                .describe('Organize navigation by product or API version'),
-        }).strict(),
+        z
+            .object({
+                global: GlobalLinks.optional().describe(
+                    'External/global links shown site-wide',
+                ),
+                versions: z
+                    .array(NavigationVersionItem)
+                    .min(1)
+                    .describe('Organize navigation by product or API version'),
+            })
+            .strict(),
 
         // Organize by tabs
-        z.object({
-            global: GlobalLinks.optional().describe('External/global links shown site-wide'),
-            tabs: z
-                .array(NavigationTabItem)
-                .min(1)
-                .describe('Organize navigation by tab (top-level sections as tabs)'),
-        }).strict(),
+        z
+            .object({
+                global: GlobalLinks.optional().describe(
+                    'External/global links shown site-wide',
+                ),
+                tabs: z
+                    .array(NavigationTabItem)
+                    .min(1)
+                    .describe(
+                        'Organize navigation by tab (top-level sections as tabs)',
+                    ),
+            })
+            .strict(),
 
         // Organize by dropdowns
-        z.object({
-            global: GlobalLinks.optional().describe('External/global links shown site-wide'),
-            dropdowns: z
-                .array(NavigationDropdownItem)
-                .min(1)
-                .describe('Organize navigation using dropdowns for grouped content'),
-        }).strict(),
+        z
+            .object({
+                global: GlobalLinks.optional().describe(
+                    'External/global links shown site-wide',
+                ),
+                dropdowns: z
+                    .array(NavigationDropdownItem)
+                    .min(1)
+                    .describe(
+                        'Organize navigation using dropdowns for grouped content',
+                    ),
+            })
+            .strict(),
 
         // Organize by anchors
-        z.object({
-            global: GlobalLinks.optional().describe('External/global links shown site-wide'),
-            anchors: z
-                .array(NavigationAnchorItem)
-                .min(1)
-                .describe('Flat list: organize navigation sections as anchors'),
-        }).strict(),
+        z
+            .object({
+                global: GlobalLinks.optional().describe(
+                    'External/global links shown site-wide',
+                ),
+                anchors: z
+                    .array(NavigationAnchorItem)
+                    .min(1)
+                    .describe(
+                        'Flat list: organize navigation sections as anchors',
+                    ),
+            })
+            .strict(),
 
         // Top-level groups that may contain nested items
-        z.object({
-            global: GlobalLinks.optional().describe('External/global links shown site-wide'),
-            groups: z
-                .array(NavigationGroupItem)
-                .min(1)
-                .describe('Group navigation with nested pages/groups'),
-        }).strict(),
+        z
+            .object({
+                global: GlobalLinks.optional().describe(
+                    'External/global links shown site-wide',
+                ),
+                groups: z
+                    .array(NavigationGroupItem)
+                    .min(1)
+                    .describe('Group navigation with nested pages/groups'),
+            })
+            .strict(),
 
         // Simple flat list of page paths (optionally with groups)
-        z.object({
-            global: GlobalLinks.optional().describe('External/global links shown site-wide'),
-            pages: NavigationPages.min(1).describe('Simple linear list of doc page paths'),
-        }).strict(),
+        z
+            .object({
+                global: GlobalLinks.optional().describe(
+                    'External/global links shown site-wide',
+                ),
+                pages: NavigationPages.min(1).describe(
+                    'Simple linear list of doc page paths',
+                ),
+            })
+            .strict(),
     ])
     .describe(
         `Navigation tree configuration for Mintlify docs.
@@ -452,7 +496,7 @@ The navigation can be customized by:
 Use the appropriate field for your site's organization (one pattern per config). A 'global' field is available to add universal links/anchors that appear in all navigation contexts.
 
 Each field inside (languages, versions, etc) supports further customization of entries: 'icon', 'color', 'hidden', descriptions, and nested structures for advanced multi-dimensional docs.
-`
+`,
     )
 
 // === Navbar & Footer ===
