@@ -24,7 +24,7 @@ import { useLoaderData } from 'react-router'
 import { useDocsState } from '../lib/docs-state'
 
 import { LOCALE_LABELS, LOCALES } from '../lib/locales'
-import { Markdown } from '../lib/safe-mdx'
+import { Markdown } from '../lib/markdown'
 import { getFumadocsSource } from '../lib/source.server'
 
 export function meta({ data }: Route.MetaArgs) {
