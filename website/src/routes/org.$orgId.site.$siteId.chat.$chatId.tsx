@@ -37,7 +37,7 @@ export async function loader({
     if (!orgUser) {
         throw redirect('/dashboard')
     }
-    const [site, chat, chatHistory, userOrgs] = await Promise.all([
+    const [site, chat, chatHistory, userSites] = await Promise.all([
         prisma.site.findUnique({
             where: {
                 siteId: siteId,
@@ -84,13 +84,19 @@ export async function loader({
             },
             orderBy: { createdAt: 'desc' },
         }),
-        prisma.org.findMany({
+        prisma.site.findMany({
             where: {
-                users: {
-                    some: {
-                        userId,
+                org: {
+                    users: {
+                        some: {
+                            userId,
+                        },
                     },
                 },
+            },
+            include: {
+                org: true,
+                // customization: true,
             },
             orderBy: {
                 name: 'asc',
@@ -131,7 +137,7 @@ export async function loader({
         chatId,
         chat,
         chatHistory,
-        userOrgs,
+        userSites,
         prUrl,
         initialFilesInDraft: chat.filesInDraft as any,
     }

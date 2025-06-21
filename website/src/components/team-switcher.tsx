@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { href } from 'react-router'
 
@@ -19,26 +20,35 @@ import {
     SidebarMenuItem,
 } from 'website/src/components/ui/sidebar'
 import { RiExpandUpDownLine, RiAddLine } from '@remixicon/react'
+import { apiClient } from 'website/src/lib/spiceflow-client'
 
 export function TeamSwitcher({
-    teams,
+    sites,
     className = '',
 }: {
-    teams: {
-        name: string
-        logo: string
-        orgId?: string
+    sites: {
+        name: string | null
+        siteId: string
+        customization?: {
+            logoUrl?: string | null
+        } | null
+        org: {
+            orgId: string
+            name: string
+            image?: string | null
+        }
     }[]
     className?: string
 }) {
     const navigate = useNavigate()
     const params = useParams()
-    const { orgId: currentOrgId } = params
+    const { siteId: currentSiteId } = params
+    const [isSwitchingSite, setIsSwitchingSite] = useState<string | null>(null)
 
-    const activeTeam =
-        teams.find((team) => team.orgId === currentOrgId) || teams[0] || null
+    const activeSite =
+        sites.find((site) => site.siteId === currentSiteId) || sites[0] || null
 
-    if (!teams.length) return null
+    if (!sites.length) return null
 
     return (
         <DropdownMenu>
@@ -48,18 +58,18 @@ export function TeamSwitcher({
                     className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground gap-3 [&>svg]:size-auto'
                 >
                     <div className='flex aspect-square size-9 items-center justify-center rounded-md overflow-hidden bg-sidebar-primary text-sidebar-primary-foreground relative after:rounded-[inherit] after:absolute after:inset-0 after:shadow-[0_1px_2px_0_rgb(0_0_0/.05),inset_0_1px_0_0_rgb(255_255_255/.12)] after:pointer-events-none'>
-                        {activeTeam && (
+                        {activeSite && (
                             <img
-                                src={activeTeam.logo}
+                                src={activeSite.customization?.logoUrl || activeSite.org.image || `https://avatar.vercel.sh/${encodeURIComponent(activeSite.name || activeSite.org.name)}?gradient=linear`}
                                 width={36}
                                 height={36}
-                                alt={activeTeam.name}
+                                alt={activeSite.name || activeSite.org.name}
                             />
                         )}
                     </div>
                     <div className='grid flex-1 text-left text-base leading-tight'>
                         <span className='truncate font-medium'>
-                            {activeTeam?.name ?? 'Select a Team'}
+                            {activeSite?.name || activeSite?.org.name || 'Select a Site'}
                         </span>
                     </div>
                     <RiExpandUpDownLine
@@ -76,30 +86,60 @@ export function TeamSwitcher({
                 sideOffset={4}
             >
                 <DropdownMenuLabel className='uppercase text-muted-foreground/70 text-xs'>
-                    Teams
+                    Sites
                 </DropdownMenuLabel>
-                {teams.map((team, index) => (
+                {sites.map((site, index) => (
                     <DropdownMenuItem
-                        key={team.orgId || team.name}
-                        onClick={() => {
-                            if (team.orgId && team.orgId !== currentOrgId) {
-                                navigate(href('/org/:orgId', { orgId: team.orgId }))
+                        key={site.siteId}
+                        onClick={async () => {
+                            if (site.siteId !== currentSiteId && !isSwitchingSite) {
+                                setIsSwitchingSite(site.siteId)
+                                try {
+                                    const { data, error } = await apiClient.api.newChat.post({
+                                        orgId: site.org.orgId,
+                                        siteId: site.siteId,
+                                    })
+
+                                    if (error) {
+                                        console.error('Error creating new chat:', error)
+                                        return
+                                    }
+
+                                    if (data?.success && data.chatId) {
+                                        navigate(
+                                            href('/org/:orgId/site/:siteId/chat/:chatId', {
+                                                orgId: site.org.orgId,
+                                                siteId: site.siteId,
+                                                chatId: data.chatId,
+                                            }),
+                                        )
+                                    }
+                                } catch (error) {
+                                    console.error('Failed to create new chat:', error)
+                                } finally {
+                                    setIsSwitchingSite(null)
+                                }
                             }
                         }}
                         className='gap-2 p-2'
+                        disabled={isSwitchingSite === site.siteId}
                     >
                         <div className='flex size-6 items-center justify-center rounded-md overflow-hidden'>
                             <img
-                                src={team.logo}
+                                src={site.customization?.logoUrl || site.org.image || `https://avatar.vercel.sh/${encodeURIComponent(site.name || site.org.name)}?gradient=linear`}
                                 width={36}
                                 height={36}
-                                alt={team.name}
+                                alt={site.name || site.org.name}
                             />
                         </div>
-                        {team.name}
-                        <DropdownMenuShortcut>
-                            ⌘{index + 1}
-                        </DropdownMenuShortcut>
+                        {site.name || site.org.name}
+                        {isSwitchingSite === site.siteId ? (
+                            <div className='ml-auto text-xs text-muted-foreground'>Loading...</div>
+                        ) : (
+                            <DropdownMenuShortcut>
+                                ⌘{index + 1}
+                            </DropdownMenuShortcut>
+                        )}
                     </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
@@ -109,7 +149,7 @@ export function TeamSwitcher({
                         size={16}
                         aria-hidden='true'
                     />
-                    <div className='font-medium'>Add team</div>
+                    <div className='font-medium'>Add site</div>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
