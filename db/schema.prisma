@@ -228,7 +228,8 @@ model Site {
   domains            Domain[]
   githubInstallation GithubInstallation? @relation(fields: [installationId, orgId], references: [installationId, orgId])
   installationId     Int?
-  customization      SiteCustomization?
+  docsJson           Json                @default("{}")
+  cssStyles          String              @default("")
   githubOwner        String
   githubRepo         String
   mediaAssets        MediaAsset[]
@@ -298,14 +299,6 @@ model GithubInstallation {
 enum GithubAccountType {
   USER
   ORGANIZATION
-}
-
-model SiteCustomization {
-  siteId     String  @id
-  faviconUrl String?
-  logoUrl    String?
-  color      String?
-  site       Site    @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
 }
 
 model SiteEnabledLocale {
