@@ -17,7 +17,7 @@ import {
     TooltipTrigger,
 } from 'website/src/components/ui/tooltip'
 import { cn } from 'website/src/lib/utils'
-import { Markdown } from 'docs-website/src/lib/safe-mdx'
+import { Markdown } from 'docs-website/src/lib/markdown'
 
 import { useChatState } from '../lib/state'
 import { EditToolParamSchema } from '../lib/edit-tool'

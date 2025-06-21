@@ -21,7 +21,7 @@ const customTransformer: CustomTransformer = (node, transform) => {
         // the mdast plugin replaces the code string with shiki html
         const html = node.data?.['html'] || node.value || ''
         return (
-            <CodeBlock {...meta} lang={language}>
+            <CodeBlock {...node.data?.hProperties} {...meta} lang={language}>
                 <Pre>
                     <div
                         className='content'
