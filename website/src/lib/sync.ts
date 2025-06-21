@@ -11,7 +11,7 @@ import { ChunkReqPayload, TrieveSDK } from 'trieve-ts-sdk'
 import { env } from './env'
 import { notifyError } from './errors'
 import {
-    addInitialSlashToPath as addFrontSlashToPath,
+    addFrontSlashToPath,
     checkGitHubIsInstalled,
     getOctokit,
     getRepoFiles,

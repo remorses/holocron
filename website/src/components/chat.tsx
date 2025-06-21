@@ -7,6 +7,12 @@ import { ChatMessage } from 'website/src/components/chat-message'
 
 import { Button } from 'website/src/components/ui/button'
 import { ScrollArea } from 'website/src/components/ui/scroll-area'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from 'website/src/components/ui/dropdown-menu'
 
 import { useStickToBottom } from 'use-stick-to-bottom'
 
@@ -15,7 +21,14 @@ import { apiClient } from '../lib/spiceflow-client'
 import { useChatState } from '../lib/state'
 import { Cards, Card } from 'fumadocs-ui/components/card'
 
-import { CpuIcon, PanelsTopLeft, Database, Terminal } from 'lucide-react'
+import {
+    CpuIcon,
+    PanelsTopLeft,
+    Database,
+    Terminal,
+    ChevronDown,
+    GitBranch,
+} from 'lucide-react'
 import {
     createEditExecute,
     EditToolParamSchema,
@@ -358,50 +371,92 @@ function Footer() {
         }
     }, [handleSubmit])
 
+    const docsState = useChatState((x) => x.docsState)
+    const filesInDraft = docsState?.filesInDraft || {}
+    const hasFilesInDraft = Object.keys(filesInDraft).length > 0
+    const showCreatePR = hasFilesInDraft && !isPending
+
     return (
         <div className='sticky bottom-0 pt-4 md:pt-8 pr-4 z-50 w-full'>
-            <div className='max-w-3xl mx-auto bg-background rounded-[20px] '>
-                <div className='relative rounded-[20px] border border-transparent bg-muted transition-colors focus-within:bg-muted/50 focus-within:border-input has-[:disabled]:cursor-not-allowed  [&:has(input:is(:disabled))_*]:pointer-events-none'>
-                    <textarea
-                        className='flex sm:min-h-[84px] w-full bg-transparent px-4 py-3 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/70 focus-visible:outline-none [resize:none]'
-                        placeholder='Ask me anything...'
-                        aria-label='Enter your prompt'
-                        value={text}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                                e.preventDefault()
-                                if (!isPending && text.trim()) {
-                                    handleSubmit()
-                                }
-                            }
-                        }}
-                        onChange={(e) => setText(e.target.value)}
-                    />
-                    {/* Textarea buttons */}
-                    <div className='flex items-center justify-between gap-2 p-3'>
-                        {/* Left buttons */}
-                        <div className='flex items-center gap-2'>
-                            <Button
-                                variant='outline'
-                                size='icon'
-                                className='rounded-full size-8 border-none hover:bg-background hover:shadow-md transition-[box-shadow]'
-                            >
-                                <RiAttachment2
-                                    className='text-muted-foreground/70 size-5'
-                                    size={20}
-                                    aria-hidden='true'
-                                />
-                            </Button>
+            <div className='max-w-3xl mx-auto space-y-3'>
+                <div className='flex flex-col gap-2 '>
+                    {showCreatePR && (
+                        <div className='flex justify-end'>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant='default'
+                                        size={'sm'}
+                                        className='bg-purple-600 hover:bg-purple-700 text-white'
+                                    >
+                                        <div className='flex items-center gap-2'>
+                                            <GitBranch className='size-4' />
+                                            Create Github PR
+                                        </div>
+                                        <ChevronDown className='size-4 ml-1' />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align='end'
+                                    className='min-w-[200px]'
+                                >
+                                    <DropdownMenuItem>
+                                        <GitBranch className='size-4 mr-2' />
+                                        Create PR to main
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                        <GitBranch className='size-4 mr-2' />
+                                        Push to main
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
-                        {/* Right buttons */}
-                        <div className='flex items-center gap-2'>
-                            <Button
-                                className='rounded-full h-8'
-                                onClick={() => handleSubmit()}
-                                disabled={isPending || !text.trim()}
-                            >
-                                {isPending ? 'Loading...' : 'Generate'}
-                            </Button>
+                    )}
+                    <div className='relative rounded-[20px] border border-transparent bg-muted transition-colors focus-within:bg-muted/50 focus-within:border-input has-[:disabled]:cursor-not-allowed  [&:has(input:is(:disabled))_*]:pointer-events-none'>
+                        <textarea
+                            className='flex sm:min-h-[84px] w-full bg-transparent px-4 py-3 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/70 focus-visible:outline-none [resize:none]'
+                            placeholder='Ask me anything...'
+                            aria-label='Enter your prompt'
+                            value={text}
+                            onKeyDown={(e) => {
+                                if (
+                                    e.key === 'Enter' &&
+                                    (e.metaKey || e.ctrlKey)
+                                ) {
+                                    e.preventDefault()
+                                    if (!isPending && text.trim()) {
+                                        handleSubmit()
+                                    }
+                                }
+                            }}
+                            onChange={(e) => setText(e.target.value)}
+                        />
+                        {/* Textarea buttons */}
+                        <div className='flex items-center justify-between gap-2 p-3'>
+                            {/* Left buttons */}
+                            <div className='flex items-center gap-2'>
+                                <Button
+                                    variant='outline'
+                                    size='icon'
+                                    className='rounded-full size-8 border-none hover:bg-background hover:shadow-md transition-[box-shadow]'
+                                >
+                                    <RiAttachment2
+                                        className='text-muted-foreground/70 size-5'
+                                        size={20}
+                                        aria-hidden='true'
+                                    />
+                                </Button>
+                            </div>
+                            {/* Right buttons */}
+                            <div className='flex items-center gap-2'>
+                                <Button
+                                    className='rounded-full h-8'
+                                    onClick={() => handleSubmit()}
+                                    disabled={isPending || !text.trim()}
+                                >
+                                    {isPending ? 'Loading...' : 'Generate'}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>

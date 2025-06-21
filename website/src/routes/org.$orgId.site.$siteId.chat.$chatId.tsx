@@ -259,17 +259,6 @@ function Content() {
     )
 }
 
-function Block({ children, className = '', ...props }) {
-    return (
-        <div
-            className={cn('rounded-lg border bg-card p-6 shadow-sm', className)}
-            {...props}
-        >
-            {children}
-        </div>
-    )
-}
-
 type SiteData = any
 
 function updatePageProps(newPageProps: Partial<SiteData>, iframeRef) {

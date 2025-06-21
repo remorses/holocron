@@ -1,15 +1,42 @@
 import { Sema } from 'sema4'
 import { prisma } from 'db'
-import { App, Octokit } from 'octokit'
+import { App, Octokit, RequestError } from 'octokit'
 import { AppError, notifyError } from 'website/src/lib/errors'
 import { isTruthy } from 'website/src/lib/utils'
 import { env } from './env'
+
 
 type OctokitRest = Octokit['rest']
 
 // data passed back to framer after login, to tell it what org to use
 export type GithubLoginRequestData = {
     githubAccountLogin: string
+}
+
+const installationsCache = new Map<number, { octokit: Octokit; timestamp: number }>()
+
+const repoFilesCache = new Map<string, { data: any; timestamp: number }>()
+
+function handleOctokitError(installationId) {
+    return async (e) => {
+        // TODO handle This installation has been suspended errors, delete the installation from db
+
+        if (e.message.includes('This installation has been suspended')) {
+            console.log(
+                `deleting suspended github app for installation ${installationId}`,
+            )
+            await prisma.githubInstallation.updateMany({
+                where: {
+                    installationId: installationId,
+                },
+                data: {
+                    status: 'suspended',
+                },
+            })
+            throw e
+        }
+        throw e
+    }
 }
 
 export function getGithubApp(): App {
@@ -57,18 +84,20 @@ export async function checkGitHubIsInstalled({ installationId }) {
 
 export async function getOctokit({ installationId }): Promise<Octokit> {
     installationId = Number(installationId)
-    // const cached = installationsCache.get(installationId)
-    // if (cached) {
-    //     return cached
-    // }
+    const cached = installationsCache.get(installationId)
+    if (cached && Date.now() - cached.timestamp < 1000 * 60 * 40) {
+        return cached.octokit
+    }
     const app = getGithubApp()
 
     // https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation
-    const octokit = await app.getInstallationOctokit(installationId)
-    // .catch(handleOctokitError(installationId))
-    // installationsCache.set(installationId, octokit)
+    const octokit = await app
+        .getInstallationOctokit(installationId)
+        .catch(handleOctokitError(installationId))
+    installationsCache.set(installationId, { octokit, timestamp: Date.now() })
     return octokit
 }
+
 export async function getRepoFiles({
     branch,
     owner,
@@ -128,7 +157,7 @@ export async function getRepoFiles({
         files.map(async (file) => {
             try {
                 await sema.acquire()
-                let pathWithFrontSlash = addInitialSlashToPath(file.path || '')
+                let pathWithFrontSlash = addFrontSlashToPath(file.path || '')
                 if (!pathWithFrontSlash) {
                     return
                 }
@@ -179,10 +208,70 @@ export async function getRepoFiles({
     return downloadedFiles.filter(isTruthy)
 }
 
+export const getCurrentCommit = async ({
+    octokit,
+    owner,
+    repo,
+    branch,
+}: {
+    octokit: OctokitRest
+    owner: string
+    repo: string
+    branch: string
+}) => {
+    console.log(`getting ref ${branch}`)
+    const { data: refData } = await octokit.git.getRef({
+        owner: owner,
+        repo,
+        ref: `heads/${branch}`,
+    })
+    const commitSha = refData.object.sha
+    console.log(`getting commit ${commitSha}`)
+    const { data: commitData } = await octokit.git.getCommit({
+        owner: owner,
+        repo,
+        commit_sha: commitSha,
+    })
+    return {
+        commitSha,
+        treeSha: commitData.tree.sha,
+    }
+}
+
+export async function createBranch({
+    owner,
+    repo,
+    octokit,
+    branch,
+}: {
+    octokit: OctokitRest
+    owner: string
+    repo: string
+    branch: string
+}) {
+    console.log(`getting repo ${repo}`)
+    const repoResult = await octokit.repos.get({ owner, repo })
+    let base = repoResult.data.default_branch
+    console.log(`getting base branch ${base}`)
+    const baseBranchRef = await octokit.git.getRef({
+        owner,
+        repo,
+        ref: `heads/${base}`,
+    })
+    console.log(`creating branch ${branch}`)
+    const { data: newRef } = await octokit.git.createRef({
+        owner,
+        repo,
+        ref: `refs/heads/${branch}`,
+        sha: baseBranchRef.data.object.sha,
+    })
+
+    return newRef
+}
+
 export function isMarkdown(p: string) {
     return p.endsWith('.md') || p.endsWith('.markdown') || p.endsWith('.mdx')
 }
-
 
 export async function upsertGithubFile({
     octokit,
@@ -244,7 +333,7 @@ export async function upsertGithubFile({
     let url = `https://github.com/${owner}/${repo}/commit/${data.commit.sha}`
 }
 
-export function addInitialSlashToPath(path?: string) {
+export function addFrontSlashToPath(path?: string) {
     if (!path) {
         return ''
     }
@@ -254,6 +343,7 @@ export function addInitialSlashToPath(path?: string) {
 
     return path
 }
+
 
 // Credit to https://dev.to/lucis/how-to-push-files-programatically-to-a-repository-using-octokit-with-typescript-1nj0
 
@@ -467,6 +557,158 @@ export const createNewTree = async ({
     return data
 }
 
+const createTreeWithUpdates = async ({
+    create,
+    move,
+    remove,
+    octokit,
+    owner,
+    parentTreeSha,
+    repo,
+}: {
+    octokit: OctokitRest
+    owner: string
+    repo: string
+    create: { filePath: string; blobSha: string }[]
+    move: { filePath: string; oldPath: string; sha: string }[]
+    remove: { filePath: string }[]
+    parentTreeSha: string
+}) => {
+    if (!parentTreeSha) {
+        throw new AppError(`No parent tree sha`)
+    }
+    const tree: {
+        path: string
+        mode: string
+        type: 'blob'
+        sha?: string | null
+    }[] = []
+    for (let toCreate of create) {
+        tree.push({
+            path: toCreate.filePath,
+            type: 'blob',
+            mode: `100644`,
+            sha: toCreate.blobSha,
+        })
+    }
+    for (let toMove of move) {
+        tree.push(
+            {
+                path: toMove.oldPath,
+                type: 'blob',
+                mode: `100644`,
+                sha: null,
+            },
+            {
+                path: toMove.filePath,
+                type: 'blob',
+                mode: `100644`,
+                sha: toMove.sha,
+            },
+        )
+    }
+    for (let toRemove of remove) {
+        tree.push({
+            path: toRemove.filePath,
+            type: 'blob',
+            mode: `100644`,
+            sha: null as any,
+        })
+    }
+
+    console.log('creating new tree')
+    // console.log(tree)
+    const { data } = await octokit.git.createTree({
+        owner,
+        repo,
+        tree: tree as any,
+        base_tree: parentTreeSha,
+    })
+    return data
+}
+
+export async function changeGithubTree({
+    // branch,
+    create,
+    move,
+    remove,
+    owner,
+    repo,
+    branch,
+    octokit,
+}: {
+    octokit: OctokitRest
+    create: { filePath: string; content: string }[]
+    move: { oldPath: string; filePath: string; sha: string }[]
+    remove: { filePath: string }[]
+    owner: string
+    repo: string
+    branch: string
+}) {
+    console.log(
+        `updating tree to github ${owner}/${repo}`,
+        // JSON.stringify({ create, move, remove }, null, 2),
+    )
+
+    console.log(
+        'creating blobs for',
+        create.map((x) => x.filePath),
+    )
+    const [withBlobs, currentCommit] = await Promise.all([
+        Promise.all(
+            create.map(async (x) => {
+                const encoding = 'utf-8'
+                const blobData = await octokit.git.createBlob({
+                    owner: owner,
+                    repo,
+                    content: x.content,
+                    encoding,
+                })
+                return {
+                    ...x,
+                    blobSha: blobData.data.sha,
+                    blob: blobData.data,
+                }
+            }),
+        ),
+        getCurrentCommit({ octokit, owner, repo, branch }),
+    ])
+
+    const newTree = await createTreeWithUpdates({
+        octokit,
+        owner,
+        repo,
+        create: withBlobs,
+        parentTreeSha: currentCommit.treeSha,
+        move,
+        remove,
+    })
+
+    const files = [...create, ...move, ...remove]
+
+    console.log('creating commit')
+    const { data: newCommit } = await octokit.git.createCommit({
+        owner: owner,
+        repo,
+        message: getCommitMessage({
+            filePaths: files.map((x) => x.filePath),
+        }),
+        tree: newTree.sha,
+
+        committer: committer,
+        parents: [currentCommit.commitSha],
+    })
+
+    const {} = await octokit.git.updateRef({
+        owner: owner,
+        repo,
+        ref: `heads/${branch}`,
+        sha: newCommit.sha,
+    })
+    const commitUrl = `https://github.com/${owner}/${repo}/commit/${newCommit.sha}`
+    return { branch, parentCommit: currentCommit, commitUrl }
+}
+
 export async function pushChangesToNewBranch({
     files,
     owner,
@@ -603,4 +845,430 @@ export async function getGithubFile({
     } catch (e) {}
     return null
 }
-type Repo = { owner: string; repo: string; branch: string }
+
+export async function getGithubImage({ token, path, owner, branch, repo }) {
+    const res = await fetch(
+        getGithubAssetUrl({
+            path,
+            owner,
+            branch,
+            repo,
+        }),
+        {
+            headers: {
+                Authorization: `token ${token}`,
+            },
+        },
+    )
+    if (!res.ok) {
+        throw new AppError(`Could not get github image ${path}`)
+    }
+    return res
+}
+
+export function getGithubAssetUrl({ path = '', owner, branch, repo }) {
+    if (!path.startsWith('/')) {
+        path = '/' + path
+    }
+    return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}${path}`
+}
+
+async function checkOrCreateFork({
+    octokit,
+    upstream,
+    accountLogin,
+}: {
+    octokit: Octokit
+    upstream: { owner: string; repo: string; branch: string }
+    accountLogin: string
+}) {
+    const autocompleteForks = await octokit.rest.repos.listForks(upstream)
+
+    const existingFork = autocompleteForks.data.find((fork) => {
+        return fork.owner.login === accountLogin
+    })
+    if (existingFork) {
+        console.info('A fork of the target repo already exists')
+        const forkData = {
+            owner: existingFork.owner.login,
+            repo: existingFork.name,
+        }
+        console.log(`merging upstream to fork from ${upstream.branch}`)
+        try {
+            await octokit.rest.repos.mergeUpstream({
+                branch: upstream.branch,
+                ...forkData,
+                merge_type: 'fast-forward',
+            })
+        } catch (e) {
+            notifyError(
+                e,
+                'mergeUpstream'
+            )
+            throw new AppError(
+                `Failed syncing your fork ${forkData.owner}/${forkData.repo} with the upstream repo.`,
+            )
+        }
+
+        return {
+            owner: forkData.owner,
+            repo: forkData.repo,
+        }
+    }
+
+    // TODO: race until the repo is created
+    const createdFork = await octokit.rest.repos.createFork(upstream)
+    console.info(
+        `Created fork: ${createdFork.data.owner.login}/${createdFork.data.name}`,
+    )
+    let n = 0
+    while (n < 20) {
+        n++
+        try {
+            const fork = await octokit.rest.repos.get({
+                owner: createdFork.data.owner.login,
+                repo: createdFork.data.name,
+            })
+            break
+        } catch (error) {
+            if (error instanceof RequestError && error.status === 404) {
+                await new Promise(resolve => setTimeout(resolve, 2 * 1000))
+
+                console.info('Waiting for the fork to be created...', n)
+                await new Promise(resolve => setTimeout(resolve, 2000))
+            } else {
+                throw error
+            }
+        }
+    }
+
+    return {
+        owner: accountLogin,
+        repo: createdFork.data.name,
+    }
+}
+
+export async function createPullRequestSuggestion({
+    files,
+    octokit,
+    branch,
+    owner,
+    repo,
+    fork,
+    accountLogin,
+    title = '',
+    body,
+}: {
+    octokit: Octokit
+    fork: boolean
+    owner: string
+    repo: string
+    branch: string
+    accountLogin: string
+    body?: string
+    title?: string
+    files: { filePath: string; content: string }[]
+}) {
+    for (let f of files) {
+        if (!f.filePath) {
+            throw new AppError(`No file path for ${JSON.stringify(f)}`)
+        }
+    }
+    console.log(
+        `creating pr for ${owner}/${repo} branch ${branch}, fork? ${fork}`,
+    )
+
+    const branchName = `holocron/${Date.now()}`
+
+    let head = `refs/heads/${branchName}`
+    let prOwner = owner
+    let prRepo = repo
+
+    if (fork) {
+        const forkResult = await checkOrCreateFork({
+            octokit,
+            accountLogin,
+            upstream: {
+                owner,
+                repo,
+                branch,
+            },
+        })
+        prOwner = forkResult.owner
+        prRepo = forkResult.repo
+        if (forkResult.owner !== owner) {
+            head = forkResult.owner + ':' + branchName
+        }
+    }
+
+    const {} = await pushChangesToNewBranch({
+        owner: prOwner,
+        repo: prRepo,
+        branch: branchName,
+        baseBranch: branch,
+        files,
+        octokit: octokit.rest,
+    })
+    if (!title) {
+        title = `Update ${files.map((x) => '`' + x.filePath + '`').join(', ')}`
+    }
+    if (!body) {
+        body = `I created this PR with [Holocron](https://holocron.so/markdown-editor).`
+    }
+    const { data: pr } = await octokit.rest.pulls.create({
+        owner,
+        repo,
+        head,
+        base: `refs/heads/${branch}`,
+        title,
+        body,
+    })
+
+    const url = pr.html_url // `https://github.com/owner/repo/pull/${pr.number}`
+    return { url }
+}
+
+export async function pushToPrOrBranch({
+    files,
+    branch,
+    auth,
+    owner,
+    repo,
+}: {
+    auth: string
+    branch: string
+    files: { filePath: string; content: string }[]
+    owner: string
+    repo: string
+}) {
+    const octokit = new Octokit({
+        auth,
+    })
+    const [currentCommit, { data: githubUser }] = await Promise.all([
+        getCurrentCommit({ octokit: octokit.rest, owner, repo, branch }),
+        octokit.request('GET /user'),
+    ])
+    console.log(`last commit is ${currentCommit.commitSha}`)
+    const {
+        data: [pr],
+    } = await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+        commit_sha: currentCommit.commitSha,
+        owner,
+        repo,
+    })
+    let prUrl = pr?.html_url || ''
+    const base = pr?.base?.repo
+    let baseOwner = base?.owner?.login
+    let prOwner = pr?.head?.repo?.owner?.login
+    let baseRepo = base?.name
+    if (!pr || prOwner === githubUser?.login) {
+        console.log(
+            `pushing files directly to ${owner}/${repo}/${branch}`,
+            !pr ? 'because no pr found' : 'because owner === baseOwner',
+        )
+        const { commitUrl } = await changeGithubTree({
+            owner,
+            branch,
+            create: files,
+            octokit: octokit.rest,
+            move: [],
+            remove: [],
+            repo,
+        })
+        return { commitUrl, prUrl }
+    }
+
+    const [withBlobs] = await Promise.all([
+        Promise.all(
+            files.map(async (x) => {
+                const encoding = 'utf-8'
+                const blobData = await octokit.rest.git.createBlob({
+                    owner: baseOwner,
+                    repo: baseRepo,
+                    content: x.content,
+                    encoding,
+                })
+                return {
+                    ...x,
+                    blobSha: blobData.data.sha,
+                    blob: blobData.data,
+                }
+            }),
+        ),
+    ])
+
+    console.log('creating new tree')
+    const { data: newTree } = await octokit.rest.git.createTree({
+        owner: baseOwner,
+        repo: baseRepo,
+        tree: withBlobs.map(({ blobSha, filePath }) => ({
+            path: filePath,
+            mode: `100644`,
+            type: `blob`,
+            sha: blobSha,
+        })),
+        base_tree: currentCommit.treeSha,
+    })
+
+    console.log('creating commit')
+    const { data: newCommit } = await octokit.rest.git.createCommit({
+        owner: baseOwner,
+        repo: baseRepo,
+        message: getCommitMessage({
+            filePaths: files.map((x) => x.filePath),
+        }),
+        tree: newTree.sha,
+        committer: committer,
+        parents: [currentCommit.commitSha],
+    })
+
+    console.log(`updating ref`, branch)
+    await octokit.rest.git
+        .deleteRef({
+            owner: baseOwner,
+            repo: baseRepo,
+            ref: `heads/${branch}`,
+        })
+        .catch((e) => {
+            if (
+                e instanceof RequestError &&
+                e.message.toLowerCase().includes('does not exist')
+            ) {
+                return {}
+            }
+            throw e
+        })
+    await octokit.rest.git.createRef({
+        owner: baseOwner,
+        repo: baseRepo,
+        ref: `refs/heads/${branch}`,
+        sha: newCommit.sha,
+    })
+
+    try {
+        const {} = await octokit.rest.git.updateRef({
+            owner,
+            repo,
+            ref: `heads/${branch}`,
+            force: true, // or errors with Update is not a fast forward
+            sha: newCommit.sha,
+        })
+    } catch (error) {
+        console.log('updateRef failed', error)
+        throw error
+    }
+    await octokit.rest.git
+        .deleteRef({
+            owner: baseOwner,
+            repo: baseRepo,
+            ref: `heads/${branch}`,
+        })
+        .catch((e) => null)
+
+    return { prUrl }
+}
+
+export async function getRepoFilesWithCache({
+    githubBranch,
+    githubOwner,
+    githubRepo,
+    octokit,
+}: {
+    githubOwner: string
+    githubBranch: string
+    githubRepo: string
+    octokit: Octokit
+}): Promise<{
+    allAssetPaths: string[]
+    nodes: Array<{ slug: string; pageId: string; size: number }>
+}> {
+    const key = `${githubOwner}/${githubRepo}/${githubBranch}`
+    const cached = repoFilesCache.get(key)
+    if (cached && Date.now() - cached.timestamp < 1000 * 60) {
+        return cached.data
+    }
+
+    try {
+        console.log(`getting github tree ${githubBranch}`)
+        const tree = await octokit.rest.git.getTree({
+            owner: githubOwner,
+            repo: githubRepo,
+            tree_sha: githubBranch,
+            recursive: 'true',
+        })
+        const files = tree.data.tree.filter((file) => {
+            if (file.type !== 'blob') {
+                return false
+            }
+            if (!file.path) {
+                return false
+            }
+
+            return true
+        })
+        const allAssetPaths = files.map((x) => x.path).filter(isTruthy)
+
+        const markdownExtensions = ['.md', '.markdown', '.mdx']
+        const nodes = files
+            .filter((file) => {
+                return markdownExtensions.some((ext) =>
+                    file?.path?.endsWith(ext),
+                )
+            })
+            .map((x) => {
+                const pageSlug = addFrontSlashToPath(x.path)
+
+                const pageId = githubFileToPageId({
+                    githubBranch,
+                    githubOwner,
+                    githubRepo,
+                    pageSlug,
+                })
+                return {
+                    slug: pageSlug,
+                    pageId,
+                    size: x.size || 0,
+                }
+            })
+        console.log(
+            `found ${nodes.length} markdown files in repo ${githubOwner}/${githubRepo}`,
+        )
+        const res = {
+            nodes,
+            allAssetPaths,
+        }
+        repoFilesCache.set(key, { data: res, timestamp: Date.now() })
+        return res
+    } catch (e) {
+        if (e instanceof RequestError && e.status === 404) {
+            console.log(`repo not found ${githubOwner}/${githubRepo}`)
+            return {
+                nodes: [],
+                allAssetPaths: [],
+            }
+        }
+        throw e
+    }
+}
+
+export function githubFileToPageId({
+    githubOwner,
+    githubRepo,
+    githubBranch,
+    pageSlug,
+}: {
+    githubOwner: string
+    githubRepo: string
+    githubBranch: string
+    pageSlug: string
+}) {
+    // Simple hash implementation to replace missing 'hash' function
+    const str = `${githubOwner}:${githubRepo}:${githubBranch}:${pageSlug || ''}`
+    let hash = 0
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i)
+        hash = ((hash << 5) - hash) + char
+        hash = hash & hash // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString()
+}
