@@ -397,7 +397,6 @@ export const app = new Spiceflow({ basePath: '/api' })
                 console.log(part)
                 yield part
             }
-
         },
     })
     .route({
@@ -684,6 +683,14 @@ export const app = new Spiceflow({ basePath: '/api' })
                 console.log(
                     `Successfully pushed to existing PR #${chat.prNumber}`,
                 )
+
+                // Update chat with the new PR number
+                await prisma.chat.update({
+                    where: { chatId, userId },
+                    data: {
+                        lastPushedFiles: filesInDraft,
+                    },
+                })
                 return { prUrl: result.prUrl || existingPr.html_url }
             }
 

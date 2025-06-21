@@ -14,7 +14,7 @@ import {
     MarkdownAstRenderer,
     Markdown,
     MarkdownRendererProps,
-} from './safe-mdx'
+} from './markdown'
 import { createHighlighter, Highlighter } from 'shiki'
 import { getProcessor, ProcessorData } from './mdx'
 import markdownRs from '@xmorse/markdown-rs'
