@@ -13,6 +13,11 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from 'website/src/components/ui/dropdown-menu'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from 'website/src/components/ui/popover'
 
 import { useStickToBottom } from 'use-stick-to-bottom'
 
@@ -28,6 +33,8 @@ import {
     Terminal,
     ChevronDown,
     GitBranch,
+    AlertCircle,
+    X,
 } from 'lucide-react'
 import {
     createEditExecute,
@@ -41,6 +48,7 @@ import { useLoaderData } from 'react-router'
 import { teeAsyncIterable } from '../lib/utils'
 import { generateSlugFromPath } from 'docs-website/src/lib/utils'
 import { flushSync } from 'react-dom'
+import { DialogOverlay } from '@radix-ui/react-dialog'
 
 export default function Chat({}) {
     const { scrollRef, contentRef, scrollToBottom } = useStickToBottom()
@@ -374,7 +382,7 @@ function Footer() {
     const docsState = useChatState((x) => x.docsState)
     const filesInDraft = docsState?.filesInDraft || {}
     const hasFilesInDraft = Object.keys(filesInDraft).length > 0
-    const showCreatePR = hasFilesInDraft && !isPending
+    const showCreatePR = hasFilesInDraft
 
     return (
         <div className='sticky bottom-0 pt-4 md:pt-8 pr-4 z-50 w-full'>
@@ -441,11 +449,16 @@ function Footer() {
 function PrButton() {
     const [isLoading, setIsLoading] = useState(false)
     const [pushToMainDisabled, setPushToMainDisabled] = useState(false)
-
+    const [errorMessage, setErrorMessage] = useState('')
+    const [githubResultUrl, setPrUrl] = useState<string>('')
     const { siteId } = useLoaderData() as Route.ComponentProps['loaderData']
 
     const filesInDraft = useChatState((x) => x.docsState?.filesInDraft || {})
     const isChatGenerating = useChatState((x) => x.isChatGenerating)
+    // Reset githubResultUrl when a new chat generation starts
+    useEffect(() => {
+        if (isChatGenerating) setPrUrl('')
+    }, [isChatGenerating])
 
     const handleCreatePr = async () => {
         setIsLoading(true)
@@ -461,12 +474,14 @@ function PrButton() {
                 siteId,
                 files,
             })
+            if (result.error) throw result.error
 
-            if (result.data?.prUrl) {
-                window.open(result.data.prUrl, '_blank')
-            }
+            setPrUrl(result.data.prUrl)
         } catch (error) {
             console.error('Failed to create PR:', error)
+            const message =
+                error instanceof Error ? error.message : 'Failed to create PR'
+            setErrorMessage(message)
         } finally {
             setIsLoading(false)
         }
@@ -486,12 +501,18 @@ function PrButton() {
                 siteId,
                 files,
             })
+            if (result.error) throw result.error
 
             if (result.data?.commitUrl) {
-                window.open(result.data.commitUrl, '_blank')
+                setPrUrl(result.data.commitUrl)
             }
         } catch (error) {
             console.error('Failed to push to main:', error)
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to push to main'
+            setErrorMessage(message)
             setPushToMainDisabled(true)
         } finally {
             setIsLoading(false)
@@ -499,35 +520,105 @@ function PrButton() {
     }
 
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger disabled={isChatGenerating} asChild>
-                <Button
-                    variant='default'
-                    size={'sm'}
-                    className='bg-purple-600 hover:bg-purple-700 text-white'
-                    disabled={isLoading || isChatGenerating}
-                >
-                    <div className='flex items-center gap-2'>
-                        <GitBranch className='size-4' />
-                        {isLoading ? 'pushing...' : 'Create Github PR'}
+        <div className='flex items-center gap-2'>
+            <Popover
+                onOpenChange={(x) => {
+                    if (!x) setErrorMessage('')
+                }}
+                open={!!errorMessage}
+            >
+                <PopoverTrigger>
+                    <DropdownMenu>
+                        {githubResultUrl ? (
+                            <a
+                                href={githubResultUrl}
+                                target='_blank'
+                                rel='noopener noreferrer'
+                            >
+                                <Button
+                                    variant='default'
+                                    size={'sm'}
+                                    className='bg-purple-600 hover:bg-purple-700 text-white'
+                                >
+                                    <div className='flex items-center gap-2'>
+                                        <GitBranch className='size-4' />
+                                        {githubResultUrl.includes('/commit/')
+                                            ? 'View Commit'
+                                            : 'View PR'}
+                                    </div>
+                                </Button>
+                            </a>
+                        ) : (
+                            <DropdownMenuTrigger
+                                disabled={isChatGenerating || !!errorMessage}
+                                asChild
+                            >
+                                <Button
+                                    variant='default'
+                                    size={'sm'}
+                                    className='bg-purple-600 hover:bg-purple-700 text-white'
+                                    disabled={isLoading || isChatGenerating}
+                                >
+                                    <div className='flex items-center gap-2'>
+                                        <GitBranch className='size-4' />
+                                        {isLoading
+                                            ? 'pushing...'
+                                            : 'Create Github PR'}
+                                    </div>
+                                    <ChevronDown className='size-4 ml-1' />
+                                </Button>
+                            </DropdownMenuTrigger>
+                        )}
+                        <DropdownMenuContent
+                            align='end'
+                            className='min-w-[200px]'
+                        >
+                            <DropdownMenuItem
+                                onClick={handleCreatePr}
+                                disabled={isLoading}
+                            >
+                                <GitBranch className='size-4 mr-2' />
+                                Create PR to main
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={handlePushToMain}
+                                disabled={isLoading || pushToMainDisabled}
+                            >
+                                <GitBranch className='size-4 mr-2' />
+                                Push to main
+                                {pushToMainDisabled && ' (unavailable)'}
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </PopoverTrigger>
+
+                {!!errorMessage && (
+                    <div
+                        style={{
+                            pointerEvents: 'auto',
+                        }}
+                        className='fixed inset-0 z-50 bg-black/10 backdrop-blur-xs transition-all duration-100'
+                    />
+                )}
+
+                <PopoverContent className='w-full max-w-[400px]'>
+                    <div className='flex items-start gap-3 '>
+                        <AlertCircle className='size-5 mt-0.5 flex-shrink-0' />
+                        <div className='grow'>
+                            <h4 className='font-medium  mb-1'>Error</h4>
+                            <p className='text-sm '>{errorMessage}</p>
+                        </div>
+                        <Button
+                            variant='ghost'
+                            size='sm'
+                            className='p-1 h-auto hover:text-destructive hover:bg-destructive/10'
+                            onClick={() => setErrorMessage('')}
+                        >
+                            <X className='size-4' />
+                        </Button>
                     </div>
-                    <ChevronDown className='size-4 ml-1' />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end' className='min-w-[200px]'>
-                <DropdownMenuItem onClick={handleCreatePr} disabled={isLoading}>
-                    <GitBranch className='size-4 mr-2' />
-                    Create PR to main
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                    onClick={handlePushToMain}
-                    disabled={isLoading || pushToMainDisabled}
-                >
-                    <GitBranch className='size-4 mr-2' />
-                    Push to main
-                    {pushToMainDisabled && ' (unavailable)'}
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+                </PopoverContent>
+            </Popover>
+        </div>
     )
 }

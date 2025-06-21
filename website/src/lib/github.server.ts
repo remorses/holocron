@@ -1006,7 +1006,7 @@ export async function createPullRequestSuggestion({
         }
     }
 
-    throw new Error('this is an error very long asdfalskdfalskfjaklsdfaklsjdfklajsdfkljasdklfjklsdfjkljsad\nsdfkjsldfkjalksd\n')
+
     await pushChangesToBranch({
         owner: prOwner,
         repo: prRepo,

@@ -124,7 +124,10 @@ export const app = new Spiceflow({ basePath: '/api' })
             tabId: z.string(),
             currentSlug: z.string(),
             filesInDraft: z.record(
-                z.object({ githubPath: z.string(), content: z.string() }),
+                z.object({
+                    githubPath: z.string(),
+                    content: z.string().optional().default(''),
+                }),
             ),
         }),
         async *handler({ request, waitUntil, state: { userId } }) {

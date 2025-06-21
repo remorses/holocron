@@ -347,6 +347,7 @@ model Chat {
   createdAt    DateTime      @default(now())
   currentSlug  String?
   filesInDraft Json          @default("{}")
+  prNumber     Int?
 }
 
 model ChatMessage {
