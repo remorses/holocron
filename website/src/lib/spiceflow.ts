@@ -17,7 +17,12 @@ import { openapi } from 'spiceflow/openapi'
 import { z } from 'zod'
 import { getSession } from './better-auth'
 import { env } from './env'
-import { notifyError } from './errors'
+import { AppError, notifyError } from './errors'
+import {
+    createPullRequestSuggestion,
+    getOctokit,
+    pushToPrOrBranch,
+} from './github.server'
 import { pagesFromGithub, syncSite } from './sync'
 import { mdxRegex, sleep } from './utils'
 
@@ -631,6 +636,165 @@ export const app = new Spiceflow({ basePath: '/api' })
             return {
                 success: true,
                 chatId: newChat.chatId,
+            }
+        },
+    })
+
+    .route({
+        method: 'POST',
+        path: '/createPrSuggestion',
+        request: z.object({
+            siteId: z.string().min(1, 'siteId is required'),
+            orgId: z.string().min(1, 'orgId is required'),
+            // branchId: z.string().min(1, 'branchId is required'),
+            files: z
+                .array(
+                    z.object({
+                        filePath: z.string().min(1, 'filePath is required'),
+                        content: z.string(),
+                    }),
+                )
+                .min(1, 'files is required'),
+            installationId: z.number(),
+        }),
+        async handler({ request, state }) {
+            const { userId } = await getSession({ request })
+            const { siteId, orgId, files, installationId } =
+                await request.json()
+
+            if (!userId) {
+                throw new AppError('Missing userId')
+            }
+
+            // Check user has access to the site
+            const site = await prisma.site.findFirst({
+                where: {
+                    siteId,
+                    org: {
+                        users: {
+                            some: { userId },
+                        },
+                    },
+                },
+            })
+
+            if (!site) {
+                throw new AppError('Site not found or access denied')
+            }
+
+            // Get GitHub installation
+            const githubInstallation =
+                await prisma.githubInstallation.findFirst({
+                    where: {
+                        installationId,
+                        sites: {
+                            some: {
+                                siteId,
+                            },
+                        },
+                    },
+                })
+
+            if (!githubInstallation) {
+                throw new AppError('Missing GitHub installation')
+            }
+
+            const octokit = await getOctokit({ installationId })
+
+            // Get the default branch of the repo
+            const { data: repoData } = await octokit.rest.repos.get({
+                owner: site.githubOwner,
+                repo: site.githubRepo,
+            })
+            const branch = repoData.default_branch
+            const { url } = await createPullRequestSuggestion({
+                files,
+                octokit,
+                owner: site.githubOwner,
+                repo: site.githubRepo,
+                branch,
+                accountLogin: '',
+                fork: false,
+            })
+
+            return { prUrl: url }
+        },
+    })
+
+    .route({
+        method: 'POST',
+        path: '/commitChangesToRepo',
+        request: z.object({
+            siteId: z.string().min(1, 'siteId is required'),
+            files: z
+                .array(
+                    z.object({
+                        filePath: z.string().min(1, 'filePath is required'),
+                        content: z.string(),
+                    }),
+                )
+                .min(1, 'files is required'),
+        }),
+        async handler({ request, state }) {
+            const { userId } = await getSession({ request })
+            const { siteId, files } = await request.json()
+
+            if (!userId) {
+                throw new AppError('Missing userId')
+            }
+
+            // Check user has access to the site
+            const site = await prisma.site.findFirst({
+                where: {
+                    siteId,
+                    org: {
+                        users: {
+                            some: { userId },
+                        },
+                    },
+                },
+                include: {
+                    githubInstallation: true,
+                },
+            })
+
+            if (!site) {
+                throw new AppError('Site not found or access denied')
+            }
+
+            if (!site.githubInstallation) {
+                throw new AppError('GitHub installation not found')
+            }
+
+            const installationId = site.githubInstallation.installationId
+            const octokit = await getOctokit({ installationId })
+
+            const owner = site.githubOwner
+            const repo = site.githubRepo
+            
+            // Get the default branch of the repo
+            const { data: repoData } = await octokit.rest.repos.get({
+                owner,
+                repo,
+            })
+            const branch = repoData.default_branch
+
+            try {
+                const result = await pushToPrOrBranch({
+                    auth: site.githubInstallation.oauthToken || '',
+                    files,
+                    owner,
+                    repo,
+                    branch,
+                })
+
+                return {
+                    prUrl: result.prUrl || '',
+                    commitUrl: result.commitUrl || '',
+                    githubAuthUrl: '',
+                }
+            } catch (error) {
+                throw new AppError(`Failed to commit changes: ${error.message}`)
             }
         },
     })

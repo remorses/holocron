@@ -5,7 +5,6 @@ import { AppError, notifyError } from 'website/src/lib/errors'
 import { isTruthy } from 'website/src/lib/utils'
 import { env } from './env'
 
-
 type OctokitRest = Octokit['rest']
 
 // data passed back to framer after login, to tell it what org to use
@@ -13,7 +12,10 @@ export type GithubLoginRequestData = {
     githubAccountLogin: string
 }
 
-const installationsCache = new Map<number, { octokit: Octokit; timestamp: number }>()
+const installationsCache = new Map<
+    number,
+    { octokit: Octokit; timestamp: number }
+>()
 
 const repoFilesCache = new Map<string, { data: any; timestamp: number }>()
 
@@ -344,7 +346,6 @@ export function addFrontSlashToPath(path?: string) {
     return path
 }
 
-
 // Credit to https://dev.to/lucis/how-to-push-files-programatically-to-a-repository-using-octokit-with-typescript-1nj0
 
 export async function doesRepoExist({
@@ -433,7 +434,6 @@ export async function createNewRepo({
         description: `Repository created using Unframer`,
         has_wiki: false,
         auto_init: true,
-
     }).catch((e) => {
         if (e.status === 422) {
             throw new AppError(`Repository name already used`)
@@ -901,10 +901,7 @@ async function checkOrCreateFork({
                 merge_type: 'fast-forward',
             })
         } catch (e) {
-            notifyError(
-                e,
-                'mergeUpstream'
-            )
+            notifyError(e, 'mergeUpstream')
             throw new AppError(
                 `Failed syncing your fork ${forkData.owner}/${forkData.repo} with the upstream repo.`,
             )
@@ -932,10 +929,10 @@ async function checkOrCreateFork({
             break
         } catch (error) {
             if (error instanceof RequestError && error.status === 404) {
-                await new Promise(resolve => setTimeout(resolve, 2 * 1000))
+                await new Promise((resolve) => setTimeout(resolve, 2 * 1000))
 
                 console.info('Waiting for the fork to be created...', n)
-                await new Promise(resolve => setTimeout(resolve, 2000))
+                await new Promise((resolve) => setTimeout(resolve, 2000))
             } else {
                 throw error
             }
@@ -978,13 +975,16 @@ export async function createPullRequestSuggestion({
         `creating pr for ${owner}/${repo} branch ${branch}, fork? ${fork}`,
     )
 
-    const branchName = `holocron/${Date.now()}`
+    const branchName = `fumabase/${Date.now()}`
 
     let head = `refs/heads/${branchName}`
     let prOwner = owner
     let prRepo = repo
 
     if (fork) {
+        if (!accountLogin) {
+            throw new AppError(`No github account login to create fork with`)
+        }
         const forkResult = await checkOrCreateFork({
             octokit,
             accountLogin,
@@ -1013,7 +1013,7 @@ export async function createPullRequestSuggestion({
         title = `Update ${files.map((x) => '`' + x.filePath + '`').join(', ')}`
     }
     if (!body) {
-        body = `I created this PR with [Holocron](https://holocron.so/markdown-editor).`
+        body = `I created this PR with [Fumabase](https://fumabase.com).`
     }
     const { data: pr } = await octokit.rest.pulls.create({
         owner,
@@ -1267,7 +1267,7 @@ export function githubFileToPageId({
     let hash = 0
     for (let i = 0; i < str.length; i++) {
         const char = str.charCodeAt(i)
-        hash = ((hash << 5) - hash) + char
+        hash = (hash << 5) - hash + char
         hash = hash & hash // Convert to 32bit integer
     }
     return Math.abs(hash).toString()
