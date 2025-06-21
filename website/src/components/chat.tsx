@@ -125,13 +125,13 @@ function Messages({ ref }) {
     return (
         <div
             ref={ref}
-            className='relative h-full flex flex-col grow pr-4 mt-6 space-y-6'
+            className='relative h-full flex flex-col grow pr-4 mt-6 space-y-3'
         >
             {messages.map((x) => {
                 return <ChatMessage key={x.id} message={x} />
             })}
             {lastError && <ErrorMessage error={lastError} />}
-            {!messages.length && <ChatCards />}
+            {/* {!messages.length && <ChatCards />} */}
         </div>
     )
 }

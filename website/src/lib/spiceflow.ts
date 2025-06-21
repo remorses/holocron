@@ -406,8 +406,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             siteId: z.string().min(1, 'siteId is required'),
             // tabId: z.string().min(1, 'tabId is required'),
         }),
-        async handler({ request, state }) {
-            const { userId } = await getSession({ request })
+        async handler({ request, state: { userId } }) {
             const { siteId } = await request.json()
 
             if (!userId) {
@@ -735,8 +734,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             siteId: z.string().min(1, 'siteId is required'),
             filesInDraft: z.record(fileUpdateSchema),
         }),
-        async handler({ request, state }) {
-            const { userId } = await getSession({ request })
+        async handler({ request, state: { userId } }) {
             const { siteId, filesInDraft } = await request.json()
 
             if (!userId) {

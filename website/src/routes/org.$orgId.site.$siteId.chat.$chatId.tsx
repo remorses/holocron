@@ -181,7 +181,7 @@ export default function Page({
             >
                 <AppSidebar />
                 <SidebarInset>
-                    <div className='flex grow h-full flex-col gap-4 p-2 pt-0'>
+                    <div className='flex grow h-full flex-col gap-4 p-2'>
                         <Content />
                     </div>
                 </SidebarInset>
@@ -202,7 +202,7 @@ function Content() {
     return (
         <div className='flex flex-col h-full gap-3'>
             {/* <NavBar /> */}
-            <div className=''></div>
+
             <div className='flex grow flex-col'>
                 <BrowserWindow
                     url={iframeUrl}
