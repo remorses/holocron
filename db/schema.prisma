@@ -348,6 +348,8 @@ model Chat {
   currentSlug  String?
   filesInDraft Json          @default("{}")
   prNumber     Int?
+  // addedLines   Int           @default(0)
+  // deletedLines Int           @default(0)
 }
 
 model ChatMessage {

@@ -1,9 +1,34 @@
 import z from 'zod'
 import { diffLines, createPatch } from 'diff'
 
+function calculateLineChanges(
+    oldContent: string,
+    newContent: string,
+): { addedLines: number; deletedLines: number } {
+    const diff = diffLines(oldContent, newContent)
+    let addedLines = 0
+    let deletedLines = 0
+
+    for (const part of diff) {
+        if (part.added) {
+            addedLines += part.count || 0
+        } else if (part.removed) {
+            deletedLines += part.count || 0
+        }
+    }
+
+    return { addedLines, deletedLines }
+}
+
 export type EditToolParamSchema = z.infer<typeof editToolParamsSchema>
 
-export type PageUpdate = { githubPath: string; content: string }
+export const fileUpdateSchema = z.object({
+    githubPath: z.string(),
+    content: z.string().default(''),
+    addedLines: z.number().optional(),
+    deletedLines: z.number().optional(),
+})
+export type FileUpdate = z.infer<typeof fileUpdateSchema>
 
 export function isParameterComplete(args: Partial<EditToolParamSchema>) {
     if (!args) return false
@@ -40,16 +65,28 @@ export function isParameterComplete(args: Partial<EditToolParamSchema>) {
 
 export function createEditExecute({
     filesInDraft,
-    getPageContent,
+    getPageContent: _getPageContent,
     validateNewContent,
 }: {
     validateNewContent?: (x: { githubPath: string; content: string }) => any
-    filesInDraft: Record<string, PageUpdate>
+    filesInDraft: Record<string, FileUpdate>
     getPageContent: (x: {
         githubPath: string
     }) => Promise<string | undefined | void>
 }) {
-    const previousEdits = [] as PageUpdate[]
+    const previousEdits = [] as FileUpdate[]
+    const originalContent = new Map<string, string>()
+
+    async function getOriginalContent(path: string): Promise<string> {
+        if (originalContent.has(path)) {
+            return originalContent.get(path)!
+        }
+        const content = await _getPageContent({ githubPath: path })
+        const contentStr = content || ''
+        originalContent.set(path, contentStr)
+        return contentStr
+    }
+
     return async function execute(params: EditToolParamSchema) {
         const {
             command,
@@ -70,13 +107,13 @@ export function createEditExecute({
                     content = override.content
                 } else {
                     try {
-                        const fetchedContent = await getPageContent({
-                            githubPath: path,
-                        })
+                        const fetchedContent = await getOriginalContent(path)
                         content = fetchedContent || ''
                         filesInDraft[path] = {
                             githubPath: path,
                             content: content,
+                            addedLines: 0,
+                            deletedLines: 0,
                         }
                     } catch (e) {
                         return {
@@ -146,18 +183,19 @@ export function createEditExecute({
                         }
                     }
                 }
+                const lineCount = file_text.split('\n').length
                 filesInDraft[path] = {
                     githubPath: path,
                     content: file_text,
+                    addedLines: lineCount,
+                    deletedLines: 0,
                 }
                 return file_text
             }
             case 'str_replace': {
                 let override = filesInDraft[path]
                 if (!override) {
-                    const content = await getPageContent({
-                        githubPath: path,
-                    })
+                    const content = await getOriginalContent(path)
                     if (typeof content !== 'string') {
                         return {
                             success: false,
@@ -167,13 +205,20 @@ export function createEditExecute({
                     override = {
                         githubPath: path,
                         content: content,
+                        addedLines: 0,
+                        deletedLines: 0,
                     }
                 }
+
+                // Ensure we have the original content for comparison
+                const original = await getOriginalContent(path)
 
                 // Store current state before editing
                 previousEdits.push({
                     githubPath: path,
                     content: override.content,
+                    addedLines: override.addedLines || 0,
+                    deletedLines: override.deletedLines || 0,
                 })
                 if (typeof old_str !== 'string' || old_str.length === 0) {
                     return {
@@ -223,9 +268,15 @@ export function createEditExecute({
                         }
                     }
                 }
+                const { addedLines, deletedLines } = calculateLineChanges(
+                    original,
+                    replacedContent,
+                )
                 filesInDraft[path] = {
                     githubPath: path,
                     content: replacedContent,
+                    addedLines,
+                    deletedLines,
                 }
 
                 const patch = createPatch(
@@ -249,9 +300,7 @@ export function createEditExecute({
             case 'insert': {
                 let override = filesInDraft[path]
                 if (!override) {
-                    const content = await getPageContent({
-                        githubPath: path,
-                    })
+                    const content = await getOriginalContent(path)
                     if (typeof content !== 'string') {
                         return {
                             success: false,
@@ -261,13 +310,20 @@ export function createEditExecute({
                     override = {
                         githubPath: path,
                         content: content,
+                        addedLines: 0,
+                        deletedLines: 0,
                     }
                 }
+
+                // Ensure we have the original content for comparison
+                const original = await getOriginalContent(path)
 
                 // Store current state before editing
                 previousEdits.push({
                     githubPath: path,
                     content: override.content,
+                    addedLines: override.addedLines || 0,
+                    deletedLines: override.deletedLines || 0,
                 })
                 if (typeof insert_line !== 'number' || insert_line < 1) {
                     return {
@@ -305,9 +361,15 @@ export function createEditExecute({
                         }
                     }
                 }
+                const { addedLines, deletedLines } = calculateLineChanges(
+                    original,
+                    newContent,
+                )
                 filesInDraft[path] = {
                     githubPath: path,
                     content: newContent,
+                    addedLines,
+                    deletedLines,
                 }
 
                 const patch = createPatch(
@@ -332,7 +394,7 @@ export function createEditExecute({
                     }
                 }
 
-                // Restore the previous content
+                // Restore the previous content and recalculate line changes against original
                 if (validateNewContent) {
                     try {
                         const result = await validateNewContent({
@@ -352,9 +414,18 @@ export function createEditExecute({
                         }
                     }
                 }
+
+                const original = await getOriginalContent(path)
+                const { addedLines, deletedLines } = calculateLineChanges(
+                    original,
+                    previous.content,
+                )
+
                 filesInDraft[path] = {
                     githubPath: path,
                     content: previous.content,
+                    addedLines,
+                    deletedLines,
                 }
 
                 return {

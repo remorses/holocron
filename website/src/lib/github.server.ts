@@ -1006,7 +1006,6 @@ export async function createPullRequestSuggestion({
         }
     }
 
-
     await pushChangesToBranch({
         owner: prOwner,
         repo: prRepo,
@@ -1031,7 +1030,8 @@ export async function createPullRequestSuggestion({
     })
 
     const url = pr.html_url // `https://github.com/owner/repo/pull/${pr.number}`
-    return { url }
+    const prNumber = pr.number
+    return { url, prNumber }
 }
 
 export async function pushToPrOrBranch({

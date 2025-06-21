@@ -30,7 +30,8 @@ import { printDirectoryTree } from '../components/directory-tree'
 import {
     createEditExecute,
     editToolParamsSchema,
-    PageUpdate,
+    FileUpdate,
+    fileUpdateSchema,
 } from './edit-tool'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import path from 'path'
@@ -123,12 +124,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             chatId: z.string(),
             tabId: z.string(),
             currentSlug: z.string(),
-            filesInDraft: z.record(
-                z.object({
-                    githubPath: z.string(),
-                    content: z.string().optional().default(''),
-                }),
-            ),
+            filesInDraft: z.record(fileUpdateSchema),
         }),
         async *handler({ request, waitUntil, state: { userId } }) {
             const {
@@ -645,10 +641,10 @@ export const app = new Spiceflow({ basePath: '/api' })
 
     .route({
         method: 'POST',
-        path: '/createPrSuggestion',
+        path: '/createPrSuggestionForChat',
         request: z.object({
             siteId: z.string().min(1, 'siteId is required'),
-
+            chatId: z.string().min(1, 'chatId is required'),
             // branchId: z.string().min(1, 'branchId is required'),
             files: z
                 .array(
@@ -661,7 +657,7 @@ export const app = new Spiceflow({ basePath: '/api' })
         }),
         async handler({ request, state }) {
             const { userId } = await getSession({ request })
-            const { siteId, files } = await request.json()
+            const { siteId, files, chatId } = await request.json()
 
             if (!userId) {
                 throw new AppError('Missing userId')
@@ -671,6 +667,11 @@ export const app = new Spiceflow({ basePath: '/api' })
             const site = await prisma.site.findFirst({
                 where: {
                     siteId,
+                    chats: {
+                        some: {
+                            chatId,
+                        },
+                    },
                     org: {
                         users: {
                             some: { userId },
@@ -705,7 +706,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 repo: site.githubRepo,
             })
             const branch = repoData.default_branch
-            const { url } = await createPullRequestSuggestion({
+            const { url, prNumber } = await createPullRequestSuggestion({
                 files,
                 octokit,
                 owner: site.githubOwner,
@@ -713,6 +714,13 @@ export const app = new Spiceflow({ basePath: '/api' })
                 branch,
                 accountLogin: '',
                 fork: false,
+            })
+
+            await prisma.chat.update({
+                where: { chatId, userId },
+                data: {
+                    prNumber,
+                },
             })
 
             return { prUrl: url }

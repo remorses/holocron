@@ -3,7 +3,7 @@ import { UIMessage } from 'ai'
 import { DocsState } from 'docs-website/src/lib/docs-state'
 import { createZustandContext } from 'docs-website/src/lib/zustand-context'
 import { create } from 'zustand'
-import { PageUpdate } from './edit-tool'
+import { FileUpdate } from './edit-tool'
 
 export type State = {
     messages: UIMessage[]

@@ -2,7 +2,13 @@
 import memoize from 'micro-memoize'
 import { RiAttachment2, RiRefreshLine } from '@remixicon/react'
 import { createIdGenerator, UIMessage } from 'ai'
-import { useState, useTransition, useEffect, startTransition } from 'react'
+import {
+    useState,
+    useTransition,
+    useEffect,
+    startTransition,
+    useMemo,
+} from 'react'
 import { ChatMessage } from 'website/src/components/chat-message'
 
 import { Button } from 'website/src/components/ui/button'
@@ -40,7 +46,7 @@ import {
     createEditExecute,
     EditToolParamSchema,
     isParameterComplete,
-    PageUpdate,
+    FileUpdate,
 } from '../lib/edit-tool'
 import { docsRpcClient } from '../lib/docs-setstate'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
@@ -382,17 +388,30 @@ function Footer() {
     const docsState = useChatState((x) => x.docsState)
     const filesInDraft = docsState?.filesInDraft || {}
     const hasFilesInDraft = Object.keys(filesInDraft).length > 0
-    const showCreatePR = hasFilesInDraft
+    const updatedLines = useMemo(() => {
+        return Object.values(filesInDraft).reduce(
+            (sum, file) =>
+                sum + (file.addedLines || 0) + (file.deletedLines || 0),
+            0,
+        )
+    }, [filesInDraft])
+    const showCreatePR = updatedLines && hasFilesInDraft
 
     return (
         <div className='sticky bottom-0 pt-4 md:pt-8 pr-4 z-50 w-full'>
             <div className='max-w-3xl mx-auto space-y-3'>
                 <div className='flex flex-col gap-2 '>
-                    {showCreatePR && (
-                        <div className='flex justify-end'>
-                            <PrButton />
-                        </div>
-                    )}
+                    <div className='flex gap-1 items-center'>
+                        {showCreatePR && (
+                            <DiffStats filesInDraft={filesInDraft} />
+                        )}
+                        <div className='grow'></div>
+                        {showCreatePR && (
+                            <div className='flex justify-end'>
+                                <PrButton />
+                            </div>
+                        )}
+                    </div>
                     <div className='relative rounded-[20px] border border-transparent bg-muted transition-colors focus-within:bg-muted/50 focus-within:border-input has-[:disabled]:cursor-not-allowed  [&:has(input:is(:disabled))_*]:pointer-events-none'>
                         <textarea
                             className='flex sm:min-h-[84px] w-full bg-transparent px-4 py-3 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/70 focus-visible:outline-none [resize:none]'
@@ -448,10 +467,10 @@ function Footer() {
 
 function PrButton() {
     const [isLoading, setIsLoading] = useState(false)
-    const [pushToMainDisabled, setPushToMainDisabled] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
     const [githubResultUrl, setPrUrl] = useState<string>('')
-    const { siteId } = useLoaderData() as Route.ComponentProps['loaderData']
+    const { siteId, chatId } =
+        useLoaderData() as Route.ComponentProps['loaderData']
 
     const filesInDraft = useChatState((x) => x.docsState?.filesInDraft || {})
     const isChatGenerating = useChatState((x) => x.isChatGenerating)
@@ -470,9 +489,10 @@ function PrButton() {
                 }),
             )
 
-            const result = await apiClient.api.createPrSuggestion.post({
+            const result = await apiClient.api.createPrSuggestionForChat.post({
                 siteId,
                 files,
+                chatId,
             })
             if (result.error) throw result.error
 
@@ -482,38 +502,6 @@ function PrButton() {
             const message =
                 error instanceof Error ? error.message : 'Failed to create PR'
             setErrorMessage(message)
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
-    const handlePushToMain = async () => {
-        setIsLoading(true)
-        try {
-            const files = Object.entries(filesInDraft).map(
-                ([filePath, { content }]) => ({
-                    filePath,
-                    content: content || '',
-                }),
-            )
-
-            const result = await apiClient.api.commitChangesToRepo.post({
-                siteId,
-                files,
-            })
-            if (result.error) throw result.error
-
-            if (result.data?.commitUrl) {
-                setPrUrl(result.data.commitUrl)
-            }
-        } catch (error) {
-            console.error('Failed to push to main:', error)
-            const message =
-                error instanceof Error
-                    ? error.message
-                    : 'Failed to push to main'
-            setErrorMessage(message)
-            setPushToMainDisabled(true)
         } finally {
             setIsLoading(false)
         }
@@ -549,25 +537,24 @@ function PrButton() {
                                 </Button>
                             </a>
                         ) : (
-                            <DropdownMenuTrigger
-                                disabled={isChatGenerating || !!errorMessage}
-                                asChild
+                            <Button
+                                variant='default'
+                                disabled={
+                                    isLoading ||
+                                    isChatGenerating ||
+                                    !!errorMessage
+                                }
+                                size={'sm'}
+                                className='bg-purple-600 hover:bg-purple-700 text-white'
                             >
-                                <Button
-                                    variant='default'
-                                    size={'sm'}
-                                    className='bg-purple-600 hover:bg-purple-700 text-white'
-                                    disabled={isLoading || isChatGenerating}
-                                >
-                                    <div className='flex items-center gap-2'>
-                                        <GitBranch className='size-4' />
-                                        {isLoading
-                                            ? 'pushing...'
-                                            : 'Create Github PR'}
-                                    </div>
-                                    <ChevronDown className='size-4 ml-1' />
-                                </Button>
-                            </DropdownMenuTrigger>
+                                <div className='flex items-center gap-2'>
+                                    <GitBranch className='size-4' />
+                                    {isLoading
+                                        ? 'loading...'
+                                        : 'Create Github PR'}
+                                </div>
+                                {/* <ChevronDown className='size-4 ml-1' /> */}
+                            </Button>
                         )}
                         <DropdownMenuContent
                             align='end'
@@ -576,18 +563,7 @@ function PrButton() {
                             <DropdownMenuItem
                                 onClick={handleCreatePr}
                                 disabled={isLoading}
-                            >
-                                <GitBranch className='size-4 mr-2' />
-                                Create PR to main
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onClick={handlePushToMain}
-                                disabled={isLoading || pushToMainDisabled}
-                            >
-                                <GitBranch className='size-4 mr-2' />
-                                Push to main
-                                {pushToMainDisabled && ' (unavailable)'}
-                            </DropdownMenuItem>
+                            ></DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </PopoverTrigger>
@@ -622,3 +598,63 @@ function PrButton() {
         </div>
     )
 }
+
+interface DiffStatsProps {
+    filesInDraft: Record<string, FileUpdate>
+    className?: string
+}
+import { memo } from 'react'
+export const DiffStats = memo(function DiffStats({
+    filesInDraft,
+    className = '',
+}: DiffStatsProps) {
+    // Only include files that have additions or deletions
+    const changedFiles = Object.entries(filesInDraft).filter(
+        ([, file]) =>
+            (file.addedLines || 0) > 0 || (file.deletedLines || 0) > 0,
+    )
+    const fileCount = changedFiles.length
+
+    // Don't render if no files have diff
+    if (fileCount === 0) {
+        return null
+    }
+
+    const totalAdded = changedFiles.reduce(
+        (sum, [, file]) => sum + (file.addedLines || 0),
+        0,
+    )
+    const totalDeleted = changedFiles.reduce(
+        (sum, [, file]) => sum + (file.deletedLines || 0),
+        0,
+    )
+
+    return (
+        <div
+            className={`text-xs flex gap-2 text-muted-foreground px-2 py-1 rounded-md ${className}`}
+        >
+            <div>
+                edited <span className='font-medium'>{fileCount}</span> file
+                {fileCount !== 1 ? 's' : ''}
+            </div>
+            <div>
+                {totalAdded > 0 && (
+                    <>
+                        {' '}
+                        <span className='text-green-600 font-medium'>
+                            +{totalAdded}
+                        </span>
+                    </>
+                )}
+                {totalDeleted > 0 && (
+                    <>
+                        ,{' '}
+                        <span className='text-red-600 font-medium'>
+                            -{totalDeleted}
+                        </span>
+                    </>
+                )}
+            </div>
+        </div>
+    )
+})

@@ -12,8 +12,8 @@ export type DocsState = {
         {
             content: string
             githubPath: string
-            // ast: any
-            // toc: TOCItemType[]
+            addedLines: number
+            deletedLines: number
         }
     >
     isMarkdownStreaming?: boolean

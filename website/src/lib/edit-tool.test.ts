@@ -2,10 +2,10 @@ import { describe, expect, test } from 'vitest'
 import {
     createEditExecute,
     isParameterComplete,
-    type PageUpdate
+    type FileUpdate
 } from './edit-tool'
 
-const filesInDraft: Record<string, PageUpdate> = {}
+const filesInDraft: Record<string, FileUpdate> = {}
 
 const mockGetPageContent = async ({ githubPath }: { githubPath: string }) => {
     const mockFiles: Record<string, string> = {
@@ -73,13 +73,15 @@ describe('edit-tool commands', () => {
       Created by test"
     `)
         expect(filesInDraft['new-file.md']).toMatchInlineSnapshot(`
-      {
-        "githubPath": "new-file.md",
-        "markdown": "This is a new file
-      With multiple lines
-      Created by test",
-      }
-    `)
+          {
+            "addedLines": 3,
+            "content": "This is a new file
+          With multiple lines
+          Created by test",
+            "deletedLines": 0,
+            "githubPath": "new-file.md",
+          }
+        `)
     })
 
     test('str_replace command', async () => {
@@ -93,12 +95,12 @@ describe('edit-tool commands', () => {
             view_range: null,
         })
         expect(result).toMatchInlineSnapshot(`
-          "Here is the diff of the changes made:
+          "Here is the diff of the changes made
 
           Index: test.md
           ===================================================================
-          --- test.md
-          +++ test.md
+          --- test.md	
+          +++ test.md	
           @@ -1,4 +1,4 @@
            line 1
           -line 2
@@ -108,14 +110,16 @@ describe('edit-tool commands', () => {
           "
         `)
         expect(filesInDraft['test.md']).toMatchInlineSnapshot(`
-      {
-        "githubPath": "test.md",
-        "markdown": "line 1
-      modified line 2
-      line 3
-      line 4",
-      }
-    `)
+          {
+            "addedLines": 1,
+            "content": "line 1
+          modified line 2
+          line 3
+          line 4",
+            "deletedLines": 1,
+            "githubPath": "test.md",
+          }
+        `)
     })
 
     test('insert command', async () => {
@@ -133,8 +137,8 @@ describe('edit-tool commands', () => {
 
           Index: example.txt
           ===================================================================
-          --- example.txt
-          +++ example.txt
+          --- example.txt	
+          +++ example.txt	
           @@ -1,3 +1,4 @@
            Hello World
           +Inserted line after line 1
@@ -143,14 +147,16 @@ describe('edit-tool commands', () => {
           "
         `)
         expect(filesInDraft['example.txt']).toMatchInlineSnapshot(`
-      {
-        "githubPath": "example.txt",
-        "markdown": "Hello World
-      Inserted line after line 1
-      This is a test file
-      End of file",
-      }
-    `)
+          {
+            "addedLines": 1,
+            "content": "Hello World
+          Inserted line after line 1
+          This is a test file
+          End of file",
+            "deletedLines": 0,
+            "githubPath": "example.txt",
+          }
+        `)
     })
 
     test('undo_edit command', async () => {
@@ -207,11 +213,20 @@ describe('edit-tool commands', () => {
             view_range: null,
         })
         expect(duplicateReplaceResult).toMatchInlineSnapshot(`
-      {
-        "error": "Old string "line" found more than once in the document.",
-        "success": false,
-      }
-    `)
+          "Here is the diff of the changes made, notice that you replaced more than one match, if that was not desired undo the change or add back the old content you want to keep
+
+          Index: test.md
+          ===================================================================
+          --- test.md	
+          +++ test.md	
+          @@ -1,4 +1,4 @@
+          -line 1
+          +new 1
+           modified line 2
+           line 3
+           line 4
+          "
+        `)
 
         const noMatchReplaceResult = await execute({
             command: 'str_replace',

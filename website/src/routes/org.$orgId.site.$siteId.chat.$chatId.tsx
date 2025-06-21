@@ -123,9 +123,10 @@ export async function loader({
         host,
         siteId,
         tabId,
+        chatId,
         chat,
         chatHistory,
-        userOrgs: userOrgs,
+        userOrgs,
     }
 }
 
