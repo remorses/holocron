@@ -338,6 +338,7 @@ enum ChatMessagePartType {
 model Chat {
   chatId          String        @id @default(cuid())
   title           String?
+  description     String?
   messages        ChatMessage[]
   siteId          String
   site            Site          @relation(fields: [siteId], references: [siteId], onDelete: Cascade)

@@ -1040,12 +1040,14 @@ export async function pushToPrOrBranch({
     auth,
     owner,
     repo,
+    message,
 }: {
     auth: string
     branch: string
     files: { filePath: string; content: string }[]
     owner: string
     repo: string
+    message?: string
 }) {
     const octokit = new Octokit({
         auth,
@@ -1120,9 +1122,11 @@ export async function pushToPrOrBranch({
     const { data: newCommit } = await octokit.rest.git.createCommit({
         owner: baseOwner,
         repo: baseRepo,
-        message: getCommitMessage({
-            filePaths: files.map((x) => x.filePath),
-        }),
+        message:
+            message ||
+            getCommitMessage({
+                filePaths: files.map((x) => x.filePath),
+            }),
         tree: newTree.sha,
         committer: committer,
         parents: [currentCommit.commitSha],
@@ -1179,9 +1183,11 @@ export async function pushToPrOrBranch({
         const { data: rebased } = await octokit.rest.git.createCommit({
             owner,
             repo,
-            message: getCommitMessage({
-                filePaths: files.map((f) => f.filePath),
-            }),
+            message:
+                message ||
+                getCommitMessage({
+                    filePaths: files.map((f) => f.filePath),
+                }),
             tree: newTree.sha, // same tree you already built
             parents: [latest], // NEW parent!
             committer,

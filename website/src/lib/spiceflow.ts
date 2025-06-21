@@ -5,6 +5,7 @@ import dedent from 'string-dedent'
 import { anthropic } from '@ai-sdk/anthropic'
 import {
     appendResponseMessages,
+    generateObject,
     generateText,
     Message,
     streamText,
@@ -281,7 +282,6 @@ export const app = new Spiceflow({ basePath: '/api' })
 
                         const chatRow = await tx.chat.create({
                             data: {
-                                ...prevChat,
                                 chatId,
                                 createdAt: prevChat.createdAt,
                                 userId,
@@ -291,11 +291,12 @@ export const app = new Spiceflow({ basePath: '/api' })
                                 lastPushedFiles: prevChat.lastPushedFiles || {},
                                 title: prevChat.title,
                                 prNumber: prevChat.prNumber,
+                                description: prevChat.description,
                             },
                         })
 
                         for (const [msgIdx, msg] of resultMessages.entries()) {
-                            const parts = msg.parts || []
+                            const parts = (msg as any).parts || []
 
                             if (
                                 msg.role !== 'assistant' &&
@@ -310,8 +311,12 @@ export const app = new Spiceflow({ basePath: '/api' })
                             const content =
                                 msg.content ||
                                 parts
-                                    .filter((x) => x.type === 'text')
-                                    .reduce((acc, cur) => acc + cur.text, '\n')
+                                    .filter((x: any) => x.type === 'text')
+                                    .reduce(
+                                        (acc: string, cur: any) =>
+                                            acc + cur.text,
+                                        '\n',
+                                    )
                             const chatMessage = await tx.chatMessage.create({
                                 data: {
                                     chatId: chatRow.chatId,
@@ -341,7 +346,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                                             messageId: chatMessage.id,
                                             type: 'reasoning',
 
-                                            text: part.reasoning,
+                                            text: (part as any).reasoning,
                                             index,
                                         },
                                     })
@@ -677,6 +682,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                     owner: site.githubOwner,
                     repo: site.githubRepo,
                     branch: existingPr.head.ref,
+                    message: chat.title || '',
                 })
 
                 console.log(
@@ -710,6 +716,10 @@ export const app = new Spiceflow({ basePath: '/api' })
                 branch,
                 accountLogin: '',
                 fork: false,
+                title: chat.title || 'Update documentation',
+                body:
+                    (chat as any).description ??
+                    'Updated content from FumaBase assistant.',
             })
 
             console.log(`Successfully created new PR #${prNumber} at ${url}`)
@@ -813,7 +823,7 @@ async function generateAndSaveChatTitle(params: {
     resultMessages: Message[]
     chatId: string
     userId: string
-}): Promise<string | null> {
+}): Promise<{ title: string | null; description: string | null }> {
     // Extract conversation text
     const textMessages = params.resultMessages
         .filter((msg) => msg.role === 'user' || msg.role === 'assistant')
@@ -821,32 +831,59 @@ async function generateAndSaveChatTitle(params: {
             const content =
                 msg.content ||
                 (msg.parts || [])
-                    .filter((part) => part.type === 'text')
-                    .map((part) => part.text)
+                    .filter(
+                        (part) =>
+                            part.type === 'text' ||
+                            part.type === 'tool-invocation',
+                    )
+                    .map((part) => {
+                        if (part.type === 'tool-invocation') {
+                            return `[Tool: ${part.toolInvocation?.toolName}] ${JSON.stringify(part.toolInvocation?.args)}`
+                        }
+                        return part.text
+                    })
                     .join('\n')
             return `${msg.role}: ${content}`
         })
         .join('\n\n')
 
-    let chatTitle: string | null = null
+    let chatInfo: { title: string | null; description: string | null } = {
+        title: null,
+        description: null,
+    }
+
     if (textMessages.trim()) {
         try {
-            const titleResponse = await generateText({
+            const { object } = await generateObject({
                 model: openai('gpt-4o-mini'),
+                schema: z.object({
+                    title: z
+                        .string()
+                        .describe(
+                            'A short, descriptive title for the changes, 2-6 words.',
+                        ),
+                    description: z
+                        .string()
+                        .describe(
+                            'A concise summary of the changes made, in a few sentences. Use markdown. This will be used as the body of a GitHub PR.',
+                        ),
+                }),
                 messages: [
                     {
                         role: 'system',
                         content:
-                            'Generate a very short, descriptive title for this chat conversation. The title should be 2-6 words that capture the main topic or purpose. Do not use quotes or special formatting.',
+                            'Generate a title and description for a pull request based on this chat conversation. The title should be short and descriptive (2-6 words), and the description should summarize the changes. Do not use quotes or special formatting for the title.',
                     },
                     {
                         role: 'user',
                         content: `Here is the chat conversation:\n\n${textMessages}`,
                     },
                 ],
-                maxTokens: 20,
             })
-            chatTitle = titleResponse.text.trim()
+            chatInfo = {
+                title: object.title.trim(),
+                description: object.description.trim(),
+            }
         } catch (error) {
             console.error('Failed to generate chat title:', error)
         }
@@ -855,10 +892,11 @@ async function generateAndSaveChatTitle(params: {
     await prisma.chat.update({
         where: { chatId: params.chatId, userId: params.userId },
         data: {
-            title: chatTitle,
+            title: chatInfo.title,
+            description: chatInfo.description,
         },
     })
-    return chatTitle
+    return chatInfo
 }
 
 export type SpiceflowApp = typeof app
