@@ -14,6 +14,8 @@ do not add useless comments if the code is self descriptive. only add comments i
 
 try to use early returns and breaks, try nesting code as little as possible, follow the go best practice of if statements: avoid else, nest as little as possible, use top level ifs. minimize nesting.
 
+after any change to typescript code ALWAYS run the `pnpm typecheck` script of that package, or if there is no typecheck script run `pnpm tsc` yourself
+
 # testing
 
 do not write new test files unless asked. do not write tests if there is not already a test or describe block for that function or module.
@@ -52,7 +54,19 @@ React-router framework is the successor of Remix, it is basically the same frame
 
 react-router follows all the conventions of remix but all imports must be updated to point to `react-router` instead of `@remix-run/react` or `@remix-run/node`.
 
-## website routes
+## react-router navigation state
+
+react-router has the hook `useNavigation` that expose the navigation state, ALWAYS use this hook to track loading state for navigation
+
+```ts
+const navigation = useNavigation()
+
+if (navigation.state === 'loading' || navigation.state === 'submitting') {
+    return null
+}
+```
+
+## website, react-routes
 
 website routes use the flat routes filesystem routes, inside src/routes. these files encode the routing logic in the filename, using $id for params and dot . for slashes.
 
@@ -151,6 +165,10 @@ always try use use react-router `useNavigate` or `Link` instead of doing window.
 
 so that internal navigation are done client side and are faster. notice that navigate only accepts a relative path and not a full url, so if you have a full url you should do new URL(url).pathname. only use navigate if you know the url is relative to the app.
 
+## Link or a components are preferred over `navigate`
+
+ALWAYS use link components instead of the navigate function if possible, for example in a dropdown component you should wrap the dropdown item in a link instead of adding a onClick handler.
+
 ## calling the server from the client
 
 for simple routes that only have one interaction in the page, for example a form page, you should use react-router forms and actions to interact with the server.
@@ -196,7 +214,6 @@ for very complex updates or inserts that involve more than 3 related tables, for
 try to never write sql by hand, user prisma
 
 if a query becomes too complex because fetching too deeply into related tables (more than 1 `include` nesting), use different queries instead, put them in a Promise.all
-
 
 ## concurrency
 

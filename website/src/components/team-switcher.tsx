@@ -1,8 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useNavigation, useParams, Link } from 'react-router'
 import { href } from 'react-router'
 
 import {
@@ -20,7 +19,7 @@ import {
     SidebarMenuItem,
 } from 'website/src/components/ui/sidebar'
 import { RiExpandUpDownLine, RiAddLine } from '@remixicon/react'
-import { apiClient } from 'website/src/lib/spiceflow-client'
+import { Button } from './ui/button'
 
 export function TeamSwitcher({
     sites,
@@ -40,10 +39,9 @@ export function TeamSwitcher({
     }[]
     className?: string
 }) {
-    const navigate = useNavigate()
+    const navigation = useNavigation()
     const params = useParams()
     const { siteId: currentSiteId } = params
-    const [isSwitchingSite, setIsSwitchingSite] = useState<string | null>(null)
 
     const activeSite =
         sites.find((site) => site.siteId === currentSiteId) || sites[0] || null
@@ -51,33 +49,36 @@ export function TeamSwitcher({
     if (!sites.length) return null
 
     return (
-        <DropdownMenu>
+        <DropdownMenu >
             <DropdownMenuTrigger className={className} asChild>
-                <SidebarMenuButton
-                    size='lg'
-                    className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground gap-3 [&>svg]:size-auto'
-                >
-                    <div className='flex aspect-square size-9 items-center justify-center rounded-md overflow-hidden bg-sidebar-primary text-sidebar-primary-foreground relative after:rounded-[inherit] after:absolute after:inset-0 after:shadow-[0_1px_2px_0_rgb(0_0_0/.05),inset_0_1px_0_0_rgb(255_255_255/.12)] after:pointer-events-none'>
+                <Button variant={'secondary'} className='pl-1 grow-0 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground gap-3 [&>svg]:size-auto'>
+                    <div className='flex aspect-square items-center justify-center rounded-md overflow-hidden bg-sidebar-primary text-sidebar-primary-foreground relative after:rounded-[inherit] after:absolute after:inset-0 after:shadow-[0_1px_2px_0_rgb(0_0_0/.05),inset_0_1px_0_0_rgb(255_255_255/.12)] after:pointer-events-none'>
                         {activeSite && (
                             <img
-                                src={activeSite.customization?.logoUrl || activeSite.org.image || `https://avatar.vercel.sh/${encodeURIComponent(activeSite.name || activeSite.org.name)}?gradient=linear`}
-                                width={36}
-                                height={36}
+                                src={
+                                    activeSite.customization?.logoUrl ||
+                                    activeSite.org.image ||
+                                    `https://avatar.vercel.sh/${encodeURIComponent(activeSite.name || activeSite.org.name)}?gradient=linear`
+                                }
+                                width={26}
+                                height={26}
                                 alt={activeSite.name || activeSite.org.name}
                             />
                         )}
                     </div>
-                    <div className='grid flex-1 text-left text-base leading-tight'>
+                    <div className='grid flex-1 text-left leading-tight'>
                         <span className='truncate font-medium'>
-                            {activeSite?.name || activeSite?.org.name || 'Select a Site'}
+                            {activeSite?.name ||
+                                activeSite?.org.name ||
+                                'Select a Site'}
                         </span>
                     </div>
                     <RiExpandUpDownLine
                         className='ms-auto text-sidebar-foreground/50'
-                        size={20}
+                        size={18}
                         aria-hidden='true'
                     />
-                </SidebarMenuButton>
+                </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
                 className='dark w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-md'
@@ -91,65 +92,54 @@ export function TeamSwitcher({
                 {sites.map((site, index) => (
                     <DropdownMenuItem
                         key={site.siteId}
-                        onClick={async () => {
-                            if (site.siteId !== currentSiteId && !isSwitchingSite) {
-                                setIsSwitchingSite(site.siteId)
-                                try {
-                                    const { data, error } = await apiClient.api.newChat.post({
-                                        orgId: site.org.orgId,
-                                        siteId: site.siteId,
-                                    })
-
-                                    if (error) {
-                                        console.error('Error creating new chat:', error)
-                                        return
-                                    }
-
-                                    if (data?.success && data.chatId) {
-                                        navigate(
-                                            href('/org/:orgId/site/:siteId/chat/:chatId', {
-                                                orgId: site.org.orgId,
-                                                siteId: site.siteId,
-                                                chatId: data.chatId,
-                                            }),
-                                        )
-                                    }
-                                } catch (error) {
-                                    console.error('Failed to create new chat:', error)
-                                } finally {
-                                    setIsSwitchingSite(null)
-                                }
-                            }
-                        }}
                         className='gap-2 p-2'
-                        disabled={isSwitchingSite === site.siteId}
+                        asChild
                     >
-                        <div className='flex size-6 items-center justify-center rounded-md overflow-hidden'>
-                            <img
-                                src={site.customization?.logoUrl || site.org.image || `https://avatar.vercel.sh/${encodeURIComponent(site.name || site.org.name)}?gradient=linear`}
-                                width={36}
-                                height={36}
-                                alt={site.name || site.org.name}
-                            />
-                        </div>
-                        {site.name || site.org.name}
-                        {isSwitchingSite === site.siteId ? (
-                            <div className='ml-auto text-xs text-muted-foreground'>Loading...</div>
-                        ) : (
-                            <DropdownMenuShortcut>
-                                ⌘{index + 1}
-                            </DropdownMenuShortcut>
-                        )}
+                        <Link
+                            to={href('/org/:orgId/site/:siteId', {
+                                orgId: site.org.orgId,
+                                siteId: site.siteId,
+                            })}
+                        >
+                            <div className='flex size-6 items-center justify-center rounded-md overflow-hidden'>
+                                <img
+                                    src={
+                                        site.customization?.logoUrl ||
+                                        site.org.image ||
+                                        `https://avatar.vercel.sh/${encodeURIComponent(site.name || site.org.name)}?gradient=linear`
+                                    }
+                                    width={24}
+                                    height={24}
+                                    alt={site.name || site.org.name}
+                                />
+                            </div>
+                            {site.name || site.org.name}
+                            {navigation.state === 'loading' ? (
+                                <div className='ml-auto text-xs text-muted-foreground'>
+                                    Loading...
+                                </div>
+                            ) : (
+                                <DropdownMenuShortcut>
+                                    ⌘{index + 1}
+                                </DropdownMenuShortcut>
+                            )}
+                        </Link>
                     </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className='gap-2 p-2'>
-                    <RiAddLine
-                        className='opacity-60'
-                        size={16}
-                        aria-hidden='true'
-                    />
-                    <div className='font-medium'>Add site</div>
+                <DropdownMenuItem className='gap-2 p-2' asChild>
+                    <Link
+                        to={href('/org/:orgId/onboarding', {
+                            orgId: activeSite?.org.orgId || sites[0]?.org.orgId,
+                        })}
+                    >
+                        <RiAddLine
+                            className='opacity-60'
+                            size={16}
+                            aria-hidden='true'
+                        />
+                        <div className='font-medium'>Add site</div>
+                    </Link>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
