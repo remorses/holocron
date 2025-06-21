@@ -487,7 +487,7 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
     const { siteId, prUrl, chatId, chat } =
         useLoaderData() as Route.ComponentProps['loaderData']
 
-    const { deferredFilesInDraft, hasUnsavedChanges } = useFilesInDraftChanges()
+    const { hasUnsavedChanges } = useFilesInDraftChanges()
     const isChatGenerating = useChatState((x) => x.isChatGenerating)
 
     const revalidator = useRevalidator()
@@ -511,16 +511,12 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
     const handleCreatePr = async () => {
         setIsLoading(true)
         try {
-            const files = Object.entries(deferredFilesInDraft).map(
-                ([filePath, { content }]) => ({
-                    filePath,
-                    content: content || '',
-                }),
-            )
-
+            const docsState = useChatState.getState()?.docsState
+            const filesInDraft = docsState?.filesInDraft || {}
+            
             const result = await apiClient.api.createPrSuggestionForChat.post({
                 siteId,
-                files,
+                filesInDraft,
                 chatId,
             })
             if (result.error) throw result.error

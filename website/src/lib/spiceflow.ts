@@ -343,13 +343,15 @@ export const app = new Spiceflow({ basePath: '/api' })
 
                         const chatRow = await tx.chat.create({
                             data: {
-                                ...prevChat,
                                 chatId,
                                 createdAt: prevChat.createdAt,
                                 userId,
                                 siteId,
                                 currentSlug,
                                 filesInDraft: filesInDraft || {},
+                                title: prevChat.title,
+                                prNumber: prevChat.prNumber,
+                                lastPushedFiles: filesInDraft || {},
                             },
                         })
 
@@ -646,18 +648,11 @@ export const app = new Spiceflow({ basePath: '/api' })
             siteId: z.string().min(1, 'siteId is required'),
             chatId: z.string().min(1, 'chatId is required'),
             // branchId: z.string().min(1, 'branchId is required'),
-            files: z
-                .array(
-                    z.object({
-                        filePath: z.string().min(1, 'filePath is required'),
-                        content: z.string(),
-                    }),
-                )
-                .min(1, 'files is required'),
+            filesInDraft: z.record(fileUpdateSchema),
         }),
         async handler({ request, state }) {
             const { userId } = state
-            const { siteId, files, chatId } = await request.json()
+            const { siteId, filesInDraft, chatId } = await request.json()
 
             if (!userId) {
                 throw new AppError('Missing userId')
@@ -714,6 +709,14 @@ export const app = new Spiceflow({ basePath: '/api' })
             if (!chat) {
                 throw new AppError('Chat not found')
             }
+
+            // Convert filesInDraft to files format
+            const files = Object.entries(filesInDraft).map(
+                ([filePath, fileUpdate]) => ({
+                    filePath,
+                    content: fileUpdate.content || '',
+                }),
+            )
 
             // If chat already has a PR, push to the existing PR branch
             if (chat.prNumber) {
@@ -773,7 +776,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 where: { chatId, userId },
                 data: {
                     prNumber,
-                    lastPushedFiles,
+                    lastPushedFiles: filesInDraft,
                 },
             })
 
@@ -786,18 +789,11 @@ export const app = new Spiceflow({ basePath: '/api' })
         path: '/commitChangesToRepo',
         request: z.object({
             siteId: z.string().min(1, 'siteId is required'),
-            files: z
-                .array(
-                    z.object({
-                        filePath: z.string().min(1, 'filePath is required'),
-                        content: z.string(),
-                    }),
-                )
-                .min(1, 'files is required'),
+            filesInDraft: z.record(fileUpdateSchema),
         }),
         async handler({ request, state }) {
             const { userId } = await getSession({ request })
-            const { siteId, files } = await request.json()
+            const { siteId, filesInDraft } = await request.json()
 
             if (!userId) {
                 throw new AppError('Missing userId')
@@ -838,6 +834,14 @@ export const app = new Spiceflow({ basePath: '/api' })
                 repo,
             })
             const branch = repoData.default_branch
+
+            // Convert filesInDraft to files format
+            const files = Object.entries(filesInDraft).map(
+                ([filePath, fileUpdate]) => ({
+                    filePath,
+                    content: fileUpdate.content || '',
+                }),
+            )
 
             try {
                 const result = await pushToPrOrBranch({
