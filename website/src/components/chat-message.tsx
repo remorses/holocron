@@ -393,7 +393,6 @@ function EditorToolPreview({
         )
     }
 
-    if (!code) return null
     if (command === 'insert') {
         let markdown = ''
         markdown += `Inserting content into \`${args?.path}:${args?.insert_line || 0}\`\n`

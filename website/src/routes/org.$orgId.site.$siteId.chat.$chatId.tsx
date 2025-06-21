@@ -152,6 +152,7 @@ export default function Page({
                 }
                 return message
             }),
+            lastPushedFiles: (chat.lastPushedFiles as any) || {},
             isChatGenerating: false,
             docsState: {
                 filesInDraft: chat.filesInDraft as any,

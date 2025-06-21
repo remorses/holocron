@@ -656,7 +656,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 .min(1, 'files is required'),
         }),
         async handler({ request, state }) {
-            const { userId } = await getSession({ request })
+            const { userId } = state
             const { siteId, files, chatId } = await request.json()
 
             if (!userId) {
@@ -664,27 +664,38 @@ export const app = new Spiceflow({ basePath: '/api' })
             }
 
             // Check user has access to the site
-            const site = await prisma.site.findFirst({
-                where: {
-                    siteId,
-                    chats: {
-                        some: {
-                            chatId,
+            const [site, chat] = await Promise.all([
+                prisma.site.findFirst({
+                    where: {
+                        siteId,
+                        chats: {
+                            some: {
+                                chatId,
+                            },
+                        },
+                        org: {
+                            users: {
+                                some: { userId },
+                            },
                         },
                     },
-                    org: {
-                        users: {
-                            some: { userId },
-                        },
+                    include: {
+                        githubInstallation: true,
                     },
-                },
-                include: {
-                    githubInstallation: true,
-                },
-            })
+                }),
+                prisma.chat.findFirst({
+                    where: {
+                        chatId,
+                        userId,
+                    },
+                }),
+            ])
 
             if (!site) {
                 throw new AppError('Site not found or access denied')
+            }
+            if (!chat) {
+                throw new AppError('Chat not found or access denied')
             }
             if (!site.githubInstallation) {
                 throw new AppError('GitHub installation for site not found')
@@ -699,14 +710,6 @@ export const app = new Spiceflow({ basePath: '/api' })
             }
 
             const octokit = await getOctokit({ installationId })
-
-            // Get the chat to check if it already has a PR
-            const chat = await prisma.chat.findFirst({
-                where: {
-                    chatId,
-                    userId,
-                },
-            })
 
             if (!chat) {
                 throw new AppError('Chat not found')
@@ -770,6 +773,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 where: { chatId, userId },
                 data: {
                     prNumber,
+                    lastPushedFiles,
                 },
             })
 

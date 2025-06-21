@@ -9,9 +9,8 @@ import { FileUpdate } from './edit-tool'
 export type State = {
     messages: UIMessage[]
     docsState?: Pick<DocsState, 'currentSlug' | 'filesInDraft'>
+    lastPushedFiles: Record<string, FileUpdate>
     isChatGenerating?: boolean
-    initialFilesInDraft?: Record<string, FileUpdate>
-
     lastError?: {
         messageId: string
         error: string
@@ -25,31 +24,33 @@ export const [StateProvider, useChatState] = createZustandContext<State>(
 )
 
 export function useFilesInDraftChanges() {
-    const currentFilesInDraft = useChatState((x) => x.docsState?.filesInDraft || {})
-    const initialFilesInDraft = useChatState((x) => x.initialFilesInDraft || {})
-    
+    const currentFilesInDraft = useChatState(
+        (x) => x.docsState?.filesInDraft || {},
+    )
+    const initialFilesInDraft = useChatState((x) => x.lastPushedFiles || {})
+
     // Use deferred value for better performance
     const deferredFilesInDraft = useDeferredValue(currentFilesInDraft)
-    
+
     const hasUnsavedChanges = useMemo(() => {
         const currentKeys = Object.keys(deferredFilesInDraft)
         const initialKeys = Object.keys(initialFilesInDraft)
-        
+
         // Quick check for different number of files
         if (currentKeys.length !== initialKeys.length) {
             return true
         }
-        
+
         // Check if any file has changed
-        return currentKeys.some(key => {
+        return currentKeys.some((key) => {
             const current = deferredFilesInDraft[key]
             const initial = initialFilesInDraft[key]
-            
+
             // If file doesn't exist in initial state, it's a change
             if (!initial) {
                 return true
             }
-            
+
             // Compare content or other relevant properties
             return (
                 current.content !== initial.content ||
@@ -58,7 +59,7 @@ export function useFilesInDraftChanges() {
             )
         })
     }, [deferredFilesInDraft, initialFilesInDraft])
-    
+
     return {
         currentFilesInDraft,
         deferredFilesInDraft,
