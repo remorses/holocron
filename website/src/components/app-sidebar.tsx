@@ -109,7 +109,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 placeholder='Select chat...'
                                 searchPlaceholder='Search chats...'
                                 emptyText='No chats found.'
-                                className='max-w-[200px] text-sm'
+                                className='max-w-[200px] font-medium'
                                 items={chatHistoryItems}
                             />
                         </div>
