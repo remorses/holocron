@@ -30,8 +30,46 @@ type ChatMessageProps = {
     children?: React.ReactNode
 }
 function LoadingSpinner() {
+    // This will animate the dots: . .. ... . .. ... etc.
+    // We use a span for each sequence, only one visible at a time via keyframes.
+    // Inline style for keyframes to avoid external CSS dependencies.
     return (
-        <div className='mt-2 ml-2 w-3 h-3 bg-white opacity-0 rotate-45 animate-[assistant-spinner-spin_1.7s_ease-in-out_infinite]'></div>
+        <span className='ml-2 mt-2 inline-flex h-3 select-none font-mono text-base text-muted-foreground'>
+            <style>
+                {`
+                    @keyframes chatDot1 {
+                        0%, 74% { opacity: 0; }
+                        10%, 24% { opacity: 1; }
+                        75%, 100% { opacity: 0; }
+                    }
+                    @keyframes chatDot2 {
+                        0%, 24% { opacity: 0; }
+                        25%, 49% { opacity: 1; }
+                        50%, 100% { opacity: 0; }
+                    }
+                    @keyframes chatDot3 {
+                        0%, 49% { opacity: 0; }
+                        50%, 74% { opacity: 1; }
+                        75%, 100% { opacity: 0; }
+                    }
+                `}
+            </style>
+            <span style={{ animation: 'chatDot1 1.2s linear infinite' }}>
+                .
+            </span>
+            <span
+                style={{ animation: 'chatDot2 1.2s linear infinite' }}
+                className='ml-0.5'
+            >
+                .
+            </span>
+            <span
+                style={{ animation: 'chatDot3 1.2s linear infinite' }}
+                className='ml-0.5'
+            >
+                .
+            </span>
+        </span>
     )
 }
 function isMessageAlmostEmpty(message: UIMessage) {
@@ -89,6 +127,7 @@ export const ChatMessage = memo(function ChatMessage({
     ) {
         return <LoadingSpinner />
     }
+    // return <LoadingSpinner />
 
     const handleEditStart = () => {
         const textContent = message.parts

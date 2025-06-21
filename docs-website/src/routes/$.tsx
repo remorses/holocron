@@ -293,7 +293,6 @@ function DocsMarkdown() {
                 }
             }
             console.log(`no override for githubPath ${loaderData.githubPath}, using loader data`)
-            console.log(filesInDraft)
 
             return { isStreaming, ast: loaderData.ast, markdown: '' }
         }),

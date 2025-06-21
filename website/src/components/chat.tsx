@@ -181,7 +181,7 @@ function ErrorMessage({
 function Footer() {
     const [text, setText] = useState('')
     const isPending = useChatState((x) => x.isChatGenerating)
-
+    const revalidator = useRevalidator()
     const { siteId, chat, tabId, prUrl } =
         useLoaderData() as Route.ComponentProps['loaderData']
     const messages = useChatState((x) => x?.messages || [])
@@ -382,6 +382,7 @@ function Footer() {
             })
         } finally {
             useChatState.setState({ isChatGenerating: false })
+            revalidator.revalidate()
         }
     }
     // Listen for regenerate events

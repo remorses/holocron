@@ -288,7 +288,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                                 siteId,
                                 currentSlug,
                                 filesInDraft: filesInDraft || {},
-                                lastPushedFiles: filesInDraft || {},
+                                lastPushedFiles: prevChat.lastPushedFiles || {},
                                 title: prevChat.title,
                                 prNumber: prevChat.prNumber,
                             },

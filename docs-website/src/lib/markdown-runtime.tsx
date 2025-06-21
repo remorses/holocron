@@ -67,21 +67,20 @@ export const StreamingMarkdownRuntimeComponent = memo(
         })
     },
 )
-const failedLanguages = new Set<string>()
+const alreadyLoadedLanguages = new Set<string>()
 
 const loadLanguageMemo = memoize(
     (highlighter: Highlighter, language: string) => {
-        return highlighter.loadLanguage(language as any).catch((e) => {
-            console.error(e)
-            failedLanguages.add(language)
+        return highlighter.loadLanguage(language as any).finally(() => {
+            alreadyLoadedLanguages.add(language)
         })
     },
 )
 
 const onMissingLanguage = (highlighter: Highlighter, language: string) => {
-    if (failedLanguages.has(language)) {
+    if (alreadyLoadedLanguages.has(language)) {
         console.warn(
-            `Skipping language loading for previously failed language ${language}`,
+            `Skipping language loading for previously loaded language ${language}`,
         )
         return
     }
