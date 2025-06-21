@@ -23,47 +23,30 @@ export const [StateProvider, useChatState] = createZustandContext<State>(
     (initial) => create((set) => ({ ...initial })),
 )
 
-export function useFilesInDraftChanges() {
-    const currentFilesInDraft = useChatState(
-        (x) => x.docsState?.filesInDraft || {},
-    )
-    const initialFilesInDraft = useChatState((x) => x.lastPushedFiles || {})
+export function doFilesInDraftNeedPush(
+    currentFilesInDraft: Record<string, FileUpdate>,
+    lastPushedFiles: Record<string, FileUpdate>,
+) {
+    // Use trimmed content comparison as before
+    const hasNonPushedChanges = Object.keys(currentFilesInDraft).some((key) => {
+        const current = currentFilesInDraft[key]
+        const initial = lastPushedFiles[key]
 
-    // Use deferred value for better performance
-    const deferredFilesInDraft = useDeferredValue(currentFilesInDraft)
+        // Compare content or other relevant properties, trim before comparing content
+        const currentContent = (current?.content ?? '').trim()
+        const initialContent = (initial?.content ?? '').trim()
 
-    const hasUnsavedChanges = useMemo(() => {
-        const currentKeys = Object.keys(deferredFilesInDraft)
-        const initialKeys = Object.keys(initialFilesInDraft)
-
-        // Quick check for different number of files
-        if (currentKeys.length !== initialKeys.length) {
-            return true
-        }
-
-        // Check if any file has changed
-        return currentKeys.some((key) => {
-            const current = deferredFilesInDraft[key]
-            const initial = initialFilesInDraft[key]
-
-            // If file doesn't exist in initial state, it's a change
-            if (!initial) {
-                return true
-            }
-
-            // Compare content or other relevant properties
-            return (
-                current.content !== initial.content ||
-                current.addedLines !== initial.addedLines ||
-                current.deletedLines !== initial.deletedLines
+        const different = currentContent !== initialContent
+        if (different) {
+            const diffLen = Math.abs(currentContent.length - initialContent.length)
+            // You might want to log more details depending on your needs
+            // For now, we log the key, what changed, and by how many characters
+            console.log(
+                `[doFilesInDraftNeedPush] File "${key}" is different: length changed by ${diffLen} (was ${initialContent.length}, now ${currentContent.length})`
             )
-        })
-    }, [deferredFilesInDraft, initialFilesInDraft])
+        }
+        return different
+    })
 
-    return {
-        currentFilesInDraft,
-        deferredFilesInDraft,
-        initialFilesInDraft,
-        hasUnsavedChanges,
-    }
+    return hasNonPushedChanges
 }

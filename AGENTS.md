@@ -1,3 +1,5 @@
+when summarizing changes at the end of the message be super short, a few words and in bullet points, use bold text to highlight important keywords. use markdown.
+
 # package manager: pnpm with workspace
 
 This project uses pnpm workspaces to manage dependencies. Important scripts are in the root package.json or various packages package.json
@@ -13,6 +15,10 @@ do not add useless comments if the code is self descriptive. only add comments i
 try to use early returns and breaks, try nesting code as little as possible, follow the go best practice of if statements: avoid else, nest as little as possible, use top level ifs. minimize nesting.
 
 # testing
+
+do not write new test files unless asked. do not write tests if there is not already a test or describe block for that function or module.
+
+tests should validate complex and non obvious logic, if a test looks like a placeholder, do not add it.
 
 Use vitest to run tests. Tests should be run from the current package directory and not root, try using the test script instead of vitest directly. Additional vitest flags can be added at the end, like --run to disable watch mode or -u to update snapshots.
 
@@ -50,7 +56,7 @@ react-router follows all the conventions of remix but all imports must be update
 
 website routes use the flat routes filesystem routes, inside src/routes. these files encode the routing logic in the filename, using $id for params and dot . for slashes.
 
-if 2 routes share the same prefix then the loader of both routes is run on a request and the route with the shorter routename is called a layout. a layout can also use <Outlet /> to render the child route inside it. for example /org/x/site will run loaders in `org.$orgid` and `org.$orgid.site`. if you want instead to create a route that is not a layout route, where the loader does not run for routes that share the prefix, append _index to the filename, for example `org.$orgid._index` in the example before.
+if 2 routes share the same prefix then the loader of both routes is run on a request and the route with the shorter routename is called a layout. a layout can also use <Outlet /> to render the child route inside it. for example /org/x/site will run loaders in `org.$orgid` and `org.$orgid.site`. if you want instead to create a route that is not a layout route, where the loader does not run for routes that share the prefix, append \_index to the filename, for example `org.$orgid._index` in the example before.
 
 ## route file exports
 
@@ -191,7 +197,6 @@ try to never write sql by hand, user prisma
 
 if a query becomes too complex because fetching too deeply into related tables (more than 1 `include` nesting), use different queries instead, put them in a Promise.all
 
-##
 
 ## concurrency
 
@@ -245,10 +250,10 @@ if (!user.subscription) {
 
 - NEVER pass functions to useEffect or useMemo dependencies. when you start passing functions to hook dependencies you need to add useCallback everywhere in the code, useCallback is a virus that infects the codebase and should be ALWAYS avoided.
 
-- custom hooks are generally bad. instead of creating hooks create generic react independent functions. Every time you find yourself creating a custom hook call @think and think hard if you can just create a normal function instead, or just inline the expression in the component if small enough
+- custom hooks are bad. NEVER add custom hooks unless asked to do so by me. instead of creating hooks create generic react independent functions. Every time you find yourself creating a custom hook call @think and think hard if you can just create a normal function instead, or just inline the expression in the component if small enough
 
 - minimize number of props. do not use props if you can use Zustand state instead. The app has global Zustand state that let's you get a piece of state down from the component tree by using something like `useStore(x => x.something)` or `useLoaderData<typeof loader>()` or even useRouteLoaderData if you are deep in the react component tree
 
 - do not consider local state truthful when interactive with server. when interacting with the server with rpc or api calls never use state from the render function as input for the api call. This state can easily become stale or not get updated in the closure context. instead prefer using Zustand `useStore.getState().stateValue`. Notice that useLoaderData or useParams should be fine in this case.
 
--
+- when using useRef with a generic type always add undefined in the call, for example `useRef<number>(undefined)`. this is required by the rect types definitions

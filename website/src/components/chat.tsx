@@ -1,5 +1,5 @@
 'use client'
-import { memo } from 'react'
+import { memo, useDeferredValue } from 'react'
 import memoize from 'micro-memoize'
 import { RiAttachment2, RiRefreshLine } from '@remixicon/react'
 import { createIdGenerator, UIMessage } from 'ai'
@@ -35,7 +35,8 @@ import { useStickToBottom } from 'use-stick-to-bottom'
 
 import { fullStreamToUIMessages } from '../lib/process-chat'
 import { apiClient } from '../lib/spiceflow-client'
-import { useChatState, useFilesInDraftChanges } from '../lib/state'
+import { useChatState, doFilesInDraftNeedPush } from '../lib/state'
+import { useTemporaryState } from '../lib/hooks'
 import { Cards, Card } from 'fumadocs-ui/components/card'
 
 import {
@@ -184,6 +185,11 @@ function Footer() {
     const { siteId, chat, tabId, prUrl } =
         useLoaderData() as Route.ComponentProps['loaderData']
     const messages = useChatState((x) => x?.messages || [])
+    const filesInDraft = useChatState((x) => x?.docsState?.filesInDraft || {})
+    const lastPushedFiles = useChatState((x) => x.lastPushedFiles)
+    const hasNonPushedChanges = useMemo(() => {
+        return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
+    }, [filesInDraft, lastPushedFiles])
 
     const handleSubmit = async ({ inputText }: { inputText?: string } = {}) => {
         const messages = useChatState.getState()?.messages
@@ -391,15 +397,14 @@ function Footer() {
         }
     }, [handleSubmit])
 
-    const { deferredFilesInDraft, hasUnsavedChanges } = useFilesInDraftChanges()
-    const hasFilesInDraft = Object.keys(deferredFilesInDraft).length > 0
+    const hasFilesInDraft = Object.keys(filesInDraft).length > 0
     const updatedLines = useMemo(() => {
-        return Object.values(deferredFilesInDraft).reduce(
+        return Object.values(filesInDraft).reduce(
             (sum, file) =>
                 sum + (file.addedLines || 0) + (file.deletedLines || 0),
             0,
         )
-    }, [deferredFilesInDraft])
+    }, [filesInDraft])
     const showCreatePR = updatedLines && hasFilesInDraft
 
     return (
@@ -409,8 +414,8 @@ function Footer() {
                     <div className='flex gap-1 items-center bg-background p-1 rounded-md'>
                         {showCreatePR && (
                             <DiffStats
-                                filesInDraft={deferredFilesInDraft}
-                                hasUnsavedChanges={hasUnsavedChanges}
+                                filesInDraft={filesInDraft}
+                                hasNonPushedChanges={hasNonPushedChanges}
                             />
                         )}
                         {prUrl && (
@@ -426,7 +431,7 @@ function Footer() {
                         <div className='grow'></div>
                         {showCreatePR && (
                             <div className='flex justify-end'>
-                                <PrButton disabled={!hasUnsavedChanges} />
+                                <PrButton disabled={!hasNonPushedChanges} />
                             </div>
                         )}
                     </div>
@@ -483,24 +488,29 @@ function Footer() {
 function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
     const [isLoading, setIsLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
+    const [buttonText, setButtonText] = useTemporaryState('', 2000)
 
     const { siteId, prUrl, chatId, chat } =
         useLoaderData() as Route.ComponentProps['loaderData']
 
-    const { hasUnsavedChanges } = useFilesInDraftChanges()
+    const filesInDraft = useChatState((x) => x?.docsState?.filesInDraft || {})
+    const lastPushedFiles = useChatState((x) => x.lastPushedFiles)
+    const hasNonPushedChanges = useMemo(() => {
+        return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
+    }, [filesInDraft, lastPushedFiles])
     const isChatGenerating = useChatState((x) => x.isChatGenerating)
 
     const revalidator = useRevalidator()
 
     const isButtonDisabled =
         disabled ||
-        !hasUnsavedChanges ||
+        !hasNonPushedChanges ||
         isLoading ||
         isChatGenerating ||
         !!errorMessage
 
     const getTooltipMessage = () => {
-        if (disabled || !hasUnsavedChanges)
+        if (disabled || !hasNonPushedChanges)
             return 'No unsaved changes to create PR'
         if (isChatGenerating) return 'Wait for chat to finish generating'
         if (isLoading) return 'Creating PR...'
@@ -508,12 +518,20 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
         return null
     }
 
+    const displayButtonText =
+        buttonText ||
+        (isLoading
+            ? 'loading...'
+            : chat.prNumber
+              ? `Push to PR #${chat.prNumber}`
+              : 'Create Github PR')
+
     const handleCreatePr = async () => {
         setIsLoading(true)
         try {
             const docsState = useChatState.getState()?.docsState
             const filesInDraft = docsState?.filesInDraft || {}
-            
+
             const result = await apiClient.api.createPrSuggestionForChat.post({
                 siteId,
                 filesInDraft,
@@ -522,6 +540,7 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
             if (result.error) throw result.error
 
             await revalidator.revalidate()
+            setButtonText('PR submitted')
         } catch (error) {
             console.error('Failed to create PR:', error)
             const message =
@@ -553,11 +572,7 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
                                 >
                                     <div className='flex items-center gap-2'>
                                         <GitBranch className='size-4' />
-                                        {isLoading
-                                            ? 'loading...'
-                                            : chat.prNumber
-                                              ? `Push to PR #${chat.prNumber}`
-                                              : 'Create Github PR'}
+                                        {displayButtonText}
                                     </div>
                                     {/* <ChevronDown className='size-4 ml-1' /> */}
                                 </Button>
@@ -608,13 +623,13 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
 
 interface DiffStatsProps {
     filesInDraft: Record<string, FileUpdate>
-    hasUnsavedChanges?: boolean
+    hasNonPushedChanges?: boolean
     className?: string
 }
 
 export const DiffStats = memo(function DiffStats({
     filesInDraft,
-    hasUnsavedChanges = false,
+    hasNonPushedChanges = false,
     className = '',
 }: DiffStatsProps) {
     // Only include files that have additions or deletions
@@ -645,11 +660,6 @@ export const DiffStats = memo(function DiffStats({
             <div>
                 edited <span className='font-medium'>{fileCount}</span> file
                 {fileCount !== 1 ? 's' : ''}
-                {hasUnsavedChanges && (
-                    <span className='text-orange-600 font-medium ml-1'>
-                        (unsaved)
-                    </span>
-                )}
             </div>
             <div>
                 {totalAdded > 0 && (

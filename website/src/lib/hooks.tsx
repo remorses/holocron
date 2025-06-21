@@ -79,3 +79,38 @@ export function useClickOutside<T extends HTMLElement>(
         }
     }, [ref, onAway])
 }
+
+export function useTemporaryState<T>(
+    defaultValue: T,
+    resetAfter: number,
+): [T, React.Dispatch<React.SetStateAction<T>>] {
+    const [state, setState] = React.useState(defaultValue)
+    const timeoutId = React.useRef<number>(undefined)
+
+    React.useEffect(() => {
+        // if the state is not the default value, set a timeout to reset it
+        if (state !== defaultValue) {
+            timeoutId.current = window.setTimeout(() => {
+                setState(defaultValue)
+            }, resetAfter)
+        }
+        // when the component unmounts, clear the timeout
+        return () => {
+            if (timeoutId.current) {
+                clearTimeout(timeoutId.current)
+            }
+        }
+    }, [state, defaultValue, resetAfter])
+
+    const customSetState: React.Dispatch<React.SetStateAction<T>> = (
+        newState,
+    ) => {
+        // when we set a new state, we should clear the previous timeout
+        if (timeoutId.current) {
+            clearTimeout(timeoutId.current)
+        }
+        setState(newState)
+    }
+
+    return [state, customSetState]
+}
