@@ -25,12 +25,17 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from 'website/src/components/ui/popover'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from 'website/src/components/ui/tooltip'
 
 import { useStickToBottom } from 'use-stick-to-bottom'
 
 import { fullStreamToUIMessages } from '../lib/process-chat'
 import { apiClient } from '../lib/spiceflow-client'
-import { useChatState } from '../lib/state'
+import { useChatState, useFilesInDraftChanges } from '../lib/state'
 import { Cards, Card } from 'fumadocs-ui/components/card'
 
 import {
@@ -386,16 +391,15 @@ function Footer() {
         }
     }, [handleSubmit])
 
-    const docsState = useChatState((x) => x.docsState)
-    const filesInDraft = docsState?.filesInDraft || {}
-    const hasFilesInDraft = Object.keys(filesInDraft).length > 0
+    const { deferredFilesInDraft, hasUnsavedChanges } = useFilesInDraftChanges()
+    const hasFilesInDraft = Object.keys(deferredFilesInDraft).length > 0
     const updatedLines = useMemo(() => {
-        return Object.values(filesInDraft).reduce(
+        return Object.values(deferredFilesInDraft).reduce(
             (sum, file) =>
                 sum + (file.addedLines || 0) + (file.deletedLines || 0),
             0,
         )
-    }, [filesInDraft])
+    }, [deferredFilesInDraft])
     const showCreatePR = updatedLines && hasFilesInDraft
 
     return (
@@ -404,7 +408,10 @@ function Footer() {
                 <div className='flex flex-col gap-2 '>
                     <div className='flex gap-1 items-center bg-background p-1 rounded-md'>
                         {showCreatePR && (
-                            <DiffStats filesInDraft={filesInDraft} />
+                            <DiffStats
+                                filesInDraft={deferredFilesInDraft}
+                                hasUnsavedChanges={hasUnsavedChanges}
+                            />
                         )}
                         {prUrl && (
                             <a
@@ -419,11 +426,11 @@ function Footer() {
                         <div className='grow'></div>
                         {showCreatePR && (
                             <div className='flex justify-end'>
-                                <PrButton />
+                                <PrButton disabled={!hasUnsavedChanges} />
                             </div>
                         )}
                     </div>
-                    <div className='relative rounded-[20px] border border-transparent bg-muted transition-colors focus-within:bg-muted/50 focus-within:border-input has-[:disabled]:cursor-not-allowed  [&:has(input:is(:disabled))_*]:pointer-events-none'>
+                    <div className='relative rounded-[20px] border border-transparent bg-muted transition-colors focus-within:bg-muted focus-within:border-input has-[:disabled]:cursor-not-allowed  [&:has(input:is(:disabled))_*]:pointer-events-none'>
                         <textarea
                             className='flex sm:min-h-[84px] w-full bg-transparent px-4 py-3 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/70 focus-visible:outline-none [resize:none]'
                             placeholder='Ask me anything...'
@@ -473,23 +480,38 @@ function Footer() {
     )
 }
 
-function PrButton() {
+function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
     const [isLoading, setIsLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
 
     const { siteId, prUrl, chatId, chat } =
         useLoaderData() as Route.ComponentProps['loaderData']
 
-    const filesInDraft = useChatState((x) => x.docsState?.filesInDraft || {})
+    const { deferredFilesInDraft, hasUnsavedChanges } = useFilesInDraftChanges()
     const isChatGenerating = useChatState((x) => x.isChatGenerating)
-    // Reset githubResultUrl when a new chat generation starts
 
     const revalidator = useRevalidator()
+
+    const isButtonDisabled =
+        disabled ||
+        !hasUnsavedChanges ||
+        isLoading ||
+        isChatGenerating ||
+        !!errorMessage
+
+    const getTooltipMessage = () => {
+        if (disabled || !hasUnsavedChanges)
+            return 'No unsaved changes to create PR'
+        if (isChatGenerating) return 'Wait for chat to finish generating'
+        if (isLoading) return 'Creating PR...'
+        if (errorMessage) return 'Fix error before creating PR'
+        return null
+    }
 
     const handleCreatePr = async () => {
         setIsLoading(true)
         try {
-            const files = Object.entries(filesInDraft).map(
+            const files = Object.entries(deferredFilesInDraft).map(
                 ([filePath, { content }]) => ({
                     filePath,
                     content: content || '',
@@ -524,25 +546,32 @@ function PrButton() {
             >
                 <PopoverTrigger>
                     <DropdownMenu>
-                        <Button
-                            variant='default'
-                            onClick={handleCreatePr}
-                            disabled={
-                                isLoading || isChatGenerating || !!errorMessage
-                            }
-                            size={'sm'}
-                            className='bg-purple-600 hover:bg-purple-700 text-white'
-                        >
-                            <div className='flex items-center gap-2'>
-                                <GitBranch className='size-4' />
-                                {isLoading
-                                    ? 'loading...'
-                                    : chat.prNumber
-                                      ? `Push to PR #${chat.prNumber}`
-                                      : 'Create Github PR'}
-                            </div>
-                            {/* <ChevronDown className='size-4 ml-1' /> */}
-                        </Button>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant='default'
+                                    onClick={handleCreatePr}
+                                    disabled={isButtonDisabled}
+                                    size={'sm'}
+                                    className='bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50'
+                                >
+                                    <div className='flex items-center gap-2'>
+                                        <GitBranch className='size-4' />
+                                        {isLoading
+                                            ? 'loading...'
+                                            : chat.prNumber
+                                              ? `Push to PR #${chat.prNumber}`
+                                              : 'Create Github PR'}
+                                    </div>
+                                    {/* <ChevronDown className='size-4 ml-1' /> */}
+                                </Button>
+                            </TooltipTrigger>
+                            {isButtonDisabled && getTooltipMessage() && (
+                                <TooltipContent>
+                                    {getTooltipMessage()}
+                                </TooltipContent>
+                            )}
+                        </Tooltip>
                         <DropdownMenuContent
                             align='end'
                             className='min-w-[200px]'
@@ -583,11 +612,13 @@ function PrButton() {
 
 interface DiffStatsProps {
     filesInDraft: Record<string, FileUpdate>
+    hasUnsavedChanges?: boolean
     className?: string
 }
 
 export const DiffStats = memo(function DiffStats({
     filesInDraft,
+    hasUnsavedChanges = false,
     className = '',
 }: DiffStatsProps) {
     // Only include files that have additions or deletions
@@ -618,6 +649,11 @@ export const DiffStats = memo(function DiffStats({
             <div>
                 edited <span className='font-medium'>{fileCount}</span> file
                 {fileCount !== 1 ? 's' : ''}
+                {hasUnsavedChanges && (
+                    <span className='text-orange-600 font-medium ml-1'>
+                        (unsaved)
+                    </span>
+                )}
             </div>
             <div>
                 {totalAdded > 0 && (

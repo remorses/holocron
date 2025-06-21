@@ -1,6 +1,6 @@
 import { prisma } from 'db'
 import { DocsState } from 'docs-website/src/lib/docs-state'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useDeferredValue } from 'react'
 import { redirect, useLoaderData } from 'react-router'
 import { AppSidebar } from '../components/app-sidebar'
 import { BrowserWindow } from '../components/browser-window'
@@ -133,6 +133,7 @@ export async function loader({
         chatHistory,
         userOrgs,
         prUrl,
+        initialFilesInDraft: chat.filesInDraft as any,
     }
 }
 
@@ -140,7 +141,7 @@ export default function Page({
     loaderData,
     params: { siteId, orgId },
 }: Route.ComponentProps) {
-    const { chat, site, host } = loaderData
+    const { chat, site, host, initialFilesInDraft } = loaderData
     const initialState = useMemo<State>(
         () => ({
             messages: chat.messages.map((x) => {
@@ -156,6 +157,7 @@ export default function Page({
                 filesInDraft: chat.filesInDraft as any,
                 currentSlug: chat.currentSlug || undefined,
             },
+            initialFilesInDraft,
         }),
         [loaderData],
     )
