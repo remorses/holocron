@@ -382,34 +382,7 @@ function Footer() {
                 <div className='flex flex-col gap-2 '>
                     {showCreatePR && (
                         <div className='flex justify-end'>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant='default'
-                                        size={'sm'}
-                                        className='bg-purple-600 hover:bg-purple-700 text-white'
-                                    >
-                                        <div className='flex items-center gap-2'>
-                                            <GitBranch className='size-4' />
-                                            Create Github PR
-                                        </div>
-                                        <ChevronDown className='size-4 ml-1' />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                    align='end'
-                                    className='min-w-[200px]'
-                                >
-                                    <DropdownMenuItem>
-                                        <GitBranch className='size-4 mr-2' />
-                                        Create PR to main
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                        <GitBranch className='size-4 mr-2' />
-                                        Push to main
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                            <PrButton />
                         </div>
                     )}
                     <div className='relative rounded-[20px] border border-transparent bg-muted transition-colors focus-within:bg-muted/50 focus-within:border-input has-[:disabled]:cursor-not-allowed  [&:has(input:is(:disabled))_*]:pointer-events-none'>
@@ -462,5 +435,35 @@ function Footer() {
                 </div>
             </div>
         </div>
+    )
+}
+
+function PrButton() {
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button
+                    variant='default'
+                    size={'sm'}
+                    className='bg-purple-600 hover:bg-purple-700 text-white'
+                >
+                    <div className='flex items-center gap-2'>
+                        <GitBranch className='size-4' />
+                        Create Github PR
+                    </div>
+                    <ChevronDown className='size-4 ml-1' />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end' className='min-w-[200px]'>
+                <DropdownMenuItem>
+                    <GitBranch className='size-4 mr-2' />
+                    Create PR to main
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                    <GitBranch className='size-4 mr-2' />
+                    Push to main
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
     )
 }

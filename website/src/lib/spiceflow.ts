@@ -645,7 +645,7 @@ export const app = new Spiceflow({ basePath: '/api' })
         path: '/createPrSuggestion',
         request: z.object({
             siteId: z.string().min(1, 'siteId is required'),
-            orgId: z.string().min(1, 'orgId is required'),
+
             // branchId: z.string().min(1, 'branchId is required'),
             files: z
                 .array(
@@ -655,12 +655,10 @@ export const app = new Spiceflow({ basePath: '/api' })
                     }),
                 )
                 .min(1, 'files is required'),
-            installationId: z.number(),
         }),
         async handler({ request, state }) {
             const { userId } = await getSession({ request })
-            const { siteId, orgId, files, installationId } =
-                await request.json()
+            const { siteId, files } = await request.json()
 
             if (!userId) {
                 throw new AppError('Missing userId')
@@ -676,24 +674,21 @@ export const app = new Spiceflow({ basePath: '/api' })
                         },
                     },
                 },
+                include: {
+                    githubInstallation: true,
+                },
             })
 
             if (!site) {
                 throw new AppError('Site not found or access denied')
             }
+            if (!site.githubInstallation) {
+                throw new AppError('GitHub installation for site not found')
+            }
+            const installationId = site.githubInstallation.installationId
 
             // Get GitHub installation
-            const githubInstallation =
-                await prisma.githubInstallation.findFirst({
-                    where: {
-                        installationId,
-                        sites: {
-                            some: {
-                                siteId,
-                            },
-                        },
-                    },
-                })
+            const githubInstallation = site.githubInstallation
 
             if (!githubInstallation) {
                 throw new AppError('Missing GitHub installation')
@@ -771,7 +766,7 @@ export const app = new Spiceflow({ basePath: '/api' })
 
             const owner = site.githubOwner
             const repo = site.githubRepo
-            
+
             // Get the default branch of the repo
             const { data: repoData } = await octokit.rest.repos.get({
                 owner,
