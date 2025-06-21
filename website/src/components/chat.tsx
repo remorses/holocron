@@ -1,4 +1,5 @@
 'use client'
+import { memo } from 'react'
 import memoize from 'micro-memoize'
 import { RiAttachment2, RiRefreshLine } from '@remixicon/react'
 import { createIdGenerator, UIMessage } from 'ai'
@@ -603,7 +604,7 @@ interface DiffStatsProps {
     filesInDraft: Record<string, FileUpdate>
     className?: string
 }
-import { memo } from 'react'
+
 export const DiffStats = memo(function DiffStats({
     filesInDraft,
     className = '',

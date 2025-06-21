@@ -700,12 +700,59 @@ export const app = new Spiceflow({ basePath: '/api' })
 
             const octokit = await getOctokit({ installationId })
 
-            // Get the default branch of the repo
+            // Get the chat to check if it already has a PR
+            const chat = await prisma.chat.findFirst({
+                where: {
+                    chatId,
+                    userId,
+                },
+            })
+
+            if (!chat) {
+                throw new AppError('Chat not found')
+            }
+
+            // If chat already has a PR, push to the existing PR branch
+            if (chat.prNumber) {
+                console.log(
+                    `Chat ${chatId} has existing PR #${chat.prNumber}, attempting to push to existing PR`,
+                )
+
+                // Get the existing PR details
+                const { data: existingPr } = await octokit.rest.pulls.get({
+                    owner: site.githubOwner,
+                    repo: site.githubRepo,
+                    pull_number: chat.prNumber,
+                })
+
+                console.log(
+                    `Found existing PR #${chat.prNumber} with branch: ${existingPr.head.ref}`,
+                )
+
+                // Push to the existing PR branch using pushToPrOrBranch
+                const result = await pushToPrOrBranch({
+                    auth: site.githubInstallation.oauthToken || '',
+                    files,
+                    owner: site.githubOwner,
+                    repo: site.githubRepo,
+                    branch: existingPr.head.ref,
+                })
+
+                console.log(
+                    `Successfully pushed to existing PR #${chat.prNumber}`,
+                )
+                return { prUrl: result.prUrl || existingPr.html_url }
+            }
+
+            // Create a new PR (either first time or if existing PR was not found)
+            console.log(`Creating new PR for chat ${chatId}`)
+
             const { data: repoData } = await octokit.rest.repos.get({
                 owner: site.githubOwner,
                 repo: site.githubRepo,
             })
             const branch = repoData.default_branch
+
             const { url, prNumber } = await createPullRequestSuggestion({
                 files,
                 octokit,
@@ -716,6 +763,9 @@ export const app = new Spiceflow({ basePath: '/api' })
                 fork: false,
             })
 
+            console.log(`Successfully created new PR #${prNumber} at ${url}`)
+
+            // Update chat with the new PR number
             await prisma.chat.update({
                 where: { chatId, userId },
                 data: {
