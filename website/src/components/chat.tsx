@@ -64,7 +64,9 @@ import { flushSync } from 'react-dom'
 import { DialogOverlay } from '@radix-ui/react-dialog'
 
 export default function Chat({}) {
-    const { scrollRef, contentRef } = useStickToBottom({ initial: true,  })
+    const { scrollRef, contentRef } = useStickToBottom({
+        initial: 'instant',
+    })
 
     return (
         <ScrollArea
