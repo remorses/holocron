@@ -509,7 +509,7 @@ function PrButton() {
                 >
                     <div className='flex items-center gap-2'>
                         <GitBranch className='size-4' />
-                        {isLoading ? 'Processing...' : 'Create Github PR'}
+                        {isLoading ? 'pushing...' : 'Create Github PR'}
                     </div>
                     <ChevronDown className='size-4 ml-1' />
                 </Button>

@@ -709,90 +709,95 @@ export async function changeGithubTree({
     return { branch, parentCommit: currentCommit, commitUrl }
 }
 
-export async function pushChangesToNewBranch({
+async function pushChangesToBranch({
     files,
     owner,
     repo,
     branch,
+    baseBranch = 'main',
     octokit,
-    baseBranch,
-}: {
-    octokit: OctokitRest
-    files: { filePath: string; content: string }[]
-    owner: string
-    repo: string
-    branch: string
-    baseBranch: string
 }) {
-    const { data: refData } = await octokit.git.getRef({
+    // 1. Get the commit we will build on
+    let parentCommitSha, parentTreeSha
+    try {
+        const { data: ref } = await octokit.git.getRef({
+            owner,
+            repo,
+            ref: `heads/${branch}`,
+        }) // branch already exists
+        parentCommitSha = ref.object.sha
+    } catch (e: any) {
+        if (e.status !== 404) throw e // real error
+        const { data: baseRef } = await octokit.git.getRef({
+            owner,
+            repo,
+            ref: `heads/${baseBranch}`,
+        }) // fall back to base branch
+        parentCommitSha = baseRef.object.sha
+    }
+
+    const { data: parentCommit } = await octokit.git.getCommit({
         owner,
         repo,
-        ref: `heads/${branch}`,
+        commit_sha: parentCommitSha,
     })
-    let commitSha = refData.object.sha
-    console.log(`getting commit ${commitSha}`)
-    const { data: commitData } = await octokit.git.getCommit({
-        owner: owner,
-        repo,
-        commit_sha: commitSha,
-    })
-    const treeSha = commitData.tree.sha
+    parentTreeSha = parentCommit.tree.sha
 
-    console.log(
-        'creating blobs for',
-        files.map((x) => x.filePath),
-    )
-    const withBlobs = await Promise.all(
-        files.map(async (x) => {
-            const encoding = 'utf-8'
-            const blobData = await octokit.git.createBlob({
-                owner,
-                repo,
-                content: x.content,
-                encoding,
-            })
-            return {
-                ...x,
-                blobSha: blobData.data.sha,
-                blob: blobData.data,
-            }
-        }),
-    )
-
+    // 2. Create blobs → new tree (same as your helper)
     const newTree = await createNewTree({
         octokit,
         owner,
         repo,
-        create: withBlobs,
-        parentTreeSha: treeSha,
+        parentTreeSha,
+        create: await Promise.all(
+            files.map(async (f) => ({
+                ...f,
+                blobSha: (
+                    await octokit.git.createBlob({
+                        owner,
+                        repo,
+                        content: f.content,
+                        encoding: 'utf-8',
+                    })
+                ).data.sha,
+            })),
+        ),
     })
 
-    console.log('creating commit')
+    // 3. Create commit that points to the new tree
     const { data: newCommit } = await octokit.git.createCommit({
-        owner: owner,
+        owner,
         repo,
-        message: getCommitMessage({
-            filePaths: files.map((x) => x.filePath),
-        }),
+        message: getCommitMessage({ filePaths: files.map((f) => f.filePath) }),
         tree: newTree.sha,
-
-        committer: committer,
-        parents: [commitSha],
+        parents: [parentCommitSha],
+        committer,
     })
 
-    // creates the branch
-    await octokit.git.createRef({
-        owner: owner,
-        repo,
-        ref: `refs/heads/${branch}`,
-        sha: newCommit.sha,
-    })
-    return {}
+    // 4. Move or create the ref
+    try {
+        await octokit.git.createRef({
+            owner,
+            repo,
+            ref: `refs/heads/${branch}`,
+            sha: newCommit.sha,
+        }) // succeeds if branch was absent
+    } catch (e: any) {
+        if (e.status !== 422) throw e // 422 = ref already exists
+        await octokit.git.updateRef({
+            // fast-forward existing branch
+            owner,
+            repo,
+            ref: `heads/${branch}`,
+            sha: newCommit.sha,
+            force: false,
+        })
+    }
 }
 
 export const committer = {
-    name: 'Unframer',
-    email: 'info@unframer.co',
+    name: 'Fumabase',
+    email: 'info@fumabase.com',
 }
 
 export function getCommitMessage({ filePaths = [] as string[] }) {
@@ -1001,7 +1006,8 @@ export async function createPullRequestSuggestion({
         }
     }
 
-    const {} = await pushChangesToNewBranch({
+    throw new Error('this is an error very long asdfalskdfalskfjaklsdfaklsjdfklajsdfkljasdklfjklsdfjkljsad\nsdfkjsldfkjalksd\n')
+    await pushChangesToBranch({
         owner: prOwner,
         repo: prRepo,
         branch: branchName,
