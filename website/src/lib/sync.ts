@@ -46,6 +46,18 @@ export type AssetForSync =
           githubPath: string
           githubSha: string
       }
+    | {
+          type: 'docsJson'
+          jsonData: any
+          githubPath: string
+          githubSha: string
+      }
+    | {
+          type: 'stylesCss'
+          content: string
+          githubPath: string
+          githubSha: string
+      }
 
 export const mediaExtensions = [
     // Image extensions
@@ -211,6 +223,20 @@ export async function syncFiles({
                         tabId,
                         githubSha: asset.githubSha,
                     },
+                })
+            }
+            if (asset.type === 'docsJson') {
+                console.log(`Updating docsJson for site ${siteId}`)
+                await prisma.site.update({
+                    where: { siteId },
+                    data: { docsJson: asset.jsonData },
+                })
+            }
+            if (asset.type === 'stylesCss') {
+                console.log(`Updating stylesCss for site ${siteId}`)
+                await prisma.site.update({
+                    where: { siteId },
+                    data: { cssStyles: asset.content },
                 })
             }
             if (asset.type === 'mediaAsset') {
@@ -459,10 +485,12 @@ export async function* filesFromGithub({
             }
             if (
                 !isMarkdown(pathWithFrontSlash) &&
-                !isMetaFile(pathWithFrontSlash)
+                !isMetaFile(pathWithFrontSlash) &&
+                !isDocsJsonFile(pathWithFrontSlash) &&
+                !isStylesCssFile(pathWithFrontSlash)
             ) {
                 console.log(
-                    `Skipping file ${file.path} because it is neither markdown nor meta file`,
+                    `Skipping file ${file.path} because it is not a markdown, meta, docs.json, or styles.css file`,
                 )
                 return false
             }
@@ -557,6 +585,57 @@ export async function* filesFromGithub({
             githubSha: file.sha,
         }
         yield meta
+    }
+
+    // Process docs.json file (root only)
+    const docsJsonFile = files.find((x) => {
+        if (
+            x.content == null ||
+            !x?.pathWithFrontSlash?.startsWith(basePath) ||
+            !isDocsJsonFile(x.pathWithFrontSlash)
+        ) {
+            return false
+        }
+        if (forceFullSync) return true
+        return !existingPathsPlusSha.has(x.githubPath + x.sha)
+    })
+
+    if (docsJsonFile) {
+        const jsonData = safeJsonParse(docsJsonFile.content || '{}')
+        if (jsonData) {
+            const docsJson: AssetForSync = {
+                type: 'docsJson',
+                jsonData,
+                githubPath: docsJsonFile.githubPath,
+                githubSha: docsJsonFile.sha,
+            }
+            yield docsJson
+        } else {
+            console.log('skipping docs.json file for invalid json', docsJsonFile.githubPath)
+        }
+    }
+
+    // Process styles.css file (root only)
+    const stylesCssFile = files.find((x) => {
+        if (
+            x.content == null ||
+            !x?.pathWithFrontSlash?.startsWith(basePath) ||
+            !isStylesCssFile(x.pathWithFrontSlash)
+        ) {
+            return false
+        }
+        if (forceFullSync) return true
+        return !existingPathsPlusSha.has(x.githubPath + x.sha)
+    })
+
+    if (stylesCssFile) {
+        const stylesCss: AssetForSync = {
+            type: 'stylesCss',
+            content: stylesCssFile.content || '',
+            githubPath: stylesCssFile.githubPath,
+            githubSha: stylesCssFile.sha,
+        }
+        yield stylesCss
     }
 
     let onlyMarkdown = files.filter((x) => {
