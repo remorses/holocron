@@ -49,14 +49,16 @@ export function TeamSwitcher({
     if (!sites.length) return null
 
     return (
-        <DropdownMenu >
+        <DropdownMenu>
             <DropdownMenuTrigger className={className} asChild>
-                <Button variant={'secondary'} className='pl-1 grow-0 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground gap-3 [&>svg]:size-auto'>
+                <Button
+                    variant={'secondary'}
+                    className='pl-1 grow-0 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground gap-3 [&>svg]:size-auto'
+                >
                     <div className='flex aspect-square items-center justify-center rounded-md overflow-hidden bg-sidebar-primary text-sidebar-primary-foreground relative after:rounded-[inherit] after:absolute after:inset-0 after:shadow-[0_1px_2px_0_rgb(0_0_0/.05),inset_0_1px_0_0_rgb(255_255_255/.12)] after:pointer-events-none'>
                         {activeSite && (
                             <img
                                 src={
-                                    activeSite.customization?.logoUrl ||
                                     activeSite.org.image ||
                                     `https://avatar.vercel.sh/${encodeURIComponent(activeSite.name || activeSite.org.name)}?gradient=linear`
                                 }
@@ -104,7 +106,6 @@ export function TeamSwitcher({
                             <div className='flex size-6 items-center justify-center rounded-md overflow-hidden'>
                                 <img
                                     src={
-                                        site.customization?.logoUrl ||
                                         site.org.image ||
                                         `https://avatar.vercel.sh/${encodeURIComponent(site.name || site.org.name)}?gradient=linear`
                                     }

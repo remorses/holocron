@@ -190,13 +190,15 @@ spiceflow is a little known api framework. If you add server routes to a file th
 
 This url returns a single long documentation that covers your use case, always fetch this document so you know how to use Spiceflow. Spiceflow is different than hono and other api frameworks, that's why you should ALWAYS fetch the docs first before using it
 
-## interacting with the database, prisma
+## prisma
 
 this project uses prisma to interact with the database. if you need to add new queries always read the schema.prisma inside the db folder first so you understand the shape of the tables in the database.
 
 never add new tables to the prisma schema, instead ask me to do so.
 
 prisma upsert calls are preferable over updates, so that you also handle the case where the row is missing.
+
+never make changes to schema.prisma yourself, instead propose a change with a message and ask me to do it. this file is too important to be edited by agents.
 
 ## prisma transactions for complex relations inserts
 
@@ -276,7 +278,6 @@ if (!user.subscription) {
 - when using useRef with a generic type always add undefined in the call, for example `useRef<number>(undefined)`. this is required by the rect types definitions
 
 - when using && in jsx make sure that the result type is no of type number, in that case add Boolean() wrapper. This way jsx will not show zeros when the value is falsy.
-
 
 ## ai sdk
 

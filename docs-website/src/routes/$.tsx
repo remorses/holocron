@@ -30,10 +30,9 @@ import { getFumadocsSource } from '../lib/source.server'
 export function meta({ data }: Route.MetaArgs) {
     if (!data) return {}
     const site = data.site
-    const customization = site?.customization
     const suffix = ''
     const og = '' // TODO generate og image
-    const favicon = customization?.faviconUrl
+    const favicon = ''
     return [
         {
             title: data.title
@@ -233,6 +232,9 @@ function Providers({
                 }),
             }}
         >
+            {site.cssStyles && (
+                <style dangerouslySetInnerHTML={{ __html: site.cssStyles }} />
+            )}
             {children}
         </RootProvider>
     )
@@ -292,7 +294,9 @@ function DocsMarkdown() {
                     ast: undefined,
                 }
             }
-            console.log(`no override for githubPath ${loaderData.githubPath}, using loader data`)
+            console.log(
+                `no override for githubPath ${loaderData.githubPath}, using loader data`,
+            )
 
             return { isStreaming, ast: loaderData.ast, markdown: '' }
         }),
