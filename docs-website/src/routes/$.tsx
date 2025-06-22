@@ -30,16 +30,33 @@ import { getFumadocsSource } from '../lib/source.server'
 export function meta({ data }: Route.MetaArgs) {
     if (!data) return {}
     const site = data.site
-    const suffix = ''
+    const docsConfig = site?.docsJson as any
+    const suffix = site?.name || ''
     const og = '' // TODO generate og image
-    const favicon = ''
+
+    const favicon = (() => {
+        if (!docsConfig?.favicon) {
+            return undefined
+        }
+        if (typeof docsConfig.favicon === 'string') {
+            return docsConfig.favicon
+        }
+        if (docsConfig.favicon?.light) {
+            return docsConfig.favicon.light
+        }
+        return undefined
+    })()
+
     return [
         {
             title: data.title
                 ? `${data.title}${suffix ? ` - ${suffix}` : ''}`
                 : '',
         },
-        { name: 'description', content: data.description },
+        {
+            name: 'description',
+            content: data.description || docsConfig?.description,
+        },
         ...(og
             ? [
                   { property: 'og:image', content: og },
@@ -74,7 +91,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                 take: 1,
             },
             locales: true,
-            customization: true,
         },
     })
 
@@ -235,6 +251,7 @@ function Providers({
             {site.cssStyles && (
                 <style dangerouslySetInnerHTML={{ __html: site.cssStyles }} />
             )}
+
             {children}
         </RootProvider>
     )
@@ -254,10 +271,29 @@ function MainDocsPage({
         }),
     )
 
+    const docsConfig = site.docsJson as any
+
+    const logoConfig = (() => {
+        if (!docsConfig?.logo) {
+            return {}
+        }
+        if (typeof docsConfig.logo === 'string') {
+            return { url: docsConfig.logo }
+        }
+        if (docsConfig.logo?.light) {
+            return {
+                url: docsConfig.logo.light,
+                darkUrl: docsConfig.logo.dark,
+                href: docsConfig.logo.href,
+            }
+        }
+        return {}
+    })()
+
     return (
         <DocsLayout
             nav={{
-                title: site.name || 'Documentation',
+                title: site.name || docsConfig?.name || 'Documentation',
             }}
             i18n={i18n}
             // tabMode='navbar'

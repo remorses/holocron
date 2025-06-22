@@ -48,14 +48,6 @@ const IconSchema = z
     .describe('Icon name or detailed icon object')
 
 // === Top-level component schemas ===
-const ColorsSchema = z
-    .object({
-        primary: Color.describe('Primary brand color'),
-        light: Color.optional().describe('Light variant for dark mode'),
-        dark: Color.optional().describe('Dark variant for light mode'),
-    })
-    .strict()
-    .describe('Theme color configuration')
 
 const LogoSchema = z
     .union([
@@ -128,82 +120,7 @@ const ContextualSchema = z
     .strict()
     .describe('Contextual action options (e.g., on code blocks)')
 
-// === Appearance & styling ===
-const AppearanceSchema = z
-    .object({
-        default: z
-            .enum(['system', 'light', 'dark'])
-            .optional()
-            .describe('Initial color scheme'),
-        strict: z.boolean().optional().describe('Hide color switcher if true'),
-    })
-    .strict()
-    .describe('Appearance settings')
 
-const BackgroundSchema = z
-    .object({
-        image: z
-            .union([z.string().describe('Background image path'), ColorMode])
-            .describe('Fixed background image or color mode'),
-        decoration: z
-            .enum(['gradient', 'grid', 'windows'])
-            .optional()
-            .describe('Background decoration style'),
-        color: z
-            .object({
-                color: ColorMode.describe('Color fallback for background'),
-            })
-            .optional()
-            .describe('Background solid color configuration'),
-    })
-    .strict()
-    .describe('Background visual settings')
-
-const FontsSingle = z
-    .object({
-        family: z.string().describe('Font family name'),
-        weight: z.number().optional().describe('Font weight'),
-        source: z.string().url().optional().describe('Font file URL'),
-        format: z
-            .enum(['woff', 'woff2'])
-            .optional()
-            .describe('Font file format'),
-    })
-    .strict()
-    .describe('Single font definition')
-
-const FontsSchema = z
-    .union([
-        FontsSingle,
-        z
-            .object({
-                heading: FontsSingle.describe('Heading font'),
-                body: FontsSingle.describe('Body font'),
-            })
-            .strict(),
-    ])
-    .describe('Fonts configuration')
-
-const IconsSchema = z
-    .object({
-        library: z.enum(['fontawesome', 'lucide']).describe('Icon library'),
-    })
-    .strict()
-    .describe('Global icon settings')
-
-const StylingSchema = z
-    .object({
-        eyebrows: z
-            .enum(['section', 'breadcrumbs'])
-            .optional()
-            .describe('Style for subsection labels'),
-        codeblocks: z
-            .enum(['system', 'dark'])
-            .optional()
-            .describe('Code block color theme'),
-    })
-    .strict()
-    .describe('Styling tweaks')
 
 // === Navigation ===
 const GlobalLinks = z
@@ -755,35 +672,16 @@ export const DocsConfigSchema = z
             .url()
             .optional()
             .describe('Schema URL for IDE autocomplete'),
-        theme: z
-            .enum([
-                'mint',
-                'maple',
-                'palm',
-                'willow',
-                'linden',
-                'almond',
-                'aspen',
-            ])
-            .describe('Selects the visual theme preset'),
         name: z.string().min(1).describe('Project or product name'),
         description: z.string().optional().describe('SEO description'),
-        colors: ColorsSchema.describe('Colors setup'),
         logo: LogoSchema.optional().describe('Logo config'),
         favicon: FaviconSchema.optional().describe('Favicon config'),
         api: ApiSchema.optional().describe('API reference settings'),
-        appearance: AppearanceSchema.describe(
-            'Light/dark mode settings',
-        ).optional(),
-        background: BackgroundSchema.optional().describe('Background visuals'),
         navbar: NavbarSchema.optional().describe('Top navbar settings'),
         navigation: NavigationSchema.describe('Site navigation structure'),
         footer: FooterSchema.optional().describe('Footer content'),
         search: SearchSchema.optional().describe('Search behavior'),
         seo: SeoSchema.optional().describe('SEO meta & indexing'),
-        fonts: FontsSchema.optional().describe('Typography options'),
-        icons: IconsSchema.optional().describe('Icon library'),
-        styling: StylingSchema.optional().describe('Styling options'),
         redirects: z
             .array(RedirectSchema)
             .optional()
