@@ -7,7 +7,8 @@ import { TrieveSDK } from 'trieve-ts-sdk'
 
 import { prisma } from 'db'
 
-import { DocsLayout } from 'fumadocs-ui/layouts/docs'
+// import { DocsLayout,  } from 'fumadocs-ui/layouts/docs'
+import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
 
 import {
     DocsBody,
@@ -321,7 +322,7 @@ function MainDocsPage(props: Route.ComponentProps) {
         >
             <PageRoot
                 toc={{
-                    toc,
+                    toc: toc as any,
                     single: false,
                 }}
             >
