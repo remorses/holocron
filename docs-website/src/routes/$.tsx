@@ -26,6 +26,24 @@ import { useDocsState } from '../lib/docs-state'
 import { LOCALE_LABELS, LOCALES } from '../lib/locales'
 import { Markdown } from '../lib/markdown'
 import { getFumadocsSource } from '../lib/source.server'
+import {
+    PageBreadcrumb,
+    PageFooter,
+    PageLastUpdate,
+    PageRoot,
+    PageTOC,
+    PageTOCPopover,
+    PageTOCPopoverContent,
+    PageTOCPopoverTrigger,
+} from 'fumadocs-ui/layouts/docs/page-client'
+import { LLMCopyButton, ViewOptions } from '../components/llm'
+import { Rate } from '../components/rate'
+import {
+    PageArticle,
+    PageTOCItems,
+    PageTOCPopoverItems,
+    PageTOCTitle,
+} from 'fumadocs-ui/layouts/docs/page'
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data) return {}
@@ -199,22 +217,25 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
     return {
         ...data,
+        slugs,
         slug,
         locale,
         i18n: source._i18n,
         page,
         githubPath: page.githubPath,
-
+        githubOwner: site.githubOwner,
+        githubRepo: site.githubRepo,
         tree,
         site,
+        lastEditedAt: page.lastEditedAt || new Date(),
     }
 }
 
 let trieveClient: TrieveSDK
-export default function Page({ loaderData }: Route.ComponentProps) {
+export default function Page(props: Route.ComponentProps) {
     return (
-        <Providers loaderData={loaderData}>
-            <MainDocsPage loaderData={loaderData} />
+        <Providers loaderData={props.loaderData}>
+            <MainDocsPage {...props} />
         </Providers>
     )
 }
@@ -256,12 +277,11 @@ function Providers({
         </RootProvider>
     )
 }
-function MainDocsPage({
-    loaderData,
-}: {
-    loaderData: Route.ComponentProps['loaderData']
-}) {
-    const { i18n, site, slug } = loaderData
+function MainDocsPage(props: Route.ComponentProps) {
+    const loaderData = props.loaderData
+    const { i18n, site, slug, slugs, githubPath, lastEditedAt } = loaderData
+    const owner = loaderData.githubOwner
+    const repo = loaderData.githubRepo
     let { tree, title, description, toc } = useDocsState(
         useShallow((state) => {
             const { title, description } = loaderData
@@ -299,18 +319,52 @@ function MainDocsPage({
             // tabMode='navbar'
             tree={tree as any}
         >
-            <DocsPage
-                tableOfContentPopover={{ style: 'clerk' }}
-                toc={toc as any}
+            <PageRoot
+                toc={{
+                    toc,
+                    single: false,
+                }}
             >
-                {title && <DocsTitle>{title}</DocsTitle>}
-                {description && (
-                    <DocsDescription>{description}</DocsDescription>
+                {toc.length > 0 && (
+                    <PageTOCPopover>
+                        <PageTOCPopoverTrigger />
+                        <PageTOCPopoverContent>
+                            <PageTOCPopoverItems />
+                        </PageTOCPopoverContent>
+                    </PageTOCPopover>
                 )}
-                <DocsBody>
+                <PageArticle>
+                    <PageBreadcrumb />
+                    <h1 className='text-3xl font-semibold'>{title}</h1>
+                    <p className='text-lg text-fd-muted-foreground'>
+                        {description}
+                    </p>
+                    <div className='flex flex-row gap-2 items-center border-b pb-6'>
+                        <LLMCopyButton slug={slugs} />
+                        <ViewOptions
+                            markdownUrl={`${slug}.mdx`}
+                            githubUrl={`https://github.com/${owner}/${repo}/blob/dev/apps/docs/content/docs/${githubPath}`}
+                        />
+                    </div>
+
                     <DocsMarkdown />
-                </DocsBody>
-            </DocsPage>
+                    <Rate
+                        onRateAction={async () => {
+                            // No-op: Fixes signature, but does nothing.
+                            return { success: true, githubUrl: '' }
+                        }}
+                    />
+                    {lastEditedAt && <PageLastUpdate date={lastEditedAt} />}
+                    <div className='grow'></div>
+                    <PageFooter />
+                </PageArticle>
+                {toc.length > 0 && (
+                    <PageTOC>
+                        <PageTOCTitle />
+                        <PageTOCItems variant='clerk' />
+                    </PageTOC>
+                )}
+            </PageRoot>
         </DocsLayout>
     )
 }

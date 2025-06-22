@@ -185,7 +185,7 @@ model MarkdownPage {
   markdown     String    @db.Text
   createdAt    DateTime  @default(now())
   // updatedAt DateTime @updatedAt
-  lastEditedAt DateTime?
+  lastEditedAt DateTime? @updatedAt
 
   // ogImage      String?           @db.Text
   description String? @db.Text
