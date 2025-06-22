@@ -22,6 +22,7 @@ import { RootProvider } from 'fumadocs-ui/provider/base'
 import { TagItem } from 'fumadocs-ui/contexts/search'
 import { useI18n } from 'fumadocs-ui/contexts/i18n'
 import { useTrieveSearch } from './trieve-client'
+import { PoweredBy } from '../components/poweredby'
 
 export interface TrieveSearchDialogProps extends SharedProps {
     trieveClient: TrieveSDK
@@ -78,19 +79,7 @@ export function TrieveSearchDialog({
                     items={query.data !== 'empty' ? query.data : null}
                 />
                 <SearchDialogFooter>
-                    <div className='ms-auto text-xs text-fd-muted-foreground'>
-                        Search powered by{' '}
-                        <b>
-                            <a
-                                href='https://fumabase.com'
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className='text-fd-muted-foreground'
-                            >
-                                Fumabase
-                            </a>
-                        </b>
-                    </div>
+                   <PoweredBy />
                 </SearchDialogFooter>
             </SearchDialogContent>
         </SearchDialog>
