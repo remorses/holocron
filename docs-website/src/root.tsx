@@ -94,27 +94,34 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-    let message = 'Oops!'
-    let details = 'An unexpected error occurred.'
-    let stack: string | undefined
-
+    const containerClass =
+        'flex flex-col items-center justify-center min-h-screen px-6 py-12 text-center bg-background text-foreground'
+    const titleClass = 'text-3xl font-semibold mb-3 text-primary'
+    const messageClass = 'text-base mb-2 text-muted-foreground'
+    const preClass =
+        'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2'
     if (isRouteErrorResponse(error)) {
-        message = error.status === 404 ? '404' : 'Error'
-        details = error.data
-    } else if (import.meta.env.DEV && error && error instanceof Error) {
-        details = error.message
-        stack = error.stack
+        return (
+            <div className={containerClass}>
+                <h1 className={titleClass}>
+                    {error.status} {error.statusText}
+                </h1>
+                <p className={messageClass}>{error.data}</p>
+            </div>
+        )
+    } else if (error instanceof Error) {
+        return (
+            <div className={containerClass}>
+                <h1 className={titleClass}>Error</h1>
+                <p className={messageClass}>{error.message}</p>
+                <pre className={preClass}>{error.stack}</pre>
+            </div>
+        )
+    } else {
+        return (
+            <div className={containerClass}>
+                <h1 className={titleClass}>Unknown Error</h1>
+            </div>
+        )
     }
-
-    return (
-        <main className='pt-16 p-4 container mx-auto'>
-            <h1>{message}</h1>
-            <p>{details}</p>
-            {stack && (
-                <pre className='w-full p-4 overflow-x-auto'>
-                    <code>{stack}</code>
-                </pre>
-            )}
-        </main>
-    )
 }

@@ -18,6 +18,10 @@ summary {
     cursor: pointer;
 }
 
+:root {
+    --color-fd-primary: hsl(220, 91%, 54%);
+}
+
 .navIcon {
     width: 19px;
     height: 19px;

@@ -314,7 +314,28 @@ function MainDocsPage(props: Route.ComponentProps) {
     return (
         <DocsLayout
             nav={{
+                // mode: 'top',
                 title: site.name || docsConfig?.name || 'Documentation',
+            }}
+            tabMode='navbar'
+            sidebar={{
+                tabs: [
+                    {
+                        url: '/',
+                        title: 'Getting Started',
+                        description: 'Introduction and initial setup',
+                    },
+                    {
+                        url: '/features',
+                        title: 'Features',
+                        description: 'Explore all functionality',
+                    },
+                    {
+                        url: '/faq',
+                        title: 'FAQ',
+                        description: 'Frequently Asked Questions',
+                    },
+                ],
             }}
             i18n={i18n}
             // tabMode='navbar'
