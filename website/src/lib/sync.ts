@@ -47,7 +47,7 @@ export type AssetForSync =
           githubSha: string
       }
 
-const mediaExtensions = [
+export const mediaExtensions = [
     // Image extensions
     'jpg',
     'jpeg',
@@ -73,6 +73,11 @@ const mediaExtensions = [
     'ogg',
     'ogv',
 ].map((x) => '.' + x)
+
+export function isMediaFile(path: string): boolean {
+    if (!path) return false
+    return mediaExtensions.some(ext => path.toLowerCase().endsWith(ext))
+}
 
 export async function syncSite({
     siteId,
@@ -112,11 +117,11 @@ export async function syncSite({
     })
     console.log(`Tab upsert complete: ${tab.tabId} (${tab.title})`)
 
-    await syncPages({
+    await syncFiles({
         tabId,
         siteId,
         trieveDatasetId,
-        pages,
+        files: pages,
     })
 }
 
@@ -151,15 +156,15 @@ export async function* pagesFromExampleJson(): AsyncGenerator<
     }
 }
 
-export async function syncPages({
+export async function syncFiles({
     tabId,
     siteId,
     trieveDatasetId,
-    pages,
+    files,
     name,
     signal,
 }: {
-    pages: AsyncIterable<AssetForSync>
+    files: AsyncIterable<AssetForSync>
     tabId: string
     siteId: string
     trieveDatasetId?: string
@@ -183,7 +188,7 @@ export async function syncPages({
     }
     const cacheTagsToInvalidate = [] as string[]
     const processedSlugs = new Set<string>()
-    for await (const asset of pages) {
+    for await (const asset of files) {
         await semaphore.acquire() // Acquire permit for file processing
         try {
             if (asset.type === 'metaFile') {
@@ -358,19 +363,29 @@ function groupByN<T>(array: T[], n: number): T[][] {
     return result
 }
 
-function isMetaFile(path: string) {
+export function isMetaFile(path: string) {
     if (!path) return false
     return path.endsWith('/meta.json') || path === 'meta.json'
 }
 
-export async function* pagesFromGithub({
+export function isDocsJsonFile(path: string): boolean {
+    if (!path) return false
+    return path === 'docs.json' || path === 'docs.jsonc'
+}
+
+export function isStylesCssFile(path: string): boolean {
+    if (!path) return false
+    return path === 'styles.css'
+}
+
+export async function* filesFromGithub({
     repo,
     owner,
     installationId,
     tabId,
     basePath = '',
     signal,
-    onlyGithubPaths = new Set<string>(), // TODO probably not needed
+    onlyGithubPaths = new Set<string>(),
     forceFullSync = false,
 }) {
     if (!installationId) throw new Error('Installation ID is required')

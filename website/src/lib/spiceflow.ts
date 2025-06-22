@@ -25,7 +25,7 @@ import {
     getOctokit,
     pushToPrOrBranch,
 } from './github.server'
-import { pagesFromGithub, syncSite } from './sync'
+import { filesFromGithub, syncSite } from './sync'
 import { mdxRegex, sleep } from './utils'
 
 import { printDirectoryTree } from '../components/directory-tree'
@@ -434,7 +434,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             const tabId = tab.tabId
             const orgId = site.orgId
             const name = site.name
-            const pages = pagesFromGithub({
+            const pages = filesFromGithub({
                 installationId: site.installationId,
                 owner: site.githubOwner,
                 repo: site.githubRepo,

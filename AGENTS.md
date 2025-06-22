@@ -8,13 +8,17 @@ try to run commands inside the package folder that you are working on. for examp
 
 # typescript
 
-Try to use object arguments for new typescript functions if the function would accept more than one argument, this way you can use the object as a sort of named argument feature, where order of arguments does not matter and it's easier to discover parameters.
+- use a single object argument instead of multiple positional args: use object arguments for new typescript functions if the function would accept more than one argument, so it is more readable, ({a,b,c}) instead of (a,b,c), this way you can use the object as a sort of named argument feature, where order of arguments does not matter and it's easier to discover parameters.
 
-do not add useless comments if the code is self descriptive. only add comments if requested or if this was a change that i asked for, meaning it is not obvious code and needs some inline documentation.
+- always add the {} block body in arrow functions: arrow functions should never be written as `onClick={(x) => setState('')}`. NEVER. Instead you should ALWAYS write `onClick={() => {setState('')}}`. This way it's easy to add new statements in the arrow function without refactoring it.
 
-try to use early returns and breaks, try nesting code as little as possible, follow the go best practice of if statements: avoid else, nest as little as possible, use top level ifs. minimize nesting.
+- minimize comments: do not add useless comments if the code is self descriptive. only add comments if requested or if this was a change that i asked for, meaning it is not obvious code and needs some inline documentation. if a comment is required because the part of the code was result of difficult back and forth with me, keep it very short.
 
-after any change to typescript code ALWAYS run the `pnpm typecheck` script of that package, or if there is no typecheck script run `pnpm tsc` yourself
+- use early returns (and breaks in loops): do not nest code too much, follow the go best practice of if statements: avoid else, nest as little as possible, use top level ifs. minimize nesting. instead of doing `if (x) { if (b) {} }` you should do `if (x && b) {};` for example. You can always convert multiple nested ifs or elses into many linear ifs at one nesting level. Use the @think tool for this if necessary.
+
+- typecheck after updating code: after any change to typescript code ALWAYS run the `pnpm typecheck` script of that package, or if there is no typecheck script run `pnpm tsc` yourself
+
+- do not use any: you should NEVER use any, if you find yourself using `as any` or `:any` use the @think tool to think hard if there are types you can import instead. do even a search in the project for what the type could be. any should be used as a last resort.
 
 # testing
 
@@ -141,7 +145,7 @@ also keep in mind it's preferable to throw redirects in loaders instead of retur
 
 ## typescript
 
-Always try to use non relative imports, each package has a absolute import with the package name, for example paths inside website can be imported from website. Notice these paths also need to include the src directory.
+Always try to use non relative imports, each package has a absolute import with the package name, you can find it in the tsconfig.json paths section, for example paths inside website can be imported from website. Notice these paths also need to include the src directory.
 
 This is preferable other aliases like @/ because i can easily move the code from one package to another without changing the import paths. This way you can even move a file and import paths do not change much.
 
