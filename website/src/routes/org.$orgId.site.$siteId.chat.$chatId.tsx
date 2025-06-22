@@ -51,7 +51,7 @@ export async function loader({
                 org: true,
                 domains: true,
                 tabs: true,
-                customization: true,
+
             },
         }),
         prisma.chat.findUnique({
@@ -192,13 +192,9 @@ export default function Page({
 
 function Content() {
     const { site, host, chat, iframeUrl } = useLoaderData<typeof loader>()
-    const [logoUrl, setLogoUrl] = useState(site.customization?.logoUrl)
+
     const iframeRef = useRef<HTMLIFrameElement>(null)
 
-    const [color, setColor] = useState(site.customization?.color || '')
-    useEffect(() => {
-        updatePageProps({ logoUrl, color: color || undefined }, iframeRef)
-    }, [color, logoUrl])
     return (
         <div className='flex flex-col h-full gap-3'>
             {/* <NavBar /> */}
