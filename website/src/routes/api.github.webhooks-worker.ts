@@ -103,7 +103,6 @@ async function updatePagesFromCommits(
 
     // Process non-deleted files using syncFiles
     const changedFiles = filesFromWebhookCommits({
-        site,
         commits,
         installationId,
         owner,
@@ -118,13 +117,11 @@ async function updatePagesFromCommits(
 }
 
 async function* filesFromWebhookCommits({
-    site,
     commits,
     installationId,
     owner,
     repo,
 }: {
-    site: { siteId: string; tabs: Array<{ tabId: string }> }
     commits: Array<{
         id: string
         added?: string[]
