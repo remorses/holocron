@@ -1,3 +1,7 @@
+import { cn } from "./cn";
+
+export { cn }
+
 export function trySync<T>(fn: () => T): { data: T | undefined; error: any } {
     try {
         return { data: fn(), error: undefined }

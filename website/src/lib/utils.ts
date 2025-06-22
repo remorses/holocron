@@ -1,13 +1,12 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { cn } from './cn'
 
 export const sleep = (ms: number): Promise<void> => {
     return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs))
-}
+export { cn }
 
 export const isTruthy = <T>(value: T): value is NonNullable<T> => {
     return Boolean(value)
@@ -101,7 +100,6 @@ export function debounce<T extends (...args: any[]) => any>(
         return pendingPromise
     } as any
 }
-
 
 // teeAsync.ts
 // Requires the DOM lib for `ReadableStream` types (e.g. `tsconfig.json` → `"lib": ["esnext", "dom"]`).
