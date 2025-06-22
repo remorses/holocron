@@ -1,7 +1,7 @@
 import { Route } from './+types/api.github.webhooks-worker'
 import { Spiceflow } from 'spiceflow'
 import { z } from 'zod'
-import { prisma } from 'db'
+import { MarkdownExtension, prisma } from 'db'
 import { env } from 'website/src/lib/env'
 import { notifyError } from 'website/src/lib/errors'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
@@ -12,6 +12,8 @@ import {
     isMetaFile,
     isDocsJsonFile,
     isStylesCssFile,
+    syncFiles,
+    AssetForSync,
 } from 'website/src/lib/sync'
 
 const logger = console
@@ -31,35 +33,44 @@ export const webhookWorkerRequestSchema = z.object({
     ),
 })
 
-const app = new Spiceflow({ basePath: '/api/github' }).route({
-    method: 'POST',
-    path: '/webhooks-worker',
-    request: webhookWorkerRequestSchema,
-    async handler({ request }) {
-        const { secret, installationId, owner, repoName, commits } =
-            await request.json()
+const app = new Spiceflow({ basePath: '/api/github' })
+    .route({
+        method: 'POST',
+        path: '/webhooks-worker',
+        request: webhookWorkerRequestSchema,
+        async handler({ request }) {
+            const { secret, installationId, owner, repoName, commits } =
+                await request.json()
 
-        if (secret !== env.SECRET) {
-            throw new Error('Invalid secret')
-        }
+            if (secret !== env.SECRET) {
+                throw new Error('Invalid secret')
+            }
 
-        try {
-            await updatePagesFromCommits({
-                installationId,
-                owner,
-                repoName,
-                commits,
-                secret,
-            })
+            try {
+                await updatePagesFromCommits({
+                    installationId,
+                    owner,
+                    repoName,
+                    commits,
+                    secret,
+                })
 
-            return { success: true, message: 'Webhook processed successfully' }
-        } catch (error) {
-            logger.error('Error processing webhook:', error)
-            notifyError(error, 'github webhook worker')
-            throw error
-        }
-    },
-})
+                return {
+                    success: true,
+                    message: 'Webhook processed successfully',
+                }
+            } catch (error) {
+                logger.error('Error processing webhook:', error)
+                notifyError(error, 'github webhook worker')
+                throw error
+            }
+        },
+    })
+    .onError(async (error) => {
+        logger.error('Error processing webhook:', error)
+        notifyError(error, 'github webhook worker')
+        throw error
+    })
 
 async function updatePagesFromCommits(
     args: z.infer<typeof webhookWorkerRequestSchema>,
@@ -81,455 +92,282 @@ async function updatePagesFromCommits(
         return
     }
 
-    const allChangedFiles = new Set<string>()
+    const tab = site.tabs[0]
+    if (!tab) {
+        logger.log(`No tabs found for site ${site.siteId}`)
+        return
+    }
 
+    // Handle deletions first
+    await handleDeletions({ site, commits, tabId: tab.tabId })
+
+    // Process non-deleted files using syncFiles
+    const changedFiles = filesFromWebhookCommits({
+        site,
+        commits,
+        installationId,
+        owner,
+        repo: repoName,
+    })
+
+    await syncFiles({
+        tabId: tab.tabId,
+        siteId: site.siteId,
+        files: changedFiles,
+    })
+}
+
+async function* filesFromWebhookCommits({
+    site,
+    commits,
+    installationId,
+    owner,
+    repo,
+}: {
+    site: { siteId: string; tabs: Array<{ tabId: string }> }
+    commits: Array<{
+        id: string
+        added?: string[]
+        modified?: string[]
+        removed?: string[]
+    }>
+    installationId: number
+    owner: string
+    repo: string
+}): AsyncGenerator<AssetForSync> {
+    const octokit = await getOctokit({ installationId })
+    const latestCommit = commits[commits.length - 1]
+
+    // Collect all non-deleted files
+    const allChangedFiles = new Set<string>()
     for (const commit of commits) {
         const added = commit.added || []
         const modified = commit.modified || []
-        const removed = commit.removed || []
+        // Don't include removed files here as we handle deletions separately
 
-        for (const file of [...added, ...modified, ...removed]) {
+        for (const file of [...added, ...modified]) {
             allChangedFiles.add(file)
         }
     }
 
-    const changedFilesList = Array.from(allChangedFiles)
-    logger.log(
-        `Processing ${changedFilesList.length} changed files for ${owner}/${repoName}`,
-    )
+    for (const filePath of allChangedFiles) {
+        if (isDocsJsonFile(filePath)) {
+            const { data } = await octokit.rest.repos.getContent({
+                owner,
+                repo,
+                path: filePath,
+            })
 
-    const octokit = await getOctokit({ installationId })
+            if ('content' in data && data.type === 'file') {
+                const content = Buffer.from(data.content, 'base64').toString(
+                    'utf-8',
+                )
+                const jsonData = safeJsonParse(content, {})
 
-    for (const filePath of changedFilesList) {
+                yield {
+                    type: 'docsJson',
+                    jsonData,
+                    githubPath: filePath,
+                    githubSha: latestCommit.id,
+                }
+            }
+            continue
+        }
+
+        if (isStylesCssFile(filePath)) {
+            const { data } = await octokit.rest.repos.getContent({
+                owner,
+                repo,
+                path: filePath,
+            })
+
+            if ('content' in data && data.type === 'file') {
+                const content = Buffer.from(data.content, 'base64').toString(
+                    'utf-8',
+                )
+
+                yield {
+                    type: 'stylesCss',
+                    content,
+                    githubPath: filePath,
+                    githubSha: latestCommit.id,
+                }
+            }
+            continue
+        }
+
+        if (isMarkdown(`/${filePath}`)) {
+            const { data } = await octokit.rest.repos.getContent({
+                owner,
+                repo,
+                path: filePath,
+            })
+
+            if ('content' in data && data.type === 'file') {
+                const content = Buffer.from(data.content, 'base64').toString(
+                    'utf-8',
+                )
+                const extension: MarkdownExtension = filePath.endsWith('.mdx')
+                    ? 'mdx'
+                    : 'md'
+                const pathWithFrontSlash = `/${filePath}`
+                const slug = generateSlugFromPath(pathWithFrontSlash, '')
+
+                const { data: processedData } = await processMdxInServer({
+                    markdown: content,
+                    extension,
+                })
+
+                yield {
+                    type: 'page',
+                    totalPages: 1,
+                    pageInput: {
+                        slug,
+                        title: processedData.title || '',
+                        description: processedData.description,
+                        markdown: content,
+                        frontmatter: processedData.frontmatter,
+                        githubSha: latestCommit.id,
+                        githubPath: filePath,
+                        extension,
+                        structuredData: processedData.structuredData as any,
+                    },
+                    structuredData: processedData.structuredData,
+                }
+            }
+            continue
+        }
+
+        if (isMediaFile(filePath)) {
+            const slug = generateSlugFromPath(`/${filePath}`, '')
+            const res = await octokit.rest.repos.getContent({
+                owner,
+                repo,
+                path: filePath,
+            })
+
+            if ('download_url' in res.data && res.data.download_url) {
+                yield {
+                    type: 'mediaAsset',
+                    slug,
+                    sha: latestCommit.id,
+                    githubPath: filePath,
+                    downloadUrl: res.data.download_url,
+                }
+            }
+            continue
+        }
+
+        if (isMetaFile(filePath)) {
+            const { data } = await octokit.rest.repos.getContent({
+                owner,
+                repo,
+                path: filePath,
+            })
+
+            if ('content' in data && data.type === 'file') {
+                const content = Buffer.from(data.content, 'base64').toString(
+                    'utf-8',
+                )
+                const jsonData = safeJsonParse(content, {})
+
+                yield {
+                    type: 'metaFile',
+                    jsonData,
+                    githubPath: filePath,
+                    githubSha: latestCommit.id,
+                }
+            }
+            continue
+        }
+    }
+}
+
+async function handleDeletions({
+    site,
+    commits,
+    tabId,
+}: {
+    site: { siteId: string }
+    commits: Array<{
+        id: string
+        added?: string[]
+        modified?: string[]
+        removed?: string[]
+    }>
+    tabId: string
+}) {
+    const latestCommit = commits[commits.length - 1]
+    const removedFiles = latestCommit.removed || []
+
+    for (const filePath of removedFiles) {
         try {
             if (isDocsJsonFile(filePath)) {
-                await handleDocsJsonUpdate({
-                    siteId: site.siteId,
-                    filePath,
-                    commits,
-                    octokit,
-                    owner,
-                    repo: repoName,
+                await prisma.site.update({
+                    where: { siteId: site.siteId },
+                    data: { docsJson: {} },
                 })
+                logger.log(
+                    `Deleted docs.json/docs.jsonc for site ${site.siteId}`,
+                )
                 continue
             }
 
             if (isStylesCssFile(filePath)) {
-                await handleStylesCssUpdate({
-                    siteId: site.siteId,
-                    filePath,
-                    commits,
-                    octokit,
-                    owner,
-                    repo: repoName,
+                await prisma.site.update({
+                    where: { siteId: site.siteId },
+                    data: { cssStyles: '' },
                 })
+                logger.log(`Deleted styles.css for site ${site.siteId}`)
                 continue
             }
 
             if (isMarkdown(`/${filePath}`)) {
-                await handleMarkdownFileUpdate({
-                    site,
-                    filePath,
-                    commits,
-                    octokit,
-                    owner,
-                    repo: repoName,
+                const pathWithFrontSlash = `/${filePath}`
+                const slug = generateSlugFromPath(pathWithFrontSlash, '')
+
+                await prisma.markdownPage.deleteMany({
+                    where: {
+                        githubPath: filePath,
+                        tab: {
+                            siteId: site.siteId,
+                        },
+                    },
                 })
+                logger.log(`Deleted page ${slug} at ${filePath}`)
                 continue
             }
 
             if (isMediaFile(filePath)) {
-                await handleMediaFileUpdate({
-                    site,
-                    filePath,
-                    commits,
-                    octokit,
-                    owner,
-                    repo: repoName,
+                const slug = generateSlugFromPath(`/${filePath}`, '')
+
+                await prisma.mediaAsset.deleteMany({
+                    where: {
+                        githubPath: filePath,
+                        site: {
+                            siteId: site.siteId,
+                        },
+                    },
                 })
+                logger.log(`Deleted media asset ${slug} at ${filePath}`)
                 continue
             }
 
             if (isMetaFile(filePath)) {
-                await handleMetaFileUpdate({
-                    site,
-                    filePath,
-                    commits,
-                    octokit,
-                    owner,
-                    repo: repoName,
+                await prisma.metaFile.deleteMany({
+                    where: {
+                        githubPath: filePath,
+                        tab: {
+                            siteId: site.siteId,
+                        },
+                    },
                 })
+                logger.log(`Deleted meta file at ${filePath}`)
                 continue
             }
         } catch (error) {
-            logger.error(`Error processing file ${filePath}:`, error)
+            logger.error(`Error deleting file ${filePath}:`, error)
         }
-    }
-}
-
-async function handleDocsJsonUpdate({
-    siteId,
-    filePath,
-    commits,
-    octokit,
-    owner,
-    repo,
-}: {
-    siteId: string
-    filePath: string
-    commits: Array<{
-        id: string
-        added?: string[]
-        modified?: string[]
-        removed?: string[]
-    }>
-    octokit: Awaited<ReturnType<typeof getOctokit>>
-    owner: string
-    repo: string
-}) {
-    const latestCommit = commits[commits.length - 1]
-    const isDeleted = latestCommit.removed?.includes(filePath)
-
-    if (isDeleted) {
-        await prisma.site.update({
-            where: { siteId },
-            data: { docsJson: {} },
-        })
-        logger.log(`Deleted docs.json/docs.jsonc for site ${siteId}`)
-        return
-    }
-
-    try {
-        const { data } = await octokit.rest.repos.getContent({
-            owner,
-            repo,
-            path: filePath,
-        })
-
-        if ('content' in data && data.type === 'file') {
-            const content = Buffer.from(data.content, 'base64').toString(
-                'utf-8',
-            )
-            const jsonData = safeJsonParse(content, {})
-
-            await prisma.site.update({
-                where: { siteId },
-                data: { docsJson: jsonData },
-            })
-
-            logger.log(`Updated docs.json/docs.jsonc for site ${siteId}`)
-        }
-    } catch (error) {
-        logger.error(`Error fetching ${filePath} content:`, error)
-    }
-}
-
-async function handleStylesCssUpdate({
-    siteId,
-    filePath,
-    commits,
-    octokit,
-    owner,
-    repo,
-}: {
-    siteId: string
-    filePath: string
-    commits: Array<{
-        id: string
-        added?: string[]
-        modified?: string[]
-        removed?: string[]
-    }>
-    octokit: Awaited<ReturnType<typeof getOctokit>>
-    owner: string
-    repo: string
-}) {
-    const latestCommit = commits[commits.length - 1]
-    const isDeleted = latestCommit.removed?.includes(filePath)
-
-    if (isDeleted) {
-        await prisma.site.update({
-            where: { siteId },
-            data: { cssStyles: '' },
-        })
-        logger.log(`Deleted styles.css for site ${siteId}`)
-        return
-    }
-
-    try {
-        const { data } = await octokit.rest.repos.getContent({
-            owner,
-            repo,
-            path: filePath,
-        })
-
-        if ('content' in data && data.type === 'file') {
-            const content = Buffer.from(data.content, 'base64').toString(
-                'utf-8',
-            )
-
-            await prisma.site.update({
-                where: { siteId },
-                data: { cssStyles: content },
-            })
-
-            logger.log(`Updated styles.css for site ${siteId}`)
-        }
-    } catch (error) {
-        logger.error(`Error fetching ${filePath} content:`, error)
-    }
-}
-
-async function handleMarkdownFileUpdate({
-    site,
-    filePath,
-    commits,
-    octokit,
-    owner,
-    repo,
-}: {
-    site: { siteId: string; tabs: Array<{ tabId: string }> }
-    filePath: string
-    commits: Array<{
-        id: string
-        added?: string[]
-        modified?: string[]
-        removed?: string[]
-    }>
-    octokit: Awaited<ReturnType<typeof getOctokit>>
-    owner: string
-    repo: string
-}) {
-    const latestCommit = commits[commits.length - 1]
-    const isDeleted = latestCommit.removed?.includes(filePath)
-
-    const pathWithFrontSlash = `/${filePath}`
-    const slug = generateSlugFromPath(pathWithFrontSlash, '')
-
-    if (isDeleted) {
-        await prisma.markdownPage.deleteMany({
-            where: {
-                githubPath: filePath,
-                tab: {
-                    siteId: site.siteId,
-                },
-            },
-        })
-        logger.log(`Deleted page ${slug} at ${filePath}`)
-        return
-    }
-
-    const tab = site.tabs[0]
-    if (!tab) {
-        logger.log(`No tabs found for site ${site.siteId}`)
-        return
-    }
-
-    try {
-        const { data } = await octokit.rest.repos.getContent({
-            owner,
-            repo,
-            path: filePath,
-        })
-
-        if ('content' in data && data.type === 'file') {
-            const content = Buffer.from(data.content, 'base64').toString(
-                'utf-8',
-            )
-            const extension = filePath.endsWith('.mdx') ? 'mdx' : 'md'
-            const githubSha = latestCommit.id
-
-            const { data: processedData } = await processMdxInServer({
-                markdown: content,
-                extension,
-            })
-
-            await prisma.markdownPage.upsert({
-                where: {
-                    tabId_slug: {
-                        tabId: tab.tabId,
-                        slug,
-                    },
-                },
-                update: {
-                    title: processedData.title || '',
-                    description: processedData.description,
-                    markdown: content,
-                    frontmatter: processedData.frontmatter,
-                    githubSha,
-                    githubPath: filePath,
-                    lastEditedAt: new Date(),
-                    structuredData: processedData.structuredData as any,
-                },
-                create: {
-                    slug,
-                    tabId: tab.tabId,
-                    title: processedData.title || '',
-                    description: processedData.description,
-                    markdown: content,
-                    frontmatter: processedData.frontmatter,
-                    githubSha,
-                    githubPath: filePath,
-                    extension,
-                    structuredData: processedData.structuredData as any,
-                },
-            })
-
-            logger.log(`Updated/created page ${slug} at ${filePath}`)
-        }
-    } catch (error) {
-        logger.error(`Error fetching ${filePath} content:`, error)
-    }
-}
-
-async function handleMediaFileUpdate({
-    site,
-    filePath,
-    commits,
-    octokit,
-    owner,
-    repo,
-}: {
-    site: { siteId: string; tabs: Array<{ tabId: string }> }
-    filePath: string
-    commits: Array<{
-        id: string
-        added?: string[]
-        modified?: string[]
-        removed?: string[]
-    }>
-    octokit: Awaited<ReturnType<typeof getOctokit>>
-    owner: string
-    repo: string
-}) {
-    const latestCommit = commits[commits.length - 1]
-    const isDeleted = latestCommit.removed?.includes(filePath)
-
-    const slug = generateSlugFromPath(`/${filePath}`, '')
-
-    if (isDeleted) {
-        await prisma.mediaAsset.deleteMany({
-            where: {
-                githubPath: filePath,
-                site: {
-                    siteId: site.siteId,
-                },
-            },
-        })
-        logger.log(`Deleted media asset ${slug} at ${filePath}`)
-        return
-    }
-
-    const tab = site.tabs[0]
-    if (!tab) {
-        logger.log(`No tabs found for site ${site.siteId}`)
-        return
-    }
-
-    const githubSha = latestCommit.id
-
-    await prisma.mediaAsset.upsert({
-        where: {
-            slug_tabId: {
-                tabId: tab.tabId,
-                slug,
-            },
-        },
-        update: {
-            githubSha,
-            githubPath: filePath,
-        },
-        create: {
-            slug,
-            tabId: tab.tabId,
-            siteId: site.siteId,
-            githubSha,
-            githubPath: filePath,
-        },
-    })
-
-    logger.log(`Updated/created media asset ${slug} at ${filePath}`)
-}
-
-async function handleMetaFileUpdate({
-    site,
-    filePath,
-    commits,
-    octokit,
-    owner,
-    repo,
-}: {
-    site: { siteId: string; tabs: Array<{ tabId: string }> }
-    filePath: string
-    commits: Array<{
-        id: string
-        added?: string[]
-        modified?: string[]
-        removed?: string[]
-    }>
-    octokit: Awaited<ReturnType<typeof getOctokit>>
-    owner: string
-    repo: string
-}) {
-    const latestCommit = commits[commits.length - 1]
-    const isDeleted = latestCommit.removed?.includes(filePath)
-
-    if (isDeleted) {
-        await prisma.metaFile.deleteMany({
-            where: {
-                githubPath: filePath,
-                tab: {
-                    siteId: site.siteId,
-                },
-            },
-        })
-        logger.log(`Deleted meta file at ${filePath}`)
-        return
-    }
-
-    const tab = site.tabs[0]
-    if (!tab) {
-        logger.log(`No tabs found for site ${site.siteId}`)
-        return
-    }
-
-    try {
-        const { data } = await octokit.rest.repos.getContent({
-            owner,
-            repo,
-            path: filePath,
-        })
-
-        if ('content' in data && data.type === 'file') {
-            const content = Buffer.from(data.content, 'base64').toString(
-                'utf-8',
-            )
-            const jsonData = safeJsonParse(content, {})
-            const githubSha = latestCommit.id
-
-            await prisma.metaFile.upsert({
-                where: {
-                    githubPath_tabId: {
-                        githubPath: filePath,
-                        tabId: tab.tabId,
-                    },
-                },
-                update: {
-                    githubSha,
-                    jsonData,
-                },
-                create: {
-                    githubPath: filePath,
-                    tabId: tab.tabId,
-                    githubSha,
-                    jsonData,
-                },
-            })
-
-            logger.log(`Updated/created meta file at ${filePath}`)
-        }
-    } catch (error) {
-        logger.error(`Error fetching ${filePath} content:`, error)
     }
 }
 
