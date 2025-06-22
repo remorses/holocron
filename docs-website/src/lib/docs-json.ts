@@ -693,3 +693,6 @@ export const DocsConfigSchema = z
     })
     .strict()
     .describe('Schema for docs.json configuration')
+
+
+export type DocsConfigType = z.infer<typeof DocsConfigSchema>;

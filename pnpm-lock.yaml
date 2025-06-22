@@ -241,6 +241,9 @@ importers:
       micro-memoize:
         specifier: ^4.1.3
         version: 4.1.3
+      next-themes:
+        specifier: ^0.4.6
+        version: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       notion-types:
         specifier: ^7.4.2
         version: 7.4.2

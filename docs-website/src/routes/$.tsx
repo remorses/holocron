@@ -1,4 +1,5 @@
 import { useShallow } from 'zustand/react/shallow'
+import { ThemeProvider, useTheme } from 'next-themes'
 import { LargeSearchToggle } from 'fumadocs-ui/components/layout/search-toggle'
 
 import { getCacheTagForMediaAsset, getKeyForMediaAsset, s3 } from '../lib/s3'
@@ -53,6 +54,7 @@ import { ButtonHTMLAttributes, useState } from 'react'
 import { cn } from '../lib/cn'
 import { LinkItemType } from 'fumadocs-ui/layouts/links'
 import { PoweredBy } from '../components/poweredby'
+import { DocsConfigType } from '../lib/docs-json'
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data) return {}
@@ -278,11 +280,20 @@ function Providers({
                 }),
             }}
         >
-            {site.cssStyles && (
-                <style dangerouslySetInnerHTML={{ __html: site.cssStyles }} />
-            )}
+            <ThemeProvider
+                attribute='class'
+                defaultTheme='system'
+                enableSystem
+                disableTransitionOnChange
+            >
+                {site.cssStyles && (
+                    <style
+                        dangerouslySetInnerHTML={{ __html: site.cssStyles }}
+                    />
+                )}
 
-            {children}
+                {children}
+            </ThemeProvider>
         </RootProvider>
     )
 }
@@ -304,28 +315,12 @@ function MainDocsPage(props: Route.ComponentProps) {
 
     const docsConfig = site.docsJson as any
 
-    const logoConfig = (() => {
-        if (!docsConfig?.logo) {
-            return {}
-        }
-        if (typeof docsConfig.logo === 'string') {
-            return { url: docsConfig.logo }
-        }
-        if (docsConfig.logo?.light) {
-            return {
-                url: docsConfig.logo.light,
-                darkUrl: docsConfig.logo.dark,
-                href: docsConfig.logo.href,
-            }
-        }
-        return {}
-    })()
-
     // TODO add to docs.json
     const navMode = 'auto'
     // TODO docs.json
     const disableThemeSwitch = false
 
+    // TODO based on docsjson links
     const links: LinkItemType[] = [
         {
             // icon: <AlbumIcon />,
@@ -347,19 +342,6 @@ function MainDocsPage(props: Route.ComponentProps) {
         // },
     ]
 
-    // TODO use docs.json
-    let logo = (
-        <>
-            <img
-                alt='Fumadocs'
-                src={''}
-                sizes='100px'
-                className='hidden w-20 md:w-24 [.uwu_&]:block'
-                aria-label='logo'
-            />
-        </>
-    )
-
     // TODO add this to docs.json
     const navTransparentMode = 'top'
 
@@ -378,14 +360,7 @@ function MainDocsPage(props: Route.ComponentProps) {
                 mode: navMode,
                 transparentMode: navTransparentMode,
 
-                title: (
-                    <>
-                        {logo}
-                        <span className='font-medium [.uwu_&]:hidden max-md:hidden'>
-                            {docsConfig?.name || site.name || 'Documentation'}
-                        </span>
-                    </>
-                ),
+                title: <Logo />,
             }}
             // TODO add tabMode to docs.json
             tabMode={navTabMode}
@@ -441,7 +416,7 @@ function MainDocsPage(props: Route.ComponentProps) {
                         />
                     </div>
 
-                    <div className="prose flex-1 text-fd-foreground/80">
+                    <div className='prose flex-1 text-fd-foreground/80'>
                         <DocsMarkdown />
                     </div>
                     <div className='grow'></div>
@@ -467,6 +442,42 @@ function MainDocsPage(props: Route.ComponentProps) {
             </PageRoot>
         </DocsLayout>
     )
+}
+
+function Logo() {
+    const loaderData = useLoaderData<typeof loader>()
+    const { site } = loaderData
+
+    const { theme = 'light', resolvedTheme = 'light' } = useTheme()
+    const currentTheme = resolvedTheme || theme
+    const docsConfig = site.docsJson as DocsConfigType
+
+    if (!docsConfig.logo) {
+        return (
+            <span className='font-medium [.uwu_&]:hidden max-md:hidden'>
+                {docsConfig?.name || site.name || 'Documentation'}
+            </span>
+        )
+    }
+
+    const logoImageUrl =
+        typeof docsConfig?.logo === 'string'
+            ? docsConfig.logo
+            : docsConfig?.logo?.[currentTheme] || docsConfig?.logo?.light || ''
+
+    // TODO use docs.json
+    let logo = (
+        <>
+            <img
+                alt='logo'
+                src={logoImageUrl}
+                sizes='100px'
+                className='hidden w-20 md:w-24 [.uwu_&]:block'
+                aria-label='logo'
+            />
+        </>
+    )
+    return logo
 }
 
 function DocsMarkdown() {
