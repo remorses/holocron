@@ -347,7 +347,6 @@ function Footer() {
     const handleAutocompleteSelect = (item: string) => {
         setText(item)
         // setShowAutocomplete(false)
-
     }
 
     const handleTextChange = (value: string) => {
@@ -653,7 +652,7 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
     const [errorMessage, setErrorMessage] = useState('')
     const [buttonText, setButtonText] = useTemporaryState('', 2000)
 
-    const { siteId, prUrl, chatId, chat } =
+    const { siteId, chatId, chat } =
         useLoaderData() as Route.ComponentProps['loaderData']
 
     const filesInDraft = useChatState((x) => x?.docsState?.filesInDraft || {})

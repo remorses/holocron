@@ -11,7 +11,7 @@ import { createIframeRpcClient } from '../lib/docs-setstate'
 import { getTabFilesWithoutContents } from '../lib/spiceflow'
 import { State, StateProvider } from '../lib/state'
 import { cn } from '../lib/utils'
-import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId._index'
+import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
 
 import { UIMessage } from 'ai'
 
@@ -19,6 +19,7 @@ export type { Route }
 
 export async function loader({
     request,
+
     params: { orgId, siteId, chatId },
 }: Route.LoaderArgs) {
     const { userId, redirectTo } = await getSession({ request })
@@ -155,9 +156,10 @@ export async function loader({
 
 export default function Page({
     loaderData,
+
     params: { siteId, orgId },
 }: Route.ComponentProps) {
-    const { chat, site, host, initialFilesInDraft } = loaderData
+    const { chat, initialFilesInDraft } = loaderData
     const initialState = useMemo<State>(
         () => ({
             messages: chat.messages.map((x) => {
@@ -201,7 +203,7 @@ export default function Page({
 }
 
 function Content() {
-    const { site, host, chat, iframeUrl } = useLoaderData<typeof loader>()
+    const { chat, iframeUrl } = useLoaderData<typeof loader>()
 
     const iframeRef = useRef<HTMLIFrameElement>(null)
 
@@ -282,17 +284,6 @@ function Content() {
 }
 
 type SiteData = any
-
-function updatePageProps(newPageProps: Partial<SiteData>, iframeRef) {
-    if (!iframeRef?.current || !newPageProps) {
-        console.log('updatePageProps: no iframeElement or newPageProps')
-        return
-    }
-    iframeRef?.current?.contentWindow.postMessage(
-        { newPageProps },
-        { targetOrigin: '*' },
-    )
-}
 
 function scaleDownElement(iframeScale) {
     return {

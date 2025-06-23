@@ -109,6 +109,23 @@ if (navigation.state === 'loading' || navigation.state === 'submitting') {
 }
 ```
 
+## react-router layout routes
+
+react-router layout routes are simply routes that share a prefix with some children routes. these routes will run their loaders and components also when the children paths are fetched.
+
+components can render children routes using the Outlet component
+
+```tsx
+export function Component() {
+    return <Outlet />
+}
+```
+
+the loader data from parent layouts will NOT be present in the children routes `Route.componentProps['loaderData']` type. Instead you have to use the `useRouteLoaderData('/prefix-path')` instead. Always add the type to this calls getting the `Route` type from the parent layout
+
+
+> layout routes should ALWAYS export their own Route namespace types so that child route can use it to type `useRouteLoaderData`!
+
 ## website, react-routes
 
 website routes use the flat routes filesystem routes, inside src/routes. these files encode the routing logic in the filename, using $id for params and dot . for slashes.

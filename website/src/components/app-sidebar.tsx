@@ -22,7 +22,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { Combobox } from './ui/combobox'
 import { useRouteLoaderData, useParams, useNavigate } from 'react-router'
 import { href } from 'react-router'
-import type { Route } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId._index'
+import type { Route } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId'
 import { apiClient } from 'website/src/lib/spiceflow-client'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
