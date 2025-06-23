@@ -1489,6 +1489,9 @@ importers:
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.3.1
+      textarea-caret:
+        specifier: ^3.1.0
+        version: 3.1.0
       tinyglobby:
         specifier: ^0.2.14
         version: 0.2.14
@@ -10450,6 +10453,9 @@ packages:
 
   text-hex@1.0.0:
     resolution: {integrity: sha512-uuVGNWzgJ4yhRaNSiubPY7OjISw4sw4E5Uv0wbjp+OzcbmVU/rsT8ujgcXJhn9ypzsgr5vlzpPqP+MBBKcGvbg==}
+
+  textarea-caret@3.1.0:
+    resolution: {integrity: sha512-cXAvzO9pP5CGa6NKx0WYHl+8CHKZs8byMkt3PCJBCmq2a34YA9pO1NrQET5pzeqnBjBdToF5No4rrmkDUgQC2Q==}
 
   thenify-all@1.6.0:
     resolution: {integrity: sha512-RNxQH/qI8/t3thXJDwcstUO4zeqo64+Uy/+sNVRBx4Xn2OX+OZ9oP+iJnNFqplFra2ZUVeKCSa2oVWi3T4uVmA==}
@@ -22416,6 +22422,8 @@ snapshots:
       b4a: 1.6.7
 
   text-hex@1.0.0: {}
+
+  textarea-caret@3.1.0: {}
 
   thenify-all@1.6.0:
     dependencies:

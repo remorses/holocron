@@ -93,6 +93,7 @@
         "spiceflow": "^1.13.2",
         "string-dedent": "^3.0.1",
         "tailwind-merge": "^3.3.1",
+        "textarea-caret": "^3.1.0",
         "tinyglobby": "^0.2.14",
         "trieve-ts-sdk": "^0.0.118",
         "tw-animate-css": "^1.3.4",
