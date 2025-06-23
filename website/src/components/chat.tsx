@@ -49,7 +49,7 @@ import {
     FileUpdate,
 } from '../lib/edit-tool'
 import { docsRpcClient } from '../lib/docs-setstate'
-import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
+import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId._index'
 import { useLoaderData, useRevalidator } from 'react-router'
 import { teeAsyncIterable } from '../lib/utils'
 import { generateSlugFromPath } from 'docs-website/src/lib/utils'

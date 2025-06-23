@@ -11,7 +11,7 @@ import { createIframeRpcClient } from '../lib/docs-setstate'
 import { getTabFilesWithoutContents } from '../lib/spiceflow'
 import { State, StateProvider } from '../lib/state'
 import { cn } from '../lib/utils'
-import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
+import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId._index'
 
 import { UIMessage } from 'ai'
 
@@ -132,7 +132,7 @@ export async function loader({
     const mentionOptions: string[] = await (async () => {
         const tabId = site.tabs[0]?.tabId
         if (!tabId) return []
-        
+
         const allFiles = await getTabFilesWithoutContents({ tabId })
         return allFiles.map((file) => `@${file.githubPath}`).sort()
     })()
