@@ -24,6 +24,7 @@ import { EditToolParamSchema } from '../lib/edit-tool'
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
 import { Button } from './ui/button'
 import { useClickOutside } from '../lib/hooks'
+import { RenderFormPreview } from './render-form-preview'
 
 type ChatMessageProps = {
     message: UIMessage
@@ -232,6 +233,14 @@ export const ChatMessage = memo(function ChatMessage({
                             if (toolName === 'get_project_files') {
                                 return (
                                     <FilesTreePreview
+                                        key={index}
+                                        {...part.toolInvocation}
+                                    />
+                                )
+                            }
+                            if (toolName === 'render_form') {
+                                return (
+                                    <RenderFormPreview
                                         key={index}
                                         {...part.toolInvocation}
                                     />

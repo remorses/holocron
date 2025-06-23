@@ -18,11 +18,15 @@ try to run commands inside the package folder that you are working on. for examp
 
 - typecheck after updating code: after any change to typescript code ALWAYS run the `pnpm typecheck` script of that package, or if there is no typecheck script run `pnpm tsc` yourself
 
-- do not use any: you should NEVER use any, if you find yourself using `as any` or `:any` use the @think tool to think hard if there are types you can import instead. do even a search in the project for what the type could be. any should be used as a last resort.
+- do not use any: you must NEVER use any, if you find yourself using `as any` or `:any` use the @think tool to think hard if there are types you can import instead. do even a search in the project for what the type could be. any should be used as a last resort.
+
+- NEVER do `(x as any).field` or `'field' in x` before trying to accessing the property and checking if the code compiles first. the code probably doesn't need any or the in check. even if it does not, use @think tool first!
 
 - after any change to typescript code ALWAYS run the `pnpm typecheck` script of that package, or if there is no typecheck script run `pnpm tsc` yourself
 
 - do not declare uninitialized variables that are defined later in the flow. Instead use an IIFE with returns. this way there is less state. Also define the type of the variable before the iife. Here is an example:
+
+- use || over in: avoid 'x' in obj checks. prefer doing `obj?.x || ''` over doing `'x' in obj ? obj.x : ''`. only use the in operator if that field causes problems in typescript checks because typescript thinks the field is missing, as a last resort.
 
 ```ts
 // BAD. DO NOT DO THIS
@@ -50,9 +54,9 @@ const favicon: string = (() => {
     return ''
 })()
 // if you already know the type use it:
-const favicon: string = (() => {
-  // ...
-})
+const favicon: string = () => {
+    // ...
+}
 ```
 
 # testing
@@ -186,11 +190,13 @@ This is preferable other aliases like @/ because i can easily move the code from
 
 ## styling
 
-always use tailwind for styling, prefer using simple styles using flex and gap. Margins should be avoided, instead use flexbox gaps, grid gaps, or separate spacing divs.
+- always use tailwind for styling, prefer using simple styles using flex and gap. Margins should be avoided, instead use flexbox gaps, grid gaps, or separate spacing divs.
 
-Use shadcn theme colors instead of tailwind default colors.
+- Use shadcn theme colors instead of tailwind default colors. This way there is no need to add `dark:` variants most of the time.
 
-Try to keep styles as simple as possible, for breakpoint too.
+- `flex flex-col gap-3` is preferred over `space-y-3`. same for the x direction.
+
+- Try to keep styles as simple as possible, for breakpoint too.
 
 ## components
 
@@ -317,6 +323,18 @@ if (!user.subscription) {
 - when using useRef with a generic type always add undefined in the call, for example `useRef<number>(undefined)`. this is required by the rect types definitions
 
 - when using && in jsx make sure that the result type is no of type number, in that case add Boolean() wrapper. This way jsx will not show zeros when the value is falsy.
+
+## components
+
+- place new components in the src/components folder. shadcn comopnents will go to the src/components/ui folder, usually they are not manually updated but added with the shadcn cli (which is preferred to be run without npx, either with pnpm or globally just shadcn)
+
+- component filenames should follow kebab case structure
+
+- do not create a new component file if this new code will only be used in another component file. only create a component file if the component is used by multiple components or routes. colocate related components in the same file.
+
+- non component code should be put in the src/lib folder.
+
+- hooks should be put in the src/hooks.tsx file. do not create a new file for each new hook. also notice that you should never create custom hook, only do it if asked for.
 
 ## ai sdk
 

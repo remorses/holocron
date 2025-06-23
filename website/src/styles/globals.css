@@ -1,12 +1,14 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-
-@import 'docs-website/src/app.css';
+@import 'fumadocs-ui/css/preset.css';
+@import 'fumadocs-ui/css/shadcn.css';
+@source "docs-website/src";
+@source "docs-website/src/components";
+@source "fumadocs-ui";
 
 @custom-variant dark (&:is(.dark *));
 
-@source "docs-website";
-@source "fumadocs-ui";
+
 
 :root {
     --background: oklch(1 0 0);

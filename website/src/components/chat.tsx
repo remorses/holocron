@@ -122,7 +122,6 @@ function ChatCards({ items = chatCardItems }: { items?: ChatCardItem[] }) {
 
 function Messages({ ref }) {
     const messages = useChatState((x) => x?.messages)
-    const lastError = useChatState((x) => x?.lastError)
 
     return (
         <div
@@ -132,17 +131,15 @@ function Messages({ ref }) {
             {messages.map((x) => {
                 return <ChatMessage key={x.id} message={x} />
             })}
-            {lastError && <ErrorMessage error={lastError} />}
+            <ErrorMessage />
             {/* {!messages.length && <ChatCards />} */}
         </div>
     )
 }
 
-function ErrorMessage({
-    error,
-}: {
-    error: { messageId: string; error: string; userInput: string }
-}) {
+function ErrorMessage() {
+    const error = useChatState((x) => x?.lastError)
+
     const handleRetry = () => {
         // Clear the error and retry - the user message is already in the messages
         useChatState.setState({ lastError: undefined })
@@ -150,7 +147,7 @@ function ErrorMessage({
         const event = new CustomEvent('chatRegenerate')
         window.dispatchEvent(event)
     }
-
+    if (!error) return null
     return (
         <div className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed'>
             <div className='space-y-4 w-full'>
