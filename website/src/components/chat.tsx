@@ -10,6 +10,7 @@ import {
     useEffect,
     startTransition,
     useMemo,
+    useRef,
 } from 'react'
 import { ChatMessage } from 'website/src/components/chat-message'
 
@@ -295,8 +296,26 @@ function ErrorMessage() {
     )
 }
 
+// Static autocomplete suggestions for first message
+const AUTOCOMPLETE_SUGGESTIONS = [
+    'change theme color to blue',
+    'update site logo with new design',
+    'add a new doc page about getting started',
+    'edit navigation menu structure',
+    'configure footer links and social media',
+    'set up custom 404 error page',
+    'add search functionality to docs',
+    'create a faq section',
+    'setup custom domain configuration',
+    'add analytics tracking code',
+]
+
 function Footer() {
     const [text, setText] = useState('')
+    const [selectedAutocompleteIndex, setSelectedAutocompleteIndex] =
+        useState(-1)
+    const [showAutocomplete, setShowAutocomplete] = useState(false)
+    const originalTextRef = useRef('')
     const isPending = useChatState((x) => x.isChatGenerating)
     const revalidator = useRevalidator()
     const { siteId, chat, tabId, prUrl } =
@@ -307,6 +326,27 @@ function Footer() {
     const hasNonPushedChanges = useMemo(() => {
         return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
     }, [filesInDraft, lastPushedFiles])
+
+    // Filtered autocomplete suggestions based on original text (not current selection)
+    const filteredSuggestions = useMemo(() => {
+        const searchText = originalTextRef.current || text
+        if (!searchText.trim() || messages.length > 0) return []
+        return AUTOCOMPLETE_SUGGESTIONS.filter((suggestion) =>
+            suggestion.toLowerCase().startsWith(searchText.toLowerCase()),
+        ).slice(0, 5)
+    }, [originalTextRef.current, text, messages.length])
+
+    // Update autocomplete visibility
+    useEffect(() => {
+        const shouldShow =
+            messages.length === 0 &&
+            text.length > 0 &&
+            filteredSuggestions.length > 0
+        setShowAutocomplete(shouldShow)
+        if (!shouldShow) {
+            setSelectedAutocompleteIndex(-1)
+        }
+    }, [text, messages.length, filteredSuggestions.length])
 
     const handleSubmit = async ({ inputText }: { inputText?: string } = {}) => {
         const messages = useChatState.getState()?.messages
@@ -553,13 +593,98 @@ function Footer() {
                             </div>
                         )}
                     </div>
+
                     <div className='relative rounded-[20px] border border-transparent bg-muted transition-colors focus-within:bg-muted focus-within:border-input has-[:disabled]:cursor-not-allowed  [&:has(input:is(:disabled))_*]:pointer-events-none'>
+                        {showAutocomplete && filteredSuggestions.length > 0 && (
+                            <div className='absolute bottom-full left-0 right-0 mb-2 border-border  rounded-lg shadow-lg max-h-[200px] overflow-y-auto z-10 flex flex-col divide-y divide-border'>
+                                {filteredSuggestions.map(
+                                    (suggestion, index) => {
+                                        return (
+                                            <button
+                                                key={suggestion}
+                                                className={`w-full px-4 py-2 text-left text-sm transition-colors rounded ${
+                                                    selectedAutocompleteIndex ===
+                                                    index
+                                                        ? 'bg-muted'
+                                                        : ''
+                                                }`}
+                                                onClick={() => {
+                                                    setText(suggestion)
+                                                    setShowAutocomplete(false)
+                                                    setSelectedAutocompleteIndex(
+                                                        -1,
+                                                    )
+                                                    originalTextRef.current = ''
+                                                }}
+                                            >
+                                                {suggestion}
+                                            </button>
+                                        )
+                                    },
+                                )}
+                            </div>
+                        )}
                         <textarea
                             className='flex sm:min-h-[84px] w-full bg-transparent px-4 py-3 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/70 focus-visible:outline-none [resize:none]'
                             placeholder='Ask me anything...'
                             aria-label='Enter your prompt'
                             value={text}
+                            ref={(el) => {
+                                if (el && selectedAutocompleteIndex >= 0) {
+                                    el.setSelectionRange(
+                                        el.value.length,
+                                        el.value.length,
+                                    )
+                                }
+                            }}
                             onKeyDown={(e) => {
+                                if (
+                                    showAutocomplete &&
+                                    filteredSuggestions.length > 0
+                                ) {
+                                    if (e.key === 'ArrowDown') {
+                                        e.preventDefault()
+                                        const newIndex =
+                                            selectedAutocompleteIndex <
+                                            filteredSuggestions.length - 1
+                                                ? selectedAutocompleteIndex + 1
+                                                : 0
+                                        setSelectedAutocompleteIndex(newIndex)
+                                        setText(filteredSuggestions[newIndex])
+                                        return
+                                    }
+                                    if (e.key === 'ArrowUp') {
+                                        e.preventDefault()
+                                        const newIndex =
+                                            selectedAutocompleteIndex > 0
+                                                ? selectedAutocompleteIndex - 1
+                                                : filteredSuggestions.length - 1
+                                        setSelectedAutocompleteIndex(newIndex)
+                                        setText(filteredSuggestions[newIndex])
+                                        return
+                                    }
+                                    if (
+                                        e.key === 'Tab' &&
+                                        selectedAutocompleteIndex >= 0
+                                    ) {
+                                        e.preventDefault()
+                                        setText(
+                                            filteredSuggestions[
+                                                selectedAutocompleteIndex
+                                            ],
+                                        )
+                                        setShowAutocomplete(false)
+                                        setSelectedAutocompleteIndex(-1)
+                                        originalTextRef.current = ''
+                                        return
+                                    }
+                                    if (e.key === 'Escape') {
+                                        setShowAutocomplete(false)
+                                        setSelectedAutocompleteIndex(-1)
+                                        setText(originalTextRef.current)
+                                        return
+                                    }
+                                }
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault()
                                     if (!isPending && text.trim()) {
@@ -567,7 +692,17 @@ function Footer() {
                                     }
                                 }
                             }}
-                            onChange={(e) => setText(e.target.value)}
+                            onChange={(e) => {
+                                setText(e.target.value)
+                                // Store original text when user starts typing
+                                if (selectedAutocompleteIndex === -1) {
+                                    originalTextRef.current = e.target.value
+                                } else {
+                                    // Reset selection when user manually types after navigation
+                                    setSelectedAutocompleteIndex(-1)
+                                    originalTextRef.current = e.target.value
+                                }
+                            }}
                         />
                         {/* Textarea buttons */}
                         <div className='flex items-center justify-between gap-2 p-3'>
