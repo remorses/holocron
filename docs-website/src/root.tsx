@@ -30,6 +30,8 @@ export const links: Route.LinksFunction = () => [
 ]
 
 const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, '')]
+
+
 export function Layout({ children }: { children: React.ReactNode }) {
     const navigate = useNavigate()
 

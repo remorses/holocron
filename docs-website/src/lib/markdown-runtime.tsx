@@ -7,39 +7,50 @@ import {
     useEffect,
     startTransition,
     useDeferredValue,
+    useRef,
 } from 'react'
 import { marked } from 'marked'
 
-import {
-    MarkdownAstRenderer,
-    Markdown,
-    MarkdownRendererProps,
-} from './markdown'
+import { Markdown, MarkdownRendererProps } from './markdown'
 import { createHighlighter, Highlighter } from 'shiki'
-import { getProcessor, ProcessorData } from './mdx'
+import { customTransformer, getProcessor, ProcessorData } from './mdx'
 import markdownRs from '@xmorse/markdown-rs'
 import React from 'react'
 import memoize from 'micro-memoize'
-
+import { SafeMdxRenderer } from 'safe-mdx'
+import { markRemarkAstAdditions, useAddedHighlighter } from './diff'
+import { cn } from './cn'
+import { mdxComponents } from '../components/mdx-components'
 export const StreamingMarkdownRuntimeComponent = memo(
     function MarkdownRuntimeComponent({
         markdown: _markdown,
         extension = 'mdx',
         isStreaming: _isStreaming,
-    }: MarkdownRendererProps) {
-        const previousBlocksRef = React.useRef<any[]>([])
+        astToDiff: oldAstToDiff,
+        className,
+    }: MarkdownRendererProps & {
+        astToDiff?: any
+    }) {
+        const container = useRef<HTMLDivElement>(null)
+
+        useAddedHighlighter({ root: container, enabled: !!oldAstToDiff })
+        const previousAstRef = React.useRef<any>(null)
         const markdown = _markdown
         const isStreaming = _isStreaming
 
-        const blocks = useMemo(
-            function getMarkdownBlocks() {
-                let localBlocks = previousBlocksRef.current
+        const ast = useMemo(
+            function getMarkdownAst() {
+                let prevAst = previousAstRef.current
                 try {
                     const { ast } = processMdxInClient({ extension, markdown })
-                    // Add a `raw` field to each child by using its `position` to extract from the markdown text.
-                    localBlocks = ast.children
-                    previousBlocksRef.current = localBlocks
-                    return localBlocks
+                    if (oldAstToDiff) {
+                        console.log(`diffing the old ast`)
+                        const result = markRemarkAstAdditions(oldAstToDiff, ast)
+                        console.log(result)
+                    }
+                    prevAst = ast
+                    previousAstRef.current = prevAst
+                    return prevAst
                 } catch (err) {
                     if (err instanceof Promise) {
                         throw err
@@ -55,18 +66,30 @@ export const StreamingMarkdownRuntimeComponent = memo(
                         'Markdown lexing error, showing previous markdown content:',
                         err,
                     )
-                    return localBlocks
+                    return prevAst
                 }
             },
-            [extension, markdown, isStreaming],
+            [extension, markdown, isStreaming, oldAstToDiff],
         )
         if (!markdown) return null
-        return (blocks || []).map((block, index) => {
-            // if (block.type === 'space') return block.raw
-            return <MarkdownAstRenderer key={index} ast={block} />
-        })
+        return (
+            <div className={cn('contents', className)} ref={container}>
+                {ast?.children?.map((block, index) => {
+                    // if (block.type === 'space') return block.raw
+                    return (
+                        <SafeMdxRenderer
+                            key={index}
+                            customTransformer={customTransformer}
+                            components={mdxComponents}
+                            mdast={block}
+                        />
+                    )
+                })}
+            </div>
+        )
     },
 )
+
 const alreadyLoadedLanguages = new Set<string>()
 
 const loadLanguageMemo = memoize(

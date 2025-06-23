@@ -304,6 +304,7 @@ export const ChatMessage = memo(function ChatMessage({
                                 return (
                                     <Markdown
                                         key={index}
+                                        className='[&_p]:m-0'
                                         isStreaming={isChatGenerating}
                                         markdown={part.text}
                                     />

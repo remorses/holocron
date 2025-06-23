@@ -30,10 +30,10 @@ export function usePrevious<T>(value: T): T | undefined {
 
     return ref.current
 }
-
 /**
  * This hook sets up a window 'message' event listener using the provided handler function.
  * It will automatically remove the listener when the component is unmounted or handler changes.
+ * Additionally, it sends a 'ping' postMessage to the parent window every second.
  */
 export function useParentPostMessage(
     onParentPostMessage: (event: MessageEvent) => void,
@@ -48,8 +48,22 @@ export function useParentPostMessage(
                 },
             )
         }
+
+        // Set up ping interval
+        const pingInterval = setInterval(() => {
+            if (typeof window !== 'undefined' && window.parent) {
+                window.parent?.postMessage?.(
+                    { type: 'ping' },
+                    {
+                        targetOrigin: '*',
+                    },
+                )
+            }
+        }, 1000)
+
         return () => {
             window.removeEventListener('message', onParentPostMessage)
+            clearInterval(pingInterval)
         }
     }, [onParentPostMessage])
 }

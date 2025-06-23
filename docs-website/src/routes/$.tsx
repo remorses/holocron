@@ -1,6 +1,5 @@
-import { useShallow } from 'zustand/react/shallow'
 import { ThemeProvider, useTheme } from 'next-themes'
-import { LargeSearchToggle } from 'fumadocs-ui/components/layout/search-toggle'
+import { useShallow } from 'zustand/react/shallow'
 
 import { getCacheTagForMediaAsset, getKeyForMediaAsset, s3 } from '../lib/s3'
 
@@ -13,13 +12,6 @@ import { prisma } from 'db'
 // import { DocsLayout,  } from 'fumadocs-ui/layouts/docs'
 import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
 
-import {
-    DocsBody,
-    DocsDescription,
-    DocsPage,
-    DocsTitle,
-} from 'fumadocs-ui/page'
-
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { TrieveSearchDialog } from 'docs-website/src/trieve/search-dialog-trieve'
 import { SharedProps } from 'fumadocs-ui/components/dialog/search'
@@ -27,9 +19,12 @@ import { RootProvider } from 'fumadocs-ui/provider/base'
 import { useLoaderData } from 'react-router'
 import { useDocsState } from '../lib/docs-state'
 
-import { LOCALE_LABELS, LOCALES } from '../lib/locales'
-import { Markdown } from '../lib/markdown'
-import { getFumadocsSource } from '../lib/source.server'
+import {
+    PageArticle,
+    PageTOCItems,
+    PageTOCPopoverItems,
+    PageTOCTitle,
+} from 'fumadocs-ui/layouts/docs/page'
 import {
     PageBreadcrumb,
     PageFooter,
@@ -40,21 +35,16 @@ import {
     PageTOCPopoverContent,
     PageTOCPopoverTrigger,
 } from 'fumadocs-ui/layouts/docs/page-client'
-import { LLMCopyButton, ViewOptions } from '../components/llm'
-import { Rate } from '../components/rate'
-import {
-    PageArticle,
-    PageTOCItems,
-    PageTOCPopoverItems,
-    PageTOCTitle,
-} from 'fumadocs-ui/layouts/docs/page'
-import { buttonVariants } from 'fumadocs-ui/components/ui/button'
-import { Sparkles } from 'lucide-react'
-import { ButtonHTMLAttributes, useState } from 'react'
-import { cn } from '../lib/cn'
 import { LinkItemType } from 'fumadocs-ui/layouts/links'
+import { ButtonHTMLAttributes, useState } from 'react'
+import { LLMCopyButton, ViewOptions } from '../components/llm'
 import { PoweredBy } from '../components/poweredby'
+import { Rate } from '../components/rate'
 import { DocsConfigType } from '../lib/docs-json'
+import { LOCALE_LABELS, LOCALES } from '../lib/locales'
+import { Markdown } from '../lib/markdown'
+import { getFumadocsSource } from '../lib/source.server'
+import { StreamingMarkdownRuntimeComponent } from '../lib/markdown-runtime'
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data) return {}
@@ -493,7 +483,7 @@ function Logo() {
 
 function DocsMarkdown() {
     const loaderData = useLoaderData<typeof loader>()
-    let { ast, markdown, isStreaming } = useDocsState(
+    let { ast, markdown, astToDiff, isStreaming } = useDocsState(
         useShallow((x) => {
             const { filesInDraft, isMarkdownStreaming: isStreaming } = x
 
@@ -504,17 +494,30 @@ function DocsMarkdown() {
                     markdown: override.content,
                     isStreaming,
                     ast: undefined,
+                    astToDiff: loaderData.ast,
                 }
             }
             console.log(
                 `no override for githubPath ${loaderData.githubPath}, using loader data`,
             )
 
-            return { isStreaming, ast: loaderData.ast, markdown: '' }
+            return {
+                isStreaming,
+                astToDiff: undefined,
+                ast: loaderData.ast,
+                markdown: '',
+            }
         }),
     )
 
-    return <Markdown isStreaming={isStreaming} markdown={markdown} ast={ast} />
+    return (
+        <StreamingMarkdownRuntimeComponent
+            astToDiff={astToDiff}
+            isStreaming={isStreaming}
+            markdown={markdown}
+            ast={ast}
+        />
+    )
 }
 
 function CustomSearchDialog(props: SharedProps) {

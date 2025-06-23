@@ -20,6 +20,17 @@ summary {
     --color-fd-primary: hsl(220, 91%, 54%);
 }
 
+/* show added content as green in diff, improve for dark mode */
+::highlight(md-add) {
+    background: #b6f2c2;
+}
+.dark {
+    ::highlight(md-add) {
+        background: #244e29;
+    }
+}
+
+
 .navIcon {
     width: 19px;
     height: 19px;

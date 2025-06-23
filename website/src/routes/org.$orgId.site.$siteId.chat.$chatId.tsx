@@ -92,10 +92,7 @@ export default function Page({
     params: { siteId, orgId },
 }: Route.ComponentProps) {
     const { chat, initialFilesInDraft } = loaderData
-    
-    // Get parent loader data
-    const siteData = useRouteLoaderData('routes/org.$orgId.site.$siteId') as SiteRoute.ComponentProps['loaderData']
-    const orgData = useRouteLoaderData('routes/org.$orgId') as OrgRoute.ComponentProps['loaderData']
+
     const initialState = useMemo<State>(
         () => ({
             messages: chat.messages.map((x) => {
@@ -140,7 +137,9 @@ export default function Page({
 
 function Content() {
     const { chat } = useLoaderData<typeof loader>()
-    const siteData = useRouteLoaderData('routes/org.$orgId.site.$siteId') as SiteRoute.ComponentProps['loaderData']
+    const siteData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId',
+    ) as SiteRoute.ComponentProps['loaderData']
     const { iframeUrl } = siteData
 
     const iframeRef = useRef<HTMLIFrameElement>(null)

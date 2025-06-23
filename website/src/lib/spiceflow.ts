@@ -249,6 +249,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                     }),
                 },
                 async onFinish({ response }) {
+                  console.log(`chat finished, saving the chat in database`)
                     const resultMessages = appendResponseMessages({
                         messages,
                         responseMessages: response.messages,
