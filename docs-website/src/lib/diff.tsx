@@ -4,11 +4,12 @@ import { diff_match_patch, DIFF_INSERT } from 'diff-match-patch'
 import type { Root, Parent, Literal, Text, Content as MdContent } from 'mdast'
 
 declare module 'mdast' {
+    export interface HProperties {
+        id?: string
+        'data-added'?: boolean | string
+    }
     export interface Data {
-        hProperties?: {
-            id?: string
-            'data-added'?: boolean | string
-        }
+        hProperties?: HProperties
     }
 }
 
@@ -46,7 +47,6 @@ export function markRemarkAstAdditions(oldTree: Root, newTree: Root): void {
     // newTree.children = newTree.children.map((newChild) => {
     //     const newFingerprint = fp(newChild)
     //     const oldChild = oldNodesByFingerprint.get(newFingerprint)
-
 
     //     // If we have a matching old node and it's unchanged, use the old node
     //     if (oldChild && !hasAddedMarker(newChild) && 'children' in oldChild === 'children' in newChild) {
@@ -153,7 +153,7 @@ function setAdded(n: MdContent | Parent): void {
 function diffText(newText: Text, oldTree: Root): void {
     const oldNode = findSameSpotText(newText, oldTree)
     if (!oldNode || oldNode.value === newText.value) return
-    
+
     const dmp = new diff_match_patch()
     const diffs = dmp.diff_main(oldNode.value, newText.value)
     dmp.diff_cleanupSemantic(diffs)
@@ -180,9 +180,9 @@ function diffText(newText: Text, oldTree: Root): void {
 
     // Instead of converting to emphasis (which can cause nesting issues),
     // create a single text node with the concatenated diff and mark as added
-    const combinedValue = pieces.map(p => p.value).join('')
+    const combinedValue = pieces.map((p) => p.value).join('')
     newText.value = combinedValue
-    
+
     // Mark the text node as changed
     setAdded(newText)
 }

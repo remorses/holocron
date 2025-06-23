@@ -6,40 +6,58 @@ import { SafeMdxRenderer } from 'safe-mdx'
 import { describe, expect, test } from 'vitest'
 import { markRemarkAstAdditions } from './diff'
 
-const processor = remark().use(remarkMdx)
-
-function parseWithPositions(markdown: string): Root {
-    return processor.parse(markdown)
+async function parseWithPositions(markdown: string) {
+    const res = await processMdxInServer({ markdown, extension: 'mdx' })
+    return res.data?.ast
 }
 
 import prettierHtml from 'prettier/plugins/html'
 import prettier from 'prettier/standalone'
+import { processMdxInServer } from './mdx.server'
 
 // Helper to extract relevant test data from AST
 async function extractTestData(ast: Root) {
     try {
-        const html = renderToStaticMarkup(<SafeMdxRenderer mdast={ast} />)
+        const html = renderToStaticMarkup(
+            <SafeMdxRenderer
+                components={{
+                    Card: ({ children, ...props }: any) => (
+                        <div role='card' {...props}>
+                            {children}
+                        </div>
+                    ),
+                    Alert: ({ children, ...props }: any) => (
+                        <div role='alert' {...props}>
+                            {children}
+                        </div>
+                    ),
+                }}
+                mdast={ast}
+            />,
+        )
         return await prettier.format(`<html>${html}</html>`, {
             parser: 'html',
             plugins: [prettierHtml],
         })
     } catch (err) {
         // eslint-disable-next-line no-console
-        console.error('extractTestData error for AST:', JSON.stringify(ast, null, 2))
+        console.error(
+            'extractTestData error for AST:',
+            JSON.stringify(ast, null, 2),
+        )
         throw err
     }
 }
 
 describe('markRemarkAstAdditions', () => {
     test('detects no changes when trees are identical', async () => {
-        const old = parseWithPositions('# Hello\n\nWorld')
-        const new_ = parseWithPositions('# Hello\n\nWorld')
+        const old = await parseWithPositions('# Hello\n\nWorld')
+        const new_ = await parseWithPositions('# Hello\n\nWorld')
 
         markRemarkAstAdditions(old, new_)
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <h1>Hello</h1>
             <p>World</p>
           </html>
           "
@@ -47,8 +65,8 @@ describe('markRemarkAstAdditions', () => {
     })
 
     test('detects text content changes with inline diff', async () => {
-        const old = parseWithPositions('Hello world')
-        const new_ = parseWithPositions('Hello universe')
+        const old = await parseWithPositions('Hello world')
+        const new_ = await parseWithPositions('Hello universe')
 
         markRemarkAstAdditions(old, new_)
 
@@ -67,22 +85,24 @@ describe('markRemarkAstAdditions', () => {
     })
 
     test('detects heading level changes', async () => {
-        const old = parseWithPositions('# Title')
-        const new_ = parseWithPositions('## Title')
+        const old = await parseWithPositions('# Title')
+        const new_ = await parseWithPositions('## Title')
 
         markRemarkAstAdditions(old, new_)
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <h2 data-added="true"><span data-added="true">Title</span></h2>
+            <h2 id="title" data-added="true"><span data-added="true">Title</span></h2>
           </html>
           "
         `)
     })
 
     test('detects new paragraphs', async () => {
-        const old = parseWithPositions('First paragraph')
-        const new_ = parseWithPositions('First paragraph\n\nSecond paragraph')
+        const old = await parseWithPositions('First paragraph')
+        const new_ = await parseWithPositions(
+            'First paragraph\n\nSecond paragraph',
+        )
 
         markRemarkAstAdditions(old, new_)
 
@@ -96,8 +116,8 @@ describe('markRemarkAstAdditions', () => {
     })
 
     test('detects link URL changes', async () => {
-        const old = parseWithPositions('[Link](https://old.com)')
-        const new_ = parseWithPositions('[Link](https://new.com)')
+        const old = await parseWithPositions('[Link](https://old.com)')
+        const new_ = await parseWithPositions('[Link](https://new.com)')
 
         markRemarkAstAdditions(old, new_)
 
@@ -110,10 +130,10 @@ describe('markRemarkAstAdditions', () => {
     })
 
     test('detects link title changes', async () => {
-        const old = parseWithPositions(
+        const old = await parseWithPositions(
             '[Link](https://example.com "Old Title")',
         )
-        const new_ = parseWithPositions(
+        const new_ = await parseWithPositions(
             '[Link](https://example.com "New Title")',
         )
 
@@ -130,8 +150,8 @@ describe('markRemarkAstAdditions', () => {
     })
 
     test('detects list type changes', async () => {
-        const old = parseWithPositions('- Item 1\n- Item 2')
-        const new_ = parseWithPositions('1. Item 1\n2. Item 2')
+        const old = await parseWithPositions('- Item 1\n- Item 2')
+        const new_ = await parseWithPositions('1. Item 1\n2. Item 2')
 
         markRemarkAstAdditions(old, new_)
 
@@ -151,8 +171,10 @@ describe('markRemarkAstAdditions', () => {
     })
 
     test('detects code block language changes', async () => {
-        const old = parseWithPositions('```js\nconsole.log("hello")\n```')
-        const new_ = parseWithPositions('```ts\nconsole.log("hello")\n```')
+        const old = await parseWithPositions('```js\nconsole.log("hello")\n```')
+        const new_ = await parseWithPositions(
+            '```ts\nconsole.log("hello")\n```',
+        )
 
         markRemarkAstAdditions(old, new_)
 
@@ -165,8 +187,8 @@ describe('markRemarkAstAdditions', () => {
     })
 
     test('detects image changes', async () => {
-        const old = parseWithPositions('![Alt](old.jpg)')
-        const new_ = parseWithPositions('![New Alt](new.jpg)')
+        const old = await parseWithPositions('![Alt](old.jpg)')
+        const new_ = await parseWithPositions('![New Alt](new.jpg)')
 
         markRemarkAstAdditions(old, new_)
 
@@ -180,8 +202,8 @@ describe('markRemarkAstAdditions', () => {
     })
 
     test('detects emphasis changes', async () => {
-        const old = parseWithPositions('*italic*')
-        const new_ = parseWithPositions('**bold**')
+        const old = await parseWithPositions('*italic*')
+        const new_ = await parseWithPositions('**bold**')
 
         markRemarkAstAdditions(old, new_)
 
@@ -196,32 +218,36 @@ describe('markRemarkAstAdditions', () => {
     })
 
     test('detects MDX component name changes', async () => {
-        const old = parseWithPositions('<Card title="Hello" />')
-        const new_ = parseWithPositions('<Alert title="Hello" />')
+        const old = await parseWithPositions('<Card title="Hello" />')
+        const new_ = await parseWithPositions('<Alert title="Hello" />')
 
         markRemarkAstAdditions(old, new_)
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
-          "<html></html>
+          "<html>
+            <div role="alert" title="Hello"></div>
+          </html>
           "
         `)
     })
 
     test('detects MDX component attribute changes', async () => {
-        const old = parseWithPositions('<Card title="Old" />')
-        const new_ = parseWithPositions('<Card title="New" />')
+        const old = await parseWithPositions('<Card title="Old" />')
+        const new_ = await parseWithPositions('<Card title="New" />')
 
         markRemarkAstAdditions(old, new_)
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
-          "<html></html>
+          "<html>
+            <div role="card" title="New"></div>
+          </html>
           "
         `)
     })
 
     test('detects table structure changes', async () => {
-        const old = parseWithPositions('| A | B |\n|---|---|\n| 1 | 2 |')
-        const new_ = parseWithPositions(
+        const old = await parseWithPositions('| A | B |\n|---|---|\n| 1 | 2 |')
+        const new_ = await parseWithPositions(
             '| A | B | C |\n|---|---|---|\n| 1 | 2 | 3 |',
         )
 
@@ -229,19 +255,32 @@ describe('markRemarkAstAdditions', () => {
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <p data-added="true">
-              <span data-added="true">| A | B | C | |---|---|---| | 1 | 2 | 3 |</span>
-            </p>
+            <table data-added="true">
+              <thead>
+                <tr class="">
+                  <td class="">A</td>
+                  <td class="">B</td>
+                  <td class="" data-added="true"><span data-added="true">C</span></td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="" data-added="true">
+                  <td class="" data-added="true"><span data-added="true">1</span></td>
+                  <td class="" data-added="true"><span data-added="true">2</span></td>
+                  <td class="" data-added="true"><span data-added="true">3</span></td>
+                </tr>
+              </tbody>
+            </table>
           </html>
           "
         `)
     })
 
     test.todo('preserves React identity for unchanged nodes', async () => {
-        const old = parseWithPositions(
+        const old = await parseWithPositions(
             '# Unchanged\n\nSame text\n\n## Also unchanged',
         )
-        const new_ = parseWithPositions(
+        const new_ = await parseWithPositions(
             '# Unchanged\n\nSame text\n\n## Also unchanged\n\nNew paragraph',
         )
 
@@ -275,7 +314,7 @@ describe('markRemarkAstAdditions', () => {
     })
 
     test('handles complex nested changes', async () => {
-        const old = parseWithPositions(`
+        const old = await parseWithPositions(`
 # Title
 
 This is a paragraph with [old link](https://old.com).
@@ -288,7 +327,7 @@ const old = "code"
 \`\`\`
         `)
 
-        const new_ = parseWithPositions(`
+        const new_ = await parseWithPositions(`
 # Title
 
 This is a paragraph with [new link](https://new.com) and **bold text**.
@@ -306,7 +345,6 @@ const new = "code"
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <h1>Title</h1>
             <p data-added="true">
               This is a paragraph with
               <a href="https://new.com" title="" data-added="true"
@@ -333,8 +371,8 @@ const new = "code"
     })
 
     test('handles blockquote changes', async () => {
-        const old = parseWithPositions('> Old quote')
-        const new_ = parseWithPositions('> New quote')
+        const old = await parseWithPositions('> Old quote')
+        const new_ = await parseWithPositions('> New quote')
 
         markRemarkAstAdditions(old, new_)
 
@@ -349,8 +387,8 @@ const new = "code"
     })
 
     test('handles inline code changes', async () => {
-        const old = parseWithPositions('Use `oldFunction()` here')
-        const new_ = parseWithPositions('Use `newFunction()` here')
+        const old = await parseWithPositions('Use `oldFunction()` here')
+        const new_ = await parseWithPositions('Use `newFunction()` here')
 
         markRemarkAstAdditions(old, new_)
 
@@ -363,8 +401,10 @@ const new = "code"
     })
 
     test('handles thematic break additions', async () => {
-        const old = parseWithPositions('Paragraph one\n\nParagraph two')
-        const new_ = parseWithPositions('Paragraph one\n\n---\n\nParagraph two')
+        const old = await parseWithPositions('Paragraph one\n\nParagraph two')
+        const new_ = await parseWithPositions(
+            'Paragraph one\n\n---\n\nParagraph two',
+        )
 
         markRemarkAstAdditions(old, new_)
 
@@ -379,19 +419,24 @@ const new = "code"
     })
 
     test('handles list item checkbox changes', async () => {
-        const old = parseWithPositions('- [ ] Unchecked\n- [x] Checked')
-        const new_ = parseWithPositions('- [x] Checked\n- [ ] Unchecked')
+        const old = await parseWithPositions(
+            'todos\n\n- [ ] Unchecked\n- [x] Checked',
+        )
+        const new_ = await parseWithPositions(
+            'todos\n\n- [x] Checked\n- [ ] Unchecked',
+        )
 
         markRemarkAstAdditions(old, new_)
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
+            <p>todos</p>
             <ul>
-              <li>
-                <p data-added="true"><span data-added="true">[x] Checked</span></p>
+              <li data-checked="true">
+                <p data-added="true"><span data-added="true">Checked</span></p>
               </li>
-              <li>
-                <p data-added="true"><span data-added="true">[ ] Unchecked</span></p>
+              <li data-checked="false">
+                <p data-added="true"><span data-added="true">Unchecked</span></p>
               </li>
             </ul>
           </html>
@@ -400,8 +445,8 @@ const new = "code"
     })
 
     test('handles partial text changes with highlighting', async () => {
-        const old = parseWithPositions('The quick brown fox jumps')
-        const new_ = parseWithPositions('The quick red fox leaps')
+        const old = await parseWithPositions('The quick brown fox jumps')
+        const new_ = await parseWithPositions('The quick red fox leaps')
 
         markRemarkAstAdditions(old, new_)
 
@@ -416,8 +461,8 @@ const new = "code"
     })
 
     test('handles MDX expression changes', async () => {
-        const old = parseWithPositions('{oldVariable}')
-        const new_ = parseWithPositions('{newVariable}')
+        const old = await parseWithPositions('{oldVariable}')
+        const new_ = await parseWithPositions('{newVariable}')
 
         markRemarkAstAdditions(old, new_)
 

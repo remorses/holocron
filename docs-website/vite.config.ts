@@ -1,4 +1,5 @@
 /// <reference types="vitest/config" />
+import react from '@vitejs/plugin-react'
 import { reactRouter } from '@react-router/dev/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { viteExternalsPlugin } from '@xmorse/deployment-utils/dist/vite-externals-plugin.js'
@@ -26,12 +27,6 @@ export default defineConfig({
     },
     build: {
         sourcemap: true,
-        rollupOptions: {
-            external: ['shiki'],
-        },
-    },
-    ssr: {
-        external: ['shiki'],
     },
 
     plugins: [
@@ -39,10 +34,10 @@ export default defineConfig({
         EnvironmentPlugin('all', { prefix: 'PUBLIC' }),
         EnvironmentPlugin('all', { prefix: 'NEXT_PUBLIC' }),
         !process.env.VITEST && reactRouterHonoServer(),
-        !process.env.VITEST && reactRouter(),
+        !process.env.VITEST ? reactRouter() : react(),
         tsconfigPaths(),
         viteExternalsPlugin({ externals: ['pg'] }),
-        !process.env.VITEST &&tailwindcss(),
+        !process.env.VITEST && tailwindcss(),
     ],
 
     legacy: {
