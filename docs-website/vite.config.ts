@@ -26,23 +26,26 @@ export default defineConfig({
     },
     build: {
         sourcemap: true,
-        // rollupOptions: {
-        //     external: ['pg'],
-        // },
+        rollupOptions: {
+            external: ['shiki'],
+        },
+    },
+    ssr: {
+        external: ['shiki'],
     },
 
     plugins: [
         // cloudflare({ viteEnvironment: { name: 'ssr' } }),
         EnvironmentPlugin('all', { prefix: 'PUBLIC' }),
         EnvironmentPlugin('all', { prefix: 'NEXT_PUBLIC' }),
-        reactRouterHonoServer(),
+        !process.env.VITEST && reactRouterHonoServer(),
         !process.env.VITEST && reactRouter(),
         tsconfigPaths(),
         viteExternalsPlugin({ externals: ['pg'] }),
-        tailwindcss(),
+        !process.env.VITEST &&tailwindcss(),
     ],
 
-    // legacy: {
-    //     proxySsrExternalModules: true,
-    // },
+    legacy: {
+        proxySsrExternalModules: true,
+    },
 })

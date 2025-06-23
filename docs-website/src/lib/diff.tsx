@@ -41,17 +41,19 @@ export function markRemarkAstAdditions(oldTree: Root, newTree: Root): void {
     })
 
     /* pass 3 - swap unchanged top-level nodes to preserve React identity */
-    newTree.children = newTree.children.map((newChild) => {
-        const newFingerprint = fp(newChild)
-        const oldChild = oldNodesByFingerprint.get(newFingerprint)
+    // TODO: This logic replaces new nodes with old ones, losing changes.
+    // Need to fix React identity preservation without overwriting diff results.
+    // newTree.children = newTree.children.map((newChild) => {
+    //     const newFingerprint = fp(newChild)
+    //     const oldChild = oldNodesByFingerprint.get(newFingerprint)
 
 
-        // If we have a matching old node and it's unchanged, use the old node
-        if (oldChild && !hasAddedMarker(newChild) && 'children' in oldChild === 'children' in newChild) {
-            return oldChild as typeof newChild
-        }
-        return newChild
-    })
+    //     // If we have a matching old node and it's unchanged, use the old node
+    //     if (oldChild && !hasAddedMarker(newChild) && 'children' in oldChild === 'children' in newChild) {
+    //         return oldChild as typeof newChild
+    //     }
+    //     return newChild
+    // })
 }
 
 /* ---------- helpers ------------------------------------------------- */
@@ -170,12 +172,18 @@ function diffText(newText: Text, oldTree: Root): void {
         return []
     })
 
-    // Replace the text node with the diff pieces directly
-    newText.value = undefined as any
-    ;(newText as any).children = pieces
-    ;(newText as any).type = 'paragraph'
+    // If there's only one piece and it's not marked as added, just update the value
+    if (pieces.length === 1 && !pieces[0].data?.hProperties?.['data-added']) {
+        newText.value = pieces[0].value
+        return
+    }
+
+    // Instead of converting to emphasis (which can cause nesting issues),
+    // create a single text node with the concatenated diff and mark as added
+    const combinedValue = pieces.map(p => p.value).join('')
+    newText.value = combinedValue
     
-    // Mark the text node (now paragraph) as changed
+    // Mark the text node as changed
     setAdded(newText)
 }
 

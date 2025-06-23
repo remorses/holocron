@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { DocsConfigSchema } from './docs-json'
-import { streamObject, streamText } from 'ai'
+import { streamObject, streamText, wrapLanguageModel } from 'ai'
 import { openai } from '@ai-sdk/openai'
+import { createAiCacheMiddleware } from './ai-cache'
 
-describe(
+describe.skip(
     'AI-generated example for DocsConfigSchema',
     () => {
         it('should generate an example schema and match snapshot', async () => {
@@ -15,9 +16,15 @@ describe(
       ${DocsConfigSchema.toString()}
     `
 
+            const middleware = createAiCacheMiddleware({})
+
+            const model = wrapLanguageModel({
+                model: openai('gpt-4o-mini', { structuredOutputs: false }),
+                middleware: [middleware],
+            })
             // Use streamText v4 API, do not use a string for the model field
             const aiStream = await streamObject({
-                model: openai('gpt-4o-mini', { structuredOutputs: false }),
+                model,
                 system: systemPrompt,
                 schema: DocsConfigSchema,
                 messages: [

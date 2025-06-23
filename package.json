@@ -14,13 +14,14 @@
         "tsx": "^4.20.3",
         "typescript": "^5.8.3",
         "vite": "^6.3.5",
-        "vitest": "^3.2.3"
+        "vitest": "^3.2.4"
     },
     "repository": "https://github.com/remorses/",
     "author": "remorses <beats.by.morse@gmail.com>",
     "license": "",
     "dependencies": {
         "@types/node": "^24.0.1",
-        "unframer": "link:../../../.local/share/pnpm/global/5/node_modules/unframer"
+        "unframer": "link:../../../.local/share/pnpm/global/5/node_modules/unframer",
+        "vite-node": "^3.2.4"
     }
 }

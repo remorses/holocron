@@ -1,4 +1,3 @@
-import memoize from 'micro-memoize'
 import remarkFrontmatter from 'remark-frontmatter'
 
 import YAML from 'js-yaml'
@@ -9,7 +8,6 @@ import {
     transformerNotationHighlight,
     transformerNotationWordHighlight,
 } from '@shikijs/transformers'
-import remarkGfm from 'remark-gfm'
 import { remarkAdmonition } from 'fumadocs-core/mdx-plugins/remark-admonition'
 import { remarkCodeTab } from 'fumadocs-core/mdx-plugins/remark-code-tab'
 import { remarkHeading } from 'fumadocs-core/mdx-plugins/remark-heading'
@@ -18,19 +16,14 @@ import {
     remarkStructure,
     StructuredData,
 } from 'fumadocs-core/mdx-plugins/remark-structure'
-import {} from 'js-yaml'
+import { } from 'js-yaml'
 import { Heading, Root } from 'mdast'
 import { remark } from 'remark'
+import remarkGfm from 'remark-gfm'
 import remarkMdx from 'remark-mdx'
 import {
-    createHighlighter,
-    createHighlighterCore,
-    createJavaScriptRegexEngine,
-    Highlighter,
-    HighlighterCore,
-    loadWasm,
+    Highlighter
 } from 'shiki'
-import { bundledLanguages } from 'shiki/langs' // every grammar object
 
 import { visit } from 'unist-util-visit'
 import { remarkGitHubBlockquotes } from './github-blockquotes'
@@ -150,9 +143,9 @@ const remarkExtractFirstHeading = () => {
     }
 }
 
-import { trySync } from './utils'
 import { TOCItemType } from 'fumadocs-core/server'
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
+import { trySync } from './utils'
 
 const injectData = () => {
     return (tree, file) => {
