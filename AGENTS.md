@@ -70,6 +70,7 @@ Use vitest to run tests. Tests should be run from the current package directory 
 To understand how the code you are writing works you should add inline snapshots in the test files with expect().toMatchInlineSnapshot(), then run the test with `pnpm test -u --run` or `pnpm vitest -u --run` to update the snapshot in the file, then read the file again to inspect the result. If the result is not expected, update the code and repeat until the snapshot matches your expectations. Never write the inline snapshots in test files yourself. Just leave them empty and run `pnpm test -u --run` to update them.
 
 > Always call `pnpm vitest` or `pnpm test` with `--run` or they will hang forever waiting for changes!
+> ALWAYS read back the test if you use the `-u` option, to make sure the inline snapshot are as you expect.
 
 Never test client React components. Only server code that runs on the server.
 

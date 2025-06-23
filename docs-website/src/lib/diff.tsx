@@ -17,35 +17,127 @@ declare module 'mdast' {
  * -------------------------------------------------------------------- */
 
 export function markRemarkAstAdditions(oldTree: Root, newTree: Root): void {
-    /* pass 1 - fingerprint every node that already existed */
+    /* pass 1 - fingerprint every node and create lookup map */
     const previous = new Set<string>()
+    const oldNodesByFingerprint = new Map<string, MdContent | Parent>()
+
     visit(oldTree, (n) => {
-        previous.add(fp(n))
+        const fingerprint = fp(n)
+        previous.add(fingerprint)
+        oldNodesByFingerprint.set(fingerprint, n)
     })
 
     /* pass 2 - walk new tree, tag additions + diff text */
-    visit(newTree, (node: MdContent | Parent) => {
+    visit(newTree, (node: MdContent | Parent, index, parent) => {
         if (!previous.has(fp(node))) setAdded(node)
-        else if (node.type === 'text') diffText(node as Text, oldTree)
+        else if (node.type === 'text') {
+            const oldNode = findSameSpotText(node as Text, oldTree)
+            if (oldNode && oldNode.value !== (node as Text).value) {
+                // Text has changed - mark parent as changed and do inline diff
+                if (parent) setAdded(parent)
+                diffText(node as Text, oldTree)
+            }
+        }
+    })
+
+    /* pass 3 - swap unchanged top-level nodes to preserve React identity */
+    newTree.children = newTree.children.map((newChild) => {
+        const newFingerprint = fp(newChild)
+        const oldChild = oldNodesByFingerprint.get(newFingerprint)
+
+
+        // If we have a matching old node and it's unchanged, use the old node
+        if (oldChild && !hasAddedMarker(newChild) && 'children' in oldChild === 'children' in newChild) {
+            return oldChild as typeof newChild
+        }
+        return newChild
     })
 }
 
 /* ---------- helpers ------------------------------------------------- */
 
-// stable  fingerprint: ignore layout data + actual text content
+function hasAddedMarker(node: MdContent | Parent): boolean {
+    return Boolean(node.data?.hProperties?.['data-added'])
+}
+
+// stable fingerprint: capture semantic properties that affect rendering
 function fp(n: MdContent | Parent): string {
     const { type } = n
     const base: Record<string, unknown> = { type }
 
     switch (type) {
         case 'text':
-            /* same position = same identity for a text node */
+            // Position-based identity for text nodes (content changes will be diffed)
             base.pos = n.position?.start?.offset
             break
+        case 'heading':
+            base.depth = (n as any).depth
+            break
         case 'link':
-            base.url = n['url']
+            base.url = (n as any).url
+            base.title = (n as any).title
+            break
+        case 'image':
+            base.url = (n as any).url
+            base.alt = (n as any).alt
+            base.title = (n as any).title
+            break
+        case 'code':
+            base.lang = (n as any).lang
+            base.meta = (n as any).meta
+            break
+        case 'inlineCode':
+            // Position-based identity for inline code
+            base.pos = n.position?.start?.offset
+            break
+        case 'list':
+            base.ordered = (n as any).ordered
+            base.start = (n as any).start
+            base.spread = (n as any).spread
+            break
+        case 'listItem':
+            base.checked = (n as any).checked
+            base.spread = (n as any).spread
+            break
+        case 'table':
+            base.align = (n as any).align
+            break
+        case 'tableRow':
+            // Position-based for table rows
+            base.pos = n.position?.start?.offset
+            break
+        case 'tableCell':
+            // Position-based for table cells
+            base.pos = n.position?.start?.offset
+            break
+        case 'emphasis':
+        case 'strong':
+        case 'delete':
+            // Position-based for inline formatting
+            base.pos = n.position?.start?.offset
+            break
+        case 'blockquote':
+        case 'paragraph':
+            // Position-based for block elements
+            base.pos = n.position?.start?.offset
+            break
+        case 'thematicBreak':
+            // Position-based for breaks
+            base.pos = n.position?.start?.offset
+            break
+        // MDX nodes
+        case 'mdxJsxFlowElement':
+        case 'mdxJsxTextElement':
+            base.name = (n as any).name
+            base.attributes = JSON.stringify((n as any).attributes || [])
+            break
+        case 'mdxFlowExpression':
+        case 'mdxTextExpression':
+            base.value = (n as any).value
             break
         default:
+            // Fallback to position for unknown node types
+            base.pos = n.position?.start?.offset
             break
     }
     return JSON.stringify(base)
@@ -59,7 +151,7 @@ function setAdded(n: MdContent | Parent): void {
 function diffText(newText: Text, oldTree: Root): void {
     const oldNode = findSameSpotText(newText, oldTree)
     if (!oldNode || oldNode.value === newText.value) return
-
+    
     const dmp = new diff_match_patch()
     const diffs = dmp.diff_main(oldNode.value, newText.value)
     dmp.diff_cleanupSemantic(diffs)
@@ -78,12 +170,13 @@ function diffText(newText: Text, oldTree: Root): void {
         return []
     })
 
-    // swap text node for an inline paragraph of pieces
-    Object.assign(newText, {
-        type: 'paragraph',
-        children: pieces,
-        value: undefined,
-    })
+    // Replace the text node with the diff pieces directly
+    newText.value = undefined as any
+    ;(newText as any).children = pieces
+    ;(newText as any).type = 'paragraph'
+    
+    // Mark the text node (now paragraph) as changed
+    setAdded(newText)
 }
 
 function findSameSpotText(target: Text, tree: Root): Text | null {
