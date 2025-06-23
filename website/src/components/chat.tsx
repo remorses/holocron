@@ -13,7 +13,7 @@ import {
     useRef,
 } from 'react'
 import { ChatMessage } from 'website/src/components/chat-message'
-import { MentionsTextArea } from 'website/src/components/mentions-textarea/mentions-textarea'
+import { MentionsTextArea } from 'website/src/components/mentions-textarea'
 
 import { Button } from 'website/src/components/ui/button'
 import { ScrollArea } from 'website/src/components/ui/scroll-area'
@@ -612,6 +612,12 @@ function Footer() {
                             autocompleteEnabled={showAutocomplete}
                             autocompleteStrings={filteredSuggestions}
                             onAutocompleteSelect={handleAutocompleteSelect}
+                            mentionOptions={[
+                                '@docs',
+                                '@config',
+                                '@theme',
+                                '@navigation'
+                            ]}
                         />
                         {/* Textarea buttons */}
                         <div className='flex items-center justify-between gap-2 p-3'>

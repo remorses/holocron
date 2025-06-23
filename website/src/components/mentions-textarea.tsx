@@ -1,15 +1,8 @@
 import * as Ariakit from '@ariakit/react'
+import getCaretCoordinates from 'textarea-caret'
 import classNames from 'clsx'
 import { matchSorter } from 'match-sorter'
 import * as React from 'react'
-import { getList, getValue } from './list'
-import {
-    getAnchorRect,
-    getSearchValue,
-    getTrigger,
-    getTriggerOffset,
-    replaceValue,
-} from './utils'
 
 interface MentionsTextAreaProps {
     value: string
@@ -21,6 +14,7 @@ interface MentionsTextAreaProps {
     autocompleteEnabled?: boolean
     autocompleteStrings?: string[]
     onAutocompleteSelect?: (item: string) => void
+    mentionOptions?: string[]
 }
 
 export function MentionsTextArea({
@@ -28,11 +22,12 @@ export function MentionsTextArea({
     onChange,
     onSubmit,
     disabled = false,
-    placeholder = 'Type @, # or :',
+    placeholder = 'Type @',
     className = '',
     autocompleteEnabled = false,
     autocompleteStrings = [],
     onAutocompleteSelect,
+    mentionOptions,
 }: MentionsTextAreaProps) {
     const ref = React.useRef<HTMLTextAreaElement>(null)
     const [trigger, setTrigger] = React.useState<string | null>(null)
@@ -46,10 +41,14 @@ export function MentionsTextArea({
     const deferredSearchValue = React.useDeferredValue(searchValue)
 
     const mentionMatches = React.useMemo(() => {
-        return matchSorter(getList(trigger), deferredSearchValue, {
-            baseSort: (a, b) => (a.index < b.index ? -1 : 1),
-        }).slice(0, 10)
-    }, [trigger, deferredSearchValue])
+        return matchSorter(
+            getList(trigger, mentionOptions),
+            deferredSearchValue,
+            {
+                baseSort: (a, b) => (a.index < b.index ? -1 : 1),
+            },
+        ).slice(0, 10)
+    }, [trigger, deferredSearchValue, mentionOptions])
 
     const hasMatches = !!mentionMatches.length
 
@@ -153,7 +152,7 @@ export function MentionsTextArea({
         const textarea = ref.current
         if (!textarea) return
         const offset = getTriggerOffset(textarea)
-        const displayValue = getValue(itemValue, trigger)
+        const displayValue = getValue(itemValue, trigger, mentionOptions)
         if (!displayValue) return
         setTrigger(null)
         onChange(replaceValue(offset, searchValue, displayValue)(value))
@@ -281,4 +280,102 @@ export function MentionsTextArea({
             </Ariakit.ComboboxPopover>
         </div>
     )
+}
+
+
+
+function getTriggerOffset(
+    element: HTMLTextAreaElement,
+    triggers = defaultTriggers,
+) {
+    const { value, selectionStart } = element
+    for (let i = selectionStart; i >= 0; i--) {
+        const char = value[i]
+        if (char && triggers.includes(char)) {
+            return i
+        }
+    }
+    return -1
+}
+
+function getTrigger(
+    element: HTMLTextAreaElement,
+    triggers = defaultTriggers,
+) {
+    const { value, selectionStart } = element
+    const previousChar = value[selectionStart - 1]
+    if (!previousChar) return null
+    const secondPreviousChar = value[selectionStart - 2]
+    const isIsolated = !secondPreviousChar || /\s/.test(secondPreviousChar)
+    if (!isIsolated) return null
+    if (triggers.includes(previousChar)) return previousChar
+    return null
+}
+
+function getSearchValue(
+    element: HTMLTextAreaElement,
+    triggers = defaultTriggers,
+) {
+    const offset = getTriggerOffset(element, triggers)
+    if (offset === -1) return ''
+    return element.value.slice(offset + 1, element.selectionStart)
+}
+
+function getAnchorRect(
+    element: HTMLTextAreaElement,
+    triggers = defaultTriggers,
+) {
+    const offset = getTriggerOffset(element, triggers)
+    const { left, top, height } = getCaretCoordinates(element, offset + 1)
+    const { x, y } = element.getBoundingClientRect()
+    return {
+        x: left + x - element.scrollLeft,
+        y: top + y - element.scrollTop,
+        height,
+    }
+}
+
+function replaceValue(
+    offset: number,
+    searchValue: string,
+    displayValue: string,
+) {
+    return (prevValue: string) => {
+        const nextValue = `${
+            prevValue.slice(0, offset) + displayValue
+        } ${prevValue.slice(offset + searchValue.length + 1)}`
+        return nextValue
+    }
+}
+
+const defaultTriggers = ['@']
+
+function getList(trigger: string | null, mentionOptions?: string[]) {
+    switch (trigger) {
+        case '@':
+            return mentionOptions
+                ? mentionOptions.map((option) =>
+                      option.startsWith('@') ? option.slice(1) : option,
+                  )
+                : []
+        default:
+            return []
+    }
+}
+
+function getValue(
+    listValue: string,
+    trigger: string | null,
+    mentionOptions?: string[],
+) {
+    if (trigger === '@') {
+        if (mentionOptions) {
+            const option = mentionOptions.find((opt) => {
+                const displayValue = opt.startsWith('@') ? opt.slice(1) : opt
+                return displayValue === listValue
+            })
+            return option || `@${listValue}`
+        }
+    }
+    return null
 }
