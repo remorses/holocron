@@ -1,8 +1,9 @@
 'use client'
+import { UIMessage, IdGenerator } from 'ai'
 import { memo, useDeferredValue } from 'react'
 import memoize from 'micro-memoize'
 import { RiAttachment2, RiRefreshLine } from '@remixicon/react'
-import { createIdGenerator, UIMessage } from 'ai'
+import { createIdGenerator } from 'ai'
 import {
     useState,
     useTransition,
@@ -131,41 +132,61 @@ function Messages({ ref }) {
             ref={ref}
             className='relative h-full flex flex-col grow pr-4 mt-6 gap-6'
         >
-            <ChatMessage
-                message={{
-                    role: 'assistant',
-                    id: '',
+            {!messages.length && (
+                <ChatMessage
+                    message={{
+                        role: 'assistant',
+                        id: '',
 
-                    content: '',
-                    parts: [
-                        {
-                            type: 'text',
-                            text: 'Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:',
-                        },
-                    ],
-                }}
-            >
-                <div className='flex flex-col items-start gap-3 mt-3'>
-                    <SuggestionButton icon={<PaletteIcon />}>
-                        Change theme color
-                    </SuggestionButton>
-                    <SuggestionButton icon={<ImageIcon />}>
-                        Update site logo
-                    </SuggestionButton>
-                    <SuggestionButton icon={<FilePlus2Icon />}>
-                        Add a new doc page
-                    </SuggestionButton>
-                    <SuggestionButton icon={<ListTreeIcon />}>
-                        Edit navigation menu
-                    </SuggestionButton>
-                    <SuggestionButton icon={<Link2Icon />}>
-                        Configure footer links
-                    </SuggestionButton>
-                    <SuggestionButton icon={<AlertTriangleIcon />}>
-                        Set up custom 404 error page
-                    </SuggestionButton>
-                </div>
-            </ChatMessage>
+                        content: '',
+                        parts: [
+                            {
+                                type: 'text',
+                                text: 'Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:',
+                            },
+                        ],
+                    }}
+                >
+                    <div className='flex flex-col items-start gap-3 mt-3'>
+                        <SuggestionButton
+                            icon={<PaletteIcon />}
+                            userMessage='Change theme color'
+                        >
+                            Change theme color
+                        </SuggestionButton>
+                        <SuggestionButton
+                            icon={<ImageIcon />}
+                            userMessage='Update site logo'
+                        >
+                            Update site logo
+                        </SuggestionButton>
+                        <SuggestionButton
+                            icon={<FilePlus2Icon />}
+                            userMessage='Add a new doc page'
+                        >
+                            Add a new doc page
+                        </SuggestionButton>
+                        <SuggestionButton
+                            icon={<ListTreeIcon />}
+                            userMessage='Edit navigation menu'
+                        >
+                            Edit navigation menu
+                        </SuggestionButton>
+                        <SuggestionButton
+                            icon={<Link2Icon />}
+                            userMessage='Configure footer links'
+                        >
+                            Configure footer links
+                        </SuggestionButton>
+                        <SuggestionButton
+                            icon={<AlertTriangleIcon />}
+                            userMessage='Set up custom 404 error page'
+                        >
+                            Set up custom 404 error page
+                        </SuggestionButton>
+                    </div>
+                </ChatMessage>
+            )}
             {messages.map((x) => {
                 return <ChatMessage key={x.id} message={x} />
             })}
@@ -174,15 +195,15 @@ function Messages({ ref }) {
         </div>
     )
 }
-
-
 function SuggestionButton({
     icon,
     children,
+    userMessage,
     ...props
 }: {
     icon: React.ReactNode
     children: React.ReactNode
+    userMessage: string
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
     return (
         <Button
@@ -191,6 +212,26 @@ function SuggestionButton({
             className={
                 'flex px-2 items-center gap-3 ' + (props.className ?? '')
             }
+            onClick={(e) => {
+                if (props.onClick) props.onClick(e)
+                if (userMessage) {
+                    const generateId = createIdGenerator()
+                    const id = generateId()
+                    useChatState.setState({
+                        messages: [
+                            {
+                                role: 'user',
+                                id,
+                                createdAt: new Date(),
+
+                                parts: [{ type: 'text', text: userMessage }],
+                                content: userMessage,
+                            },
+                        ],
+                    })
+                    window.dispatchEvent(new CustomEvent('chatRegenerate'))
+                }
+            }}
         >
             {icon}
             {children}

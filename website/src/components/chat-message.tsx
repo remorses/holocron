@@ -8,7 +8,7 @@ import {
     RiCheckLine as RiSaveLine,
     RiCloseLine,
 } from '@remixicon/react'
-import { UIMessage } from 'ai'
+import { UIMessage, IdGenerator } from 'ai'
 import { memo, useRef, useState } from 'react'
 import {
     Tooltip,
