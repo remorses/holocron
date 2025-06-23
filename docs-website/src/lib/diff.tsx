@@ -23,14 +23,14 @@ export function markRemarkAstAdditions(oldTree: Root, newTree: Root): void {
     const oldNodesByFingerprint = new Map<string, MdContent | Parent>()
 
     visit(oldTree, (n) => {
-        const fingerprint = fp(n)
+        const fingerprint = computeHashForAstNode(n)
         previous.add(fingerprint)
         oldNodesByFingerprint.set(fingerprint, n)
     })
 
     /* pass 2 - walk new tree, tag additions + diff text */
     visit(newTree, (node: MdContent | Parent, index, parent) => {
-        if (!previous.has(fp(node))) setAdded(node)
+        if (!previous.has(computeHashForAstNode(node))) setAdded(node)
         else if (node.type === 'text') {
             const oldNode = findSameSpotText(node as Text, oldTree)
             if (oldNode && oldNode.value !== (node as Text).value) {
@@ -63,7 +63,7 @@ function hasAddedMarker(node: MdContent | Parent): boolean {
 }
 
 // stable fingerprint: capture semantic properties that affect rendering
-function fp(n: MdContent | Parent): string {
+function computeHashForAstNode(n: MdContent | Parent): string {
     const { type } = n
     const base: Record<string, unknown> = { type }
 
