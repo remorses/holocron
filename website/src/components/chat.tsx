@@ -726,35 +726,28 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
                 }}
                 open={!!errorMessage}
             >
-                <PopoverTrigger>
-                    <DropdownMenu>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant='default'
-                                    onClick={handleCreatePr}
-                                    disabled={isButtonDisabled}
-                                    size={'sm'}
-                                    className='bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50'
-                                >
-                                    <div className='flex items-center gap-2'>
-                                        <GitBranch className='size-4' />
-                                        {displayButtonText}
-                                    </div>
-                                    {/* <ChevronDown className='size-4 ml-1' /> */}
-                                </Button>
-                            </TooltipTrigger>
-                            {isButtonDisabled && getTooltipMessage() && (
-                                <TooltipContent>
-                                    {getTooltipMessage()}
-                                </TooltipContent>
-                            )}
-                        </Tooltip>
-                        <DropdownMenuContent
-                            align='end'
-                            className='min-w-[200px]'
-                        ></DropdownMenuContent>
-                    </DropdownMenu>
+                <PopoverTrigger asChild>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant='default'
+                                onClick={handleCreatePr}
+                                disabled={isButtonDisabled}
+                                size={'sm'}
+                                className='bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50'
+                            >
+                                <div className='flex items-center gap-2'>
+                                    <GitBranch className='size-4' />
+                                    {displayButtonText}
+                                </div>
+                            </Button>
+                        </TooltipTrigger>
+                        {isButtonDisabled && getTooltipMessage() && (
+                            <TooltipContent>
+                                {getTooltipMessage()}
+                            </TooltipContent>
+                        )}
+                    </Tooltip>
                 </PopoverTrigger>
 
                 {!!errorMessage && (
