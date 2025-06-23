@@ -219,43 +219,9 @@ export const app = new Spiceflow({ basePath: '/api' })
                             'Returns a directory tree diagram of the current project files as plain text. Useful for giving an overview or locating files.',
                         parameters: z.object({}),
                         execute: async () => {
-                            const [pages, metaFiles, mediaAssets] =
-                                await Promise.all([
-                                    prisma.markdownPage.findMany({
-                                        where: {
-                                            tabId,
-                                        },
-                                        omit: {
-                                            markdown: true,
-                                            structuredData: true,
-                                        },
-                                    }),
-                                    prisma.metaFile.findMany({
-                                        where: {
-                                            tabId,
-                                        },
-                                        omit: {
-                                            jsonData: true,
-                                        },
-                                    }),
-                                    prisma.mediaAsset.findMany({
-                                        where: {
-                                            tabId,
-                                        },
-                                    }),
-                                ])
-                            const allFiles = [
-                                ...pages.map(
-                                    (x) => ({ ...x, type: 'page' }) as const,
-                                ),
-                                ...metaFiles.map(
-                                    (x) => ({ ...x, type: 'meta' }) as const,
-                                ),
-                                ...mediaAssets.map(
-                                    (x) => ({ ...x, type: 'media' }) as const,
-                                ),
-                            ].flat()
-
+                            const allFiles = await getTabFilesWithoutContents({
+                                tabId,
+                            })
                             return printDirectoryTree({
                                 filePaths: allFiles.map((x) => {
                                     const path = x.githubPath
@@ -913,6 +879,39 @@ async function generateAndSaveChatTitle(params: {
         },
     })
     return chatInfo
+}
+
+export async function getTabFilesWithoutContents({ tabId }) {
+    const [pages, metaFiles, mediaAssets] = await Promise.all([
+        prisma.markdownPage.findMany({
+            where: {
+                tabId,
+            },
+            omit: {
+                markdown: true,
+                structuredData: true,
+            },
+        }),
+        prisma.metaFile.findMany({
+            where: {
+                tabId,
+            },
+            omit: {
+                jsonData: true,
+            },
+        }),
+        prisma.mediaAsset.findMany({
+            where: {
+                tabId,
+            },
+        }),
+    ])
+    const allFiles = [
+        ...pages.map((x) => ({ ...x, type: 'page' }) as const),
+        ...metaFiles.map((x) => ({ ...x, type: 'meta' }) as const),
+        ...mediaAssets.map((x) => ({ ...x, type: 'media' }) as const),
+    ].flat()
+    return allFiles
 }
 
 export type SpiceflowApp = typeof app

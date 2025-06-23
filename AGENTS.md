@@ -115,6 +115,8 @@ website routes use the flat routes filesystem routes, inside src/routes. these f
 
 if 2 routes share the same prefix then the loader of both routes is run on a request and the route with the shorter routename is called a layout. a layout can also use <Outlet /> to render the child route inside it. for example /org/x/site will run loaders in `org.$orgid` and `org.$orgid.site`. if you want instead to create a route that is not a layout route, where the loader does not run for routes that share the prefix, append \_index to the filename, for example `org.$orgid._index` in the example before.
 
+if you need to add new prisma queries or data fetching in loaders put it in layouts if possible, this way the data is fetched less often. you can do this if the data does not depend on the children routes specific parameters.
+
 ## route file exports
 
 You can export the functions `loader` and `action` to handle loading data and submitting user data.
@@ -246,6 +248,10 @@ never add new tables to the prisma schema, instead ask me to do so.
 prisma upsert calls are preferable over updates, so that you also handle the case where the row is missing.
 
 never make changes to schema.prisma yourself, instead propose a change with a message and ask me to do it. this file is too important to be edited by agents.
+
+## prisma queries for relation
+
+- NEVER add more than 1 include nesting. This is very bad for performance because prisma will have to do the query to get the relation sequentially. Instead of adding a new nested `include` you should add a new prisma query and wrap them in a `Promise.all`
 
 ## prisma transactions for complex relations inserts
 

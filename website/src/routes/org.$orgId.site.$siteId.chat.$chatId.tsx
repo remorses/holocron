@@ -8,6 +8,7 @@ import NavBar from '../components/navbar'
 import { SidebarInset, SidebarProvider } from '../components/ui/sidebar'
 import { getSession } from '../lib/better-auth'
 import { createIframeRpcClient } from '../lib/docs-setstate'
+import { getTabFilesWithoutContents } from '../lib/spiceflow'
 import { State, StateProvider } from '../lib/state'
 import { cn } from '../lib/utils'
 import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
@@ -51,7 +52,6 @@ export async function loader({
                 org: true,
                 domains: true,
                 tabs: true,
-
             },
         }),
         prisma.chat.findUnique({
@@ -128,6 +128,15 @@ export async function loader({
         ? `https://github.com/${site.githubOwner}/${site.githubRepo}/pull/${chat.prNumber}`
         : undefined
 
+    // Create mention options from site tab pages using getTabFilesWithoutContents
+    const mentionOptions: string[] = await (async () => {
+        const tabId = site.tabs[0]?.tabId
+        if (!tabId) return []
+        
+        const allFiles = await getTabFilesWithoutContents({ tabId })
+        return allFiles.map((file) => `@${file.githubPath}`).sort()
+    })()
+
     return {
         site,
         iframeUrl,
@@ -140,6 +149,7 @@ export async function loader({
         userSites,
         prUrl,
         initialFilesInDraft: chat.filesInDraft as any,
+        mentionOptions,
     }
 }
 

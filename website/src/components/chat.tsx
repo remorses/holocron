@@ -317,7 +317,7 @@ function Footer() {
     const originalTextRef = useRef('')
     const isPending = useChatState((x) => x.isChatGenerating)
     const revalidator = useRevalidator()
-    const { siteId, chat, tabId, prUrl } =
+    const { siteId, chat, tabId, prUrl, mentionOptions } =
         useLoaderData() as Route.ComponentProps['loaderData']
     const messages = useChatState((x) => x?.messages || [])
     const filesInDraft = useChatState((x) => x?.docsState?.filesInDraft || {})
@@ -612,12 +612,7 @@ function Footer() {
                             autocompleteEnabled={showAutocomplete}
                             autocompleteStrings={filteredSuggestions}
                             onAutocompleteSelect={handleAutocompleteSelect}
-                            mentionOptions={[
-                                '@docs',
-                                '@config',
-                                '@theme',
-                                '@navigation'
-                            ]}
+                            mentionOptions={mentionOptions || []}
                         />
                         {/* Textarea buttons */}
                         <div className='flex items-center justify-between gap-2 p-3'>
