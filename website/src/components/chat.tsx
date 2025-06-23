@@ -594,18 +594,18 @@ function Footer() {
                         )}
                     </div>
 
-                    <div className='relative rounded-[20px] border border-transparent bg-muted transition-colors focus-within:bg-muted focus-within:border-input has-[:disabled]:cursor-not-allowed  [&:has(input:is(:disabled))_*]:pointer-events-none'>
+                    <div className='relative rounded-[20px] border bg-muted'>
                         {showAutocomplete && filteredSuggestions.length > 0 && (
-                            <div className='absolute bottom-full left-0 right-0 mb-2 border-border  rounded-lg shadow-lg max-h-[200px] overflow-y-auto z-10 flex flex-col divide-y divide-border'>
+                            <div className='absolute bottom-full left-0 right-0 mb-2 shadow-lg max-h-[200px] overflow-y-auto z-10 flex flex-col gap-1 p-1'>
                                 {filteredSuggestions.map(
                                     (suggestion, index) => {
                                         return (
                                             <button
                                                 key={suggestion}
-                                                className={`w-full px-4 py-2 text-left text-sm transition-colors rounded ${
+                                                className={`w-full px-3 py-2 text-left text-sm rounded-lg ${
                                                     selectedAutocompleteIndex ===
                                                     index
-                                                        ? 'bg-muted'
+                                                        ? 'bg-muted/50'
                                                         : ''
                                                 }`}
                                                 onClick={() => {
@@ -625,7 +625,7 @@ function Footer() {
                             </div>
                         )}
                         <textarea
-                            className='flex sm:min-h-[84px] w-full bg-transparent px-4 py-3 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/70 focus-visible:outline-none [resize:none]'
+                            className='flex sm:min-h-[84px] w-full bg-transparent px-4 py-3 text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none resize-none'
                             placeholder='Ask me anything...'
                             aria-label='Enter your prompt'
                             value={text}
