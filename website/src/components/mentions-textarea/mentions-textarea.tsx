@@ -68,6 +68,14 @@ export function MentionsTextArea({
     React.useEffect(combobox.render, [combobox, value])
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (event.isPropagationStopped()) {
+            console.log('event is propagation stopped, ignoring enter')
+            return
+        }
+        if (event.defaultPrevented) {
+            console.log('event is default prevented, ignoring enter')
+            return
+        }
         // Handle autocomplete navigation when autocomplete is enabled and has items
         if (autocompleteEnabled && autocompleteStrings.length > 0) {
             if (event.key === 'ArrowDown') {
@@ -202,11 +210,12 @@ export function MentionsTextArea({
                         rows={5}
                         placeholder={placeholder}
                         disabled={disabled}
+                        onKeyDown={handleKeyDown}
                         // We need to re-calculate the position of the combobox popover
                         // when the textarea contents are scrolled.
                         onScroll={combobox.render}
                         // Hide the combobox popover whenever the selection changes.
-                        onKeyDown={handleKeyDown}
+
                         onPointerDown={combobox.hide}
                         onChange={handleChange}
                     />
@@ -242,6 +251,14 @@ export function MentionsTextArea({
                         value={value}
                         focusOnHover
                         onClick={onItemClick(value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                e.stopPropagation()
+                                e.preventDefault()
+                                e.nativeEvent?.stopImmediatePropagation()
+                                onItemClick(value)()
+                            }
+                        }}
                         className={classNames(
                             // Layout
                             'flex items-center gap-2',
