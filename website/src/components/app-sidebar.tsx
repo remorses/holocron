@@ -22,17 +22,22 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { Combobox } from './ui/combobox'
 import { useRouteLoaderData, useParams, useNavigate } from 'react-router'
 import { href } from 'react-router'
-import type { Route } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId'
+import type { Route as SiteRoute } from 'website/src/routes/org.$orgId.site.$siteId'
+import type { Route as OrgRoute } from 'website/src/routes/org.$orgId'
 import { apiClient } from 'website/src/lib/spiceflow-client'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-    const loaderData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId.chat.$chatId',
-    ) as Route.ComponentProps['loaderData']
+    const siteData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId',
+    ) as SiteRoute.ComponentProps['loaderData']
+    const orgData = useRouteLoaderData(
+        'routes/org.$orgId',
+    ) as OrgRoute.ComponentProps['loaderData']
     const params = useParams()
     const navigate = useNavigate()
     const { orgId, siteId, chatId } = params
-    const { chatHistory, userSites } = loaderData
+    const { chatHistory } = siteData
+    const { userSites } = orgData
     const [isCreatingChat, setIsCreatingChat] = React.useState(false)
 
     const handleNewChat = async () => {

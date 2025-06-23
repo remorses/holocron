@@ -49,8 +49,9 @@ import {
     FileUpdate,
 } from '../lib/edit-tool'
 import { docsRpcClient } from '../lib/docs-setstate'
-import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId._index'
-import { useLoaderData, useRevalidator } from 'react-router'
+import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
+import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
+import { useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
 import { teeAsyncIterable } from '../lib/utils'
 import { generateSlugFromPath } from 'docs-website/src/lib/utils'
 import { flushSync } from 'react-dom'
@@ -317,8 +318,10 @@ function Footer() {
     const originalTextRef = useRef('')
     const isPending = useChatState((x) => x.isChatGenerating)
     const revalidator = useRevalidator()
-    const { siteId, chat, tabId, prUrl, mentionOptions } =
+    const { chat, prUrl, mentionOptions } =
         useLoaderData() as Route.ComponentProps['loaderData']
+    const siteData = useRouteLoaderData('routes/org.$orgId.site.$siteId') as SiteRoute.ComponentProps['loaderData']
+    const { siteId, tabId } = siteData
     const messages = useChatState((x) => x?.messages || [])
     const filesInDraft = useChatState((x) => x?.docsState?.filesInDraft || {})
     const lastPushedFiles = useChatState((x) => x.lastPushedFiles)
@@ -652,8 +655,10 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
     const [errorMessage, setErrorMessage] = useState('')
     const [buttonText, setButtonText] = useTemporaryState('', 2000)
 
-    const { siteId, chatId, chat } =
+    const { chatId, chat } =
         useLoaderData() as Route.ComponentProps['loaderData']
+    const siteData = useRouteLoaderData('routes/org.$orgId.site.$siteId') as SiteRoute.ComponentProps['loaderData']
+    const { siteId } = siteData
 
     const filesInDraft = useChatState((x) => x?.docsState?.filesInDraft || {})
     const lastPushedFiles = useChatState((x) => x.lastPushedFiles)

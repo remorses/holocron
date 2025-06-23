@@ -1,7 +1,7 @@
 import { prisma } from 'db'
 import { DocsState } from 'docs-website/src/lib/docs-state'
 import { useEffect, useMemo, useRef, useState, useDeferredValue } from 'react'
-import { redirect, useLoaderData } from 'react-router'
+import { redirect, useLoaderData, useRouteLoaderData } from 'react-router'
 import { AppSidebar } from '../components/app-sidebar'
 import { BrowserWindow } from '../components/browser-window'
 import NavBar from '../components/navbar'
@@ -12,6 +12,8 @@ import { getTabFilesWithoutContents } from '../lib/spiceflow'
 import { State, StateProvider } from '../lib/state'
 import { cn } from '../lib/utils'
 import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
+import type { Route as SiteRoute } from './org.$orgId.site.$siteId'
+import type { Route as OrgRoute } from './org.$orgId'
 
 import { UIMessage } from 'ai'
 
@@ -19,49 +21,18 @@ export type { Route }
 
 export async function loader({
     request,
-
     params: { orgId, siteId, chatId },
 }: Route.LoaderArgs) {
-    const { userId, redirectTo } = await getSession({ request })
-    if (redirectTo) {
-        throw redirect(redirectTo)
-    }
-    // Check if user has access to this site through org membership
-    const orgUser = await prisma.orgsUsers.findUnique({
-        where: {
-            userId_orgId: {
-                userId: userId!,
-                orgId: orgId,
-            },
-        },
-    })
+    const { userId } = await getSession({ request })
 
-    if (!orgUser) {
-        throw redirect('/dashboard')
-    }
-    const [site, chat, chatHistory, userSites] = await Promise.all([
-        prisma.site.findUnique({
-            where: {
-                siteId: siteId,
-                org: {
-                    users: {
-                        some: { userId },
-                    },
-                },
-            },
-            include: {
-                org: true,
-                domains: true,
-                tabs: true,
-            },
-        }),
+    // Fetch chat and get site with minimal includes for github info and tabs
+    const [chat, site] = await Promise.all([
         prisma.chat.findUnique({
             where: {
                 chatId: chatId,
                 siteId,
                 userId,
             },
-
             include: {
                 messages: {
                     orderBy: { createdAt: 'asc' },
@@ -73,56 +44,25 @@ export async function loader({
                 },
             },
         }),
-        prisma.chat.findMany({
-            where: {
-                siteId,
-                userId,
-            },
+        prisma.site.findUnique({
+            where: { siteId },
             select: {
-                chatId: true,
-                title: true,
-                createdAt: true,
-            },
-            orderBy: { createdAt: 'desc' },
-        }),
-        prisma.site.findMany({
-            where: {
-                org: {
-                    users: {
-                        some: {
-                            userId,
-                        },
-                    },
+                githubOwner: true,
+                githubRepo: true,
+                tabs: {
+                    select: { tabId: true },
+                    take: 1,
                 },
-            },
-            include: {
-                org: true,
-                // customization: true,
-            },
-            orderBy: {
-                name: 'asc',
             },
         }),
     ])
 
-    if (!site) {
-        throw new Error('Site not found')
-    }
     if (!chat) {
         throw new Error('Chat not found')
     }
-
-    const host = site.domains.find(
-        (x) => x.domainType === 'internalDomain',
-    )?.host
-
-    const iframeUrl = new URL(`https://${host}`)
-    if (host?.endsWith('.localhost')) {
-        iframeUrl.protocol = 'http:'
-        iframeUrl.port = '7777'
+    if (!site) {
+        throw new Error('Site not found')
     }
-
-    const tabId = site.tabs[0].tabId
 
     // Create PR URL if chat has a PR number
     const prUrl = chat.prNumber
@@ -139,15 +79,8 @@ export async function loader({
     })()
 
     return {
-        site,
-        iframeUrl,
-        host,
-        siteId,
-        tabId,
         chatId,
         chat,
-        chatHistory,
-        userSites,
         prUrl,
         initialFilesInDraft: chat.filesInDraft as any,
         mentionOptions,
@@ -156,10 +89,13 @@ export async function loader({
 
 export default function Page({
     loaderData,
-
     params: { siteId, orgId },
 }: Route.ComponentProps) {
     const { chat, initialFilesInDraft } = loaderData
+    
+    // Get parent loader data
+    const siteData = useRouteLoaderData('routes/org.$orgId.site.$siteId') as SiteRoute.ComponentProps['loaderData']
+    const orgData = useRouteLoaderData('routes/org.$orgId') as OrgRoute.ComponentProps['loaderData']
     const initialState = useMemo<State>(
         () => ({
             messages: chat.messages.map((x) => {
@@ -203,7 +139,9 @@ export default function Page({
 }
 
 function Content() {
-    const { chat, iframeUrl } = useLoaderData<typeof loader>()
+    const { chat } = useLoaderData<typeof loader>()
+    const siteData = useRouteLoaderData('routes/org.$orgId.site.$siteId') as SiteRoute.ComponentProps['loaderData']
+    const { iframeUrl } = siteData
 
     const iframeRef = useRef<HTMLIFrameElement>(null)
 

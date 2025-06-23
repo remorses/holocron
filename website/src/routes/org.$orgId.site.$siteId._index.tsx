@@ -1,7 +1,7 @@
 import { prisma } from 'db'
 import { redirect } from 'react-router'
-import { getSession } from '../lib/better-auth'
 import { href } from 'react-router'
+import { getSession } from '../lib/better-auth'
 import type { Route } from './+types/org.$orgId.site.$siteId._index'
 
 export async function loader({
@@ -27,25 +27,10 @@ export async function loader({
         throw redirect(href('/org/:orgId/onboarding', { orgId }))
     }
 
-    // Find the first site in this org, ordered by creation date (newest first)
-    const site = await prisma.site.findFirst({
-        where: {
-            orgId,
-            siteId,
-        },
-        orderBy: {
-            createdAt: 'desc',
-        },
-    })
-
-    if (!site) {
-        throw redirect(href('/org/:orgId/onboarding', { orgId }))
-    }
-
     // Find the first chat for this user in this site, ordered by creation date (newest first)
     const chat = await prisma.chat.findFirst({
         where: {
-            siteId: site.siteId,
+            siteId,
             userId,
         },
         orderBy: {
@@ -63,7 +48,7 @@ export async function loader({
     throw redirect(
         href('/org/:orgId/site/:siteId/chat/:chatId', {
             orgId,
-            siteId: site.siteId,
+            siteId,
             chatId: chat.chatId,
         }),
     )

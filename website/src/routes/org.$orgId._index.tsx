@@ -1,7 +1,7 @@
 import { prisma } from 'db'
 import { redirect } from 'react-router'
-import { getSession } from '../lib/better-auth'
 import { href } from 'react-router'
+import { getSession } from '../lib/better-auth'
 import type { Route } from './+types/org.$orgId._index'
 
 export async function loader({

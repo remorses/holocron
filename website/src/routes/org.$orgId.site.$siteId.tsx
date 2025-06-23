@@ -1,4 +1,6 @@
+import { prisma } from 'db'
 import { Outlet } from 'react-router'
+import { getSession } from '../lib/better-auth'
 import type { Route } from './+types/org.$orgId.site.$siteId'
 
 
@@ -8,7 +10,63 @@ export async function loader({
     request,
     params: { orgId, siteId },
 }: Route.LoaderArgs) {
-    return { xxx: true }
+    // We need userId for the queries, get it from session
+    const { userId } = await getSession({ request })
+
+    const [site, chatHistory] = await Promise.all([
+        prisma.site.findUnique({
+            where: {
+                siteId: siteId,
+                org: {
+                    users: {
+                        some: { userId },
+                    },
+                },
+            },
+            include: {
+                org: true,
+                domains: true,
+                tabs: true,
+            },
+        }),
+        prisma.chat.findMany({
+            where: {
+                siteId,
+                userId,
+            },
+            select: {
+                chatId: true,
+                title: true,
+                createdAt: true,
+            },
+            orderBy: { createdAt: 'desc' },
+        }),
+    ])
+
+    if (!site) {
+        throw new Error('Site not found')
+    }
+
+    const host = site.domains.find(
+        (x) => x.domainType === 'internalDomain',
+    )?.host
+
+    const iframeUrl = new URL(`https://${host}`)
+    if (host?.endsWith('.localhost')) {
+        iframeUrl.protocol = 'http:'
+        iframeUrl.port = '7777'
+    }
+
+    const tabId = site.tabs[0].tabId
+
+    return {
+        site,
+        iframeUrl,
+        host,
+        siteId,
+        tabId,
+        chatHistory,
+    }
 }
 export function Component({ loaderData }: Route.ComponentProps) {
     return <Outlet />
