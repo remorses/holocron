@@ -2,7 +2,7 @@ import { describe, test, expect } from 'vitest'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 import type { JSONSchema7 } from 'json-schema'
 import { extractPaths, applyPath } from './schema-path-utils'
-import { DocsConfigSchema } from './docs-json'
+import { DocsConfigSchema } from 'docs-website/src/lib/docs-json'
 
 type SimpleSchema = {
     type?: string
@@ -238,10 +238,10 @@ describe('schema-path-utils', () => {
     describe('applyPath', () => {
         test('gets and sets simple object properties', () => {
             const target = { name: 'John', age: 30 }
-            
+
             expect(applyPath(target, 'name')).toMatchInlineSnapshot(`"John"`)
             expect(applyPath(target, 'age')).toMatchInlineSnapshot(`30`)
-            
+
             applyPath(target, 'name', 'Jane')
             expect(target.name).toMatchInlineSnapshot(`"Jane"`)
         })
@@ -255,10 +255,10 @@ describe('schema-path-utils', () => {
                     }
                 }
             }
-            
+
             expect(applyPath(target, 'user.profile.name')).toMatchInlineSnapshot(`"John"`)
             expect(applyPath(target, 'user.profile.email')).toMatchInlineSnapshot(`"john@example.com"`)
-            
+
             applyPath(target, 'user.profile.name', 'Jane')
             expect(target.user.profile.name).toMatchInlineSnapshot(`"Jane"`)
         })
@@ -270,17 +270,17 @@ describe('schema-path-utils', () => {
                     { name: 'item2', value: 20 }
                 ]
             }
-            
+
             expect(applyPath(target, 'items[0].name')).toMatchInlineSnapshot(`"item1"`)
             expect(applyPath(target, 'items[1].value')).toMatchInlineSnapshot(`20`)
-            
+
             applyPath(target, 'items[0].name', 'newItem1')
             expect(target.items[0].name).toMatchInlineSnapshot(`"newItem1"`)
         })
 
         test('creates missing nested structures', () => {
             const target = {}
-            
+
             applyPath(target, 'user.profile.name', 'John')
             expect(target).toMatchInlineSnapshot(`
               {
@@ -291,7 +291,7 @@ describe('schema-path-utils', () => {
                 },
               }
             `)
-            
+
             applyPath(target, 'items[0].name', 'item1')
             expect(target).toMatchInlineSnapshot(`
               {
@@ -311,13 +311,13 @@ describe('schema-path-utils', () => {
 
         test('throws error for invalid paths', () => {
             const target = {}
-            
+
             expect(() => applyPath(target, '')).toThrow('Invalid path')
         })
 
         test('handles array creation when existing property is not array', () => {
             const target = { items: {} }
-            
+
             applyPath(target, 'items[0].name', 'test')
             expect(target).toMatchInlineSnapshot(`
               {
