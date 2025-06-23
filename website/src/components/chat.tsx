@@ -40,16 +40,6 @@ import { useTemporaryState } from '../lib/hooks'
 import { Cards, Card } from 'fumadocs-ui/components/card'
 
 import {
-    CpuIcon,
-    PanelsTopLeft,
-    Database,
-    Terminal,
-    ChevronDown,
-    GitBranch,
-    AlertCircle,
-    X,
-} from 'lucide-react'
-import {
     createEditExecute,
     EditToolParamSchema,
     isParameterComplete,
@@ -62,6 +52,19 @@ import { teeAsyncIterable } from '../lib/utils'
 import { generateSlugFromPath } from 'docs-website/src/lib/utils'
 import { flushSync } from 'react-dom'
 import { DialogOverlay } from '@radix-ui/react-dialog'
+import {
+    CpuIcon,
+    PanelsTopLeft,
+    PaletteIcon,
+    ImageIcon,
+    FilePlus2Icon,
+    ListTreeIcon,
+    Link2Icon,
+    AlertTriangleIcon,
+    GitBranch,
+    AlertCircle,
+    X,
+} from 'lucide-react'
 
 export default function Chat({}) {
     const { scrollRef, contentRef } = useStickToBottom({
@@ -126,14 +129,88 @@ function Messages({ ref }) {
     return (
         <div
             ref={ref}
-            className='relative h-full flex flex-col grow pr-4 mt-6 space-y-3'
+            className='relative h-full flex flex-col grow pr-4 mt-6 gap-6'
         >
+            <ChatMessage
+                message={{
+                    role: 'assistant',
+                    id: '',
+
+                    content: '',
+                    parts: [
+                        {
+                            type: 'text',
+                            text: 'Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:',
+                        },
+                    ],
+                }}
+            >
+                <div className='flex flex-col items-start gap-3 mt-3'>
+                    <SuggestionButton icon={<PaletteIcon />}>
+                        Change theme color
+                    </SuggestionButton>
+                    <SuggestionButton icon={<ImageIcon />}>
+                        Update site logo
+                    </SuggestionButton>
+                    <SuggestionButton icon={<FilePlus2Icon />}>
+                        Add a new doc page
+                    </SuggestionButton>
+                    <SuggestionButton icon={<ListTreeIcon />}>
+                        Edit navigation menu
+                    </SuggestionButton>
+                    <SuggestionButton icon={<Link2Icon />}>
+                        Configure footer links
+                    </SuggestionButton>
+                    <SuggestionButton icon={<AlertTriangleIcon />}>
+                        Set up custom 404 error page
+                    </SuggestionButton>
+                </div>
+            </ChatMessage>
             {messages.map((x) => {
                 return <ChatMessage key={x.id} message={x} />
             })}
             <ErrorMessage />
             {/* {!messages.length && <ChatCards />} */}
         </div>
+    )
+}
+
+
+function SuggestionButton({
+    icon,
+    children,
+    ...props
+}: {
+    icon: React.ReactNode
+    children: React.ReactNode
+} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+    return (
+        <Button
+            variant='ghost'
+            {...props}
+            className={
+                'flex px-2 items-center gap-3 ' + (props.className ?? '')
+            }
+        >
+            {icon}
+            {children}
+            <svg
+                width='16'
+                height='16'
+                fill='none'
+                stroke='currentColor'
+                strokeWidth={2}
+                className='ml-auto shrink-0'
+                viewBox='0 0 16 16'
+                aria-hidden='true'
+            >
+                <path
+                    d='M6 4l4 4-4 4'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                />
+            </svg>
+        </Button>
     )
 }
 

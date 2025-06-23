@@ -343,3 +343,7 @@ I use the vercel ai sdk to interact with LLMs, also know as the npm package `ai`
 ALWAYS fetch the latest docs for the ai sdk using this url with @fetch tool: https://context7.com/ai-sdk.dev/llmstxt/llms.txt?topic=streamText&tokens=10000
 
 You can swap out the topic with text you want to search docs for. You can also limit the total results returned with the param token to limit the tokens that will be added to the context window
+
+## lucide icons
+
+use lucide-react to import icons. always add the Icon import name, for example `ImageIcon` instead of just `Image`.

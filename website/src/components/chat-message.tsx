@@ -328,6 +328,7 @@ export const ChatMessage = memo(function ChatMessage({
                             )
                         }
                     })}
+                    {children}
                 </div>
                 {/* {message.role !== 'user' && !isChatGenerating && (
                     <MessageActions />
