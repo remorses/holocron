@@ -71,7 +71,7 @@ export default function Chat({}) {
     return (
         <ScrollArea
             ref={scrollRef}
-            className='[&>div>div]:grow max-w-full h-full flex flex-col grow bg-background'
+            className='[&>div>div]:grow  max-w-full h-full flex flex-col grow '
         >
             <Messages ref={contentRef} />
             <Footer />
@@ -411,7 +411,7 @@ function Footer() {
         <div className='sticky bottom-0 pt-4 md:pt-8 pr-4 z-50 w-full'>
             <div className='max-w-3xl mx-auto space-y-3'>
                 <div className='flex flex-col gap-2 '>
-                    <div className='flex gap-1 items-center bg-background p-1 rounded-md'>
+                    <div className='flex gap-1 empty:hidden justify-start items-center bg-background p-1 rounded-md'>
                         {showCreatePR && (
                             <DiffStats
                                 filesInDraft={filesInDraft}
@@ -428,9 +428,9 @@ function Footer() {
                                 view pr
                             </a>
                         )}
-                        <div className='grow'></div>
+
                         {showCreatePR && (
-                            <div className='flex justify-end'>
+                            <div className='justify-end flex grow'>
                                 <PrButton disabled={!hasNonPushedChanges} />
                             </div>
                         )}

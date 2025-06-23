@@ -78,13 +78,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <Sidebar
             variant='inset'
             {...props}
-            className='dark flex h-full flex-col grow scheme-only-dark max-lg:p-3 p-4 pr-0'
+            className='dark flex  bg-black h-full flex-col grow scheme-only-dark max-lg:p-3 p-4 pr-0'
         >
             <div
-                className='grid grow h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
+                className='grid grow bg-black h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
                 // style={{ height: 'var(--sidebar-header-height, 64px)' }}
             >
-                <div className='p-0 justify-between row-span-1 gap-2 w-full flex   pr-4'>
+                <div className='p-0  justify-between row-span-1 gap-2 w-full flex   pr-4'>
                     <TeamSwitcher className='w-auto grow-0' sites={userSites} />
 
 
