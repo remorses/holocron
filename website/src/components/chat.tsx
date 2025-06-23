@@ -13,6 +13,7 @@ import {
     useRef,
 } from 'react'
 import { ChatMessage } from 'website/src/components/chat-message'
+import { MentionsTextArea } from 'website/src/components/mentions-textarea/mentions-textarea'
 
 import { Button } from 'website/src/components/ui/button'
 import { ScrollArea } from 'website/src/components/ui/scroll-area'
@@ -312,8 +313,6 @@ const AUTOCOMPLETE_SUGGESTIONS = [
 
 function Footer() {
     const [text, setText] = useState('')
-    const [selectedAutocompleteIndex, setSelectedAutocompleteIndex] =
-        useState(-1)
     const [showAutocomplete, setShowAutocomplete] = useState(false)
     const originalTextRef = useRef('')
     const isPending = useChatState((x) => x.isChatGenerating)
@@ -343,10 +342,18 @@ function Footer() {
             text.length > 0 &&
             filteredSuggestions.length > 0
         setShowAutocomplete(shouldShow)
-        if (!shouldShow) {
-            setSelectedAutocompleteIndex(-1)
-        }
     }, [text, messages.length, filteredSuggestions.length])
+
+    const handleAutocompleteSelect = (item: string) => {
+        setText(item)
+        // setShowAutocomplete(false)
+
+    }
+
+    const handleTextChange = (value: string) => {
+        setText(value)
+        originalTextRef.current = value
+    }
 
     const handleSubmit = async ({ inputText }: { inputText?: string } = {}) => {
         const messages = useChatState.getState()?.messages
@@ -595,114 +602,16 @@ function Footer() {
                     </div>
 
                     <div className='relative rounded-[20px] border bg-muted'>
-                        {showAutocomplete && filteredSuggestions.length > 0 && (
-                            <div className='absolute bottom-full left-0 right-0 mb-2 shadow-lg max-h-[200px] overflow-y-auto z-10 flex flex-col gap-1 p-1'>
-                                {filteredSuggestions.map(
-                                    (suggestion, index) => {
-                                        return (
-                                            <button
-                                                key={suggestion}
-                                                className={`w-full px-3 py-2 text-left text-sm rounded-lg ${
-                                                    selectedAutocompleteIndex ===
-                                                    index
-                                                        ? 'bg-muted/50'
-                                                        : ''
-                                                }`}
-                                                onClick={() => {
-                                                    setText(suggestion)
-                                                    setShowAutocomplete(false)
-                                                    setSelectedAutocompleteIndex(
-                                                        -1,
-                                                    )
-                                                    originalTextRef.current = ''
-                                                }}
-                                            >
-                                                {suggestion}
-                                            </button>
-                                        )
-                                    },
-                                )}
-                            </div>
-                        )}
-                        <textarea
-                            className='flex sm:min-h-[84px] w-full bg-transparent px-4 py-3 text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none resize-none'
-                            placeholder='Ask me anything...'
-                            aria-label='Enter your prompt'
+                        <MentionsTextArea
                             value={text}
-                            ref={(el) => {
-                                if (el && selectedAutocompleteIndex >= 0) {
-                                    el.setSelectionRange(
-                                        el.value.length,
-                                        el.value.length,
-                                    )
-                                }
-                            }}
-                            onKeyDown={(e) => {
-                                if (
-                                    showAutocomplete &&
-                                    filteredSuggestions.length > 0
-                                ) {
-                                    if (e.key === 'ArrowDown') {
-                                        e.preventDefault()
-                                        const newIndex =
-                                            selectedAutocompleteIndex <
-                                            filteredSuggestions.length - 1
-                                                ? selectedAutocompleteIndex + 1
-                                                : 0
-                                        setSelectedAutocompleteIndex(newIndex)
-                                        setText(filteredSuggestions[newIndex])
-                                        return
-                                    }
-                                    if (e.key === 'ArrowUp') {
-                                        e.preventDefault()
-                                        const newIndex =
-                                            selectedAutocompleteIndex > 0
-                                                ? selectedAutocompleteIndex - 1
-                                                : filteredSuggestions.length - 1
-                                        setSelectedAutocompleteIndex(newIndex)
-                                        setText(filteredSuggestions[newIndex])
-                                        return
-                                    }
-                                    if (
-                                        e.key === 'Tab' &&
-                                        selectedAutocompleteIndex >= 0
-                                    ) {
-                                        e.preventDefault()
-                                        setText(
-                                            filteredSuggestions[
-                                                selectedAutocompleteIndex
-                                            ],
-                                        )
-                                        setShowAutocomplete(false)
-                                        setSelectedAutocompleteIndex(-1)
-                                        originalTextRef.current = ''
-                                        return
-                                    }
-                                    if (e.key === 'Escape') {
-                                        setShowAutocomplete(false)
-                                        setSelectedAutocompleteIndex(-1)
-                                        setText(originalTextRef.current)
-                                        return
-                                    }
-                                }
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault()
-                                    if (!isPending && text.trim()) {
-                                        handleSubmit()
-                                    }
-                                }
-                            }}
-                            onChange={(e) => {
-                                setText(e.target.value)
-                                // Store original text when user starts typing
-                                if (selectedAutocompleteIndex === -1) {
-                                    originalTextRef.current = e.target.value
-                                } else {
-                                    // Reset selection when user manually types after navigation
-                                    setSelectedAutocompleteIndex(-1)
-                                    originalTextRef.current = e.target.value
-                                }
-                            }}
+                            onChange={handleTextChange}
+                            onSubmit={() => handleSubmit()}
+                            disabled={isPending}
+                            placeholder='Ask me anything...'
+                            className='flex sm:min-h-[84px] w-full bg-transparent px-4 py-3 text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none resize-none'
+                            autocompleteEnabled={showAutocomplete}
+                            autocompleteStrings={filteredSuggestions}
+                            onAutocompleteSelect={handleAutocompleteSelect}
                         />
                         {/* Textarea buttons */}
                         <div className='flex items-center justify-between gap-2 p-3'>
