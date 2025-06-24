@@ -211,6 +211,9 @@ importers:
       fumadocs-ui:
         specifier: workspace:*
         version: link:../fumadocs/packages/ui
+      getprototypeof:
+        specifier: ^2.0.0
+        version: 2.0.0
       github-slugger:
         specifier: ^2.0.0
         version: 2.0.0
@@ -223,6 +226,9 @@ importers:
       idb-keyval:
         specifier: ^6.2.2
         version: 6.2.2
+      is-object:
+        specifier: ^1.0.2
+        version: 1.0.2
       isbot:
         specifier: ^5.1.28
         version: 5.1.28
@@ -322,6 +328,9 @@ importers:
       trieve-ts-sdk:
         specifier: ^0.0.118
         version: 0.0.118
+      unist-util-size:
+        specifier: ^4.0.0
+        version: 4.0.0
       unist-util-visit:
         specifier: ^5.0.0
         version: 5.0.0
@@ -331,6 +340,9 @@ importers:
       website:
         specifier: workspace:^
         version: link:../website
+      x-is-array:
+        specifier: ^0.1.0
+        version: 0.1.0
       zod:
         specifier: ^3.25.67
         version: 3.25.67
@@ -7620,6 +7632,11 @@ packages:
   get-tsconfig@4.10.1:
     resolution: {integrity: sha512-auHyJ4AgMz7vgS8Hp3N6HXSmlMdUyhSUrfBF16w153rxtLIEOE+HGqaBppczZvnHLqQJfiHotCYpNhl0lUROFQ==}
 
+  getprototypeof@2.0.0:
+    resolution: {integrity: sha512-hl8Zctp9qAVFbImzxLeRbt7CnM2esuIpYl5TgIfaXHDEk3z3HnDsX1FOVHLlrrJAsvoEGHpCUvH27rT0lKnSNg==}
+    engines: {node: '>= 0.4'}
+    deprecated: Please use `object.getprototypeof` instead!
+
   giget@2.0.0:
     resolution: {integrity: sha512-L5bGsVkxJbJgdnwyuheIunkGatUF/zssUoxxjACCseZYAVbaqdh9Tsmmlkl8vYan09H7sbvKt4pS8GqKLBrEzA==}
     hasBin: true
@@ -8066,6 +8083,9 @@ packages:
   is-obj@3.0.0:
     resolution: {integrity: sha512-IlsXEHOjtKhpN8r/tRFj2nDyTmHvcfNeu/nrRIcXE17ROeatXchkojffa1SpdqW4cr/Fj6QkEf/Gn4zf6KKvEQ==}
     engines: {node: '>=12'}
+
+  is-object@1.0.2:
+    resolution: {integrity: sha512-2rRIahhZr2UWb45fIOuvZGpFtz0TyOZLf32KxBbSoUCeZR495zCKlWUKKUByk3geS2eAs7ZAABt0Y/Rx0GiQGA==}
 
   is-path-inside@4.0.0:
     resolution: {integrity: sha512-lJJV/5dYS+RcL8uQdBDW9c9uWFLLBNRyFhnAKXw5tVqLlKZ4RMGZKv+YQ/IA3OhD+RpbJa1LLFM1FQPGyIXvOA==}
@@ -10871,6 +10891,9 @@ packages:
   unist-util-position@5.0.0:
     resolution: {integrity: sha512-fucsC7HjXvkB5R3kTCO7kUjRdrS0BJt3M/FPxmHMBOm8JQi2BsHAHFsy27E0EolP8rp0NzXsJ+jNPyDWvOJZPA==}
 
+  unist-util-size@4.0.0:
+    resolution: {integrity: sha512-NcyCKZYuRslsxIuKxQuRILmaSoRGSzjaN1CWbVNDANCOVvVWESQmGcOfyevbeXpgxBCiU9y4+5XY4sbk86GqVg==}
+
   unist-util-stringify-position@4.0.0:
     resolution: {integrity: sha512-0ASV06AAoKCDkS2+xw5RXJywruurpbC4JZSm7nr7MOt1ojAzvyyaO+UxZf18j8FCF6kmzCZKcAgN/yu2gm2XgQ==}
 
@@ -11405,6 +11428,9 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
+
+  x-is-array@0.1.0:
+    resolution: {integrity: sha512-goHPif61oNrr0jJgsXRfc8oqtYzvfiMJpTqwE7Z4y9uH+T3UozkGqQ4d2nX9mB9khvA8U2o/UbPOFjgC7hLWIA==}
 
   xml-js@1.6.11:
     resolution: {integrity: sha512-7rVi2KMfwfWFl+GpPg6m80IVMWXLRjO+PxTq7V2CDhoGak0wzYzFgUY2m4XJ47OGdXd8eLE8EmwfAmdjw7lC1g==}
@@ -18765,6 +18791,14 @@ snapshots:
     dependencies:
       resolve-pkg-maps: 1.0.0
 
+  getprototypeof@2.0.0:
+    dependencies:
+      call-bind: 1.0.8
+      define-properties: 1.2.1
+      es-abstract: 1.24.0
+      get-intrinsic: 1.3.0
+      which-builtin-type: 1.2.1
+
   giget@2.0.0:
     dependencies:
       citty: 0.1.6
@@ -19344,6 +19378,8 @@ snapshots:
   is-number@7.0.0: {}
 
   is-obj@3.0.0: {}
+
+  is-object@1.0.2: {}
 
   is-path-inside@4.0.0: {}
 
@@ -22920,6 +22956,11 @@ snapshots:
     dependencies:
       '@types/unist': 3.0.3
 
+  unist-util-size@4.0.0:
+    dependencies:
+      '@types/unist': 3.0.3
+      unist-util-is: 6.0.0
+
   unist-util-stringify-position@4.0.0:
     dependencies:
       '@types/unist': 3.0.3
@@ -23641,6 +23682,8 @@ snapshots:
   ws@8.18.0: {}
 
   ws@8.18.2: {}
+
+  x-is-array@0.1.0: {}
 
   xml-js@1.6.11:
     dependencies:

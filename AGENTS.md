@@ -6,6 +6,8 @@ This project uses pnpm workspaces to manage dependencies. Important scripts are 
 
 try to run commands inside the package folder that you are working on. for example you should never run `pnpm test` from the root
 
+if you need to install packages always use pnpm
+
 # typescript
 
 - use a single object argument instead of multiple positional args: use object arguments for new typescript functions if the function would accept more than one argument, so it is more readable, ({a,b,c}) instead of (a,b,c), this way you can use the object as a sort of named argument feature, where order of arguments does not matter and it's easier to discover parameters.
