@@ -66,7 +66,9 @@ async function messagesHandling() {
                     window.location.pathname = state.currentSlug
                 }
                 console.log(`setting docs-state inside iframe`, state)
-                useDocsState.setState(state)
+                startTransition(() => {
+                    useDocsState.setState(state)
+                })
             }
         } finally {
             e.source!.postMessage(

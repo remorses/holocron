@@ -25,11 +25,7 @@ export type MarkdownRendererProps = {
 export const Markdown = function MarkdownRender(props: MarkdownRendererProps) {
     const { markdown, ast } = props
     if (!ast) {
-        return (
-            <Suspense fallback={null}>
-                <MarkdownRuntimeComponent {...props} />
-            </Suspense>
-        )
+        return <MarkdownRuntimeComponent {...props} />
     }
     return (
         <div className={props.className}>

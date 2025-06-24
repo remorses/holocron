@@ -30,9 +30,11 @@ export const StreamingMarkdownRuntimeComponent = memo(
 
         useAddedHighlighter({
             root: container,
+            enabled: addDiffAttributes,
+        })
+        useScrollToFirstAddedIfAtTop({
             enabled: addDiffAttributes && isStreaming,
         })
-        useScrollToFirstAddedIfAtTop({ enabled: addDiffAttributes })
         const previousAstRef = React.useRef<any[]>(null)
 
         const astNodes = useMemo(() => {
