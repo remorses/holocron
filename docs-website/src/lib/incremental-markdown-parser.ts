@@ -28,6 +28,29 @@ const quickHash = (s: string): number => {
     return h
 }
 
+// Recursively adjust positions in AST nodes
+const adjustNodePositions = (node: any, offset: number): any => {
+    if (!node) return node
+
+    // Adjust position if it exists
+    if (
+        node.position?.start?.offset !== undefined &&
+        node.position?.end?.offset !== undefined
+    ) {
+        node.position.start.offset += offset
+        node.position.end.offset += offset
+    }
+
+    // Recursively adjust children
+    if (node.children && Array.isArray(node.children)) {
+        node.children = node.children.map((child: any) =>
+            adjustNodePositions(child, offset),
+        )
+    }
+
+    return node
+}
+
 export type IncrementalParsingProps = {
     markdown: string
     extension: string
@@ -60,12 +83,11 @@ export const parseMarkdownIncremental = ({
 
         const { ast } = processMdxInClient({ extension, markdown: rest })
 
-        ;(ast.children as PosNode[]).forEach((node) => {
-            node.position.start.offset += offset
-            node.position.end.offset += offset
-            children.push(node)
-            offset = node.position.end.offset // manual increment
-        })
+        // Process nodes and recursively adjust all positions
+        const adjustedNodes = ast.children.map((node) =>
+            adjustNodePositions(node, offset),
+        )
+        children.push(...adjustedNodes)
         break
     }
 
@@ -83,6 +105,16 @@ export const parseMarkdownIncremental = ({
                 nodes: [node],
             })
         })
+    // If cache is too big, remove some items (simple LRU: delete lowest keys first)
+    const MAX_CACHE_SIZE = 300
+    if (cache.size > MAX_CACHE_SIZE) {
+        const keys = Array.from(cache.keys()).sort((a, b) => a - b)
+        const toRemove = cache.size - MAX_CACHE_SIZE
+        console.log(`Removing ${toRemove} items from markdown runtime cache`)
+        for (let i = 0; i < toRemove; i++) {
+            cache.delete(keys[i])
+        }
+    }
 
     // Instead of returning just children, return an AST root node.
     const root = {

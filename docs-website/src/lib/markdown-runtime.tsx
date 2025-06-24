@@ -44,14 +44,16 @@ export const StreamingMarkdownRuntimeComponent = memo(
 
             try {
                 if (!markdown) return []
-                const { ast } = processMdxInClient({ extension, markdown })
+                // const { ast } = processMdxInClient({ extension, markdown })
 
-                // const ast = parseMarkdownIncremental({
-                //     cache: markdownCache,
-                //     extension,
-                //     markdown,
-                //     trailingNodes: 2,
-                // })
+                // TODO incremental parsing does not work right now, probably becase some nodes maintain identity?
+                const ast = parseMarkdownIncremental({
+                    cache: markdownCache,
+                    extension,
+                    markdown,
+                    trailingNodes: 2,
+                })
+                console.log(ast)
                 if (previousMarkdown) {
                     const diffs = diffWordsWithSpace(previousMarkdown, markdown)
                     // Create a root node that wraps the nodes

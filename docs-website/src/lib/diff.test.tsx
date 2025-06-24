@@ -531,4 +531,23 @@ const new = "code"
           "
         `)
     })
+
+    test('detects added code blocks', async () => {
+        const old = await parseWithPositions('# Hello\n\nSome text.')
+        const new_ = await parseWithPositions('# Hello\n\nSome text.\n\n```js\nconsole.log("added")\n```')
+
+        diffMarkdowns(
+            '# Hello\n\nSome text.',
+            '# Hello\n\nSome text.\n\n```js\nconsole.log("added")\n```',
+            new_
+        )
+
+        expect(await extractTestData(new_)).toMatchInlineSnapshot(`
+          "<html>
+            <p>Some text.</p>
+            <pre data-added="true"><code>console.log(&quot;added&quot;)</code></pre>
+          </html>
+          "
+        `)
+    })
 })
