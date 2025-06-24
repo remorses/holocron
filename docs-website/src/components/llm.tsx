@@ -145,11 +145,6 @@ export function ViewOptions(props: { markdownUrl: string; githubUrl: string }) {
                             </svg>
                         ),
                     },
-                    {
-                        title: 'Open in T3 Chat',
-                        href: t3,
-                        icon: <MessageCircleIcon />,
-                    },
                 ].map((item) => (
                     <a
                         key={item.href}
