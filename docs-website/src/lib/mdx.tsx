@@ -96,7 +96,6 @@ const remarkCodeToHtml =
                         },
                         defaultColor: false,
                     })
-                    throw e
                 }
 
                 node.data ||= {}
