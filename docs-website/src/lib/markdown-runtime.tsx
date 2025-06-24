@@ -16,10 +16,12 @@ export const StreamingMarkdownRuntimeComponent = memo(
         extension = 'mdx',
         isStreaming: _isStreaming,
         previousMarkdown: oldAstToDiff,
+        previousAst,
         className,
         addDiffAttributes = false,
     }: MarkdownRendererProps & {
         previousMarkdown?: any
+        previousAst?: any
         addDiffAttributes?: any
     }) {
         const container = useRef<HTMLDivElement>(null)

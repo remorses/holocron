@@ -11,6 +11,7 @@ async function parseWithPositions(markdown: string) {
     return res.data?.ast
 }
 
+// this function should add a data-added attribute to all the added text nodes and other leaf nodes
 function diffMarkdowns(oldMarkdown, newMarkdown, ast) {
     const diffs: Change[] = diffWords(oldMarkdown, newMarkdown)
     return markAddedNodes(diffs, ast)

@@ -513,6 +513,7 @@ function DocsMarkdown() {
     return (
         <StreamingMarkdownRuntimeComponent
             previousMarkdown={previousMarkdownToDiff}
+            previousAst={loaderData.ast}
             isStreaming={isStreaming}
             markdown={markdown}
             ast={ast}
