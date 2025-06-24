@@ -2,8 +2,6 @@ import { createSpiceflowClient, SpiceflowClient } from 'spiceflow/client'
 import { DocsState, IframeRpcMessage } from 'docs-website/src/lib/docs-state'
 import { debounce } from './utils'
 
-
-
 export function createIframeRpcClient({
     iframeRef,
     targetOrigin,
@@ -27,14 +25,6 @@ export function createIframeRpcClient({
         state: DocsState,
         idempotenceId?: string,
     ): Promise<any> => {
-        // If idempotenceId is specified and already used, return resolved promise immediately
-        if (idempotenceId && usedIdempotenceIds.has(idempotenceId)) {
-            console.log(`Idempotence ID ${idempotenceId} already used, skipping docs state set state`)
-            return Promise.resolve(undefined)
-        }
-        if (idempotenceId) {
-            usedIdempotenceIds.add(idempotenceId)
-        }
         console.log(`sending state to docs iframe`)
         // contentWindow is accessible even for cross-origin iframes, but you cannot access *properties* of the window if it's cross-origin.
         // Here, we just need to postMessage, which is allowed on cross-origin frames.
@@ -49,6 +39,13 @@ export function createIframeRpcClient({
         }
 
         return new Promise((resolve, reject) => {
+            // If idempotenceId is specified and already used, return resolved promise immediately
+            if (idempotenceId && usedIdempotenceIds.has(idempotenceId)) {
+                console.log(
+                    `Idempotence ID ${idempotenceId} already used, skipping docs state set state`,
+                )
+                return Promise.resolve(undefined)
+            }
             const timeout = setTimeout(() => {
                 pendingRequests.delete(id)
                 reject(
@@ -63,6 +60,9 @@ export function createIframeRpcClient({
             w.postMessage(message, {
                 targetOrigin: '*',
             })
+            if (idempotenceId) {
+                usedIdempotenceIds.add(idempotenceId)
+            }
         })
     }
     function onMessage(e: MessageEvent) {

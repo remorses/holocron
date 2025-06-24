@@ -160,6 +160,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             // model = anthropic('claude-3-5-haiku-latest')
             const editFilesExecute = createEditExecute({
                 filesInDraft,
+
                 async validateNewContent(x) {
                     if (mdxRegex.test(x.githubPath)) {
                         await processMdxInServer({
@@ -249,7 +250,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                     }),
                 },
                 async onFinish({ response }) {
-                  console.log(`chat finished, saving the chat in database`)
+                    console.log(`chat finished, saving the chat in database`)
                     const resultMessages = appendResponseMessages({
                         messages,
                         responseMessages: response.messages,

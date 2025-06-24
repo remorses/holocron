@@ -320,7 +320,9 @@ function Footer() {
     const revalidator = useRevalidator()
     const { chat, prUrl, mentionOptions } =
         useLoaderData() as Route.ComponentProps['loaderData']
-    const siteData = useRouteLoaderData('routes/org.$orgId.site.$siteId') as SiteRoute.ComponentProps['loaderData']
+    const siteData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId',
+    ) as SiteRoute.ComponentProps['loaderData']
     const { siteId, tabId } = siteData
     const messages = useChatState((x) => x?.messages || [])
     const filesInDraft = useChatState((x) => x?.docsState?.filesInDraft || {})
@@ -657,7 +659,9 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
 
     const { chatId, chat } =
         useLoaderData() as Route.ComponentProps['loaderData']
-    const siteData = useRouteLoaderData('routes/org.$orgId.site.$siteId') as SiteRoute.ComponentProps['loaderData']
+    const siteData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId',
+    ) as SiteRoute.ComponentProps['loaderData']
     const { siteId } = siteData
 
     const filesInDraft = useChatState((x) => x?.docsState?.filesInDraft || {})
