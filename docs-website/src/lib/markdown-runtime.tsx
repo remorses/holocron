@@ -44,25 +44,25 @@ export const StreamingMarkdownRuntimeComponent = memo(
 
             try {
                 if (!markdown) return []
-                // const { ast } = processMdxInClient({ extension, markdown })
+                const { ast } = processMdxInClient({ extension, markdown })
 
-                const resultAst = parseMarkdownIncremental({
-                    cache: markdownCache,
-                    extension,
-                    markdown,
-                    trailingNodes: 2,
-                })
+                // const ast = parseMarkdownIncremental({
+                //     cache: markdownCache,
+                //     extension,
+                //     markdown,
+                //     trailingNodes: 2,
+                // })
                 if (previousMarkdown) {
                     const diffs = diffWordsWithSpace(previousMarkdown, markdown)
                     // Create a root node that wraps the nodes
 
-                    markAddedNodes(diffs, resultAst)
+                    markAddedNodes(diffs, ast)
                 }
                 // const nodes = ast.children
 
-                previousAstRef.current = resultAst
+                previousAstRef.current = ast
 
-                return resultAst
+                return ast
             } catch (err) {
                 if (err instanceof Promise) {
                     throw err
