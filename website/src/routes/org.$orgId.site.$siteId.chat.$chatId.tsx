@@ -116,7 +116,7 @@ export default function Page({
     return (
         <StateProvider initialValue={initialState}>
             <SidebarProvider
-                className=''
+                className='dark:bg-black'
                 style={
                     {
                         '--sidebar-width': '480px',
@@ -223,7 +223,7 @@ function Content() {
 }
 import memoize from 'micro-memoize'
 
-const scaleDownElement = memoize(function(iframeScale) {
+const scaleDownElement = memoize(function (iframeScale) {
     return {
         transform: `scale(${iframeScale})`,
         transformOrigin: 'top left',
