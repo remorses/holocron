@@ -15,6 +15,7 @@ import { useParentPostMessage } from './lib/hooks'
 import { env } from './lib/env'
 import { startTransition, useEffect } from 'react'
 import { IframeRpcMessage, useDocsState } from './lib/docs-state'
+import { isInsidePreviewIframe } from './lib/utils'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -37,7 +38,7 @@ const firstStateReceived = new Promise<void>((resolve) => {
 })
 
 export const clientLoader = async () => {
-    await firstStateReceived
+    if (isInsidePreviewIframe()) await firstStateReceived
 }
 
 async function messagesHandling() {
@@ -85,7 +86,6 @@ async function messagesHandling() {
             },
         )
     }
-
     // Set up ping interval
     const pingInterval = setInterval(() => {
         if (typeof window !== 'undefined' && window.parent) {

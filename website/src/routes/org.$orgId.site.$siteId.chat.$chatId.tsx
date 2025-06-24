@@ -181,6 +181,7 @@ function Content() {
                                 currentSlug: chat.currentSlug || undefined,
                                 filesInDraft: (chat.filesInDraft as any) || {},
                             }
+                            // do it as soon as the page loads to not wait for the ready message
                             docsRpcClient.setDocsState(state)
                             const waitForFirstMessage = (event) => {
                                 if (
@@ -206,7 +207,7 @@ function Content() {
                         frameBorder={0}
                         allowTransparency={true}
                         name='preview' // tell iframe preview props is enabled
-                        title='website preview'
+                        title='preview'
                         src={iframeUrl.toString()}
                     ></iframe>
                     {/* {!loaded && (
@@ -219,8 +220,6 @@ function Content() {
         </div>
     )
 }
-
-type SiteData = any
 
 function scaleDownElement(iframeScale) {
     return {

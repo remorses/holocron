@@ -1,4 +1,4 @@
-import { cn } from "./cn";
+import { cn } from './cn'
 
 export { cn }
 
@@ -21,6 +21,12 @@ export function isAbsoluteUrl(url: string) {
         'mailto:', //
     ].some((x) => url.startsWith(x))
     return abs
+}
+export function isInsidePreviewIframe(): boolean {
+    if (typeof window !== 'undefined') {
+        return window.name === 'preview'
+    }
+    return false
 }
 
 export function debounce<T extends (...args: any[]) => any>(
