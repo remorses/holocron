@@ -17,6 +17,9 @@ export type MarkdownRendererProps = {
     ast?: any
     isStreaming: boolean | undefined
     extension?: any
+    previousMarkdown?: any
+    previousAst?: any
+    addDiffAttributes?: any
 }
 
 export const Markdown = function MarkdownRender(props: MarkdownRendererProps) {
@@ -40,7 +43,6 @@ export const Markdown = function MarkdownRender(props: MarkdownRendererProps) {
 }
 
 Markdown.displayName = 'MemoizedMarkdownBlock'
-
 
 export class PreserveUIBoundary extends React.Component<
     { children: React.ReactNode; enabled?: boolean },

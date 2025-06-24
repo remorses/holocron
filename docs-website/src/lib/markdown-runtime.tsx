@@ -23,9 +23,7 @@ export const StreamingMarkdownRuntimeComponent = memo(
         className,
         addDiffAttributes = false,
     }: MarkdownRendererProps & {
-        previousMarkdown?: any
-        previousAst?: any
-        addDiffAttributes?: any
+
     }) {
         const container = useRef<HTMLDivElement>(null)
 
