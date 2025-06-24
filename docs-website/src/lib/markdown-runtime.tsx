@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef } from 'react'
+import { memo, useMemo, useRef, useState } from 'react'
 
 import { diffWordsWithSpace } from 'diff'
 import memoize from 'micro-memoize'
@@ -9,11 +9,12 @@ import { mdxComponents } from '../components/mdx-components'
 import { cn } from './cn'
 import { markAddedNodes } from './diff'
 import {
-  useAddedHighlighter,
-  useScrollToFirstAddedIfAtTop,
+    useAddedHighlighter,
+    useScrollToFirstAddedIfAtTop,
 } from './diff-highlight'
 import { MarkdownRendererProps } from './markdown'
 import { customTransformer, getProcessor, ProcessorData } from './mdx'
+import { parseMarkdownIncremental } from './incremental-markdown-parser'
 
 export const StreamingMarkdownRuntimeComponent = memo(
     function MarkdownRuntimeComponent({
@@ -34,30 +35,34 @@ export const StreamingMarkdownRuntimeComponent = memo(
         useScrollToFirstAddedIfAtTop({
             enabled: addDiffAttributes && isStreaming,
         })
-        const previousAstRef = React.useRef<any[]>(null)
 
-        const astNodes = useMemo(() => {
+        let [markdownCache] = useState(() => new Map())
+        const previousAstRef = React.useRef<any>(null)
+
+        const resultAst = useMemo(() => {
             if (!markdown) return []
 
             try {
                 if (!markdown) return []
-                const { ast } = processMdxInClient({ extension, markdown })
+                // const { ast } = processMdxInClient({ extension, markdown })
+
+                const resultAst = parseMarkdownIncremental({
+                    cache: markdownCache,
+                    extension,
+                    markdown,
+                    trailingNodes: 2,
+                })
                 if (previousMarkdown) {
                     const diffs = diffWordsWithSpace(previousMarkdown, markdown)
-                    markAddedNodes(diffs, ast)
+                    // Create a root node that wraps the nodes
+
+                    markAddedNodes(diffs, resultAst)
                 }
-                const nodes = ast.children
-                // const nodes = getOptimizedMarkdownAst({
-                //     markdown,
-                //     previousMarkdown: oldAstToDiff,
-                //     previousAst,
-                //     extension,
-                // })
+                // const nodes = ast.children
 
-                // Always update the ref with the new AST structure
-                previousAstRef.current = nodes
+                previousAstRef.current = resultAst
 
-                return nodes
+                return resultAst
             } catch (err) {
                 if (err instanceof Promise) {
                     throw err
@@ -74,19 +79,13 @@ export const StreamingMarkdownRuntimeComponent = memo(
                     err,
                 )
                 // Return previous AST nodes when streaming and error occurs
-                return previousAstRef.current || []
+                return previousAstRef.current
             }
         }, [extension, markdown, isStreaming, previousMarkdown, previousAst])
         if (!markdown) return null
         return (
             <div className={cn('contents', className)} ref={container}>
-                {astNodes?.map((block, index) => {
-                    // if (block.type === 'space') return block.raw
-                    // Use position-based key for better memoization when nodes are reused
-                    const nodeKey =
-                        block.position?.start?.offset !== undefined
-                            ? `${block.position.start.offset}-${block.position.end?.offset || 0}`
-                            : index
+                {resultAst?.children?.map((block, index) => {
                     return (
                         <SafeMdxRenderer
                             key={index}

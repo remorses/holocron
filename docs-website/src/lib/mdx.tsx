@@ -16,14 +16,12 @@ import {
     remarkStructure,
     StructuredData,
 } from 'fumadocs-core/mdx-plugins/remark-structure'
-import { } from 'js-yaml'
+import {} from 'js-yaml'
 import { Heading, Root } from 'mdast'
 import { remark } from 'remark'
 import remarkGfm from 'remark-gfm'
 import remarkMdx from 'remark-mdx'
-import {
-    Highlighter
-} from 'shiki'
+import { Highlighter } from 'shiki'
 
 import { visit } from 'unist-util-visit'
 import { remarkGitHubBlockquotes } from './github-blockquotes'

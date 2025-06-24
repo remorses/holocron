@@ -71,38 +71,27 @@ this is another paragraph
     const streamingChunks = simulateStreaming(markdown)
     streamingChunks.forEach((chunk, idx) => {
         test(`incremental parsing at chunk ${idx + 1}`, async () => {
-            const astNodes = await parseAndWaitForHighlighter({
+            const ast = await parseAndWaitForHighlighter({
                 markdown: chunk,
                 cache,
                 extension,
             })
 
-            const md = toMarkdown({
-                type: 'root',
-
-                children: astNodes as any[],
-            })
-            const changes = diffWords(chunk, md)
+            const md = toMarkdown(ast)
+            // const changes = diffWords(chunk, md)
             // const additions = changes.filter((change) => change.added)
             expect(md).toMatchSnapshot()
-            // console.log(createPatch('', markdown, md, ))
-            // expect(additions).toEqual([])
         })
     })
 
     test('returns full AST when no previous data', async () => {
-        const astNodes = await parseAndWaitForHighlighter({
+        const ast = await parseAndWaitForHighlighter({
             markdown,
             cache,
             extension,
         })
 
-        expect(
-            toMarkdown({
-                type: 'root',
-                children: astNodes as any[],
-            }),
-        ).toMatchInlineSnapshot(`
+        expect(toMarkdown(ast)).toMatchInlineSnapshot(`
           "This is a sample markdown file to showcase various features.
 
           ## Features

@@ -34,7 +34,6 @@ export type IncrementalParsingProps = {
     cache: SegmentCache
     trailingNodes?: number
 }
-
 export const parseMarkdownIncremental = ({
     markdown: text,
     cache,
@@ -85,5 +84,15 @@ export const parseMarkdownIncremental = ({
             })
         })
 
-    return children
+    // Instead of returning just children, return an AST root node.
+    const root = {
+        type: 'root',
+        children: children,
+        position: {
+            start: { offset: 0 },
+            end: { offset: text.length },
+        },
+    }
+
+    return root as any
 }
