@@ -143,6 +143,9 @@ function Content() {
     const { iframeUrl } = siteData
 
     const iframeRef = useRef<HTMLIFrameElement>(null)
+    useEffect(() => {
+        console.log('iframe sidebar remounted')
+    }, [])
 
     return (
         <div className='flex flex-col h-full gap-3'>
@@ -168,9 +171,7 @@ function Content() {
                     )}
                 >
                     <iframe
-                        ref={(el) => {
-                            iframeRef.current = el
-                        }}
+                        ref={iframeRef}
                         onLoad={() => {
                             console.log(`docs iframe is being replaced`)
                             const docsRpcClient = createIframeRpcClient({
@@ -220,12 +221,13 @@ function Content() {
         </div>
     )
 }
+import memoize from 'micro-memoize'
 
-function scaleDownElement(iframeScale) {
+const scaleDownElement = memoize(function(iframeScale) {
     return {
         transform: `scale(${iframeScale})`,
         transformOrigin: 'top left',
         width: `${Number(100 / iframeScale).toFixed(1)}%`,
         height: `${Number(100 / iframeScale).toFixed(1)}%`,
     }
-}
+})

@@ -22,11 +22,11 @@ summary {
 
 /* show added content as green in diff, improve for dark mode */
 ::highlight(md-add) {
-    background: #b6f2c2;
+    background: rgba(182, 242, 194, 0.6);
 }
 .dark {
     ::highlight(md-add) {
-        background: #244e29;
+        background: rgba(36, 78, 41, 0.6);
     }
 }
 
