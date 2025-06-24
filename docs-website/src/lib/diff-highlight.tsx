@@ -1,4 +1,42 @@
 import { useLayoutEffect, useRef, RefObject } from 'react'
+
+export const useScrollToFirstAddedIfAtTop = ({
+    root,
+    enabled,
+}: {
+    root?: RefObject<HTMLElement | null>
+    enabled?: boolean
+} = {}) => {
+    // Every render, check scroll position and scroll to first data-added if at top
+    useLayoutEffect(() => {
+        const isEnabled = enabled ?? true
+        if (!isEnabled) return
+
+        const host = root?.current ?? document.documentElement
+
+        if (!host) return
+
+        const scrollable = document.scrollingElement || document.documentElement
+        const isAtTop = scrollable.scrollTop <= 1 // Accept 1px margin
+
+        if (!isAtTop) return
+
+        const first = host.querySelector<HTMLElement>('[data-added]')
+        if (!first) return
+
+        const rect = first.getBoundingClientRect()
+        // Check if element is not fully in view vertically
+        const inView =
+            rect.top >= 0 &&
+            rect.bottom <=
+                (window.innerHeight || document.documentElement.clientHeight)
+
+        if (!inView) {
+            first.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+    })
+}
+
 export const useAddedHighlighter = ({
     root,
     enabled = true,

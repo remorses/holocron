@@ -7,7 +7,10 @@ import { createHighlighter, Highlighter } from 'shiki'
 import { diffWords, diffWordsWithSpace } from 'diff'
 import { mdxComponents } from '../components/mdx-components'
 import { cn } from './cn'
-import { useAddedHighlighter } from './diff-highlight'
+import {
+    useAddedHighlighter,
+    useScrollToFirstAddedIfAtTop,
+} from './diff-highlight'
 import { MarkdownRendererProps } from './markdown'
 import { customTransformer, getProcessor, ProcessorData } from './mdx'
 import { getOptimizedMarkdownAst } from './incremental-markdown-parser'
@@ -15,22 +18,22 @@ import { markAddedNodes } from './diff'
 
 export const StreamingMarkdownRuntimeComponent = memo(
     function MarkdownRuntimeComponent({
-        markdown: _markdown,
+        markdown: markdown,
         extension = 'mdx',
-        isStreaming: _isStreaming,
+        isStreaming: isStreaming,
         previousMarkdown,
         previousAst,
         className,
         addDiffAttributes = false,
-    }: MarkdownRendererProps & {
-
-    }) {
+    }: MarkdownRendererProps & {}) {
         const container = useRef<HTMLDivElement>(null)
 
-        useAddedHighlighter({ root: container, enabled: addDiffAttributes })
+        useAddedHighlighter({
+            root: container,
+            enabled: addDiffAttributes && isStreaming,
+        })
+        useScrollToFirstAddedIfAtTop({ enabled: addDiffAttributes })
         const previousAstRef = React.useRef<any[]>(null)
-        const markdown = _markdown
-        const isStreaming = _isStreaming
 
         const astNodes = useMemo(() => {
             if (!markdown) return []
