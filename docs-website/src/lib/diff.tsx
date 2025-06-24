@@ -1,209 +1,337 @@
-/* diffHighlight.ts ---------------------------------------------------- */
-import { visit } from 'unist-util-visit'
-import { diff_match_patch, DIFF_INSERT } from 'diff-match-patch'
-import type { Root, Parent, Literal, Text, Content as MdContent } from 'mdast'
+import { diffWords, Change } from 'diff'
+import type { Root, Node, Parent, Text as TextNode, Data } from 'mdast'
 
-declare module 'mdast' {
-    export interface HProperties {
-        id?: string
-        'data-added'?: boolean | string
-    }
-    export interface Data {
-        hProperties?: HProperties
+/**
+ * Interface extending mdast's Data to include hProperties
+ */
+interface DataWithHProperties extends Data {
+    hProperties?: {
+        'data-added'?: boolean
+        [key: string]: any
     }
 }
 
-/* -------------------------------------------------------------------- *
- * 1.  MARK ADDITIONS (adds data-added attr to new or edited nodes)
- * -------------------------------------------------------------------- */
+/**
+ * Interface for nodes with our extended data type
+ */
+interface NodeWithData extends Node {
+    data?: DataWithHProperties
+}
 
-export function markRemarkAstAdditions(oldTree: Root, newTree: Root): void {
-    /* pass 1 - fingerprint every node and create lookup map */
-    const previous = new Set<string>()
-    const oldNodesByFingerprint = new Map<string, MdContent | Parent>()
+/**
+ * Interface for added ranges in the markdown text
+ */
+interface AddedRange {
+    start: number
+    end: number
+}
 
-    visit(oldTree, (n) => {
-        const fingerprint = computeHashForAstNode(n)
-        previous.add(fingerprint)
-        oldNodesByFingerprint.set(fingerprint, n)
-    })
+/**
+ * Diffs two markdown strings and marks nodes in a remark AST that were added.
+ *
+ * This function uses a string diffing library to find added portions of text,
+ * then traverses the AST and marks nodes that fall within added ranges.
+ *
+ * Key behaviors:
+ * - Uses diffWords from the 'diff' library to find added sequences of characters
+ * - Traverses the new AST tree and inspects node position attributes
+ * - Marks nodes with data.hProperties['data-added'] = true if they're in added portions
+ * - For text nodes: splits them if only part of the text was added
+ * - For other nodes: marks them as added only if the entire node is within an added range
+ * - Parent nodes are marked as added if their entire content is added
+ * - Only text nodes are split (not bold, emphasis, inline code, etc.)
+ *
+ * The hProperties field is used as it's the standard way to pass HTML properties
+ * through the remark/rehype ecosystem, particularly useful for rendering.
+ *
+ * @param oldMarkdown - The previous markdown content as a string
+ * @param newMarkdown - The new markdown content as a string
+ * @param ast - The remark AST of the new content (Root node)
+ * @returns The modified AST with added nodes marked
+ */
+export function markAddedNodes(diffs: Change[], ast: Root): Root {
 
-    /* pass 2 - walk new tree, tag additions + diff text */
-    visit(newTree, (node: MdContent | Parent, index, parent) => {
-        if (!previous.has(computeHashForAstNode(node))) setAdded(node)
-        else if (node.type === 'text') {
-            const oldNode = findSameSpotText(node as Text, oldTree)
-            if (oldNode && oldNode.value !== (node as Text).value) {
-                // Text has changed - mark parent as changed and do inline diff
-                if (parent) setAdded(parent)
-                diffText(node as Text, oldTree)
+
+    // Convert diffs to offset ranges for added portions
+    // We need to track the character offsets in the new markdown
+    const addedRanges: AddedRange[] = []
+    let currentOffset = 0
+
+    for (const diff of diffs) {
+        if (diff.added) {
+            // This portion was added, record its range
+            addedRanges.push({
+                start: currentOffset,
+                end: currentOffset + diff.value.length,
+            })
+        }
+        // Only increment offset for content that exists in the new markdown
+        // (added content and unchanged content, not removed content)
+        if (!diff.removed) {
+            currentOffset += diff.value.length
+        }
+    }
+
+    /**
+     * Helper function to check if an entire range is within any added range.
+     * This is used for non-text nodes to determine if they should be marked as added.
+     */
+    function isRangeFullyAdded(start: number, end: number): boolean {
+        return addedRanges.some(
+            (range) => start >= range.start && end <= range.end,
+        )
+    }
+
+    /**
+     * Helper function to find which portions of a range overlap with added ranges.
+     * This is used for text nodes to determine which parts need to be split out.
+     *
+     * @returns Array of portions that overlap with added ranges
+     */
+    function getAddedPortions(
+        start: number,
+        end: number,
+        text: string,
+    ): Array<{
+        start: number
+        end: number
+        text: string
+    }> {
+        const portions: Array<{ start: number; end: number; text: string }> = []
+
+        for (const range of addedRanges) {
+            // Check if this added range overlaps with our node's range
+            if (range.start < end && range.end > start) {
+                // Calculate the overlap
+                const overlapStart = Math.max(range.start, start)
+                const overlapEnd = Math.min(range.end, end)
+
+                // Convert global offsets to text-relative positions
+                const textStart = overlapStart - start
+                const textEnd = overlapEnd - start
+
+                portions.push({
+                    start: textStart,
+                    end: textEnd,
+                    text: text.substring(textStart, textEnd),
+                })
             }
         }
-    })
 
-    /* pass 3 - swap unchanged top-level nodes to preserve React identity */
-    // TODO: This logic replaces new nodes with old ones, losing changes.
-    // Need to fix React identity preservation without overwriting diff results.
-    // newTree.children = newTree.children.map((newChild) => {
-    //     const newFingerprint = fp(newChild)
-    //     const oldChild = oldNodesByFingerprint.get(newFingerprint)
-
-    //     // If we have a matching old node and it's unchanged, use the old node
-    //     if (oldChild && !hasAddedMarker(newChild) && 'children' in oldChild === 'children' in newChild) {
-    //         return oldChild as typeof newChild
-    //     }
-    //     return newChild
-    // })
-}
-
-/* ---------- helpers ------------------------------------------------- */
-
-function hasAddedMarker(node: MdContent | Parent): boolean {
-    return Boolean(node.data?.hProperties?.['data-added'])
-}
-
-// stable fingerprint: capture semantic properties that affect rendering
-function computeHashForAstNode(n: MdContent | Parent): string {
-    const { type } = n
-    const base: Record<string, unknown> = { type }
-
-    switch (type) {
-        case 'text':
-            // Position-based identity for text nodes (content changes will be diffed)
-            base.pos = n.position?.start?.offset
-            break
-        case 'heading':
-            base.depth = (n as any).depth
-            break
-        case 'link':
-            base.url = (n as any).url
-            base.title = (n as any).title
-            break
-        case 'image':
-            base.url = (n as any).url
-            base.alt = (n as any).alt
-            base.title = (n as any).title
-            break
-        case 'code':
-            base.lang = (n as any).lang
-            base.meta = (n as any).meta
-            break
-        case 'inlineCode':
-            // Position-based identity for inline code
-            base.pos = n.position?.start?.offset
-            break
-        case 'list':
-            base.ordered = (n as any).ordered
-            base.start = (n as any).start
-            base.spread = (n as any).spread
-            break
-        case 'listItem':
-            base.checked = (n as any).checked
-            base.spread = (n as any).spread
-            break
-        case 'table':
-            base.align = (n as any).align
-            break
-        case 'tableRow':
-            // Position-based for table rows
-            base.pos = n.position?.start?.offset
-            break
-        case 'tableCell':
-            // Position-based for table cells
-            base.pos = n.position?.start?.offset
-            break
-        case 'emphasis':
-        case 'strong':
-        case 'delete':
-            // Position-based for inline formatting
-            base.pos = n.position?.start?.offset
-            break
-        case 'blockquote':
-        case 'paragraph':
-            // Position-based for block elements
-            base.pos = n.position?.start?.offset
-            break
-        case 'thematicBreak':
-            // Position-based for breaks
-            base.pos = n.position?.start?.offset
-            break
-        // MDX nodes
-        case 'mdxJsxFlowElement':
-        case 'mdxJsxTextElement':
-            base.name = (n as any).name
-            base.attributes = JSON.stringify((n as any).attributes || [])
-            break
-        case 'mdxFlowExpression':
-        case 'mdxTextExpression':
-            base.value = (n as any).value
-            break
-        default:
-            // Fallback to position for unknown node types
-            base.pos = n.position?.start?.offset
-            break
+        return portions
     }
-    return JSON.stringify(base)
-}
 
-function setAdded(n: MdContent | Parent): void {
-    ;(n.data ??= {}).hProperties ??= {}
-    ;(n.data.hProperties as Record<string, unknown>)['data-added'] = true
-}
+    /**
+     * Helper function to split a text node based on added portions.
+     *
+     * This handles the edge case where only part of a text node is added.
+     * For example, if we have "Hello world" and only "world" was added,
+     * this will split it into two text nodes: "Hello " (not added) and "world" (added).
+     *
+     * Only applies to text nodes - other inline nodes like emphasis, strong,
+     * and inlineCode are not split even if partially added.
+     */
+    function splitTextNode(
+        node: TextNode & NodeWithData,
+    ): (TextNode & NodeWithData)[] {
+        const text = node.value
+        const nodeStart = node.position!.start.offset!
+        const nodeEnd = node.position!.end.offset!
 
-function diffText(newText: Text, oldTree: Root): void {
-    const oldNode = findSameSpotText(newText, oldTree)
-    if (!oldNode || oldNode.value === newText.value) return
+        const addedPortions = getAddedPortions(nodeStart, nodeEnd, text)
 
-    const dmp = new diff_match_patch()
-    const diffs = dmp.diff_main(oldNode.value, newText.value)
-    dmp.diff_cleanupSemantic(diffs)
+        if (addedPortions.length === 0) {
+            // No added portions, return the node as-is
+            return [node]
+        }
 
-    const pieces: Text[] = diffs.flatMap(([op, data]): Text[] => {
-        if (op === DIFF_INSERT) {
-            return [
-                {
+        // Check if entire node is added
+        if (isRangeFullyAdded(nodeStart, nodeEnd)) {
+            // Entire node is added, mark it and return
+            node.data = node.data || {}
+            node.data.hProperties = node.data.hProperties || {}
+            node.data.hProperties['data-added'] = true
+            return [node]
+        }
+
+        // Need to split the text node
+        const nodes: (TextNode & NodeWithData)[] = []
+        let lastEnd = 0
+
+        // Sort portions by start position to process them in order
+        addedPortions.sort((a, b) => a.start - b.start)
+
+        for (const portion of addedPortions) {
+            // Add non-added text before this portion
+            if (portion.start > lastEnd) {
+                const beforeText = text.substring(lastEnd, portion.start)
+                const beforeNode: TextNode & NodeWithData = {
                     type: 'text',
-                    value: data,
-                    data: { hProperties: { 'data-added': true } },
-                },
-            ]
-        }
-        if (op === 0) return [{ type: 'text', value: data }]
-        return []
-    })
+                    value: beforeText,
+                    position: {
+                        start: {
+                            line: node.position!.start.line,
+                            column: node.position!.start.column + lastEnd,
+                            offset: nodeStart + lastEnd,
+                        },
+                        end: {
+                            line: node.position!.start.line,
+                            column: node.position!.start.column + portion.start,
+                            offset: nodeStart + portion.start,
+                        },
+                    },
+                }
+                nodes.push(beforeNode)
+            }
 
-    // If there's only one piece and it's not marked as added, just update the value
-    if (pieces.length === 1 && !pieces[0].data?.hProperties?.['data-added']) {
-        newText.value = pieces[0].value
-        return
+            // Add the added portion with data-added marker
+            const addedNode: TextNode & NodeWithData = {
+                type: 'text',
+                value: portion.text,
+                data: {
+                    hProperties: {
+                        'data-added': true,
+                    },
+                },
+                position: {
+                    start: {
+                        line: node.position!.start.line,
+                        column: node.position!.start.column + portion.start,
+                        offset: nodeStart + portion.start,
+                    },
+                    end: {
+                        line: node.position!.start.line,
+                        column: node.position!.start.column + portion.end,
+                        offset: nodeStart + portion.end,
+                    },
+                },
+            }
+            nodes.push(addedNode)
+
+            lastEnd = portion.end
+        }
+
+        // Add remaining non-added text after the last added portion
+        if (lastEnd < text.length) {
+            const remainingText = text.substring(lastEnd)
+            const remainingNode: TextNode & NodeWithData = {
+                type: 'text',
+                value: remainingText,
+                position: {
+                    start: {
+                        line: node.position!.start.line,
+                        column: node.position!.start.column + lastEnd,
+                        offset: nodeStart + lastEnd,
+                    },
+                    end: {
+                        line: node.position!.end.line,
+                        column: node.position!.end.column,
+                        offset: nodeEnd,
+                    },
+                },
+            }
+            nodes.push(remainingNode)
+        }
+
+        return nodes
     }
 
-    // Instead of converting to emphasis (which can cause nesting issues),
-    // create a single text node with the concatenated diff and mark as added
-    const combinedValue = pieces.map((p) => p.value).join('')
-    newText.value = combinedValue
-
-    // Mark the text node as changed
-    setAdded(newText)
-}
-
-function findSameSpotText(target: Text, tree: Root): Text | null {
-    let result: Text | null = null
-    visit(tree, (n: MdContent | Parent) => {
+    /**
+     * Recursively walk the AST and mark added nodes.
+     *
+     * This function:
+     * - Processes leaf nodes (text, code, etc.) to check if they're added
+     * - Handles the special case of text nodes that may need splitting
+     * - Marks parent nodes as added if their entire range is within an added range
+     * - Works with MDX nodes as well as standard markdown nodes
+     *
+     * @param node - Current node being processed
+     * @param parent - Parent node (used for replacing split text nodes)
+     * @param index - Index of current node in parent's children
+     * @returns Number of extra nodes added (for split text nodes)
+     */
+    function walk(
+        node: NodeWithData,
+        parent: Parent | null = null,
+        index: number | null = null,
+    ): number {
+        // Skip nodes without position information
         if (
-            !result &&
-            n.type === 'text' &&
-            n.position?.start?.offset === target.position?.start?.offset
+            !node ||
+            !node.position ||
+            typeof node.position.start.offset !== 'number' ||
+            typeof node.position.end.offset !== 'number'
         ) {
-            result = n as Text
+            return 0
         }
-    })
-    return result
+
+        const nodeStart = node.position.start.offset
+        const nodeEnd = node.position.end.offset
+
+        // Special handling for text nodes - they can be split if partially added
+        if (node.type === 'text' && parent && index !== null) {
+            const textNode = node as TextNode & NodeWithData
+            const splitNodes = splitTextNode(textNode)
+
+            if (splitNodes.length > 1) {
+                // Replace the single text node with split nodes
+                parent.children.splice(index, 1, ...splitNodes)
+                return splitNodes.length - 1 // Return how many extra nodes were added
+            }
+        }
+
+        // For non-text nodes (including parent nodes and inline nodes like
+        // emphasis, strong, inlineCode), mark as added only if the entire
+        // node content falls within an added range
+        if (node.type !== 'text') {
+            if (isRangeFullyAdded(nodeStart, nodeEnd)) {
+                node.data = node.data || {}
+                node.data.hProperties = node.data.hProperties || {}
+                node.data.hProperties['data-added'] = true
+            }
+        }
+
+        // Recursively process children if this is a parent node
+        if ('children' in node && Array.isArray(node.children)) {
+            let i = 0
+            while (i < node.children.length) {
+                const child = node.children[i] as NodeWithData
+                const extraNodes = walk(child, node as Parent, i)
+                i += 1 + extraNodes // Skip past any newly added split nodes
+            }
+        }
+
+        return 0
+    }
+
+    // Clone the AST to avoid modifying the original
+    // This ensures the function is pure and doesn't have side effects
+    const clonedAst: Root = JSON.parse(JSON.stringify(ast))
+
+    // Walk the AST starting from the root
+    walk(clonedAst as NodeWithData)
+
+    return clonedAst
 }
 
-/* -------------------------------------------------------------------- *
- * 2.  REACT HOOK ⇒ APPLY CSS CUSTOM HIGHLIGHTS
- * -------------------------------------------------------------------- */
+// Example usage:
+/*
+import { unified } from 'unified';
+import remarkParse from 'remark-parse';
+import remarkMdx from 'remark-mdx';
+
+const processor = unified()
+  .use(remarkParse)
+  .use(remarkMdx); // If using MDX
+
+const oldMarkdown = "# Hello\n\nSome text.";
+const newMarkdown = "# Hello World\n\nSome new text.";
+
+const ast = processor.parse(newMarkdown);
+const markedAst = markAddedNodes(oldMarkdown, newMarkdown, ast);
+
+// Now markedAst has nodes marked with data.hProperties['data-added'] = true
+*/
 
 import { useLayoutEffect, useRef, RefObject } from 'react'
 export const useAddedHighlighter = ({

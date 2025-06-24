@@ -14,7 +14,9 @@ if you need to install packages always use pnpm
 
 - always add the {} block body in arrow functions: arrow functions should never be written as `onClick={(x) => setState('')}`. NEVER. Instead you should ALWAYS write `onClick={() => {setState('')}}`. This way it's easy to add new statements in the arrow function without refactoring it.
 
-- minimize comments: do not add useless comments if the code is self descriptive. only add comments if requested or if this was a change that i asked for, meaning it is not obvious code and needs some inline documentation. if a comment is required because the part of the code was result of difficult back and forth with me, keep it very short.
+- minimize usless comments: do not add useless comments if the code is self descriptive. only add comments if requested or if this was a change that i asked for, meaning it is not obvious code and needs some inline documentation. if a comment is required because the part of the code was result of difficult back and forth with me, keep it very short.
+
+- ALWAYS add all information encapsulated in my prompt to comments: when my prompt is super detailed and in depth all this information should be added to comments in your code. this is because if the prompt is very detailed it must be fruit of a lot of research, all this information would be lost if you don't put it in the code. next LLMs calls would misinterpret the code and miss context.
 
 - use early returns (and breaks in loops): do not nest code too much, follow the go best practice of if statements: avoid else, nest as little as possible, use top level ifs. minimize nesting. instead of doing `if (x) { if (b) {} }` you should do `if (x && b) {};` for example. You can always convert multiple nested ifs or elses into many linear ifs at one nesting level. Use the @think tool for this if necessary.
 

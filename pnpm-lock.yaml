@@ -181,6 +181,9 @@ importers:
       dedent:
         specifier: ^1.6.0
         version: 1.6.0(babel-plugin-macros@3.1.0)
+      diff:
+        specifier: ^8.0.2
+        version: 8.0.2
       diff-match-patch:
         specifier: ^1.0.5
         version: 1.0.5

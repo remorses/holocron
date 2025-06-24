@@ -1,35 +1,26 @@
-import {
-    useId,
-    useMemo,
-    Suspense,
-    memo,
-    useState,
-    useEffect,
-    startTransition,
-    useDeferredValue,
-    useRef,
-} from 'react'
-import { marked } from 'marked'
+import { memo, useMemo, useRef } from 'react'
 
-import { Markdown, MarkdownRendererProps } from './markdown'
-import { createHighlighter, Highlighter } from 'shiki'
-import { customTransformer, getProcessor, ProcessorData } from './mdx'
-import markdownRs from '@xmorse/markdown-rs'
-import React from 'react'
 import memoize from 'micro-memoize'
+import React from 'react'
 import { SafeMdxRenderer } from 'safe-mdx'
-import { markRemarkAstAdditions, useAddedHighlighter } from './diff'
-import { cn } from './cn'
+import { createHighlighter, Highlighter } from 'shiki'
 import { mdxComponents } from '../components/mdx-components'
+import { cn } from './cn'
+import { useAddedHighlighter } from './diff'
+import { MarkdownRendererProps } from './markdown'
+import { customTransformer, getProcessor, ProcessorData } from './mdx'
+
 export const StreamingMarkdownRuntimeComponent = memo(
     function MarkdownRuntimeComponent({
         markdown: _markdown,
         extension = 'mdx',
         isStreaming: _isStreaming,
-        astToDiff: oldAstToDiff,
+        previousMarkdown: oldAstToDiff,
         className,
+        addDiffAttributes = false,
     }: MarkdownRendererProps & {
-        astToDiff?: any
+        previousMarkdown?: any
+        addDiffAttributes?: any
     }) {
         const container = useRef<HTMLDivElement>(null)
 
@@ -43,11 +34,11 @@ export const StreamingMarkdownRuntimeComponent = memo(
                 let prevAst = previousAstRef.current
                 try {
                     const { ast } = processMdxInClient({ extension, markdown })
-                    if (oldAstToDiff) {
-                        console.log(`diffing the old ast`)
-                        const result = markRemarkAstAdditions(oldAstToDiff, ast)
-                        console.log(result)
-                    }
+                    // if (oldAstToDiff) {
+                    //     console.log(`diffing the old ast`)
+                    //     const result = markRemarkAstAdditions(oldAstToDiff, ast)
+                    //     console.log(result)
+                    // }
                     prevAst = ast
                     previousAstRef.current = prevAst
                     return prevAst

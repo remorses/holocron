@@ -4,16 +4,22 @@ import { remark } from 'remark'
 import remarkMdx from 'remark-mdx'
 import { SafeMdxRenderer } from 'safe-mdx'
 import { describe, expect, test } from 'vitest'
-import { markRemarkAstAdditions } from './diff'
+import { markAddedNodes } from './diff'
 
 async function parseWithPositions(markdown: string) {
     const res = await processMdxInServer({ markdown, extension: 'mdx' })
     return res.data?.ast
 }
 
+function diffMarkdowns(oldMarkdown, newMarkdown, ast) {
+    const diffs: Change[] = diffWords(oldMarkdown, newMarkdown)
+    return markAddedNodes(diffs, ast)
+}
+
 import prettierHtml from 'prettier/plugins/html'
 import prettier from 'prettier/standalone'
 import { processMdxInServer } from './mdx.server'
+import { Change, diffWords } from 'diff'
 
 // Helper to extract relevant test data from AST
 async function extractTestData(ast: Root) {
@@ -54,7 +60,7 @@ describe('markRemarkAstAdditions', () => {
         const old = await parseWithPositions('# Hello\n\nWorld')
         const new_ = await parseWithPositions('# Hello\n\nWorld')
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns('# Hello\n\nWorld', '# Hello\n\nWorld', new_)
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
@@ -68,31 +74,25 @@ describe('markRemarkAstAdditions', () => {
         const old = await parseWithPositions('Hello world')
         const new_ = await parseWithPositions('Hello universe')
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns('Hello world', 'Hello universe', new_)
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <p data-added="true"><span data-added="true">Hello universe</span></p>
+            <p>Hello universe</p>
           </html>
           "
         `)
-
-        // Also verify the AST structure has the expected markers
-        expect(new_.children[0]).toHaveProperty(
-            'data.hProperties.data-added',
-            true,
-        )
     })
 
     test('detects heading level changes', async () => {
         const old = await parseWithPositions('# Title')
         const new_ = await parseWithPositions('## Title')
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns('# Title', '## Title', new_)
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <h2 id="title" data-added="true"><span data-added="true">Title</span></h2>
+            <h2 id="title">Title</h2>
           </html>
           "
         `)
@@ -104,12 +104,16 @@ describe('markRemarkAstAdditions', () => {
             'First paragraph\n\nSecond paragraph',
         )
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns(
+            'First paragraph',
+            'First paragraph\n\nSecond paragraph',
+            new_,
+        )
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
             <p>First paragraph</p>
-            <p data-added="true"><span data-added="true">Second paragraph</span></p>
+            <p>Second paragraph</p>
           </html>
           "
         `)
@@ -119,11 +123,15 @@ describe('markRemarkAstAdditions', () => {
         const old = await parseWithPositions('[Link](https://old.com)')
         const new_ = await parseWithPositions('[Link](https://new.com)')
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns(
+            '[Link](https://old.com)',
+            '[Link](https://new.com)',
+            new_,
+        )
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <p><a href="https://new.com" title="" data-added="true">Link</a></p>
+            <p><a href="https://new.com" title="">Link</a></p>
           </html>
           "
         `)
@@ -137,13 +145,15 @@ describe('markRemarkAstAdditions', () => {
             '[Link](https://example.com "New Title")',
         )
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns(
+            '[Link](https://example.com "Old Title")',
+            '[Link](https://example.com "New Title")',
+            new_,
+        )
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <p>
-              <a href="https://example.com" title="New Title" data-added="true">Link</a>
-            </p>
+            <p><a href="https://example.com" title="New Title">Link</a></p>
           </html>
           "
         `)
@@ -153,17 +163,13 @@ describe('markRemarkAstAdditions', () => {
         const old = await parseWithPositions('- Item 1\n- Item 2')
         const new_ = await parseWithPositions('1. Item 1\n2. Item 2')
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns('- Item 1\n- Item 2', '1. Item 1\n2. Item 2', new_)
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <ol start="1" data-added="true">
-              <li>
-                <p data-added="true"><span data-added="true">Item 1</span></p>
-              </li>
-              <li>
-                <p data-added="true"><span data-added="true">Item 2</span></p>
-              </li>
+            <ol start="1">
+              <li><p>Item 1</p></li>
+              <li><p>Item 2</p></li>
             </ol>
           </html>
           "
@@ -176,11 +182,15 @@ describe('markRemarkAstAdditions', () => {
             '```ts\nconsole.log("hello")\n```',
         )
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns(
+            '```js\nconsole.log("hello")\n```',
+            '```ts\nconsole.log("hello")\n```',
+            new_,
+        )
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <pre data-added="true"><code>console.log(&quot;hello&quot;)</code></pre>
+            <pre><code>console.log(&quot;hello&quot;)</code></pre>
           </html>
           "
         `)
@@ -190,12 +200,12 @@ describe('markRemarkAstAdditions', () => {
         const old = await parseWithPositions('![Alt](old.jpg)')
         const new_ = await parseWithPositions('![New Alt](new.jpg)')
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns('![Alt](old.jpg)', '![New Alt](new.jpg)', new_)
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
             <link rel="preload" as="image" href="new.jpg" />
-            <p><img src="new.jpg" alt="New Alt" title="" data-added="true" /></p>
+            <p><img src="new.jpg" alt="New Alt" title="" /></p>
           </html>
           "
         `)
@@ -205,13 +215,11 @@ describe('markRemarkAstAdditions', () => {
         const old = await parseWithPositions('*italic*')
         const new_ = await parseWithPositions('**bold**')
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns('*italic*', '**bold**', new_)
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <p>
-              <strong data-added="true"><span data-added="true">bold</span></strong>
-            </p>
+            <p><strong>bold</strong></p>
           </html>
           "
         `)
@@ -221,7 +229,7 @@ describe('markRemarkAstAdditions', () => {
         const old = await parseWithPositions('<Card title="Hello" />')
         const new_ = await parseWithPositions('<Alert title="Hello" />')
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns('<Card title="Hello" />', '<Alert title="Hello" />', new_)
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
@@ -235,7 +243,7 @@ describe('markRemarkAstAdditions', () => {
         const old = await parseWithPositions('<Card title="Old" />')
         const new_ = await parseWithPositions('<Card title="New" />')
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns('<Card title="Old" />', '<Card title="New" />', new_)
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
@@ -251,23 +259,27 @@ describe('markRemarkAstAdditions', () => {
             '| A | B | C |\n|---|---|---|\n| 1 | 2 | 3 |',
         )
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns(
+            '| A | B |\n|---|---|\n| 1 | 2 |',
+            '| A | B | C |\n|---|---|---|\n| 1 | 2 | 3 |',
+            new_,
+        )
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <table data-added="true">
+            <table>
               <thead>
                 <tr class="">
                   <td class="">A</td>
                   <td class="">B</td>
-                  <td class="" data-added="true"><span data-added="true">C</span></td>
+                  <td class="">C</td>
                 </tr>
               </thead>
               <tbody>
-                <tr class="" data-added="true">
-                  <td class="" data-added="true"><span data-added="true">1</span></td>
-                  <td class="" data-added="true"><span data-added="true">2</span></td>
-                  <td class="" data-added="true"><span data-added="true">3</span></td>
+                <tr class="">
+                  <td class="">1</td>
+                  <td class="">2</td>
+                  <td class="">3</td>
                 </tr>
               </tbody>
             </table>
@@ -289,7 +301,11 @@ describe('markRemarkAstAdditions', () => {
         const oldParagraph = old.children[1]
         const oldSecondHeading = old.children[2]
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns(
+            '# Unchanged\n\nSame text\n\n## Also unchanged',
+            '# Unchanged\n\nSame text\n\n## Also unchanged\n\nNew paragraph',
+            new_,
+        )
 
         // Check that unchanged nodes preserve identity
         expect(new_.children[0]).toBe(oldHeading)
@@ -341,30 +357,47 @@ const new = "code"
 \`\`\`
         `)
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns(
+            `
+# Title
+
+This is a paragraph with [old link](https://old.com).
+
+- List item 1
+- List item 2
+
+\`\`\`js
+const old = "code"
+\`\`\`
+        `,
+            `
+# Title
+
+This is a paragraph with [new link](https://new.com) and **bold text**.
+
+- List item 1
+- List item 2
+- List item 3
+
+\`\`\`ts
+const new = "code"
+\`\`\`
+        `,
+            new_,
+        )
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <p data-added="true">
-              This is a paragraph with
-              <a href="https://new.com" title="" data-added="true"
-                ><span data-added="true">new link</span></a
-              ><span data-added="true"> and </span
-              ><strong data-added="true"><span data-added="true">bold text</span></strong
-              ><span data-added="true">.</span>
+            <p>
+              This is a paragraph with <a href="https://new.com" title="">new link</a> and
+              <strong>bold text</strong>.
             </p>
             <ul>
-              <li>
-                <p data-added="true"><span data-added="true">List item 1</span></p>
-              </li>
-              <li>
-                <p data-added="true"><span data-added="true">List item 2</span></p>
-              </li>
-              <li>
-                <p data-added="true"><span data-added="true">List item 3</span></p>
-              </li>
+              <li><p>List item 1</p></li>
+              <li><p>List item 2</p></li>
+              <li><p>List item 3</p></li>
             </ul>
-            <pre data-added="true"><code>const new = &quot;code&quot;</code></pre>
+            <pre><code>const new = &quot;code&quot;</code></pre>
           </html>
           "
         `)
@@ -374,13 +407,11 @@ const new = "code"
         const old = await parseWithPositions('> Old quote')
         const new_ = await parseWithPositions('> New quote')
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns('> Old quote', '> New quote', new_)
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <blockquote>
-              <p data-added="true"><span data-added="true">New quote</span></p>
-            </blockquote>
+            <blockquote><p>New quote</p></blockquote>
           </html>
           "
         `)
@@ -390,7 +421,11 @@ const new = "code"
         const old = await parseWithPositions('Use `oldFunction()` here')
         const new_ = await parseWithPositions('Use `newFunction()` here')
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns(
+            'Use `oldFunction()` here',
+            'Use `newFunction()` here',
+            new_,
+        )
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
@@ -406,13 +441,17 @@ const new = "code"
             'Paragraph one\n\n---\n\nParagraph two',
         )
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns(
+            'Paragraph one\n\nParagraph two',
+            'Paragraph one\n\n---\n\nParagraph two',
+            new_,
+        )
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
             <p>Paragraph one</p>
-            <hr data-added="true" />
-            <p data-added="true"><span data-added="true">Paragraph two</span></p>
+            <hr />
+            <p>Paragraph two</p>
           </html>
           "
         `)
@@ -426,18 +465,18 @@ const new = "code"
             'todos\n\n- [x] Checked\n- [ ] Unchecked',
         )
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns(
+            'todos\n\n- [ ] Unchecked\n- [x] Checked',
+            'todos\n\n- [x] Checked\n- [ ] Unchecked',
+            new_,
+        )
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
             <p>todos</p>
             <ul>
-              <li data-checked="true">
-                <p data-added="true"><span data-added="true">Checked</span></p>
-              </li>
-              <li data-checked="false">
-                <p data-added="true"><span data-added="true">Unchecked</span></p>
-              </li>
+              <li data-checked="true"><p>Checked</p></li>
+              <li data-checked="false"><p>Unchecked</p></li>
             </ul>
           </html>
           "
@@ -448,13 +487,15 @@ const new = "code"
         const old = await parseWithPositions('The quick brown fox jumps')
         const new_ = await parseWithPositions('The quick red fox leaps')
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns(
+            'The quick brown fox jumps',
+            'The quick red fox leaps',
+            new_,
+        )
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <p data-added="true">
-              <span data-added="true">The quick red fox leaps</span>
-            </p>
+            <p>The quick red fox leaps</p>
           </html>
           "
         `)
@@ -464,7 +505,7 @@ const new = "code"
         const old = await parseWithPositions('{oldVariable}')
         const new_ = await parseWithPositions('{newVariable}')
 
-        markRemarkAstAdditions(old, new_)
+        diffMarkdowns('{oldVariable}', '{newVariable}', new_)
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html></html>
