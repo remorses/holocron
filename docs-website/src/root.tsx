@@ -31,7 +31,6 @@ export const links: Route.LinksFunction = () => [
 
 const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, '')]
 
-
 export function Layout({ children }: { children: React.ReactNode }) {
     const navigate = useNavigate()
 
@@ -50,7 +49,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 const prevState = useDocsState.getState()
                 if (
                     state.currentSlug &&
-                    prevState.currentSlug !== state.currentSlug
+                    prevState.currentSlug !== state.currentSlug &&
+                    state.currentSlug !== window.location.pathname
                 ) {
                     return await navigate(state.currentSlug!)
                 }

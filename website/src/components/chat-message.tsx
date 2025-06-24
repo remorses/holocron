@@ -425,7 +425,7 @@ function EditorToolPreview({
         let markdown = ''
         markdown += `Creating \`${args?.path}\`\n`
         markdown +=
-            '```mdx' + ` title=" ${args?.path || ''}" \n` + code + '\n```'
+            '````mdx' + ` title=" ${args?.path || ''}" \n` + code + '\n````'
         return (
             <ToolPreviewContainer>
                 <Markdown isStreaming={isChatGenerating} markdown={markdown} />
@@ -452,10 +452,10 @@ function EditorToolPreview({
             .map((line) => '+ ' + line)
             .join('\n')
         markdown +=
-            '```diff' +
+            '````diff' +
             ` title=" ${args?.path || ''}:${args?.insert_line || 0}" \n` +
             codeWithPrefix +
-            '\n```'
+            '\n````'
         return (
             <ToolPreviewContainer className='py-0'>
                 <Markdown isStreaming={isChatGenerating} markdown={markdown} />
@@ -471,14 +471,14 @@ function EditorToolPreview({
             diff = result?.error || JSON.stringify(result, null, 2)
         }
         markdown +=
-            '```diff' + ` title=" ${args?.path || ''}" \n` + diff + '\n```'
+            '````diff' + ` title=" ${args?.path || ''}" \n` + diff + '\n````'
         return (
             <ToolPreviewContainer className='py-0'>
                 <Markdown isStreaming={isChatGenerating} markdown={markdown} />
             </ToolPreviewContainer>
         )
     }
-    markdown += '```mdx' + ` title=" ${args?.path || ''}" \n` + code + '\n```'
+    markdown += '````mdx' + ` title=" ${args?.path || ''}" \n` + code + '\n````'
     return (
         <ToolPreviewContainer className='py-0'>
             <Markdown isStreaming={isChatGenerating} markdown={markdown} />

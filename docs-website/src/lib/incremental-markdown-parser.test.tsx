@@ -125,7 +125,7 @@ describe('getOptimizedMarkdownAst', () => {
         expect(await extractTestData(result)).toMatchInlineSnapshot(`
           "<html>
             <p>First paragraph</p>
-            <p>Modified paragra</p>
+            <p>Modified paragraph</p>
           </html>
           "
         `)
@@ -145,6 +145,7 @@ describe('getOptimizedMarkdownAst', () => {
         expect(await extractTestData(result)).toMatchInlineSnapshot(`
           "<html>
             <p>First paragraph</p>
+            <p>New paragraph</p>
           </html>
           "
         `)
@@ -164,7 +165,6 @@ describe('getOptimizedMarkdownAst', () => {
         expect(await extractTestData(result)).toMatchInlineSnapshot(`
           "<html>
             <p>First paragraph</p>
-            <p>Second paragraph</p>
           </html>
           "
         `)
@@ -184,7 +184,8 @@ describe('getOptimizedMarkdownAst', () => {
         expect(await extractTestData(result)).toMatchInlineSnapshot(`
           "<html>
             <p>First paragraph</p>
-            <p>Modified second</p>
+            <p>Modified second paragraph</p>
+            <p>Third paragraph</p>
           </html>
           "
         `)
@@ -227,7 +228,7 @@ describe('getOptimizedMarkdownAst', () => {
         
         expect(await extractTestData(result)).toMatchInlineSnapshot(`
           "<html>
-            <p>Modifie</p>
+            <p>Modified content</p>
           </html>
           "
         `)
