@@ -1,118 +1,89 @@
-import { diffWordsWithSpace } from "diff"
-import { processMdxInClient } from "./markdown-runtime"
+import { diffWordsWithSpace } from 'diff'
+import { processMdxInClient } from './markdown-runtime'
 
-/**
- * Optimizes markdown AST generation by reusing unchanged nodes from previous AST.
- * Uses diffWords to identify changed sections and only re-parses those sections.
- *
- * @param options - Configuration object
- * @returns Array of AST nodes (children of root)
- */
-export function getOptimizedMarkdownAst({
-    markdown,
-    previousMarkdown,
-    previousAst,
-    extension = 'mdx',
-}: {
+import remarkMdx from 'remark-mdx'
+import { Root, Content } from 'mdast'
+
+/* ─────────── types ─────────── */
+interface Offset {
+    offset: number
+}
+interface PosNode {
+    position: { start: Offset; end: Offset }
+}
+export interface SegmentEntry {
+    len: number
+    hash: number
+    end: number
+    nodes: any[]
+}
+export type SegmentCache = Map<number, SegmentEntry>
+
+const quickHash = (s: string): number => {
+    let h = 0x811c9dc5
+    for (let i = 0; i < s.length; i++) {
+        h ^= s.charCodeAt(i)
+        h = (h * 0x01000193) >>> 0
+    }
+    return h
+}
+
+export type IncrementalParsingProps = {
     markdown: string
-    previousMarkdown?: string
-    previousAst?: any
-    extension?: string
-}): any[] {
-    // If we have previousAst and previous markdown, try to optimize
-    if (
-        previousAst &&
-        previousMarkdown &&
-        markdown &&
-        markdown !== previousMarkdown
-    ) {
-        console.time('optimized AST generation')
+    extension: string
+    cache: SegmentCache
+    trailingNodes?: number
+}
 
-        // Diff the markdown to find changed ranges
+export const parseMarkdownIncremental = ({
+    markdown: text,
+    cache,
+    trailingNodes = 2,
+    extension,
+}: IncrementalParsingProps) => {
+    const children: PosNode[] = []
 
-        const diffs = diffWordsWithSpace(previousMarkdown, markdown)
-        const changedRanges: Array<{ start: number; end: number }> = []
-        let currentOffset = 0
-
-        for (const diff of diffs) {
-            if (diff.added || diff.removed) {
-                changedRanges.push({
-                    start: currentOffset,
-                    end: currentOffset + (diff.added ? diff.value.length : 0),
-                })
-            }
-            if (!diff.removed) {
-                currentOffset += diff.value.length
+    /* single-header for loop replaces the old while ------------------- */
+    for (let offset = 0; offset < text.length; ) {
+        /* ① try cache -------------------------------------------------- */
+        const entry = cache.get(offset)
+        if (entry) {
+            const slice = text.slice(offset, entry.end)
+            if (slice.length === entry.len && quickHash(slice) === entry.hash) {
+                children.push(...(entry.nodes as PosNode[]))
+                offset = entry.end // manual increment
+                continue
             }
         }
 
-        // If no changes, reuse the entire previous AST
-        if (changedRanges.length === 0) {
-            console.timeEnd('optimized AST generation')
-            return previousAst.children || []
-        }
+        /* ② miss → parse ---------------------------------------------- */
+        const rest = text.slice(offset)
 
-        // Check which root-level nodes can be reused
-        const optimizedNodes: any[] = []
-        const previousNodes = previousAst.children || []
+        const { ast } = processMdxInClient({ extension, markdown: rest })
 
-        for (let i = 0; i < previousNodes.length; i++) {
-            const node = previousNodes[i]
-
-            // Check if this node's range overlaps with any changed ranges
-            if (
-                node.position?.start?.offset !== undefined &&
-                node.position?.end?.offset !== undefined
-            ) {
-                const nodeStart = node.position.start.offset
-                const nodeEnd = node.position.end.offset
-
-                const hasChanges = changedRanges.some(
-                    (range) =>
-                        !(nodeEnd <= range.start || nodeStart >= range.end),
-                )
-
-                if (!hasChanges) {
-                    // Node is unchanged, reuse it
-                    optimizedNodes.push(node)
-                } else {
-                    // Node has changes, need to re-parse this section
-                    const sectionStart = nodeStart
-                    const sectionEnd = nodeEnd
-                    const sectionMarkdown = markdown.slice(
-                        sectionStart,
-                        sectionEnd,
-                    )
-
-                    try {
-                        const { ast: sectionAst } = processMdxInClient({
-                            extension,
-                            markdown: sectionMarkdown,
-                        })
-                        if (sectionAst?.children) {
-                            optimizedNodes.push(...sectionAst.children)
-                        }
-                    } catch (sectionErr) {
-                        // If section parsing fails, fall back to reusing the old node
-                        console.warn(
-                            'Section parsing failed, reusing old node:',
-                            sectionErr,
-                        )
-                        optimizedNodes.push(node)
-                    }
-                }
-            } else {
-                // Node without position info, reuse it
-                optimizedNodes.push(...node.children)
-            }
-        }
-
-        console.timeEnd('optimized AST generation')
-        return optimizedNodes
+        ;(ast.children as PosNode[]).forEach((node) => {
+            node.position.start.offset += offset
+            node.position.end.offset += offset
+            children.push(node)
+            offset = node.position.end.offset // manual increment
+        })
+        break
     }
 
-    // Fallback to full parsing
-    if (!markdown) return []
-    const { ast } = processMdxInClient({ extension, markdown })
-    return ast?.children || []
+    /* ③ refresh cache (skip the live tail) --------------------------- */
+    children
+        .slice(0, trailingNodes ? -trailingNodes : undefined)
+        .forEach((node) => {
+            const start = node.position.start.offset
+            const end = node.position.end.offset
+            const slice = text.slice(start, end)
+            cache.set(start, {
+                len: slice.length,
+                hash: quickHash(slice),
+                end,
+                nodes: [node],
+            })
+        })
+
+    return children
 }

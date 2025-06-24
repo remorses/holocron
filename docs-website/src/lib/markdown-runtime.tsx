@@ -1,20 +1,19 @@
 import { memo, useMemo, useRef } from 'react'
 
+import { diffWordsWithSpace } from 'diff'
 import memoize from 'micro-memoize'
 import React from 'react'
 import { SafeMdxRenderer } from 'safe-mdx'
 import { createHighlighter, Highlighter } from 'shiki'
-import { diffWords, diffWordsWithSpace } from 'diff'
 import { mdxComponents } from '../components/mdx-components'
 import { cn } from './cn'
+import { markAddedNodes } from './diff'
 import {
-    useAddedHighlighter,
-    useScrollToFirstAddedIfAtTop,
+  useAddedHighlighter,
+  useScrollToFirstAddedIfAtTop,
 } from './diff-highlight'
 import { MarkdownRendererProps } from './markdown'
 import { customTransformer, getProcessor, ProcessorData } from './mdx'
-import { getOptimizedMarkdownAst } from './incremental-markdown-parser'
-import { markAddedNodes } from './diff'
 
 export const StreamingMarkdownRuntimeComponent = memo(
     function MarkdownRuntimeComponent({

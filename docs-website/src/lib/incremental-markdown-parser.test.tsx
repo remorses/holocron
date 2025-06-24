@@ -1,18 +1,21 @@
-import { describe, expect, test, beforeAll } from 'vitest'
-import { getOptimizedMarkdownAst } from './incremental-markdown-parser'
-import { processMdxInClient } from './markdown-runtime'
-import { renderToStaticMarkup } from 'react-dom/server.edge'
-import { SafeMdxRenderer } from 'safe-mdx'
-import prettierHtml from 'prettier/plugins/html'
-import prettier from 'prettier/standalone'
+import { toMarkdown } from 'mdast-util-to-markdown'
+import { describe, expect, test } from 'vitest'
+
+import { diffWords } from 'diff'
+import {
+    IncrementalParsingProps,
+    parseMarkdownIncremental,
+    SegmentEntry,
+} from './incremental-markdown-parser'
 
 // Wait for highlighter to initialize
-async function waitForHighlighter() {
+async function parseAndWaitForHighlighter(props: IncrementalParsingProps) {
     let retries = 0
     while (retries < 10) {
         try {
-            await processMdxInClient({ extension: 'mdx', markdown: '# test' })
-            return
+            return parseMarkdownIncremental({
+                ...props,
+            })
         } catch (promise) {
             if (promise instanceof Promise) {
                 await promise
@@ -22,214 +25,104 @@ async function waitForHighlighter() {
             }
         }
     }
+    throw new Error('Highlighter initialization timed out')
 }
 
-async function parseMarkdown(markdown: string) {
-    const { ast } = processMdxInClient({ extension: 'mdx', markdown })
-    return ast
-}
-
-// Helper to extract HTML from AST nodes
-async function extractTestData(astNodes: any[]) {
-    try {
-        const html = renderToStaticMarkup(
-            <>
-                {astNodes.map((node, index) => (
-                    <SafeMdxRenderer
-                        key={index}
-                        components={{
-                            Card: ({ children, ...props }: any) => (
-                                <div role='card' {...props}>
-                                    {children}
-                                </div>
-                            ),
-                            Alert: ({ children, ...props }: any) => (
-                                <div role='alert' {...props}>
-                                    {children}
-                                </div>
-                            ),
-                        }}
-                        mdast={node}
-                    />
-                ))}
-            </>
-        )
-        return await prettier.format(`<html>${html}</html>`, {
-            parser: 'html',
-            plugins: [prettierHtml],
-        })
-    } catch (err) {
-        console.error(
-            'extractTestData error for AST nodes:',
-            JSON.stringify(astNodes, null, 2),
-        )
-        throw err
+function simulateStreaming(text: string): string[] {
+    const words = text.split(' ')
+    const result: string[] = []
+    for (let i = 1; i <= words.length; i++) {
+        result.push(words.slice(0, i).join(' '))
     }
+    return result
 }
 
 describe('getOptimizedMarkdownAst', () => {
-    beforeAll(async () => {
-        await waitForHighlighter()
+    const cache = new Map<number, SegmentEntry>()
+    const extension = 'mdx'
+    const markdown = `
+# Welcome to the Example Document
+
+This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy formatting
+* Lists
+* **Bold text**
+* [Links](https://example.com)
+
+> "Markdown makes documentation easy!"
+
+\`\`\`js
+console.log('Hello, world!');
+\`\`\`
+
+1. one
+2. two
+3. three
+
+this is another paragraph
+
+
+`.trim()
+
+    // Loop over streaming chunks and parse incrementally
+    const streamingChunks = simulateStreaming(markdown)
+    streamingChunks.forEach((chunk, idx) => {
+        test(`incremental parsing at chunk ${idx + 1}`, async () => {
+            const astNodes = await parseAndWaitForHighlighter({
+                markdown: chunk,
+                cache,
+                extension,
+            })
+
+            const md = toMarkdown({
+                type: 'root',
+
+                children: astNodes as any[],
+            })
+            const changes = diffWords(chunk, md)
+            // const additions = changes.filter((change) => change.added)
+            expect(md).toMatchSnapshot()
+            // console.log(createPatch('', markdown, md, ))
+            // expect(additions).toEqual([])
+        })
     })
+
     test('returns full AST when no previous data', async () => {
-        const markdown = '# Hello\n\nWorld'
-        const result = getOptimizedMarkdownAst({ markdown })
-        
-        expect(await extractTestData(result)).toMatchInlineSnapshot(`
-          "<html>
-            <p>World</p>
-          </html>
-          "
-        `)
-    })
-
-    test('returns empty array for empty markdown', async () => {
-        const result = getOptimizedMarkdownAst({ markdown: '' })
-        
-        expect(await extractTestData(result)).toMatchInlineSnapshot(`
-          "<html></html>
-          "
-        `)
-    })
-
-    test('reuses entire AST when markdown is unchanged', async () => {
-        const markdown = '# Hello\n\nWorld'
-        const previousMarkdown = '# Hello\n\nWorld'
-        const previousAst = await parseMarkdown(previousMarkdown)
-        
-        const result = getOptimizedMarkdownAst({
+        const astNodes = await parseAndWaitForHighlighter({
             markdown,
-            previousMarkdown,
-            previousAst,
+            cache,
+            extension,
         })
-        
-        expect(await extractTestData(result)).toMatchInlineSnapshot(`
-          "<html>
-            <p>World</p>
-          </html>
-          "
-        `)
-    })
 
-    test('optimizes when only part of markdown changes', async () => {
-        const previousMarkdown = '# Title\n\nFirst paragraph\n\nSecond paragraph'
-        const markdown = '# Title\n\nFirst paragraph\n\nModified paragraph'
-        const previousAst = await parseMarkdown(previousMarkdown)
-        
-        const result = getOptimizedMarkdownAst({
-            markdown,
-            previousMarkdown,
-            previousAst,
-        })
-        
-        expect(await extractTestData(result)).toMatchInlineSnapshot(`
-          "<html>
-            <p>First paragraph</p>
-            <p>Modified paragraph</p>
-          </html>
-          "
-        `)
-    })
+        expect(
+            toMarkdown({
+                type: 'root',
+                children: astNodes as any[],
+            }),
+        ).toMatchInlineSnapshot(`
+          "This is a sample markdown file to showcase various features.
 
-    test('handles new content addition', async () => {
-        const previousMarkdown = '# Title\n\nFirst paragraph'
-        const markdown = '# Title\n\nFirst paragraph\n\nNew paragraph'
-        const previousAst = await parseMarkdown(previousMarkdown)
-        
-        const result = getOptimizedMarkdownAst({
-            markdown,
-            previousMarkdown,
-            previousAst,
-        })
-        
-        expect(await extractTestData(result)).toMatchInlineSnapshot(`
-          "<html>
-            <p>First paragraph</p>
-            <p>New paragraph</p>
-          </html>
-          "
-        `)
-    })
+          ## Features
 
-    test('handles content removal', async () => {
-        const previousMarkdown = '# Title\n\nFirst paragraph\n\nSecond paragraph'
-        const markdown = '# Title\n\nFirst paragraph'
-        const previousAst = await parseMarkdown(previousMarkdown)
-        
-        const result = getOptimizedMarkdownAst({
-            markdown,
-            previousMarkdown,
-            previousAst,
-        })
-        
-        expect(await extractTestData(result)).toMatchInlineSnapshot(`
-          "<html>
-            <p>First paragraph</p>
-          </html>
-          "
-        `)
-    })
+          * Easy formatting
+          * Lists
+          * **Bold text**
+          * [Links](https://example.com)
 
-    test('handles mixed changes', async () => {
-        const previousMarkdown = '# Old Title\n\nFirst paragraph\n\nSecond paragraph'
-        const markdown = '# New Title\n\nFirst paragraph\n\nModified second paragraph\n\nThird paragraph'
-        const previousAst = await parseMarkdown(previousMarkdown)
-        
-        const result = getOptimizedMarkdownAst({
-            markdown,
-            previousMarkdown,
-            previousAst,
-        })
-        
-        expect(await extractTestData(result)).toMatchInlineSnapshot(`
-          "<html>
-            <p>First paragraph</p>
-            <p>Modified second paragraph</p>
-            <p>Third paragraph</p>
-          </html>
-          "
-        `)
-    })
+          > "Markdown makes documentation easy!"
 
-    test('handles nodes without position info', async () => {
-        const previousMarkdown = '# Title\n\nContent'
-        const markdown = '# Title\n\nContent'
-        const previousAst = await parseMarkdown(previousMarkdown)
-        
-        // Remove position info from a node to test fallback
-        if (previousAst?.children?.[0]) {
-            delete previousAst.children[0].position
-        }
-        
-        const result = getOptimizedMarkdownAst({
-            markdown,
-            previousMarkdown,
-            previousAst,
-        })
-        
-        expect(await extractTestData(result)).toMatchInlineSnapshot(`
-          "<html>
-            <p>Content</p>
-          </html>
-          "
-        `)
-    })
+          \`\`\`js
+          console.log('Hello, world!');
+          \`\`\`
 
-    test('handles parsing errors gracefully', async () => {
-        const previousMarkdown = '# Title\n\nContent'
-        const markdown = '# Title\n\nModified content'
-        const previousAst = await parseMarkdown(previousMarkdown)
-        
-        const result = getOptimizedMarkdownAst({
-            markdown,
-            previousMarkdown,
-            previousAst,
-        })
-        
-        expect(await extractTestData(result)).toMatchInlineSnapshot(`
-          "<html>
-            <p>Modified content</p>
-          </html>
+          1. one
+          2. two
+          3. three
+
+          this is another paragraph
           "
         `)
     })

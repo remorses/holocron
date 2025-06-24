@@ -1,0 +1,358 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 1 1`] = `""`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 2 1`] = `""`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 3 1`] = `""`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 4 1`] = `""`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 5 1`] = `""`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 6 1`] = `
+"This
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 7 1`] = `
+"This is
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 8 1`] = `
+"This is a
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 9 1`] = `
+"This is a sample
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 10 1`] = `
+"This is a sample markdown
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 11 1`] = `
+"This is a sample markdown file
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 12 1`] = `
+"This is a sample markdown file to
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 13 1`] = `
+"This is a sample markdown file to showcase
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 14 1`] = `
+"This is a sample markdown file to showcase various
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 15 1`] = `
+"This is a sample markdown file to showcase various features.
+
+##
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 16 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+*
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 17 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 18 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy formatting
+*
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 19 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy formatting
+* Lists
+*
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 20 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy formatting
+* Lists
+* \\*\\*Bold
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 21 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy formatting
+* Lists
+* **Bold text**
+*
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 22 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy formatting
+* Lists
+* **Bold text**
+* [Links](https://example.com)
+
+>
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 23 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy formatting
+* Lists
+* **Bold text**
+* [Links](https://example.com)
+
+> "Markdown
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 24 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy formatting
+* Lists
+* **Bold text**
+* [Links](https://example.com)
+
+> "Markdown makes
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 25 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy formatting
+* Lists
+* **Bold text**
+* [Links](https://example.com)
+
+> "Markdown makes documentation
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 26 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy formatting
+* Lists
+* **Bold text**
+* [Links](https://example.com)
+
+> "Markdown makes documentation easy!"
+
+\`\`\`js
+console.log('Hello,
+\`\`\`
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 27 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy formatting
+* Lists
+* **Bold text**
+* [Links](https://example.com)
+
+> "Markdown makes documentation easy!"
+
+\`\`\`js
+console.log('Hello, world!');
+\`\`\`
+
+1.
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 28 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy formatting
+* Lists
+* **Bold text**
+* [Links](https://example.com)
+
+> "Markdown makes documentation easy!"
+
+\`\`\`js
+console.log('Hello, world!');
+\`\`\`
+
+1. one
+2.
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 29 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy formatting
+* Lists
+* **Bold text**
+* [Links](https://example.com)
+
+> "Markdown makes documentation easy!"
+
+\`\`\`js
+console.log('Hello, world!');
+\`\`\`
+
+1. one
+2. two
+3.
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 30 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy formatting
+* Lists
+* **Bold text**
+* [Links](https://example.com)
+
+> "Markdown makes documentation easy!"
+
+\`\`\`js
+console.log('Hello, world!');
+\`\`\`
+
+1. one
+2. two
+3. three
+
+this
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 31 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy formatting
+* Lists
+* **Bold text**
+* [Links](https://example.com)
+
+> "Markdown makes documentation easy!"
+
+\`\`\`js
+console.log('Hello, world!');
+\`\`\`
+
+1. one
+2. two
+3. three
+
+this is
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 32 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy formatting
+* Lists
+* **Bold text**
+* [Links](https://example.com)
+
+> "Markdown makes documentation easy!"
+
+\`\`\`js
+console.log('Hello, world!');
+\`\`\`
+
+1. one
+2. two
+3. three
+
+this is another
+"
+`;
+
+exports[`getOptimizedMarkdownAst > incremental parsing at chunk 33 1`] = `
+"This is a sample markdown file to showcase various features.
+
+## Features
+
+* Easy formatting
+* Lists
+* **Bold text**
+* [Links](https://example.com)
+
+> "Markdown makes documentation easy!"
+
+\`\`\`js
+console.log('Hello, world!');
+\`\`\`
+
+1. one
+2. two
+3. three
+
+this is another paragraph
+"
+`;
