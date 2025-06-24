@@ -5,7 +5,6 @@ import { size } from 'unist-util-size'
 
 import type { Root, Parent, Literal, Text, Content as MdContent } from 'mdast'
 
-
 declare module 'mdast' {
     export interface HProperties {
         id?: string
@@ -16,42 +15,73 @@ declare module 'mdast' {
     }
 }
 
+type DiffNode = Root | Parent | MdContent | null
 
-var objectProto = Object.prototype
+interface DiffPatch {
+    type: 'remove' | 'insert' | 'replace' | 'text' | 'props' | 'order'
+    left: DiffNode
+    right: DiffNode | Record<string, any> | MoveInfo | null
+}
 
-var ignoredKeys = ['type', 'children', 'value']
+interface MoveInfo {
+    removes: Array<{ left: DiffNode; right: number | string }>
+    inserts: Array<{ left: DiffNode; right: number | string }>
+}
 
-module.exports = diff
+interface PatchResult {
+    left: DiffNode
+    [index: number]: DiffPatch | DiffPatch[]
+}
 
-function diff(left, right) {
-    var patch = { left: left }
+interface KeyIndexResult {
+    key: Record<string, number>
+    index: string[]
+}
+
+interface ReorderResult {
+    children: DiffNode[]
+    moves: MoveInfo | null
+}
+
+const objectProto = Object.prototype
+
+const ignoredKeys = ['type', 'children', 'value']
+
+export default diff
+
+function diff(left: Root, right: Root): PatchResult {
+    const patch: PatchResult = { left: left }
     walk(left, right, patch, 0)
     return patch
 }
 
-function walk(left, right, patch, index) {
-    var apply = patch[index]
+function walk(left: DiffNode, right: DiffNode, patch: PatchResult, index: number): void {
+    let apply = patch[index]
 
     if (left === right) {
         return
     }
 
     if (!right) {
-        apply = append(apply, { type: 'remove', left: left, right: null })
+        const removePatch: DiffPatch = { type: 'remove', left: left, right: null }
+        apply = append(apply, removePatch)
     } else if (!left) {
-        apply = append(apply, { type: 'insert', left: null, right: right })
+        const insertPatch: DiffPatch = { type: 'insert', left: null, right: right }
+        apply = append(apply, insertPatch)
     } else if (left.type === right.type) {
-        apply = diffProperties(apply, left, right)
+        const propsResult = diffProperties(apply, left, right)
+        if (propsResult) apply = propsResult
 
-        /* Nodes of the same type must be of the same kind: if `right` is a
-         * text, so is `left`. */
         if (text(right)) {
-            apply = diffText(apply, left, right)
+            const textResult = diffText(apply, left as Text, right as Text)
+            if (textResult) apply = textResult
         } else if (parent(right)) {
-            apply = diffChildren(apply, left, right, patch, index)
+            const childrenResult = diffChildren(apply, left as Parent, right as Parent, patch, index)
+            if (childrenResult) apply = childrenResult
         }
     } else {
-        apply = append(apply, { type: 'replace', left: left, right: right })
+        const replacePatch: DiffPatch = { type: 'replace', left: left, right: right }
+        apply = append(apply, replacePatch)
     }
 
     if (apply) {
@@ -59,20 +89,20 @@ function walk(left, right, patch, index) {
     }
 }
 
-function diffText(apply, left, right) {
+function diffText(apply: DiffPatch | DiffPatch[] | undefined, left: Text, right: Text): DiffPatch | DiffPatch[] | undefined {
     return left.value === right.value
         ? apply
         : append(apply, { type: 'text', left: left, right: right })
 }
 
-function diffChildren(apply, left, right, patch, offset) {
-    var leftChildren = left.children
-    var ordered = reorder(leftChildren, right.children)
-    var children = ordered.children
-    var length = children.length
-    var index = -1
-    var leftChild
-    var rightChild
+function diffChildren(apply: DiffPatch | DiffPatch[] | undefined, left: Parent, right: Parent, patch: PatchResult, offset: number): DiffPatch | DiffPatch[] | undefined {
+    const leftChildren = left.children
+    const ordered = reorder(leftChildren, right.children)
+    const children = ordered.children
+    const length = children.length
+    let index = -1
+    let leftChild: DiffNode
+    let rightChild: DiffNode
 
     while (++index < length) {
         leftChild = leftChildren[index]
@@ -82,7 +112,6 @@ function diffChildren(apply, left, right, patch, offset) {
         if (leftChild) {
             walk(leftChild, rightChild, patch, offset)
         } else {
-            /* Excess nodes in `right` need to be added */
             apply = append(apply, {
                 type: 'insert',
                 left: null,
@@ -94,7 +123,6 @@ function diffChildren(apply, left, right, patch, offset) {
     }
 
     if (ordered.moves) {
-        /* Reorder nodes last */
         apply = append(apply, {
             type: 'order',
             left: left,
@@ -105,20 +133,20 @@ function diffChildren(apply, left, right, patch, offset) {
     return apply
 }
 
-function diffProperties(apply, left, right) {
-    var diff = diffObjects(left, right)
+function diffProperties(apply: DiffPatch | DiffPatch[] | undefined, left: DiffNode, right: DiffNode): DiffPatch | DiffPatch[] | undefined {
+    const diff = diffObjects(left, right)
     return diff
         ? append(apply, { type: 'props', left: left, right: diff })
         : apply
 }
 
-function diffObjects(left, right) {
-    var diff
-    var leftKey
-    var rightKey
-    var leftValue
-    var rightValue
-    var objectDiff
+function diffObjects(left: any, right: any): Record<string, any> | undefined {
+    let diff: Record<string, any> | undefined
+    let leftKey: string
+    let rightKey: string
+    let leftValue: any
+    let rightValue: any
+    let objectDiff: Record<string, any> | undefined
 
     for (leftKey in left) {
         if (ignoredKeys.indexOf(leftKey) !== -1) {
@@ -169,39 +197,38 @@ function diffObjects(left, right) {
     return diff
 }
 
-function append(apply, patch) {
+function append(apply: DiffPatch | DiffPatch[] | undefined, patch: DiffPatch): DiffPatch | DiffPatch[] {
     if (!apply) {
         return patch
     }
 
     if (array(apply)) {
-        apply.push(patch)
-        return apply
+        (apply as DiffPatch[]).push(patch)
+        return apply as DiffPatch[]
     }
 
-    return [apply, patch]
+    return [apply as DiffPatch, patch]
 }
 
-/* List diff, naive left to right reordering */
-function reorder(leftChildren, rightChildren) {
-    var leftChildIndex = keyIndex(leftChildren)
-    var leftKeys = leftChildIndex.key
-    var leftIndex = leftChildIndex.index
-    var rightChildIndex = keyIndex(rightChildren)
-    var rightKeys = rightChildIndex.key
-    var rightIndex = rightChildIndex.index
-    var leftLength = leftChildren.length
-    var rightLength = rightChildren.length
-    var leftOffset = 0
-    var rightOffset = 0
-    var rightMoved = []
-    var leftMoved = []
-    var removes = []
-    var inserts = []
-    var next = []
-    var index = -1
-    var leftKey
-    var rightKey
+function reorder(leftChildren: DiffNode[], rightChildren: DiffNode[]): ReorderResult {
+    let leftChildIndex = keyIndex(leftChildren)
+    let leftKeys = leftChildIndex.key
+    let leftIndex = leftChildIndex.index
+    const rightChildIndex = keyIndex(rightChildren)
+    const rightKeys = rightChildIndex.key
+    const rightIndex = rightChildIndex.index
+    let leftLength = leftChildren.length
+    const rightLength = rightChildren.length
+    let leftOffset = 0
+    let rightOffset = 0
+    const rightMoved: number[] = []
+    const leftMoved: number[] = []
+    const removes: Array<{ left: DiffNode; right: number | string }> = []
+    const inserts: Array<{ left: DiffNode; right: number | string }> = []
+    const next: DiffNode[] = []
+    let index = -1
+    let leftKey: string
+    let rightKey: string
 
     while (++index < leftLength) {
         leftKey = leftIndex[index]
@@ -221,18 +248,18 @@ function reorder(leftChildren, rightChildren) {
         }
     }
 
-    leftChildren = next
-    leftChildIndex = keyIndex(leftChildren)
+    const finalChildren = next
+    leftChildIndex = keyIndex(finalChildren)
     leftKeys = leftChildIndex.key
     leftIndex = leftChildIndex.index
-    leftLength = leftChildren.length
+    leftLength = finalChildren.length
     rightKey = rightIndex[rightOffset]
     leftKey = leftIndex[leftOffset]
 
     while (leftOffset < leftLength || rightOffset < rightLength) {
         /* The left node moved already. */
         if (leftMoved.indexOf(leftOffset) !== -1) {
-            removes.push({ left: leftChildren[leftOffset], right: leftOffset })
+            removes.push({ left: finalChildren[leftOffset], right: leftOffset })
             leftKey = leftIndex[++leftOffset]
             /* The right node moved already. */
         } else if (rightMoved.indexOf(rightOffset) !== -1) {
@@ -260,7 +287,7 @@ function reorder(leftChildren, rightChildren) {
             rightKey = rightIndex[++rightOffset]
         } else {
             inserts.push({
-                left: leftChildren[leftOffset],
+                left: finalChildren[leftOffset],
                 right: rightKeys[leftKey],
             })
             rightMoved.push(rightKeys[leftKey])
@@ -269,23 +296,23 @@ function reorder(leftChildren, rightChildren) {
     }
 
     if (removes.length === 0 && inserts.length === 0) {
-        return { children: leftChildren, moves: null }
+        return { children: finalChildren, moves: null }
     }
 
     return {
-        children: leftChildren,
+        children: finalChildren,
         moves: { removes: removes, inserts: inserts },
     }
 }
 
-function keyIndex(children) {
-    var keys = {}
-    var indices = []
-    var length = children.length
-    var counts = {}
-    var index = -1
-    var child
-    var key
+function keyIndex(children: DiffNode[]): KeyIndexResult {
+    const keys: Record<string, number> = {}
+    const indices: string[] = []
+    const length = children.length
+    const counts: Record<string, number> = {}
+    let index = -1
+    let child: DiffNode
+    let key: string
 
     while (++index < length) {
         child = children[index]
@@ -309,27 +336,29 @@ function keyIndex(children) {
     return { key: keys, index: indices }
 }
 
-function syntheticKey(node) {
-    var props = {}
-    var key
+function syntheticKey(node: DiffNode): string {
+    const props: Record<string, any> = {}
+    let key: string
+
+    if (!node) return 'null'
 
     for (key in node) {
         if (ignoredKeys.indexOf(key) === -1) {
-            props[key] = node[key]
+            props[key] = (node as any)[key]
         }
     }
 
     return node.type + ':' + JSON.stringify(props)
 }
 
-function parent(value) {
-    return node(value) && 'children' in value
+function parent(value: any): value is Parent {
+    return node(value) && !!value && 'children' in value
 }
 
-function text(value) {
-    return node(value) && 'value' in value
+function text(value: any): value is Text {
+    return node(value) && !!value && 'value' in value
 }
 
-function node(value) {
-    return object(value) && 'type' in value
+function node(value: any): value is DiffNode {
+    return value !== null && value !== undefined && object(value) && 'type' in value
 }
