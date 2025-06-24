@@ -59,7 +59,7 @@ export function useParentPostMessage(
                     },
                 )
             }
-        }, 1000)
+        }, 500)
 
         return () => {
             window.removeEventListener('message', onParentPostMessage)

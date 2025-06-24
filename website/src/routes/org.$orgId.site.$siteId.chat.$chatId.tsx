@@ -177,18 +177,18 @@ function Content() {
                                 iframeRef,
                             })
 
+                            const state = {
+                                currentSlug: chat.currentSlug || undefined,
+                                filesInDraft: (chat.filesInDraft as any) || {},
+                            }
+                            docsRpcClient.setDocsState(state)
                             const waitForFirstMessage = (event) => {
                                 if (
                                     iframeRef.current &&
                                     event.source ===
                                         iframeRef.current.contentWindow
                                 ) {
-                                    docsRpcClient.setDocsState({
-                                        currentSlug:
-                                            chat.currentSlug || undefined,
-                                        filesInDraft:
-                                            (chat.filesInDraft as any) || {},
-                                    })
+                                    docsRpcClient.setDocsState(state)
                                     window.removeEventListener(
                                         'message',
                                         waitForFirstMessage,

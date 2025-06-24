@@ -31,10 +31,18 @@ export const links: Route.LinksFunction = () => [
 
 const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, '')]
 
-export function Layout({ children }: { children: React.ReactNode }) {
-    const navigate = useNavigate()
+let onFirstStateMessage = () => {}
+const firstStateReceived = new Promise<void>((resolve) => {
+    onFirstStateMessage = resolve
+})
 
-    useParentPostMessage(async (e: MessageEvent) => {
+export const clientLoader = async () => {
+    await firstStateReceived
+}
+
+async function messagesHandling() {
+    async function onParentPostMessage(e) {
+        onFirstStateMessage()
         try {
             if (!allowedOrigins.includes(e.origin)) {
                 console.warn(
@@ -52,7 +60,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     prevState.currentSlug !== state.currentSlug &&
                     state.currentSlug !== window.location.pathname
                 ) {
-                    return await navigate(state.currentSlug!)
+                    // return await navigate(state.currentSlug!)
+                    // TODO do client side navigation instead
+                    window.location.pathname = state.currentSlug
                 }
                 console.log(`setting docs-state inside iframe`, state)
                 useDocsState.setState(state)
@@ -65,7 +75,40 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 },
             )
         }
-    })
+    }
+    window.addEventListener('message', onParentPostMessage)
+    if (typeof window !== 'undefined' && window.parent) {
+        window.parent?.postMessage?.(
+            { type: 'ready' },
+            {
+                targetOrigin: '*',
+            },
+        )
+    }
+
+    // Set up ping interval
+    const pingInterval = setInterval(() => {
+        if (typeof window !== 'undefined' && window.parent) {
+            window.parent?.postMessage?.(
+                { type: 'ping' },
+                {
+                    targetOrigin: '*',
+                },
+            )
+        }
+    }, 500)
+}
+
+if (typeof window !== 'undefined') {
+    messagesHandling()
+}
+
+export function Layout({ children }: { children: React.ReactNode }) {
+    const navigate = useNavigate()
+
+    // useParentPostMessage(async (e: MessageEvent) => {
+
+    // })
     useNProgress()
     return (
         <html lang='en' suppressHydrationWarning>
