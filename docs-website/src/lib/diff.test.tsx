@@ -1,4 +1,8 @@
 import type { Root } from 'mdast'
+import prettierHtml from 'prettier/plugins/html'
+import prettier from 'prettier/standalone'
+import { processMdxInServer } from './mdx.server'
+import { Change, diffWords, diffWordsWithSpace } from 'diff'
 import { renderToStaticMarkup } from 'react-dom/server.edge'
 import { remark } from 'remark'
 import remarkMdx from 'remark-mdx'
@@ -13,14 +17,11 @@ async function parseWithPositions(markdown: string) {
 
 // this function should add a data-added attribute to all the added text nodes and other leaf nodes
 function diffMarkdowns(oldMarkdown, newMarkdown, ast) {
-    const diffs: Change[] = diffWords(oldMarkdown, newMarkdown)
+    const diffs: Change[] = diffWordsWithSpace(oldMarkdown, newMarkdown)
     return markAddedNodes(diffs, ast)
 }
 
-import prettierHtml from 'prettier/plugins/html'
-import prettier from 'prettier/standalone'
-import { processMdxInServer } from './mdx.server'
-import { Change, diffWords } from 'diff'
+
 
 // Helper to extract relevant test data from AST
 async function extractTestData(ast: Root) {
@@ -395,8 +396,7 @@ const new = "code"
               This is a paragraph with
               <a href="https://new.com" title=""
                 ><span data-added="true">new</span> link</a
-              >
-              <span data-added="true">and </span
+              ><span data-added="true"> and </span
               ><strong data-added="true"><span data-added="true">bold text</span></strong
               >.
             </p>

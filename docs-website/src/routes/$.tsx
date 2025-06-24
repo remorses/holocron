@@ -483,7 +483,7 @@ function Logo() {
 
 function DocsMarkdown() {
     const loaderData = useLoaderData<typeof loader>()
-    let { ast, markdown, previousMarkdownToDiff, isStreaming } = useDocsState(
+    let { ast, markdown, isStreaming } = useDocsState(
         useShallow((x) => {
             const { filesInDraft, isMarkdownStreaming: isStreaming } = x
 
@@ -494,7 +494,6 @@ function DocsMarkdown() {
                     markdown: override.content,
                     isStreaming,
                     ast: undefined,
-                    previousMarkdownToDiff: loaderData.ast,
                 }
             }
             console.log(
@@ -503,7 +502,7 @@ function DocsMarkdown() {
 
             return {
                 isStreaming,
-                previousMarkdownToDiff: undefined,
+
                 ast: loaderData.ast,
                 markdown: '',
             }
@@ -512,9 +511,10 @@ function DocsMarkdown() {
 
     return (
         <StreamingMarkdownRuntimeComponent
-            previousMarkdown={previousMarkdownToDiff}
+            previousMarkdown={loaderData.markdown}
             previousAst={loaderData.ast}
             isStreaming={isStreaming}
+            addDiffAttributes={true}
             markdown={markdown}
             ast={ast}
         />
