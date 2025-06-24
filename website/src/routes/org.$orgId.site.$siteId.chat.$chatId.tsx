@@ -170,6 +170,8 @@ function Content() {
                     <iframe
                         ref={(el) => {
                             iframeRef.current = el
+                        }}
+                        onLoad={() => {
                             console.log(`docs iframe is being replaced`)
                             const docsRpcClient = createIframeRpcClient({
                                 iframeRef,
@@ -197,8 +199,6 @@ function Content() {
                                 'message',
                                 waitForFirstMessage,
                             )
-
-                            return docsRpcClient.cleanup
                         }}
                         key={chat.chatId}
                         style={scaleDownElement(0.9)}
