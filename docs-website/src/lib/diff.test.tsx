@@ -78,7 +78,7 @@ describe('markRemarkAstAdditions', () => {
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <p>Hello universe</p>
+            <p>Hello <span data-added="true">universe</span></p>
           </html>
           "
         `)
@@ -113,7 +113,7 @@ describe('markRemarkAstAdditions', () => {
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
             <p>First paragraph</p>
-            <p>Second paragraph</p>
+            <p data-added="true"><span data-added="true">Second paragraph</span></p>
           </html>
           "
         `)
@@ -219,7 +219,9 @@ describe('markRemarkAstAdditions', () => {
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <p><strong>bold</strong></p>
+            <p>
+              <strong><span data-added="true">bold</span></strong>
+            </p>
           </html>
           "
         `)
@@ -272,14 +274,14 @@ describe('markRemarkAstAdditions', () => {
                 <tr class="">
                   <td class="">A</td>
                   <td class="">B</td>
-                  <td class="">C</td>
+                  <td class=""><span data-added="true">C</span></td>
                 </tr>
               </thead>
               <tbody>
                 <tr class="">
                   <td class="">1</td>
                   <td class="">2</td>
-                  <td class="">3</td>
+                  <td class=""><span data-added="true">3</span></td>
                 </tr>
               </tbody>
             </table>
@@ -389,13 +391,20 @@ const new = "code"
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
             <p>
-              This is a paragraph with <a href="https://new.com" title="">new link</a> and
-              <strong>bold text</strong>.
+              This is a paragraph with
+              <a href="https://new.com" title=""
+                ><span data-added="true">new</span> link</a
+              >
+              <span data-added="true">and </span
+              ><strong data-added="true"><span data-added="true">bold text</span></strong
+              >.
             </p>
             <ul>
               <li><p>List item 1</p></li>
               <li><p>List item 2</p></li>
-              <li><p>List item 3</p></li>
+              <li data-added="true">
+                <p data-added="true"><span data-added="true">List item 3</span></p>
+              </li>
             </ul>
             <pre><code>const new = &quot;code&quot;</code></pre>
           </html>
@@ -411,7 +420,9 @@ const new = "code"
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <blockquote><p>New quote</p></blockquote>
+            <blockquote>
+              <p><span data-added="true">New</span> quote</p>
+            </blockquote>
           </html>
           "
         `)
@@ -450,7 +461,7 @@ const new = "code"
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
             <p>Paragraph one</p>
-            <hr />
+            <hr data-added="true" />
             <p>Paragraph two</p>
           </html>
           "
@@ -475,8 +486,12 @@ const new = "code"
           "<html>
             <p>todos</p>
             <ul>
-              <li data-checked="true"><p>Checked</p></li>
-              <li data-checked="false"><p>Unchecked</p></li>
+              <li data-checked="true">
+                <p data-added="true"><span data-added="true">Checked</span></p>
+              </li>
+              <li data-checked="false">
+                <p data-added="true"><span data-added="true">Unchecked</span></p>
+              </li>
             </ul>
           </html>
           "
@@ -495,7 +510,10 @@ const new = "code"
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <p>The quick red fox leaps</p>
+            <p>
+              The quick <span data-added="true">red</span> fox
+              <span data-added="true">leaps</span>
+            </p>
           </html>
           "
         `)

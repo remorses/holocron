@@ -1,21 +1,13 @@
 import { diffWords, Change } from 'diff'
 import type { Root, Node, Parent, Text as TextNode, Data } from 'mdast'
 
-/**
- * Interface extending mdast's Data to include hProperties
- */
-interface DataWithHProperties extends Data {
-    hProperties?: {
-        'data-added'?: boolean
-        [key: string]: any
+declare module 'mdast' {
+    export interface HProperties {
+        id?: string
     }
-}
-
-/**
- * Interface for nodes with our extended data type
- */
-interface NodeWithData extends Node {
-    data?: DataWithHProperties
+    export interface Data {
+        hProperties?: HProperties
+    }
 }
 
 /**
@@ -50,8 +42,6 @@ interface AddedRange {
  * @returns The modified AST with added nodes marked
  */
 export function markAddedNodes(diffs: Change[], ast: Root): Root {
-
-
     // Convert diffs to offset ranges for added portions
     // We need to track the character offsets in the new markdown
     const addedRanges: AddedRange[] = []
@@ -131,9 +121,7 @@ export function markAddedNodes(diffs: Change[], ast: Root): Root {
      * Only applies to text nodes - other inline nodes like emphasis, strong,
      * and inlineCode are not split even if partially added.
      */
-    function splitTextNode(
-        node: TextNode & NodeWithData,
-    ): (TextNode & NodeWithData)[] {
+    function splitTextNode(node: TextNode & Node): (TextNode & Node)[] {
         const text = node.value
         const nodeStart = node.position!.start.offset!
         const nodeEnd = node.position!.end.offset!
@@ -155,7 +143,7 @@ export function markAddedNodes(diffs: Change[], ast: Root): Root {
         }
 
         // Need to split the text node
-        const nodes: (TextNode & NodeWithData)[] = []
+        const nodes: (TextNode & Node)[] = []
         let lastEnd = 0
 
         // Sort portions by start position to process them in order
@@ -165,7 +153,7 @@ export function markAddedNodes(diffs: Change[], ast: Root): Root {
             // Add non-added text before this portion
             if (portion.start > lastEnd) {
                 const beforeText = text.substring(lastEnd, portion.start)
-                const beforeNode: TextNode & NodeWithData = {
+                const beforeNode: TextNode & Node = {
                     type: 'text',
                     value: beforeText,
                     position: {
@@ -185,7 +173,7 @@ export function markAddedNodes(diffs: Change[], ast: Root): Root {
             }
 
             // Add the added portion with data-added marker
-            const addedNode: TextNode & NodeWithData = {
+            const addedNode: TextNode & Node = {
                 type: 'text',
                 value: portion.text,
                 data: {
@@ -214,7 +202,7 @@ export function markAddedNodes(diffs: Change[], ast: Root): Root {
         // Add remaining non-added text after the last added portion
         if (lastEnd < text.length) {
             const remainingText = text.substring(lastEnd)
-            const remainingNode: TextNode & NodeWithData = {
+            const remainingNode: TextNode & Node = {
                 type: 'text',
                 value: remainingText,
                 position: {
@@ -251,7 +239,7 @@ export function markAddedNodes(diffs: Change[], ast: Root): Root {
      * @returns Number of extra nodes added (for split text nodes)
      */
     function walk(
-        node: NodeWithData,
+        node: Node,
         parent: Parent | null = null,
         index: number | null = null,
     ): number {
@@ -270,7 +258,7 @@ export function markAddedNodes(diffs: Change[], ast: Root): Root {
 
         // Special handling for text nodes - they can be split if partially added
         if (node.type === 'text' && parent && index !== null) {
-            const textNode = node as TextNode & NodeWithData
+            const textNode = node as TextNode & Node
             const splitNodes = splitTextNode(textNode)
 
             if (splitNodes.length > 1) {
@@ -295,7 +283,7 @@ export function markAddedNodes(diffs: Change[], ast: Root): Root {
         if ('children' in node && Array.isArray(node.children)) {
             let i = 0
             while (i < node.children.length) {
-                const child = node.children[i] as NodeWithData
+                const child = node.children[i] as Node
                 const extraNodes = walk(child, node as Parent, i)
                 i += 1 + extraNodes // Skip past any newly added split nodes
             }
@@ -304,14 +292,10 @@ export function markAddedNodes(diffs: Change[], ast: Root): Root {
         return 0
     }
 
-    // Clone the AST to avoid modifying the original
-    // This ensures the function is pure and doesn't have side effects
-    const clonedAst: Root = JSON.parse(JSON.stringify(ast))
-
     // Walk the AST starting from the root
-    walk(clonedAst as NodeWithData)
+    walk(ast as Node)
 
-    return clonedAst
+    return ast
 }
 
 // Example usage:
