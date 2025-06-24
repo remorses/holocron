@@ -3,6 +3,7 @@
     "private": true,
     "scripts": {
         "test": "NODE_ENV=test vitest",
+        "deployment": "pnpm -r --parallel run deployment",
         "watch": "pnpm -r watch",
         "build": "pnpm -r build",
         "release": "pnpm build && changeset"

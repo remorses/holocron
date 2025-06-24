@@ -4,6 +4,7 @@ import type { Root, Node, Parent, Text as TextNode, Data } from 'mdast'
 declare module 'mdast' {
     export interface HProperties {
         id?: string
+        'data-added'?: string | boolean
     }
     export interface Data {
         hProperties?: HProperties
