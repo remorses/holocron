@@ -38,7 +38,7 @@ const firstStateReceived = new Promise<void>((resolve) => {
 })
 
 export const clientLoader = async () => {
-    if (isInsidePreviewIframe()) await firstStateReceived
+    // if (isInsidePreviewIframe()) await firstStateReceived
 }
 
 async function messagesHandling() {
