@@ -12,8 +12,18 @@ import {
     useMemo,
     useRef,
 } from 'react'
-import { ChatMessage } from 'website/src/components/chat-message'
+import { 
+    ChatMessage, 
+    EditingUserMessage, 
+    UserMessageWithEditButton,
+    EditorToolPreview,
+    FilesTreePreview,
+    ToolPreviewContainer
+} from 'website/src/components/chat-message'
+import { RenderFormPreview } from './render-form-preview'
 import { MentionsTextArea } from 'website/src/components/mentions-textarea'
+import { Markdown } from 'docs-website/src/lib/markdown'
+import { useClickOutside } from '../lib/hooks'
 
 import { Button } from 'website/src/components/ui/button'
 import { ScrollArea } from 'website/src/components/ui/scroll-area'
@@ -140,7 +150,6 @@ function Messages({ ref }) {
                     message={{
                         role: 'assistant',
                         id: '',
-
                         content: '',
                         parts: [
                             {
@@ -150,6 +159,10 @@ function Messages({ ref }) {
                         ],
                     }}
                 >
+                    <Markdown
+                        markdown='Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:'
+                        isStreaming={false}
+                    />
                     <div className='flex flex-col items-start gap-3 mt-3'>
                         <SuggestionButton
                             icon={<PaletteIcon />}
@@ -190,14 +203,117 @@ function Messages({ ref }) {
                     </div>
                 </ChatMessage>
             )}
-            {messages.map((x) => {
-                return <ChatMessage key={x.id} message={x} />
+            {messages.map((message) => {
+                return <MessageRenderer key={message.id} message={message} />
             })}
             <ErrorMessage />
             {/* {!messages.length && <ChatCards />} */}
         </div>
     )
 }
+
+function MessageRenderer({ message }: { message: UIMessage }) {
+    const isChatGenerating = useChatState((x) => x.isChatGenerating)
+    const editingMessageId = useChatState((x) => x.editingMessageId)
+    const isEditing = editingMessageId === message.id
+
+    const handleEditStart = () => {
+        useChatState.setState({ editingMessageId: message.id })
+    }
+
+    if (message.role === 'user' && isEditing) {
+        return <EditingUserMessage message={message} />
+    }
+
+    if (message.role === 'user') {
+        return (
+            <UserMessageWithEditButton
+                message={message}
+                onEditStart={handleEditStart}
+            >
+                {message.parts.map((part, index) => {
+                    if (part.type === 'text') {
+                        return (
+                            <Markdown
+                                key={index}
+                                className='[&_p]:m-0'
+                                isStreaming={isChatGenerating}
+                                markdown={part.text}
+                            />
+                        )
+                    }
+                    return null
+                })}
+            </UserMessageWithEditButton>
+        )
+    }
+
+    return (
+        <ChatMessage message={message}>
+            {message.parts.map((part, index) => {
+                if (part.type === 'tool-invocation') {
+                    const toolName = part.toolInvocation.toolName
+                    if (toolName === 'str_replace_editor') {
+                        return (
+                            <EditorToolPreview
+                                key={index}
+                                {...part.toolInvocation}
+                            />
+                        )
+                    }
+                    if (toolName === 'get_project_files') {
+                        return (
+                            <FilesTreePreview
+                                key={index}
+                                {...part.toolInvocation}
+                            />
+                        )
+                    }
+                    if (toolName === 'render_form') {
+                        return (
+                            <RenderFormPreview
+                                key={index}
+                                {...part.toolInvocation}
+                            />
+                        )
+                    }
+                    return (
+                        <pre key={index}>
+                            {JSON.stringify(
+                                part.toolInvocation,
+                                null,
+                                2,
+                            )}
+                        </pre>
+                    )
+                }
+
+                if (part.type === 'text') {
+                    return (
+                        <Markdown
+                            isStreaming={isChatGenerating}
+                            key={index}
+                            markdown={part.text}
+                        />
+                    )
+                }
+
+                if (part.type === 'reasoning') {
+                    return (
+                        <Markdown
+                            key={index}
+                            isStreaming={isChatGenerating}
+                            markdown={'thinking:' + part.reasoning}
+                        />
+                    )
+                }
+
+                return null
+            })}
+        </ChatMessage>
+    )
+}
+
 function SuggestionButton({
     icon,
     children,

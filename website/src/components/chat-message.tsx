@@ -28,8 +28,13 @@ import { RenderFormPreview } from './render-form-preview'
 
 type ChatMessageProps = {
     message: UIMessage
-    children?: React.ReactNode
+    children: React.ReactNode
 }
+
+type EditingUserMessageProps = {
+    message: UIMessage
+}
+
 function LoadingSpinner() {
     // This will animate the dots: . .. ... . .. ... etc.
     // We use a span for each sequence, only one visible at a time via keyframes.
@@ -102,25 +107,14 @@ export const ChatMessage = memo(function ChatMessage({
     message,
     children,
 }: ChatMessageProps) {
-    // console.log(`rendering message ${message.id}`)
     const isChatGenerating = useChatState((x) => x.isChatGenerating)
-    const editingMessageId = useChatState((x) => x.editingMessageId)
-    const [editText, setEditText] = useState('')
-    const editingBox = useRef<HTMLDivElement>(null)
-    const isEditing = editingMessageId === message.id
-    useClickOutside(editingBox, () => {
-        if (isEditing) {
-            useChatState.setState({ editingMessageId: undefined })
-        }
-    })
-
-    // Add isLastMessage
     const isLastAssistantMessage = useChatState(
         (x) =>
             x.messages.length > 0 &&
             x.messages[x.messages.length - 1]?.id === message.id &&
             message.role === 'assistant',
     )
+    
     if (
         isLastAssistantMessage &&
         isChatGenerating &&
@@ -128,19 +122,46 @@ export const ChatMessage = memo(function ChatMessage({
     ) {
         return <LoadingSpinner />
     }
-    // return <LoadingSpinner />
 
-    const handleEditStart = () => {
-        const textContent = message.parts
+    return (
+        <article
+            className={cn(
+                'flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed',
+                message.role === 'user' && 'justify-end',
+            )}
+        >
+            <div
+                className={cn(
+                    'max-w-full relative group/message',
+                    message.role === 'user'
+                        ? 'bg-muted px-4 py-3 rounded-xl'
+                        : 'space-y-4 w-full',
+                )}
+            >
+                <div className='prose text-sm w-full max-w-full dark:prose-invert'>
+                    {children}
+                </div>
+            </div>
+        </article>
+    )
+})
+
+export const EditingUserMessage = memo(function EditingUserMessage({
+    message,
+}: EditingUserMessageProps) {
+    const [editText, setEditText] = useState(() => {
+        return message.parts
             .filter((part) => part.type === 'text')
             .map((part) => part['text'])
             .join('')
-        setEditText(textContent)
-        useChatState.setState({ editingMessageId: message.id })
+    })
+    const editingBox = useRef<HTMLDivElement>(null)
+    
+    const handleEditCancel = () => {
+        useChatState.setState({ editingMessageId: undefined })
     }
 
     const handleEditSave = () => {
-        // Update the message with new text
         const messages = useChatState.getState().messages || []
         const updatedMessages = messages.map((msg) => {
             if (msg.id === message.id) {
@@ -151,13 +172,12 @@ export const ChatMessage = memo(function ChatMessage({
                             ? { ...part, text: editText }
                             : part,
                     ),
-                    content: editText, // Also update content field
+                    content: editText,
                 }
             }
             return msg
         })
 
-        // Remove all messages after this one (since we're editing)
         const messageIndex = updatedMessages.findIndex(
             (msg) => msg.id === message.id,
         )
@@ -172,172 +192,90 @@ export const ChatMessage = memo(function ChatMessage({
         const event = new CustomEvent('chatRegenerate')
         window.dispatchEvent(event)
     }
+    
+    useClickOutside(editingBox, handleEditCancel)
 
-    const handleEditCancel = () => {
-        useChatState.setState({ editingMessageId: undefined })
-        setEditText('')
-    }
-
-    // return <LoadingSpinner />
     return (
-        <article
-            className={cn(
-                'flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed',
-                message.role === 'user' && 'justify-end',
-            )}
-        >
-            <div
-                className={cn(
-                    'max-w-full relative group/message',
-                    isEditing && 'grow',
-                    message.role === 'user'
-                        ? 'bg-muted px-4 py-3 rounded-xl'
-                        : 'space-y-4 w-full',
-                )}
-            >
-                {message.role === 'user' && !isEditing && (
-                    <div className='absolute hidden group-hover/message:block -top-2 -right-2'>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant='outline'
-                                    size='icon'
-                                    className='rounded-full size-6 border-none bg-background shadow-md hover:bg-muted'
-                                    onClick={handleEditStart}
-                                >
-                                    <RiEditLine className='size-3' />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent
-                                side='top'
-                                className='px-2 py-1 text-xs'
-                            >
-                                <p>Edit message</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </div>
-                )}
-
+        <article className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end'>
+            <div className='max-w-full relative group/message grow bg-muted px-4 py-3 rounded-xl'>
                 <div className='prose text-sm w-full max-w-full dark:prose-invert'>
-                    {message.parts.map((part, index) => {
-                        if (part.type === 'tool-invocation') {
-                            const toolName = part.toolInvocation.toolName
-                            if (toolName === 'str_replace_editor') {
-                                return (
-                                    <EditorToolPreview
-                                        key={index}
-                                        {...part.toolInvocation}
-                                    />
-                                )
-                            }
-                            if (toolName === 'get_project_files') {
-                                return (
-                                    <FilesTreePreview
-                                        key={index}
-                                        {...part.toolInvocation}
-                                    />
-                                )
-                            }
-                            if (toolName === 'render_form') {
-                                return (
-                                    <RenderFormPreview
-                                        key={index}
-                                        {...part.toolInvocation}
-                                    />
-                                )
-                            }
-                            return (
-                                <pre key={index}>
-                                    {JSON.stringify(
-                                        part.toolInvocation,
-                                        null,
-                                        2,
-                                    )}
-                                </pre>
-                            )
-                        }
-
-                        if (part.type === 'text') {
-                            if (isEditing) {
-                                return (
-                                    <div
-                                        key={index}
-                                        ref={editingBox}
-                                        className='space-y-2 w-full'
-                                    >
-                                        <textarea
-                                            value={editText}
-                                            onChange={(e) =>
-                                                setEditText(e.target.value)
-                                            }
-                                            onKeyDown={(e) => {
-                                                if (
-                                                    e.key === 'Enter' &&
-                                                    !e.shiftKey
-                                                ) {
-                                                    e.preventDefault()
-                                                    if (editText.trim()) {
-                                                        handleEditSave()
-                                                    }
-                                                }
-                                                if (e.key === 'Escape') {
-                                                    e.preventDefault()
-                                                    handleEditCancel()
-                                                }
-                                            }}
-                                            className='w-full min-h-0 min-w-[100px]  p-px focus-visible:outline-none bg-transparent rounded-md  text-sm resize-none focus:outline-none '
-                                            autoFocus
-                                        />
-                                        <div className='flex items-center gap-2 justify-end'>
-                                            <Button
-                                                size='sm'
-                                                onClick={handleEditSave}
-                                                disabled={!editText.trim()}
-                                            >
-                                                Save
-                                            </Button>
-                                        </div>
-                                    </div>
-                                )
-                            }
-                            if (message.role === 'user') {
-                                return (
-                                    <Markdown
-                                        key={index}
-                                        className='[&_p]:m-0'
-                                        isStreaming={isChatGenerating}
-                                        markdown={part.text}
-                                    />
-                                )
-                            }
-                            return (
-                                <Markdown
-                                    isStreaming={isChatGenerating}
-                                    key={index}
-                                    markdown={part.text}
-                                />
-                            )
-                        }
-
-                        if (part.type === 'reasoning') {
-                            return (
-                                <Markdown
-                                    key={index}
-                                    isStreaming={isChatGenerating}
-                                    markdown={'thinking:' + part.reasoning}
-                                />
-                            )
-                        }
-                    })}
-                    {children}
+                    <div
+                        ref={editingBox}
+                        className='space-y-2 w-full'
+                    >
+                        <textarea
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault()
+                                    if (editText.trim()) {
+                                        handleEditSave()
+                                    }
+                                }
+                                if (e.key === 'Escape') {
+                                    e.preventDefault()
+                                    handleEditCancel()
+                                }
+                            }}
+                            className='w-full min-h-0 min-w-[100px] p-px focus-visible:outline-none bg-transparent rounded-md text-sm resize-none focus:outline-none'
+                            autoFocus
+                        />
+                        <div className='flex items-center gap-2 justify-end'>
+                            <Button
+                                size='sm'
+                                onClick={handleEditSave}
+                                disabled={!editText.trim()}
+                            >
+                                Save
+                            </Button>
+                        </div>
+                    </div>
                 </div>
-                {/* {message.role !== 'user' && !isChatGenerating && (
-                    <MessageActions />
-                )} */}
             </div>
         </article>
     )
 })
+
+export function UserMessageWithEditButton({
+    message,
+    onEditStart,
+    children,
+}: {
+    message: UIMessage
+    onEditStart: () => void
+    children: React.ReactNode
+}) {
+    return (
+        <article className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end'>
+            <div className='max-w-full relative group/message bg-muted px-4 py-3 rounded-xl'>
+                <div className='absolute hidden group-hover/message:block -top-2 -right-2'>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant='outline'
+                                size='icon'
+                                className='rounded-full size-6 border-none bg-background shadow-md hover:bg-muted'
+                                onClick={onEditStart}
+                            >
+                                <RiEditLine className='size-3' />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent
+                            side='top'
+                            className='px-2 py-1 text-xs'
+                        >
+                            <p>Edit message</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
+                <div className='prose text-sm w-full max-w-full dark:prose-invert'>
+                    {children}
+                </div>
+            </div>
+        </article>
+    )
+}
 
 type ActionButtonProps = {
     icon: React.ReactNode
@@ -387,7 +325,7 @@ const MessageActions = memo(function MessageActions() {
     )
 })
 
-function EditorToolPreview({
+export function EditorToolPreview({
     args,
     state,
     toolCallId,
@@ -486,7 +424,7 @@ function EditorToolPreview({
     )
 }
 
-function FilesTreePreview({
+export function FilesTreePreview({
     args,
     state,
     toolCallId,
@@ -511,7 +449,7 @@ function FilesTreePreview({
     )
 }
 
-function ToolPreviewContainer({ className = '', children, ...props }) {
+export function ToolPreviewContainer({ className = '', children, ...props }) {
     return (
         <div
             className={cn(
