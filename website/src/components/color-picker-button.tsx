@@ -7,9 +7,10 @@ type ColorPickerButtonProps = {
     value: string
     onChange: (color: string) => void
     disabled?: boolean
+    buttonText?: string
 }
 
-export function ColorPickerButton({ value, onChange, disabled }: ColorPickerButtonProps) {
+export function ColorPickerButton({ value, onChange, disabled, buttonText: label }: ColorPickerButtonProps) {
     const [open, setOpen] = useState(false)
 
     return (
@@ -18,9 +19,14 @@ export function ColorPickerButton({ value, onChange, disabled }: ColorPickerButt
                 <Button
                     variant="outline"
                     disabled={disabled}
-                    className="w-10 h-10 p-0 rounded-md"
-                    style={{ backgroundColor: value }}
-                />
+                    className="flex items-center gap-2 px-3 py-2 h-auto"
+                >
+                    <div
+                        className="w-4 h-4 rounded border border-gray-300"
+                        style={{ backgroundColor: value }}
+                    />
+                    {label}
+                </Button>
             </PopoverTrigger>
             <PopoverContent className="w-64 p-3">
                 <Sketch

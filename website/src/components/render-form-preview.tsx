@@ -212,6 +212,7 @@ export function RenderFormPreview({
                                 <ColorPickerButton
                                     value={ctl.value as string}
                                     onChange={ctl.onChange}
+                                    buttonText={field.buttonText}
                                 />
                             )
                         }}
@@ -258,7 +259,7 @@ export function RenderFormPreview({
                 {args.fields.map((f) => {
                     return (
                         <div key={f.name} className='flex flex-col gap-2'>
-                            {f.type !== 'button' && (
+                            {f.type !== 'button' && f.type !== 'color_picker' && (
                                 <label className='font-medium text-sm'>
                                     {f.label}
                                     {f.required && (

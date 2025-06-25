@@ -87,7 +87,7 @@ export const SwitchField = z.object({
 export const ColorPickerField = z.object({
     type: z.literal('color_picker'),
     name: z.string(),
-    label: z.string(),
+    buttonText: z.string(),
     required: boolReq,
     description: stringReq,
     defaultValue: stringReq,
