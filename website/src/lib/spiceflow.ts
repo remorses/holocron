@@ -5,41 +5,39 @@ import dedent from 'string-dedent'
 
 import { anthropic } from '@ai-sdk/anthropic'
 import {
-    appendResponseMessages,
-    generateObject,
-    generateText,
-    Message,
-    streamText,
-    tool,
-    UIMessage,
+  appendResponseMessages,
+  generateObject,
+  Message,
+  streamText,
+  tool,
+  UIMessage
 } from 'ai'
 import { prisma } from 'db'
 import { s3 } from 'docs-website/src/lib/s3'
 import { Spiceflow } from 'spiceflow'
-import { openapi } from 'spiceflow/openapi'
 import { cors } from 'spiceflow/cors'
+import { openapi } from 'spiceflow/openapi'
 import { z } from 'zod'
 import { getSession } from './better-auth'
 import { env } from './env'
 import { AppError, notifyError } from './errors'
 import {
-    createPullRequestSuggestion,
-    getOctokit,
-    pushToPrOrBranch,
+  createPullRequestSuggestion,
+  getOctokit,
+  pushToPrOrBranch,
 } from './github.server'
 import { filesFromGithub, syncSite } from './sync'
-import { mdxRegex, sleep } from './utils'
+import { mdxRegex } from './utils'
 
-import { printDirectoryTree } from '../components/directory-tree'
-import {
-    createEditExecute,
-    editToolParamsSchema,
-    FileUpdate,
-    fileUpdateSchema,
-} from './edit-tool'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import path from 'path'
-import { RenderFormParameters, createRenderFormExecute } from './render-form-tool'
+import { printDirectoryTree } from '../components/directory-tree'
+import {
+  createEditExecute,
+  editToolParamsSchema,
+  fileUpdateSchema
+} from './edit-tool'
+import { createRenderFormExecute, RenderFormParameters } from './render-form-tool'
 
 // Create the main spiceflow app with comprehensive routes and features
 export const app = new Spiceflow({ basePath: '/api' })

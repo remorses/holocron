@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { compileSchema } from 'json-schema-library'
+import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
 
 const stringReq = z.string().nullable()
 const boolReq = z.boolean().nullable()
@@ -147,4 +149,21 @@ export function createRenderFormExecute({ schema }) {
     return async (params: RenderFormParameters) => {
         return `rendered form to the user`
     }
+}
+export const compiledDocsJsonSchema = compileSchema(docsJsonSchema)
+
+export function getTypeForNameInSchema(
+    name: string,
+    schema = compiledDocsJsonSchema,
+) {
+    const pointer =
+        '#' +
+        '/' +
+        name
+            .split('.')
+            .filter((part) => isNaN(Number(part)))
+            .join('/')
+    console.log(pointer)
+    const { node, error } = schema.getNode(pointer)
+    return node?.schema
 }

@@ -1,36 +1,36 @@
 'use client'
-import { FormProvider, useForm } from 'react-hook-form'
 import { RiAttachment2, RiRefreshLine } from '@remixicon/react'
 import { createIdGenerator, UIMessage } from 'ai'
 import { Markdown } from 'docs-website/src/lib/markdown'
 import memoize from 'micro-memoize'
 import {
-    memo,
-    startTransition,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
+  memo,
+  startTransition,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from 'react'
+import { FormProvider, useForm } from 'react-hook-form'
 import {
-    ChatMessage,
-    EditingUserMessage,
-    UserMessageWithEditButton,
+  ChatMessage,
+  EditingUserMessage,
+  UserMessageWithEditButton,
 } from 'website/src/components/chat-message'
-import { ToolInvocationRenderer } from 'website/src/components/tools-preview'
 import { MentionsTextArea } from 'website/src/components/mentions-textarea'
+import { ToolInvocationRenderer } from 'website/src/components/tools-preview'
 
 import { Button } from 'website/src/components/ui/button'
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from 'website/src/components/ui/popover'
 import { ScrollArea } from 'website/src/components/ui/scroll-area'
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
 } from 'website/src/components/ui/tooltip'
 
 import { useStickToBottom } from 'use-stick-to-bottom'
@@ -41,33 +41,33 @@ import { fullStreamToUIMessages } from '../lib/process-chat'
 import { apiClient } from '../lib/spiceflow-client'
 import { doFilesInDraftNeedPush, useChatState } from '../lib/state'
 
+import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { generateSlugFromPath } from 'docs-website/src/lib/utils'
 import {
-    AlertCircle,
-    AlertTriangleIcon,
-    CpuIcon,
-    FilePlus2Icon,
-    GitBranch,
-    ImageIcon,
-    Link2Icon,
-    ListTreeIcon,
-    PaletteIcon,
-    PanelsTopLeft,
-    X,
+  AlertCircle,
+  AlertTriangleIcon,
+  CpuIcon,
+  FilePlus2Icon,
+  GitBranch,
+  ImageIcon,
+  Link2Icon,
+  ListTreeIcon,
+  PaletteIcon,
+  PanelsTopLeft,
+  X,
 } from 'lucide-react'
 import { flushSync } from 'react-dom'
 import { useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
 import { docsRpcClient } from '../lib/docs-setstate'
 import {
-    createEditExecute,
-    EditToolParamSchema,
-    FileUpdate,
-    isParameterComplete,
+  createEditExecute,
+  EditToolParamSchema,
+  FileUpdate,
+  isParameterComplete,
 } from '../lib/edit-tool'
 import { teeAsyncIterable } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
-import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 
 export default function Chat({}) {
     const { scrollRef, contentRef } = useStickToBottom({

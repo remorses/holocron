@@ -1,14 +1,14 @@
 'use client'
+import { cva } from 'class-variance-authority'
 import { cn } from 'docs-website/src/lib/cn'
 import { buttonVariants } from 'fumadocs-ui/components/ui/button'
-import { ThumbsDown, ThumbsUp } from 'lucide-react'
-import { type SyntheticEvent, useEffect, useState, useTransition } from 'react'
 import {
     Collapsible,
     CollapsibleContent,
 } from 'fumadocs-ui/components/ui/collapsible'
-import { cva } from 'class-variance-authority'
-import { useLocation, useNavigation } from 'react-router'
+import { ThumbsDown, ThumbsUp } from 'lucide-react'
+import { type SyntheticEvent, useEffect, useState, useTransition } from 'react'
+import { useLocation } from 'react-router'
 
 const rateButtonVariants = cva(
     'inline-flex items-center gap-2 px-3 py-2 rounded-full font-medium border text-sm [&_svg]:size-4 disabled:cursor-not-allowed',
@@ -73,7 +73,7 @@ export function Rate({
             }
 
             setError(null)
-            
+
             try {
                 const response = await onRateAction(url, feedback)
                 setPrevious({
