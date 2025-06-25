@@ -371,7 +371,6 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
             }}
             tabMode={navTabMode}
             sidebar={{
-                footer: <Footer footer={docsJson?.footer} />,
                 banner: <Banner banner={docsJson?.banner} />,
             }}
             i18n={i18n}
@@ -416,77 +415,6 @@ function Banner({ banner }: { banner?: any }) {
     )
 }
 
-function Footer({ footer }: { footer?: any }) {
-    if (!footer) return null
-    
-    return (
-        <div className='flex flex-col gap-4 border-t pt-4'>
-            {/* Social Links */}
-            {footer.socials && (
-                <div className='flex gap-3'>
-                    {Object.entries(footer.socials).map(([platform, url]: [string, any]) => (
-                        <a
-                            key={platform}
-                            href={url}
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            className='text-fd-muted-foreground hover:text-fd-foreground transition-colors'
-                            aria-label={platform}
-                        >
-                            <SocialIcon platform={platform} />
-                        </a>
-                    ))}
-                </div>
-            )}
-            
-            {/* Link Columns */}
-            {footer.links && (
-                <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3'>
-                    {footer.links.map((column: any, index: number) => (
-                        <div key={index} className='flex flex-col gap-2'>
-                            {column.header && (
-                                <h4 className='font-medium text-fd-foreground text-sm'>
-                                    {column.header}
-                                </h4>
-                            )}
-                            <div className='flex flex-col gap-1'>
-                                {column.items.map((item: any, itemIndex: number) => (
-                                    <a
-                                        key={itemIndex}
-                                        href={item.href}
-                                        target={item.href.startsWith('http') ? '_blank' : undefined}
-                                        rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                                        className='text-sm text-fd-muted-foreground hover:text-fd-foreground transition-colors'
-                                    >
-                                        {item.label}
-                                    </a>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
-    )
-}
-
-function SocialIcon({ platform }: { platform: string }) {
-    const iconClass = 'w-4 h-4'
-    
-    switch (platform.toLowerCase()) {
-        case 'github':
-            return <GithubIcon className={iconClass} />
-        case 'twitter':
-        case 'x':
-            return <TwitterIcon className={iconClass} />
-        case 'discord':
-            return <MessageCircleIcon className={iconClass} />
-        case 'linkedin':
-            return <LinkedinIcon className={iconClass} />
-        default:
-            return <ExternalLinkIcon className={iconClass} />
-    }
-}
 
 function Logo() {
     const { site } = useLoaderData<typeof loader>()
