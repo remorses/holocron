@@ -1,15 +1,21 @@
-import { icons } from '@iconify-json/lucide'
+import { icons as lucideIcons } from '@iconify-json/lucide'
 import { createElement, ReactSVGElement } from 'react'
 
-export function getIconJsx({ key }) {
+export function getIconJsx({ provider = 'lucide', key }) {
+    if (provider !== 'lucide') {
+        console.error(
+            `Provider "${provider}" is not supported. Only 'lucide' is supported at this time.`,
+        )
+        return null
+    }
     if (!key) return null
-    const alias = icons.aliases?.[key]?.parent
-    const icon = icons[key || alias]
+    const alias = lucideIcons.aliases?.[key]?.parent
+    const icon = lucideIcons[key || alias]
     if (!icon) {
         console.error(`icon with key ${key} not found`)
         return null
     }
-    const { width, height } = icons
+    const { width, height } = lucideIcons
     const { body } = icon
     return createElement('svg', {
         viewBox: `0 0 ${width} ${height}`,
