@@ -1,4 +1,5 @@
 import { ThemeProvider, useTheme } from 'next-themes'
+import { LargeSearchToggle } from 'fumadocs-ui/components/layout/search-toggle'
 import { useShallow } from 'zustand/react/shallow'
 
 import { getCacheTagForMediaAsset, getKeyForMediaAsset, s3 } from '../lib/s3'
@@ -40,7 +41,7 @@ import { ButtonHTMLAttributes, useState } from 'react'
 import { LLMCopyButton, ViewOptions } from '../components/llm'
 import { PoweredBy } from '../components/poweredby'
 import { Rate } from '../components/rate'
-import { DocsConfigType } from '../lib/docs-json'
+import { DocsJsonType } from '../lib/docs-json'
 import { LOCALE_LABELS, LOCALES } from '../lib/locales'
 import { Markdown } from '../lib/markdown'
 import { getFumadocsSource } from '../lib/source.server'
@@ -227,6 +228,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         markdown: page.markdown,
     })
 
+    const docsJson: DocsJsonType = site.docsJson as any
     return {
         ...data,
         slugs,
@@ -239,6 +241,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         githubRepo: site.githubRepo,
         tree,
         site,
+        docsJson,
         lastEditedAt: page.lastEditedAt || new Date(),
     }
 }
@@ -271,6 +274,7 @@ function Providers({
         <RootProvider
             search={{
                 // SearchDialog: CustomSearchDialog,
+
                 options: {},
                 enabled: !!site.trieveDatasetId,
             }}
@@ -314,8 +318,6 @@ function MainDocsPage(props: Route.ComponentProps) {
     )
     const githubUrl = `https://github.com/${owner}/${repo}`
 
-    const docsConfig = site.docsJson as any
-
     // TODO add to docs.json
     const navMode = 'auto'
     // TODO docs.json
@@ -356,6 +358,9 @@ function MainDocsPage(props: Route.ComponentProps) {
         <DocsLayout
             searchToggle={{
                 enabled: searchEnabled,
+                components: {
+                    // lg: <LargeSearchToggle  className="flex-1" />
+                },
             }}
             nav={{
                 mode: navMode,
@@ -451,7 +456,7 @@ function Logo() {
 
     const { theme = 'light', resolvedTheme = 'light' } = useTheme()
     const currentTheme = resolvedTheme || theme
-    const docsConfig = site.docsJson as DocsConfigType
+    const docsConfig = site.docsJson as DocsJsonType
 
     if (!docsConfig.logo) {
         return (
@@ -523,14 +528,4 @@ function DocsMarkdown() {
 
 function CustomSearchDialog(props: SharedProps) {
     return <TrieveSearchDialog trieveClient={trieveClient} {...props} />
-}
-
-function AISearchTrigger(props: ButtonHTMLAttributes<HTMLButtonElement>) {
-    const [open, setOpen] = useState<boolean>()
-
-    return (
-        <>
-            <button {...props} onClick={() => setOpen(true)} />
-        </>
-    )
 }

@@ -721,6 +721,7 @@ export const app = new Spiceflow({ basePath: '/api' })
         },
     })
 
+    // currently not used
     .route({
         method: 'POST',
         path: '/commitChangesToRepo',

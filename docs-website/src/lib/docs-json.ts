@@ -17,35 +17,36 @@ const ColorMode = z
     .strict()
     .describe('Pair of colors for light and dark mode')
 
-const IconSchema = z
-    .union([
-        z.string().describe('Icon name or SVG path'),
-        z
-            .object({
-                name: z.string().describe('Icon name'),
-                library: z
-                    .enum(['fontawesome', 'lucide'])
-                    .describe('Icon library'),
-                style: z
-                    .enum([
-                        'brands',
-                        'duotone',
-                        'light',
-                        'regular',
-                        'sharp-duotone-solid',
-                        'sharp-light',
-                        'sharp-regular',
-                        'sharp-solid',
-                        'sharp-thin',
-                        'solid',
-                        'thin',
-                    ])
-                    .describe('Icon style'),
-            })
-            .strict()
-            .describe('Icon object with library and style'),
-    ])
-    .describe('Icon name or detailed icon object')
+const IconNameSchema = z.string().describe('Icon name or SVG path')
+// .union([
+//     z.string().describe('Icon name or SVG path'),
+// TODO
+// z
+//     .object({
+//         name: z.string().describe('Icon name'),
+//         library: z
+//             .enum(['fontawesome', 'lucide'])
+//             .describe('Icon library'),
+//         style: z
+//             .enum([
+//                 'brands',
+//                 'duotone',
+//                 'light',
+//                 'regular',
+//                 'sharp-duotone-solid',
+//                 'sharp-light',
+//                 'sharp-regular',
+//                 'sharp-solid',
+//                 'sharp-thin',
+//                 'solid',
+//                 'thin',
+//             ])
+//             .describe('Icon style'),
+//     })
+//     .strict()
+//     .describe('Icon object with library and style'),
+// ])
+// .describe('Icon name or detailed icon object')
 
 // === Top-level component schemas ===
 
@@ -120,8 +121,6 @@ const ContextualSchema = z
     .strict()
     .describe('Contextual action options (e.g., on code blocks)')
 
-
-
 // === Navigation ===
 const GlobalLinks = z
     .object({
@@ -191,7 +190,7 @@ const NavigationVersionItem = z
 const NavigationTabItem = z
     .object({
         tab: z.string().min(1).describe('Tab name or label'),
-        icon: IconSchema.optional().describe('Optional icon for the tab'),
+        icon: IconNameSchema.optional().describe('Optional icon for the tab'),
         hidden: z
             .boolean()
             .optional()
@@ -208,7 +207,7 @@ const NavigationTabItem = z
 const NavigationDropdownItem = z
     .object({
         dropdown: z.string().min(1).describe('Dropdown name or label'),
-        icon: IconSchema.optional().describe('Optional icon for the dropdown'),
+        icon: IconNameSchema.optional().describe('Optional icon for the dropdown'),
         color: ColorMode.optional().describe('Optional custom color'),
         description: z
             .string()
@@ -233,7 +232,7 @@ const NavigationAnchorItem = z
             .string()
             .min(1)
             .describe('Anchor name/section for this navigation entry'),
-        icon: IconSchema.optional().describe('Optional icon for this section'),
+        icon: IconNameSchema.optional().describe('Optional icon for this section'),
         color: ColorMode.optional().describe('Optional custom color'),
         hidden: z
             .boolean()
@@ -257,7 +256,7 @@ const NavigationGroupItem: z.ZodType<any> = z.lazy(() =>
     z
         .object({
             group: z.string().min(1).describe('Name of the navigation group'),
-            icon: IconSchema.optional().describe('Group section icon'),
+            icon: IconNameSchema.optional().describe('Group section icon'),
             hidden: z
                 .boolean()
                 .optional()
@@ -421,7 +420,7 @@ const NavbarLink = z
     .object({
         label: z.string().describe('Link text'),
         href: z.string().url().describe('Link URL'),
-        icon: IconSchema.optional().describe('Optional icon'),
+        icon: IconNameSchema.optional().describe('Optional icon'),
     })
     .strict()
     .describe('Navbar link entry')
@@ -664,6 +663,12 @@ const IntegrationsSchema = z
     .strict()
     .describe('Third-party integration configs')
 
+const CSSVariablesSchema = z
+    .record(z.string())
+    .describe(
+        'Object of CSS variable names and their values. Variables defined here will be injected into the website as CSS custom properties.',
+    )
+
 // === Main docs.json schema ===
 export const DocsConfigSchema = z
     .object({
@@ -676,23 +681,23 @@ export const DocsConfigSchema = z
         description: z.string().optional().describe('SEO description'),
         logo: LogoSchema.optional().describe('Logo config'),
         favicon: FaviconSchema.optional().describe('Favicon config'),
-        api: ApiSchema.optional().describe('API reference settings'),
+        // api: ApiSchema.optional().describe('API reference settings'),
         navbar: NavbarSchema.optional().describe('Top navbar settings'),
         navigation: NavigationSchema.describe('Site navigation structure'),
         footer: FooterSchema.optional().describe('Footer content'),
-        search: SearchSchema.optional().describe('Search behavior'),
-        seo: SeoSchema.optional().describe('SEO meta & indexing'),
-        redirects: z
-            .array(RedirectSchema)
-            .optional()
-            .describe('Redirect rules'),
+        // search: SearchSchema.optional().describe('Search behavior'),
+        // seo: SeoSchema.optional().describe('SEO meta & indexing'),
+        // redirects: z
+        //     .array(RedirectSchema)
+        //     .optional()
+        //     .describe('Redirect rules'),
         banner: BannerSchema.optional().describe('Site-wide banner'),
-        errors: ErrorsSchema.optional().describe('Error page config'),
+        // errors: ErrorsSchema.optional().describe('Error page config'),
         contextual: ContextualSchema.optional().describe('Contextual actions'),
-        integrations: IntegrationsSchema.optional().describe('Integrations'),
+        cssVariables: CSSVariablesSchema.optional().describe('CSS variables'),
+        // integrations: IntegrationsSchema.optional().describe('Integrations'),
     })
     .strict()
     .describe('Schema for docs.json configuration')
 
-
-export type DocsConfigType = z.infer<typeof DocsConfigSchema>;
+export type DocsJsonType = z.infer<typeof DocsConfigSchema>
