@@ -1,9 +1,9 @@
 {
-    "type": "module",
-    "scripts": {},
-    "dependencies": {
-        "@prisma/client": "*",
-        "pg": "^8.13.1",
-        "shiki": "^3.6.0"
-    }
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "@prisma/client": "*",
+    "pg": "^8.13.1",
+    "shiki": "^3.6.0"
+  }
 }
