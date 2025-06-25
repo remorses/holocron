@@ -56,6 +56,19 @@ export function meta({ data }: Route.MetaArgs) {
         return undefined
     })()
 
+    const faviconDark = (() => {
+        if (!docsConfig?.favicon) {
+            return undefined
+        }
+        if (typeof docsConfig.favicon === 'string') {
+            return docsConfig.favicon
+        }
+        if (docsConfig.favicon?.dark) {
+            return docsConfig.favicon.dark
+        }
+        return undefined
+    })()
+
     return [
         {
             title: data.title
@@ -75,8 +88,14 @@ export function meta({ data }: Route.MetaArgs) {
             : []),
         ...(favicon
             ? [
-                  { rel: 'icon', href: favicon },
-                  { rel: 'apple-touch-icon', href: favicon },
+                  { rel: 'icon', href: favicon, media: '(prefers-color-scheme: light)' },
+                  { rel: 'apple-touch-icon', href: favicon, media: '(prefers-color-scheme: light)' },
+              ]
+            : []),
+        ...(faviconDark
+            ? [
+                  { rel: 'icon', href: faviconDark, media: '(prefers-color-scheme: dark)' },
+                  { rel: 'apple-touch-icon', href: faviconDark, media: '(prefers-color-scheme: dark)' },
               ]
             : []),
     ].filter(Boolean)
