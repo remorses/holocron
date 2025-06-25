@@ -697,7 +697,7 @@ function Footer() {
                             value={text}
                             onChange={handleTextChange}
                             onSubmit={() => handleSubmit()}
-                            disabled={isPending}
+                            disabled={false}
                             placeholder='Ask me anything...'
                             className='flex sm:min-h-[84px] w-full bg-transparent px-4 py-3 text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none resize-none'
                             autocompleteEnabled={showAutocomplete}

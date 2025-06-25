@@ -23,6 +23,16 @@ export function EditorToolPreview({
         code = code?.['error'] || JSON.stringify(code, null, 2)
     }
     const command = args?.command
+    if (typeof result === 'object' && 'error' in result && result.error) {
+        return (
+            <ToolPreviewContainer>
+                <Markdown
+                    isStreaming={isChatGenerating}
+                    markdown={`❌ Error: ${result.error}`}
+                />
+            </ToolPreviewContainer>
+        )
+    }
     if (command === 'view') {
         let linesText = ''
         if (args?.view_range?.length === 2) {
@@ -143,39 +153,29 @@ export function ToolPreviewContainer({ className = '', children, ...props }) {
     )
 }
 
-export function ToolInvocationRenderer({ part, index }: { part: any, index: number }) {
+export function ToolInvocationRenderer({
+    part,
+    index,
+}: {
+    part: any
+    index: number
+}) {
     const toolName = part.toolInvocation.toolName
     if (toolName === 'str_replace_editor') {
-        return (
-            <EditorToolPreview
-                key={index}
-                {...part.toolInvocation}
-            />
-        )
+        return <EditorToolPreview key={index} {...part.toolInvocation} />
     }
     if (toolName === 'get_project_files') {
-        return (
-            <FilesTreePreview
-                key={index}
-                {...part.toolInvocation}
-            />
-        )
+        return <FilesTreePreview key={index} {...part.toolInvocation} />
     }
     if (toolName === 'render_form') {
+        return <RenderFormPreview key={index} {...part.toolInvocation} />
+    }
+    if (process.env.NODE_ENV === 'development') {
         return (
-            <RenderFormPreview
-                key={index}
-                {...part.toolInvocation}
-            />
+            <pre key={index}>
+                {JSON.stringify(part.toolInvocation, null, 2)}
+            </pre>
         )
     }
-    return (
-        <pre key={index}>
-            {JSON.stringify(
-                part.toolInvocation,
-                null,
-                2,
-            )}
-        </pre>
-    )
+    return null
 }
