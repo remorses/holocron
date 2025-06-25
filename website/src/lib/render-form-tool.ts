@@ -2,6 +2,7 @@ import { z } from 'zod'
 import schemaLib from 'json-schema-library'
 const compileSchema = schemaLib.compileSchema
 import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
+import { notifyError } from './errors'
 
 const stringReq = z.string().nullable()
 const boolReq = z.boolean().nullable()
@@ -146,9 +147,25 @@ export const RenderFormParameters = z.object({
 
 type RenderFormParameters = z.infer<typeof RenderFormParameters>
 
-export function createRenderFormExecute({ schema }) {
+export function createRenderFormExecute({}) {
     return async (params: RenderFormParameters) => {
-        return `rendered form to the user`
+        const errors: string[] = []
+        try {
+            for (const field of params.fields) {
+                if (!getTypeForNameInSchema(field.name)) {
+                    errors.push(
+                        `name ${field.name} is not valid for the docs.json schema`,
+                    )
+                }
+            }
+            return errors.length > 0 ? { errors } : `rendered form to the user`
+        } catch (err) {
+            notifyError(err, 'createRenderFormExecute')
+            errors.push(
+                `Unexpected error: ${err instanceof Error ? err.message : String(err)}`,
+            )
+            return { errors }
+        }
     }
 }
 export const compiledDocsJsonSchema = compileSchema(docsJsonSchema)
@@ -162,7 +179,7 @@ export function getTypeForNameInSchema(
         '/' +
         name
             .split('.')
-            .filter((part) => isNaN(Number(part)))
+            .map((part) => (isNaN(Number(part)) ? part : 'items'))
             .join('/')
     console.log(pointer)
     const { node, error } = schema.getNode(pointer)

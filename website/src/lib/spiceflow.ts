@@ -5,12 +5,12 @@ import dedent from 'string-dedent'
 
 import { anthropic } from '@ai-sdk/anthropic'
 import {
-  appendResponseMessages,
-  generateObject,
-  Message,
-  streamText,
-  tool,
-  UIMessage
+    appendResponseMessages,
+    generateObject,
+    Message,
+    streamText,
+    tool,
+    UIMessage,
 } from 'ai'
 import { prisma } from 'db'
 import { s3 } from 'docs-website/src/lib/s3'
@@ -22,9 +22,9 @@ import { getSession } from './better-auth'
 import { env } from './env'
 import { AppError, notifyError } from './errors'
 import {
-  createPullRequestSuggestion,
-  getOctokit,
-  pushToPrOrBranch,
+    createPullRequestSuggestion,
+    getOctokit,
+    pushToPrOrBranch,
 } from './github.server'
 import { filesFromGithub, syncSite } from './sync'
 import { mdxRegex } from './utils'
@@ -33,11 +33,14 @@ import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import path from 'path'
 import { printDirectoryTree } from '../components/directory-tree'
 import {
-  createEditExecute,
-  editToolParamsSchema,
-  fileUpdateSchema
+    createEditExecute,
+    editToolParamsSchema,
+    fileUpdateSchema,
 } from './edit-tool'
-import { createRenderFormExecute, RenderFormParameters } from './render-form-tool'
+import {
+    createRenderFormExecute,
+    RenderFormParameters,
+} from './render-form-tool'
 
 // Create the main spiceflow app with comprehensive routes and features
 export const app = new Spiceflow({ basePath: '/api' })
@@ -242,9 +245,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                             'Render a series of input elements so the user can provide structured data. Array-style names such as items[0].color are supported.',
                         parameters: RenderFormParameters,
 
-                        execute: createRenderFormExecute({
-                            schema: docsJsonSchema,
-                        }),
+                        execute: createRenderFormExecute({}),
                     }),
                 },
                 async onFinish({ response }) {

@@ -48,15 +48,15 @@ describe('compileSchema with union in array', () => {
     const compiled = compileSchema(schema)
 
     test('should resolve pointer to field existing in only some unions: sms', () => {
-        expect(getTypeForNameInSchema('container.items.0.sms', compiled))
+        expect(getTypeForNameInSchema('container.0.sms', compiled))
             .toMatchInlineSnapshot(`
-          {
-            "type": "string",
-          }
-        `)
+              {
+                "type": "string",
+              }
+            `)
     })
     test('should resolve pointer to field existing in only some unions: type', () => {
-        expect(getTypeForNameInSchema('container.items.0.type', compiled))
+        expect(getTypeForNameInSchema('container.0.type', compiled))
             .toMatchInlineSnapshot(`
               {
                 "const": "push",
@@ -64,27 +64,27 @@ describe('compileSchema with union in array', () => {
             `)
     })
     test('should resolve pointer to field existing in only some unions: email', () => {
-        expect(getTypeForNameInSchema('container.items.0.email', compiled))
+        expect(getTypeForNameInSchema('container.0.email', compiled))
             .toMatchInlineSnapshot(`
-          {
-            "type": "string",
-          }
-        `)
+              {
+                "type": "string",
+              }
+            `)
     })
 
     test('should resolve pointer to field existing in only some unions: push', () => {
-        expect(getTypeForNameInSchema('container.items.0.push', compiled))
+        expect(getTypeForNameInSchema('container.0.push', compiled))
             .toMatchInlineSnapshot(`
-          {
-            "type": "boolean",
-          }
-        `)
+              {
+                "type": "boolean",
+              }
+            `)
     })
 
     // This showcases when a field does not exist, or only in some unions
     test('should resolve pointer to a non-existent field', () => {
         expect(
-            getTypeForNameInSchema('container.items.0.notarealfield', compiled),
+            getTypeForNameInSchema('container.0.notarealfield', compiled),
         ).toBeUndefined()
     })
 })
@@ -124,7 +124,7 @@ describe('compileSchema with array union of string or object', () => {
     const compiled = compileSchema(schema)
 
     test('should resolve pointer to field in string-or-object union: type', () => {
-        expect(getTypeForNameInSchema('container.items.0.type', compiled))
+        expect(getTypeForNameInSchema('container.0.type', compiled))
             .toMatchInlineSnapshot(`
               {
                 "const": "complex",
@@ -172,7 +172,7 @@ describe('compileSchema with array union of string or object', () => {
     })
 
     test('should resolve pointer to nested field in union: nested.foo', () => {
-        expect(getTypeForNameInSchema('container.items.0.nested.foo', compiled))
+        expect(getTypeForNameInSchema('container.0.nested.foo', compiled))
             .toMatchInlineSnapshot(`
               {
                 "type": "integer",
@@ -181,7 +181,7 @@ describe('compileSchema with array union of string or object', () => {
     })
 
     test('should resolve pointer to nested field in union: nested.bar', () => {
-        expect(getTypeForNameInSchema('container.items.0.nested.bar', compiled))
+        expect(getTypeForNameInSchema('container.0.nested.bar', compiled))
             .toMatchInlineSnapshot(`
               {
                 "type": "string",
@@ -190,7 +190,7 @@ describe('compileSchema with array union of string or object', () => {
     })
 
     test('should resolve pointer to the nested object itself', () => {
-        expect(getTypeForNameInSchema('container.items.0.nested', compiled))
+        expect(getTypeForNameInSchema('container.0.nested', compiled))
             .toMatchInlineSnapshot(`
               {
                 "properties": {
@@ -214,66 +214,66 @@ describe('compileSchema with array union of string or object', () => {
 describe('DocsConfigSchema', () => {
     test('name', () => {
         expect(getTypeForNameInSchema('name')).toMatchInlineSnapshot(`
-                {
-                  "description": "Project or product name",
-                  "minLength": 1,
-                  "type": "string",
-                }
-            `)
+          {
+            "description": "Project or product name",
+            "minLength": 1,
+            "type": "string",
+          }
+        `)
     })
 
     test('description', () => {
         expect(getTypeForNameInSchema('description')).toMatchInlineSnapshot(`
-                {
-                  "description": "SEO description",
-                  "type": "string",
-                }
-            `)
+          {
+            "description": "SEO description",
+            "type": "string",
+          }
+        `)
     })
 
     // logo
     test('logo.light', () => {
         expect(getTypeForNameInSchema('logo.light')).toMatchInlineSnapshot(`
-                {
-                  "description": "Logo for light mode",
-                  "type": "string",
-                }
-            `)
+          {
+            "description": "Logo for light mode",
+            "type": "string",
+          }
+        `)
     })
     test('logo.dark', () => {
         expect(getTypeForNameInSchema('logo.dark')).toMatchInlineSnapshot(`
-                {
-                  "description": "Logo for dark mode",
-                  "type": "string",
-                }
-            `)
+          {
+            "description": "Logo for dark mode",
+            "type": "string",
+          }
+        `)
     })
     test('logo.href', () => {
         expect(getTypeForNameInSchema('logo.href')).toMatchInlineSnapshot(`
-                {
-                  "description": "Logo click target URL",
-                  "format": "uri",
-                  "type": "string",
-                }
-            `)
+          {
+            "description": "Logo click target URL",
+            "format": "uri",
+            "type": "string",
+          }
+        `)
     })
 
     // favicon
     test('favicon.light', () => {
         expect(getTypeForNameInSchema('favicon.light')).toMatchInlineSnapshot(`
-                {
-                  "description": "Favicon for light mode",
-                  "type": "string",
-                }
-            `)
+          {
+            "description": "Favicon for light mode",
+            "type": "string",
+          }
+        `)
     })
     test('favicon.dark', () => {
         expect(getTypeForNameInSchema('favicon.dark')).toMatchInlineSnapshot(`
-                {
-                  "description": "Favicon for dark mode",
-                  "type": "string",
-                }
-            `)
+          {
+            "description": "Favicon for dark mode",
+            "type": "string",
+          }
+        `)
     })
 
     // Navbar: links[0] fields
@@ -281,28 +281,8 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navbar.links.0.label'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Navbar link entry",
-                "properties": {
-                  "href": {
-                    "description": "Link URL",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "icon": {
-                    "description": "Optional icon",
-                    "type": "string",
-                  },
-                  "label": {
-                    "description": "Link text",
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "label",
-                  "href",
-                ],
-                "type": "object",
+                "description": "Link text",
+                "type": "string",
               }
             `)
     })
@@ -310,28 +290,9 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navbar.links.0.href'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Navbar link entry",
-                "properties": {
-                  "href": {
-                    "description": "Link URL",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "icon": {
-                    "description": "Optional icon",
-                    "type": "string",
-                  },
-                  "label": {
-                    "description": "Link text",
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "label",
-                  "href",
-                ],
-                "type": "object",
+                "description": "Link URL",
+                "format": "uri",
+                "type": "string",
               }
             `)
     })
@@ -339,28 +300,8 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navbar.links.0.icon'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Navbar link entry",
-                "properties": {
-                  "href": {
-                    "description": "Link URL",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "icon": {
-                    "description": "Optional icon",
-                    "type": "string",
-                  },
-                  "label": {
-                    "description": "Link text",
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "label",
-                  "href",
-                ],
-                "type": "object",
+                "description": "Optional icon",
+                "type": "string",
               }
             `)
     })
@@ -379,10 +320,10 @@ describe('DocsConfigSchema', () => {
     test('navbar.primary.label', () => {
         expect(getTypeForNameInSchema('navbar.primary.label'))
             .toMatchInlineSnapshot(`
-                {
-                  "description": "Button label",
-                  "type": "string",
-                }
+              {
+                "description": "Button label",
+                "type": "string",
+              }
             `)
     })
     test('navbar.primary.href', () => {
@@ -400,21 +341,21 @@ describe('DocsConfigSchema', () => {
         // For github union: the type property
         expect(getTypeForNameInSchema('navbar.primary.type', undefined))
             .toMatchInlineSnapshot(`
-                {
-                  "const": "github",
-                  "description": "CTA type GitHub",
-                  "type": "string",
-                }
+              {
+                "const": "github",
+                "description": "CTA type GitHub",
+                "type": "string",
+              }
             `)
     })
     test('navbar.primary.href_github', () => {
         expect(getTypeForNameInSchema('navbar.primary.href', undefined))
             .toMatchInlineSnapshot(`
-                {
-                  "description": "GitHub repo URL",
-                  "format": "uri",
-                  "type": "string",
-                }
+              {
+                "description": "GitHub repo URL",
+                "format": "uri",
+                "type": "string",
+              }
             `)
     })
 
@@ -424,32 +365,9 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.languages.0.language'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Language item within navigation",
-                "properties": {
-                  "default": {
-                    "description": "Whether this language is the default selection",
-                    "type": "boolean",
-                  },
-                  "hidden": {
-                    "description": "Whether the language is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "URL or root path for this language variant",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "language": {
-                    "description": "The language code (ISO 639-1) for this section, e.g., "en", "fr", "es"",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "language",
-                ],
-                "type": "object",
+                "description": "The language code (ISO 639-1) for this section, e.g., "en", "fr", "es"",
+                "minLength": 1,
+                "type": "string",
               }
             `)
     })
@@ -457,32 +375,8 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.languages.0.default'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Language item within navigation",
-                "properties": {
-                  "default": {
-                    "description": "Whether this language is the default selection",
-                    "type": "boolean",
-                  },
-                  "hidden": {
-                    "description": "Whether the language is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "URL or root path for this language variant",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "language": {
-                    "description": "The language code (ISO 639-1) for this section, e.g., "en", "fr", "es"",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "language",
-                ],
-                "type": "object",
+                "description": "Whether this language is the default selection",
+                "type": "boolean",
               }
             `)
     })
@@ -490,32 +384,8 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.languages.0.hidden'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Language item within navigation",
-                "properties": {
-                  "default": {
-                    "description": "Whether this language is the default selection",
-                    "type": "boolean",
-                  },
-                  "hidden": {
-                    "description": "Whether the language is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "URL or root path for this language variant",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "language": {
-                    "description": "The language code (ISO 639-1) for this section, e.g., "en", "fr", "es"",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "language",
-                ],
-                "type": "object",
+                "description": "Whether the language is hidden by default",
+                "type": "boolean",
               }
             `)
     })
@@ -523,32 +393,9 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.languages.0.href'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Language item within navigation",
-                "properties": {
-                  "default": {
-                    "description": "Whether this language is the default selection",
-                    "type": "boolean",
-                  },
-                  "hidden": {
-                    "description": "Whether the language is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "URL or root path for this language variant",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "language": {
-                    "description": "The language code (ISO 639-1) for this section, e.g., "en", "fr", "es"",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "language",
-                ],
-                "type": "object",
+                "description": "URL or root path for this language variant",
+                "format": "uri",
+                "type": "string",
               }
             `)
     })
@@ -558,32 +405,9 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.versions.0.version'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Version item within navigation",
-                "properties": {
-                  "default": {
-                    "description": "Whether this is the default version",
-                    "type": "boolean",
-                  },
-                  "hidden": {
-                    "description": "Whether this version selection is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "URL or root path for this version",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "version": {
-                    "description": "Version label (e.g., "v1.0", "latest")",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "version",
-                ],
-                "type": "object",
+                "description": "Version label (e.g., "v1.0", "latest")",
+                "minLength": 1,
+                "type": "string",
               }
             `)
     })
@@ -591,32 +415,8 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.versions.0.default'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Version item within navigation",
-                "properties": {
-                  "default": {
-                    "description": "Whether this is the default version",
-                    "type": "boolean",
-                  },
-                  "hidden": {
-                    "description": "Whether this version selection is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "URL or root path for this version",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "version": {
-                    "description": "Version label (e.g., "v1.0", "latest")",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "version",
-                ],
-                "type": "object",
+                "description": "Whether this is the default version",
+                "type": "boolean",
               }
             `)
     })
@@ -624,32 +424,8 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.versions.0.hidden'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Version item within navigation",
-                "properties": {
-                  "default": {
-                    "description": "Whether this is the default version",
-                    "type": "boolean",
-                  },
-                  "hidden": {
-                    "description": "Whether this version selection is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "URL or root path for this version",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "version": {
-                    "description": "Version label (e.g., "v1.0", "latest")",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "version",
-                ],
-                "type": "object",
+                "description": "Whether this version selection is hidden by default",
+                "type": "boolean",
               }
             `)
     })
@@ -657,32 +433,9 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.versions.0.href'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Version item within navigation",
-                "properties": {
-                  "default": {
-                    "description": "Whether this is the default version",
-                    "type": "boolean",
-                  },
-                  "hidden": {
-                    "description": "Whether this version selection is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "URL or root path for this version",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "version": {
-                    "description": "Version label (e.g., "v1.0", "latest")",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "version",
-                ],
-                "type": "object",
+                "description": "URL or root path for this version",
+                "format": "uri",
+                "type": "string",
               }
             `)
     })
@@ -692,32 +445,9 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.tabs.0.tab'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Tab item for organizing navigation",
-                "properties": {
-                  "hidden": {
-                    "description": "Whether the tab is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "URL or root path for this tab",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Optional icon for the tab",
-                  },
-                  "tab": {
-                    "description": "Tab name or label",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "tab",
-                ],
-                "type": "object",
+                "description": "Tab name or label",
+                "minLength": 1,
+                "type": "string",
               }
             `)
     })
@@ -725,32 +455,8 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.tabs.0.icon'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Tab item for organizing navigation",
-                "properties": {
-                  "hidden": {
-                    "description": "Whether the tab is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "URL or root path for this tab",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Optional icon for the tab",
-                  },
-                  "tab": {
-                    "description": "Tab name or label",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "tab",
-                ],
-                "type": "object",
+                "description": "Optional icon",
+                "type": "string",
               }
             `)
     })
@@ -758,32 +464,8 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.tabs.0.hidden'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Tab item for organizing navigation",
-                "properties": {
-                  "hidden": {
-                    "description": "Whether the tab is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "URL or root path for this tab",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Optional icon for the tab",
-                  },
-                  "tab": {
-                    "description": "Tab name or label",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "tab",
-                ],
-                "type": "object",
+                "description": "Whether the tab is hidden by default",
+                "type": "boolean",
               }
             `)
     })
@@ -791,32 +473,9 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.tabs.0.href'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Tab item for organizing navigation",
-                "properties": {
-                  "hidden": {
-                    "description": "Whether the tab is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "URL or root path for this tab",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Optional icon for the tab",
-                  },
-                  "tab": {
-                    "description": "Tab name or label",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "tab",
-                ],
-                "type": "object",
+                "description": "URL or root path for this tab",
+                "format": "uri",
+                "type": "string",
               }
             `)
     })
@@ -826,57 +485,9 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.dropdowns.0.dropdown'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Dropdown item for navigation groups",
-                "properties": {
-                  "color": {
-                    "additionalProperties": false,
-                    "description": "Optional custom color",
-                    "properties": {
-                      "dark": {
-                        "description": "Color used in dark mode",
-                        "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
-                        "type": "string",
-                      },
-                      "light": {
-                        "description": "Color used in light mode",
-                        "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "light",
-                      "dark",
-                    ],
-                    "type": "object",
-                  },
-                  "description": {
-                    "description": "Text description shown for dropdown",
-                    "type": "string",
-                  },
-                  "dropdown": {
-                    "description": "Dropdown name or label",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                  "hidden": {
-                    "description": "Whether the dropdown is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "Optional URL linked from the dropdown",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Optional icon for the dropdown",
-                  },
-                },
-                "required": [
-                  "dropdown",
-                ],
-                "type": "object",
+                "description": "Dropdown name or label",
+                "minLength": 1,
+                "type": "string",
               }
             `)
     })
@@ -884,125 +495,39 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.dropdowns.0.icon'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Dropdown item for navigation groups",
-                "properties": {
-                  "color": {
-                    "additionalProperties": false,
-                    "description": "Optional custom color",
-                    "properties": {
-                      "dark": {
-                        "description": "Color used in dark mode",
-                        "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
-                        "type": "string",
-                      },
-                      "light": {
-                        "description": "Color used in light mode",
-                        "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "light",
-                      "dark",
-                    ],
-                    "type": "object",
-                  },
-                  "description": {
-                    "description": "Text description shown for dropdown",
-                    "type": "string",
-                  },
-                  "dropdown": {
-                    "description": "Dropdown name or label",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                  "hidden": {
-                    "description": "Whether the dropdown is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "Optional URL linked from the dropdown",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Optional icon for the dropdown",
-                  },
-                },
-                "required": [
-                  "dropdown",
-                ],
-                "type": "object",
+                "description": "Optional icon",
+                "type": "string",
               }
             `)
     })
     test('navigation.dropdowns.0.color.light', () => {
         expect(
             getTypeForNameInSchema('navigation.dropdowns.0.color.light'),
-        ).toMatchInlineSnapshot(`undefined`)
+        ).toMatchInlineSnapshot(`
+          {
+            "description": "Color used in light mode",
+            "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
+            "type": "string",
+          }
+        `)
     })
     test('navigation.dropdowns.0.color.dark', () => {
         expect(
             getTypeForNameInSchema('navigation.dropdowns.0.color.dark'),
-        ).toMatchInlineSnapshot(`undefined`)
+        ).toMatchInlineSnapshot(`
+          {
+            "description": "Color used in dark mode",
+            "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
+            "type": "string",
+          }
+        `)
     })
     test('navigation.dropdowns.0.description', () => {
         expect(getTypeForNameInSchema('navigation.dropdowns.0.description'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Dropdown item for navigation groups",
-                "properties": {
-                  "color": {
-                    "additionalProperties": false,
-                    "description": "Optional custom color",
-                    "properties": {
-                      "dark": {
-                        "description": "Color used in dark mode",
-                        "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
-                        "type": "string",
-                      },
-                      "light": {
-                        "description": "Color used in light mode",
-                        "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "light",
-                      "dark",
-                    ],
-                    "type": "object",
-                  },
-                  "description": {
-                    "description": "Text description shown for dropdown",
-                    "type": "string",
-                  },
-                  "dropdown": {
-                    "description": "Dropdown name or label",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                  "hidden": {
-                    "description": "Whether the dropdown is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "Optional URL linked from the dropdown",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Optional icon for the dropdown",
-                  },
-                },
-                "required": [
-                  "dropdown",
-                ],
-                "type": "object",
+                "description": "Text description shown for dropdown",
+                "type": "string",
               }
             `)
     })
@@ -1010,57 +535,8 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.dropdowns.0.hidden'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Dropdown item for navigation groups",
-                "properties": {
-                  "color": {
-                    "additionalProperties": false,
-                    "description": "Optional custom color",
-                    "properties": {
-                      "dark": {
-                        "description": "Color used in dark mode",
-                        "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
-                        "type": "string",
-                      },
-                      "light": {
-                        "description": "Color used in light mode",
-                        "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "light",
-                      "dark",
-                    ],
-                    "type": "object",
-                  },
-                  "description": {
-                    "description": "Text description shown for dropdown",
-                    "type": "string",
-                  },
-                  "dropdown": {
-                    "description": "Dropdown name or label",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                  "hidden": {
-                    "description": "Whether the dropdown is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "Optional URL linked from the dropdown",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Optional icon for the dropdown",
-                  },
-                },
-                "required": [
-                  "dropdown",
-                ],
-                "type": "object",
+                "description": "Whether the dropdown is hidden by default",
+                "type": "boolean",
               }
             `)
     })
@@ -1068,57 +544,9 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.dropdowns.0.href'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Dropdown item for navigation groups",
-                "properties": {
-                  "color": {
-                    "additionalProperties": false,
-                    "description": "Optional custom color",
-                    "properties": {
-                      "dark": {
-                        "description": "Color used in dark mode",
-                        "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
-                        "type": "string",
-                      },
-                      "light": {
-                        "description": "Color used in light mode",
-                        "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "light",
-                      "dark",
-                    ],
-                    "type": "object",
-                  },
-                  "description": {
-                    "description": "Text description shown for dropdown",
-                    "type": "string",
-                  },
-                  "dropdown": {
-                    "description": "Dropdown name or label",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                  "hidden": {
-                    "description": "Whether the dropdown is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "Optional URL linked from the dropdown",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Optional icon for the dropdown",
-                  },
-                },
-                "required": [
-                  "dropdown",
-                ],
-                "type": "object",
+                "description": "Optional URL linked from the dropdown",
+                "format": "uri",
+                "type": "string",
               }
             `)
     })
@@ -1128,36 +556,9 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.anchors.0.anchor'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Anchor item for navigation",
-                "properties": {
-                  "anchor": {
-                    "description": "Anchor name/section for this navigation entry",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                  "color": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navigation/anyOf/3/properties/dropdowns/items/properties/color",
-                    "description": "Optional custom color",
-                  },
-                  "hidden": {
-                    "description": "Whether the anchor/section is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "Optional link or path for this anchor",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Optional icon for this section",
-                  },
-                },
-                "required": [
-                  "anchor",
-                ],
-                "type": "object",
+                "description": "Anchor name/section for this navigation entry",
+                "minLength": 1,
+                "type": "string",
               }
             `)
     })
@@ -1165,83 +566,39 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.anchors.0.icon'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Anchor item for navigation",
-                "properties": {
-                  "anchor": {
-                    "description": "Anchor name/section for this navigation entry",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                  "color": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navigation/anyOf/3/properties/dropdowns/items/properties/color",
-                    "description": "Optional custom color",
-                  },
-                  "hidden": {
-                    "description": "Whether the anchor/section is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "Optional link or path for this anchor",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Optional icon for this section",
-                  },
-                },
-                "required": [
-                  "anchor",
-                ],
-                "type": "object",
+                "description": "Optional icon",
+                "type": "string",
               }
             `)
     })
     test('navigation.anchors.0.color.light', () => {
         expect(
             getTypeForNameInSchema('navigation.anchors.0.color.light'),
-        ).toMatchInlineSnapshot(`undefined`)
+        ).toMatchInlineSnapshot(`
+          {
+            "description": "Color used in light mode",
+            "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
+            "type": "string",
+          }
+        `)
     })
     test('navigation.anchors.0.color.dark', () => {
         expect(
             getTypeForNameInSchema('navigation.anchors.0.color.dark'),
-        ).toMatchInlineSnapshot(`undefined`)
+        ).toMatchInlineSnapshot(`
+          {
+            "description": "Color used in dark mode",
+            "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
+            "type": "string",
+          }
+        `)
     })
     test('navigation.anchors.0.hidden', () => {
         expect(getTypeForNameInSchema('navigation.anchors.0.hidden'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Anchor item for navigation",
-                "properties": {
-                  "anchor": {
-                    "description": "Anchor name/section for this navigation entry",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                  "color": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navigation/anyOf/3/properties/dropdowns/items/properties/color",
-                    "description": "Optional custom color",
-                  },
-                  "hidden": {
-                    "description": "Whether the anchor/section is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "Optional link or path for this anchor",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Optional icon for this section",
-                  },
-                },
-                "required": [
-                  "anchor",
-                ],
-                "type": "object",
+                "description": "Whether the anchor/section is hidden by default",
+                "type": "boolean",
               }
             `)
     })
@@ -1249,36 +606,9 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.anchors.0.href'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Anchor item for navigation",
-                "properties": {
-                  "anchor": {
-                    "description": "Anchor name/section for this navigation entry",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                  "color": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navigation/anyOf/3/properties/dropdowns/items/properties/color",
-                    "description": "Optional custom color",
-                  },
-                  "hidden": {
-                    "description": "Whether the anchor/section is hidden by default",
-                    "type": "boolean",
-                  },
-                  "href": {
-                    "description": "Optional link or path for this anchor",
-                    "format": "uri",
-                    "type": "string",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Optional icon for this section",
-                  },
-                },
-                "required": [
-                  "anchor",
-                ],
-                "type": "object",
+                "description": "Optional link or path for this anchor",
+                "format": "uri",
+                "type": "string",
               }
             `)
     })
@@ -1288,50 +618,9 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.groups.0.group'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Navigation group, can contain nested pages or groups",
-                "properties": {
-                  "group": {
-                    "description": "Name of the navigation group",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                  "hidden": {
-                    "description": "Whether this group is hidden by default",
-                    "type": "boolean",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Group section icon",
-                  },
-                  "pages": {
-                    "description": "Nested list of page paths or group objects",
-                    "items": {
-                      "anyOf": [
-                        {
-                          "minLength": 1,
-                          "type": "string",
-                        },
-                        {
-                          "$ref": "#/definitions/DocsConfigSchema/properties/navigation/anyOf/5/properties/groups/items",
-                        },
-                      ],
-                    },
-                    "type": "array",
-                  },
-                  "root": {
-                    "description": "Path to the root page of this group",
-                    "type": "string",
-                  },
-                  "tag": {
-                    "description": "Optional tag for this group",
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "group",
-                ],
-                "type": "object",
+                "description": "Name of the navigation group",
+                "minLength": 1,
+                "type": "string",
               }
             `)
     })
@@ -1339,50 +628,8 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.groups.0.icon'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Navigation group, can contain nested pages or groups",
-                "properties": {
-                  "group": {
-                    "description": "Name of the navigation group",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                  "hidden": {
-                    "description": "Whether this group is hidden by default",
-                    "type": "boolean",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Group section icon",
-                  },
-                  "pages": {
-                    "description": "Nested list of page paths or group objects",
-                    "items": {
-                      "anyOf": [
-                        {
-                          "minLength": 1,
-                          "type": "string",
-                        },
-                        {
-                          "$ref": "#/definitions/DocsConfigSchema/properties/navigation/anyOf/5/properties/groups/items",
-                        },
-                      ],
-                    },
-                    "type": "array",
-                  },
-                  "root": {
-                    "description": "Path to the root page of this group",
-                    "type": "string",
-                  },
-                  "tag": {
-                    "description": "Optional tag for this group",
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "group",
-                ],
-                "type": "object",
+                "description": "Optional icon",
+                "type": "string",
               }
             `)
     })
@@ -1390,50 +637,8 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.groups.0.hidden'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Navigation group, can contain nested pages or groups",
-                "properties": {
-                  "group": {
-                    "description": "Name of the navigation group",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                  "hidden": {
-                    "description": "Whether this group is hidden by default",
-                    "type": "boolean",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Group section icon",
-                  },
-                  "pages": {
-                    "description": "Nested list of page paths or group objects",
-                    "items": {
-                      "anyOf": [
-                        {
-                          "minLength": 1,
-                          "type": "string",
-                        },
-                        {
-                          "$ref": "#/definitions/DocsConfigSchema/properties/navigation/anyOf/5/properties/groups/items",
-                        },
-                      ],
-                    },
-                    "type": "array",
-                  },
-                  "root": {
-                    "description": "Path to the root page of this group",
-                    "type": "string",
-                  },
-                  "tag": {
-                    "description": "Optional tag for this group",
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "group",
-                ],
-                "type": "object",
+                "description": "Whether this group is hidden by default",
+                "type": "boolean",
               }
             `)
     })
@@ -1441,50 +646,8 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.groups.0.root'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Navigation group, can contain nested pages or groups",
-                "properties": {
-                  "group": {
-                    "description": "Name of the navigation group",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                  "hidden": {
-                    "description": "Whether this group is hidden by default",
-                    "type": "boolean",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Group section icon",
-                  },
-                  "pages": {
-                    "description": "Nested list of page paths or group objects",
-                    "items": {
-                      "anyOf": [
-                        {
-                          "minLength": 1,
-                          "type": "string",
-                        },
-                        {
-                          "$ref": "#/definitions/DocsConfigSchema/properties/navigation/anyOf/5/properties/groups/items",
-                        },
-                      ],
-                    },
-                    "type": "array",
-                  },
-                  "root": {
-                    "description": "Path to the root page of this group",
-                    "type": "string",
-                  },
-                  "tag": {
-                    "description": "Optional tag for this group",
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "group",
-                ],
-                "type": "object",
+                "description": "Path to the root page of this group",
+                "type": "string",
               }
             `)
     })
@@ -1492,50 +655,8 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.groups.0.tag'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Navigation group, can contain nested pages or groups",
-                "properties": {
-                  "group": {
-                    "description": "Name of the navigation group",
-                    "minLength": 1,
-                    "type": "string",
-                  },
-                  "hidden": {
-                    "description": "Whether this group is hidden by default",
-                    "type": "boolean",
-                  },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Group section icon",
-                  },
-                  "pages": {
-                    "description": "Nested list of page paths or group objects",
-                    "items": {
-                      "anyOf": [
-                        {
-                          "minLength": 1,
-                          "type": "string",
-                        },
-                        {
-                          "$ref": "#/definitions/DocsConfigSchema/properties/navigation/anyOf/5/properties/groups/items",
-                        },
-                      ],
-                    },
-                    "type": "array",
-                  },
-                  "root": {
-                    "description": "Path to the root page of this group",
-                    "type": "string",
-                  },
-                  "tag": {
-                    "description": "Optional tag for this group",
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "group",
-                ],
-                "type": "object",
+                "description": "Optional tag for this group",
+                "type": "string",
               }
             `)
     })
@@ -1543,50 +664,15 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.groups.0.pages.0'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Navigation group, can contain nested pages or groups",
-                "properties": {
-                  "group": {
-                    "description": "Name of the navigation group",
+                "anyOf": [
+                  {
                     "minLength": 1,
                     "type": "string",
                   },
-                  "hidden": {
-                    "description": "Whether this group is hidden by default",
-                    "type": "boolean",
+                  {
+                    "$ref": "#/definitions/DocsConfigSchema/properties/navigation/anyOf/5/properties/groups/items",
                   },
-                  "icon": {
-                    "$ref": "#/definitions/DocsConfigSchema/properties/navbar/properties/links/items/properties/icon",
-                    "description": "Group section icon",
-                  },
-                  "pages": {
-                    "description": "Nested list of page paths or group objects",
-                    "items": {
-                      "anyOf": [
-                        {
-                          "minLength": 1,
-                          "type": "string",
-                        },
-                        {
-                          "$ref": "#/definitions/DocsConfigSchema/properties/navigation/anyOf/5/properties/groups/items",
-                        },
-                      ],
-                    },
-                    "type": "array",
-                  },
-                  "root": {
-                    "description": "Path to the root page of this group",
-                    "type": "string",
-                  },
-                  "tag": {
-                    "description": "Optional tag for this group",
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "group",
                 ],
-                "type": "object",
               }
             `)
     })
@@ -1596,14 +682,9 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('navigation.pages.0'))
             .toMatchInlineSnapshot(`
               {
-                "description": "Simple linear list of doc page paths",
-                "items": {
-                  "description": "Path to a documentation page",
-                  "minLength": 1,
-                  "type": "string",
-                },
-                "minItems": 1,
-                "type": "array",
+                "description": "Path to a documentation page",
+                "minLength": 1,
+                "type": "string",
               }
             `)
     })
@@ -1612,10 +693,10 @@ describe('DocsConfigSchema', () => {
     test('footer.socials.somekey', () => {
         expect(getTypeForNameInSchema('footer.socials.somekey'))
             .toMatchInlineSnapshot(`
-                {
-                  "format": "uri",
-                  "type": "string",
-                }
+              {
+                "format": "uri",
+                "type": "string",
+              }
             `)
     })
 
@@ -1624,73 +705,50 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('footer.links.0.header'))
             .toMatchInlineSnapshot(`
               {
-                "additionalProperties": false,
-                "description": "Footer link column",
-                "properties": {
-                  "header": {
-                    "description": "Column header",
-                    "type": "string",
-                  },
-                  "items": {
-                    "description": "Column link items",
-                    "items": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "href": {
-                          "description": "Item link URL",
-                          "format": "uri",
-                          "type": "string",
-                        },
-                        "label": {
-                          "description": "Item text",
-                          "type": "string",
-                        },
-                      },
-                      "required": [
-                        "label",
-                        "href",
-                      ],
-                      "type": "object",
-                    },
-                    "minItems": 1,
-                    "type": "array",
-                  },
-                },
-                "required": [
-                  "items",
-                ],
-                "type": "object",
+                "description": "Column header",
+                "type": "string",
               }
             `)
     })
     test('footer.links.0.items.0.label', () => {
         expect(
             getTypeForNameInSchema('footer.links.0.items.0.label'),
-        ).toMatchInlineSnapshot(`undefined`)
+        ).toMatchInlineSnapshot(`
+          {
+            "description": "Item text",
+            "type": "string",
+          }
+        `)
     })
     test('footer.links.0.items.0.href', () => {
         expect(
             getTypeForNameInSchema('footer.links.0.items.0.href'),
-        ).toMatchInlineSnapshot(`undefined`)
+        ).toMatchInlineSnapshot(`
+          {
+            "description": "Item link URL",
+            "format": "uri",
+            "type": "string",
+          }
+        `)
     })
 
     // Banner
     test('banner.content', () => {
         expect(getTypeForNameInSchema('banner.content')).toMatchInlineSnapshot(`
-                {
-                  "description": "Banner HTML/MDX content",
-                  "minLength": 1,
-                  "type": "string",
-                }
-            `)
+          {
+            "description": "Banner HTML/MDX content",
+            "minLength": 1,
+            "type": "string",
+          }
+        `)
     })
     test('banner.dismissible', () => {
         expect(getTypeForNameInSchema('banner.dismissible'))
             .toMatchInlineSnapshot(`
-                {
-                  "description": "Whether the banner can be dismissed",
-                  "type": "boolean",
-                }
+              {
+                "description": "Whether the banner can be dismissed",
+                "type": "boolean",
+              }
             `)
     })
 
@@ -1699,16 +757,13 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('contextual.options.0'))
             .toMatchInlineSnapshot(`
               {
-                "items": {
-                  "enum": [
-                    "copy",
-                    "view",
-                    "chatgpt",
-                    "claude",
-                  ],
-                  "type": "string",
-                },
-                "type": "array",
+                "enum": [
+                  "copy",
+                  "view",
+                  "chatgpt",
+                  "claude",
+                ],
+                "type": "string",
               }
             `)
     })
@@ -1717,9 +772,9 @@ describe('DocsConfigSchema', () => {
     test('cssVariables.someVar', () => {
         expect(getTypeForNameInSchema('cssVariables.someVar'))
             .toMatchInlineSnapshot(`
-                {
-                  "type": "string",
-                }
+              {
+                "type": "string",
+              }
             `)
     })
 })
