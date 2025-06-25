@@ -7,6 +7,7 @@ import {
     RiEditLine,
     RiCheckLine as RiSaveLine,
     RiCloseLine,
+    RiRefreshLine,
 } from '@remixicon/react'
 import { UIMessage, IdGenerator } from 'ai'
 import { memo, useRef, useState } from 'react'
@@ -19,9 +20,9 @@ import {
 import { cn } from 'website/src/lib/utils'
 import { Markdown } from 'docs-website/src/lib/markdown'
 
-import { useChatState } from '../lib/state'
-import { Button } from './ui/button'
-import { useClickOutside } from '../lib/hooks'
+import { useChatState } from '../../lib/state'
+import { Button } from '../ui/button'
+import { useClickOutside } from '../../lib/hooks'
 
 type ChatMessageProps = {
     message: UIMessage
@@ -319,3 +320,43 @@ const MessageActions = memo(function MessageActions() {
         </div>
     )
 })
+
+export function ChatErrorMessage() {
+    const error = useChatState((x) => x?.assistantErrorMessage)
+
+    const handleRetry = () => {
+        // Clear the error and retry - the user message is already in the messages
+        useChatState.setState({ assistantErrorMessage: undefined })
+        // Trigger retry without user input since message is already there
+        const event = new CustomEvent('chatRegenerate')
+        window.dispatchEvent(event)
+    }
+    if (!error) return null
+    return (
+        <div className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed'>
+            <div className='space-y-4 w-full'>
+                <div className='bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800/50 rounded-lg p-4'>
+                    <div className='flex items-start gap-3'>
+                        <div className='flex-1'>
+                            <h4 className='text-sm font-medium text-red-800 dark:text-red-200 mb-1'>
+                                Failed to generate response
+                            </h4>
+                            <p className='text-sm text-red-700 dark:text-red-300'>
+                                {error}
+                            </p>
+                        </div>
+                        <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={handleRetry}
+                            className='border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/50'
+                        >
+                            <RiRefreshLine className='w-4 h-4 mr-1' />
+                            Retry
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}

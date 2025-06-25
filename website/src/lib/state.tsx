@@ -11,11 +11,7 @@ export type State = {
     docsState?: Pick<DocsState, 'currentSlug' | 'filesInDraft'>
     lastPushedFiles: Record<string, FileUpdate>
     isChatGenerating?: boolean
-    lastError?: {
-        messageId: string
-        error: string
-        userInput: string
-    }
+    assistantErrorMessage?: string
     editingMessageId?: string
 }
 

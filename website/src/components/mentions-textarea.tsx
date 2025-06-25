@@ -3,6 +3,9 @@ import getCaretCoordinates from 'textarea-caret'
 import classNames from 'clsx'
 import { matchSorter } from 'match-sorter'
 import * as React from 'react'
+import { text } from 'stream/consumers'
+import { useChatState } from '../lib/state'
+import { createIdGenerator, UIMessage } from 'ai'
 
 interface MentionsTextAreaProps {
     value: string
@@ -11,31 +14,104 @@ interface MentionsTextAreaProps {
     disabled?: boolean
     placeholder?: string
     className?: string
-    autocompleteEnabled?: boolean
-    autocompleteStrings?: string[]
-    onAutocompleteSelect?: (item: string) => void
+
+    // autocompleteStrings?: string[]
+
     mentionOptions?: string[]
+    autocompleteSuggestions?: string[]
 }
 
 export function MentionsTextArea({
     value,
-    onChange,
-    onSubmit,
+    onChange: _onChange,
+    onSubmit: _onSubmit,
     disabled = false,
     placeholder = 'Type @',
     className = '',
-    autocompleteEnabled = false,
-    autocompleteStrings = [],
-    onAutocompleteSelect,
     mentionOptions,
+    autocompleteSuggestions = [],
 }: MentionsTextAreaProps) {
     const ref = React.useRef<HTMLTextAreaElement>(null)
     const [trigger, setTrigger] = React.useState<string | null>(null)
     const [caretOffset, setCaretOffset] = React.useState<number | null>(null)
+
     const [selectedAutocompleteIndex, setSelectedAutocompleteIndex] =
         React.useState(-1)
+    const originalTextRef = React.useRef('')
 
+    function onChange(text) {
+        originalTextRef.current = text
+        _onChange(text)
+    }
 
+    function onSubmit() {
+        const generateId = createIdGenerator()
+        const assistantMessageId = generateId()
+        const userMessageId = generateId()
+        const now = new Date()
+        if (!value.trim()) {
+            // For regenerate, use existing messages and just add new assistant message
+            useChatState.setState({
+                messages: [
+                    ...messages,
+                    {
+                        parts: [],
+                        role: 'assistant',
+                        content: '',
+                        id: assistantMessageId,
+                        createdAt: now,
+                    },
+                ],
+            })
+        } else {
+            // Create user message for new requests
+            const userMessage: UIMessage = {
+                id: userMessageId,
+                content: '',
+                role: 'user',
+                createdAt: new Date(now.getTime() - 1),
+                parts: [{ type: 'text', text: value }],
+            }
+
+            useChatState.setState({
+                messages: [
+                    ...messages,
+                    userMessage,
+                    {
+                        parts: [],
+                        role: 'assistant',
+                        content: '',
+                        id: assistantMessageId,
+                        createdAt: now,
+                    },
+                ],
+            })
+            onChange('')
+        }
+        _onSubmit?.()
+    }
+
+    const messages = useChatState((x) => x.messages)
+    // Filtered autocomplete suggestions based on original text (not current selection)
+    const filteredSuggestions = React.useMemo(() => {
+        const searchText = originalTextRef.current || value
+        if (!searchText.trim() || messages.length > 0) return []
+        return autocompleteSuggestions
+            .filter((suggestion) =>
+                suggestion.toLowerCase().startsWith(searchText.toLowerCase()),
+            )
+            .slice(0, 5)
+    }, [value, messages.length])
+
+    const autocompleteEnabled =
+        messages.length === 0 &&
+        value.length > 0 &&
+        filteredSuggestions.length > 0
+
+    const onAutocompleteSelect = (item: string) => {
+        _onChange(item)
+        // setShowAutocomplete(false)
+    }
 
     React.useEffect(() => {
         const handleChatRegenerate = () => {
@@ -90,14 +166,14 @@ export function MentionsTextArea({
             return
         }
         // Handle autocomplete navigation when autocomplete is enabled and has items
-        if (autocompleteEnabled && autocompleteStrings.length > 0) {
+        if (autocompleteEnabled && filteredSuggestions.length > 0) {
             if (event.key === 'ArrowDown') {
                 event.preventDefault()
                 const newIndex =
-                    selectedAutocompleteIndex < autocompleteStrings.length - 1
+                    selectedAutocompleteIndex < filteredSuggestions.length - 1
                         ? selectedAutocompleteIndex + 1
                         : 0
-                onAutocompleteSelect?.(autocompleteStrings[newIndex])
+                onAutocompleteSelect?.(filteredSuggestions[newIndex])
                 setSelectedAutocompleteIndex(newIndex)
                 return
             }
@@ -106,17 +182,15 @@ export function MentionsTextArea({
                 const newIndex =
                     selectedAutocompleteIndex > 0
                         ? selectedAutocompleteIndex - 1
-                        : autocompleteStrings.length - 1
-                onAutocompleteSelect?.(autocompleteStrings[newIndex])
+                        : filteredSuggestions.length - 1
+                onAutocompleteSelect?.(filteredSuggestions[newIndex])
                 setSelectedAutocompleteIndex(newIndex)
                 return
             }
             if (event.key === 'Enter' && selectedAutocompleteIndex >= 0) {
                 event.preventDefault()
-                onAutocompleteSelect?.(
-                    autocompleteStrings[selectedAutocompleteIndex],
-                )
-                setSelectedAutocompleteIndex(-1)
+
+                onChange(value + ' ')
                 return
             }
         }
@@ -140,6 +214,7 @@ export function MentionsTextArea({
     }
 
     const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+        originalTextRef.current = event.target.value
         const trigger = getTrigger(event.target)
         const searchValue = getSearchValue(event.target)
         // If there's a trigger character, we'll show the combobox popover. This can
@@ -177,11 +252,11 @@ export function MentionsTextArea({
     return (
         <div className='relative flex flex-col gap-2'>
             {/* External autocomplete dropdown */}
-            {autocompleteEnabled && autocompleteStrings.length > 0 && (
+            {autocompleteEnabled && filteredSuggestions.length > 0 && (
                 <div className='absolute bottom-full left-0 right-0 mb-2 z-10'>
                     <div className='rounded-lg shadow-lg p-1'>
                         <div className='flex flex-col gap-0.5'>
-                            {autocompleteStrings
+                            {filteredSuggestions
                                 .slice(0, 5)
                                 .map((item, index) => {
                                     return (

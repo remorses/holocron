@@ -15,8 +15,9 @@ import { FormProvider, useForm } from 'react-hook-form'
 import {
     ChatMessage,
     EditingUserMessage,
+    ChatErrorMessage,
     UserMessageWithEditButton,
-} from 'website/src/components/chat-message'
+} from 'website/src/components/chat/chat-message'
 import { MentionsTextArea } from 'website/src/components/mentions-textarea'
 import { ToolInvocationRenderer } from 'website/src/components/tools-preview'
 
@@ -68,6 +69,7 @@ import {
 import { teeAsyncIterable } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
+import { SuggestionButton } from './chat/suggestions'
 
 export default function Chat({}) {
     const { scrollRef, contentRef } = useStickToBottom({
@@ -94,53 +96,12 @@ export default function Chat({}) {
         <FormProvider {...methods}>
             <ScrollArea
                 ref={scrollRef}
-                className='[&>div>div]:grow  max-w-full h-full flex flex-col grow '
+                className='[&>div>div]:grow max-w-full h-full flex flex-col grow '
             >
                 <Messages ref={contentRef} />
                 <Footer />
             </ScrollArea>
         </FormProvider>
-    )
-}
-
-type ChatCardItem = {
-    icon: React.ReactNode
-    title: string
-    description: string
-    className?: string
-}
-
-// Example data, could be moved outside or passed as props
-const chatCardItems: ChatCardItem[] = [
-    {
-        icon: <CpuIcon className='text-purple-300' />,
-        title: 'Fumadocs Core',
-        description: 'Handles logic like doc search and adapters.',
-        className: '@max-lg:col-span-1',
-    },
-    {
-        icon: <PanelsTopLeft className='text-blue-300' />,
-        title: 'Fumadocs UI',
-        description: 'A modern theme for docs and components.',
-        className: '@max-lg:col-span-1',
-    },
-]
-
-// The component
-function ChatCards({ items = chatCardItems }: { items?: ChatCardItem[] }) {
-    return (
-        <Cards className='mt-auto '>
-            {items.map((item, idx) => (
-                <Card
-                    key={item.title + idx}
-                    icon={item.icon}
-                    title={item.title}
-                    className={item.className}
-                >
-                    {item.description}
-                </Card>
-            ))}
-        </Cards>
     )
 }
 
@@ -213,7 +174,7 @@ function Messages({ ref }) {
             {messages.map((message) => {
                 return <MessageRenderer key={message.id} message={message} />
             })}
-            <ErrorMessage />
+            <ChatErrorMessage />
             {/* {!messages.length && <ChatCards />} */}
         </div>
     )
@@ -281,106 +242,6 @@ function MessageRenderer({ message }: { message: UIMessage }) {
     )
 }
 
-function SuggestionButton({
-    icon,
-    children,
-    userMessage,
-    ...props
-}: {
-    icon: React.ReactNode
-    children: React.ReactNode
-    userMessage: string
-} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
-    return (
-        <Button
-            variant='ghost'
-            {...props}
-            className={
-                'flex px-2 items-center gap-3 ' + (props.className ?? '')
-            }
-            onClick={(e) => {
-                if (props.onClick) props.onClick(e)
-                if (userMessage) {
-                    const generateId = createIdGenerator()
-                    const id = generateId()
-                    useChatState.setState({
-                        messages: [
-                            {
-                                role: 'user',
-                                id,
-                                createdAt: new Date(),
-
-                                parts: [{ type: 'text', text: userMessage }],
-                                content: userMessage,
-                            },
-                        ],
-                    })
-                    window.dispatchEvent(new CustomEvent('chatRegenerate'))
-                }
-            }}
-        >
-            {icon}
-            {children}
-            <svg
-                width='16'
-                height='16'
-                fill='none'
-                stroke='currentColor'
-                strokeWidth={2}
-                className='ml-auto shrink-0'
-                viewBox='0 0 16 16'
-                aria-hidden='true'
-            >
-                <path
-                    d='M6 4l4 4-4 4'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                />
-            </svg>
-        </Button>
-    )
-}
-
-function ErrorMessage() {
-    const error = useChatState((x) => x?.lastError)
-
-    const handleRetry = () => {
-        // Clear the error and retry - the user message is already in the messages
-        useChatState.setState({ lastError: undefined })
-        // Trigger retry without user input since message is already there
-        const event = new CustomEvent('chatRegenerate')
-        window.dispatchEvent(event)
-    }
-    if (!error) return null
-    return (
-        <div className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed'>
-            <div className='space-y-4 w-full'>
-                <div className='bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800/50 rounded-lg p-4'>
-                    <div className='flex items-start gap-3'>
-                        <div className='flex-1'>
-                            <h4 className='text-sm font-medium text-red-800 dark:text-red-200 mb-1'>
-                                Failed to generate response
-                            </h4>
-                            <p className='text-sm text-red-700 dark:text-red-300'>
-                                {error.error}
-                            </p>
-                        </div>
-                        <Button
-                            variant='outline'
-                            size='sm'
-                            onClick={handleRetry}
-                            className='border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/50'
-                        >
-                            <RiRefreshLine className='w-4 h-4 mr-1' />
-                            Retry
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-}
-
 // Static autocomplete suggestions for first message
 const AUTOCOMPLETE_SUGGESTIONS = [
     'change theme color to blue',
@@ -397,8 +258,7 @@ const AUTOCOMPLETE_SUGGESTIONS = [
 
 function Footer() {
     const [text, setText] = useState('')
-    const [showAutocomplete, setShowAutocomplete] = useState(false)
-    const originalTextRef = useRef('')
+
     const isPending = useChatState((x) => x.isChatGenerating)
     const revalidator = useRevalidator()
     const { chat, prUrl, mentionOptions } =
@@ -414,97 +274,28 @@ function Footer() {
         return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
     }, [filesInDraft, lastPushedFiles])
 
-    // Filtered autocomplete suggestions based on original text (not current selection)
-    const filteredSuggestions = useMemo(() => {
-        const searchText = originalTextRef.current || text
-        if (!searchText.trim() || messages.length > 0) return []
-        return AUTOCOMPLETE_SUGGESTIONS.filter((suggestion) =>
-            suggestion.toLowerCase().startsWith(searchText.toLowerCase()),
-        ).slice(0, 5)
-    }, [originalTextRef.current, text, messages.length])
-
-    // Update autocomplete visibility
-    useEffect(() => {
-        const shouldShow =
-            messages.length === 0 &&
-            text.length > 0 &&
-            filteredSuggestions.length > 0
-        setShowAutocomplete(shouldShow)
-    }, [text, messages.length, filteredSuggestions.length])
-
-    const handleAutocompleteSelect = (item: string) => {
-        setText(item)
-        // setShowAutocomplete(false)
-    }
-
-    const handleTextChange = (value: string) => {
-        setText(value)
-        originalTextRef.current = value
-    }
-
     const handleSubmit = async () => {
         const messages = useChatState.getState()?.messages
-        const submitText = text
-        if (!submitText.trim() && messages.length === 0) return
+
+        // if (!text.trim() && messages.length === 0) return
         const generateId = createIdGenerator()
-        flushSync(() => {
-            useChatState.setState({
-                isChatGenerating: true,
-                lastError: undefined,
-            })
+
+        useChatState.setState({
+            isChatGenerating: true,
+            assistantErrorMessage: undefined,
         })
 
-        const assistantMessageId = generateId()
-        const userMessageId = generateId()
+        setText('')
 
         try {
-            let allMessages: UIMessage[]
-            const now = new Date()
-
-            if (!submitText.trim()) {
-                // For regenerate, use existing messages and just add new assistant message
-                allMessages = [
-                    ...messages,
-                    {
-                        parts: [],
-                        role: 'assistant',
-                        content: '',
-                        id: assistantMessageId,
-                        createdAt: now,
-                    },
-                ]
-            } else {
-                // Create user message for new requests
-                const userMessage: UIMessage = {
-                    id: userMessageId,
-                    content: '',
-                    role: 'user',
-                    createdAt: new Date(now.getTime() - 1),
-                    parts: [{ type: 'text', text: submitText }],
-                }
-
-                allMessages = [
-                    ...messages,
-                    userMessage,
-                    {
-                        parts: [],
-                        role: 'assistant',
-                        content: '',
-                        id: assistantMessageId,
-                        createdAt: now,
-                    },
-                ]
-                setText('') // Clear input for new requests
-            }
-
             const docsState = useChatState.getState()?.docsState
             const filesInDraft = docsState?.filesInDraft || {}
             const currentSlug = docsState?.currentSlug || ''
-            useChatState.setState({ messages: allMessages })
+            useChatState.setState({ messages: messages })
 
             const { data: generator, error } =
                 await apiClient.api.generateMessage.post({
-                    messages: allMessages,
+                    messages: messages,
                     siteId,
                     tabId,
                     currentSlug,
@@ -512,8 +303,6 @@ function Footer() {
                     chatId: chat.chatId,
                 })
             if (error) throw error
-            // Clear the input
-            //
 
             async function getPageContent(x) {
                 const { data, error } = await apiClient.api.getPageContent.post(
@@ -533,7 +322,7 @@ function Footer() {
             const [editIter, stateIter] = teeAsyncIterable(
                 fullStreamToUIMessages({
                     fullStream: generator,
-                    messages: allMessages,
+                    messages: messages,
                     generateId,
                 }),
             )
@@ -615,19 +404,13 @@ function Footer() {
         } catch (error) {
             // Remove only the failed assistant message, keep user message
             const currentMessages = useChatState.getState().messages || []
-            const messagesWithoutAssistant = currentMessages.filter(
-                (msg) => msg.id !== assistantMessageId,
-            )
+            let messagesWithoutAssistant = currentMessages.slice(0, -1)
             useChatState.setState({
                 messages: messagesWithoutAssistant,
-                lastError: {
-                    messageId: assistantMessageId,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : 'An unexpected error occurred',
-                    userInput: submitText,
-                },
+                assistantErrorMessage:
+                    error instanceof Error
+                        ? error.message
+                        : 'An unexpected error occurred',
             })
         } finally {
             useChatState.setState({ isChatGenerating: false })
@@ -678,14 +461,12 @@ function Footer() {
                     <div className='relative rounded-[20px] border bg-muted'>
                         <MentionsTextArea
                             value={text}
-                            onChange={handleTextChange}
+                            onChange={setText}
+                            autocompleteSuggestions={AUTOCOMPLETE_SUGGESTIONS}
                             onSubmit={() => handleSubmit()}
                             disabled={false}
                             placeholder='Ask me anything...'
                             className='flex sm:min-h-[84px] w-full bg-transparent px-4 py-3 text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none resize-none'
-                            autocompleteEnabled={showAutocomplete}
-                            autocompleteStrings={filteredSuggestions}
-                            onAutocompleteSelect={handleAutocompleteSelect}
                             mentionOptions={mentionOptions || []}
                         />
                         {/* Textarea buttons */}
