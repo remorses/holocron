@@ -25,6 +25,7 @@ import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
 import { TrieveSDK } from 'trieve-ts-sdk'
 import { LOCALE_LABELS } from './lib/locales'
 import { LinkItemType } from 'fumadocs-ui/layouts/links'
+import { useShallow } from 'zustand/react/shallow'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -250,8 +251,18 @@ function DocsProvider({ children }: { children: React.ReactNode }) {
 }
 
 function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
-    const { site, tree, i18n } = useLoaderData<typeof loader>()
+    const loaderData = useLoaderData<typeof loader>()
+    const { site, i18n } = loaderData
     const locale = site.defaultLocale
+    
+    // Check for state overrides for tree
+    const { tree } = useDocsState(
+        useShallow((state) => {
+            return {
+                tree: state.tree || loaderData.tree,
+            }
+        }),
+    )
     
     // TODO add to docs.json
     const navMode = 'auto'
@@ -295,7 +306,17 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
 
 function Logo() {
     const { site } = useLoaderData<typeof loader>()
-    const docsConfig = site.docsJson as any
+    
+    // Check for state overrides for docsJson
+    const { docsJson } = useDocsState(
+        useShallow((state) => {
+            return {
+                docsJson: state.docsJson || (site.docsJson as any),
+            }
+        }),
+    )
+    
+    const docsConfig = docsJson
 
     if (!docsConfig.logo) {
         return (
