@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { compileSchema } from 'json-schema-library'
+import schemaLib from 'json-schema-library'
+const compileSchema = schemaLib.compileSchema
 import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
 
 const stringReq = z.string().nullable()
@@ -169,12 +170,16 @@ export function getTypeForNameInSchema(
 }
 
 export function isScalarSchema(schema: any): boolean {
-    // A scalar is any of these JSON Schema types, and not an array/object
+    // A scalar is any JSON Schema type that is not an array or object
     const scalarTypes = ['string', 'number', 'integer', 'boolean', 'null']
     if (!schema || typeof schema !== 'object') return false
+    if (schema.anyOf && Array.isArray(schema.anyOf)) {
+        // It's scalar if any of the anyOf sub-schemas are scalar
+        return schema.anyOf.some((subSchema: any) => isScalarSchema(subSchema))
+    }
     if (Array.isArray(schema.type)) {
-        // If multiple types, only "scalar" if all are scalar
-        return schema.type.every((type: any) => scalarTypes.includes(type))
+        // If multiple types, it's scalar if any are scalar
+        return schema.type.some((type: any) => scalarTypes.includes(type))
     }
     return scalarTypes.includes(schema.type)
 }
