@@ -35,6 +35,20 @@ export function MentionsTextArea({
     const [selectedAutocompleteIndex, setSelectedAutocompleteIndex] =
         React.useState(-1)
 
+
+
+    React.useEffect(() => {
+        const handleChatRegenerate = () => {
+            // Generate a new assistant response
+            onSubmit()
+        }
+
+        window.addEventListener('chatRegenerate', handleChatRegenerate)
+        return () => {
+            window.removeEventListener('chatRegenerate', handleChatRegenerate)
+        }
+    }, [onSubmit])
+
     const combobox = Ariakit.useComboboxStore()
 
     const searchValue = Ariakit.useStoreState(combobox, 'value')
@@ -282,8 +296,6 @@ export function MentionsTextArea({
     )
 }
 
-
-
 function getTriggerOffset(
     element: HTMLTextAreaElement,
     triggers = defaultTriggers,
@@ -298,10 +310,7 @@ function getTriggerOffset(
     return -1
 }
 
-function getTrigger(
-    element: HTMLTextAreaElement,
-    triggers = defaultTriggers,
-) {
+function getTrigger(element: HTMLTextAreaElement, triggers = defaultTriggers) {
     const { value, selectionStart } = element
     const previousChar = value[selectionStart - 1]
     if (!previousChar) return null

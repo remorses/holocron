@@ -4,33 +4,33 @@ import { createIdGenerator, UIMessage } from 'ai'
 import { Markdown } from 'docs-website/src/lib/markdown'
 import memoize from 'micro-memoize'
 import {
-  memo,
-  startTransition,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
+    memo,
+    startTransition,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
 } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import {
-  ChatMessage,
-  EditingUserMessage,
-  UserMessageWithEditButton,
+    ChatMessage,
+    EditingUserMessage,
+    UserMessageWithEditButton,
 } from 'website/src/components/chat-message'
 import { MentionsTextArea } from 'website/src/components/mentions-textarea'
 import { ToolInvocationRenderer } from 'website/src/components/tools-preview'
 
 import { Button } from 'website/src/components/ui/button'
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from 'website/src/components/ui/popover'
 import { ScrollArea } from 'website/src/components/ui/scroll-area'
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
 } from 'website/src/components/ui/tooltip'
 
 import { useStickToBottom } from 'use-stick-to-bottom'
@@ -44,26 +44,26 @@ import { doFilesInDraftNeedPush, useChatState } from '../lib/state'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { generateSlugFromPath } from 'docs-website/src/lib/utils'
 import {
-  AlertCircle,
-  AlertTriangleIcon,
-  CpuIcon,
-  FilePlus2Icon,
-  GitBranch,
-  ImageIcon,
-  Link2Icon,
-  ListTreeIcon,
-  PaletteIcon,
-  PanelsTopLeft,
-  X,
+    AlertCircle,
+    AlertTriangleIcon,
+    CpuIcon,
+    FilePlus2Icon,
+    GitBranch,
+    ImageIcon,
+    Link2Icon,
+    ListTreeIcon,
+    PaletteIcon,
+    PanelsTopLeft,
+    X,
 } from 'lucide-react'
 import { flushSync } from 'react-dom'
 import { useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
 import { docsRpcClient } from '../lib/docs-setstate'
 import {
-  createEditExecute,
-  EditToolParamSchema,
-  FileUpdate,
-  isParameterComplete,
+    createEditExecute,
+    EditToolParamSchema,
+    FileUpdate,
+    isParameterComplete,
 } from '../lib/edit-tool'
 import { teeAsyncIterable } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
@@ -224,17 +224,13 @@ function MessageRenderer({ message }: { message: UIMessage }) {
     const editingMessageId = useChatState((x) => x.editingMessageId)
     const isEditing = editingMessageId === message.id
 
-    const handleEditStart = () => {
-        useChatState.setState({ editingMessageId: message.id })
-    }
-
     if (message.role === 'user' && isEditing) {
         return <EditingUserMessage message={message} />
     }
 
     if (message.role === 'user') {
         return (
-            <UserMessageWithEditButton onEditStart={handleEditStart}>
+            <UserMessageWithEditButton messageId={message.id}>
                 {message.parts.map((part, index) => {
                     if (part.type === 'text') {
                         return (
@@ -446,9 +442,9 @@ function Footer() {
         originalTextRef.current = value
     }
 
-    const handleSubmit = async ({ inputText }: { inputText?: string } = {}) => {
+    const handleSubmit = async () => {
         const messages = useChatState.getState()?.messages
-        const submitText = inputText || text
+        const submitText = text
         if (!submitText.trim() && messages.length === 0) return
         const generateId = createIdGenerator()
         flushSync(() => {
@@ -519,18 +515,16 @@ function Footer() {
             // Clear the input
             //
 
-            const getPageContent = memoize(
-                async function getPageContent(x) {
-                    const { data, error } =
-                        await apiClient.api.getPageContent.post({
-                            tabId,
-                            githubPath: x.githubPath,
-                        })
-                    if (error) return ''
-                    return data?.content
-                },
-                { transformKey: (x) => x.map((l) => JSON.stringify(l)) },
-            )
+            async function getPageContent(x) {
+                const { data, error } = await apiClient.api.getPageContent.post(
+                    {
+                        tabId,
+                        githubPath: x.githubPath,
+                    },
+                )
+                if (error) return ''
+                return data?.content
+            }
             const execute = createEditExecute({
                 filesInDraft: filesInDraft,
                 getPageContent,
@@ -641,17 +635,6 @@ function Footer() {
         }
     }
     // Listen for regenerate events
-    useEffect(() => {
-        const handleChatRegenerate = () => {
-            // Generate a new assistant response
-            handleSubmit()
-        }
-
-        window.addEventListener('chatRegenerate', handleChatRegenerate)
-        return () => {
-            window.removeEventListener('chatRegenerate', handleChatRegenerate)
-        }
-    }, [handleSubmit])
 
     const hasFilesInDraft = Object.keys(filesInDraft).length > 0
     const updatedLines = useMemo(() => {

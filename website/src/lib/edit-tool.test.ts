@@ -243,6 +243,79 @@ describe('edit-tool commands', () => {
         "success": false,
       }
     `)
+
+        const undoWithoutEditResult = await execute({
+            command: 'undo_edit',
+            path: 'never-edited.md',
+            file_text: null,
+            insert_line: null,
+            new_str: null,
+            old_str: null,
+            view_range: null,
+        })
+        expect(undoWithoutEditResult).toMatchInlineSnapshot(`
+          {
+            "content": "new 1
+          modified line 2
+          line 3
+          line 4",
+            "message": "Successfully reverted never-edited.md to previous state.",
+            "success": true,
+          }
+        `)
+    })
+
+    test('edge cases', async () => {
+        const viewEmptyFile = await execute({
+            command: 'view',
+            path: 'empty.md',
+            file_text: null,
+            insert_line: null,
+            new_str: null,
+            old_str: null,
+            view_range: null,
+        })
+        expect(viewEmptyFile).toMatchInlineSnapshot(`""`)
+
+        const viewEndRange = await execute({
+            command: 'view',
+            path: 'test.md',
+            file_text: null,
+            insert_line: null,
+            new_str: null,
+            old_str: null,
+            view_range: [3, -1],
+        })
+        expect(viewEndRange).toMatchInlineSnapshot(`
+      "3: line 3
+      4: line 4"
+    `)
+
+        const insertAtEnd = await execute({
+            command: 'insert',
+            path: 'test.md',
+            file_text: null,
+            insert_line: 99,
+            new_str: 'line at end',
+            old_str: null,
+            view_range: null,
+        })
+        expect(insertAtEnd).toMatchInlineSnapshot(`
+          "Here is the diff of the changes made:
+
+          Index: test.md
+          ===================================================================
+          --- test.md	
+          +++ test.md	
+          @@ -1,4 +1,5 @@
+           new 1
+           modified line 2
+           line 3
+          -line 4
+          +line 4
+          +line at end
+          "
+        `)
     })
 })
 

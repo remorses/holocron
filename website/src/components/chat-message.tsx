@@ -232,12 +232,15 @@ export const EditingUserMessage = memo(function EditingUserMessage({
 })
 
 export function UserMessageWithEditButton({
-    onEditStart,
     children,
+    messageId,
 }: {
-    onEditStart: () => void
     children: React.ReactNode
+    messageId: string
 }) {
+    const handleEditStart = () => {
+        useChatState.setState({ editingMessageId: messageId })
+    }
     return (
         <article className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end'>
             <div className='max-w-full relative group/message bg-muted px-4 py-3 rounded-xl'>
@@ -248,7 +251,7 @@ export function UserMessageWithEditButton({
                                 variant='outline'
                                 size='icon'
                                 className='rounded-full size-6 border-none bg-background shadow-md hover:bg-muted'
-                                onClick={onEditStart}
+                                onClick={handleEditStart}
                             >
                                 <RiEditLine className='size-3' />
                             </Button>
@@ -316,4 +319,3 @@ const MessageActions = memo(function MessageActions() {
         </div>
     )
 })
-
