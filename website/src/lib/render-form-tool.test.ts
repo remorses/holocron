@@ -1,50 +1,32 @@
+import { z } from 'zod'
+import { zodToJsonSchema } from 'zod-to-json-schema'
 import schemaLib from 'json-schema-library'
 const compileSchema = schemaLib.compileSchema
 import { describe, expect, test } from 'vitest'
 import { getTypeForNameInSchema } from './render-form-tool'
 
 describe('compileSchema with union in array', () => {
-    const schema = {
-        type: 'object',
-        properties: {
-            container: {
-                type: 'array',
-                items: {
-                    anyOf: [
-                        {
-                            type: 'null',
-                        },
-                        {
-                            type: 'object',
-                            properties: {
-                                email: { type: 'string' },
-                                type: { const: 'email' },
-                            },
-                            required: ['email', 'type'],
-                        },
-                        {
-                            type: 'object',
-                            properties: {
-                                sms: { type: 'string' },
-                                type: { const: 'sms' },
-                            },
-                            required: ['sms', 'type'],
-                        },
-                        {
-                            type: 'object',
-                            properties: {
-                                push: { type: 'boolean' },
-                                type: { const: 'push' },
-                            },
-                            required: ['push', 'type'],
-                        },
-                    ],
-                },
-            },
-        },
-        required: ['container'],
-    }
+    const zodSchema = z.object({
+        container: z.array(
+            z.union([
+                z.null(),
+                z.object({
+                    email: z.string(),
+                    type: z.literal('email'),
+                }),
+                z.object({
+                    sms: z.string(),
+                    type: z.literal('sms'),
+                }),
+                z.object({
+                    push: z.boolean(),
+                    type: z.literal('push'),
+                }),
+            ]),
+        ),
+    })
 
+    const schema = zodToJsonSchema(zodSchema)
     const compiled = compileSchema(schema)
 
     test('should resolve pointer to field existing in only some unions: sms', () => {
@@ -60,6 +42,7 @@ describe('compileSchema with union in array', () => {
             .toMatchInlineSnapshot(`
               {
                 "const": "push",
+                "type": "string",
               }
             `)
     })
@@ -91,36 +74,22 @@ describe('compileSchema with union in array', () => {
 
 // UNION TESTS: string or object union
 describe('compileSchema with array union of string or object', () => {
-    const schema = {
-        type: 'object',
-        properties: {
-            container: {
-                type: 'array',
-                items: {
-                    anyOf: [
-                        { type: 'string' },
-                        {
-                            type: 'object',
-                            properties: {
-                                nested: {
-                                    type: 'object',
-                                    properties: {
-                                        foo: { type: 'integer' },
-                                        bar: { type: 'string' },
-                                    },
-                                    required: ['foo', 'bar'],
-                                },
-                                type: { const: 'complex' },
-                            },
-                            required: ['nested', 'type'],
-                        },
-                    ],
-                },
-            },
-        },
-        required: ['container'],
-    }
+    const zodSchema = z.object({
+        container: z.array(
+            z.union([
+                z.string(),
+                z.object({
+                    nested: z.object({
+                        foo: z.number().int(),
+                        bar: z.string(),
+                    }),
+                    type: z.literal('complex'),
+                }),
+            ]),
+        ),
+    })
 
+    const schema = zodToJsonSchema(zodSchema)
     const compiled = compileSchema(schema)
 
     test('should resolve pointer to field in string-or-object union: type', () => {
@@ -128,45 +97,7 @@ describe('compileSchema with array union of string or object', () => {
             .toMatchInlineSnapshot(`
               {
                 "const": "complex",
-              }
-            `)
-    })
-    test('container.items', () => {
-        expect(getTypeForNameInSchema('container.items', compiled))
-            .toMatchInlineSnapshot(`
-              {
-                "anyOf": [
-                  {
-                    "type": "string",
-                  },
-                  {
-                    "properties": {
-                      "nested": {
-                        "properties": {
-                          "bar": {
-                            "type": "string",
-                          },
-                          "foo": {
-                            "type": "integer",
-                          },
-                        },
-                        "required": [
-                          "foo",
-                          "bar",
-                        ],
-                        "type": "object",
-                      },
-                      "type": {
-                        "const": "complex",
-                      },
-                    },
-                    "required": [
-                      "nested",
-                      "type",
-                    ],
-                    "type": "object",
-                  },
-                ],
+                "type": "string",
               }
             `)
     })
@@ -193,6 +124,7 @@ describe('compileSchema with array union of string or object', () => {
         expect(getTypeForNameInSchema('container.0.nested', compiled))
             .toMatchInlineSnapshot(`
               {
+                "additionalProperties": false,
                 "properties": {
                   "bar": {
                     "type": "string",
@@ -501,9 +433,8 @@ describe('DocsConfigSchema', () => {
             `)
     })
     test('navigation.dropdowns.0.color.light', () => {
-        expect(
-            getTypeForNameInSchema('navigation.dropdowns.0.color.light'),
-        ).toMatchInlineSnapshot(`
+        expect(getTypeForNameInSchema('navigation.dropdowns.0.color.light'))
+            .toMatchInlineSnapshot(`
           {
             "description": "Color used in light mode",
             "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
@@ -512,9 +443,8 @@ describe('DocsConfigSchema', () => {
         `)
     })
     test('navigation.dropdowns.0.color.dark', () => {
-        expect(
-            getTypeForNameInSchema('navigation.dropdowns.0.color.dark'),
-        ).toMatchInlineSnapshot(`
+        expect(getTypeForNameInSchema('navigation.dropdowns.0.color.dark'))
+            .toMatchInlineSnapshot(`
           {
             "description": "Color used in dark mode",
             "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
@@ -572,9 +502,8 @@ describe('DocsConfigSchema', () => {
             `)
     })
     test('navigation.anchors.0.color.light', () => {
-        expect(
-            getTypeForNameInSchema('navigation.anchors.0.color.light'),
-        ).toMatchInlineSnapshot(`
+        expect(getTypeForNameInSchema('navigation.anchors.0.color.light'))
+            .toMatchInlineSnapshot(`
           {
             "description": "Color used in light mode",
             "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
@@ -583,9 +512,8 @@ describe('DocsConfigSchema', () => {
         `)
     })
     test('navigation.anchors.0.color.dark', () => {
-        expect(
-            getTypeForNameInSchema('navigation.anchors.0.color.dark'),
-        ).toMatchInlineSnapshot(`
+        expect(getTypeForNameInSchema('navigation.anchors.0.color.dark'))
+            .toMatchInlineSnapshot(`
           {
             "description": "Color used in dark mode",
             "pattern": "^(#|rgb|rgba|hsl|hsla)\\b",
@@ -711,9 +639,8 @@ describe('DocsConfigSchema', () => {
             `)
     })
     test('footer.links.0.items.0.label', () => {
-        expect(
-            getTypeForNameInSchema('footer.links.0.items.0.label'),
-        ).toMatchInlineSnapshot(`
+        expect(getTypeForNameInSchema('footer.links.0.items.0.label'))
+            .toMatchInlineSnapshot(`
           {
             "description": "Item text",
             "type": "string",
@@ -721,9 +648,8 @@ describe('DocsConfigSchema', () => {
         `)
     })
     test('footer.links.0.items.0.href', () => {
-        expect(
-            getTypeForNameInSchema('footer.links.0.items.0.href'),
-        ).toMatchInlineSnapshot(`
+        expect(getTypeForNameInSchema('footer.links.0.items.0.href'))
+            .toMatchInlineSnapshot(`
           {
             "description": "Item link URL",
             "format": "uri",

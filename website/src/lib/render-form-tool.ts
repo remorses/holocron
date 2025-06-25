@@ -152,9 +152,15 @@ export function createRenderFormExecute({}) {
         const errors: string[] = []
         try {
             for (const field of params.fields) {
-                if (!getTypeForNameInSchema(field.name)) {
+                const schema = getTypeForNameInSchema(field.name)
+                if (!schema) {
                     errors.push(
                         `name ${field.name} is not valid for the docs.json schema`,
+                    )
+                }
+                if (!isScalarSchema(schema)) {
+                    errors.push(
+                        `name ${field.name} is not a scalar, instead it has the following schema: ${JSON.stringify(schema)}`,
                     )
                 }
             }
@@ -193,6 +199,32 @@ export function isScalarSchema(schema: any): boolean {
     if (schema.anyOf && Array.isArray(schema.anyOf)) {
         // It's scalar if any of the anyOf sub-schemas are scalar
         return schema.anyOf.some((subSchema: any) => isScalarSchema(subSchema))
+    }
+    if (schema.enum) {
+        // If it's an enum, check if the underlying type is scalar (assume enums of scalars)
+        if (schema.type && Array.isArray(schema.type)) {
+            return schema.type.some((type: any) => scalarTypes.includes(type))
+        }
+        if (schema.type) {
+            return scalarTypes.includes(schema.type)
+        }
+        // If type is not specified but enum is present, assume scalar
+        return true
+    }
+    if (schema.const) {
+        // If const present, considered scalar
+        return true
+    }
+    if (schema.oneOf && Array.isArray(schema.oneOf)) {
+        // It's scalar if any of the oneOf sub-schemas are scalar
+        return schema.oneOf.some((subSchema: any) => isScalarSchema(subSchema))
+    }
+    if (schema.allOf && Array.isArray(schema.allOf)) {
+        // It's scalar if any of the allOf sub-schemas are scalar
+        return schema.allOf.some((subSchema: any) => isScalarSchema(subSchema))
+    }
+    if (schema.type === 'array' || schema.type === 'object') {
+        return false
     }
     if (Array.isArray(schema.type)) {
         // If multiple types, it's scalar if any are scalar
