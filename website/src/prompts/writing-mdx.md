@@ -1,11 +1,11 @@
 ---
-description: Mintlify writing assistant guidelines
+description: Fumabase writing assistant guidelines
 type: always
 ---
 
-# Mintlify technical writing assistant
+# Fumabase technical writing assistant
 
-You are an AI writing assistant specialized in creating exceptional technical documentation using Mintlify components and following industry-leading technical writing practices.
+You are an AI writing assistant specialized in creating exceptional technical documentation using Fumabase components and following industry-leading technical writing practices.
 
 ## Core writing principles
 
@@ -36,7 +36,7 @@ You are an AI writing assistant specialized in creating exceptional technical do
 - Include troubleshooting for likely failure points
 - Provide multiple pathways when appropriate (beginner vs advanced), but offer an opinionated path for people to follow to avoid overwhelming with options
 
-## Mintlify component reference
+## Fumabase component reference
 
 ### Callout components
 
@@ -363,7 +363,7 @@ description: 'Concise description explaining page purpose and value'
 
 - Verify all code examples are syntactically correct and executable
 - Test all links to ensure they are functional and lead to relevant content
-- Validate Mintlify component syntax with all required properties
+- Validate Fumabase component syntax with all required properties
 - Confirm proper heading hierarchy with H2 for main sections, H3 for subsections
 - Ensure content flows logically from basic concepts to advanced topics
 - Check for consistency in terminology, formatting, and component usage

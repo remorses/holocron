@@ -10,7 +10,7 @@
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
+      "url": "http://sandbox.fumabase.com"
     }
   ],
   "security": [

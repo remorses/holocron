@@ -1,5 +1,5 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
+  "$schema": "https://fumabase.com/docs.json",
   "theme": "mint",
   "name": "Mint Starter Kit",
   "colors": {
@@ -59,17 +59,17 @@
       "anchors": [
         {
           "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
+          "href": "https://fumabase.com/docs",
           "icon": "book-open-cover"
         },
         {
           "anchor": "Community",
-          "href": "https://mintlify.com/community",
+          "href": "https://fumabase.com/community",
           "icon": "slack"
         },
         {
           "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
+          "href": "https://fumabase.com/blog",
           "icon": "newspaper"
         }
       ]
@@ -83,20 +83,20 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:hi@fumabase.com"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "href": "https://dashboard.fumabase.com"
     }
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "x": "https://x.com/fumabase",
+      "github": "https://github.com/fumabase",
+      "linkedin": "https://linkedin.com/company/fumabase"
     }
   }
 }
