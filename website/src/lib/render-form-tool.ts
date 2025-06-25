@@ -167,3 +167,14 @@ export function getTypeForNameInSchema(
     const { node, error } = schema.getNode(pointer)
     return node?.schema
 }
+
+export function isScalarSchema(schema: any): boolean {
+    // A scalar is any of these JSON Schema types, and not an array/object
+    const scalarTypes = ['string', 'number', 'integer', 'boolean', 'null']
+    if (!schema || typeof schema !== 'object') return false
+    if (Array.isArray(schema.type)) {
+        // If multiple types, only "scalar" if all are scalar
+        return schema.type.every((type: any) => scalarTypes.includes(type))
+    }
+    return scalarTypes.includes(schema.type)
+}
