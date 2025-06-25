@@ -8,6 +8,7 @@ import {
     Scripts,
     ScrollRestoration,
     useNavigate,
+    useLoaderData,
 } from 'react-router'
 import type { Route } from './+types/root'
 import './app.css'
@@ -16,6 +17,14 @@ import { env } from './lib/env'
 import { startTransition, useEffect } from 'react'
 import { IframeRpcMessage, useDocsState } from './lib/docs-state'
 import { isInsidePreviewIframe } from './lib/utils'
+import { prisma } from 'db'
+import { getFumadocsSource } from './lib/source.server'
+import { ThemeProvider } from 'next-themes'
+import { RootProvider } from 'fumadocs-ui/provider/base'
+import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
+import { TrieveSDK } from 'trieve-ts-sdk'
+import { LOCALE_LABELS } from './lib/locales'
+import { LinkItemType } from 'fumadocs-ui/layouts/links'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -36,6 +45,57 @@ let onFirstStateMessage = () => {}
 const firstStateReceived = new Promise<void>((resolve) => {
     onFirstStateMessage = resolve
 })
+
+export async function loader({ request }: Route.LoaderArgs) {
+    const url = new URL(request.url)
+    const domain = url.hostname.split(':')[0]
+
+    const site = await prisma.site.findFirst({
+        where: {
+            domains: {
+                some: {
+                    host: domain,
+                },
+            },
+        },
+        include: {
+            domains: true,
+            tabs: {
+                take: 1,
+            },
+            locales: true,
+        },
+    })
+
+    if (!site) {
+        console.log('Site not found for domain:', domain)
+        throw new Response('Site not found', { status: 404 })
+    }
+
+    const tab = site.tabs[0]
+    if (!tab) {
+        console.log('Tab not found for site:', site?.siteId)
+        throw new Response('Tab not found', { status: 404 })
+    }
+
+    const locales = site.locales.map((x) => x.locale)
+    const source = await getFumadocsSource({
+        defaultLocale: site.defaultLocale,
+        tabId: tab.tabId,
+        locales,
+    })
+
+    const tree = source.getPageTree(site.defaultLocale)
+    const i18n = source._i18n
+
+    return {
+        site,
+        tab,
+        locales,
+        tree,
+        i18n,
+    }
+}
 
 export const clientLoader = async () => {
     // if (isInsidePreviewIframe()) await firstStateReceived
@@ -136,9 +196,133 @@ export function Layout({ children }: { children: React.ReactNode }) {
     )
 }
 
+let trieveClient: TrieveSDK
+
 export default function App() {
-    return <Outlet />
+    return (
+        <DocsProvider>
+            <DocsLayoutWrapper>
+                <Outlet />
+            </DocsLayoutWrapper>
+        </DocsProvider>
+    )
 }
+
+function DocsProvider({ children }: { children: React.ReactNode }) {
+    const { site, i18n } = useLoaderData<typeof loader>()
+    const locale = site.defaultLocale // Will be updated from child route
+    
+    if (!trieveClient && site.trieveReadApiKey) {
+        trieveClient = new TrieveSDK({
+            apiKey: site.trieveReadApiKey!,
+            datasetId: site.trieveDatasetId || undefined,
+        })
+    }
+
+    return (
+        <RootProvider
+            search={{
+                options: {},
+                enabled: !!site.trieveDatasetId,
+            }}
+            i18n={{
+                locale,
+                locales: i18n?.languages.map((locale) => {
+                    return { locale, name: LOCALE_LABELS[locale] || '' }
+                }),
+            }}
+        >
+            <ThemeProvider
+                attribute='class'
+                defaultTheme='system'
+                enableSystem
+                disableTransitionOnChange
+            >
+                {site.cssStyles && (
+                    <style
+                        dangerouslySetInnerHTML={{ __html: site.cssStyles }}
+                    />
+                )}
+                {children}
+            </ThemeProvider>
+        </RootProvider>
+    )
+}
+
+function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
+    const { site, tree, i18n } = useLoaderData<typeof loader>()
+    const locale = site.defaultLocale
+    
+    // TODO add to docs.json
+    const navMode = 'auto'
+    const disableThemeSwitch = false
+    const navTransparentMode = 'top'
+    const searchEnabled = true
+    const navTabMode = 'navbar'
+    
+    const links: LinkItemType[] = [
+        {
+            text: 'Blog',
+            url: '/blog',
+            active: 'nested-url',
+        },
+    ]
+
+    return (
+        <DocsLayout
+            searchToggle={{
+                enabled: searchEnabled,
+                components: {},
+            }}
+            nav={{
+                mode: navMode,
+                transparentMode: navTransparentMode,
+                title: <Logo />,
+            }}
+            tabMode={navTabMode}
+            sidebar={{}}
+            i18n={i18n}
+            tree={tree as any}
+            {...{
+                disableThemeSwitch,
+                links,
+            }}
+        >
+            {children}
+        </DocsLayout>
+    )
+}
+
+function Logo() {
+    const { site } = useLoaderData<typeof loader>()
+    const docsConfig = site.docsJson as any
+
+    if (!docsConfig.logo) {
+        return (
+            <span className='font-medium [.uwu_&]:hidden max-md:hidden'>
+                {docsConfig?.name || site.name || 'Documentation'}
+            </span>
+        )
+    }
+
+    const logoImageUrl =
+        typeof docsConfig?.logo === 'string'
+            ? docsConfig.logo
+            : docsConfig?.logo?.light || ''
+
+    return (
+        <img
+            alt='logo'
+            src={logoImageUrl}
+            sizes='100px'
+            className='hidden w-20 md:w-24 [.uwu_&]:block'
+            aria-label='logo'
+        />
+    )
+}
+
+// Export Route type for other components to use
+export type { Route }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     const containerClass =
