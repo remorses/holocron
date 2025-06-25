@@ -14,7 +14,7 @@ import type { Route } from './+types/root'
 import './app.css'
 import { useParentPostMessage } from './lib/hooks'
 import { env } from './lib/env'
-import { startTransition, useEffect } from 'react'
+import { startTransition, useState } from 'react'
 import { IframeRpcMessage, useDocsState } from './lib/docs-state'
 import { isInsidePreviewIframe } from './lib/utils'
 import { prisma } from 'db'
@@ -26,6 +26,10 @@ import { TrieveSDK } from 'trieve-ts-sdk'
 import { LOCALE_LABELS } from './lib/locales'
 import { LinkItemType } from 'fumadocs-ui/layouts/links'
 import { useShallow } from 'zustand/react/shallow'
+import { GithubIcon, TwitterIcon, LinkedinIcon, MessageCircleIcon, ExternalLinkIcon } from 'lucide-react'
+import { processMdxInServer } from './lib/mdx.server'
+import { Markdown } from './lib/markdown'
+import { useTheme } from 'next-themes'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -89,12 +93,28 @@ export async function loader({ request }: Route.LoaderArgs) {
     const tree = source.getPageTree(site.defaultLocale)
     const i18n = source._i18n
 
+    // Process banner markdown if it exists
+    let bannerAst: any = null
+    const docsJson = site.docsJson as any
+    if (docsJson?.banner?.content) {
+        try {
+            const { data } = await processMdxInServer({
+                extension: '.mdx',
+                markdown: docsJson.banner.content,
+            })
+            bannerAst = data.ast
+        } catch (error) {
+            console.error('Error processing banner markdown:', error)
+        }
+    }
+
     return {
         site,
         tab,
         locales,
         tree,
         i18n,
+        bannerAst,
     }
 }
 
@@ -182,6 +202,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     content='width=device-width, initial-scale=1'
                 />
                 <Meta />
+                <CSSVariables />
                 <script
                     crossOrigin='anonymous'
                     src='//unpkg.com/react-scan/dist/auto.global.js'
@@ -194,6 +215,36 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <Scripts />
             </body>
         </html>
+    )
+}
+
+function CSSVariables() {
+    const { site } = useLoaderData<typeof loader>()
+    
+    // Check for state overrides for docsJson
+    const docsJson = useDocsState((state) => state.docsJson || (site.docsJson as any))
+    
+    const cssVariables = docsJson?.cssVariables
+    
+    if (!cssVariables || Object.keys(cssVariables).length === 0) {
+        return null
+    }
+    
+    // Convert cssVariables object to CSS custom properties
+    const cssText = Object.entries(cssVariables)
+        .map(([key, value]) => {
+            // Ensure the key starts with --
+            const cssVar = key.startsWith('--') ? key : `--${key}`
+            return `${cssVar}: ${value};`
+        })
+        .join('\n  ')
+    
+    return (
+        <style
+            dangerouslySetInnerHTML={{
+                __html: `:root {\n  ${cssText}\n}`,
+            }}
+        />
     )
 }
 
@@ -255,29 +306,57 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
     const { site, i18n } = loaderData
     const locale = site.defaultLocale
     
-    // Check for state overrides for tree
-    const { tree } = useDocsState(
+    // Check for state overrides
+    const { tree, docsJson } = useDocsState(
         useShallow((state) => {
             return {
                 tree: state.tree || loaderData.tree,
+                docsJson: state.docsJson || (site.docsJson as any),
             }
         }),
     )
     
-    // TODO add to docs.json
+    // Configure layout based on docsJson
     const navMode = 'auto'
     const disableThemeSwitch = false
     const navTransparentMode = 'top'
     const searchEnabled = true
     const navTabMode = 'navbar'
     
-    const links: LinkItemType[] = [
-        {
-            text: 'Blog',
-            url: '/blog',
-            active: 'nested-url',
-        },
-    ]
+    // Build links from docsJson navbar configuration
+    const links: LinkItemType[] = (() => {
+        const navbarLinks = docsJson?.navbar?.links || []
+        const primary = docsJson?.navbar?.primary
+        
+        const mainLinks: LinkItemType[] = navbarLinks.map((link: any) => ({
+            text: link.label,
+            url: link.href,
+            icon: link.icon,
+            external: !link.href.startsWith('/'),
+        }))
+        
+        // Add primary CTA if configured
+        if (primary) {
+            if (primary.type === 'button') {
+                mainLinks.push({
+                    type: 'button',
+                    text: primary.label,
+                    url: primary.href,
+                    external: !primary.href.startsWith('/'),
+                })
+            } else if (primary.type === 'github') {
+                mainLinks.push({
+                    type: 'icon',
+                    icon: <GithubIcon className='w-4 h-4' />,
+                    text: 'GitHub',
+                    url: primary.href,
+                    external: true,
+                })
+            }
+        }
+        
+        return mainLinks
+    })()
 
     return (
         <DocsLayout
@@ -291,7 +370,10 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
                 title: <Logo />,
             }}
             tabMode={navTabMode}
-            sidebar={{}}
+            sidebar={{
+                footer: <Footer footer={docsJson?.footer} />,
+                banner: <Banner banner={docsJson?.banner} />,
+            }}
             i18n={i18n}
             tree={tree as any}
             {...{
@@ -304,8 +386,111 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
     )
 }
 
+function Banner({ banner }: { banner?: any }) {
+    const [dismissed, setDismissed] = useState(false)
+    const { bannerAst } = useLoaderData<typeof loader>()
+    
+    if (!banner || dismissed) return null
+    
+    return (
+        <div className='relative bg-fd-primary/10 border border-fd-primary/20 rounded-lg p-4 mb-4'>
+            <div className='prose prose-sm text-fd-foreground'>
+                <Markdown
+                    markdown={banner.content}
+                    ast={bannerAst}
+                    isStreaming={false}
+                />
+            </div>
+            {banner.dismissible && (
+                <button
+                    onClick={() => {setDismissed(true)}}
+                    className='absolute top-2 right-2 p-1 rounded hover:bg-fd-primary/20 transition-colors'
+                    aria-label='Dismiss banner'
+                >
+                    <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                    </svg>
+                </button>
+            )}
+        </div>
+    )
+}
+
+function Footer({ footer }: { footer?: any }) {
+    if (!footer) return null
+    
+    return (
+        <div className='flex flex-col gap-4 border-t pt-4'>
+            {/* Social Links */}
+            {footer.socials && (
+                <div className='flex gap-3'>
+                    {Object.entries(footer.socials).map(([platform, url]: [string, any]) => (
+                        <a
+                            key={platform}
+                            href={url}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='text-fd-muted-foreground hover:text-fd-foreground transition-colors'
+                            aria-label={platform}
+                        >
+                            <SocialIcon platform={platform} />
+                        </a>
+                    ))}
+                </div>
+            )}
+            
+            {/* Link Columns */}
+            {footer.links && (
+                <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3'>
+                    {footer.links.map((column: any, index: number) => (
+                        <div key={index} className='flex flex-col gap-2'>
+                            {column.header && (
+                                <h4 className='font-medium text-fd-foreground text-sm'>
+                                    {column.header}
+                                </h4>
+                            )}
+                            <div className='flex flex-col gap-1'>
+                                {column.items.map((item: any, itemIndex: number) => (
+                                    <a
+                                        key={itemIndex}
+                                        href={item.href}
+                                        target={item.href.startsWith('http') ? '_blank' : undefined}
+                                        rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                                        className='text-sm text-fd-muted-foreground hover:text-fd-foreground transition-colors'
+                                    >
+                                        {item.label}
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
+function SocialIcon({ platform }: { platform: string }) {
+    const iconClass = 'w-4 h-4'
+    
+    switch (platform.toLowerCase()) {
+        case 'github':
+            return <GithubIcon className={iconClass} />
+        case 'twitter':
+        case 'x':
+            return <TwitterIcon className={iconClass} />
+        case 'discord':
+            return <MessageCircleIcon className={iconClass} />
+        case 'linkedin':
+            return <LinkedinIcon className={iconClass} />
+        default:
+            return <ExternalLinkIcon className={iconClass} />
+    }
+}
+
 function Logo() {
     const { site } = useLoaderData<typeof loader>()
+    const { theme, resolvedTheme } = useTheme()
     
     // Check for state overrides for docsJson
     const { docsJson } = useDocsState(
@@ -317,6 +502,7 @@ function Logo() {
     )
     
     const docsConfig = docsJson
+    const currentTheme = resolvedTheme || theme || 'light'
 
     if (!docsConfig.logo) {
         return (
@@ -326,17 +512,23 @@ function Logo() {
         )
     }
 
-    const logoImageUrl =
-        typeof docsConfig?.logo === 'string'
-            ? docsConfig.logo
-            : docsConfig?.logo?.light || ''
+    const logoImageUrl = (() => {
+        if (typeof docsConfig.logo === 'string') {
+            return docsConfig.logo
+        }
+        
+        if (docsConfig.logo?.dark && currentTheme === 'dark') {
+            return docsConfig.logo.dark
+        }
+        
+        return docsConfig.logo?.light || ''
+    })()
 
     return (
         <img
             alt='logo'
             src={logoImageUrl}
-            sizes='100px'
-            className='hidden w-20 md:w-24 [.uwu_&]:block'
+            className='hidden h-8 [.uwu_&]:block'
             aria-label='logo'
         />
     )

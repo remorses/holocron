@@ -270,13 +270,14 @@ function PageContent(props: Route.ComponentProps) {
                     {description}
                 </p>
                 <div className='flex flex-row gap-2 items-center border-b pb-6'>
-                    <LLMCopyButton slug={slugs} />
+                    <LLMCopyButton slug={slugs} contextual={loaderData.docsJson?.contextual} />
                     <ViewOptions
                         markdownUrl={`${slug}.mdx`}
                         githubUrl={new URL(
                             `/blob/dev/apps/docs/content/docs/${githubPath}`,
                             githubUrl,
                         ).toString()}
+                        contextual={loaderData.docsJson?.contextual}
                     />
                 </div>
 
