@@ -1,6 +1,6 @@
 import { useShallow } from 'zustand/react/shallow'
 import { getCacheTagForMediaAsset, getKeyForMediaAsset, s3 } from '../lib/s3'
-import type { Route } from './+types/$'
+import type { Route } from './+types/_catchall.$'
 import { prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { useLoaderData, useRouteLoaderData } from 'react-router'
@@ -69,6 +69,13 @@ export function meta({ data }: Route.MetaArgs) {
         return undefined
     })()
 
+    // Custom meta tags from docsJson.seo.metatags
+    const customMetaTags = docsConfig?.seo?.metatags ?
+        Object.entries(docsConfig.seo.metatags).map(([name, content]) => ({
+            name,
+            content,
+        })) : []
+
     return [
         {
             title: data.title
@@ -79,6 +86,7 @@ export function meta({ data }: Route.MetaArgs) {
             name: 'description',
             content: data.description || docsConfig?.description,
         },
+        ...customMetaTags,
         ...(og
             ? [
                   { property: 'og:image', content: og },
@@ -146,6 +154,22 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     if (slugs[0] && LOCALES.includes(slugs[0] as any)) {
         locale = slugs[0]
         slugs = slugs.slice(1)
+    }
+
+    // Check for redirects from docsJson configuration
+    const docsJson: DocsJsonType = site.docsJson as any
+    if (docsJson?.redirects) {
+        const currentPath = '/' + (params['*'] || '')
+        const redirect = docsJson.redirects.find(r => r.source === currentPath)
+        if (redirect) {
+            const status = redirect.permanent ? 301 : 302
+            throw new Response(null, {
+                status,
+                headers: {
+                    Location: redirect.destination,
+                },
+            })
+        }
     }
     // const slug = '/' + slugs.join('/')
     const fumadocsPage = source.getPage(slugs, locale)
@@ -238,7 +262,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     })
 
     const githubBranch = site.githubBranch || 'main'
-    const docsJson: DocsJsonType = site.docsJson as any
     return {
         ...data,
         slugs,
@@ -327,11 +350,11 @@ function PageContent(props: Route.ComponentProps) {
                                 message: feedback.message,
                             }),
                         })
-                        
+
                         if (!response.ok) {
                             throw new Error('Failed to submit feedback')
                         }
-                        
+
                         const result = await response.json()
                         return { githubUrl: result.githubUrl }
                     }}
