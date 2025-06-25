@@ -1,10 +1,10 @@
-import { DocsConfigSchema } from 'docs-website/src/lib/docs-json'
-
-import { zodToJsonSchema } from 'zod-to-json-schema'
+import {
+    DocsConfigSchema,
+    docsJsonSchema,
+} from 'docs-website/src/lib/docs-json'
 
 export const loader = async () => {
-    const schema = zodToJsonSchema(DocsConfigSchema, 'DocsConfigSchema')
-    return new Response(JSON.stringify(schema), {
+    return new Response(JSON.stringify(docsJsonSchema), {
         headers: {
             'Content-Type': 'application/json',
             'Cache-Control': 'public, max-age=3600',

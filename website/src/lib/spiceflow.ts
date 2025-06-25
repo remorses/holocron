@@ -1,4 +1,5 @@
 import { openai, OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
+import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
 
 import dedent from 'string-dedent'
 
@@ -38,7 +39,7 @@ import {
 } from './edit-tool'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import path from 'path'
-import { RenderFormParameters } from './ui-field'
+import { RenderFormParameters, createRenderFormExecute } from './render-form-tool'
 
 // Create the main spiceflow app with comprehensive routes and features
 export const app = new Spiceflow({ basePath: '/api' })
@@ -242,13 +243,10 @@ export const app = new Spiceflow({ basePath: '/api' })
                         description:
                             'Render a series of input elements so the user can provide structured data. Array-style names such as items[0].color are supported.',
                         parameters: RenderFormParameters,
-                        execute: async ({ fields }) => {
-                            return {
-                                fields,
-                                success: true,
-                                message: 'Form rendered successfully',
-                            }
-                        },
+
+                        execute: createRenderFormExecute({
+                            schema: docsJsonSchema,
+                        }),
                     }),
                 },
                 async onFinish({ response }) {

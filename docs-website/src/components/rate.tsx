@@ -46,6 +46,7 @@ export function Rate({
     const [previous, setPrevious] = useState<Result | null>(null)
     const [opinion, setOpinion] = useState<'good' | 'bad' | null>(null)
     const [message, setMessage] = useState('')
+    const [error, setError] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()
 
     useEffect(() => {
@@ -71,14 +72,19 @@ export function Rate({
                 message,
             }
 
-            void onRateAction(url, feedback).then((response) => {
+            setError(null)
+            
+            try {
+                const response = await onRateAction(url, feedback)
                 setPrevious({
                     response,
                     ...feedback,
                 })
                 setMessage('')
                 setOpinion(null)
-            })
+            } catch (error) {
+                setError(error instanceof Error ? error.message : 'An error occurred')
+            }
         })
 
         e?.preventDefault()
@@ -144,20 +150,6 @@ export function Rate({
                                 View on GitHub
                             </a>
 
-                            <button
-                                className={cn(
-                                    buttonVariants({
-                                        color: 'secondary',
-                                    }),
-                                    'text-xs',
-                                )}
-                                onClick={() => {
-                                    setOpinion(previous.opinion)
-                                    setPrevious(null)
-                                }}
-                            >
-                                Submit Again
-                            </button>
                         </div>
                     </div>
                 ) : (
@@ -175,6 +167,11 @@ export function Rate({
                                 }
                             }}
                         />
+                        {error && (
+                            <div className='text-red-500 text-sm bg-red-50 p-2 rounded border'>
+                                {error}
+                            </div>
+                        )}
                         <button
                             type='submit'
                             className={cn(
@@ -183,7 +180,7 @@ export function Rate({
                             )}
                             disabled={isPending}
                         >
-                            Submit
+                            {isPending ? 'Submitting...' : 'Submit'}
                         </button>
                     </form>
                 )}

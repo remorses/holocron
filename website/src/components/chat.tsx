@@ -1,4 +1,5 @@
 'use client'
+import { FormProvider, useForm } from 'react-hook-form'
 import { RiAttachment2, RiRefreshLine } from '@remixicon/react'
 import { createIdGenerator, UIMessage } from 'ai'
 import { Markdown } from 'docs-website/src/lib/markdown'
@@ -66,20 +67,39 @@ import {
 import { teeAsyncIterable } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
+import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 
 export default function Chat({}) {
     const { scrollRef, contentRef } = useStickToBottom({
         initial: 'instant',
     })
+    const methods = useForm({})
+    const { register, subscribe } = methods
+
+    useEffect(() => {
+        const unSub = subscribe({
+            formState: { values: true },
+            callback: async ({ values, name }) => {
+                console.log(`form values changed, sending state to docs iframe`)
+                await docsRpcClient.setDocsState({
+                    docsJson: values as DocsJsonType,
+                })
+            },
+        })
+
+        return unSub
+    }, [subscribe])
 
     return (
-        <ScrollArea
-            ref={scrollRef}
-            className='[&>div>div]:grow  max-w-full h-full flex flex-col grow '
-        >
-            <Messages ref={contentRef} />
-            <Footer />
-        </ScrollArea>
+        <FormProvider {...methods}>
+            <ScrollArea
+                ref={scrollRef}
+                className='[&>div>div]:grow  max-w-full h-full flex flex-col grow '
+            >
+                <Messages ref={contentRef} />
+                <Footer />
+            </ScrollArea>
+        </FormProvider>
     )
 }
 

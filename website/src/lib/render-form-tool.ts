@@ -140,3 +140,11 @@ export type UIField = z.infer<typeof UIFieldSchema>
 export const RenderFormParameters = z.object({
     fields: z.array(UIFieldSchema),
 })
+
+type RenderFormParameters = z.infer<typeof RenderFormParameters>
+
+export function createRenderFormExecute({ schema }) {
+    return async (params: RenderFormParameters) => {
+        return `rendered form to the user`
+    }
+}

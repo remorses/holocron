@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { zodToJsonSchema } from 'zod-to-json-schema'
 
 // === Primitive helper schemas ===
 const Color = z
@@ -691,3 +692,6 @@ export const DocsConfigSchema = z
     .describe('Schema for docs.json configuration')
 
 export type DocsJsonType = z.infer<typeof DocsConfigSchema>
+
+
+export const docsJsonSchema =  zodToJsonSchema(DocsConfigSchema, 'DocsConfigSchema')

@@ -72,6 +72,7 @@
         "isbot": "^5.1.28",
         "js-yaml": "^4.1.0",
         "json-schema": "^0.4.0",
+        "json-schema-library": "^10.1.2",
         "lean-s3": "^0.2.1",
         "lucide-react": "^0.514.0",
         "marked": "^15.0.12",

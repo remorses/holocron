@@ -1,12 +1,9 @@
 import {
-    useForm,
+    useFormContext,
     Controller,
     SubmitHandler,
     FieldValues,
 } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect } from 'react'
-import { z } from 'zod'
 
 import type { UIField } from '../lib/ui-field'
 import { ButtonHrefEnum } from '../lib/ui-field'
@@ -25,37 +22,6 @@ import {
 } from './ui/select'
 import { Slider } from './ui/slider'
 import { useChatState } from '../lib/state'
-
-const buildSchemaAndDefaults = (fields: UIField[]) => {
-    const entries: Record<string, z.ZodTypeAny> = {}
-    const defaults: Record<string, unknown> = {}
-
-    fields.forEach((f) => {
-        if (
-            (f as any).defaultValue !== undefined &&
-            (f as any).defaultValue !== null
-        ) {
-            defaults[f.name] = (f as any).defaultValue
-        }
-
-        const required = !!(f as any).required
-        let schema: z.ZodTypeAny
-        switch (f.type) {
-            case 'slider':
-            case 'number':
-                schema = z.number()
-                break
-            case 'switch':
-                schema = z.boolean()
-                break
-            default:
-                schema = z.string()
-        }
-        entries[f.name] = required ? schema : schema.optional()
-    })
-
-    return { schema: z.object(entries), defaults }
-}
 
 type RenderFormPreviewProps = {
     args: { fields: UIField[] }
@@ -80,16 +46,7 @@ export function RenderFormPreview({
         )
     }
 
-    const { schema: formSchema, defaults } = buildSchemaAndDefaults(
-        args.fields ?? [],
-    )
-
-    const { control, handleSubmit, register, reset, watch } = useForm({
-        resolver: zodResolver(formSchema),
-        defaultValues: defaults,
-    })
-
-    const watched = watch()
+    const { control, handleSubmit, register, reset, watch } = useFormContext()
 
     const onSubmit: SubmitHandler<FieldValues> = (data) => {
         const event = new CustomEvent('formSubmit', {
