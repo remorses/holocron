@@ -10,9 +10,9 @@ import type { JSONSchema7 } from 'json-schema'
    extractPaths()
    ------------------------------------------------------------------
    Recursively walks a JSON-Schema draft-07 node and returns every
-   possible “form name” respecting:
+   possible "form name" respecting:
      • nested objects      →  dot-notation (foo.bar)
-     • arrays              →  “[index]” placeholder (items[0].name)
+     • arrays              →  dot-notation with numeric index (items.0.name)
      • unions (oneOf/anyOf/allOf) →  union of all alternatives
    ------------------------------------------------------------------ */
 export function extractPaths(schema: JSONSchema7, root = ''): string[] {
@@ -39,7 +39,7 @@ export function extractPaths(schema: JSONSchema7, root = ''): string[] {
 
         // arrays ────────────────────────────────────────────────────
         if (node.type === 'array' && node.items) {
-            const next = `${prefix}[index]`
+            const next = prefix ? `${prefix}.{index}` : '{index}'
             walk(node.items as JSONSchema7, next)
             return
         }
@@ -64,43 +64,40 @@ export function applyPath<T = unknown>(
     name: string,
     value?: T,
 ): T {
-    // tokenise:  foo.bar[0].baz  →  ["foo","bar",0,"baz"]
-    const tokens = name
-        .replace(/\]/g, '') // remove ]
-        .split(/\.|\[/) // split by . or [
-        .filter(Boolean)
-        .map((t) => (t.match(/^\\d+$/) ? Number(t) : t))
+    // tokenise:  foo.bar.0.baz  →  ["foo","bar","0","baz"]
+    const tokens = name.split('.').filter(Boolean)
 
     if (!tokens.length) throw new Error('Invalid path')
 
     let ptr: any = target
     for (let i = 0; i < tokens.length; i++) {
         const key = tokens[i]
+        const isNumeric = /^\d+$/.test(key)
 
         // last token →  set or get
         if (i === tokens.length - 1) {
             if (value !== undefined) {
-                if (typeof key === 'number') {
+                if (isNumeric) {
                     if (!Array.isArray(ptr))
                         throw new Error('Path expects array')
-                    ptr[key] = value
+                    ptr[Number(key)] = value
                 } else {
                     ptr[key] = value
                 }
             }
-            return ptr[key]
+            return isNumeric ? ptr[Number(key)] : ptr[key]
         }
 
         // walk/create next level
         const nextKey = tokens[i + 1]
-        const shouldBeArray = typeof nextKey === 'number'
+        const nextIsNumeric = /^\d+$/.test(nextKey)
 
-        if (typeof key === 'number') {
+        if (isNumeric) {
             if (!Array.isArray(ptr)) throw new Error('Path expects array')
-            ptr[key] ??= shouldBeArray ? [] : {}
-            ptr = ptr[key]
+            ptr[Number(key)] ??= nextIsNumeric ? [] : {}
+            ptr = ptr[Number(key)]
         } else {
-            ptr[key] ??= shouldBeArray ? [] : {}
+            ptr[key] ??= nextIsNumeric ? [] : {}
             ptr = ptr[key]
         }
     }

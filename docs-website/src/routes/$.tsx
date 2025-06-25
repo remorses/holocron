@@ -294,8 +294,27 @@ function PageContent(props: Route.ComponentProps) {
                 </div>
                 <div className='grow'></div>
                 <Rate
-                    onRateAction={async () => {
-                        return { success: true, githubUrl: '' }
+                    onRateAction={async (url, feedback) => {
+                        const apiUrl = new URL('/api/submitRateFeedback', process.env.PUBLIC_URL || 'https://fumabase.com')
+                        const response = await fetch(apiUrl.toString(), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                siteId: loaderData.site.siteId,
+                                url,
+                                opinion: feedback.opinion,
+                                message: feedback.message,
+                            }),
+                        })
+                        
+                        if (!response.ok) {
+                            throw new Error('Failed to submit feedback')
+                        }
+                        
+                        const result = await response.json()
+                        return { githubUrl: result.githubUrl }
                     }}
                 />
                 <div className='flex items-center gap-2'>

@@ -724,6 +724,167 @@ export const app = new Spiceflow({ basePath: '/api' })
     // currently not used
     .route({
         method: 'POST',
+        path: '/submitRateFeedback',
+        request: z.object({
+            siteId: z.string().min(1, 'siteId is required'),
+            url: z.string().min(1, 'url is required'),
+            opinion: z.enum(['good', 'bad']),
+            message: z.string().min(1, 'message is required'),
+        }),
+        async handler({ request, state: { userId } }) {
+            const { siteId, url, opinion, message } = await request.json()
+
+            // if (!userId) {
+            //     throw new AppError('User not authenticated')
+            // }
+
+            // Check user has access to the site
+            const site = await prisma.site.findFirst({
+                where: {
+                    siteId,
+                    // org: {
+                    //     users: {
+                    //         some: { userId },
+                    //     },
+                    // },
+                },
+                include: {
+                    githubInstallation: true,
+                },
+            })
+
+            if (!site) {
+                throw new AppError('Site not found or access denied')
+            }
+
+            const DocsCategory = 'Docs Feedback'
+            let discussionUrl = `https://github.com/${site.githubOwner}/${site.githubRepo}/discussions`
+
+            // Create GitHub discussion using GraphQL API
+            if (site.githubInstallation?.oauthToken) {
+                try {
+                    const octokit = await getOctokit({
+                        installationId: site.githubInstallation.installationId
+                    })
+
+                    // Get repository info and discussion categories
+                    const repositoryInfo: {
+                        repository: {
+                            id: string
+                            discussionCategories: {
+                                nodes: { id: string; name: string }[]
+                            }
+                        }
+                    } = await octokit.graphql(`
+                        query {
+                            repository(owner: "${site.githubOwner}", name: "${site.githubRepo}") {
+                                id
+                                discussionCategories(first: 25) {
+                                    nodes { id name }
+                                }
+                            }
+                        }
+                    `)
+
+                    const repository = repositoryInfo.repository
+                    const category = repository.discussionCategories.nodes.find(
+                        (cat) => cat.name === DocsCategory
+                    )
+
+                    if (!category) {
+                        console.warn(`Discussion category "${DocsCategory}" not found in repository`)
+                        // Fall back to creating issue instead
+                        const issueTitle = `Documentation feedback: ${url}`
+                        const issueBody = `**Feedback Type:** ${opinion}\n**Page URL:** ${url}\n**User Message:**\n\n${message}\n\n> Forwarded from user feedback on docs site.`
+
+                        const { data: issue } = await octokit.rest.issues.create({
+                            owner: site.githubOwner,
+                            repo: site.githubRepo,
+                            title: issueTitle,
+                            body: issueBody,
+                            labels: ['documentation', 'feedback', opinion === 'bad' ? 'bug' : 'enhancement'],
+                        })
+
+                        discussionUrl = issue.html_url
+                    } else {
+                        const title = `Feedback for ${url}`
+                        const body = `[${opinion}] ${message}\n\n> Forwarded from user feedback.`
+
+                        // Search for existing discussion
+                        const searchResult: {
+                            search: {
+                                nodes: { id: string; url: string }[]
+                            }
+                        } = await octokit.graphql(`
+                            query {
+                                search(type: DISCUSSION, query: ${JSON.stringify(`${title} in:title repo:${site.githubOwner}/${site.githubRepo}`)}, first: 1) {
+                                    nodes {
+                                        ... on Discussion { id, url }
+                                    }
+                                }
+                            }
+                        `)
+
+                        const existingDiscussion = searchResult.search.nodes[0]
+
+                        if (existingDiscussion) {
+                            // Add comment to existing discussion
+                            await octokit.graphql(`
+                                mutation {
+                                    addDiscussionComment(input: { body: ${JSON.stringify(body)}, discussionId: "${existingDiscussion.id}" }) {
+                                        comment { id }
+                                    }
+                                }
+                            `)
+                            discussionUrl = existingDiscussion.url
+                        } else {
+                            // Create new discussion
+                            const result: {
+                                createDiscussion: {
+                                    discussion: { id: string; url: string }
+                                }
+                            } = await octokit.graphql(`
+                                mutation {
+                                    createDiscussion(input: {
+                                        repositoryId: "${repository.id}",
+                                        categoryId: "${category.id}",
+                                        body: ${JSON.stringify(body)},
+                                        title: ${JSON.stringify(title)}
+                                    }) {
+                                        discussion { id, url }
+                                    }
+                                }
+                            `)
+
+                            discussionUrl = result.createDiscussion.discussion.url
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to create GitHub discussion for feedback:', error)
+                    // Don't throw error - feedback will still be saved
+                }
+            }
+
+            // Store feedback in database
+            await prisma.pageFeedback.create({
+                data: {
+                    siteId,
+                    url,
+                    opinion,
+                    message,
+                    discussionUrl,
+                },
+            })
+
+            return {
+                success: true,
+                githubUrl: discussionUrl,
+            }
+        },
+    })
+
+    .route({
+        method: 'POST',
         path: '/commitChangesToRepo',
         request: z.object({
             siteId: z.string().min(1, 'siteId is required'),

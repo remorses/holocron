@@ -51,35 +51,21 @@ const IconNameSchema = z.string().describe('Icon name or SVG path')
 // === Top-level component schemas ===
 
 const LogoSchema = z
-    .union([
-        z.string().min(3).describe('Path to logo image'),
-        z
-            .object({
-                light: z.string().describe('Logo for light mode'),
-                dark: z.string().describe('Logo for dark mode'),
-                href: z
-                    .string()
-                    .url()
-                    .optional()
-                    .describe('Logo click target URL'),
-            })
-            .strict()
-            .describe('Logo object for both modes'),
-    ])
-    .describe('Logo configuration')
+    .object({
+        light: z.string().describe('Logo for light mode'),
+        dark: z.string().describe('Logo for dark mode'),
+        href: z.string().url().optional().describe('Logo click target URL'),
+    })
+    .strict()
+    .describe('Logo object for both modes')
 
 const FaviconSchema = z
-    .union([
-        z.string().describe('Single favicon path'),
-        z
-            .object({
-                light: z.string().describe('Favicon for light mode'),
-                dark: z.string().describe('Favicon for dark mode'),
-            })
-            .strict()
-            .describe('Favicon object for both modes'),
-    ])
-    .describe('Favicon configuration')
+    .object({
+        light: z.string().describe('Favicon for light mode'),
+        dark: z.string().describe('Favicon for dark mode'),
+    })
+    .strict()
+    .describe('Favicon object for both modes')
 
 const RedirectSchema = z
     .object({
@@ -207,7 +193,9 @@ const NavigationTabItem = z
 const NavigationDropdownItem = z
     .object({
         dropdown: z.string().min(1).describe('Dropdown name or label'),
-        icon: IconNameSchema.optional().describe('Optional icon for the dropdown'),
+        icon: IconNameSchema.optional().describe(
+            'Optional icon for the dropdown',
+        ),
         color: ColorMode.optional().describe('Optional custom color'),
         description: z
             .string()
@@ -232,7 +220,9 @@ const NavigationAnchorItem = z
             .string()
             .min(1)
             .describe('Anchor name/section for this navigation entry'),
-        icon: IconNameSchema.optional().describe('Optional icon for this section'),
+        icon: IconNameSchema.optional().describe(
+            'Optional icon for this section',
+        ),
         color: ColorMode.optional().describe('Optional custom color'),
         hidden: z
             .boolean()

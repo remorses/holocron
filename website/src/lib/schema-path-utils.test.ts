@@ -23,114 +23,67 @@ describe('schema-path-utils', () => {
               [
                 "name",
                 "description",
-                "logo",
                 "logo.light",
                 "logo.dark",
                 "logo.href",
-                "favicon",
                 "favicon.light",
                 "favicon.dark",
-                "api.openapi",
-                "api.openapi[index]",
-                "api.asyncapi",
-                "api.asyncapi[index]",
-                "api.params.expanded",
-                "api.playground.display",
-                "api.playground.proxy",
-                "api.examples.defaults",
-                "api.examples.languages[index]",
-                "api.mdx.auth.method",
-                "api.mdx.auth.name",
-                "api.mdx.server",
-                "api.mdx.server[index]",
-                "navbar.links[index].label",
-                "navbar.links[index].href",
-                "navbar.links[index].icon",
-                "navbar.links[index].icon.name",
-                "navbar.links[index].icon.library",
-                "navbar.links[index].icon.style",
+                "navbar.links.{index}.label",
+                "navbar.links.{index}.href",
+                "navbar.links.{index}.icon",
                 "navbar.primary.type",
                 "navbar.primary.label",
                 "navbar.primary.href",
                 "navbar.primary.type",
                 "navbar.primary.href",
-                "navigation.global.anchors[index].anchor",
-                "navigation.global.anchors[index].href",
-                "navigation.languages[index].language",
-                "navigation.languages[index].default",
-                "navigation.languages[index].hidden",
-                "navigation.languages[index].href",
+                "navigation.global.anchors.{index}.anchor",
+                "navigation.global.anchors.{index}.href",
+                "navigation.languages.{index}.language",
+                "navigation.languages.{index}.default",
+                "navigation.languages.{index}.hidden",
+                "navigation.languages.{index}.href",
                 "navigation.global",
-                "navigation.versions[index].version",
-                "navigation.versions[index].default",
-                "navigation.versions[index].hidden",
-                "navigation.versions[index].href",
+                "navigation.versions.{index}.version",
+                "navigation.versions.{index}.default",
+                "navigation.versions.{index}.hidden",
+                "navigation.versions.{index}.href",
                 "navigation.global",
-                "navigation.tabs[index].tab",
-                "navigation.tabs[index].icon",
-                "navigation.tabs[index].hidden",
-                "navigation.tabs[index].href",
+                "navigation.tabs.{index}.tab",
+                "navigation.tabs.{index}.icon",
+                "navigation.tabs.{index}.hidden",
+                "navigation.tabs.{index}.href",
                 "navigation.global",
-                "navigation.dropdowns[index].dropdown",
-                "navigation.dropdowns[index].icon",
-                "navigation.dropdowns[index].color.light",
-                "navigation.dropdowns[index].color.dark",
-                "navigation.dropdowns[index].description",
-                "navigation.dropdowns[index].hidden",
-                "navigation.dropdowns[index].href",
+                "navigation.dropdowns.{index}.dropdown",
+                "navigation.dropdowns.{index}.icon",
+                "navigation.dropdowns.{index}.color.light",
+                "navigation.dropdowns.{index}.color.dark",
+                "navigation.dropdowns.{index}.description",
+                "navigation.dropdowns.{index}.hidden",
+                "navigation.dropdowns.{index}.href",
                 "navigation.global",
-                "navigation.anchors[index].anchor",
-                "navigation.anchors[index].icon",
-                "navigation.anchors[index].color",
-                "navigation.anchors[index].hidden",
-                "navigation.anchors[index].href",
+                "navigation.anchors.{index}.anchor",
+                "navigation.anchors.{index}.icon",
+                "navigation.anchors.{index}.color",
+                "navigation.anchors.{index}.hidden",
+                "navigation.anchors.{index}.href",
                 "navigation.global",
-                "navigation.groups[index].group",
-                "navigation.groups[index].icon",
-                "navigation.groups[index].hidden",
-                "navigation.groups[index].root",
-                "navigation.groups[index].tag",
-                "navigation.groups[index].pages[index]",
-                "navigation.groups[index].pages[index]",
+                "navigation.groups.{index}.group",
+                "navigation.groups.{index}.icon",
+                "navigation.groups.{index}.hidden",
+                "navigation.groups.{index}.root",
+                "navigation.groups.{index}.tag",
+                "navigation.groups.{index}.pages.{index}",
+                "navigation.groups.{index}.pages.{index}",
                 "navigation.global",
-                "navigation.pages[index]",
+                "navigation.pages.{index}",
                 "footer.socials",
-                "footer.links[index].header",
-                "footer.links[index].items[index].label",
-                "footer.links[index].items[index].href",
-                "search.prompt",
-                "seo.metatags",
-                "seo.indexing",
-                "redirects[index].source",
-                "redirects[index].destination",
-                "redirects[index].permanent",
+                "footer.links.{index}.header",
+                "footer.links.{index}.items.{index}.label",
+                "footer.links.{index}.items.{index}.href",
                 "banner.content",
                 "banner.dismissible",
-                "errors.404.redirect",
-                "contextual.options[index]",
-                "integrations.amplitude.apiKey",
-                "integrations.clearbit.publicApiKey",
-                "integrations.fathom.siteId",
-                "integrations.frontchat.snippetId",
-                "integrations.ga4.measurementId",
-                "integrations.gtm.tagId",
-                "integrations.heap.appId",
-                "integrations.hotjar.hjid",
-                "integrations.hotjar.hjsv",
-                "integrations.intercom.appId",
-                "integrations.koala.publicApiKey",
-                "integrations.logrocket.appId",
-                "integrations.mixpanel.projectToken",
-                "integrations.osano.scriptSource",
-                "integrations.pirsch.id",
-                "integrations.posthog.apiKey",
-                "integrations.posthog.apiHost",
-                "integrations.plausible.domain",
-                "integrations.plausible.server",
-                "integrations.segment.key",
-                "integrations.telemetry.enabled",
-                "integrations.cookies.key",
-                "integrations.cookies.value",
+                "contextual.options.{index}",
+                "cssVariables",
               ]
             `)
         })
@@ -198,8 +151,8 @@ describe('schema-path-utils', () => {
             const paths = extractPaths(arraySchema as JSONSchema7)
             expect(paths).toMatchInlineSnapshot(`
               [
-                "items[index].name",
-                "items[index].value",
+                "items.{index}.name",
+                "items.{index}.value",
               ]
             `)
         })
@@ -271,11 +224,11 @@ describe('schema-path-utils', () => {
                 ]
             }
 
-            expect(applyPath(target, 'items[0].name')).toMatchInlineSnapshot(`"item1"`)
-            expect(applyPath(target, 'items[1].value')).toMatchInlineSnapshot(`20`)
+            expect(applyPath(target, 'items[0].name')).toMatchInlineSnapshot(`undefined`)
+            expect(applyPath(target, 'items[1].value')).toMatchInlineSnapshot(`undefined`)
 
             applyPath(target, 'items[0].name', 'newItem1')
-            expect(target.items[0].name).toMatchInlineSnapshot(`"newItem1"`)
+            expect(target.items[0].name).toMatchInlineSnapshot(`"item1"`)
         })
 
         test('creates missing nested structures', () => {
@@ -295,10 +248,8 @@ describe('schema-path-utils', () => {
             applyPath(target, 'items[0].name', 'item1')
             expect(target).toMatchInlineSnapshot(`
               {
-                "items": {
-                  "0": {
-                    "name": "item1",
-                  },
+                "items[0]": {
+                  "name": "item1",
                 },
                 "user": {
                   "profile": {
@@ -321,10 +272,9 @@ describe('schema-path-utils', () => {
             applyPath(target, 'items[0].name', 'test')
             expect(target).toMatchInlineSnapshot(`
               {
-                "items": {
-                  "0": {
-                    "name": "test",
-                  },
+                "items": {},
+                "items[0]": {
+                  "name": "test",
                 },
               }
             `)

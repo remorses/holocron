@@ -8,7 +8,7 @@ import {
     CollapsibleContent,
 } from 'fumadocs-ui/components/ui/collapsible'
 import { cva } from 'class-variance-authority'
-import { useNavigation } from 'react-router'
+import { useLocation, useNavigation } from 'react-router'
 
 const rateButtonVariants = cva(
     'inline-flex items-center gap-2 px-3 py-2 rounded-full font-medium border text-sm [&_svg]:size-4 disabled:cursor-not-allowed',
@@ -41,7 +41,7 @@ export function Rate({
 }: {
     onRateAction: (url: string, feedback: Feedback) => Promise<ActionResponse>
 }) {
-    const { location } = useNavigation()
+    const location  = useLocation()
     const url = location?.pathname || ''
     const [previous, setPrevious] = useState<Result | null>(null)
     const [opinion, setOpinion] = useState<'good' | 'bad' | null>(null)

@@ -236,6 +236,7 @@ model Site {
   mediaAssets        MediaAsset[]
   locales            SiteEnabledLocale[]
   chats              Chat[]
+  PageFeedback       PageFeedback[]
 
   @@index([createdAt])
 }
@@ -369,4 +370,21 @@ model ChatMessagePart {
   type           String
   text           String? @db.Text
   toolInvocation Json?
+}
+
+enum PageOpinion {
+  good
+  bad
+}
+
+model PageFeedback {
+  id            String      @id @default(cuid())
+  siteId        String
+  site          Site        @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
+  url           String      @db.Text
+  opinion       PageOpinion
+  message       String?     @db.Text
+  discussionUrl String
+
+  createdAt DateTime @default(now())
 }
