@@ -218,6 +218,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         markdown: page.markdown,
     })
 
+    const githubBranch = site.githubBranch || 'main'
     const docsJson: DocsJsonType = site.docsJson as any
     return {
         ...data,
@@ -229,6 +230,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         githubPath: page.githubPath,
         githubOwner: site.githubOwner,
         githubRepo: site.githubRepo,
+        githubBranch,
         tree,
         site,
         docsJson,
@@ -282,10 +284,7 @@ function PageContent(props: Route.ComponentProps) {
                     />
                     <ViewOptions
                         markdownUrl={`${slug}.mdx`}
-                        githubUrl={new URL(
-                            `/blob/dev/apps/docs/content/docs/${githubPath}`,
-                            githubUrl,
-                        ).toString()}
+                        githubUrl={`https://github.com/${loaderData.githubOwner}/${loaderData.githubRepo}/blob/${loaderData.githubBranch}/apps/docs/content/docs/${githubPath}`}
                         contextual={loaderData.docsJson?.contextual}
                     />
                 </div>

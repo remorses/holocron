@@ -231,6 +231,7 @@ model Site {
   docsJson           Json                @default("{}")
   cssStyles          String              @default("")
   githubOwner        String
+  githubBranch       String              @default("main")
   githubRepo         String
   mediaAssets        MediaAsset[]
   locales            SiteEnabledLocale[]

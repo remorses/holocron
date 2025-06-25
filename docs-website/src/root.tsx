@@ -26,7 +26,13 @@ import { TrieveSDK } from 'trieve-ts-sdk'
 import { LOCALE_LABELS } from './lib/locales'
 import { LinkItemType } from 'fumadocs-ui/layouts/links'
 import { useShallow } from 'zustand/react/shallow'
-import { GithubIcon, TwitterIcon, LinkedinIcon, MessageCircleIcon, ExternalLinkIcon } from 'lucide-react'
+import {
+    GithubIcon,
+    TwitterIcon,
+    LinkedinIcon,
+    MessageCircleIcon,
+    ExternalLinkIcon,
+} from 'lucide-react'
 import { processMdxInServer } from './lib/mdx.server'
 import { Markdown } from './lib/markdown'
 import { useTheme } from 'next-themes'
@@ -116,10 +122,6 @@ export async function loader({ request }: Route.LoaderArgs) {
         i18n,
         bannerAst,
     }
-}
-
-export const clientLoader = async () => {
-    // if (isInsidePreviewIframe()) await firstStateReceived
 }
 
 async function messagesHandling() {
@@ -220,16 +222,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 function CSSVariables() {
     const { site } = useLoaderData<typeof loader>()
-    
+
     // Check for state overrides for docsJson
-    const docsJson = useDocsState((state) => state.docsJson || (site.docsJson as any))
-    
+    const docsJson = useDocsState(
+        (state) => state.docsJson || (site.docsJson as any),
+    )
+
     const cssVariables = docsJson?.cssVariables
-    
+
     if (!cssVariables || Object.keys(cssVariables).length === 0) {
         return null
     }
-    
+
     // Convert cssVariables object to CSS custom properties
     const cssText = Object.entries(cssVariables)
         .map(([key, value]) => {
@@ -238,7 +242,7 @@ function CSSVariables() {
             return `${cssVar}: ${value};`
         })
         .join('\n  ')
-    
+
     return (
         <style
             dangerouslySetInnerHTML={{
@@ -263,7 +267,7 @@ export default function App() {
 function DocsProvider({ children }: { children: React.ReactNode }) {
     const { site, i18n } = useLoaderData<typeof loader>()
     const locale = site.defaultLocale // Will be updated from child route
-    
+
     if (!trieveClient && site.trieveReadApiKey) {
         trieveClient = new TrieveSDK({
             apiKey: site.trieveReadApiKey!,
@@ -305,7 +309,7 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
     const loaderData = useLoaderData<typeof loader>()
     const { site, i18n } = loaderData
     const locale = site.defaultLocale
-    
+
     // Check for state overrides
     const { tree, docsJson } = useDocsState(
         useShallow((state) => {
@@ -315,26 +319,26 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
             }
         }),
     )
-    
+
     // Configure layout based on docsJson
     const navMode = 'auto'
     const disableThemeSwitch = false
     const navTransparentMode = 'top'
     const searchEnabled = true
     const navTabMode = 'navbar'
-    
+
     // Build links from docsJson navbar configuration
     const links: LinkItemType[] = (() => {
         const navbarLinks = docsJson?.navbar?.links || []
         const primary = docsJson?.navbar?.primary
-        
+
         const mainLinks: LinkItemType[] = navbarLinks.map((link: any) => ({
             text: link.label,
             url: link.href,
             icon: link.icon,
             external: !link.href.startsWith('/'),
         }))
-        
+
         // Add primary CTA if configured
         if (primary) {
             if (primary.type === 'button') {
@@ -354,7 +358,7 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
                 })
             }
         }
-        
+
         return mainLinks
     })()
 
@@ -388,9 +392,9 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
 function Banner({ banner }: { banner?: any }) {
     const [dismissed, setDismissed] = useState(false)
     const { bannerAst } = useLoaderData<typeof loader>()
-    
+
     if (!banner || dismissed) return null
-    
+
     return (
         <div className='relative bg-fd-primary/10 border border-fd-primary/20 rounded-lg p-4 mb-4'>
             <div className='prose prose-sm text-fd-foreground'>
@@ -402,12 +406,24 @@ function Banner({ banner }: { banner?: any }) {
             </div>
             {banner.dismissible && (
                 <button
-                    onClick={() => {setDismissed(true)}}
+                    onClick={() => {
+                        setDismissed(true)
+                    }}
                     className='absolute top-2 right-2 p-1 rounded hover:bg-fd-primary/20 transition-colors'
                     aria-label='Dismiss banner'
                 >
-                    <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                    <svg
+                        className='w-4 h-4'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                    >
+                        <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M6 18L18 6M6 6l12 12'
+                        />
                     </svg>
                 </button>
             )}
@@ -415,11 +431,10 @@ function Banner({ banner }: { banner?: any }) {
     )
 }
 
-
 function Logo() {
     const { site } = useLoaderData<typeof loader>()
     const { theme, resolvedTheme } = useTheme()
-    
+
     // Check for state overrides for docsJson
     const { docsJson } = useDocsState(
         useShallow((state) => {
@@ -428,7 +443,7 @@ function Logo() {
             }
         }),
     )
-    
+
     const docsConfig = docsJson
     const currentTheme = resolvedTheme || theme || 'light'
 
@@ -444,11 +459,11 @@ function Logo() {
         if (typeof docsConfig.logo === 'string') {
             return docsConfig.logo
         }
-        
+
         if (docsConfig.logo?.dark && currentTheme === 'dark') {
             return docsConfig.logo.dark
         }
-        
+
         return docsConfig.logo?.light || ''
     })()
 
