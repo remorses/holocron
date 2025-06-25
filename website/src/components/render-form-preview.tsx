@@ -38,14 +38,6 @@ export function RenderFormPreview({
 }: RenderFormPreviewProps) {
     const isChatGenerating = useChatState((x) => x.isChatGenerating)
 
-    if (!args?.fields || args.fields.length === 0) {
-        return (
-            <div className='text-muted-foreground text-sm'>
-                No form fields to display
-            </div>
-        )
-    }
-
     const { control, handleSubmit, register, reset, watch } = useFormContext()
 
     const onSubmit: SubmitHandler<FieldValues> = (data) => {
@@ -55,9 +47,22 @@ export function RenderFormPreview({
         window.dispatchEvent(event)
         reset()
     }
+    if (!args?.fields || args.fields.length === 0) {
+        return (
+            <div className='text-muted-foreground text-sm'>
+                No form fields to display
+            </div>
+        )
+    }
 
     const renderField = (field: UIField) => {
         const key = field.name
+        if (!field.name) {
+            return null
+        }
+        if (!field.type) {
+            return null
+        }
 
         switch (field.type) {
             case 'input':
