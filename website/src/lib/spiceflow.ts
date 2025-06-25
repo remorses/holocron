@@ -16,6 +16,7 @@ import { prisma } from 'db'
 import { s3 } from 'docs-website/src/lib/s3'
 import { Spiceflow } from 'spiceflow'
 import { openapi } from 'spiceflow/openapi'
+import { cors } from 'spiceflow/cors'
 import { z } from 'zod'
 import { getSession } from './better-auth'
 import { env } from './env'
@@ -49,6 +50,7 @@ export const app = new Spiceflow({ basePath: '/api' })
         state.userId = session?.userId
     })
     .use(openapi())
+    .use(cors())
     .route({
         method: 'GET',
         path: '/health',
@@ -764,7 +766,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             if (site.githubInstallation?.oauthToken) {
                 try {
                     const octokit = await getOctokit({
-                        installationId: site.githubInstallation.installationId
+                        installationId: site.githubInstallation.installationId,
                     })
 
                     // Get repository info and discussion categories
@@ -788,22 +790,29 @@ export const app = new Spiceflow({ basePath: '/api' })
 
                     const repository = repositoryInfo.repository
                     const category = repository.discussionCategories.nodes.find(
-                        (cat) => cat.name === DocsCategory
+                        (cat) => cat.name === DocsCategory,
                     )
 
                     if (!category) {
-                        console.warn(`Discussion category "${DocsCategory}" not found in repository`)
+                        console.warn(
+                            `Discussion category "${DocsCategory}" not found in repository`,
+                        )
                         // Fall back to creating issue instead
                         const issueTitle = `Documentation feedback: ${url}`
                         const issueBody = `**Feedback Type:** ${opinion}\n**Page URL:** ${url}\n**User Message:**\n\n${message}\n\n> Forwarded from user feedback on docs site.`
 
-                        const { data: issue } = await octokit.rest.issues.create({
-                            owner: site.githubOwner,
-                            repo: site.githubRepo,
-                            title: issueTitle,
-                            body: issueBody,
-                            labels: ['documentation', 'feedback', opinion === 'bad' ? 'bug' : 'enhancement'],
-                        })
+                        const { data: issue } =
+                            await octokit.rest.issues.create({
+                                owner: site.githubOwner,
+                                repo: site.githubRepo,
+                                title: issueTitle,
+                                body: issueBody,
+                                labels: [
+                                    'documentation',
+                                    'feedback',
+                                    opinion === 'bad' ? 'bug' : 'enhancement',
+                                ],
+                            })
 
                         discussionUrl = issue.html_url
                     } else {
@@ -856,11 +865,15 @@ export const app = new Spiceflow({ basePath: '/api' })
                                 }
                             `)
 
-                            discussionUrl = result.createDiscussion.discussion.url
+                            discussionUrl =
+                                result.createDiscussion.discussion.url
                         }
                     }
                 } catch (error) {
-                    console.error('Failed to create GitHub discussion for feedback:', error)
+                    console.error(
+                        'Failed to create GitHub discussion for feedback:',
+                        error,
+                    )
                     // Don't throw error - feedback will still be saved
                 }
             }
