@@ -28,7 +28,13 @@ import { Rate } from '../components/rate'
 import { LOCALES } from '../lib/locales'
 import { Markdown } from '../lib/markdown'
 import { DocsJsonType } from '../lib/docs-json'
-import { GithubIcon, TwitterIcon, LinkedinIcon, MessageCircleIcon, ExternalLinkIcon } from 'lucide-react'
+import {
+    GithubIcon,
+    TwitterIcon,
+    LinkedinIcon,
+    MessageCircleIcon,
+    ExternalLinkIcon,
+} from 'lucide-react'
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data) return {}
@@ -234,7 +240,6 @@ export default function Page(props: Route.ComponentProps) {
     return <PageContent {...props} />
 }
 
-
 function PageContent(props: Route.ComponentProps) {
     const loaderData = props.loaderData
     const { slug, slugs, githubPath, lastEditedAt } = loaderData
@@ -249,7 +254,7 @@ function PageContent(props: Route.ComponentProps) {
     )
     const githubUrl = `https://github.com/${owner}/${repo}`
     const tableOfContentStyle = 'clerk'
-    
+
     return (
         <PageRoot
             toc={{
@@ -271,7 +276,10 @@ function PageContent(props: Route.ComponentProps) {
                     {description}
                 </p>
                 <div className='flex flex-row gap-2 items-center border-b pb-6'>
-                    <LLMCopyButton slug={slugs} contextual={loaderData.docsJson?.contextual} />
+                    <LLMCopyButton
+                        slug={slugs}
+                        contextual={loaderData.docsJson?.contextual}
+                    />
                     <ViewOptions
                         markdownUrl={`${slug}.mdx`}
                         githubUrl={new URL(
@@ -309,39 +317,46 @@ function PageContent(props: Route.ComponentProps) {
     )
 }
 
-
 function Footer({ footer }: { footer?: any }) {
     if (!footer) return null
-    
+
     // Calculate responsive grid columns based on number of link columns
     const numColumns = footer.links?.length || 0
-    const gridCols = numColumns === 1 ? 'grid-cols-1' : 
-                    numColumns === 2 ? 'grid-cols-1 sm:grid-cols-2' :
-                    numColumns === 3 ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3' :
-                    numColumns === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' :
-                    numColumns === 5 ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5' :
-                    'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6'
-    
+    const gridCols =
+        numColumns === 1
+            ? 'grid-cols-1'
+            : numColumns === 2
+              ? 'grid-cols-1 sm:grid-cols-2'
+              : numColumns === 3
+                ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
+                : numColumns === 4
+                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+                  : numColumns === 5
+                    ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5'
+                    : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6'
+
     return (
         <div className='flex flex-col gap-4 border-t pt-4'>
             {/* Social Links */}
             {footer.socials && (
                 <div className='flex gap-3'>
-                    {Object.entries(footer.socials).map(([platform, url]: [string, any]) => (
-                        <a
-                            key={platform}
-                            href={url}
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            className='text-fd-muted-foreground hover:text-fd-foreground transition-colors'
-                            aria-label={platform}
-                        >
-                            <SocialIcon platform={platform} />
-                        </a>
-                    ))}
+                    {Object.entries(footer.socials).map(
+                        ([platform, url]: [string, any]) => (
+                            <a
+                                key={platform}
+                                href={url}
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                className='text-fd-muted-foreground hover:text-fd-foreground transition-colors'
+                                aria-label={platform}
+                            >
+                                <SocialIcon platform={platform} />
+                            </a>
+                        ),
+                    )}
                 </div>
             )}
-            
+
             {/* Link Columns */}
             {footer.links && (
                 <div className={`grid gap-6 ${gridCols}`}>
@@ -353,17 +368,27 @@ function Footer({ footer }: { footer?: any }) {
                                 </h4>
                             )}
                             <div className='flex flex-col gap-1'>
-                                {column.items.map((item: any, itemIndex: number) => (
-                                    <a
-                                        key={itemIndex}
-                                        href={item.href}
-                                        target={item.href.startsWith('http') ? '_blank' : undefined}
-                                        rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                                        className='text-sm text-fd-muted-foreground hover:text-fd-foreground transition-colors'
-                                    >
-                                        {item.label}
-                                    </a>
-                                ))}
+                                {column.items.map(
+                                    (item: any, itemIndex: number) => (
+                                        <a
+                                            key={itemIndex}
+                                            href={item.href}
+                                            target={
+                                                item.href.startsWith('http')
+                                                    ? '_blank'
+                                                    : undefined
+                                            }
+                                            rel={
+                                                item.href.startsWith('http')
+                                                    ? 'noopener noreferrer'
+                                                    : undefined
+                                            }
+                                            className='text-sm text-fd-muted-foreground hover:text-fd-foreground transition-colors'
+                                        >
+                                            {item.label}
+                                        </a>
+                                    ),
+                                )}
                             </div>
                         </div>
                     ))}
@@ -375,7 +400,7 @@ function Footer({ footer }: { footer?: any }) {
 
 function SocialIcon({ platform }: { platform: string }) {
     const iconClass = 'w-4 h-4'
-    
+
     switch (platform.toLowerCase()) {
         case 'github':
             return <GithubIcon className={iconClass} />
@@ -430,4 +455,3 @@ function DocsMarkdown() {
         />
     )
 }
-
