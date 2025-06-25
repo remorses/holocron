@@ -1,19 +1,18 @@
 import { prisma } from 'db'
-import { DocsState } from 'docs-website/src/lib/docs-state'
-import { useEffect, useMemo, useRef, useState, useDeferredValue } from 'react'
-import { redirect, useLoaderData, useRouteLoaderData } from 'react-router'
+import memoize from 'micro-memoize'
+import { useEffect, useMemo, useRef } from 'react'
+import { useLoaderData, useRouteLoaderData } from 'react-router'
 import { AppSidebar } from '../components/app-sidebar'
 import { BrowserWindow } from '../components/browser-window'
-import NavBar from '../components/navbar'
 import { SidebarInset, SidebarProvider } from '../components/ui/sidebar'
 import { getSession } from '../lib/better-auth'
 import { createIframeRpcClient } from '../lib/docs-setstate'
-import { getTabFilesWithoutContents } from '../lib/spiceflow'
+import { getTabFilesWithoutContents } from '../lib/spiceflow-generate-message'
+
 import { State, StateProvider } from '../lib/state'
 import { cn } from '../lib/utils'
 import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from './org.$orgId.site.$siteId'
-import type { Route as OrgRoute } from './org.$orgId'
 
 import { UIMessage } from 'ai'
 
@@ -221,7 +220,7 @@ function Content() {
         </div>
     )
 }
-import memoize from 'micro-memoize'
+
 
 const scaleDownElement = memoize(function (iframeScale) {
     return {
