@@ -19,37 +19,6 @@ const ColorMode = z
     .describe('Pair of colors for light and dark mode')
 
 const IconNameSchema = z.string().describe('Icon name or SVG path')
-// .union([
-//     z.string().describe('Icon name or SVG path'),
-// TODO
-// z
-//     .object({
-//         name: z.string().describe('Icon name'),
-//         library: z
-//             .enum(['fontawesome', 'lucide'])
-//             .describe('Icon library'),
-//         style: z
-//             .enum([
-//                 'brands',
-//                 'duotone',
-//                 'light',
-//                 'regular',
-//                 'sharp-duotone-solid',
-//                 'sharp-light',
-//                 'sharp-regular',
-//                 'sharp-solid',
-//                 'sharp-thin',
-//                 'solid',
-//                 'thin',
-//             ])
-//             .describe('Icon style'),
-//     })
-//     .strict()
-//     .describe('Icon object with library and style'),
-// ])
-// .describe('Icon name or detailed icon object')
-
-// === Top-level component schemas ===
 
 const LogoSchema = z
     .object({
@@ -108,113 +77,6 @@ const ContextualSchema = z
     .strict()
     .describe('Contextual action options (e.g., on code blocks)')
 
-// === Navigation ===
-const GlobalLinks = z
-    .object({
-        anchors: z
-            .array(
-                z
-                    .object({
-                        anchor: z.string().describe('Anchor name'),
-                        href: z.string().url().describe('Anchor URL'),
-                    })
-                    .strict(),
-            )
-            .optional()
-            .describe('Links applied globally'),
-    })
-    .strict()
-    .describe('Site-wide external links')
-
-const NavigationLanguageItem = z
-    .object({
-        language: z
-            .string()
-            .min(1)
-            .describe(
-                'The language code (ISO 639-1) for this section, e.g., "en", "fr", "es"',
-            ),
-        default: z
-            .boolean()
-            .optional()
-            .describe('Whether this language is the default selection'),
-        hidden: z
-            .boolean()
-            .optional()
-            .describe('Whether the language is hidden by default'),
-        href: z
-            .string()
-            .url()
-            .optional()
-            .describe('URL or root path for this language variant'),
-    })
-    .strict()
-    .describe('Language item within navigation')
-
-const NavigationVersionItem = z
-    .object({
-        version: z
-            .string()
-            .min(1)
-            .describe('Version label (e.g., "v1.0", "latest")'),
-        default: z
-            .boolean()
-            .optional()
-            .describe('Whether this is the default version'),
-        hidden: z
-            .boolean()
-            .optional()
-            .describe('Whether this version selection is hidden by default'),
-        href: z
-            .string()
-            .url()
-            .optional()
-            .describe('URL or root path for this version'),
-    })
-    .strict()
-    .describe('Version item within navigation')
-
-const NavigationTabItem = z
-    .object({
-        tab: z.string().min(1).describe('Tab name or label'),
-        icon: IconNameSchema.optional().describe('Optional icon for the tab'),
-        hidden: z
-            .boolean()
-            .optional()
-            .describe('Whether the tab is hidden by default'),
-        href: z
-            .string()
-            .url()
-            .optional()
-            .describe('URL or root path for this tab'),
-    })
-    .strict()
-    .describe('Tab item for organizing navigation')
-
-const NavigationDropdownItem = z
-    .object({
-        dropdown: z.string().min(1).describe('Dropdown name or label'),
-        icon: IconNameSchema.optional().describe(
-            'Optional icon for the dropdown',
-        ),
-        color: ColorMode.optional().describe('Optional custom color'),
-        description: z
-            .string()
-            .optional()
-            .describe('Text description shown for dropdown'),
-        hidden: z
-            .boolean()
-            .optional()
-            .describe('Whether the dropdown is hidden by default'),
-        href: z
-            .string()
-            .url()
-            .optional()
-            .describe('Optional URL linked from the dropdown'),
-    })
-    .strict()
-    .describe('Dropdown item for navigation groups')
-
 const NavigationAnchorItem = z
     .object({
         anchor: z
@@ -237,174 +99,6 @@ const NavigationAnchorItem = z
     })
     .strict()
     .describe('Anchor item for navigation')
-
-const NavigationPages = z
-    .array(z.string().min(1).describe('Path to a documentation page'))
-    .describe('List of page paths in navigation')
-
-// --- NavigationGroupItem definition
-const NavigationGroupItem: z.ZodType<any> = z.lazy(() =>
-    z
-        .object({
-            group: z.string().min(1).describe('Name of the navigation group'),
-            icon: IconNameSchema.optional().describe('Group section icon'),
-            hidden: z
-                .boolean()
-                .optional()
-                .describe('Whether this group is hidden by default'),
-            root: z
-                .string()
-                .optional()
-                .describe('Path to the root page of this group'),
-            tag: z.string().optional().describe('Optional tag for this group'),
-            // Groups may nest anchors or pages/groups
-            pages: z
-                .array(
-                    z.union([
-                        z.string().min(1),
-                        // Use a lazy reference for recursion, but mark with type 'any'
-                        z.lazy(() => NavigationGroupItem),
-                    ]),
-                )
-                .optional()
-                .describe('Nested list of page paths or group objects'),
-        })
-        .strict()
-        .describe('Navigation group, can contain nested pages or groups'),
-)
-
-// --- Patterns for navigation root ---
-
-/**
- * The navigation supports a variety of layouts:
- * - Languages: organize by language (site is multi-lingual)
- * - Versions: organize by product version (versioned docs)
- * - Tabs: organize content by tab headers
- * - Dropdowns: use dropdown sections
- * - Anchors: a flat list of main docs sections
- * - Groups: group sections into labeled subgroups
- * - Pages: a flat list of page paths, with optional nesting
- *
- * Optionally, each can include a 'global' object with links/anchors shown in all navigation contexts.
- */
-
-const NavigationSchema = z
-    .union([
-        // Organize content by language
-        z
-            .object({
-                global: GlobalLinks.optional().describe(
-                    'External/global links shown site-wide',
-                ),
-                languages: z
-                    .array(NavigationLanguageItem)
-                    .min(1)
-                    .describe(
-                        'Organize navigation by language (for multi-language sites)',
-                    ),
-            })
-            .strict(),
-
-        // Organize by docs version
-        z
-            .object({
-                global: GlobalLinks.optional().describe(
-                    'External/global links shown site-wide',
-                ),
-                versions: z
-                    .array(NavigationVersionItem)
-                    .min(1)
-                    .describe('Organize navigation by product or API version'),
-            })
-            .strict(),
-
-        // Organize by tabs
-        z
-            .object({
-                global: GlobalLinks.optional().describe(
-                    'External/global links shown site-wide',
-                ),
-                tabs: z
-                    .array(NavigationTabItem)
-                    .min(1)
-                    .describe(
-                        'Organize navigation by tab (top-level sections as tabs)',
-                    ),
-            })
-            .strict(),
-
-        // Organize by dropdowns
-        z
-            .object({
-                global: GlobalLinks.optional().describe(
-                    'External/global links shown site-wide',
-                ),
-                dropdowns: z
-                    .array(NavigationDropdownItem)
-                    .min(1)
-                    .describe(
-                        'Organize navigation using dropdowns for grouped content',
-                    ),
-            })
-            .strict(),
-
-        // Organize by anchors
-        z
-            .object({
-                global: GlobalLinks.optional().describe(
-                    'External/global links shown site-wide',
-                ),
-                anchors: z
-                    .array(NavigationAnchorItem)
-                    .min(1)
-                    .describe(
-                        'Flat list: organize navigation sections as anchors',
-                    ),
-            })
-            .strict(),
-
-        // Top-level groups that may contain nested items
-        z
-            .object({
-                global: GlobalLinks.optional().describe(
-                    'External/global links shown site-wide',
-                ),
-                groups: z
-                    .array(NavigationGroupItem)
-                    .min(1)
-                    .describe('Group navigation with nested pages/groups'),
-            })
-            .strict(),
-
-        // Simple flat list of page paths (optionally with groups)
-        z
-            .object({
-                global: GlobalLinks.optional().describe(
-                    'External/global links shown site-wide',
-                ),
-                pages: NavigationPages.min(1).describe(
-                    'Simple linear list of doc page paths',
-                ),
-            })
-            .strict(),
-    ])
-    .describe(
-        `Navigation tree configuration for Mintlify docs.
-
-The navigation can be customized by:
-- languages: Language-based navigation, allowing users to select between languages (e.g., 'en', 'fr', etc).
-- versions: Grouped by doc/codebase version (e.g., 'v1', 'v2', etc).
-- tabs: Segments top-level docs into tabs for distinct content areas.
-- dropdowns: Use dropdown lists for grouped navigation.
-- anchors: Show a flat list of docs sections/anchors in the sidebar.
-- groups: Organize navigation into labeled and optionally nested groups.
-- pages: List of doc pages as simple paths.
-
-Use the appropriate field for your site's organization (one pattern per config). A 'global' field is available to add universal links/anchors that appear in all navigation contexts.
-
-Each field inside (languages, versions, etc) supports further customization of entries: 'icon', 'color', 'hidden', descriptions, and nested structures for advanced multi-dimensional docs.
-`,
-    )
 
 // === Navbar & Footer ===
 const NavbarLink = z
@@ -669,15 +363,18 @@ export const DocsConfigSchema = z
             .optional()
             .describe('Schema URL for IDE autocomplete'),
         name: z.string().min(1).describe('Project or product name'),
+        // TODO
+        navTopLinks: z.array(NavigationAnchorItem).optional(),
         description: z.string().optional().describe('SEO description'),
         logo: LogoSchema.optional().describe('Logo config'),
         favicon: FaviconSchema.optional().describe('Favicon config'),
         // api: ApiSchema.optional().describe('API reference settings'),
         navbar: NavbarSchema.optional().describe('Top navbar settings'),
-        navigation: NavigationSchema.describe('Site navigation structure'),
+
         footer: FooterSchema.optional().describe('Footer content'),
         // search: SearchSchema.optional().describe('Search behavior'),
-        // seo: SeoSchema.optional().describe('SEO meta & indexing'),
+        // // TODO
+        seo: SeoSchema.optional().describe('SEO meta & indexing'),
         redirects: z
             .array(RedirectSchema)
             .optional()
@@ -693,5 +390,7 @@ export const DocsConfigSchema = z
 
 export type DocsJsonType = z.infer<typeof DocsConfigSchema>
 
-
-export const docsJsonSchema =  zodToJsonSchema(DocsConfigSchema, 'DocsConfigSchema')
+export const docsJsonSchema = zodToJsonSchema(
+    DocsConfigSchema,
+    'DocsConfigSchema',
+)
