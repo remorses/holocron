@@ -1,43 +1,31 @@
 'use client'
-import { UIMessage, IdGenerator } from 'ai'
-import { memo, useDeferredValue } from 'react'
-import memoize from 'micro-memoize'
 import { RiAttachment2, RiRefreshLine } from '@remixicon/react'
-import { createIdGenerator } from 'ai'
+import { createIdGenerator, UIMessage } from 'ai'
+import { Markdown } from 'docs-website/src/lib/markdown'
+import memoize from 'micro-memoize'
 import {
-    useState,
-    useTransition,
-    useEffect,
+    memo,
     startTransition,
+    useEffect,
     useMemo,
     useRef,
+    useState,
 } from 'react'
-import { 
-    ChatMessage, 
-    EditingUserMessage, 
+import {
+    ChatMessage,
+    EditingUserMessage,
     UserMessageWithEditButton,
-    EditorToolPreview,
-    FilesTreePreview,
-    ToolPreviewContainer
 } from 'website/src/components/chat-message'
-import { RenderFormPreview } from './render-form-preview'
+import { ToolInvocationRenderer } from 'website/src/components/tools-preview'
 import { MentionsTextArea } from 'website/src/components/mentions-textarea'
-import { Markdown } from 'docs-website/src/lib/markdown'
-import { useClickOutside } from '../lib/hooks'
 
 import { Button } from 'website/src/components/ui/button'
-import { ScrollArea } from 'website/src/components/ui/scroll-area'
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from 'website/src/components/ui/dropdown-menu'
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from 'website/src/components/ui/popover'
+import { ScrollArea } from 'website/src/components/ui/scroll-area'
 import {
     Tooltip,
     TooltipContent,
@@ -46,39 +34,38 @@ import {
 
 import { useStickToBottom } from 'use-stick-to-bottom'
 
+import { Card, Cards } from 'fumadocs-ui/components/card'
+import { useTemporaryState } from '../lib/hooks'
 import { fullStreamToUIMessages } from '../lib/process-chat'
 import { apiClient } from '../lib/spiceflow-client'
-import { useChatState, doFilesInDraftNeedPush } from '../lib/state'
-import { useTemporaryState } from '../lib/hooks'
-import { Cards, Card } from 'fumadocs-ui/components/card'
+import { doFilesInDraftNeedPush, useChatState } from '../lib/state'
 
+import { generateSlugFromPath } from 'docs-website/src/lib/utils'
+import {
+    AlertCircle,
+    AlertTriangleIcon,
+    CpuIcon,
+    FilePlus2Icon,
+    GitBranch,
+    ImageIcon,
+    Link2Icon,
+    ListTreeIcon,
+    PaletteIcon,
+    PanelsTopLeft,
+    X,
+} from 'lucide-react'
+import { flushSync } from 'react-dom'
+import { useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
+import { docsRpcClient } from '../lib/docs-setstate'
 import {
     createEditExecute,
     EditToolParamSchema,
-    isParameterComplete,
     FileUpdate,
+    isParameterComplete,
 } from '../lib/edit-tool'
-import { docsRpcClient } from '../lib/docs-setstate'
+import { teeAsyncIterable } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
-import { useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
-import { teeAsyncIterable } from '../lib/utils'
-import { generateSlugFromPath } from 'docs-website/src/lib/utils'
-import { flushSync } from 'react-dom'
-import { DialogOverlay } from '@radix-ui/react-dialog'
-import {
-    CpuIcon,
-    PanelsTopLeft,
-    PaletteIcon,
-    ImageIcon,
-    FilePlus2Icon,
-    ListTreeIcon,
-    Link2Icon,
-    AlertTriangleIcon,
-    GitBranch,
-    AlertCircle,
-    X,
-} from 'lucide-react'
 
 export default function Chat({}) {
     const { scrollRef, contentRef } = useStickToBottom({
@@ -227,10 +214,7 @@ function MessageRenderer({ message }: { message: UIMessage }) {
 
     if (message.role === 'user') {
         return (
-            <UserMessageWithEditButton
-                message={message}
-                onEditStart={handleEditStart}
-            >
+            <UserMessageWithEditButton onEditStart={handleEditStart}>
                 {message.parts.map((part, index) => {
                     if (part.type === 'text') {
                         return (
@@ -252,40 +236,7 @@ function MessageRenderer({ message }: { message: UIMessage }) {
         <ChatMessage message={message}>
             {message.parts.map((part, index) => {
                 if (part.type === 'tool-invocation') {
-                    const toolName = part.toolInvocation.toolName
-                    if (toolName === 'str_replace_editor') {
-                        return (
-                            <EditorToolPreview
-                                key={index}
-                                {...part.toolInvocation}
-                            />
-                        )
-                    }
-                    if (toolName === 'get_project_files') {
-                        return (
-                            <FilesTreePreview
-                                key={index}
-                                {...part.toolInvocation}
-                            />
-                        )
-                    }
-                    if (toolName === 'render_form') {
-                        return (
-                            <RenderFormPreview
-                                key={index}
-                                {...part.toolInvocation}
-                            />
-                        )
-                    }
-                    return (
-                        <pre key={index}>
-                            {JSON.stringify(
-                                part.toolInvocation,
-                                null,
-                                2,
-                            )}
-                        </pre>
-                    )
+                    return <ToolInvocationRenderer part={part} index={index} />
                 }
 
                 if (part.type === 'text') {

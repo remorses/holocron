@@ -20,11 +20,8 @@ import { cn } from 'website/src/lib/utils'
 import { Markdown } from 'docs-website/src/lib/markdown'
 
 import { useChatState } from '../lib/state'
-import { EditToolParamSchema } from '../lib/edit-tool'
-import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
 import { Button } from './ui/button'
 import { useClickOutside } from '../lib/hooks'
-import { RenderFormPreview } from './render-form-preview'
 
 type ChatMessageProps = {
     message: UIMessage
@@ -114,7 +111,7 @@ export const ChatMessage = memo(function ChatMessage({
             x.messages[x.messages.length - 1]?.id === message.id &&
             message.role === 'assistant',
     )
-    
+
     if (
         isLastAssistantMessage &&
         isChatGenerating &&
@@ -156,7 +153,7 @@ export const EditingUserMessage = memo(function EditingUserMessage({
             .join('')
     })
     const editingBox = useRef<HTMLDivElement>(null)
-    
+
     const handleEditCancel = () => {
         useChatState.setState({ editingMessageId: undefined })
     }
@@ -192,17 +189,14 @@ export const EditingUserMessage = memo(function EditingUserMessage({
         const event = new CustomEvent('chatRegenerate')
         window.dispatchEvent(event)
     }
-    
+
     useClickOutside(editingBox, handleEditCancel)
 
     return (
         <article className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end'>
             <div className='max-w-full relative group/message grow bg-muted px-4 py-3 rounded-xl'>
                 <div className='prose text-sm w-full max-w-full dark:prose-invert'>
-                    <div
-                        ref={editingBox}
-                        className='space-y-2 w-full'
-                    >
+                    <div ref={editingBox} className='space-y-2 w-full'>
                         <textarea
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
@@ -238,11 +232,9 @@ export const EditingUserMessage = memo(function EditingUserMessage({
 })
 
 export function UserMessageWithEditButton({
-    message,
     onEditStart,
     children,
 }: {
-    message: UIMessage
     onEditStart: () => void
     children: React.ReactNode
 }) {
@@ -325,140 +317,3 @@ const MessageActions = memo(function MessageActions() {
     )
 })
 
-export function EditorToolPreview({
-    args,
-    state,
-    toolCallId,
-    result,
-}: {
-    state: 'partial-call' | 'call' | 'result'
-    result?: string | { error?: string; success?: false }
-    step?: number
-    toolCallId: any
-    args?: Partial<EditToolParamSchema>
-}) {
-    const isChatGenerating = useChatState((x) => x.isChatGenerating)
-    let code = args?.new_str || args?.file_text || ''
-    if (code && typeof code === 'object') {
-        code = code?.['error'] || JSON.stringify(code, null, 2)
-    }
-    const command = args?.command
-    if (command === 'view') {
-        let linesText = ''
-        if (args?.view_range?.length === 2) {
-            const [start, end] = args?.view_range
-            linesText = `:${start}:${end}`
-        }
-
-        return (
-            <ToolPreviewContainer>
-                <Markdown
-                    isStreaming={isChatGenerating}
-                    markdown={`Reading \`${args?.path}${linesText}\` `}
-                />
-            </ToolPreviewContainer>
-        )
-    }
-    if (command === 'create') {
-        let markdown = ''
-        markdown += `Creating \`${args?.path}\`\n`
-        markdown +=
-            '````mdx' + ` title=" ${args?.path || ''}" \n` + code + '\n````'
-        return (
-            <ToolPreviewContainer>
-                <Markdown isStreaming={isChatGenerating} markdown={markdown} />
-            </ToolPreviewContainer>
-        )
-    }
-
-    if (command === 'undo_edit') {
-        return (
-            <ToolPreviewContainer>
-                <div>
-                    <strong>Undo last edit in:</strong> {args?.path}
-                </div>
-            </ToolPreviewContainer>
-        )
-    }
-
-    if (command === 'insert') {
-        let markdown = ''
-        markdown += `Inserting content into \`${args?.path}:${args?.insert_line || 0}\`\n`
-        // Prefix each line of code content with '+ '
-        const codeWithPrefix = code
-            .split('\n')
-            .map((line) => '+ ' + line)
-            .join('\n')
-        markdown +=
-            '````diff' +
-            ` title=" ${args?.path || ''}:${args?.insert_line || 0}" \n` +
-            codeWithPrefix +
-            '\n````'
-        return (
-            <ToolPreviewContainer className='py-0'>
-                <Markdown isStreaming={isChatGenerating} markdown={markdown} />
-            </ToolPreviewContainer>
-        )
-    }
-    let markdown = ''
-    markdown += `Replacing content into \`${args?.path}\`\n`
-    if (state === 'result') {
-        let diff = result || ''
-
-        if (result && typeof result === 'object') {
-            diff = result?.error || JSON.stringify(result, null, 2)
-        }
-        markdown +=
-            '````diff' + ` title=" ${args?.path || ''}" \n` + diff + '\n````'
-        return (
-            <ToolPreviewContainer className='py-0'>
-                <Markdown isStreaming={isChatGenerating} markdown={markdown} />
-            </ToolPreviewContainer>
-        )
-    }
-    markdown += '````mdx' + ` title=" ${args?.path || ''}" \n` + code + '\n````'
-    return (
-        <ToolPreviewContainer className='py-0'>
-            <Markdown isStreaming={isChatGenerating} markdown={markdown} />
-        </ToolPreviewContainer>
-    )
-}
-
-export function FilesTreePreview({
-    args,
-    state,
-    toolCallId,
-    result,
-}: {
-    state: 'partial-call' | 'call' | 'result'
-    result?: string | { error?: string; success?: false }
-    step?: number
-    toolCallId: any
-    args?: any
-}) {
-    const isChatGenerating = useChatState((x) => x.isChatGenerating)
-    const code = result || '\n'
-    if (!code) return null
-    let markdown = ''
-    markdown += 'Reading project structure\n'
-    markdown += '```sh' + ` \n` + code + '\n```'
-    return (
-        <ToolPreviewContainer className='py-0'>
-            <Markdown isStreaming={isChatGenerating} markdown={markdown} />
-        </ToolPreviewContainer>
-    )
-}
-
-export function ToolPreviewContainer({ className = '', children, ...props }) {
-    return (
-        <div
-            className={cn(
-                'flex text-sm flex-col w-full [&_pre]:text-[12px]',
-                className,
-            )}
-            {...props}
-        >
-            {children}
-        </div>
-    )
-}
