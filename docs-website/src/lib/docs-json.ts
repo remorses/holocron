@@ -678,10 +678,10 @@ export const DocsConfigSchema = z
         footer: FooterSchema.optional().describe('Footer content'),
         // search: SearchSchema.optional().describe('Search behavior'),
         // seo: SeoSchema.optional().describe('SEO meta & indexing'),
-        // redirects: z
-        //     .array(RedirectSchema)
-        //     .optional()
-        //     .describe('Redirect rules'),
+        redirects: z
+            .array(RedirectSchema)
+            .optional()
+            .describe('Redirect rules'),
         banner: BannerSchema.optional().describe('Site-wide banner'),
         // errors: ErrorsSchema.optional().describe('Error page config'),
         contextual: ContextualSchema.optional().describe('Contextual actions'),
