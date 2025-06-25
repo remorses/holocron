@@ -8,6 +8,7 @@ import {
 import type { UIField } from '../lib/render-form-tool'
 
 import { useChatState } from '../lib/state'
+import { ColorPickerButton } from './color-picker-button'
 import { Button } from './ui/button'
 import { Card, CardContent } from './ui/card'
 import { Input } from './ui/input'
@@ -196,11 +197,19 @@ export function RenderFormPreview({
                 )
             case 'color_picker':
                 return (
-                    <Input
+                    <Controller
                         key={key}
-                        type='color'
+                        control={control}
+                        name={field.name}
                         defaultValue={field.defaultValue || '#ffffff'}
-                        {...register(field.name)}
+                        render={({ field: ctl }) => {
+                            return (
+                                <ColorPickerButton
+                                    value={ctl.value as string}
+                                    onChange={ctl.onChange}
+                                />
+                            )
+                        }}
                     />
                 )
             case 'date_picker':

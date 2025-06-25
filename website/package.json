@@ -51,6 +51,7 @@
         "@remixicon/react": "^4.6.0",
         "@sentry/node": "^9.28.1",
         "@types/nprogress": "^0.2.3",
+        "@uiw/react-color": "^2.6.0",
         "@upstash/qstash": "^2.8.1",
         "ai": "^4.3.16",
         "ai-fallback": "^0.1.5",
