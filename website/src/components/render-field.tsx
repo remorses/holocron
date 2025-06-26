@@ -198,7 +198,7 @@ export function RenderField({ field }: RenderFieldProps) {
             return (
                 <Button key={key} asChild className='justify-start'>
                     <a
-                        href={field.href}
+                        href={field.href || '#'}
                         target='_blank'
                         rel='noopener noreferrer'
                     >
