@@ -41,7 +41,7 @@ import {
     createRenderFormExecute,
     RenderFormParameters,
 } from './render-form-tool'
-import { generateMessageApp } from './spiceflow-generate-message'
+import { generateMessageApp, getPageContent } from './spiceflow-generate-message'
 
 // Create the main spiceflow app with comprehensive routes and features
 export const app = new Spiceflow({ basePath: '/api' })
@@ -97,29 +97,11 @@ export const app = new Spiceflow({ basePath: '/api' })
                 throw new Error('You do not have access to this tab')
             }
 
-            const [page, metaFile] = await Promise.all([
-                prisma.markdownPage.findFirst({
-                    where: {
-                        tabId,
-                        githubPath,
-                    },
-                }),
-                prisma.metaFile.findFirst({
-                    where: {
-                        tabId,
-                        githubPath,
-                    },
-                }),
-            ])
-            if (!page && !metaFile) {
-                throw new Error(`Cannot find page in ${githubPath}`)
-            }
+            const content = await getPageContent({ githubPath, tabId })
+
             return {
                 success: true,
-                content:
-                    page?.markdown ||
-                    JSON.stringify(metaFile?.jsonData, null, 2) ||
-                    '',
+                content,
             }
         },
     })

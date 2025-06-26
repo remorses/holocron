@@ -77,36 +77,49 @@ export default function Chat({}) {
     }, [])
     const methods = useForm({
         defaultValues: initialDocsJsonData,
+        resetOptions: { keepDirtyValues: true }, // optional
     })
-    const { register, subscribe } = methods
+    const { getValues, subscribe } = methods
 
     useEffect(() => {
-        const callback = debounce(50, async ({ values, name }) => {
-            console.log(`form values changed, sending state to docs iframe`)
-            const newJson = JSON.stringify(values, null, 2)
-            const filesInDraft = useWebsiteState.getState().filesInDraft || {}
-            const githubPath = 'docs.json'
-            const previousJson = filesInDraft[githubPath]?.content || ''
-            const newFilesInDraft: FilesInDraft = {
-                ...useWebsiteState.getState().filesInDraft,
-                [githubPath]: {
-                    content: newJson,
-                    githubPath,
-                    ...calculateLineChanges(previousJson, newJson),
-                },
-            }
-            useWebsiteState.setState({ filesInDraft: newFilesInDraft })
-            await docsRpcClient.setDocsState({
-                filesInDraft: newFilesInDraft,
-            })
-        })
+        const callback = debounce(
+            50,
+            async ({ values, defaultValues, name }) => {
+                console.log(`form values changed, sending state to docs iframe`)
+                const githubPath = 'docs.json'
+                const filesInDraft =
+                    useWebsiteState.getState().filesInDraft || {}
+                const previousJsonString =
+                    filesInDraft[githubPath]?.content || ''
+
+                const newJson = JSON.stringify(
+                    { ...initialDocsJsonData, ...defaultValues, ...values },
+                    null,
+                    2,
+                )
+
+                const newFilesInDraft: FilesInDraft = {
+                    ...useWebsiteState.getState().filesInDraft,
+                    [githubPath]: {
+                        content: newJson,
+                        githubPath,
+                        ...calculateLineChanges(previousJsonString, newJson),
+                    },
+                }
+                useWebsiteState.setState({ filesInDraft: newFilesInDraft })
+                await docsRpcClient.setDocsState({
+                    filesInDraft: newFilesInDraft,
+                })
+            },
+        )
         const unSub = subscribe({
             formState: { values: true },
+
             callback,
         })
 
         return unSub
-    }, [subscribe])
+    }, [initialDocsJsonData, subscribe])
 
     return (
         <FormProvider {...methods}>

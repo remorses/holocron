@@ -83,7 +83,10 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
         // model = anthropic('claude-3-5-haiku-latest')
         const editFilesExecute = createEditExecute({
             filesInDraft,
-
+            async getPageContent({ githubPath }) {
+                const content = await getPageContent({ githubPath, tabId })
+                return content
+            },
             async validateNewContent(x) {
                 if (mdxRegex.test(x.githubPath)) {
                     await processMdxInServer({
@@ -98,17 +101,6 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                         throw new Error('Invalid JSON in file content')
                     }
                 }
-            },
-            async getPageContent({ githubPath: path }) {
-                const page = await prisma.markdownPage.findFirst({
-                    where: {
-                        githubPath: path,
-                    },
-                })
-                if (!page) {
-                    throw new Error(`Cannot find page with path ${path}`)
-                }
-                return page.markdown || ''
             },
         })
 
@@ -421,4 +413,51 @@ export async function getTabFilesWithoutContents({ tabId }) {
         ...mediaAssets.map((x) => ({ ...x, type: 'media' }) as const),
     ].flat()
     return allFiles
+}
+
+export async function getPageContent({ githubPath, tabId }) {
+    // Support for special files: docs.json and styles.css
+    if (githubPath === 'docs.json') {
+        const tab = await prisma.site.findFirst({
+            where: { tabs: { some: { tabId } } },
+            select: { docsJson: true },
+        })
+        if (!tab || !tab.docsJson) {
+            throw new Error(`Cannot find docs.json for tab ${tabId}`)
+        }
+        return (
+            `> Notice that this is the docs.json file before any form updates. Form updates are not saved on the filesystem until save! There is no need to inspect that your changes where succesful. \n\n` +
+            JSON.stringify(tab.docsJson, null, 2)
+        )
+    }
+    if (githubPath === 'styles.css') {
+        const tab = await prisma.site.findFirst({
+            where: { tabs: { some: { tabId } } },
+            select: { cssStyles: true },
+        })
+        if (!tab) {
+            throw new Error(`Cannot find styles.css for tab ${tabId}`)
+        }
+        // Could be null if not set
+        return tab.cssStyles || ''
+    }
+    // Otherwise, try page and metaFile
+    const [page, metaFile] = await Promise.all([
+        prisma.markdownPage.findFirst({
+            where: {
+                tabId,
+                githubPath,
+            },
+        }),
+        prisma.metaFile.findFirst({
+            where: {
+                tabId,
+                githubPath,
+            },
+        }),
+    ])
+    if (!page && !metaFile) {
+        throw new Error(`Cannot find page in ${githubPath}`)
+    }
+    return page?.markdown || JSON.stringify(metaFile?.jsonData, null, 2) || ''
 }

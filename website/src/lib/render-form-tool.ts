@@ -11,106 +11,116 @@ const stringReq = z.string().nullable()
 const boolReq = z.boolean().nullable()
 const numberReq = z.number().nullable()
 
-export const InputField = z.object({
-    type: z.literal('input'),
-    name: z.string(),
-    label: z.string(),
-    placeholder: stringReq,
-    prefix: stringReq,
-    required: boolReq,
-    description: stringReq,
-    defaultValue: stringReq,
-})
+export const InputField = z
+    .object({
+        name: z.string(),
+        type: z.literal('input'),
+        label: z.string(),
+        description: stringReq,
+        placeholder: stringReq,
+        prefix: stringReq,
+        required: boolReq,
+        initialValue: stringReq,
+    })
+    .describe(
+        `should be used for one line strings, for example the name of the website or a domain`,
+    )
 
 export const PasswordField = z.object({
-    type: z.literal('password'),
     name: z.string(),
+    type: z.literal('password'),
     label: z.string(),
+    description: stringReq,
     placeholder: stringReq,
     required: boolReq,
-    description: stringReq,
-    defaultValue: stringReq,
+    initialValue: stringReq,
 })
 
-export const TextareaField = z.object({
-    type: z.literal('textarea'),
-    name: z.string(),
-    label: z.string(),
-    placeholder: stringReq,
-    required: boolReq,
-    description: stringReq,
-    defaultValue: stringReq,
-})
+export const TextareaField = z
+    .object({
+        name: z.string(),
+        type: z.literal('textarea'),
+        label: z.string(),
+        description: stringReq,
+        placeholder: stringReq,
+        required: boolReq,
+        initialValue: stringReq,
+    })
+    .describe(
+        `textarea should only be used only for multi line strings, for example a description value. NEVER use it for short values like domains`,
+    )
 
 export const NumberField = z.object({
-    type: z.literal('number'),
     name: z.string(),
+    type: z.literal('number'),
     label: z.string(),
+    description: stringReq,
     min: numberReq,
     max: numberReq,
     step: numberReq,
     placeholder: stringReq,
     required: boolReq,
-    description: stringReq,
-    defaultValue: numberReq,
+    initialValue: numberReq,
 })
 
 export const SelectField = z.object({
-    type: z.literal('select'),
     name: z.string(),
+    type: z.literal('select'),
     label: z.string(),
+    description: stringReq,
     options: z.array(z.object({ label: z.string(), value: z.string() })).min(1),
     placeholder: stringReq,
     required: boolReq,
-    description: stringReq,
-    defaultValue: stringReq,
-})
+    initialValue: stringReq,
+}).describe(
+    `should be used only when you already know the possible options for a string value, for example for contextual actions `,
+)
 
 export const SliderField = z.object({
-    type: z.literal('slider'),
     name: z.string(),
+    type: z.literal('slider'),
     label: z.string(),
+    description: stringReq,
     min: numberReq,
     max: numberReq,
     step: numberReq,
     required: boolReq,
-    description: stringReq,
-    defaultValue: numberReq,
-})
+    initialValue: numberReq,
+}).describe(`use this for values that have a min and max, for example the width of the website, with a min of 0 and max of 3000`)
 
 export const SwitchField = z.object({
-    type: z.literal('switch'),
     name: z.string(),
+    type: z.literal('switch'),
     label: z.string(),
-    required: boolReq,
     description: stringReq,
-    defaultValue: boolReq,
+    required: boolReq,
+    initialValue: boolReq,
 })
 
 export const ColorPickerField = z.object({
-    type: z.literal('color_picker'),
     name: z.string(),
+    type: z.literal('color_picker'),
     buttonText: z.string(),
-    required: boolReq,
     description: stringReq,
-    defaultValue: stringReq,
+    required: boolReq,
+    initialValue: stringReq,
 })
 
 export const DatePickerField = z.object({
-    type: z.literal('date_picker'),
     name: z.string(),
+    type: z.literal('date_picker'),
     label: z.string(),
-    required: boolReq,
     description: stringReq,
-    defaultValue: stringReq,
+    required: boolReq,
+    initialValue: stringReq,
 })
 
 export const ImageUploadField = z.object({
-    type: z.literal('image_upload'),
     name: z.string(),
+    type: z.literal('image_upload'),
     label: z.string(),
-    required: boolReq,
     description: stringReq,
+    required: boolReq,
 })
 
 export const ButtonHrefEnum = z.enum([
@@ -121,11 +131,11 @@ export const ButtonHrefEnum = z.enum([
 ])
 
 export const ButtonField = z.object({
-    type: z.literal('button'),
     name: z.string(),
+    type: z.literal('button'),
     label: z.string(),
-    href: ButtonHrefEnum,
     description: stringReq,
+    href: ButtonHrefEnum,
 })
 
 export const UIFieldSchema = z
