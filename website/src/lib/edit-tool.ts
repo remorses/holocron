@@ -1,7 +1,7 @@
 import z from 'zod'
 import { diffLines, createPatch } from 'diff'
 
-function calculateLineChanges(
+export function calculateLineChanges(
     oldContent: string,
     newContent: string,
 ): { addedLines: number; deletedLines: number } {
@@ -97,6 +97,8 @@ export function createEditExecute({
             old_str,
             view_range,
         } = params
+
+        // TODO if a file contents changed since the last read, I should tell the model. so it does not try to update the file with string replacements that are no longer there
 
         switch (command) {
             case 'view': {

@@ -7,7 +7,9 @@ import { useDeferredValue, useMemo } from 'react'
 import { FileUpdate } from './edit-tool'
 
 export type State = {
-    docsState?: Pick<DocsState, 'currentSlug' | 'filesInDraft'>
+    currentSlug: string
+    filesInDraft: DocsState['filesInDraft']
+
     lastPushedFiles: Record<string, FileUpdate>
 }
 

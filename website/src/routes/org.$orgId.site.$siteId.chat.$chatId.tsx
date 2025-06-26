@@ -82,7 +82,6 @@ export async function loader({
         chatId,
         chat,
         prUrl,
-        initialFilesInDraft: chat.filesInDraft as any,
         mentionOptions,
     }
 }
@@ -91,16 +90,13 @@ export default function Page({
     loaderData,
     params: { siteId, orgId },
 }: Route.ComponentProps) {
-    const { chat, initialFilesInDraft } = loaderData
+    const { chat } = loaderData
 
     const initialState = useMemo<State>(
         () => ({
             lastPushedFiles: (chat.lastPushedFiles as any) || {},
-            docsState: {
-                filesInDraft: chat.filesInDraft as any,
-                currentSlug: chat.currentSlug || undefined,
-            },
-            initialFilesInDraft,
+            filesInDraft: chat.filesInDraft as any,
+            currentSlug: chat.currentSlug || '',
         }),
         [loaderData],
     )

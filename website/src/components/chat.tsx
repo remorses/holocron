@@ -51,31 +51,53 @@ import {
 import { useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
 import { docsRpcClient } from '../lib/docs-setstate'
 import {
+    calculateLineChanges,
     createEditExecute,
     EditToolParamSchema,
     FileUpdate,
     isParameterComplete,
 } from '../lib/edit-tool'
-import { debounce, teeAsyncIterable } from '../lib/utils'
+import { debounce, safeJsonParse, teeAsyncIterable } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import { useChatState } from './chat/chat-provider'
 import { ChatSuggestionButton } from './chat/chat-suggestion'
 import { AnimatePresence, motion } from 'unframer'
+import { FilesInDraft } from 'docs-website/src/lib/docs-state'
 
 export default function Chat({}) {
     const { scrollRef, contentRef } = useStickToBottom({
         initial: 'instant',
     })
-    const methods = useForm({})
+    const initialDocsJsonData = useMemo(() => {
+        const filesInDraft = useWebsiteState.getState().filesInDraft
+        const githubPath = 'docs.json'
+        const previousJson = filesInDraft?.[githubPath]?.content || ''
+        return safeJsonParse(previousJson) || {}
+    }, [])
+    const methods = useForm({
+        defaultValues: initialDocsJsonData,
+    })
     const { register, subscribe } = methods
 
     useEffect(() => {
         const callback = debounce(50, async ({ values, name }) => {
             console.log(`form values changed, sending state to docs iframe`)
-            useWebsiteState.setState({docsState})
+            const newJson = JSON.stringify(values, null, 2)
+            const filesInDraft = useWebsiteState.getState().filesInDraft || {}
+            const githubPath = 'docs.json'
+            const previousJson = filesInDraft[githubPath]?.content || ''
+            const newFilesInDraft: FilesInDraft = {
+                ...useWebsiteState.getState().filesInDraft,
+                [githubPath]: {
+                    content: newJson,
+                    githubPath,
+                    ...calculateLineChanges(previousJson, newJson),
+                },
+            }
+            useWebsiteState.setState({ filesInDraft: newFilesInDraft })
             await docsRpcClient.setDocsState({
-                docsJson: values as DocsJsonType,
+                filesInDraft: newFilesInDraft,
             })
         })
         const unSub = subscribe({
@@ -249,9 +271,7 @@ function Footer() {
     ) as SiteRoute.ComponentProps['loaderData']
     const { siteId, tabId } = siteData
 
-    const filesInDraft = useWebsiteState(
-        (x) => x?.docsState?.filesInDraft || {},
-    )
+    const filesInDraft = useWebsiteState((x) => x?.filesInDraft || {})
     const lastPushedFiles = useWebsiteState((x) => x.lastPushedFiles)
     const hasNonPushedChanges = useMemo(() => {
         return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
@@ -261,9 +281,8 @@ function Footer() {
         const messages = useChatState.getState()?.messages
         const generateId = createIdGenerator()
 
-        const docsState = useWebsiteState.getState()?.docsState
-        const filesInDraft = docsState?.filesInDraft || {}
-        const currentSlug = docsState?.currentSlug || ''
+        const filesInDraft = useWebsiteState.getState()?.filesInDraft || {}
+        const currentSlug = useWebsiteState.getState()?.currentSlug || ''
 
         const { data: generator, error } =
             await apiClient.api.generateMessage.post({
@@ -355,7 +374,8 @@ function Footer() {
                                 toolInvocation.toolCallId,
                             )
                             useWebsiteState.setState({
-                                docsState: { filesInDraft, currentSlug },
+                                filesInDraft,
+                                currentSlug,
                             })
                         }
                     }
@@ -376,7 +396,7 @@ function Footer() {
     const hasFilesInDraft = Object.keys(filesInDraft).length > 0
     const updatedLines = useMemo(() => {
         return Object.values(filesInDraft).reduce(
-            (sum, file) =>
+            (sum, file: FileUpdate) =>
                 sum + (file.addedLines || 0) + (file.deletedLines || 0),
             0,
         )
@@ -474,9 +494,7 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
     ) as SiteRoute.ComponentProps['loaderData']
     const { siteId } = siteData
 
-    const filesInDraft = useWebsiteState(
-        (x) => x?.docsState?.filesInDraft || {},
-    )
+    const filesInDraft = useWebsiteState((x) => x?.filesInDraft || {})
     const lastPushedFiles = useWebsiteState((x) => x.lastPushedFiles)
     const hasNonPushedChanges = useMemo(() => {
         return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
@@ -512,8 +530,7 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
     const handleCreatePr = async () => {
         setIsLoading(true)
         try {
-            const docsState = useWebsiteState.getState()?.docsState
-            const filesInDraft = docsState?.filesInDraft || {}
+            const filesInDraft = useWebsiteState.getState()?.filesInDraft || {}
 
             const result = await apiClient.api.createPrSuggestionForChat.post({
                 siteId,

@@ -4,20 +4,21 @@ import type { PageTree, TOCItemType } from 'fumadocs-core/server'
 import { create } from 'zustand'
 import { DocsJsonType } from './docs-json'
 
+export type FilesInDraft = Record<
+    string,
+    {
+        content: string
+        githubPath: string
+        addedLines: number
+        deletedLines: number
+    }
+>
 export type DocsState = {
     tree?: PageTree.Root
     toc?: TOCItemType[]
     currentSlug?: string
     // docsJson?: DocsJsonType
-    filesInDraft: Record<
-        string,
-        {
-            content: string
-            githubPath: string
-            addedLines: number
-            deletedLines: number
-        }
-    >
+    filesInDraft: FilesInDraft
     isMarkdownStreaming?: boolean
     deletedPages: Array<{
         slug: string
