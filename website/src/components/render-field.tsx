@@ -182,7 +182,7 @@ export function RenderField({ field }: RenderFieldProps) {
                             <ColorPickerButton
                                 value={ctl.value as string}
                                 onChange={ctl.onChange}
-                                buttonText={field.buttonText}
+                                buttonText={field.label}
                             />
                         )
                     }}

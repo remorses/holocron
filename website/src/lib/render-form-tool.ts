@@ -7,159 +7,47 @@ import {
 } from 'docs-website/src/lib/docs-json'
 import { notifyError } from './errors'
 
-const stringReq = z.string().nullable()
-const boolReq = z.boolean().nullable()
-const numberReq = z.number().nullable()
-
-export const InputField = z
-    .object({
-        name: z.string(),
-        type: z.literal('input'),
-        label: z.string(),
-        description: stringReq,
-        placeholder: stringReq,
-        prefix: stringReq,
-        required: boolReq,
-        initialValue: stringReq,
-    })
-    .describe(
-        `should be used for one line strings, for example the name of the website or a domain`,
-    )
-
-export const PasswordField = z.object({
-    name: z.string(),
-    type: z.literal('password'),
-    label: z.string(),
-    description: stringReq,
-    placeholder: stringReq,
-    required: boolReq,
-    initialValue: stringReq,
-})
-
-export const TextareaField = z
-    .object({
-        name: z.string(),
-        type: z.literal('textarea'),
-        label: z.string(),
-        description: stringReq,
-        placeholder: stringReq,
-        required: boolReq,
-        initialValue: stringReq,
-    })
-    .describe(
-        `textarea should only be used only for multi line strings, for example a description value. NEVER use it for short values like domains`,
-    )
-
-export const NumberField = z.object({
-    name: z.string(),
-    type: z.literal('number'),
-    label: z.string(),
-    description: stringReq,
-    min: numberReq,
-    max: numberReq,
-    step: numberReq,
-    placeholder: stringReq,
-    required: boolReq,
-    initialValue: numberReq,
-})
-
-export const SelectField = z
-    .object({
-        name: z.string(),
-        type: z.literal('select'),
-        label: z.string(),
-        description: stringReq,
-        options: z
-            .array(z.object({ label: z.string(), value: z.string() }))
-            .min(1),
-        placeholder: stringReq,
-        required: boolReq,
-        initialValue: stringReq,
-    })
-    .describe(
-        `should be used only when you already know the possible options for a string value, for example for contextual actions `,
-    )
-
-export const SliderField = z
-    .object({
-        name: z.string(),
-        type: z.literal('slider'),
-        label: z.string(),
-        description: stringReq,
-        min: numberReq,
-        max: numberReq,
-        step: numberReq,
-        required: boolReq,
-        initialValue: numberReq,
-    })
-    .describe(
-        `use this for values that have a min and max, for example the width of the website, with a min of 0 and max of 3000`,
-    )
-
-export const SwitchField = z.object({
-    name: z.string(),
-    type: z.literal('switch'),
-    label: z.string(),
-    description: stringReq,
-    required: boolReq,
-    initialValue: boolReq,
-})
-
-export const ColorPickerField = z.object({
-    name: z.string(),
-    type: z.literal('color_picker'),
-    buttonText: z.string(),
-    description: stringReq,
-    required: boolReq,
-    initialValue: stringReq,
-})
-
-export const DatePickerField = z.object({
-    name: z.string(),
-    type: z.literal('date_picker'),
-    label: z.string(),
-    description: stringReq,
-    required: boolReq,
-    initialValue: stringReq,
-})
-
-export const ImageUploadField = z.object({
-    name: z.string(),
-    type: z.literal('image_upload'),
-    label: z.string(),
-    description: stringReq,
-    required: boolReq,
-})
-
-export const ButtonHrefEnum = z.enum([
-    '/',
-    '/docs',
-    '/pricing',
-    'https://github.com/your-org',
+const FieldTypeEnum = z.enum([
+    'input',
+    'password',
+    'textarea',
+    'number',
+    'select',
+    'slider',
+    'switch',
+    'color_picker',
+    'date_picker',
+    'image_upload',
+    'button',
 ])
 
-export const ButtonField = z.object({
-    name: z.string(),
-    type: z.literal('button'),
-    label: z.string(),
-    description: stringReq,
-    href: ButtonHrefEnum,
-})
-
 export const UIFieldSchema = z
-    .discriminatedUnion('type', [
-        InputField,
-        PasswordField,
-        TextareaField,
-        NumberField,
-        SelectField,
-        SliderField,
-        SwitchField,
-        ColorPickerField,
-        DatePickerField,
-        ImageUploadField,
-        ButtonField,
-    ])
+    .object({
+        name: z.string(),
+        type: FieldTypeEnum,
+        label: z.string(),
+        description: z.string().nullable(),
+        // Common fields
+        required: z.boolean().nullable(),
+        // Input/textarea/password fields
+        placeholder: z.string().nullable(),
+        prefix: z.string().nullable(),
+        initialValue: z.union([
+            z.string().nullable(),
+            z.number().nullable(),
+            z.boolean().nullable(),
+        ]),
+        // Number/slider fields
+        min: z.number().nullable(),
+        max: z.number().nullable(),
+        step: z.number().nullable(),
+        // Select field
+        options: z
+            .array(z.object({ label: z.string(), value: z.string() }))
+            .optional(),
+        // Button field
+        href: z.string().optional(),
+    })
     .describe(
         `Each field requires a name property that describes the filed updated on that docs.json scalar field, it can be ${exampleNamePathsForDocsJson.join(', ')} where {index} is a number. NEVER use [index] syntax, for example instead of domains[0] use domains.0`,
     )
