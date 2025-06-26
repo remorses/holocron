@@ -1,7 +1,10 @@
 import { z } from 'zod'
 import schemaLib from 'json-schema-library'
 const compileSchema = schemaLib.compileSchema
-import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
+import {
+    docsJsonSchema,
+    exampleNamePathsForDocsJson,
+} from 'docs-website/src/lib/docs-json'
 import { notifyError } from './errors'
 
 const stringReq = z.string().nullable()
@@ -125,19 +128,23 @@ export const ButtonField = z.object({
     description: stringReq,
 })
 
-export const UIFieldSchema = z.discriminatedUnion('type', [
-    InputField,
-    PasswordField,
-    TextareaField,
-    NumberField,
-    SelectField,
-    SliderField,
-    SwitchField,
-    ColorPickerField,
-    DatePickerField,
-    ImageUploadField,
-    ButtonField,
-])
+export const UIFieldSchema = z
+    .discriminatedUnion('type', [
+        InputField,
+        PasswordField,
+        TextareaField,
+        NumberField,
+        SelectField,
+        SliderField,
+        SwitchField,
+        ColorPickerField,
+        DatePickerField,
+        ImageUploadField,
+        ButtonField,
+    ])
+    .describe(
+        `Each field requires a name property that describes the filed updated on that docs.json scalar field, it can be ${exampleNamePathsForDocsJson.join(', ')} where {index} is a number`,
+    )
 
 export type UIField = z.infer<typeof UIFieldSchema>
 

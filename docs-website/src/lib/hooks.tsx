@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLoaderData, useNavigate } from 'react-router'
 import { useDocsState } from './docs-state'
 
 export function useDebounce<T>(value: T, delayMs = 1000): T {
@@ -66,4 +66,27 @@ export function useParentPostMessage(
             clearInterval(pingInterval)
         }
     }, [onParentPostMessage])
+}
+
+export function useDocsJson() {
+    const { site } = useLoaderData()
+
+    // Check for state overrides for docsJson
+    const docsJsonString = useDocsState(
+        (state) => state.filesInDraft['docs.json']?.content,
+    )
+
+    // Parse docsJsonString if present using useMemo for efficiency
+    const docsJson = useMemo(() => {
+        if (docsJsonString) {
+            try {
+                return JSON.parse(docsJsonString)
+            } catch (e) {
+                console.error('Failed to parse docsJson from state', e)
+                return site.docsJson as any
+            }
+        }
+        return site.docsJson as any
+    }, [docsJsonString, site.docsJson])
+    return docsJson
 }

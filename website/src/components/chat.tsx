@@ -56,7 +56,7 @@ import {
     FileUpdate,
     isParameterComplete,
 } from '../lib/edit-tool'
-import { teeAsyncIterable } from '../lib/utils'
+import { debounce, teeAsyncIterable } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import { useChatState } from './chat/chat-provider'
@@ -71,14 +71,16 @@ export default function Chat({}) {
     const { register, subscribe } = methods
 
     useEffect(() => {
+        const callback = debounce(50, async ({ values, name }) => {
+            console.log(`form values changed, sending state to docs iframe`)
+            useWebsiteState.setState({docsState})
+            await docsRpcClient.setDocsState({
+                docsJson: values as DocsJsonType,
+            })
+        })
         const unSub = subscribe({
             formState: { values: true },
-            callback: async ({ values, name }) => {
-                console.log(`form values changed, sending state to docs iframe`)
-                await docsRpcClient.setDocsState({
-                    docsJson: values as DocsJsonType,
-                })
-            },
+            callback,
         })
 
         return unSub

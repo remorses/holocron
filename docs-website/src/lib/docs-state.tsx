@@ -8,7 +8,7 @@ export type DocsState = {
     tree?: PageTree.Root
     toc?: TOCItemType[]
     currentSlug?: string
-    docsJson?: DocsJsonType
+    // docsJson?: DocsJsonType
     filesInDraft: Record<
         string,
         {

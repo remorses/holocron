@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
+import { extractNamePathsFromSchema } from './schema-path-utils'
 
 // === Primitive helper schemas ===
 const Color = z
@@ -396,7 +397,10 @@ export const DocsConfigSchema = z
 
 export type DocsJsonType = z.infer<typeof DocsConfigSchema>
 
-export const docsJsonSchema = zodToJsonSchema(
-    DocsConfigSchema,
-    'DocsConfigSchema',
+export const docsJsonSchema = zodToJsonSchema(DocsConfigSchema, {
+    $refStrategy: 'none',
+})
+
+export const exampleNamePathsForDocsJson = extractNamePathsFromSchema(
+    docsJsonSchema as any,
 )

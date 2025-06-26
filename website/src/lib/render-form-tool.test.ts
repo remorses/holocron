@@ -3,7 +3,10 @@ import { zodToJsonSchema } from 'zod-to-json-schema'
 import schemaLib from 'json-schema-library'
 const compileSchema = schemaLib.compileSchema
 import { describe, expect, test } from 'vitest'
-import { getTypeForNameInSchema } from './render-form-tool'
+import {
+    getTypeForNameInSchema,
+    RenderFormParameters,
+} from './render-form-tool'
 
 describe('compileSchema with union in array', () => {
     const zodSchema = z.object({
@@ -377,4 +380,586 @@ describe('DocsConfigSchema', () => {
               }
             `)
     })
+})
+
+test('render form tool schema is readable', () => {
+    const schema = zodToJsonSchema(RenderFormParameters, {
+        $refStrategy: 'none',
+    })
+    expect(schema).toMatchInlineSnapshot(`
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "fields": {
+            "items": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "defaultValue": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "description": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "label": {
+                      "type": "string",
+                    },
+                    "name": {
+                      "type": "string",
+                    },
+                    "placeholder": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "prefix": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "required": {
+                      "type": [
+                        "boolean",
+                        "null",
+                      ],
+                    },
+                    "type": {
+                      "const": "input",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "type",
+                    "name",
+                    "label",
+                    "placeholder",
+                    "prefix",
+                    "required",
+                    "description",
+                    "defaultValue",
+                  ],
+                  "type": "object",
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "defaultValue": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "description": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "label": {
+                      "type": "string",
+                    },
+                    "name": {
+                      "type": "string",
+                    },
+                    "placeholder": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "required": {
+                      "type": [
+                        "boolean",
+                        "null",
+                      ],
+                    },
+                    "type": {
+                      "const": "password",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "type",
+                    "name",
+                    "label",
+                    "placeholder",
+                    "required",
+                    "description",
+                    "defaultValue",
+                  ],
+                  "type": "object",
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "defaultValue": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "description": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "label": {
+                      "type": "string",
+                    },
+                    "name": {
+                      "type": "string",
+                    },
+                    "placeholder": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "required": {
+                      "type": [
+                        "boolean",
+                        "null",
+                      ],
+                    },
+                    "type": {
+                      "const": "textarea",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "type",
+                    "name",
+                    "label",
+                    "placeholder",
+                    "required",
+                    "description",
+                    "defaultValue",
+                  ],
+                  "type": "object",
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "defaultValue": {
+                      "type": [
+                        "number",
+                        "null",
+                      ],
+                    },
+                    "description": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "label": {
+                      "type": "string",
+                    },
+                    "max": {
+                      "type": [
+                        "number",
+                        "null",
+                      ],
+                    },
+                    "min": {
+                      "type": [
+                        "number",
+                        "null",
+                      ],
+                    },
+                    "name": {
+                      "type": "string",
+                    },
+                    "placeholder": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "required": {
+                      "type": [
+                        "boolean",
+                        "null",
+                      ],
+                    },
+                    "step": {
+                      "type": [
+                        "number",
+                        "null",
+                      ],
+                    },
+                    "type": {
+                      "const": "number",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "type",
+                    "name",
+                    "label",
+                    "min",
+                    "max",
+                    "step",
+                    "placeholder",
+                    "required",
+                    "description",
+                    "defaultValue",
+                  ],
+                  "type": "object",
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "defaultValue": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "description": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "label": {
+                      "type": "string",
+                    },
+                    "name": {
+                      "type": "string",
+                    },
+                    "options": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                          },
+                          "value": {
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "label",
+                          "value",
+                        ],
+                        "type": "object",
+                      },
+                      "minItems": 1,
+                      "type": "array",
+                    },
+                    "placeholder": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "required": {
+                      "type": [
+                        "boolean",
+                        "null",
+                      ],
+                    },
+                    "type": {
+                      "const": "select",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "type",
+                    "name",
+                    "label",
+                    "options",
+                    "placeholder",
+                    "required",
+                    "description",
+                    "defaultValue",
+                  ],
+                  "type": "object",
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "defaultValue": {
+                      "type": [
+                        "number",
+                        "null",
+                      ],
+                    },
+                    "description": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "label": {
+                      "type": "string",
+                    },
+                    "max": {
+                      "type": [
+                        "number",
+                        "null",
+                      ],
+                    },
+                    "min": {
+                      "type": [
+                        "number",
+                        "null",
+                      ],
+                    },
+                    "name": {
+                      "type": "string",
+                    },
+                    "required": {
+                      "type": [
+                        "boolean",
+                        "null",
+                      ],
+                    },
+                    "step": {
+                      "type": [
+                        "number",
+                        "null",
+                      ],
+                    },
+                    "type": {
+                      "const": "slider",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "type",
+                    "name",
+                    "label",
+                    "min",
+                    "max",
+                    "step",
+                    "required",
+                    "description",
+                    "defaultValue",
+                  ],
+                  "type": "object",
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "defaultValue": {
+                      "type": [
+                        "boolean",
+                        "null",
+                      ],
+                    },
+                    "description": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "label": {
+                      "type": "string",
+                    },
+                    "name": {
+                      "type": "string",
+                    },
+                    "required": {
+                      "type": [
+                        "boolean",
+                        "null",
+                      ],
+                    },
+                    "type": {
+                      "const": "switch",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "type",
+                    "name",
+                    "label",
+                    "required",
+                    "description",
+                    "defaultValue",
+                  ],
+                  "type": "object",
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "buttonText": {
+                      "type": "string",
+                    },
+                    "defaultValue": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "description": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "name": {
+                      "type": "string",
+                    },
+                    "required": {
+                      "type": [
+                        "boolean",
+                        "null",
+                      ],
+                    },
+                    "type": {
+                      "const": "color_picker",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "type",
+                    "name",
+                    "buttonText",
+                    "required",
+                    "description",
+                    "defaultValue",
+                  ],
+                  "type": "object",
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "defaultValue": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "description": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "label": {
+                      "type": "string",
+                    },
+                    "name": {
+                      "type": "string",
+                    },
+                    "required": {
+                      "type": [
+                        "boolean",
+                        "null",
+                      ],
+                    },
+                    "type": {
+                      "const": "date_picker",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "type",
+                    "name",
+                    "label",
+                    "required",
+                    "description",
+                    "defaultValue",
+                  ],
+                  "type": "object",
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "description": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "label": {
+                      "type": "string",
+                    },
+                    "name": {
+                      "type": "string",
+                    },
+                    "required": {
+                      "type": [
+                        "boolean",
+                        "null",
+                      ],
+                    },
+                    "type": {
+                      "const": "image_upload",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "type",
+                    "name",
+                    "label",
+                    "required",
+                    "description",
+                  ],
+                  "type": "object",
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "description": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "href": {
+                      "enum": [
+                        "/",
+                        "/docs",
+                        "/pricing",
+                        "https://github.com/your-org",
+                      ],
+                      "type": "string",
+                    },
+                    "label": {
+                      "type": "string",
+                    },
+                    "name": {
+                      "type": "string",
+                    },
+                    "type": {
+                      "const": "button",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "type",
+                    "name",
+                    "label",
+                    "href",
+                    "description",
+                  ],
+                  "type": "object",
+                },
+              ],
+              "description": "Each field requires a name property that describes the filed updated on that docs.json scalar field, it can be name, navTopLinks.{index}.anchor, navTopLinks.{index}.icon, navTopLinks.{index}.color.light, navTopLinks.{index}.color.dark, navTopLinks.{index}.hidden, navTopLinks.{index}.href, description, logo.light, logo.dark, logo.href, favicon.light, favicon.dark, navbar.links.{index}.label, navbar.links.{index}.href, navbar.links.{index}.icon, navbar.primary.type, navbar.primary.label, navbar.primary.href, navbar.primary.type, navbar.primary.href, footer.socials, footer.links.{index}.header, footer.links.{index}.items.{index}.label, footer.links.{index}.items.{index}.href, seo.metatags, seo.indexing, redirects.{index}.source, redirects.{index}.destination, redirects.{index}.permanent, banner.content, banner.dismissible, contextual.options.{index}, cssVariables, domains.{index} where {index} is a number",
+            },
+            "type": "array",
+          },
+        },
+        "required": [
+          "fields",
+        ],
+        "type": "object",
+      }
+    `)
 })

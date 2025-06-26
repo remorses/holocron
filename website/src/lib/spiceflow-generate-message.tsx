@@ -26,6 +26,26 @@ import {
     createRenderFormExecute,
 } from './render-form-tool'
 import { mdxRegex } from './utils'
+import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
+
+function createSystemPrompt({}) {
+    return dedent`
+  This is a documentation website using .md and .mdx files
+
+  You are a professional content writer with the task of improving this documentation website and follow the user tasks
+
+  You have access to an edit tool to edit files in the project. You can use another tool to list all the files in the project.
+
+  You can always edit a top level docs.json file, this file has the following json schema:
+
+  \`\`\`json title="docs.json schema"
+  ${JSON.stringify(docsJsonSchema, null, 2)}
+  \`\`\`
+
+  To edit the docs.json file you can also use a render_form tool to display nice UI forms to the user, this method is preferred.
+
+  `
+}
 
 export const generateMessageApp = new Spiceflow().state('userId', '').route({
     method: 'POST',
@@ -106,11 +126,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             messages: [
                 {
                     role: 'system',
-                    content: dedent`
-                    This is a documentation website using .md and .mdx files
-
-                    You are a professional content writer with the task of improving this documentation website and follow the user tasks
-                    `,
+                    content: createSystemPrompt({}),
                 },
                 ...messages.filter((x) => x.role !== 'system'),
             ],
@@ -133,15 +149,21 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                         const allFiles = await getTabFilesWithoutContents({
                             tabId,
                         })
+                        let filePaths = allFiles.map((x) => {
+                            const path = x.githubPath
+                            let title = ''
+                            if (x.type === 'page') {
+                                title = x.title
+                            }
+                            return { path, title }
+                        })
+                        filePaths.push({
+                            path: 'docs.json',
+                            title: 'Configuration file for the website. Here you can change most of the website configuration including CSS variables injected in the site.',
+                        })
+                        // filePaths.push({ path: 'styles.css', title: 'The CSS styles for the website. Only update this file for advanced CSS customisations' })
                         return printDirectoryTree({
-                            filePaths: allFiles.map((x) => {
-                                const path = x.githubPath
-                                let title = ''
-                                if (x.type === 'page') {
-                                    title = x.title
-                                }
-                                return { path, title }
-                            }),
+                            filePaths,
                         })
                     },
                 }),

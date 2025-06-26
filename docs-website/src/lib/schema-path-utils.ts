@@ -15,7 +15,7 @@ import type { JSONSchema7 } from 'json-schema'
      • arrays              →  dot-notation with numeric index (items.0.name)
      • unions (oneOf/anyOf/allOf) →  union of all alternatives
    ------------------------------------------------------------------ */
-export function extractPaths(schema: JSONSchema7, root = ''): string[] {
+export function extractNamePathsFromSchema(schema: JSONSchema7, root = ''): string[] {
     const paths: string[] = []
 
     const walk = (node: JSONSchema7, prefix: string) => {
@@ -50,58 +50,4 @@ export function extractPaths(schema: JSONSchema7, root = ''): string[] {
 
     walk(schema, root)
     return paths.filter((p) => p !== '$schema')
-}
-
-/* ------------------------------------------------------------------
-   applyPath()
-   ------------------------------------------------------------------
-   Deep-gets or deep-sets an object via a form name.  If `value`
-   is provided we *set* the path; otherwise we *get* the current
-   value.  Throws on malformed paths or impossible traversals.
-   ------------------------------------------------------------------ */
-export function applyPath<T = unknown>(
-    target: Record<string, any>,
-    name: string,
-    value?: T,
-): T {
-    // tokenise:  foo.bar.0.baz  →  ["foo","bar","0","baz"]
-    const tokens = name.split('.').filter(Boolean)
-
-    if (!tokens.length) throw new Error('Invalid path')
-
-    let ptr: any = target
-    for (let i = 0; i < tokens.length; i++) {
-        const key = tokens[i]
-        const isNumeric = /^\d+$/.test(key)
-
-        // last token →  set or get
-        if (i === tokens.length - 1) {
-            if (value !== undefined) {
-                if (isNumeric) {
-                    if (!Array.isArray(ptr))
-                        throw new Error('Path expects array')
-                    ptr[Number(key)] = value
-                } else {
-                    ptr[key] = value
-                }
-            }
-            return isNumeric ? ptr[Number(key)] : ptr[key]
-        }
-
-        // walk/create next level
-        const nextKey = tokens[i + 1]
-        const nextIsNumeric = /^\d+$/.test(nextKey)
-
-        if (isNumeric) {
-            if (!Array.isArray(ptr)) throw new Error('Path expects array')
-            ptr[Number(key)] ??= nextIsNumeric ? [] : {}
-            ptr = ptr[Number(key)]
-        } else {
-            ptr[key] ??= nextIsNumeric ? [] : {}
-            ptr = ptr[key]
-        }
-    }
-
-    // never reached
-    throw new Error('Unknown traversal error')
 }

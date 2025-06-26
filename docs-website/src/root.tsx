@@ -12,9 +12,9 @@ import {
 } from 'react-router'
 import type { Route } from './+types/root'
 import './app.css'
-import { useParentPostMessage } from './lib/hooks'
+import { useDocsJson, useParentPostMessage } from './lib/hooks'
 import { env } from './lib/env'
-import { startTransition, useState } from 'react'
+import { startTransition, useMemo, useState } from 'react'
 import { IframeRpcMessage, useDocsState } from './lib/docs-state'
 import { isInsidePreviewIframe } from './lib/utils'
 import { prisma } from 'db'
@@ -204,7 +204,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     content='width=device-width, initial-scale=1'
                 />
                 <Meta />
-                <CSSVariables />
+
                 <script
                     crossOrigin='anonymous'
                     src='//unpkg.com/react-scan/dist/auto.global.js'
@@ -220,13 +220,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     )
 }
 
-function CSSVariables() {
+function CSSVariables({ docsJson }) {
     const { site } = useLoaderData<typeof loader>()
-
-    // Check for state overrides for docsJson
-    const docsJson = useDocsState(
-        (state) => state.docsJson || (site.docsJson as any),
-    )
 
     const cssVariables = docsJson?.cssVariables
 
@@ -310,12 +305,13 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
     const { site, i18n } = loaderData
     const locale = site.defaultLocale
 
+    const docsJson = useDocsJson()
+
     // Check for state overrides
-    const { tree, docsJson } = useDocsState(
+    const { tree } = useDocsState(
         useShallow((state) => {
             return {
                 tree: state.tree || loaderData.tree,
-                docsJson: state.docsJson || (site.docsJson as any),
             }
         }),
     )
@@ -371,7 +367,7 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
             nav={{
                 mode: navMode,
                 transparentMode: navTransparentMode,
-                title: <Logo />,
+                title: <Logo docsJson={docsJson} />,
             }}
             tabMode={navTabMode}
             sidebar={{
@@ -384,6 +380,7 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
                 links,
             }}
         >
+            <CSSVariables docsJson={docsJson} />
             {children}
         </DocsLayout>
     )
@@ -431,40 +428,30 @@ function Banner({ banner }: { banner?: any }) {
     )
 }
 
-function Logo() {
+function Logo({ docsJson }) {
     const { site } = useLoaderData<typeof loader>()
     const { theme, resolvedTheme } = useTheme()
 
-    // Check for state overrides for docsJson
-    const { docsJson } = useDocsState(
-        useShallow((state) => {
-            return {
-                docsJson: state.docsJson || (site.docsJson as any),
-            }
-        }),
-    )
-
-    const docsConfig = docsJson
     const currentTheme = resolvedTheme || theme || 'light'
 
-    if (!docsConfig.logo) {
+    if (!docsJson.logo) {
         return (
             <span className='font-medium [.uwu_&]:hidden max-md:hidden'>
-                {docsConfig?.name || site.name || 'Documentation'}
+                {docsJson?.name || site.name || 'Documentation'}
             </span>
         )
     }
 
     const logoImageUrl = (() => {
-        if (typeof docsConfig.logo === 'string') {
-            return docsConfig.logo
+        if (typeof docsJson.logo === 'string') {
+            return docsJson.logo
         }
 
-        if (docsConfig.logo?.dark && currentTheme === 'dark') {
-            return docsConfig.logo.dark
+        if (docsJson.logo?.dark && currentTheme === 'dark') {
+            return docsJson.logo.dark
         }
 
-        return docsConfig.logo?.light || ''
+        return docsJson.logo?.light || ''
     })()
 
     return (

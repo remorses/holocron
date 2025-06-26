@@ -35,6 +35,7 @@ import {
     MessageCircleIcon,
     ExternalLinkIcon,
 } from 'lucide-react'
+import { useDocsJson } from '../lib/hooks'
 
 export function meta({ data }: Route.MetaArgs) {
     if (!data) return {}
@@ -70,11 +71,12 @@ export function meta({ data }: Route.MetaArgs) {
     })()
 
     // Custom meta tags from docsJson.seo.metatags
-    const customMetaTags = docsConfig?.seo?.metatags ?
-        Object.entries(docsConfig.seo.metatags).map(([name, content]) => ({
-            name,
-            content,
-        })) : []
+    const customMetaTags = docsConfig?.seo?.metatags
+        ? Object.entries(docsConfig.seo.metatags).map(([name, content]) => ({
+              name,
+              content,
+          }))
+        : []
 
     return [
         {
@@ -96,14 +98,30 @@ export function meta({ data }: Route.MetaArgs) {
             : []),
         ...(favicon
             ? [
-                  { rel: 'icon', href: favicon, media: '(prefers-color-scheme: light)' },
-                  { rel: 'apple-touch-icon', href: favicon, media: '(prefers-color-scheme: light)' },
+                  {
+                      rel: 'icon',
+                      href: favicon,
+                      media: '(prefers-color-scheme: light)',
+                  },
+                  {
+                      rel: 'apple-touch-icon',
+                      href: favicon,
+                      media: '(prefers-color-scheme: light)',
+                  },
               ]
             : []),
         ...(faviconDark
             ? [
-                  { rel: 'icon', href: faviconDark, media: '(prefers-color-scheme: dark)' },
-                  { rel: 'apple-touch-icon', href: faviconDark, media: '(prefers-color-scheme: dark)' },
+                  {
+                      rel: 'icon',
+                      href: faviconDark,
+                      media: '(prefers-color-scheme: dark)',
+                  },
+                  {
+                      rel: 'apple-touch-icon',
+                      href: faviconDark,
+                      media: '(prefers-color-scheme: dark)',
+                  },
               ]
             : []),
     ].filter(Boolean)
@@ -160,7 +178,9 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     const docsJson: DocsJsonType = site.docsJson as any
     if (docsJson?.redirects) {
         const currentPath = '/' + (params['*'] || '')
-        const redirect = docsJson.redirects.find(r => r.source === currentPath)
+        const redirect = docsJson.redirects.find(
+            (r) => r.source === currentPath,
+        )
         if (redirect) {
             const status = redirect.permanent ? 301 : 302
             throw new Response(null, {
@@ -299,6 +319,8 @@ function PageContent(props: Route.ComponentProps) {
     const githubUrl = `https://github.com/${owner}/${repo}`
     const tableOfContentStyle = 'clerk'
 
+    const docsJson = useDocsJson()
+
     return (
         <PageRoot
             toc={{
@@ -322,12 +344,12 @@ function PageContent(props: Route.ComponentProps) {
                 <div className='flex flex-row gap-2 items-center border-b pb-6'>
                     <LLMCopyButton
                         slug={slugs}
-                        contextual={loaderData.docsJson?.contextual}
+                        contextual={docsJson?.contextual}
                     />
                     <ViewOptions
                         markdownUrl={`${slug}.mdx`}
                         githubUrl={`https://github.com/${loaderData.githubOwner}/${loaderData.githubRepo}/blob/${loaderData.githubBranch}/apps/docs/content/docs/${githubPath}`}
-                        contextual={loaderData.docsJson?.contextual}
+                        contextual={docsJson?.contextual}
                     />
                 </div>
 
@@ -337,7 +359,10 @@ function PageContent(props: Route.ComponentProps) {
                 <div className='grow'></div>
                 <Rate
                     onRateAction={async (url, feedback) => {
-                        const apiUrl = new URL('/api/submitRateFeedback', process.env.PUBLIC_URL || 'https://fumabase.com')
+                        const apiUrl = new URL(
+                            '/api/submitRateFeedback',
+                            process.env.PUBLIC_URL || 'https://fumabase.com',
+                        )
                         const response = await fetch(apiUrl.toString(), {
                             method: 'POST',
                             headers: {
@@ -365,7 +390,7 @@ function PageContent(props: Route.ComponentProps) {
                     <PoweredBy />
                 </div>
 
-                <Footer footer={loaderData.docsJson?.footer} />
+                <Footer footer={docsJson?.footer} />
                 <PageFooter />
             </PageArticle>
 
