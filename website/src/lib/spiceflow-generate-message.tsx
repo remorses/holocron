@@ -71,6 +71,13 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                         extension: path.extname(x.githubPath),
                     })
                 }
+                if (x.githubPath.endsWith('.json')) {
+                    try {
+                        JSON.parse(x.content)
+                    } catch (e) {
+                        throw new Error('Invalid JSON in file content')
+                    }
+                }
             },
             async getPageContent({ githubPath: path }) {
                 const page = await prisma.markdownPage.findFirst({
