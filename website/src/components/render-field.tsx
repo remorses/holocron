@@ -21,8 +21,6 @@ type RenderFieldProps = {
     field: UIField
 }
 
-
-
 export function RenderField({ field }: RenderFieldProps) {
     const { control, getValues, register, setValue } = useFormContext()
 
@@ -85,7 +83,7 @@ export function RenderField({ field }: RenderFieldProps) {
                 <Textarea
                     key={key}
                     placeholder={field.placeholder || ''}
-                    {...register(field.name, {})}
+                    {...register(field.name)}
                 />
             )
         case 'select':
@@ -110,7 +108,7 @@ export function RenderField({ field }: RenderFieldProps) {
                                         />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {field.options.map((opt) => {
+                                        {field.options?.map((opt) => {
                                             return (
                                                 <SelectItem
                                                     key={opt.value}

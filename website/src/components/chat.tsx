@@ -1,4 +1,5 @@
 'use client'
+
 import { RiAttachment2 } from '@remixicon/react'
 import { createIdGenerator, UIMessage } from 'ai'
 import { Markdown } from 'docs-website/src/lib/markdown'
@@ -74,11 +75,10 @@ function keyForDocsJson({ chatId }) {
     return `docs.json-${chatId}`
 }
 
-const setDocsJsonState = debounce(16, ({ values, chatId }) => {
+const setDocsJsonState = ({ values, previousJsonString, chatId }) => {
     console.log(`form values changed, sending state to docs iframe`)
     const githubPath = 'docs.json'
     const filesInDraft = useWebsiteState.getState().filesInDraft || {}
-    const previousJsonString = filesInDraft[githubPath]?.content || ''
 
     const newJson = JSON.stringify(
         {
@@ -89,6 +89,7 @@ const setDocsJsonState = debounce(16, ({ values, chatId }) => {
         null,
         2,
     )
+    console.log(`updating docs.json`, newJson)
 
     const newFilesInDraft: FilesInDraft = {
         ...useWebsiteState.getState().filesInDraft,
@@ -98,12 +99,12 @@ const setDocsJsonState = debounce(16, ({ values, chatId }) => {
             ...calculateLineChanges(previousJsonString, newJson),
         },
     }
-    localStorage.setItem(keyForDocsJson({ chatId }), newJson)
     useWebsiteState.setState({ filesInDraft: newFilesInDraft })
+    localStorage.setItem(keyForDocsJson({ chatId }), newJson)
     docsRpcClient.setDocsState({
         filesInDraft: newFilesInDraft,
     })
-})
+}
 
 export default function Chat({}) {
     const { scrollRef, contentRef } = useStickToBottom({
@@ -116,6 +117,13 @@ export default function Chat({}) {
     })
     const { reset, subscribe } = methods
 
+    const { site } = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId',
+    ) as SiteRoute.ComponentProps['loaderData']
+    const previousJsonString = useMemo(() => {
+        return JSON.stringify(site.docsJson, null, 2)
+    }, [site.docsJson])
+
     useEffect(() => {
         const persistedValues =
             typeof localStorage !== 'undefined'
@@ -123,7 +131,7 @@ export default function Chat({}) {
                 : undefined
         const docsJsonString =
             useWebsiteState.getState()?.filesInDraft['docs.json']?.content
-        const data = safeJsonParse(persistedValues || docsJsonString) || {}
+        const data = safeJsonParse(persistedValues || docsJsonString) || null
         if (persistedValues) {
             console.log(`localStorage docs.json: `, data)
         } else {
@@ -132,13 +140,13 @@ export default function Chat({}) {
         if (!data) return
 
         reset(data, { keepDefaultValues: true })
-        setDocsJsonState({ values: data, chatId })
+        setDocsJsonState({ values: data, previousJsonString, chatId })
 
         // setValue('root', data, {
         //     shouldDirty: true,
         //     shouldTouch: true,
         // })
-    }, [chatId])
+    }, [chatId, previousJsonString])
 
     useEffect(() => {
         const unSub = subscribe({
@@ -147,12 +155,13 @@ export default function Chat({}) {
             callback: ({ values, defaultValues }) =>
                 setDocsJsonState({
                     values: { ...defaultValues, ...values },
+                    previousJsonString,
                     chatId,
                 }),
         })
 
         return unSub
-    }, [chatId])
+    }, [chatId, previousJsonString])
 
     return (
         <FormProvider {...methods}>
