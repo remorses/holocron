@@ -86,17 +86,13 @@ export async function checkGitHubIsInstalled({ installationId }) {
 
 export async function getOctokit({ installationId }): Promise<Octokit> {
     installationId = Number(installationId)
-    const cached = installationsCache.get(installationId)
-    if (cached && Date.now() - cached.timestamp < 1000 * 60 * 40) {
-        return cached.octokit
-    }
     const app = getGithubApp()
 
     // https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation
     const octokit = await app
         .getInstallationOctokit(installationId)
         .catch(handleOctokitError(installationId))
-    installationsCache.set(installationId, { octokit, timestamp: Date.now() })
+    // installationsCache.set(installationId, { octokit, timestamp: Date.now() })
     return octokit
 }
 
