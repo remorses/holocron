@@ -49,11 +49,6 @@ export function RenderField({ field }: RenderFieldProps) {
         case 'input':
             return (
                 <div key={key} className='flex items-center space-x-2'>
-                    {field.prefix && (
-                        <span className='text-sm text-muted-foreground'>
-                            {field.prefix}
-                        </span>
-                    )}
                     <Input
                         placeholder={field.placeholder || ''}
                         {...register(field.name, {})}

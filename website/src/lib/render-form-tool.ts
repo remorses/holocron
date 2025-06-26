@@ -31,7 +31,6 @@ export const UIFieldSchema = z
         required: z.boolean().nullable(),
         // Input/textarea/password fields
         placeholder: z.string().nullable(),
-        prefix: z.string().nullable(),
         initialValue: z.union([
             z.string().nullable(),
             z.number().nullable(),

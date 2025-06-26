@@ -36,11 +36,11 @@ export default defineConfig({
         !process.env.VITEST && reactRouterHonoServer(),
         !process.env.VITEST ? reactRouter() : react(),
         tsconfigPaths(),
-        viteExternalsPlugin({ externals: ['pg'] }),
+        viteExternalsPlugin({ externals: ['pg', 'shiki', 'json-schema-library'] }),
         !process.env.VITEST && tailwindcss(),
     ],
 
-    legacy: {
-        proxySsrExternalModules: true,
-    },
+    // legacy: {
+    //     proxySsrExternalModules: true,
+    // },
 })
