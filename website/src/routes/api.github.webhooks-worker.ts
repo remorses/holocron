@@ -78,7 +78,11 @@ async function updatePagesFromCommits(
     const { installationId, owner, repoName, commits } = args
     const site = await prisma.site.findFirst({
         where: {
-            installationId,
+            githubInstallations: {
+                some: {
+                    installationId,
+                },
+            },
             githubOwner: owner,
             githubRepo: repoName,
         },

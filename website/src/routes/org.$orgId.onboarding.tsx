@@ -57,7 +57,12 @@ export async function action({ request, params }: Route.ActionArgs) {
         // Find the GitHub installation for the user's organization
         const githubInstallation = await prisma.githubInstallation.findFirst({
             where: {
-                orgId,
+                orgs: {
+                    some: {
+                        orgId,
+                        appId: env.GITHUB_APP_ID,
+                    },
+                },
                 accountLogin: githubAccountLogin,
             },
         })
@@ -103,7 +108,12 @@ export async function action({ request, params }: Route.ActionArgs) {
                     orgId: orgId,
                     githubOwner: owner,
                     githubRepo: repo,
-                    installationId: githubInstallation.installationId,
+                    githubInstallations: {
+                        create: {
+                            installationId: githubInstallation.installationId,
+                            appId: env.GITHUB_APP_ID!,
+                        },
+                    },
                     domains: {
                         create: {
                             host: internalHost,

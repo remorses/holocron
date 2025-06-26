@@ -134,8 +134,9 @@ model Org {
   invitationLinks OrgInviteLink[]
   users           OrgsUsers[]
 
-  subscriptions Subscription[]
-  sites         Site[]
+  subscriptions       Subscription[]
+  sites               Site[]
+  githubInstallations OrgGithubInstallation[]
 }
 
 model Subscription {
@@ -219,24 +220,24 @@ model Site {
 
   org Org @relation(fields: [orgId], references: [orgId], onDelete: Cascade)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now())
 
   trieveDatasetId  String?
   trieveReadApiKey String?
 
-  tabs               Tab[]
-  domains            Domain[]
-  githubInstallation GithubInstallation? @relation(fields: [installationId, orgId], references: [installationId, orgId])
-  installationId     Int?
-  docsJson           Json                @default("{}")
-  cssStyles          String              @default("")
-  githubOwner        String
-  githubBranch       String              @default("main")
-  githubRepo         String
-  mediaAssets        MediaAsset[]
-  locales            SiteEnabledLocale[]
-  chats              Chat[]
-  PageFeedback       PageFeedback[]
+  tabs Tab[]
+
+  docsJson            Json                     @default("{}")
+  cssStyles           String                   @default("")
+  githubOwner         String
+  githubBranch        String                   @default("main")
+  githubRepo          String
+  mediaAssets         MediaAsset[]
+  locales             SiteEnabledLocale[]
+  chats               Chat[]
+  feedback            PageFeedback[]
+  domains             Domain[]
+  githubInstallations SiteGithubInstallation[]
 
   @@index([createdAt])
 }
@@ -282,20 +283,42 @@ model Domain {
   // lastCheck        DateTime?
 }
 
+model SiteGithubInstallation {
+  installationId Int
+  appId          String
+  siteId         String
+  site           Site               @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
+  github         GithubInstallation @relation(fields: [installationId, appId], references: [installationId, appId], onDelete: Cascade)
+
+  @@id([installationId, appId, siteId])
+}
+
+model OrgGithubInstallation {
+  installationId Int
+  appId          String
+  orgId          String
+  org            Org                @relation(fields: [orgId], references: [orgId], onDelete: Cascade)
+  github         GithubInstallation @relation(fields: [installationId, appId], references: [installationId, appId], onDelete: Cascade)
+
+  @@id([installationId, appId, orgId])
+}
+
 model GithubInstallation {
   installationId   Int
-  accountLogin     String            @default("")
+  accountLogin     String   @default("")
   appId            String
-  accountAvatarUrl String            @default("")
-  createdAt        DateTime          @default(now())
-  orgId            String
-  oauthToken       String?
-  status           String            @default("active")
-  accountType      GithubAccountType @default(USER)
-  memberLogins     String[]          @default([])
-  sites            Site[]
+  accountAvatarUrl String   @default("")
+  createdAt        DateTime @default(now())
 
-  @@id([installationId, orgId])
+  oauthToken   String?
+  status       String            @default("active")
+  memberLogins String[]          @default([])
+  accountType  GithubAccountType @default(USER)
+
+  sites SiteGithubInstallation[]
+  orgs  OrgGithubInstallation[]
+
+  @@id([installationId, appId])
 }
 
 enum GithubAccountType {
@@ -382,7 +405,7 @@ model PageFeedback {
   siteId        String
   site          Site        @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
   url           String      @db.Text
-  opinion       PageOpinion
+  opinion       PageOpinion @default(good)
   message       String?     @db.Text
   discussionUrl String
 

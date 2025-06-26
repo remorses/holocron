@@ -143,7 +143,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
             where: {
                 status: 'active',
                 appId: env.GITHUB_APP_ID,
-                orgId,
+                orgs: {
+                    some: {
+                        orgId,
+                    },
+                },
+                // orgId,
             },
         }),
     ])
@@ -158,7 +163,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
                 }
                 console.log('installation check failed, removing', {
                     installationId: installation.installationId,
-                    orgId: installation.orgId,
                 })
                 // await prisma.githubInstallation.delete({
                 //     where: {

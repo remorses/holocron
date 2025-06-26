@@ -41,7 +41,10 @@ import {
     createRenderFormExecute,
     RenderFormParameters,
 } from './render-form-tool'
-import { generateMessageApp, getPageContent } from './spiceflow-generate-message'
+import {
+    generateMessageApp,
+    getPageContent,
+} from './spiceflow-generate-message'
 
 // Create the main spiceflow app with comprehensive routes and features
 export const app = new Spiceflow({ basePath: '/api' })
@@ -121,7 +124,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             }
             const site = await prisma.site.findFirst({
                 where: { siteId, org: { users: { some: { userId } } } },
-                include: { tabs: true },
+                include: { tabs: true, githubInstallations: true },
             })
 
             if (!site) {
@@ -134,8 +137,14 @@ export const app = new Spiceflow({ basePath: '/api' })
             const tabId = tab.tabId
             const orgId = site.orgId
             const name = site.name
+            const installation = site.githubInstallations.find(
+                (x) => x.appId === env.GITHUB_APP_ID,
+            )
+            const installationId = installation?.installationId
+            if (!installationId)
+                throw new Error(`no installationId found for site`)
             const pages = filesFromGithub({
-                installationId: site.installationId,
+                installationId,
                 owner: site.githubOwner,
                 repo: site.githubRepo,
                 signal: request.signal,
@@ -311,7 +320,11 @@ export const app = new Spiceflow({ basePath: '/api' })
                     // },
                 },
                 include: {
-                    githubInstallation: true,
+                    githubInstallations: {
+                        include: {
+                            github: true,
+                        },
+                    },
                 },
             })
 
@@ -322,11 +335,14 @@ export const app = new Spiceflow({ basePath: '/api' })
             const DocsCategory = 'Docs Feedback'
             let discussionUrl = `https://github.com/${site.githubOwner}/${site.githubRepo}/discussions`
 
+            const githubInstallation = site.githubInstallations.find(
+                (x) => x.appId === env.GITHUB_APP_ID,
+            )
             // Create GitHub discussion using GraphQL API
-            if (site.githubInstallation?.oauthToken) {
+            if (githubInstallation?.github?.oauthToken) {
                 try {
                     const octokit = await getOctokit({
-                        installationId: site.githubInstallation.installationId,
+                        installationId: githubInstallation.installationId,
                     })
 
                     // Get repository info and discussion categories
@@ -481,7 +497,11 @@ export const app = new Spiceflow({ basePath: '/api' })
                     },
                 },
                 include: {
-                    githubInstallation: true,
+                    githubInstallations: {
+                        include: {
+                            github: true,
+                        },
+                    },
                 },
             })
 
@@ -489,11 +509,14 @@ export const app = new Spiceflow({ basePath: '/api' })
                 throw new AppError('Site not found or access denied')
             }
 
-            if (!site.githubInstallation) {
+            const githubInstallation = site.githubInstallations.find(
+                (x) => x.appId === env.GITHUB_APP_ID,
+            )
+            if (!githubInstallation) {
                 throw new AppError('GitHub installation not found')
             }
 
-            const installationId = site.githubInstallation.installationId
+            const installationId = githubInstallation.installationId
             const octokit = await getOctokit({ installationId })
 
             const owner = site.githubOwner
@@ -516,7 +539,7 @@ export const app = new Spiceflow({ basePath: '/api' })
 
             try {
                 const result = await pushToPrOrBranch({
-                    auth: site.githubInstallation.oauthToken || '',
+                    auth: githubInstallation?.github.oauthToken || '',
                     files,
                     owner,
                     repo,
@@ -567,7 +590,11 @@ export const app = new Spiceflow({ basePath: '/api' })
                         },
                     },
                     include: {
-                        githubInstallation: true,
+                        githubInstallations: {
+                            include: {
+                                github: true,
+                            },
+                        },
                     },
                 }),
                 prisma.chat.findFirst({
@@ -584,17 +611,13 @@ export const app = new Spiceflow({ basePath: '/api' })
             if (!chat) {
                 throw new AppError('Chat not found or access denied')
             }
-            if (!site.githubInstallation) {
+            const githubInstallation = site.githubInstallations.find(
+                (x) => x.appId === env.GITHUB_APP_ID,
+            )
+            if (!githubInstallation) {
                 throw new AppError('GitHub installation for site not found')
             }
-            const installationId = site.githubInstallation.installationId
-
-            // Get GitHub installation
-            const githubInstallation = site.githubInstallation
-
-            if (!githubInstallation) {
-                throw new AppError('Missing GitHub installation')
-            }
+            const installationId = githubInstallation.installationId
 
             const octokit = await getOctokit({ installationId })
 
@@ -629,7 +652,7 @@ export const app = new Spiceflow({ basePath: '/api' })
 
                 // Push to the existing PR branch using pushToPrOrBranch
                 const result = await pushToPrOrBranch({
-                    auth: site.githubInstallation.oauthToken || '',
+                    auth: githubInstallation.github.oauthToken || '',
                     files,
                     owner: site.githubOwner,
                     repo: site.githubRepo,

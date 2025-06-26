@@ -43,9 +43,9 @@ export const UIFieldSchema = z
         // Select field
         options: z
             .array(z.object({ label: z.string(), value: z.string() }))
-            .optional(),
+            .nullable(),
         // Button field
-        href: z.string().optional(),
+        href: z.string().nullable(),
     })
     .describe(
         `Each field requires a name property that describes the filed updated on that docs.json scalar field, it can be ${exampleNamePathsForDocsJson.join(', ')} where {index} is a number. NEVER use [index] syntax, for example instead of domains[0] use domains.0`,

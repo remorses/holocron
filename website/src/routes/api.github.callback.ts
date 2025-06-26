@@ -98,7 +98,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
     let orgId = userId
     const createInstallation: Prisma.GithubInstallationUncheckedCreateInput = {
         installationId,
-        orgId,
+        // orgId,
+        orgs: {
+            connectOrCreate: {
+                where: {
+                    installationId_appId_orgId: {
+                        installationId,
+                        appId,
+                        orgId,
+                    },
+                },
+                create: {
+                    orgId,
+                },
+            },
+        },
         accountLogin,
         accountAvatarUrl: installation.data.account?.avatar_url || '',
         oauthToken: token,
@@ -106,12 +120,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
         accountType,
         memberLogins: members,
     }
+    installation.data.id
     await Promise.all([
         prisma.githubInstallation.upsert({
             where: {
-                installationId_orgId: {
+                installationId_appId: {
                     installationId,
-                    orgId,
+                    appId,
                 },
             },
             create: createInstallation,

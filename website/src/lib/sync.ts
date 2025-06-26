@@ -195,8 +195,12 @@ export async function syncFiles({
         datasetId: trieveDatasetId || undefined,
     })
     if (!trieveDatasetId) {
-        const { datasetId } = await createTrieveDataset({ siteId, name })
-        trieve.datasetId = datasetId
+        try {
+            const { datasetId } = await createTrieveDataset({ siteId, name })
+            trieve.datasetId = datasetId
+        } catch (e) {
+            notifyError(e)
+        }
     }
     const cacheTagsToInvalidate = [] as string[]
     const processedSlugs = new Set<string>()
@@ -361,12 +365,14 @@ export async function syncFiles({
                         }),
                     chunksToSync.length >= chunkSize &&
                         (async () => {
-                            console.log(
-                                `Syncing ${chunkSize} chunks to Trieve...`,
-                            )
-                            await trieve.createChunk(
-                                chunksToSync.slice(0, chunkSize),
-                            )
+                            if (trieve.datasetId) {
+                                console.log(
+                                    `Syncing ${chunkSize} chunks to Trieve...`,
+                                )
+                                await trieve.createChunk(
+                                    chunksToSync.slice(0, chunkSize),
+                                )
+                            }
                             console.log('Chunks synced to Trieve successfully.')
                             chunksToSync = chunksToSync.slice(chunkSize)
                         })(),
@@ -397,7 +403,9 @@ export async function syncFiles({
             `Flushing remaining ${chunksToSync.length} chunks to Trieve...`,
         )
         const groups = groupByN(chunksToSync, chunkSize)
-        await Promise.all(groups.map((group) => trieve.createChunk(group)))
+        if (trieve.datasetId) {
+            await Promise.all(groups.map((group) => trieve.createChunk(group)))
+        }
         console.log('Remaining chunks synced to Trieve successfully.')
     } else {
         console.log('No remaining chunks to sync to Trieve.')
