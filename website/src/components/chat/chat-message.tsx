@@ -245,7 +245,7 @@ export function ChatUserMessage({
 
     return (
         <article className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end'>
-            <div className='max-w-full relative group/message bg-muted px-4 py-3 rounded-xl'>
+            <div className='max-w-full relative group/message bg-muted px-4 py-2 rounded-xl'>
                 <div className='absolute hidden group-hover/message:block -top-2 -right-2'>
                     <Tooltip>
                         <TooltipTrigger asChild>
@@ -266,7 +266,7 @@ export function ChatUserMessage({
                         </TooltipContent>
                     </Tooltip>
                 </div>
-                <div className='prose w-full max-w-full dark:prose-invert'>
+                <div className='full max-w-full'>
                     {children}
                 </div>
             </div>

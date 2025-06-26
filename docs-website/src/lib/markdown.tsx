@@ -29,7 +29,7 @@ export const Markdown = function MarkdownRender(props: MarkdownRendererProps) {
         return <MarkdownRuntimeComponent {...props} />
     }
     return (
-        <div className={cn('prose dark:prose-invert', props.className)}>
+        <div className={cn('contents prose dark:prose-invert', props.className)}>
             <SafeMdxRenderer
                 customTransformer={customTransformer}
                 components={mdxComponents}

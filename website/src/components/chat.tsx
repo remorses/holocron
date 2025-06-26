@@ -61,6 +61,7 @@ import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import { useChatState } from './chat/chat-provider'
 import { ChatSuggestionButton } from './chat/chat-suggestion'
+import { AnimatePresence, motion } from 'unframer'
 
 export default function Chat({}) {
     const { scrollRef, contentRef } = useStickToBottom({
@@ -104,6 +105,7 @@ function WelcomeMessage() {
     if (messages.length) return null
     return (
         <ChatAssistantMessage
+            className='-mt-[160px] px-3'
             message={{
                 role: 'assistant',
                 id: '',
@@ -138,24 +140,6 @@ function WelcomeMessage() {
                     userMessage='Add a new doc page'
                 >
                     Add a new doc page
-                </ChatSuggestionButton>
-                <ChatSuggestionButton
-                    icon={<ListTreeIcon />}
-                    userMessage='Edit navigation menu'
-                >
-                    Edit navigation menu
-                </ChatSuggestionButton>
-                <ChatSuggestionButton
-                    icon={<Link2Icon />}
-                    userMessage='Configure footer links'
-                >
-                    Configure footer links
-                </ChatSuggestionButton>
-                <ChatSuggestionButton
-                    icon={<AlertTriangleIcon />}
-                    userMessage='Set up custom 404 error page'
-                >
-                    Set up custom 404 error page
                 </ChatSuggestionButton>
             </div>
         </ChatAssistantMessage>
@@ -204,7 +188,7 @@ function MessageRenderer({ message }: { message: UIMessage }) {
     }
 
     return (
-        <ChatAssistantMessage message={message}>
+        <ChatAssistantMessage className='px-3' message={message}>
             {message.parts.map((part, index) => {
                 if (part.type === 'tool-invocation') {
                     return <ToolInvocationRenderer part={part} index={index} />
@@ -215,7 +199,7 @@ function MessageRenderer({ message }: { message: UIMessage }) {
                         <Markdown
                             isStreaming={isChatGenerating}
                             key={index}
-                            className='prose-sm'
+                            className='prose-sm '
                             markdown={part.text}
                         />
                     )
@@ -398,76 +382,81 @@ function Footer() {
     const showCreatePR = updatedLines > 0 && hasFilesInDraft
 
     return (
-        <div className='sticky bottom-0 pt-4 md:pt-8 pr-4 z-50 w-full'>
-            <div className='max-w-3xl mx-auto space-y-3'>
-                <div className='flex flex-col gap-2 '>
-                    <div className='flex gap-1 empty:hidden justify-start items-center bg-background p-1 rounded-md'>
-                        {showCreatePR && (
-                            <DiffStats
-                                filesInDraft={filesInDraft}
-                                hasNonPushedChanges={hasNonPushedChanges}
+        <AnimatePresence mode='popLayout'>
+            <motion.div
+                layoutId='textarea'
+                className='sticky bottom-0 pt-4 pr-4 z-50 w-full'
+            >
+                <div className='max-w-3xl mx-auto space-y-3'>
+                    <div className='flex flex-col gap-2 '>
+                        <div className='flex gap-1 empty:hidden justify-start items-center bg-background p-1 rounded-md'>
+                            {showCreatePR && (
+                                <DiffStats
+                                    filesInDraft={filesInDraft}
+                                    hasNonPushedChanges={hasNonPushedChanges}
+                                />
+                            )}
+                            {prUrl && (
+                                <a
+                                    href={prUrl}
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                    className='text-xs text-accent-foreground underline'
+                                >
+                                    view pr
+                                </a>
+                            )}
+
+                            {showCreatePR && (
+                                <div className='justify-end flex grow'>
+                                    <PrButton disabled={!hasNonPushedChanges} />
+                                </div>
+                            )}
+                        </div>
+
+                        <div className='relative rounded-[20px] border bg-muted'>
+                            <ChatTextarea
+                                onSubmit={() => handleSubmit()}
+                                disabled={false}
+                                placeholder='Ask me anything...'
+                                className=''
+                                mentionOptions={mentionOptions || []}
                             />
-                        )}
-                        {prUrl && (
-                            <a
-                                href={prUrl}
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className='text-xs text-accent-foreground underline'
-                            >
-                                view pr
-                            </a>
-                        )}
-
-                        {showCreatePR && (
-                            <div className='justify-end flex grow'>
-                                <PrButton disabled={!hasNonPushedChanges} />
-                            </div>
-                        )}
-                    </div>
-
-                    <div className='relative rounded-[20px] border bg-muted'>
-                        <ChatTextarea
-                            onSubmit={() => handleSubmit()}
-                            disabled={false}
-                            placeholder='Ask me anything...'
-                            className=''
-                            mentionOptions={mentionOptions || []}
-                        />
-                        {/* Textarea buttons */}
-                        <div className='flex items-center justify-between gap-2 p-3'>
-                            {/* Left buttons */}
-                            <div className='flex items-center gap-2'>
-                                <Button
-                                    variant='outline'
-                                    size='icon'
-                                    className='rounded-full size-8 border-none hover:bg-background hover:shadow-md transition-[box-shadow]'
-                                >
-                                    <RiAttachment2
-                                        className='text-muted-foreground/70 size-5'
-                                        size={20}
-                                        aria-hidden='true'
-                                    />
-                                </Button>
-                            </div>
-                            {/* Right buttons */}
-                            <div className='flex items-center gap-2'>
-                                <Button
-                                    className='rounded-full h-8'
-                                    onClick={() => handleSubmit()}
-                                    disabled={isPending || !text.trim()}
-                                >
-                                    {isPending ? 'Loading...' : 'Generate'}
-                                </Button>
+                            {/* Textarea buttons */}
+                            <div className='flex items-center justify-between gap-2 p-3'>
+                                {/* Left buttons */}
+                                <div className='flex items-center gap-2'>
+                                    <Button
+                                        variant='outline'
+                                        size='icon'
+                                        className='rounded-full size-8 border-none hover:bg-background hover:shadow-md transition-[box-shadow]'
+                                    >
+                                        <RiAttachment2
+                                            className='text-muted-foreground/70 size-5'
+                                            size={20}
+                                            aria-hidden='true'
+                                        />
+                                    </Button>
+                                </div>
+                                {/* Right buttons */}
+                                <div className='flex items-center gap-2'>
+                                    <Button
+                                        className='rounded-full h-8'
+                                        onClick={() => handleSubmit()}
+                                        disabled={isPending || !text.trim()}
+                                    >
+                                        {isPending ? 'Loading...' : 'Generate'}
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <ChatAutocomplete
-                autocompleteSuggestions={AUTOCOMPLETE_SUGGESTIONS}
-            />
-        </div>
+                <ChatAutocomplete
+                    autocompleteSuggestions={AUTOCOMPLETE_SUGGESTIONS}
+                />
+            </motion.div>
+        </AnimatePresence>
     )
 }
 

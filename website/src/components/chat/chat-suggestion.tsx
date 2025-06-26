@@ -1,4 +1,5 @@
 import { createIdGenerator } from 'ai'
+import { flushSync } from 'react-dom'
 import { Button } from 'website/src/components/ui/button'
 import { useChatState } from './chat-provider'
 
@@ -24,8 +25,11 @@ export function ChatSuggestionButton({
                 if (userMessage) {
                     const generateId = createIdGenerator()
                     const id = generateId()
-                    useChatState.setState({
-                        text: userMessage,
+
+                    flushSync(() => {
+                        useChatState.setState({
+                            text: userMessage,
+                        })
                     })
                     window.dispatchEvent(new CustomEvent('chatRegenerate'))
                 }
