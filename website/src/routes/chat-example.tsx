@@ -298,54 +298,56 @@ function Footer() {
 
     return (
         <AnimatePresence mode='popLayout'>
-            <motion.div
-                layoutId='textarea'
-                className={cn(
-                    'sticky bottom-4 mt-4 z-50 w-full rounded-[20px] border bg-popover flex flex-col gap-2 max-w-3xl mx-auto space-y-3',
-                )}
-            >
-                <ChatTextarea
-                    onSubmit={() => handleSubmit()}
-                    disabled={false}
-                    placeholder='Ask me anything...'
-                    className={cn('')}
-                    mentionOptions={[
-                        '@/docs/README.md',
-                        '@/docs/setup.md',
-                        '@/docs/changelog.md',
-                        '@/docs/faq.md',
-                    ]}
+            <div className=' sticky bottom-4 z-50 w-full mt-4'>
+                <motion.div
+                    layoutId='textarea'
+                    className={cn(
+                        ' w-full rounded-[20px] border bg-muted flex flex-col max-w-3xl mx-auto space-y-3',
+                    )}
+                >
+                    <ChatTextarea
+                        onSubmit={() => handleSubmit()}
+                        disabled={false}
+                        placeholder='Ask me anything...'
+                        className={cn('')}
+                        mentionOptions={[
+                            '@/docs/README.md',
+                            '@/docs/setup.md',
+                            '@/docs/changelog.md',
+                            '@/docs/faq.md',
+                        ]}
+                    />
+
+                    <div className='flex items-center justify-between gap-2 p-3 py-2'>
+                        <div className='flex items-center gap-2'>
+                            <Button
+                                variant='outline'
+                                size='icon'
+                                className='rounded-full size-8 border-none hover:bg-background hover:shadow-md transition-[box-shadow]'
+                            >
+                                <RiAttachment2
+                                    className='text-muted-foreground/70 size-5'
+                                    size={20}
+                                    aria-hidden='true'
+                                />
+                            </Button>
+                        </div>
+
+                        <div className='flex items-center gap-2'>
+                            <Button
+                                className='rounded-full h-8'
+                                onClick={() => handleSubmit()}
+                                disabled={isPending || !text.trim()}
+                            >
+                                {isPending ? 'Loading...' : 'Generate'}
+                            </Button>
+                        </div>
+                    </div>
+                </motion.div>
+                <ChatAutocomplete
+                    autocompleteSuggestions={AUTOCOMPLETE_SUGGESTIONS}
                 />
-
-                <div className='flex items-center justify-between gap-2 p-3'>
-                    <div className='flex items-center gap-2'>
-                        <Button
-                            variant='outline'
-                            size='icon'
-                            className='rounded-full size-8 border-none hover:bg-background hover:shadow-md transition-[box-shadow]'
-                        >
-                            <RiAttachment2
-                                className='text-muted-foreground/70 size-5'
-                                size={20}
-                                aria-hidden='true'
-                            />
-                        </Button>
-                    </div>
-
-                    <div className='flex items-center gap-2'>
-                        <Button
-                            className='rounded-full h-8'
-                            onClick={() => handleSubmit()}
-                            disabled={isPending || !text.trim()}
-                        >
-                            {isPending ? 'Loading...' : 'Generate'}
-                        </Button>
-                    </div>
-                </div>
-            </motion.div>
-            <ChatAutocomplete
-                autocompleteSuggestions={AUTOCOMPLETE_SUGGESTIONS}
-            />
+            </div>
         </AnimatePresence>
     )
 }

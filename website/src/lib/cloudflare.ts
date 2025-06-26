@@ -4,20 +4,73 @@ import { groupByN } from './utils.js'
 
 const { CLOUDFLARE_API_TOKEN, CLOUDFLARE_ZONE_ID } = env
 
-export interface DomainRoute {
-    id: string
-    createdAt: Date
-    updatedAt: Date
+type CloudflareSSLStatus =
+    | 'initializing'
+    | 'pending_validation'
+    | 'deleted'
+    | 'pending_issuance'
+    | 'pending_deployment'
+    | 'pending_expiration'
+    | 'expired'
+    | 'active'
+    | 'initializing_timed_out'
+    | 'validation_timed_out'
+    | 'issuance_timed_out'
+    | 'deployment_timed_out'
+    | 'deletion_timed_out'
+    | 'pending_cleanup'
+    | 'staging_deployment'
+    | 'staging_active'
+    | 'deactivating'
+    | 'inactive'
+    | 'backup_issued'
+    | 'holding_deployment'
 
-    domain: string
-    dnsVerifiedAt?: Date
+type CloudflareHostnameStatus =
+    | 'active'
+    | 'pending'
+    | 'active_redeploying'
+    | 'moved'
+    | 'pending_deletion'
+    | 'deleted'
+    | 'pending_blocked'
+    | 'pending_migration'
+    | 'pending_provisioned'
+    | 'test_pending'
+    | 'test_active'
+    | 'test_active_apex'
+    | 'test_blocked'
+    | 'test_failed'
+    | 'provisioned'
+    | 'blocked'
 
-    // for authorization
-    planId: string
-
-    // routes are decided dynamically based on the app and resource routed to.
-    appId: string
-    resourceId: string
+export type CloudflareCustomHostnameResponse = {
+    result: {
+        id: string
+        hostname: string
+        ssl: {
+            id: string
+            type: string
+            method: string
+            status: CloudflareSSLStatus
+            wildcard: boolean
+            certificate_authority: string
+        }
+        status: CloudflareHostnameStatus
+        ownership_verification: {
+            type: string
+            name: string
+            value: string
+        }
+        ownership_verification_http: {
+            http_url: string
+            http_body: string
+        }
+        created_at: string
+    }
+    success: boolean
+    errors: any[]
+    messages: any[]
 }
 
 export class CloudflareClient {
@@ -68,15 +121,18 @@ export class CloudflareClient {
         }
         return results
     }
-    async create(domainRoute: DomainRoute) {
-        return this.fetch('/custom_hostnames', {
+    async createDomain(
+        domain: string,
+    ): Promise<CloudflareCustomHostnameResponse> {
+        return await this.fetch('/custom_hostnames', {
             method: 'POST',
             body: JSON.stringify({
-                hostname: domainRoute.domain,
+                hostname: domain,
                 ssl: {
                     type: 'dv',
                     method: 'http',
                 },
+
                 // you have to pay for this...
                 // custom_metadata: {
                 // 	appId: domainRoute.appId,
@@ -104,27 +160,7 @@ export class CloudflareClient {
                 id: string
                 // others...
                 expires_on: string
-                status:
-                    | 'initializing'
-                    | 'pending_validation'
-                    | 'deleted'
-                    | 'pending_issuance'
-                    | 'pending_deployment'
-                    | 'pending_expiration'
-                    | 'expired'
-                    | 'active'
-                    | 'initializing_timed_out'
-                    | 'validation_timed_out'
-                    | 'issuance_timed_out'
-                    | 'deployment_timed_out'
-                    | 'deletion_timed_out'
-                    | 'pending_cleanup'
-                    | 'staging_deployment'
-                    | 'staging_active'
-                    | 'deactivating'
-                    | 'inactive'
-                    | 'backup_issued'
-                    | 'holding_deployment'
+                status: CloudflareSSLStatus
             }
             custom_metadata: {
                 appId: string
@@ -137,27 +173,11 @@ export class CloudflareClient {
                 type: string
                 value: string
             }
-            status:
-                | 'active'
-                | 'pending'
-                | 'active_redeploying'
-                | 'moved'
-                | 'pending_deletion'
-                | 'deleted'
-                | 'pending_blocked'
-                | 'pending_migration'
-                | 'pending_provisioned'
-                | 'test_pending'
-                | 'test_active'
-                | 'test_active_apex'
-                | 'test_blocked'
-                | 'test_failed'
-                | 'provisioned'
-                | 'blocked'
+            status: CloudflareHostnameStatus
         }
     }
 
-    async remove(hostname: string) {
+    async removeDomain(hostname: string) {
         const data = await this.get(hostname)
         if (!data) {
             throw new AppError(`Custom hostname ${hostname} not found`)

@@ -384,6 +384,12 @@ export const DocsConfigSchema = z
         contextual: ContextualSchema.optional().describe('Contextual actions'),
         cssVariables: CSSVariablesSchema.optional().describe('CSS variables'),
         // integrations: IntegrationsSchema.optional().describe('Integrations'),
+        domains: z
+            .array(z.string())
+            .optional()
+            .describe(
+                'Custom domains to connect to this documentation site. Each domain should point to cname.fumabase.com via CNAME record. Domains will be connected when docs.json is pushed to the main branch.',
+            ),
     })
     .strict()
     .describe('Schema for docs.json configuration')

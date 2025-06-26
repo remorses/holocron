@@ -88,7 +88,7 @@ export const mediaExtensions = [
 
 export function isMediaFile(path: string): boolean {
     if (!path) return false
-    return mediaExtensions.some(ext => path.toLowerCase().endsWith(ext))
+    return mediaExtensions.some((ext) => path.toLowerCase().endsWith(ext))
 }
 
 export async function syncSite({
@@ -231,6 +231,40 @@ export async function syncFiles({
                     where: { siteId },
                     data: { docsJson: asset.jsonData },
                 })
+
+                // Handle domain connections
+                if (
+                    asset.jsonData.domains &&
+                    Array.isArray(asset.jsonData.domains)
+                ) {
+                    const existingDomains = await prisma.domain.findMany({
+                        where: { siteId },
+                        select: { host: true },
+                    })
+                    const existingHosts = new Set(
+                        existingDomains.map((d) => d.host),
+                    )
+
+                    const domainsToConnect = asset.jsonData.domains.filter(
+                        (domain: string) => !existingHosts.has(domain),
+                    )
+
+                    if (domainsToConnect.length > 0) {
+                        console.log(
+                            `Connecting ${domainsToConnect.length} new domains for site ${siteId}`,
+                        )
+                        for (const host of domainsToConnect) {
+                            await cloudflareClient.createDomain(host)
+                            await prisma.domain.create({
+                                data: {
+                                    host,
+                                    siteId,
+                                    domainType: 'customDomain',
+                                },
+                            })
+                        }
+                    }
+                }
             }
             if (asset.type === 'stylesCss') {
                 console.log(`Updating stylesCss for site ${siteId}`)
@@ -611,7 +645,10 @@ export async function* filesFromGithub({
             }
             yield docsJson
         } else {
-            console.log('skipping docs.json file for invalid json', docsJsonFile.githubPath)
+            console.log(
+                'skipping docs.json file for invalid json',
+                docsJsonFile.githubPath,
+            )
         }
     }
 
@@ -972,7 +1009,6 @@ export async function publicFileMapUrl({
 function isValidUrl(string: string): boolean {
     return string.startsWith('http://') || string.startsWith('https://')
 }
-
 
 function safeJsonParse(str: string, defaultValue: any = {}) {
     try {

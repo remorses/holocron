@@ -220,7 +220,7 @@ export function ChatTextarea({
     }
 
     return (
-        <div className='relative flex flex-col gap-2'>
+        <div className='relative flex flex-col'>
             {/* External autocomplete dropdown */}
 
             <ScrollArea className='[&>div>div]:grow flex flex-col box-border my-1 max-h-28 w-full 2xl:max-h-40'>
@@ -300,7 +300,7 @@ export function ChatTextarea({
                             // Interaction
                             'cursor-default outline-none',
                             // States
-                            'hover:bg-accent hover:text-accent-foreground',
+                            // 'hover:bg-accent hover:text-accent-foreground',
                             'data-[active-item]:bg-accent data-[active-item]:text-accent-foreground',
                             'active:pt-[9px] active:pb-[7px]',
                             'data-[active]:pt-[9px] data-[active]:pb-[7px]',
