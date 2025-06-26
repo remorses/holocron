@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
+
 import { Button } from 'website/src/components/ui/button'
 import { ScrollArea } from 'website/src/components/ui/scroll-area'
 
@@ -7,25 +8,12 @@ import { useStickToBottom } from 'use-stick-to-bottom'
 import { fullStreamToUIMessages } from '../lib/process-chat'
 import { apiClient } from '../lib/spiceflow-client'
 
-import { DocsJsonType } from 'docs-website/src/lib/docs-json'
-import {
-    AlertTriangleIcon,
-    FilePlus2Icon,
-    ImageIcon,
-    Link2Icon,
-    ListTreeIcon,
-    PaletteIcon,
-} from 'lucide-react'
-
-import { docsRpcClient } from '../lib/docs-setstate'
-import { ChatSuggestionButton } from '../components/chat/chat-suggestion'
 import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
 
 import { RiAttachment2 } from '@remixicon/react'
 import { createIdGenerator, UIMessage } from 'ai'
 import { Markdown } from 'docs-website/src/lib/markdown'
 import { startTransition, useState } from 'react'
-import { useForm } from 'react-hook-form'
 import {
     ChatAssistantMessage,
     ChatErrorMessage,
@@ -38,6 +26,16 @@ import {
     ChatState,
     useChatState,
 } from '../components/chat/chat-provider'
+import {
+    Drawer,
+    DrawerTrigger,
+    DrawerContent,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerClose,
+} from '../components/ui/drawer'
 
 export type { Route }
 
@@ -52,9 +50,32 @@ export default function Page({ loaderData }: Route.ComponentProps) {
     return (
         <ChatProvider initialValue={initialChatState}>
             <div className=' h-full max-h-full  w-full  flex flex-col grow'>
-                <Chat />
+                <DrawerDemo />
             </div>
         </ChatProvider>
+    )
+}
+
+export function DrawerDemo() {
+    return (
+        <Drawer direction='right'>
+            <div className='flex flex-col items-center justify-center h-full '>
+                <DrawerTrigger asChild>
+                    <Button variant='outline'>Open Drawer</Button>
+                </DrawerTrigger>
+            </div>
+            <DrawerContent className='min-w-[600px]'>
+                <DrawerHeader>
+                    <DrawerTitle>Chat</DrawerTitle>
+                    <DrawerDescription>
+                        Set your daily activity goal.
+                    </DrawerDescription>
+                </DrawerHeader>
+                <div className='p-4 flex flex-col min-h-0 grow pb-0'>
+                    <Chat />
+                </div>
+            </DrawerContent>
+        </Drawer>
     )
 }
 
@@ -66,7 +87,7 @@ function Chat({}) {
     return (
         <ScrollArea
             ref={scrollRef}
-            className='[&>div>div]:grow relative w-[700px] items-stretch rounded border mx-auto max-h-full flex flex-col grow '
+            className='[&>div>div]:grow -mr-4 pr-4 relative items-stretch rounded   max-h-full flex flex-col grow '
         >
             <Messages ref={contentRef} />
             <Footer />
@@ -78,23 +99,20 @@ function Messages({ ref }) {
     const messages = useChatState((x) => x?.messages)
 
     return (
-        <div ref={ref} className=' w-full  flex flex-col grow px-4 mt-6 gap-6'>
+        <div ref={ref} className=' w-full flex flex-col grow gap-6'>
             {!messages.length && (
                 <ChatAssistantMessage
                     message={{
                         role: 'assistant',
                         id: '',
                         content: '',
-                        parts: [
-                            {
-                                type: 'text',
-                                text: 'Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:',
-                            },
-                        ],
+                        parts: [],
                     }}
                 >
                     <Markdown
-                        markdown='Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:'
+                        markdown={
+                            'Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:\n'
+                        }
                         isStreaming={false}
                     />
                 </ChatAssistantMessage>
@@ -213,7 +231,7 @@ function Footer() {
     }
 
     return (
-        <div className='sticky bottom-0 pt-4 md:pt-8 p-4 z-50 w-full'>
+        <div className='sticky bottom-0 py-4 z-50 w-full'>
             <div className='max-w-3xl mx-auto space-y-3'>
                 <div className='flex flex-col gap-2 '>
                     <div className='relative rounded-[20px] border bg-muted'>
