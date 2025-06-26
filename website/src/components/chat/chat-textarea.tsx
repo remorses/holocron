@@ -285,7 +285,7 @@ export function ChatTextarea({
                                             className={`w-full px-2 py-1.5 text-left text-sm rounded-md transition-colors ${
                                                 selectedAutocompleteIndex ===
                                                 index
-                                                    ? 'bg-background'
+                                                    ? 'bg-muted/70'
                                                     : 'hover:bg-accent/50'
                                             }`}
                                             onClick={() => {
