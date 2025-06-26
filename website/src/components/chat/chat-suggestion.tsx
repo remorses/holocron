@@ -1,8 +1,8 @@
-import { Button } from 'website/src/components/ui/button'
 import { createIdGenerator } from 'ai'
-import { useChatState } from 'website/src/lib/state'
+import { Button } from 'website/src/components/ui/button'
+import { useChatState } from './chat-provider'
 
-export function SuggestionButton({
+export function ChatSuggestionButton({
     icon,
     children,
     userMessage,
@@ -16,6 +16,7 @@ export function SuggestionButton({
         <Button
             variant='ghost'
             {...props}
+
             className={
                 'flex px-2 items-center gap-3 ' + (props.className ?? '')
             }

@@ -1,24 +1,15 @@
 'use client'
-import { RiAttachment2, RiRefreshLine } from '@remixicon/react'
+import { RiAttachment2 } from '@remixicon/react'
 import { createIdGenerator, UIMessage } from 'ai'
 import { Markdown } from 'docs-website/src/lib/markdown'
-import memoize from 'micro-memoize'
-import {
-    memo,
-    startTransition,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react'
+import { memo, startTransition, useEffect, useMemo, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import {
-    ChatMessage,
-    EditingUserMessage,
+    ChatAssistantMessage,
     ChatErrorMessage,
-    UserMessageWithEditButton,
+    ChatUserMessage,
 } from 'website/src/components/chat/chat-message'
-import { MentionsTextArea } from 'website/src/components/mentions-textarea'
+import { ChatTextarea } from 'website/src/components/chat/chat-textarea'
 import { ToolInvocationRenderer } from 'website/src/components/tools-preview'
 
 import { Button } from 'website/src/components/ui/button'
@@ -36,28 +27,24 @@ import {
 
 import { useStickToBottom } from 'use-stick-to-bottom'
 
-import { Card, Cards } from 'fumadocs-ui/components/card'
 import { useTemporaryState } from '../lib/hooks'
 import { fullStreamToUIMessages } from '../lib/process-chat'
 import { apiClient } from '../lib/spiceflow-client'
-import { doFilesInDraftNeedPush, useChatState } from '../lib/state'
+import { doFilesInDraftNeedPush, useWebsiteState } from '../lib/state'
 
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { generateSlugFromPath } from 'docs-website/src/lib/utils'
 import {
     AlertCircle,
     AlertTriangleIcon,
-    CpuIcon,
     FilePlus2Icon,
     GitBranch,
     ImageIcon,
     Link2Icon,
     ListTreeIcon,
     PaletteIcon,
-    PanelsTopLeft,
     X,
 } from 'lucide-react'
-import { flushSync } from 'react-dom'
 import { useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
 import { docsRpcClient } from '../lib/docs-setstate'
 import {
@@ -69,7 +56,8 @@ import {
 import { teeAsyncIterable } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
-import { SuggestionButton } from './chat/suggestions'
+import { useChatState } from './chat/chat-provider'
+import { ChatSuggestionButton } from './chat/chat-suggestion'
 
 export default function Chat({}) {
     const { scrollRef, contentRef } = useStickToBottom({
@@ -111,10 +99,10 @@ function Messages({ ref }) {
     return (
         <div
             ref={ref}
-            className='relative h-full flex flex-col grow pr-4 mt-6 gap-6'
+            className='relative text-sm h-full flex flex-col grow pr-4 mt-6 gap-6'
         >
             {!messages.length && (
-                <ChatMessage
+                <ChatAssistantMessage
                     message={{
                         role: 'assistant',
                         id: '',
@@ -129,47 +117,47 @@ function Messages({ ref }) {
                 >
                     <Markdown
                         markdown='Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:'
-                        isStreaming={false}
+                        className='prose-sm'
                     />
                     <div className='flex flex-col items-start gap-3 mt-3'>
-                        <SuggestionButton
+                        <ChatSuggestionButton
                             icon={<PaletteIcon />}
                             userMessage='Change theme color'
                         >
                             Change theme color
-                        </SuggestionButton>
-                        <SuggestionButton
+                        </ChatSuggestionButton>
+                        <ChatSuggestionButton
                             icon={<ImageIcon />}
                             userMessage='Update site logo'
                         >
                             Update site logo
-                        </SuggestionButton>
-                        <SuggestionButton
+                        </ChatSuggestionButton>
+                        <ChatSuggestionButton
                             icon={<FilePlus2Icon />}
                             userMessage='Add a new doc page'
                         >
                             Add a new doc page
-                        </SuggestionButton>
-                        <SuggestionButton
+                        </ChatSuggestionButton>
+                        <ChatSuggestionButton
                             icon={<ListTreeIcon />}
                             userMessage='Edit navigation menu'
                         >
                             Edit navigation menu
-                        </SuggestionButton>
-                        <SuggestionButton
+                        </ChatSuggestionButton>
+                        <ChatSuggestionButton
                             icon={<Link2Icon />}
                             userMessage='Configure footer links'
                         >
                             Configure footer links
-                        </SuggestionButton>
-                        <SuggestionButton
+                        </ChatSuggestionButton>
+                        <ChatSuggestionButton
                             icon={<AlertTriangleIcon />}
                             userMessage='Set up custom 404 error page'
                         >
                             Set up custom 404 error page
-                        </SuggestionButton>
+                        </ChatSuggestionButton>
                     </div>
-                </ChatMessage>
+                </ChatAssistantMessage>
             )}
             {messages.map((message) => {
                 return <MessageRenderer key={message.id} message={message} />
@@ -182,22 +170,16 @@ function Messages({ ref }) {
 
 function MessageRenderer({ message }: { message: UIMessage }) {
     const isChatGenerating = useChatState((x) => x.isChatGenerating)
-    const editingMessageId = useChatState((x) => x.editingMessageId)
-    const isEditing = editingMessageId === message.id
-
-    if (message.role === 'user' && isEditing) {
-        return <EditingUserMessage message={message} />
-    }
 
     if (message.role === 'user') {
         return (
-            <UserMessageWithEditButton messageId={message.id}>
+            <ChatUserMessage message={message}>
                 {message.parts.map((part, index) => {
                     if (part.type === 'text') {
                         return (
                             <Markdown
                                 key={index}
-                                className='[&_p]:m-0'
+                                className='[&_p]:m-0 prose-sm'
                                 isStreaming={isChatGenerating}
                                 markdown={part.text}
                             />
@@ -205,12 +187,12 @@ function MessageRenderer({ message }: { message: UIMessage }) {
                     }
                     return null
                 })}
-            </UserMessageWithEditButton>
+            </ChatUserMessage>
         )
     }
 
     return (
-        <ChatMessage message={message}>
+        <ChatAssistantMessage message={message}>
             {message.parts.map((part, index) => {
                 if (part.type === 'tool-invocation') {
                     return <ToolInvocationRenderer part={part} index={index} />
@@ -221,6 +203,7 @@ function MessageRenderer({ message }: { message: UIMessage }) {
                         <Markdown
                             isStreaming={isChatGenerating}
                             key={index}
+                            className='prose-sm'
                             markdown={part.text}
                         />
                     )
@@ -230,6 +213,7 @@ function MessageRenderer({ message }: { message: UIMessage }) {
                     return (
                         <Markdown
                             key={index}
+                            className='prose-sm'
                             isStreaming={isChatGenerating}
                             markdown={'thinking:' + part.reasoning}
                         />
@@ -238,7 +222,7 @@ function MessageRenderer({ message }: { message: UIMessage }) {
 
                 return null
             })}
-        </ChatMessage>
+        </ChatAssistantMessage>
     )
 }
 
@@ -267,154 +251,127 @@ function Footer() {
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
     const { siteId, tabId } = siteData
-    const messages = useChatState((x) => x?.messages || [])
-    const filesInDraft = useChatState((x) => x?.docsState?.filesInDraft || {})
-    const lastPushedFiles = useChatState((x) => x.lastPushedFiles)
+
+    const filesInDraft = useWebsiteState(
+        (x) => x?.docsState?.filesInDraft || {},
+    )
+    const lastPushedFiles = useWebsiteState((x) => x.lastPushedFiles)
     const hasNonPushedChanges = useMemo(() => {
         return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
     }, [filesInDraft, lastPushedFiles])
 
     const handleSubmit = async () => {
         const messages = useChatState.getState()?.messages
-
-        // if (!text.trim() && messages.length === 0) return
         const generateId = createIdGenerator()
 
-        useChatState.setState({
-            isChatGenerating: true,
-            assistantErrorMessage: undefined,
-        })
+        const docsState = useWebsiteState.getState()?.docsState
+        const filesInDraft = docsState?.filesInDraft || {}
+        const currentSlug = docsState?.currentSlug || ''
 
-        setText('')
-
-        try {
-            const docsState = useChatState.getState()?.docsState
-            const filesInDraft = docsState?.filesInDraft || {}
-            const currentSlug = docsState?.currentSlug || ''
-            useChatState.setState({ messages: messages })
-
-            const { data: generator, error } =
-                await apiClient.api.generateMessage.post({
-                    messages: messages,
-                    siteId,
-                    tabId,
-                    currentSlug,
-                    filesInDraft,
-                    chatId: chat.chatId,
-                })
-            if (error) throw error
-
-            async function getPageContent(x) {
-                const { data, error } = await apiClient.api.getPageContent.post(
-                    {
-                        tabId,
-                        githubPath: x.githubPath,
-                    },
-                )
-                if (error) return ''
-                return data?.content
-            }
-            const execute = createEditExecute({
-                filesInDraft: filesInDraft,
-                getPageContent,
+        const { data: generator, error } =
+            await apiClient.api.generateMessage.post({
+                messages: messages,
+                siteId,
+                tabId,
+                currentSlug,
+                filesInDraft,
+                chatId: chat.chatId,
             })
-            // Split the async iterator into two: one for docs edit, one for state updates
-            const [editIter, stateIter] = teeAsyncIterable(
-                fullStreamToUIMessages({
-                    fullStream: generator,
-                    messages: messages,
-                    generateId,
-                }),
-            )
+        if (error) throw error
 
-            // First iteration: handle docs/edit-tool logic
-            let isPostMessageBusy = false
-            async function updateDocsSite() {
-                for await (const newMessages of editIter) {
-                    const lastMessage = newMessages[newMessages.length - 1]
-                    const lastPart =
-                        lastMessage.parts[lastMessage.parts.length - 1]
-                    if (
-                        lastMessage.role === 'assistant' &&
-                        lastPart?.type === 'tool-invocation'
-                    ) {
-                        const toolInvocation = lastPart.toolInvocation
-                        if (toolInvocation.toolName === 'str_replace_editor') {
-                            const args: Partial<EditToolParamSchema> =
-                                toolInvocation.args
-                            if (args?.command === 'view') {
-                                continue
-                            }
-                            if (!isParameterComplete(args)) {
-                                continue
-                            }
-                            const currentSlug = generateSlugFromPath(
-                                args.path || '',
-                                '/',
-                            )
-                            if (toolInvocation.state === 'partial-call') {
-                                if (isPostMessageBusy) continue
-                                let updatedPagesCopy = { ...filesInDraft }
-                                const execute = createEditExecute({
+        async function getPageContent(x) {
+            const { data, error } = await apiClient.api.getPageContent.post({
+                tabId,
+                githubPath: x.githubPath,
+            })
+            if (error) return ''
+            return data?.content
+        }
+        const execute = createEditExecute({
+            filesInDraft: filesInDraft,
+            getPageContent,
+        })
+        // Split the async iterator into two: one for docs edit, one for state updates
+        const [editIter, stateIter] = teeAsyncIterable(
+            fullStreamToUIMessages({
+                fullStream: generator,
+                messages: messages,
+                generateId,
+            }),
+        )
+
+        // First iteration: handle docs/edit-tool logic
+        let isPostMessageBusy = false
+        async function updateDocsSite() {
+            for await (const newMessages of editIter) {
+                const lastMessage = newMessages[newMessages.length - 1]
+                const lastPart = lastMessage.parts[lastMessage.parts.length - 1]
+                if (
+                    lastMessage.role === 'assistant' &&
+                    lastPart?.type === 'tool-invocation'
+                ) {
+                    const toolInvocation = lastPart.toolInvocation
+                    if (toolInvocation.toolName === 'str_replace_editor') {
+                        const args: Partial<EditToolParamSchema> =
+                            toolInvocation.args
+                        if (args?.command === 'view') {
+                            continue
+                        }
+                        if (!isParameterComplete(args)) {
+                            continue
+                        }
+                        const currentSlug = generateSlugFromPath(
+                            args.path || '',
+                            '/',
+                        )
+                        if (toolInvocation.state === 'partial-call') {
+                            if (isPostMessageBusy) continue
+                            let updatedPagesCopy = { ...filesInDraft }
+                            const execute = createEditExecute({
+                                filesInDraft: updatedPagesCopy,
+                                getPageContent,
+                            })
+                            await execute(toolInvocation.args)
+                            isPostMessageBusy = true
+                            docsRpcClient
+                                .setDocsState({
                                     filesInDraft: updatedPagesCopy,
-                                    getPageContent,
+                                    currentSlug,
+                                    isMarkdownStreaming: true,
                                 })
-                                await execute(toolInvocation.args)
-                                isPostMessageBusy = true
-                                docsRpcClient
-                                    .setDocsState({
-                                        filesInDraft: updatedPagesCopy,
-                                        currentSlug,
-                                        isMarkdownStreaming: true,
-                                    })
-                                    .then(() => {
-                                        isPostMessageBusy = false
-                                    })
-                            } else if (toolInvocation.state === 'result') {
-                                await execute(toolInvocation.args)
-                                console.log(
-                                    `applying the setState update to the docs site`,
-                                    toolInvocation,
-                                )
+                                .then(() => {
+                                    isPostMessageBusy = false
+                                })
+                        } else if (toolInvocation.state === 'result') {
+                            await execute(toolInvocation.args)
+                            console.log(
+                                `applying the setState update to the docs site`,
+                                toolInvocation,
+                            )
 
-                                await docsRpcClient.setDocsState(
-                                    {
-                                        filesInDraft: filesInDraft,
-                                        isMarkdownStreaming: false,
-                                        currentSlug,
-                                    },
-                                    toolInvocation.toolCallId,
-                                )
-                                useChatState.setState({
-                                    docsState: { filesInDraft, currentSlug },
-                                })
-                            }
+                            await docsRpcClient.setDocsState(
+                                {
+                                    filesInDraft: filesInDraft,
+                                    isMarkdownStreaming: false,
+                                    currentSlug,
+                                },
+                                toolInvocation.toolCallId,
+                            )
+                            useWebsiteState.setState({
+                                docsState: { filesInDraft, currentSlug },
+                            })
                         }
                     }
                 }
             }
-            updateDocsSite()
+        }
+        updateDocsSite()
 
-            // Second iteration: update chat state
-            for await (const newMessages of stateIter) {
-                startTransition(() => {
-                    useChatState.setState({ messages: newMessages })
-                })
-            }
-        } catch (error) {
-            // Remove only the failed assistant message, keep user message
-            const currentMessages = useChatState.getState().messages || []
-            let messagesWithoutAssistant = currentMessages.slice(0, -1)
-            useChatState.setState({
-                messages: messagesWithoutAssistant,
-                assistantErrorMessage:
-                    error instanceof Error
-                        ? error.message
-                        : 'An unexpected error occurred',
+        // Second iteration: update chat state
+        for await (const newMessages of stateIter) {
+            startTransition(() => {
+                useChatState.setState({ messages: newMessages })
             })
-        } finally {
-            useChatState.setState({ isChatGenerating: false })
-            revalidator.revalidate()
         }
     }
     // Listen for regenerate events
@@ -459,7 +416,7 @@ function Footer() {
                     </div>
 
                     <div className='relative rounded-[20px] border bg-muted'>
-                        <MentionsTextArea
+                        <ChatTextarea
                             value={text}
                             onChange={setText}
                             autocompleteSuggestions={AUTOCOMPLETE_SUGGESTIONS}
@@ -515,8 +472,10 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
     ) as SiteRoute.ComponentProps['loaderData']
     const { siteId } = siteData
 
-    const filesInDraft = useChatState((x) => x?.docsState?.filesInDraft || {})
-    const lastPushedFiles = useChatState((x) => x.lastPushedFiles)
+    const filesInDraft = useWebsiteState(
+        (x) => x?.docsState?.filesInDraft || {},
+    )
+    const lastPushedFiles = useWebsiteState((x) => x.lastPushedFiles)
     const hasNonPushedChanges = useMemo(() => {
         return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
     }, [filesInDraft, lastPushedFiles])
@@ -551,7 +510,7 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
     const handleCreatePr = async () => {
         setIsLoading(true)
         try {
-            const docsState = useChatState.getState()?.docsState
+            const docsState = useWebsiteState.getState()?.docsState
             const filesInDraft = docsState?.filesInDraft || {}
 
             const result = await apiClient.api.createPrSuggestionForChat.post({

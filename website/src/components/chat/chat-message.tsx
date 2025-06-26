@@ -1,16 +1,14 @@
-import { flushSync } from 'react-dom'
 import {
     RiBookLine,
     RiCheckLine,
     RiCodeSSlashLine,
-    RiLoopRightFill,
     RiEditLine,
-    RiCheckLine as RiSaveLine,
-    RiCloseLine,
+    RiLoopRightFill,
     RiRefreshLine,
 } from '@remixicon/react'
-import { UIMessage, IdGenerator } from 'ai'
-import { memo, useRef, useState } from 'react'
+import { UIMessage } from 'ai'
+import { memo, RefObject, useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import {
     Tooltip,
     TooltipContent,
@@ -18,22 +16,11 @@ import {
     TooltipTrigger,
 } from 'website/src/components/ui/tooltip'
 import { cn } from 'website/src/lib/utils'
-import { Markdown } from 'docs-website/src/lib/markdown'
 
-import { useChatState } from '../../lib/state'
 import { Button } from '../ui/button'
-import { useClickOutside } from '../../lib/hooks'
+import { useChatState } from './chat-provider'
 
-type ChatMessageProps = {
-    message: UIMessage
-    children: React.ReactNode
-}
-
-type EditingUserMessageProps = {
-    message: UIMessage
-}
-
-function LoadingSpinner() {
+function ChatLoadingSpinner() {
     // This will animate the dots: . .. ... . .. ... etc.
     // We use a span for each sequence, only one visible at a time via keyframes.
     // Inline style for keyframes to avoid external CSS dependencies.
@@ -101,10 +88,15 @@ function isMessageAlmostEmpty(message: UIMessage) {
     return false
 }
 
-export const ChatMessage = memo(function ChatMessage({
+export const ChatAssistantMessage = memo(function ChatMessage({
     message,
     children,
-}: ChatMessageProps) {
+    className,
+}: {
+    message: UIMessage
+    className?: string
+    children: React.ReactNode
+}) {
     const isChatGenerating = useChatState((x) => x.isChatGenerating)
     const isLastAssistantMessage = useChatState(
         (x) =>
@@ -118,7 +110,7 @@ export const ChatMessage = memo(function ChatMessage({
         isChatGenerating &&
         isMessageAlmostEmpty(message)
     ) {
-        return <LoadingSpinner />
+        return <ChatLoadingSpinner />
     }
 
     return (
@@ -126,6 +118,7 @@ export const ChatMessage = memo(function ChatMessage({
             className={cn(
                 'flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed',
                 message.role === 'user' && 'justify-end',
+                className,
             )}
         >
             <div
@@ -136,17 +129,17 @@ export const ChatMessage = memo(function ChatMessage({
                         : 'space-y-4 w-full',
                 )}
             >
-                <div className='prose text-sm w-full max-w-full dark:prose-invert'>
-                    {children}
-                </div>
+                {children}
             </div>
         </article>
     )
 })
 
-export const EditingUserMessage = memo(function EditingUserMessage({
+const EditingUserMessage = memo(function EditingUserMessage({
     message,
-}: EditingUserMessageProps) {
+}: {
+    message: UIMessage
+}) {
     const [editText, setEditText] = useState(() => {
         return message.parts
             .filter((part) => part.type === 'text')
@@ -196,7 +189,7 @@ export const EditingUserMessage = memo(function EditingUserMessage({
     return (
         <article className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end'>
             <div className='max-w-full relative group/message grow bg-muted px-4 py-3 rounded-xl'>
-                <div className='prose text-sm w-full max-w-full dark:prose-invert'>
+                <div className='prose  w-full max-w-full dark:prose-invert'>
                     <div ref={editingBox} className='space-y-2 w-full'>
                         <textarea
                             value={editText}
@@ -213,7 +206,7 @@ export const EditingUserMessage = memo(function EditingUserMessage({
                                     handleEditCancel()
                                 }
                             }}
-                            className='w-full min-h-0 min-w-[100px] p-px focus-visible:outline-none bg-transparent rounded-md text-sm resize-none focus:outline-none'
+                            className='w-full min-h-0 min-w-[100px] p-px focus-visible:outline-none bg-transparent rounded-md  resize-none focus:outline-none'
                             autoFocus
                         />
                         <div className='flex items-center gap-2 justify-end'>
@@ -232,16 +225,24 @@ export const EditingUserMessage = memo(function EditingUserMessage({
     )
 })
 
-export function UserMessageWithEditButton({
+export function ChatUserMessage({
     children,
-    messageId,
+    message,
 }: {
     children: React.ReactNode
-    messageId: string
+    message: UIMessage
 }) {
+    const editingMessageId = useChatState((x) => x.editingMessageId)
+    const messageId = message.id
+    const isEditing = editingMessageId === messageId
     const handleEditStart = () => {
         useChatState.setState({ editingMessageId: messageId })
     }
+
+    if (message.role === 'user' && isEditing) {
+        return <EditingUserMessage message={message} />
+    }
+
     return (
         <article className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end'>
             <div className='max-w-full relative group/message bg-muted px-4 py-3 rounded-xl'>
@@ -265,7 +266,7 @@ export function UserMessageWithEditButton({
                         </TooltipContent>
                     </Tooltip>
                 </div>
-                <div className='prose text-sm w-full max-w-full dark:prose-invert'>
+                <div className='prose w-full max-w-full dark:prose-invert'>
                     {children}
                 </div>
             </div>
@@ -296,7 +297,7 @@ const ActionButton = memo(function ActionButton({
     )
 })
 
-const MessageActions = memo(function MessageActions() {
+const ChatMessageActions = memo(function MessageActions() {
     return (
         <div className='relative inline-flex bg-white dark:bg-zinc-900 rounded-md border border-black/[0.08] dark:border-white/[0.08] shadow-sm -space-x-px'>
             <TooltipProvider delayDuration={0}>
@@ -338,10 +339,10 @@ export function ChatErrorMessage() {
                 <div className='bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800/50 rounded-lg p-4'>
                     <div className='flex items-start gap-3'>
                         <div className='flex-1'>
-                            <h4 className='text-sm font-medium text-red-800 dark:text-red-200 mb-1'>
+                            <h4 className=' font-medium text-red-800 dark:text-red-200 mb-1'>
                                 Failed to generate response
                             </h4>
-                            <p className='text-sm text-red-700 dark:text-red-300'>
+                            <p className=' text-red-700 dark:text-red-300'>
                                 {error}
                             </p>
                         </div>
@@ -359,4 +360,24 @@ export function ChatErrorMessage() {
             </div>
         </div>
     )
+}
+
+function useClickOutside<T extends HTMLElement>(
+    ref: RefObject<T | null>,
+    onAway: (e: MouseEvent | TouchEvent) => void,
+) {
+    useEffect(() => {
+        const listener = (e: MouseEvent | TouchEvent) => {
+            if (!ref.current || ref.current.contains(e.target as Node)) return
+            onAway(e)
+        }
+
+        document.addEventListener('mousedown', listener)
+        document.addEventListener('touchstart', listener)
+
+        return () => {
+            document.removeEventListener('mousedown', listener)
+            document.removeEventListener('touchstart', listener)
+        }
+    }, [ref, onAway])
 }

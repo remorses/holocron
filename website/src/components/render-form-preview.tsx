@@ -7,7 +7,7 @@ import {
 
 import type { UIField } from '../lib/render-form-tool'
 
-import { useChatState } from '../lib/state'
+import { useWebsiteState } from '../lib/state'
 import { ColorPickerButton } from './color-picker-button'
 import { Button } from './ui/button'
 import { Card, CardContent } from './ui/card'
@@ -36,17 +36,8 @@ export function RenderFormPreview({
     result,
     toolCallId,
 }: RenderFormPreviewProps) {
-    const isChatGenerating = useChatState((x) => x.isChatGenerating)
-
     const { control, handleSubmit, register, reset, watch } = useFormContext()
 
-    const onSubmit: SubmitHandler<FieldValues> = (data) => {
-        const event = new CustomEvent('formSubmit', {
-            detail: { data, toolCallId },
-        })
-        window.dispatchEvent(event)
-        reset()
-    }
     if (!args?.fields || args.fields.length === 0) {
         return (
             <div className='text-muted-foreground text-sm'>
@@ -259,14 +250,17 @@ export function RenderFormPreview({
                 {args.fields.map((f) => {
                     return (
                         <div key={f.name} className='flex flex-col gap-2'>
-                            {f.type !== 'button' && f.type !== 'color_picker' && (
-                                <label className='font-medium text-sm'>
-                                    {f.label}
-                                    {f.required && (
-                                        <span className='text-red-500'>*</span>
-                                    )}
-                                </label>
-                            )}
+                            {f.type !== 'button' &&
+                                f.type !== 'color_picker' && (
+                                    <label className='font-medium text-sm'>
+                                        {f.label}
+                                        {f.required && (
+                                            <span className='text-red-500'>
+                                                *
+                                            </span>
+                                        )}
+                                    </label>
+                                )}
                             {renderField(f)}
                             {f.description && f.type !== 'button' && (
                                 <p className='text-xs text-muted-foreground'>

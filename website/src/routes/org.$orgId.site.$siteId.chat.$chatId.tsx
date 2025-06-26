@@ -9,12 +9,13 @@ import { getSession } from '../lib/better-auth'
 import { createIframeRpcClient } from '../lib/docs-setstate'
 import { getTabFilesWithoutContents } from '../lib/spiceflow-generate-message'
 
-import { State, StateProvider } from '../lib/state'
+import { State, WebsiteStateProvider } from '../lib/state'
 import { cn } from '../lib/utils'
 import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from './org.$orgId.site.$siteId'
 
 import { UIMessage } from 'ai'
+import { ChatProvider, ChatState } from '../components/chat/chat-provider'
 
 export type { Route }
 
@@ -94,16 +95,7 @@ export default function Page({
 
     const initialState = useMemo<State>(
         () => ({
-            messages: chat.messages.map((x) => {
-                const message: UIMessage = {
-                    ...x,
-                    content: '',
-                    parts: x.parts as any,
-                }
-                return message
-            }),
             lastPushedFiles: (chat.lastPushedFiles as any) || {},
-            isChatGenerating: false,
             docsState: {
                 filesInDraft: chat.filesInDraft as any,
                 currentSlug: chat.currentSlug || undefined,
@@ -112,25 +104,41 @@ export default function Page({
         }),
         [loaderData],
     )
-    return (
-        <StateProvider initialValue={initialState}>
-            <SidebarProvider
-                className='dark:bg-black'
-                style={
-                    {
-                        '--sidebar-width': '480px',
-                        '--sidebar-width-mobile': '20rem',
-                    } as any
+    const initialChatState = useMemo<ChatState>(
+        () => ({
+            messages: chat.messages.map((x) => {
+                const message: UIMessage = {
+                    ...x,
+                    content: '',
+                    parts: x.parts as any,
                 }
-            >
-                <AppSidebar />
-                <SidebarInset>
-                    <div className='flex grow h-full flex-col gap-4 p-2'>
-                        <Content />
-                    </div>
-                </SidebarInset>
-            </SidebarProvider>
-        </StateProvider>
+                return message
+            }),
+            isChatGenerating: false,
+        }),
+        [loaderData],
+    )
+    return (
+        <ChatProvider initialValue={initialChatState}>
+            <WebsiteStateProvider initialValue={initialState}>
+                <SidebarProvider
+                    className='dark:bg-black'
+                    style={
+                        {
+                            '--sidebar-width': '480px',
+                            '--sidebar-width-mobile': '20rem',
+                        } as any
+                    }
+                >
+                    <AppSidebar />
+                    <SidebarInset>
+                        <div className='flex grow h-full flex-col gap-4 p-2'>
+                            <Content />
+                        </div>
+                    </SidebarInset>
+                </SidebarProvider>
+            </WebsiteStateProvider>
+        </ChatProvider>
     )
 }
 
@@ -220,7 +228,6 @@ function Content() {
         </div>
     )
 }
-
 
 const scaleDownElement = memoize(function (iframeScale) {
     return {

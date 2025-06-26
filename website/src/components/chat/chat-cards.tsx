@@ -1,43 +1,67 @@
-import { Cards, Card } from "fumadocs-ui/components/card"
-import { CpuIcon, PanelsTopLeft } from "lucide-react"
+import * as Slot from '@radix-ui/react-slot'
+import { CpuIcon, PanelsTopLeft } from 'lucide-react'
 
-type ChatCardItem = {
-    icon: React.ReactNode
-    title: string
-    description: string
-    className?: string
+import type { HTMLAttributes, ReactNode } from 'react'
+import { cn } from 'website/src/lib/cn'
+
+
+export function Cards(props: HTMLAttributes<HTMLDivElement>) {
+    return (
+        <div
+            {...props}
+            className={cn(
+                'grid mt-auto grid-cols-2 gap-4 @container',
+                props.className,
+            )}
+        >
+            {props.children}
+        </div>
+    )
 }
 
-// Example data, could be moved outside or passed as props
-const chatCardItems: ChatCardItem[] = [
-    {
-        icon: <CpuIcon className='text-purple-300' />,
-        title: 'Fumadocs Core',
-        description: 'Handles logic like doc search and adapters.',
-        className: '@max-lg:col-span-1',
-    },
-    {
-        icon: <PanelsTopLeft className='text-blue-300' />,
-        title: 'Fumadocs UI',
-        description: 'A modern theme for docs and components.',
-        className: '@max-lg:col-span-1',
-    },
-]
+export type CardProps = Omit<HTMLAttributes<HTMLElement>, 'title'> & {
+    icon?: ReactNode
+    title: ReactNode
+    description?: ReactNode
+    asChild?: boolean
+    href?: string
+    external?: boolean
+}
+export function Card({
+    icon,
+    title,
+    description,
+    asChild,
+    ...props
+}: CardProps) {
+    const Comp = asChild ? Slot.Root : 'a'
 
-// The component
-export function ChatCards({ items = chatCardItems }: { items?: ChatCardItem[] }) {
     return (
-        <Cards className='mt-auto '>
-            {items.map((item, idx) => (
-                <Card
-                    key={item.title + idx}
-                    icon={item.icon}
-                    title={item.title}
-                    className={item.className}
-                >
-                    {item.description}
-                </Card>
-            ))}
-        </Cards>
+        <Comp
+            {...props}
+            data-card
+            className={cn(
+                'block rounded-lg border bg-card p-4 text-card-foreground shadow-md transition-colors @max-lg:col-span-1',
+                props.href && 'hover:bg-accent/80',
+                props.className,
+            )}
+        >
+            {icon ? (
+                <div className='not-prose mb-2 w-fit rounded-md border bg-muted p-1.5 text-muted-foreground [&_svg]:size-4'>
+                    {icon}
+                </div>
+            ) : null}
+            <h3 className='not-prose mb-1 text-sm font-medium'>{title}</h3>
+            {description ? (
+                <p className='!my-0 text-sm text-muted-foreground'>
+                    {description}
+                </p>
+            ) : null}
+            {props.children ? (
+                <div className='text-sm text-muted-foreground prose-no-margin'>
+                    {props.children}
+                </div>
+            ) : null}
+        </Comp>
     )
 }

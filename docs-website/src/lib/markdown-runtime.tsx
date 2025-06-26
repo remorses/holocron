@@ -44,9 +44,7 @@ export const StreamingMarkdownRuntimeComponent = memo(
 
             try {
                 if (!markdown) return []
-                // const { ast } = processMdxInClient({ extension, markdown })
 
-                // TODO incremental parsing does not work right now, probably becase some nodes maintain identity?
                 const ast = parseMarkdownIncremental({
                     cache: markdownCache,
                     extension,
@@ -56,11 +54,8 @@ export const StreamingMarkdownRuntimeComponent = memo(
                 console.log(ast)
                 if (previousMarkdown) {
                     const diffs = diffWordsWithSpace(previousMarkdown, markdown)
-                    // Create a root node that wraps the nodes
-
                     markAddedNodes(diffs, ast)
                 }
-                // const nodes = ast.children
 
                 previousAstRef.current = ast
 
@@ -86,7 +81,10 @@ export const StreamingMarkdownRuntimeComponent = memo(
         }, [extension, markdown, isStreaming, previousMarkdown, previousAst])
         if (!markdown) return null
         return (
-            <div className={cn('contents', className)} ref={container}>
+            <div
+                className={cn('contents prose dark:prose-invert', className)}
+                ref={container}
+            >
                 {resultAst?.children?.map((block, index) => {
                     return (
                         <SafeMdxRenderer
@@ -165,7 +163,6 @@ export function processMdxInClient({ extension = 'mdx', markdown }) {
     // console.trace('processSync')
     try {
         const file = processor.processSync(markdown)
-        let ast = file.data.ast
         return file.data as ProcessorData
     } finally {
         console.timeEnd(`${extension} processSync`)

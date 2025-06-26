@@ -1,16 +1,16 @@
 import * as Ariakit from '@ariakit/react'
-import getCaretCoordinates from 'textarea-caret'
 import classNames from 'clsx'
 import { matchSorter } from 'match-sorter'
 import * as React from 'react'
-import { text } from 'stream/consumers'
-import { useChatState } from '../lib/state'
+import getCaretCoordinates from 'textarea-caret'
+
 import { createIdGenerator, UIMessage } from 'ai'
+import { useChatState } from './chat-provider'
 
 interface MentionsTextAreaProps {
     value: string
     onChange: (value: string) => void
-    onSubmit: () => void
+    onSubmit: () => Promise<void> | void
     disabled?: boolean
     placeholder?: string
     className?: string
@@ -21,7 +21,7 @@ interface MentionsTextAreaProps {
     autocompleteSuggestions?: string[]
 }
 
-export function MentionsTextArea({
+export function ChatTextarea({
     value,
     onChange: _onChange,
     onSubmit: _onSubmit,
@@ -44,7 +44,7 @@ export function MentionsTextArea({
         _onChange(text)
     }
 
-    function onSubmit() {
+    async function onSubmit() {
         const generateId = createIdGenerator()
         const assistantMessageId = generateId()
         const userMessageId = generateId()
@@ -88,7 +88,27 @@ export function MentionsTextArea({
             })
             onChange('')
         }
-        _onSubmit?.()
+        useChatState.setState({
+            isChatGenerating: true,
+            assistantErrorMessage: undefined,
+        })
+
+        try {
+            await _onSubmit?.()
+        } catch (error) {
+            // Remove only the failed assistant message, keep user message
+            const currentMessages = useChatState.getState().messages || []
+            let messagesWithoutAssistant = currentMessages.slice(0, -1)
+            useChatState.setState({
+                messages: messagesWithoutAssistant,
+                assistantErrorMessage:
+                    error instanceof Error
+                        ? error.message
+                        : 'An unexpected error occurred',
+            })
+        } finally {
+            useChatState.setState({ isChatGenerating: false })
+        }
     }
 
     const messages = useChatState((x) => x.messages)
