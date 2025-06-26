@@ -4,7 +4,6 @@ import { getSession } from '../lib/better-auth'
 import { href } from 'react-router'
 import type { Route } from './+types/org.$orgId'
 
-
 export type { Route }
 
 export async function loader({ request, params: { orgId } }: Route.LoaderArgs) {
@@ -42,7 +41,7 @@ export async function loader({ request, params: { orgId } }: Route.LoaderArgs) {
             org: true,
         },
         orderBy: {
-            name: 'asc',
+            createdAt: 'desc',
         },
     })
 

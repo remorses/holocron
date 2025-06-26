@@ -625,27 +625,29 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
                 open={!!errorMessage}
             >
                 <PopoverTrigger asChild>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant='default'
-                                onClick={handleCreatePr}
-                                disabled={isButtonDisabled}
-                                size={'sm'}
-                                className='bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50'
-                            >
-                                <div className='flex items-center gap-2'>
-                                    <GitBranch className='size-4' />
-                                    {displayButtonText}
-                                </div>
-                            </Button>
-                        </TooltipTrigger>
-                        {isButtonDisabled && getTooltipMessage() && (
-                            <TooltipContent>
-                                {getTooltipMessage()}
-                            </TooltipContent>
-                        )}
-                    </Tooltip>
+                    <div className=''>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant='default'
+                                    onClick={handleCreatePr}
+                                    disabled={isButtonDisabled}
+                                    size={'sm'}
+                                    className='bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50'
+                                >
+                                    <div className='flex items-center gap-2'>
+                                        <GitBranch className='size-4' />
+                                        {displayButtonText}
+                                    </div>
+                                </Button>
+                            </TooltipTrigger>
+                            {isButtonDisabled && getTooltipMessage() && (
+                                <TooltipContent>
+                                    {getTooltipMessage()}
+                                </TooltipContent>
+                            )}
+                        </Tooltip>
+                    </div>
                 </PopoverTrigger>
 
                 {!!errorMessage && (
@@ -653,13 +655,13 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
                         style={{
                             pointerEvents: 'auto',
                         }}
-                        className='fixed inset-0 z-50 bg-black/10 backdrop-blur-xs transition-all duration-100'
+                        className='fixed inset-0 z-50 bg-black/20 transition-all duration-100'
                     />
                 )}
 
-                <PopoverContent className='w-full max-w-[400px]'>
+                <PopoverContent className='w-full min-w-[200px] z-50 max-w-[400px]'>
                     <div className='flex items-start gap-3 '>
-                        <AlertCircle className='size-5 mt-0.5 flex-shrink-0' />
+                        <AlertCircle className='size-5 text-destructive mt-0.5 flex-shrink-0' />
                         <div className='grow'>
                             <h4 className='font-medium  mb-1'>Error</h4>
                             <p className='text-sm '>{errorMessage}</p>
