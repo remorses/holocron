@@ -16,7 +16,6 @@ export function ChatSuggestionButton({
         <Button
             variant='ghost'
             {...props}
-
             className={
                 'flex px-2 items-center gap-3 ' + (props.className ?? '')
             }
@@ -26,16 +25,7 @@ export function ChatSuggestionButton({
                     const generateId = createIdGenerator()
                     const id = generateId()
                     useChatState.setState({
-                        messages: [
-                            {
-                                role: 'user',
-                                id,
-                                createdAt: new Date(),
-
-                                parts: [{ type: 'text', text: userMessage }],
-                                content: userMessage,
-                            },
-                        ],
+                        text: userMessage,
                     })
                     window.dispatchEvent(new CustomEvent('chatRegenerate'))
                 }

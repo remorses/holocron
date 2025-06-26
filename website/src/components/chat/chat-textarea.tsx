@@ -6,10 +6,12 @@ import getCaretCoordinates from 'textarea-caret'
 
 import { createIdGenerator, UIMessage } from 'ai'
 import { useChatState } from './chat-provider'
+import { cn } from 'website/src/lib/cn'
+import { ScrollArea } from '../ui/scroll-area'
 
 interface MentionsTextAreaProps {
-    value: string
-    onChange: (value: string) => void
+    // value: string
+    // onChange: (value: string) => void
     onSubmit: () => Promise<void> | void
     disabled?: boolean
     placeholder?: string
@@ -18,29 +20,27 @@ interface MentionsTextAreaProps {
     // autocompleteStrings?: string[]
 
     mentionOptions?: string[]
-    autocompleteSuggestions?: string[]
 }
 
 export function ChatTextarea({
-    value,
-    onChange: _onChange,
     onSubmit: _onSubmit,
     disabled = false,
     placeholder = 'Type @',
     className = '',
     mentionOptions,
-    autocompleteSuggestions = [],
 }: MentionsTextAreaProps) {
     const ref = React.useRef<HTMLTextAreaElement>(null)
     const [trigger, setTrigger] = React.useState<string | null>(null)
     const [caretOffset, setCaretOffset] = React.useState<number | null>(null)
+    const selectedAutocompleteText = useChatState(
+        (x) => x.selectedAutocompleteText,
+    )
+    const value = useChatState((x) => x.text || '')
+    function _onChange(text) {
+        useChatState.setState({ text })
+    }
 
-    const [selectedAutocompleteIndex, setSelectedAutocompleteIndex] =
-        React.useState(-1)
-    const originalTextRef = React.useRef('')
-
-    function onChange(text) {
-        originalTextRef.current = text
+    function onUserTextChange(text) {
         _onChange(text)
     }
 
@@ -86,7 +86,7 @@ export function ChatTextarea({
                     },
                 ],
             })
-            onChange('')
+            onUserTextChange('')
         }
         useChatState.setState({
             isGenerating: true,
@@ -112,26 +112,6 @@ export function ChatTextarea({
     }
 
     const messages = useChatState((x) => x.messages)
-    // Filtered autocomplete suggestions based on original text (not current selection)
-    const filteredSuggestions = React.useMemo(() => {
-        const searchText = originalTextRef.current || value
-        if (!searchText.trim() || messages.length > 0) return []
-        return autocompleteSuggestions
-            .filter((suggestion) =>
-                suggestion.toLowerCase().startsWith(searchText.toLowerCase()),
-            )
-            .slice(0, 5)
-    }, [value, messages.length])
-
-    const autocompleteEnabled =
-        messages.length === 0 &&
-        value.length > 0 &&
-        filteredSuggestions.length > 0
-
-    const onAutocompleteSelect = (item: string) => {
-        _onChange(item)
-        // setShowAutocomplete(false)
-    }
 
     React.useEffect(() => {
         const handleChatRegenerate = () => {
@@ -185,35 +165,6 @@ export function ChatTextarea({
             console.log('event is default prevented, ignoring enter')
             return
         }
-        // Handle autocomplete navigation when autocomplete is enabled and has items
-        if (autocompleteEnabled && filteredSuggestions.length > 0) {
-            if (event.key === 'ArrowDown') {
-                event.preventDefault()
-                const newIndex =
-                    selectedAutocompleteIndex < filteredSuggestions.length - 1
-                        ? selectedAutocompleteIndex + 1
-                        : 0
-                onAutocompleteSelect?.(filteredSuggestions[newIndex])
-                setSelectedAutocompleteIndex(newIndex)
-                return
-            }
-            if (event.key === 'ArrowUp') {
-                event.preventDefault()
-                const newIndex =
-                    selectedAutocompleteIndex > 0
-                        ? selectedAutocompleteIndex - 1
-                        : filteredSuggestions.length - 1
-                onAutocompleteSelect?.(filteredSuggestions[newIndex])
-                setSelectedAutocompleteIndex(newIndex)
-                return
-            }
-            if (event.key === 'Enter' && selectedAutocompleteIndex >= 0) {
-                event.preventDefault()
-
-                onChange(value + ' ')
-                return
-            }
-        }
 
         // Handle mentions combobox
         if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
@@ -234,7 +185,6 @@ export function ChatTextarea({
     }
 
     const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-        originalTextRef.current = event.target.value
         const trigger = getTrigger(event.target)
         const searchValue = getSearchValue(event.target)
         // If there's a trigger character, we'll show the combobox popover. This can
@@ -252,19 +202,19 @@ export function ChatTextarea({
             combobox.hide()
         }
         // Sets our textarea value.
-        onChange(event.target.value)
+        onUserTextChange(event.target.value)
         // Sets the combobox value that will be used to search in the list.
         combobox.setValue(searchValue)
     }
 
-    const onItemClick = (itemValue: string) => () => {
+    const onMentionClick = (itemValue: string) => () => {
         const textarea = ref.current
         if (!textarea) return
         const offset = getTriggerOffset(textarea)
         const displayValue = getValue(itemValue, trigger, mentionOptions)
         if (!displayValue) return
         setTrigger(null)
-        onChange(replaceValue(offset, searchValue, displayValue)(value))
+        onUserTextChange(replaceValue(offset, searchValue, displayValue)(value))
         const nextCaretOffset = offset + displayValue.length + 1
         setCaretOffset(nextCaretOffset)
     }
@@ -272,63 +222,38 @@ export function ChatTextarea({
     return (
         <div className='relative flex flex-col gap-2'>
             {/* External autocomplete dropdown */}
-            {autocompleteEnabled && filteredSuggestions.length > 0 && (
-                <div className='absolute bottom-full left-0 right-0 mb-2 z-10'>
-                    <div className='rounded-lg shadow-lg p-1'>
-                        <div className='flex flex-col gap-0.5'>
-                            {filteredSuggestions
-                                .slice(0, 5)
-                                .map((item, index) => {
-                                    return (
-                                        <button
-                                            key={item}
-                                            className={`w-full px-2 py-1.5 text-left text-sm rounded-md transition-colors ${
-                                                selectedAutocompleteIndex ===
-                                                index
-                                                    ? 'bg-muted/70'
-                                                    : 'hover:bg-accent/50'
-                                            }`}
-                                            onClick={() => {
-                                                onAutocompleteSelect?.(item)
-                                                setSelectedAutocompleteIndex(-1)
-                                            }}
-                                        >
-                                            {item}
-                                        </button>
-                                    )
-                                })}
-                        </div>
-                    </div>
-                </div>
-            )}
-            <Ariakit.Combobox
-                store={combobox}
-                autoSelect
-                value={value}
-                // We'll overwrite how the combobox popover is shown, so we disable
-                // the default behaviors.
-                showOnClick={false}
-                showOnChange={false}
-                showOnKeyPress={false}
-                setValueOnChange={false}
-                className={`p-2 py-2 shrink-0 leading-relaxed mt-1 w-full min-h-[80px] ${className}`}
-                render={
-                    <textarea
-                        ref={ref}
-                        rows={5}
-                        placeholder={placeholder}
-                        disabled={disabled}
-                        onKeyDown={handleKeyDown}
-                        // We need to re-calculate the position of the combobox popover
-                        // when the textarea contents are scrolled.
-                        onScroll={combobox.render}
-                        // Hide the combobox popover whenever the selection changes.
 
-                        onPointerDown={combobox.hide}
-                        onChange={handleChange}
-                    />
-                }
-            />
+            <ScrollArea className='[&>div>div]:grow flex flex-col box-border my-1 max-h-28 w-full 2xl:max-h-40'>
+                <Ariakit.Combobox
+                    store={combobox}
+                    autoSelect
+                    value={selectedAutocompleteText || value}
+                    // We'll overwrite how the combobox popover is shown, so we disable
+                    // the default behaviors.
+                    showOnClick={false}
+                    showOnChange={false}
+                    showOnKeyPress={false}
+                    setValueOnChange={false}
+                    className={cn(
+                        'flex grow min-h-[84px] overflow-auto max-h-full w-full bg-transparent px-4 py-3 text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none resize-none',
+                        className,
+                    )}
+                    render={
+                        <textarea
+                            ref={ref}
+                            rows={5}
+                            value={value}
+                            placeholder={placeholder}
+                            disabled={disabled}
+                            onKeyDown={handleKeyDown}
+                            onScroll={combobox.render}
+                            onPointerDown={combobox.hide}
+                            onChange={handleChange}
+                            className='box-border border-0 outline-none [field-sizing:content] whitespace-pre-wrap break-words resize-none'
+                        />
+                    }
+                />
+            </ScrollArea>
 
             <Ariakit.ComboboxPopover
                 store={combobox}
@@ -358,13 +283,13 @@ export function ChatTextarea({
                         key={value}
                         value={value}
                         focusOnHover
-                        onClick={onItemClick(value)}
+                        onClick={onMentionClick(value)}
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                                 e.stopPropagation()
                                 e.preventDefault()
                                 e.nativeEvent?.stopImmediatePropagation()
-                                onItemClick(value)()
+                                onMentionClick(value)()
                             }
                         }}
                         className={classNames(
@@ -387,6 +312,129 @@ export function ChatTextarea({
                     </Ariakit.ComboboxItem>
                 ))}
             </Ariakit.ComboboxPopover>
+        </div>
+    )
+}
+
+export function ChatAutocomplete({
+    autocompleteSuggestions = [],
+}: {
+    autocompleteSuggestions?: string[]
+}) {
+    const selectedAutocompleteText = useChatState(
+        (state) => state.selectedAutocompleteText,
+    )
+
+    const text = useChatState((x) => {
+        return x.text || ''
+    })
+    const messages = useChatState((x) => x.messages)
+
+    const filteredSuggestions = React.useMemo(() => {
+        if (!text.trim() || messages.length > 0) return []
+
+        return autocompleteSuggestions
+            .filter((suggestion) =>
+                suggestion.toLowerCase().startsWith(text.toLowerCase()),
+            )
+            .slice(0, 5)
+    }, [text, messages.length])
+
+    // const autocompleteEnabled =
+    //     messages.length === 0 &&
+    //     value.length > 0 &&
+    //     filteredSuggestions.length > 0
+
+    React.useLayoutEffect(() => {
+        function handleAutocompleteNavigation(event: KeyboardEvent) {
+            // Handle autocomplete navigation when autocomplete is enabled and has items
+            if (!filteredSuggestions.length) {
+                return
+            }
+            const selectedAutocompleteText =
+                useChatState.getState()?.selectedAutocompleteText || ''
+            const selectedAutocompleteIndex = filteredSuggestions.indexOf(
+                selectedAutocompleteText,
+            )
+            if (event.key === 'ArrowDown') {
+                event.preventDefault()
+                const newIndex =
+                    selectedAutocompleteIndex < filteredSuggestions.length - 1
+                        ? selectedAutocompleteIndex + 1
+                        : 0
+                const selectedAutocompleteText = filteredSuggestions[newIndex]
+                useChatState.setState({
+                    selectedAutocompleteText,
+                })
+
+                return
+            }
+            if (event.key === 'ArrowUp') {
+                event.preventDefault()
+                const newIndex =
+                    selectedAutocompleteIndex > 0
+                        ? selectedAutocompleteIndex - 1
+                        : filteredSuggestions.length - 1
+                const selectedAutocompleteText = filteredSuggestions[newIndex]
+                useChatState.setState({
+                    selectedAutocompleteText,
+                })
+                return
+            }
+            if (event.key === 'Enter' && selectedAutocompleteIndex >= 0) {
+                event.preventDefault()
+
+                event.stopPropagation()
+                const selectedAutocompleteText =
+                    useChatState.getState()?.selectedAutocompleteText || ''
+                useChatState.setState({
+                    selectedAutocompleteText: undefined,
+                    text: selectedAutocompleteText + ' ',
+                })
+                return
+            }
+        }
+
+        window.addEventListener('keydown', handleAutocompleteNavigation, {
+            capture: true,
+        })
+        return () => {
+            window.removeEventListener(
+                'keydown',
+                handleAutocompleteNavigation,
+                { capture: true },
+            )
+        }
+    }, [filteredSuggestions])
+    if (!filteredSuggestions.length) {
+        return null
+    }
+    return (
+        <div className=' bottom-0 pt-4 absolute translate-y-full left-0 right-0 mb-2 z-10'>
+            <div className='rounded-lg shadow-lg p-1'>
+                <div className='flex flex-col gap-0.5'>
+                    {filteredSuggestions.slice(0, 5).map((item, index) => {
+                        return (
+                            <button
+                                key={item}
+                                className={`w-full px-2 py-1.5 text-left text-sm rounded-md transition-colors ${
+                                    selectedAutocompleteText === item
+                                        ? 'bg-muted/70'
+                                        : 'hover:bg-accent/50'
+                                }`}
+                                onClick={() => {
+                                    useChatState.setState({
+                                        selectedAutocompleteText: undefined,
+                                        text: item + ' ',
+                                    })
+                                }}
+                            >
+                                {item}
+                            </button>
+                        )
+                    })}
+                </div>
+            </div>
         </div>
     )
 }

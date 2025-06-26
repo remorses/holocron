@@ -9,7 +9,10 @@ import {
     ChatErrorMessage,
     ChatUserMessage,
 } from 'website/src/components/chat/chat-message'
-import { ChatTextarea } from 'website/src/components/chat/chat-textarea'
+import {
+    ChatAutocomplete,
+    ChatTextarea,
+} from 'website/src/components/chat/chat-textarea'
 import { ToolInvocationRenderer } from 'website/src/components/tools-preview'
 
 import { Button } from 'website/src/components/ui/button'
@@ -86,79 +89,88 @@ export default function Chat({}) {
                 ref={scrollRef}
                 className='[&>div>div]:grow max-w-full h-full flex flex-col grow '
             >
-                <Messages ref={contentRef} />
-                <Footer />
+                <div className='flex flex-col gap-3 relative h-full grow justify-center'>
+                    <Messages ref={contentRef} />
+                    <WelcomeMessage />
+                    <Footer />
+                </div>
             </ScrollArea>
         </FormProvider>
+    )
+}
+
+function WelcomeMessage() {
+    const messages = useChatState((x) => x.messages)
+    if (messages.length) return null
+    return (
+        <ChatAssistantMessage
+            message={{
+                role: 'assistant',
+                id: '',
+                content: '',
+                parts: [
+                    {
+                        type: 'text',
+                        text: 'Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:',
+                    },
+                ],
+            }}
+        >
+            <Markdown
+                markdown='Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:'
+                className='prose-sm'
+            />
+            <div className='flex flex-col items-start gap-3 mt-3'>
+                <ChatSuggestionButton
+                    icon={<PaletteIcon />}
+                    userMessage='Change theme color'
+                >
+                    Change theme color
+                </ChatSuggestionButton>
+                <ChatSuggestionButton
+                    icon={<ImageIcon />}
+                    userMessage='Update site logo'
+                >
+                    Update site logo
+                </ChatSuggestionButton>
+                <ChatSuggestionButton
+                    icon={<FilePlus2Icon />}
+                    userMessage='Add a new doc page'
+                >
+                    Add a new doc page
+                </ChatSuggestionButton>
+                <ChatSuggestionButton
+                    icon={<ListTreeIcon />}
+                    userMessage='Edit navigation menu'
+                >
+                    Edit navigation menu
+                </ChatSuggestionButton>
+                <ChatSuggestionButton
+                    icon={<Link2Icon />}
+                    userMessage='Configure footer links'
+                >
+                    Configure footer links
+                </ChatSuggestionButton>
+                <ChatSuggestionButton
+                    icon={<AlertTriangleIcon />}
+                    userMessage='Set up custom 404 error page'
+                >
+                    Set up custom 404 error page
+                </ChatSuggestionButton>
+            </div>
+        </ChatAssistantMessage>
     )
 }
 
 function Messages({ ref }) {
     const messages = useChatState((x) => x?.messages)
 
+    if (!messages.length) return null
     return (
         <div
             ref={ref}
             className='relative text-sm h-full flex flex-col grow pr-4 mt-6 gap-6'
         >
-            {!messages.length && (
-                <ChatAssistantMessage
-                    message={{
-                        role: 'assistant',
-                        id: '',
-                        content: '',
-                        parts: [
-                            {
-                                type: 'text',
-                                text: 'Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:',
-                            },
-                        ],
-                    }}
-                >
-                    <Markdown
-                        markdown='Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:'
-                        className='prose-sm'
-                    />
-                    <div className='flex flex-col items-start gap-3 mt-3'>
-                        <ChatSuggestionButton
-                            icon={<PaletteIcon />}
-                            userMessage='Change theme color'
-                        >
-                            Change theme color
-                        </ChatSuggestionButton>
-                        <ChatSuggestionButton
-                            icon={<ImageIcon />}
-                            userMessage='Update site logo'
-                        >
-                            Update site logo
-                        </ChatSuggestionButton>
-                        <ChatSuggestionButton
-                            icon={<FilePlus2Icon />}
-                            userMessage='Add a new doc page'
-                        >
-                            Add a new doc page
-                        </ChatSuggestionButton>
-                        <ChatSuggestionButton
-                            icon={<ListTreeIcon />}
-                            userMessage='Edit navigation menu'
-                        >
-                            Edit navigation menu
-                        </ChatSuggestionButton>
-                        <ChatSuggestionButton
-                            icon={<Link2Icon />}
-                            userMessage='Configure footer links'
-                        >
-                            Configure footer links
-                        </ChatSuggestionButton>
-                        <ChatSuggestionButton
-                            icon={<AlertTriangleIcon />}
-                            userMessage='Set up custom 404 error page'
-                        >
-                            Set up custom 404 error page
-                        </ChatSuggestionButton>
-                    </div>
-                </ChatAssistantMessage>
-            )}
             {messages.map((message) => {
                 return <MessageRenderer key={message.id} message={message} />
             })}
@@ -241,9 +253,8 @@ const AUTOCOMPLETE_SUGGESTIONS = [
 ]
 
 function Footer() {
-    const [text, setText] = useState('')
-
     const isPending = useChatState((x) => x.isGenerating)
+    const text = useChatState((x) => x.text || '')
     const revalidator = useRevalidator()
     const { chat, prUrl, mentionOptions } =
         useLoaderData() as Route.ComponentProps['loaderData']
@@ -417,13 +428,10 @@ function Footer() {
 
                     <div className='relative rounded-[20px] border bg-muted'>
                         <ChatTextarea
-                            value={text}
-                            onChange={setText}
-                            autocompleteSuggestions={AUTOCOMPLETE_SUGGESTIONS}
                             onSubmit={() => handleSubmit()}
                             disabled={false}
                             placeholder='Ask me anything...'
-                            className='flex sm:min-h-[84px] w-full bg-transparent px-4 py-3 text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none resize-none'
+                            className=''
                             mentionOptions={mentionOptions || []}
                         />
                         {/* Textarea buttons */}
@@ -456,6 +464,9 @@ function Footer() {
                     </div>
                 </div>
             </div>
+            <ChatAutocomplete
+                autocompleteSuggestions={AUTOCOMPLETE_SUGGESTIONS}
+            />
         </div>
     )
 }

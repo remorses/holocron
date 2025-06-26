@@ -19,7 +19,10 @@ import {
     ChatErrorMessage,
     ChatUserMessage,
 } from 'website/src/components/chat/chat-message'
-import { ChatTextarea } from 'website/src/components/chat/chat-textarea'
+import {
+    ChatAutocomplete,
+    ChatTextarea,
+} from 'website/src/components/chat/chat-textarea'
 import { ToolInvocationRenderer } from 'website/src/components/tools-preview'
 import {
     ChatProvider,
@@ -37,10 +40,11 @@ import {
     DrawerClose,
 } from '../components/ui/drawer'
 import { cn } from '../lib/cn'
+import { AnimatePresence, motion } from 'unframer'
 
 export type { Route }
 
-const messages: UIMessage[] = [
+let exampleMessages: UIMessage[] = [
     {
         id: '1',
         role: 'user',
@@ -101,10 +105,12 @@ Let me know what you'd like to do first!
     },
 ]
 
+exampleMessages = []
+
 export default function Page({ loaderData }: Route.ComponentProps) {
     const initialChatState = useMemo<ChatState>(
         () => ({
-            messages,
+            messages: exampleMessages,
             isGenerating: false,
         }),
         [loaderData],
@@ -259,10 +265,8 @@ const AUTOCOMPLETE_SUGGESTIONS = [
 ]
 
 function Footer() {
-    const [text, setText] = useState('')
-
     const isPending = useChatState((x) => x.isGenerating)
-
+    const text = useChatState((x) => x.text || '')
     const handleSubmit = async () => {
         const messages = useChatState.getState()?.messages
         const generateId = createIdGenerator()
@@ -293,54 +297,55 @@ function Footer() {
     }
 
     return (
-        <div
-            className={cn(
-                'sticky bottom-4 mt-4 z-50 w-full rounded-[20px] border bg-muted flex flex-col gap-2 max-w-3xl mx-auto space-y-3',
-            )}
-        >
-            <ChatTextarea
-                value={text}
-                onChange={setText}
-                autocompleteSuggestions={AUTOCOMPLETE_SUGGESTIONS}
-                onSubmit={() => handleSubmit()}
-                disabled={false}
-                placeholder='Ask me anything...'
+        <AnimatePresence mode='popLayout'>
+            <motion.div
+                layoutId='textarea'
                 className={cn(
-                    'flex sm:min-h-[84px] w-full bg-transparent px-4 py-3 text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none resize-none',
+                    'sticky bottom-4 mt-4 z-50 w-full rounded-[20px] border bg-popover flex flex-col gap-2 max-w-3xl mx-auto space-y-3',
                 )}
-                mentionOptions={[
-                    '@/docs/README.md',
-                    '@/docs/setup.md',
-                    '@/docs/changelog.md',
-                    '@/docs/faq.md',
-                ]}
+            >
+                <ChatTextarea
+                    onSubmit={() => handleSubmit()}
+                    disabled={false}
+                    placeholder='Ask me anything...'
+                    className={cn('')}
+                    mentionOptions={[
+                        '@/docs/README.md',
+                        '@/docs/setup.md',
+                        '@/docs/changelog.md',
+                        '@/docs/faq.md',
+                    ]}
+                />
+
+                <div className='flex items-center justify-between gap-2 p-3'>
+                    <div className='flex items-center gap-2'>
+                        <Button
+                            variant='outline'
+                            size='icon'
+                            className='rounded-full size-8 border-none hover:bg-background hover:shadow-md transition-[box-shadow]'
+                        >
+                            <RiAttachment2
+                                className='text-muted-foreground/70 size-5'
+                                size={20}
+                                aria-hidden='true'
+                            />
+                        </Button>
+                    </div>
+
+                    <div className='flex items-center gap-2'>
+                        <Button
+                            className='rounded-full h-8'
+                            onClick={() => handleSubmit()}
+                            disabled={isPending || !text.trim()}
+                        >
+                            {isPending ? 'Loading...' : 'Generate'}
+                        </Button>
+                    </div>
+                </div>
+            </motion.div>
+            <ChatAutocomplete
+                autocompleteSuggestions={AUTOCOMPLETE_SUGGESTIONS}
             />
-
-            <div className='flex items-center justify-between gap-2 p-3'>
-                <div className='flex items-center gap-2'>
-                    <Button
-                        variant='outline'
-                        size='icon'
-                        className='rounded-full size-8 border-none hover:bg-background hover:shadow-md transition-[box-shadow]'
-                    >
-                        <RiAttachment2
-                            className='text-muted-foreground/70 size-5'
-                            size={20}
-                            aria-hidden='true'
-                        />
-                    </Button>
-                </div>
-
-                <div className='flex items-center gap-2'>
-                    <Button
-                        className='rounded-full h-8'
-                        onClick={() => handleSubmit()}
-                        disabled={isPending || !text.trim()}
-                    >
-                        {isPending ? 'Loading...' : 'Generate'}
-                    </Button>
-                </div>
-            </div>
-        </div>
+        </AnimatePresence>
     )
 }
