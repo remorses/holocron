@@ -1,8 +1,4 @@
-import {
-    FieldValues,
-    SubmitHandler,
-    useFormContext,
-} from 'react-hook-form'
+import { FieldValues, SubmitHandler, useFormContext } from 'react-hook-form'
 
 import type { UIField } from '../lib/render-form-tool'
 
@@ -34,8 +30,8 @@ export function RenderFormPreview({
     }
 
     return (
-        <Card className='flex flex-col gap-3 animate-in border fade-in'>
-            <CardContent className='flex flex-col gap-3 pt-6'>
+        <div className='flex p-3 rounded-lg flex-col gap-3 animate-in border fade-in'>
+            <div className='flex flex-col gap-3 pt-6'>
                 {args.fields.map((f) => {
                     return (
                         <div key={f.name} className='flex flex-col gap-2'>
@@ -59,9 +55,9 @@ export function RenderFormPreview({
                         </div>
                     )
                 })}
-                <pre className='bg-muted p-2 rounded text-xs overflow-x-auto'>
+                {/* <pre className='bg-muted p-2 rounded text-xs overflow-x-auto'>
                     {JSON.stringify(args, null, 2)}
-                </pre>
+                </pre> */}
                 {/* {args.fields.some((f) => f.type !== 'button') && (
                     <Button
                         className='w-full'
@@ -71,7 +67,7 @@ export function RenderFormPreview({
                         Submit
                     </Button>
                 )} */}
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     )
 }

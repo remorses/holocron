@@ -20,7 +20,7 @@ function ScrollArea({
             <ScrollAreaPrimitive.Viewport
                 ref={ref}
                 data-slot='scroll-area-viewport'
-                className='flex !overflow-x-visible [&>div]:!grow [&>div]:!flex [&>div]:!flex-col flex-col grow rounded-[inherit]'
+                className='flex !overflow-x-visible [&>div]:!grow [&>div]:!flex [&>div]:!flex-col [&>div]:!overflow-x-visible flex-col grow rounded-[inherit]'
             >
                 {children}
             </ScrollAreaPrimitive.Viewport>

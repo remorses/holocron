@@ -83,41 +83,42 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <Sidebar
             variant='inset'
             {...props}
-            className='dark flex  bg-black h-full flex-col grow scheme-only-dark max-lg:p-3 p-4 pr-0'
+            className='dark flex  bg-black h-full flex-col grow scheme-only-dark py-4 px-0'
         >
             <div
-                className='grid grow bg-black h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
+                className='grid grow bg-black h-full grid-rows-24 grid-cols-1  items-stretch gap-2'
                 // style={{ height: 'var(--sidebar-header-height, 64px)' }}
             >
-                <div className='p-0  justify-between row-span-1 gap-2 w-full flex   pr-4'>
-                    <TeamSwitcher className='w-auto grow-0' sites={userSites} />
+                <div className='justify-between w-full row-span-1 gap-2 flex px-6'>
+                    <TeamSwitcher
+                        className='grow '
+                        sites={userSites}
+                    />
 
+                    <div className='flex gap-2'>
+                        <Combobox
+                            value={chatId}
+                            onValueChange={(value) => {
+                                if (value && value !== chatId) {
+                                    navigate(
+                                        href(
+                                            '/org/:orgId/site/:siteId/chat/:chatId',
+                                            {
+                                                orgId: orgId!,
+                                                siteId: siteId!,
+                                                chatId: value,
+                                            },
+                                        ),
+                                    )
+                                }
+                            }}
+                            placeholder='Select chat...'
+                            searchPlaceholder='Search chats...'
+                            emptyText='No chats found.'
+                            className='min-w-0 truncate max-w-[200px] font-medium'
+                            items={chatHistoryItems}
+                        />
 
-                    <div className='grid  grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-2'>
-                        <div className=''>
-                            <Combobox
-                                value={chatId}
-                                onValueChange={(value) => {
-                                    if (value && value !== chatId) {
-                                        navigate(
-                                            href(
-                                                '/org/:orgId/site/:siteId/chat/:chatId',
-                                                {
-                                                    orgId: orgId!,
-                                                    siteId: siteId!,
-                                                    chatId: value,
-                                                },
-                                            ),
-                                        )
-                                    }
-                                }}
-                                placeholder='Select chat...'
-                                searchPlaceholder='Search chats...'
-                                emptyText='No chats found.'
-                                className='max-w-[200px] font-medium'
-                                items={chatHistoryItems}
-                            />
-                        </div>
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button

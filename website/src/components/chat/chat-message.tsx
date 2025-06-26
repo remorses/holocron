@@ -124,9 +124,7 @@ export const ChatAssistantMessage = memo(function ChatMessage({
             <div
                 className={cn(
                     'max-w-full relative group/message',
-                    message.role === 'user'
-                        ? 'bg-muted px-4 py-3 rounded-xl'
-                        : 'space-y-4 w-full',
+                    'space-y-4 w-full',
                 )}
             >
                 {children}
@@ -266,9 +264,7 @@ export function ChatUserMessage({
                         </TooltipContent>
                     </Tooltip>
                 </div>
-                <div className='full max-w-full'>
-                    {children}
-                </div>
+                <div className='full max-w-full'>{children}</div>
             </div>
         </article>
     )

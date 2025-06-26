@@ -127,7 +127,7 @@ export default function Chat({}) {
                 ref={scrollRef}
                 className='[&>div>div]:grow max-w-full h-full flex flex-col grow '
             >
-                <div className='flex flex-col gap-3 relative h-full grow justify-center'>
+                <div className='flex flex-col gap-3 px-6 relative h-full grow justify-center'>
                     <Messages ref={contentRef} />
                     <WelcomeMessage />
                     <Footer />
@@ -142,7 +142,7 @@ function WelcomeMessage() {
     if (messages.length) return null
     return (
         <ChatAssistantMessage
-            className='-mt-[160px] px-3'
+            className='-mt-[160px]'
             message={{
                 role: 'assistant',
                 id: '',
@@ -190,7 +190,7 @@ function Messages({ ref }) {
     return (
         <div
             ref={ref}
-            className='relative text-sm h-full flex flex-col grow pr-4 mt-6 gap-6'
+            className='relative text-sm h-full flex flex-col grow  mt-6 gap-6'
         >
             {messages.map((message) => {
                 return <MessageRenderer key={message.id} message={message} />
@@ -225,7 +225,7 @@ function MessageRenderer({ message }: { message: UIMessage }) {
     }
 
     return (
-        <ChatAssistantMessage className='px-3' message={message}>
+        <ChatAssistantMessage className='' message={message}>
             {message.parts.map((part, index) => {
                 if (part.type === 'tool-invocation') {
                     return <ToolInvocationRenderer part={part} index={index} />
@@ -420,9 +420,9 @@ function Footer() {
         <AnimatePresence mode='popLayout'>
             <motion.div
                 layoutId='textarea'
-                className='sticky bottom-0 pt-4 pr-4 z-50 w-full'
+                className='sticky bottom-0 pt-4  z-50 w-full'
             >
-                <div className='max-w-3xl mx-auto space-y-3'>
+                <div className='max-w-3xl -mx-3 space-y-3'>
                     <div className='flex flex-col gap-2 '>
                         <div className='flex gap-1 empty:hidden justify-start items-center bg-background p-1 rounded-md'>
                             {showCreatePR && (
