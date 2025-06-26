@@ -42,7 +42,9 @@ function createSystemPrompt({}) {
   ${JSON.stringify(docsJsonSchema, null, 2)}
   \`\`\`
 
-  To edit the docs.json file you can also use a render_form tool to display nice UI forms to the user, this method is preferred.
+  To edit the docs.json file you MUST always use the render_form tool to display nice UI forms to the user.
+
+  The docs.json file will be stale when using the render_form tool, so do not use it with the edit tool.
 
   `
 }
@@ -151,7 +153,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                         })
                         filePaths.push({
                             path: 'docs.json',
-                            title: 'Configuration file for the website. Here you can change most of the website configuration including CSS variables injected in the site.',
+                            title: 'Use the render_form tool to update these values',
                         })
                         // filePaths.push({ path: 'styles.css', title: 'The CSS styles for the website. Only update this file for advanced CSS customisations' })
                         return printDirectoryTree({

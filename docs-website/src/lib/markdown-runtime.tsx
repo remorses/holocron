@@ -51,7 +51,7 @@ export const StreamingMarkdownRuntimeComponent = memo(
                     markdown,
                     trailingNodes: 2,
                 })
-                console.log(ast)
+
                 if (previousMarkdown) {
                     const diffs = diffWordsWithSpace(previousMarkdown, markdown)
                     markAddedNodes(diffs, ast)

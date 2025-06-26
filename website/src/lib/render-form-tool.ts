@@ -63,30 +63,38 @@ export const NumberField = z.object({
     initialValue: numberReq,
 })
 
-export const SelectField = z.object({
-    name: z.string(),
-    type: z.literal('select'),
-    label: z.string(),
-    description: stringReq,
-    options: z.array(z.object({ label: z.string(), value: z.string() })).min(1),
-    placeholder: stringReq,
-    required: boolReq,
-    initialValue: stringReq,
-}).describe(
-    `should be used only when you already know the possible options for a string value, for example for contextual actions `,
-)
+export const SelectField = z
+    .object({
+        name: z.string(),
+        type: z.literal('select'),
+        label: z.string(),
+        description: stringReq,
+        options: z
+            .array(z.object({ label: z.string(), value: z.string() }))
+            .min(1),
+        placeholder: stringReq,
+        required: boolReq,
+        initialValue: stringReq,
+    })
+    .describe(
+        `should be used only when you already know the possible options for a string value, for example for contextual actions `,
+    )
 
-export const SliderField = z.object({
-    name: z.string(),
-    type: z.literal('slider'),
-    label: z.string(),
-    description: stringReq,
-    min: numberReq,
-    max: numberReq,
-    step: numberReq,
-    required: boolReq,
-    initialValue: numberReq,
-}).describe(`use this for values that have a min and max, for example the width of the website, with a min of 0 and max of 3000`)
+export const SliderField = z
+    .object({
+        name: z.string(),
+        type: z.literal('slider'),
+        label: z.string(),
+        description: stringReq,
+        min: numberReq,
+        max: numberReq,
+        step: numberReq,
+        required: boolReq,
+        initialValue: numberReq,
+    })
+    .describe(
+        `use this for values that have a min and max, for example the width of the website, with a min of 0 and max of 3000`,
+    )
 
 export const SwitchField = z.object({
     name: z.string(),
@@ -153,7 +161,7 @@ export const UIFieldSchema = z
         ButtonField,
     ])
     .describe(
-        `Each field requires a name property that describes the filed updated on that docs.json scalar field, it can be ${exampleNamePathsForDocsJson.join(', ')} where {index} is a number`,
+        `Each field requires a name property that describes the filed updated on that docs.json scalar field, it can be ${exampleNamePathsForDocsJson.join(', ')} where {index} is a number. NEVER use [index] syntax, for example instead of domains[0] use domains.0`,
     )
 
 export type UIField = z.infer<typeof UIFieldSchema>
@@ -169,6 +177,11 @@ export function createRenderFormExecute({}) {
         const errors: string[] = []
         try {
             for (const field of params.fields) {
+                if (field.name.match(/\[\s*index\s*\]/)) {
+                    errors.push(
+                        `field.name "${field.name}" contains "[index]" syntax; please use field.index instead.`,
+                    )
+                }
                 const schema = getTypeForNameInSchema(field.name)
                 if (!schema) {
                     errors.push(

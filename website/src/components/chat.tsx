@@ -48,7 +48,12 @@ import {
     PaletteIcon,
     X,
 } from 'lucide-react'
-import { useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
+import {
+    useLoaderData,
+    useParams,
+    useRevalidator,
+    useRouteLoaderData,
+} from 'react-router'
 import { docsRpcClient } from '../lib/docs-setstate'
 import {
     calculateLineChanges,
@@ -65,61 +70,89 @@ import { ChatSuggestionButton } from './chat/chat-suggestion'
 import { AnimatePresence, motion } from 'unframer'
 import { FilesInDraft } from 'docs-website/src/lib/docs-state'
 
+function keyForDocsJson({ chatId }) {
+    return `docs.json-${chatId}`
+}
+
+const setDocsJsonState = debounce(16, ({ values, chatId }) => {
+    console.log(`form values changed, sending state to docs iframe`)
+    const githubPath = 'docs.json'
+    const filesInDraft = useWebsiteState.getState().filesInDraft || {}
+    const previousJsonString = filesInDraft[githubPath]?.content || ''
+
+    const newJson = JSON.stringify(
+        {
+            ...safeJsonParse(previousJsonString),
+
+            ...values,
+        },
+        null,
+        2,
+    )
+
+    const newFilesInDraft: FilesInDraft = {
+        ...useWebsiteState.getState().filesInDraft,
+        [githubPath]: {
+            content: newJson,
+            githubPath,
+            ...calculateLineChanges(previousJsonString, newJson),
+        },
+    }
+    localStorage.setItem(keyForDocsJson({ chatId }), newJson)
+    useWebsiteState.setState({ filesInDraft: newFilesInDraft })
+    docsRpcClient.setDocsState({
+        filesInDraft: newFilesInDraft,
+    })
+})
+
 export default function Chat({}) {
     const { scrollRef, contentRef } = useStickToBottom({
         initial: 'instant',
     })
-    const initialDocsJsonData = useMemo(() => {
-        const filesInDraft = useWebsiteState.getState().filesInDraft
-        const githubPath = 'docs.json'
-        const previousJson = filesInDraft?.[githubPath]?.content || ''
-        return safeJsonParse(previousJson) || {}
-    }, [])
+    const { chatId } = useParams()
+
     const methods = useForm({
-        defaultValues: initialDocsJsonData,
-        resetOptions: { keepDirtyValues: true }, // optional
+        // values: initialDocsJsonData,
     })
-    const { getValues, subscribe } = methods
+    const { reset, subscribe } = methods
 
     useEffect(() => {
-        const callback = debounce(
-            50,
-            async ({ values, defaultValues, name }) => {
-                console.log(`form values changed, sending state to docs iframe`)
-                const githubPath = 'docs.json'
-                const filesInDraft =
-                    useWebsiteState.getState().filesInDraft || {}
-                const previousJsonString =
-                    filesInDraft[githubPath]?.content || ''
+        const persistedValues =
+            typeof localStorage !== 'undefined'
+                ? localStorage.getItem(keyForDocsJson({ chatId }))
+                : undefined
+        const docsJsonString =
+            useWebsiteState.getState()?.filesInDraft['docs.json']?.content
+        const data = safeJsonParse(persistedValues || docsJsonString) || {}
+        if (persistedValues) {
+            console.log(`localStorage docs.json: `, data)
+        } else {
+            console.log('docs.json', data)
+        }
+        if (!data) return
 
-                const newJson = JSON.stringify(
-                    { ...initialDocsJsonData, ...defaultValues, ...values },
-                    null,
-                    2,
-                )
+        reset(data, { keepDefaultValues: true })
+        setDocsJsonState({ values: data, chatId })
 
-                const newFilesInDraft: FilesInDraft = {
-                    ...useWebsiteState.getState().filesInDraft,
-                    [githubPath]: {
-                        content: newJson,
-                        githubPath,
-                        ...calculateLineChanges(previousJsonString, newJson),
-                    },
-                }
-                useWebsiteState.setState({ filesInDraft: newFilesInDraft })
-                await docsRpcClient.setDocsState({
-                    filesInDraft: newFilesInDraft,
-                })
-            },
-        )
+        // setValue('root', data, {
+        //     shouldDirty: true,
+        //     shouldTouch: true,
+        // })
+    }, [chatId])
+
+    useEffect(() => {
         const unSub = subscribe({
             formState: { values: true },
 
-            callback,
+            callback: ({ values, defaultValues }) =>
+                setDocsJsonState({
+                    values: { ...defaultValues, ...values },
+                    chatId,
+                }),
         })
 
         return unSub
-    }, [initialDocsJsonData, subscribe])
+    }, [chatId])
 
     return (
         <FormProvider {...methods}>
@@ -397,12 +430,17 @@ function Footer() {
         }
         updateDocsSite()
 
-        // Second iteration: update chat state
         for await (const newMessages of stateIter) {
             startTransition(() => {
                 useChatState.setState({ messages: newMessages })
             })
         }
+
+        window.dispatchEvent(
+            new CustomEvent('chatGenerationFinished', {
+                detail: { chatId: chat.chatId },
+            }),
+        )
     }
     // Listen for regenerate events
 
@@ -414,7 +452,7 @@ function Footer() {
             0,
         )
     }, [filesInDraft])
-    const showCreatePR = updatedLines > 0 && hasFilesInDraft
+    const showCreatePR = hasFilesInDraft || prUrl
 
     return (
         <AnimatePresence mode='popLayout'>
@@ -444,7 +482,12 @@ function Footer() {
 
                             {showCreatePR && (
                                 <div className='justify-end flex grow'>
-                                    <PrButton disabled={!hasNonPushedChanges} />
+                                    <PrButton
+                                        disabled={
+                                            !hasNonPushedChanges ||
+                                            !updatedLines
+                                        }
+                                    />
                                 </div>
                             )}
                         </div>

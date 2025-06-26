@@ -19,17 +19,25 @@ import { Textarea } from './ui/textarea'
 
 type RenderFieldProps = {
     field: UIField
-    hasFinished: boolean
 }
 
-export function RenderField({ field, hasFinished }: RenderFieldProps) {
-    const { control, register, setValue } = useFormContext()
+
+
+export function RenderField({ field }: RenderFieldProps) {
+    const { control, getValues, register, setValue } = useFormContext()
 
     useEffect(() => {
-        if (hasFinished && field.name && 'initialValue' in field) {
-            setValue(field.name, field.initialValue)
+        const handler = () => {
+            const value = getValues(field.name)
+            if (!value && field.name && 'initialValue' in field) {
+                setValue(field.name, field.initialValue)
+            }
         }
-    }, [field, hasFinished, setValue])
+        window.addEventListener('chatGenerationFinished', handler)
+        return () => {
+            window.removeEventListener('chatGenerationFinished', handler)
+        }
+    }, [field, setValue, getValues])
 
     const key = field.name
     if (!field.name) {

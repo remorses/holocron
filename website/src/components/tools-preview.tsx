@@ -144,7 +144,7 @@ export function ToolPreviewContainer({ className = '', children, ...props }) {
     return (
         <div
             className={cn(
-                'flex text-sm flex-col w-full [&_pre]:text-[12px]',
+                'text-sm w-full [&_pre]:text-[12px]',
                 className,
             )}
             {...props}

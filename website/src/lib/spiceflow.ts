@@ -646,6 +646,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                     where: { chatId, userId },
                     data: {
                         lastPushedFiles: filesInDraft,
+                        filesInDraft: filesInDraft,
                     },
                 })
                 return { prUrl: result.prUrl || existingPr.html_url }
