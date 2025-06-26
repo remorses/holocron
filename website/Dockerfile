@@ -13,6 +13,8 @@ COPY ./public /app/public
 
 ENV PORT=7664
 
+ENV NODE_ENV=production
+
 EXPOSE $PORT
 
 CMD ["node", "./build/server/index.js"]

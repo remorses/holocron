@@ -27,6 +27,7 @@ import {
     syncSite,
 } from '../lib/sync'
 import type { Route } from './+types/org.$orgId.onboarding'
+import { cloudflareClient } from '../lib/cloudflare'
 
 export async function loader({ request, params }: Route.LoaderArgs) {
     const { userId, redirectTo } = await getSession({ request })
@@ -86,6 +87,7 @@ export async function action({ request, params }: Route.ActionArgs) {
         const randomHash = Math.random().toString(36).substring(2, 10)
         const internalHost = `${githubAccountLogin}-${randomHash}.${env.APPS_DOMAIN}`
 
+        const cloudflareRes = await cloudflareClient.createDomain(internalHost)
         const [result, site] = await Promise.all([
             !exists &&
                 createNewRepo({

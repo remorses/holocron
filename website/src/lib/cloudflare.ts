@@ -124,6 +124,10 @@ export class CloudflareClient {
     async createDomain(
         domain: string,
     ): Promise<CloudflareCustomHostnameResponse> {
+        if (domain.endsWith('.localhost')) {
+            console.log(`skipping creating domain ${domain} in cloudflare`)
+            return {} as any
+        }
         return await this.fetch('/custom_hostnames', {
             method: 'POST',
             body: JSON.stringify({
