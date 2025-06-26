@@ -114,7 +114,7 @@ export default function Page({
                 }
                 return message
             }),
-            isChatGenerating: false,
+            isGenerating: false,
         }),
         [loaderData],
     )

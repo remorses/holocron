@@ -89,7 +89,7 @@ export function ChatTextarea({
             onChange('')
         }
         useChatState.setState({
-            isChatGenerating: true,
+            isGenerating: true,
             assistantErrorMessage: undefined,
         })
 
@@ -107,7 +107,7 @@ export function ChatTextarea({
                         : 'An unexpected error occurred',
             })
         } finally {
-            useChatState.setState({ isChatGenerating: false })
+            useChatState.setState({ isGenerating: false })
         }
     }
 

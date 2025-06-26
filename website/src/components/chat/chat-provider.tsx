@@ -39,7 +39,7 @@ export const createZustandContext = <TInitial,>(
 
 export type ChatState = {
     messages: UIMessage[]
-    isChatGenerating?: boolean
+    isGenerating?: boolean
     assistantErrorMessage?: string
     editingMessageId?: string
 }

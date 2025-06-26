@@ -45,7 +45,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
     const initialChatState = useMemo<ChatState>(
         () => ({
             messages: [],
-            isChatGenerating: false,
+            isGenerating: false,
         }),
         [loaderData],
     )
@@ -109,7 +109,7 @@ function Messages({ ref }) {
 }
 
 function MessageRenderer({ message }: { message: UIMessage }) {
-    const isChatGenerating = useChatState((x) => x.isChatGenerating)
+    const isChatGenerating = useChatState((x) => x.isGenerating)
 
     if (message.role === 'user') {
         return (
@@ -181,7 +181,7 @@ const AUTOCOMPLETE_SUGGESTIONS = [
 function Footer() {
     const [text, setText] = useState('')
 
-    const isPending = useChatState((x) => x.isChatGenerating)
+    const isPending = useChatState((x) => x.isGenerating)
 
     const handleSubmit = async () => {
         const messages = useChatState.getState()?.messages

@@ -97,7 +97,7 @@ export const ChatAssistantMessage = memo(function ChatMessage({
     className?: string
     children: React.ReactNode
 }) {
-    const isChatGenerating = useChatState((x) => x.isChatGenerating)
+    const isChatGenerating = useChatState((x) => x.isGenerating)
     const isLastAssistantMessage = useChatState(
         (x) =>
             x.messages.length > 0 &&

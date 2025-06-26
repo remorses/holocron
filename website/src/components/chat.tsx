@@ -169,7 +169,7 @@ function Messages({ ref }) {
 }
 
 function MessageRenderer({ message }: { message: UIMessage }) {
-    const isChatGenerating = useChatState((x) => x.isChatGenerating)
+    const isChatGenerating = useChatState((x) => x.isGenerating)
 
     if (message.role === 'user') {
         return (
@@ -243,7 +243,7 @@ const AUTOCOMPLETE_SUGGESTIONS = [
 function Footer() {
     const [text, setText] = useState('')
 
-    const isPending = useChatState((x) => x.isChatGenerating)
+    const isPending = useChatState((x) => x.isGenerating)
     const revalidator = useRevalidator()
     const { chat, prUrl, mentionOptions } =
         useLoaderData() as Route.ComponentProps['loaderData']
@@ -479,7 +479,7 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
     const hasNonPushedChanges = useMemo(() => {
         return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
     }, [filesInDraft, lastPushedFiles])
-    const isChatGenerating = useChatState((x) => x.isChatGenerating)
+    const isChatGenerating = useChatState((x) => x.isGenerating)
 
     const revalidator = useRevalidator()
 

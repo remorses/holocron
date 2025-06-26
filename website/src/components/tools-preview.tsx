@@ -18,7 +18,7 @@ export function EditorToolPreview({
     toolCallId: any
     args?: Partial<EditToolParamSchema>
 }) {
-    const isChatGenerating = useChatState((x) => x.isChatGenerating)
+    const isChatGenerating = useChatState((x) => x.isGenerating)
     let code = args?.new_str || args?.file_text || ''
     if (code && typeof code === 'object') {
         code = code?.['error'] || JSON.stringify(code, null, 2)
@@ -127,7 +127,7 @@ export function FilesTreePreview({
     toolCallId: any
     args?: any
 }) {
-    const isChatGenerating = useChatState((x) => x.isChatGenerating)
+    const isChatGenerating = useChatState((x) => x.isGenerating)
     const code = result || '\n'
     if (!code) return null
     let markdown = ''
