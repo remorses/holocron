@@ -36,13 +36,75 @@ import {
     DrawerFooter,
     DrawerClose,
 } from '../components/ui/drawer'
+import { cn } from '../lib/cn'
 
 export type { Route }
+
+const messages: UIMessage[] = [
+    {
+        id: '1',
+        role: 'user',
+        parts: [
+            {
+                type: 'text',
+                text: 'Hi, I want to get started with customizing my docs site. Any guidance?',
+            },
+        ],
+        content: '',
+        createdAt: new Date(),
+    },
+    {
+        id: '2',
+        role: 'assistant',
+        parts: [
+            {
+                type: 'text',
+                text: `
+# Welcome to the Docs Customizer! 🚀
+
+I'm here to help you set up and tailor your documentation site. Here’s a quick overview of what you can do:
+
+- **Change the theme color**: Easily switch your site's primary color to match your branding.
+- **Add new docs**: Create new pages and organize your content with simple commands.
+- **Edit navigation**: Rearrange, add or remove navigation items for better UX.
+- **Upload media**: Drag and drop images, icons, or attachments to enhance your documentation.
+- **Customize footer**: Manage contact info, social links, and legal pages in just a few clicks.
+- **Instant preview**: See live changes before publishing.
+- **Supports Markdown**: Write content with __Markdown__, including code snippets:
+
+\`\`\`tsx
+import { MyComponent } from 'components'
+export default function Page() {
+  return <MyComponent />
+}
+\`\`\`
+
+> *Tip*: You can ask me to "add analytics tracking," "add a FAQ page," or "edit the home page introduction."
+
+Here are some more things you can do:
+
+- **Install plugins**: Extend functionality with custom or community plugins.
+- **Configure authentication**: Set up user roles and permissions for your docs.
+- **Multi-language support**: Enable translations for global audiences.
+- **Embed videos or iframes**: Enhance docs with rich media.
+- **Automate deployments**: Connect with CI/CD pipelines for seamless publishing.
+- **Collect user feedback**: Add feedback widgets or forms.
+
+If you want details on any of these, just ask!
+
+Let me know what you'd like to do first!
+                `.trim(),
+            },
+        ],
+        content: '',
+        createdAt: new Date(),
+    },
+]
 
 export default function Page({ loaderData }: Route.ComponentProps) {
     const initialChatState = useMemo<ChatState>(
         () => ({
-            messages: [],
+            messages,
             isGenerating: false,
         }),
         [loaderData],
@@ -64,7 +126,7 @@ export function DrawerDemo() {
                     <Button variant='outline'>Open Drawer</Button>
                 </DrawerTrigger>
             </div>
-            <DrawerContent className='min-w-[600px]'>
+            <DrawerContent className=' min-w-[600px]'>
                 <DrawerHeader>
                     <DrawerTitle>Chat</DrawerTitle>
                     <DrawerDescription>
@@ -87,36 +149,36 @@ function Chat({}) {
     return (
         <ScrollArea
             ref={scrollRef}
-            className='[&>div>div]:grow -mr-4 pr-4 relative items-stretch rounded   max-h-full flex flex-col grow '
+            className='[&>div>div]:grow -mr-4 pr-4 relative items-stretch rounded max-h-full flex flex-col grow justify-center '
         >
-            <Messages ref={contentRef} />
-            <Footer />
+            <div className='flex flex-col gap-4 relative h-full justify-center'>
+                <Messages ref={contentRef} />
+                <WelcomeMessage />
+                <Footer />
+            </div>
         </ScrollArea>
+    )
+}
+
+function WelcomeMessage() {
+    const messages = useChatState((x) => x?.messages)
+    if (messages?.length) return null
+    return (
+        <Markdown
+            markdown={
+                'Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:\n'
+            }
+            isStreaming={false}
+        />
     )
 }
 
 function Messages({ ref }) {
     const messages = useChatState((x) => x?.messages)
 
+    if (!messages.length) return null
     return (
-        <div ref={ref} className=' w-full flex flex-col grow gap-6'>
-            {!messages.length && (
-                <ChatAssistantMessage
-                    message={{
-                        role: 'assistant',
-                        id: '',
-                        content: '',
-                        parts: [],
-                    }}
-                >
-                    <Markdown
-                        markdown={
-                            'Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:\n'
-                        }
-                        isStreaming={false}
-                    />
-                </ChatAssistantMessage>
-            )}
+        <div ref={ref} className={cn('w-full flex flex-col grow gap-6')}>
             {messages.map((message) => {
                 return <MessageRenderer key={message.id} message={message} />
             })}
@@ -231,52 +293,52 @@ function Footer() {
     }
 
     return (
-        <div className='sticky bottom-0 py-4 z-50 w-full'>
-            <div className='max-w-3xl mx-auto space-y-3'>
-                <div className='flex flex-col gap-2 '>
-                    <div className='relative rounded-[20px] border bg-muted'>
-                        <ChatTextarea
-                            value={text}
-                            onChange={setText}
-                            autocompleteSuggestions={AUTOCOMPLETE_SUGGESTIONS}
-                            onSubmit={() => handleSubmit()}
-                            disabled={false}
-                            placeholder='Ask me anything...'
-                            className='flex sm:min-h-[84px] w-full bg-transparent px-4 py-3 text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none resize-none'
-                            mentionOptions={[
-                                '@/docs/README.md',
-                                '@/docs/setup.md',
-                                '@/docs/changelog.md',
-                                '@/docs/faq.md',
-                            ]}
+        <div
+            className={cn(
+                'sticky bottom-4 mt-4 z-50 w-full rounded-[20px] border bg-muted flex flex-col gap-2 max-w-3xl mx-auto space-y-3',
+            )}
+        >
+            <ChatTextarea
+                value={text}
+                onChange={setText}
+                autocompleteSuggestions={AUTOCOMPLETE_SUGGESTIONS}
+                onSubmit={() => handleSubmit()}
+                disabled={false}
+                placeholder='Ask me anything...'
+                className={cn(
+                    'flex sm:min-h-[84px] w-full bg-transparent px-4 py-3 text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none resize-none',
+                )}
+                mentionOptions={[
+                    '@/docs/README.md',
+                    '@/docs/setup.md',
+                    '@/docs/changelog.md',
+                    '@/docs/faq.md',
+                ]}
+            />
+
+            <div className='flex items-center justify-between gap-2 p-3'>
+                <div className='flex items-center gap-2'>
+                    <Button
+                        variant='outline'
+                        size='icon'
+                        className='rounded-full size-8 border-none hover:bg-background hover:shadow-md transition-[box-shadow]'
+                    >
+                        <RiAttachment2
+                            className='text-muted-foreground/70 size-5'
+                            size={20}
+                            aria-hidden='true'
                         />
+                    </Button>
+                </div>
 
-                        <div className='flex items-center justify-between gap-2 p-3'>
-                            <div className='flex items-center gap-2'>
-                                <Button
-                                    variant='outline'
-                                    size='icon'
-                                    className='rounded-full size-8 border-none hover:bg-background hover:shadow-md transition-[box-shadow]'
-                                >
-                                    <RiAttachment2
-                                        className='text-muted-foreground/70 size-5'
-                                        size={20}
-                                        aria-hidden='true'
-                                    />
-                                </Button>
-                            </div>
-
-                            <div className='flex items-center gap-2'>
-                                <Button
-                                    className='rounded-full h-8'
-                                    onClick={() => handleSubmit()}
-                                    disabled={isPending || !text.trim()}
-                                >
-                                    {isPending ? 'Loading...' : 'Generate'}
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
+                <div className='flex items-center gap-2'>
+                    <Button
+                        className='rounded-full h-8'
+                        onClick={() => handleSubmit()}
+                        disabled={isPending || !text.trim()}
+                    >
+                        {isPending ? 'Loading...' : 'Generate'}
+                    </Button>
                 </div>
             </div>
         </div>
