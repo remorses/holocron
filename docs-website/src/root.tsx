@@ -85,9 +85,9 @@ export async function loader({ request }: Route.LoaderArgs) {
         redirectUrl.searchParams.delete('websocketUrl')
         
         // Create a plain Set-Cookie header (session cookie, JS-readable)
-        // Using minimal attributes for maximum compatibility
+        // Explicitly set HttpOnly=false for JavaScript access
         const isSecure = process.env.NODE_ENV === 'production'
-        const cookieValue = `__websocket_preview=${encodeURIComponent(websocketUrl)}; Path=/${isSecure ? '; Secure' : ''}`
+        const cookieValue = `__websocket_preview=${encodeURIComponent(websocketUrl)}; Path=/; HttpOnly=false${isSecure ? '; Secure' : ''}`
         
         throw redirect(redirectUrl.toString(), {
             headers: {
@@ -500,7 +500,7 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
 function PreviewBanner({ websocketUrl }: { websocketUrl: string }) {
     const handleDisconnect = () => {
         // Clear the session cookie by setting it to expire
-        document.cookie = '__websocket_preview=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax'
+        document.cookie = '__websocket_preview=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
         // Reload the page to reflect the change
         window.location.reload()
     }

@@ -101,15 +101,15 @@ async function updatePagesFromCommits(
 
     if (!siteBranch) {
         logger.log(`No branch found for ${githubBranch} in ${owner}/${repoName}`)
-        
+
         // Check if there's a docs.json in the commits with a new domain
         const newBranch = await tryCreateBranchFromDocsJson(args)
-        
+
         if (!newBranch) {
             logger.log(`No docs.json with available domain found for ${githubBranch}`)
             return
         }
-        
+
         siteBranch = newBranch
     }
 
@@ -388,24 +388,24 @@ async function tryCreateBranchFromDocsJson(
 ) {
     const { installationId, owner, repoName, githubBranch, commits } = args
     const octokit = await getOctokit({ installationId })
-    
+
     // Look for docs.json in the commits
     const docsJsonFiles: string[] = []
     for (const commit of commits) {
         const added = commit.added || []
         const modified = commit.modified || []
-        
+
         for (const file of [...added, ...modified]) {
             if (isDocsJsonFile(file)) {
                 docsJsonFiles.push(file)
             }
         }
     }
-    
+
     if (docsJsonFiles.length === 0) {
         return null
     }
-    
+
     // Get the latest docs.json content
     const docsJsonPath = docsJsonFiles[0] // Use first found docs.json
     try {
@@ -415,36 +415,42 @@ async function tryCreateBranchFromDocsJson(
             path: docsJsonPath,
             ref: githubBranch,
         })
-        
+
         if (!('content' in data) || data.type !== 'file') {
             return null
         }
-        
+
         const content = Buffer.from(data.content, 'base64').toString('utf-8')
         const docsJson: DocsJsonType = safeJsonParse(content, {})
-        
+
         // Check if docs.json has domains field with at least one domain
         if (!docsJson.domains || !Array.isArray(docsJson.domains) || docsJson.domains.length === 0) {
             logger.log(`docs.json found but no valid domains field in ${githubBranch}`)
             return null
         }
-        
-        // Check if any domain is already taken
+
+        // Check which domains are available
         const domains = docsJson.domains
         const existingDomains = await prisma.domain.findMany({
-            where: { 
-                host: { 
-                    in: domains 
-                } 
+            where: {
+                host: {
+                    in: domains
+                }
             },
         })
-        
-        if (existingDomains.length > 0) {
-            const takenDomains = existingDomains.map(d => d.host)
-            logger.log(`Domains ${takenDomains.join(', ')} are already taken, cannot create branch ${githubBranch}`)
+
+        const takenDomains = existingDomains.map(d => d.host)
+        const availableDomains = domains.filter(domain => !takenDomains.includes(domain))
+
+        if (availableDomains.length === 0) {
+            logger.log(`All domains ${domains.join(', ')} are already taken, cannot create branch ${githubBranch}`)
             return null
         }
-        
+
+        if (takenDomains.length > 0) {
+            logger.log(`Domains ${takenDomains.join(', ')} are already taken, creating branch ${githubBranch} with available domains: ${availableDomains.join(', ')}`)
+        }
+
         // Find the site for this repo
         const site = await prisma.site.findFirst({
             where: {
@@ -457,34 +463,35 @@ async function tryCreateBranchFromDocsJson(
                 },
             },
         })
-        
+
         if (!site) {
             logger.log(`No site found for ${owner}/${repoName}`)
             return null
         }
-        
-        // Create new branch with domains
+
+        // Create new branch with available domains only
         const newBranch = await prisma.siteBranch.create({
             data: {
                 siteId: site.siteId,
                 githubBranch,
                 title: docsJson.name || githubBranch,
                 docsJson,
-                domains: {
-                    create: domains.map(domain => ({
-                        host: domain,
-                        domainType: 'internalDomain',
-                    })),
-                },
+                // The domains are created by syncSite function
+                // domains: {
+                //     create: availableDomains.map(domain => ({
+                //         host: domain,
+                //         domainType: 'internalDomain',
+                //     })),
+                // },
             },
             include: {
                 site: true,
             },
         })
-        
-        logger.log(`Created new branch ${githubBranch} with domains ${domains.join(', ')}`)
+
+        logger.log(`Created new branch ${githubBranch} with available domains ${availableDomains.join(', ')}`)
         return newBranch
-        
+
     } catch (error) {
         logger.error(`Error creating branch from docs.json:`, error)
         return null
