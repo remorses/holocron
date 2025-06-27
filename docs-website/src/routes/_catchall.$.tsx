@@ -43,7 +43,8 @@ import { DocsJsonType } from '../lib/docs-json'
 import { useDocsJson } from '../lib/hooks'
 import { LOCALES } from '../lib/locales'
 import { Markdown } from '../lib/markdown'
-import { getFumadocsClientSource } from '../lib/source.client'
+import { getFumadocsClientSource } from '../lib/source'
+import { getFilesForSource, getFumadocsSource } from '../lib/source.server'
 
 export function meta({ data, matches }: Route.MetaArgs) {
     if (!data) return {}
@@ -248,10 +249,10 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         throw new Response('Branch not found', { status: 404 })
     }
     const locales = site.locales.map((x) => x.locale)
-    const { getFumadocsSource } = await import('../lib/source.server')
+    const files = await getFilesForSource({ branchId: siteBranch.branchId })
     const source = await getFumadocsSource({
         defaultLocale: site.defaultLocale,
-        branchId: siteBranch.branchId,
+        files,
         locales,
     })
 

@@ -3,7 +3,7 @@ import { createI18nSearchAPI } from 'fumadocs-core/search/server'
 
 import { structure } from 'fumadocs-core/mdx-plugins'
 import { createTokenizer } from '@orama/tokenizers/mandarin'
-import { getFumadocsSource } from '../lib/source.server'
+import { getFilesForSource, getFumadocsSource } from '../lib/source.server'
 import { prisma } from 'db'
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -26,7 +26,7 @@ export async function loader({ request }: Route.LoaderArgs) {
             },
         },
     })
-    
+
     const site = siteBranch?.site
     const branchId = siteBranch?.branchId
 
@@ -36,7 +36,8 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     const defaultLocale = site?.defaultLocale
     const locales = site?.locales?.map((x) => x.locale)
-    const source = await getFumadocsSource({ branchId, defaultLocale, locales })
+    const files = await getFilesForSource({ branchId: siteBranch.branchId })
+    const source = await getFumadocsSource({ files, defaultLocale, locales })
     const server = createI18nSearchAPI('advanced', {
         i18n: source._i18n!,
         localeMap: {

@@ -1,46 +1,40 @@
 import { useNProgress } from 'docs-website/src/lib/nprogress'
 import { Banner } from 'fumadocs-ui/components/banner'
 
+import { prisma } from 'db'
 import { ReactRouterProvider } from 'fumadocs-core/framework/react-router'
+import { LinkItemType } from 'fumadocs-ui/layouts/links'
+import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
+import { RootProvider } from 'fumadocs-ui/provider/base'
+import { GithubIcon, XIcon } from 'lucide-react'
+import { ThemeProvider, useTheme } from 'next-themes'
+import { startTransition, useEffect, useMemo, useState } from 'react'
 import {
     isRouteErrorResponse,
     Links,
     Meta,
     Outlet,
+    redirect,
     Scripts,
     ScrollRestoration,
-    useNavigate,
     useLoaderData,
-    redirect,
 } from 'react-router'
+import { TrieveSDK } from 'trieve-ts-sdk'
+import { useShallow } from 'zustand/react/shallow'
 import type { Route } from './+types/root'
 import './app.css'
-import { useDocsJson } from './lib/hooks'
-import { env } from './lib/env'
-import { startTransition, useEffect, useMemo, useState } from 'react'
-import { DocsState, IframeRpcMessage, useDocsState } from './lib/docs-state'
-import { isInsidePreviewIframe } from './lib/utils'
-import { prisma } from 'db'
-import { getFumadocsSource } from './lib/source.server'
-import { ThemeProvider } from 'next-themes'
-import { RootProvider } from 'fumadocs-ui/provider/base'
-import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
-import { TrieveSDK } from 'trieve-ts-sdk'
-import { LOCALE_LABELS } from './lib/locales'
-import { LinkItemType } from 'fumadocs-ui/layouts/links'
-import { useShallow } from 'zustand/react/shallow'
-import {
-    GithubIcon,
-    TwitterIcon,
-    LinkedinIcon,
-    MessageCircleIcon,
-    ExternalLinkIcon,
-    XIcon,
-} from 'lucide-react'
-import { processMdxInServer } from './lib/mdx.server'
-import { Markdown } from './lib/markdown'
-import { useTheme } from 'next-themes'
 import { DocsJsonType } from './lib/docs-json'
+import { DocsState, IframeRpcMessage, useDocsState } from './lib/docs-state'
+import { env } from './lib/env'
+import { useDocsJson } from './lib/hooks'
+import { LOCALE_LABELS } from './lib/locales'
+import { Markdown } from './lib/markdown'
+import { processMdxInServer } from './lib/mdx.server'
+import { getFumadocsSource, getFilesForSource } from './lib/source.server'
+import { getFumadocsClientSource } from './lib/source'
+import { VirtualFile } from 'fumadocs-core/source'
+import frontMatter from 'front-matter'
+import { isInsidePreviewIframe } from './lib/utils'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -124,19 +118,15 @@ export async function loader({ request }: Route.LoaderArgs) {
         throw new Response('Site not found', { status: 404 })
     }
 
-    if (!siteBranch) {
-        console.log('Branch not found for site:', site?.siteId)
-        throw new Response('Branch not found', { status: 404 })
-    }
+    const files = await getFilesForSource({ branchId: siteBranch.branchId })
 
     const locales = site.locales.map((x) => x.locale)
     const source = await getFumadocsSource({
         defaultLocale: site.defaultLocale,
-        branchId: siteBranch.branchId,
+        files,
         locales,
     })
 
-    const tree = source.getPageTree(site.defaultLocale)
     const i18n = source._i18n
 
     // Process banner markdown if it exists
@@ -145,7 +135,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     if (docsJson?.banner?.content) {
         try {
             const { data } = await processMdxInServer({
-                extension: '.mdx',
+                extension: '.md',
                 markdown: docsJson.banner.content,
             })
             bannerAst = data.ast
@@ -163,7 +153,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     return {
         docsJson: siteBranch.docsJson as DocsJsonType,
         locales,
-        tree,
+        files,
         i18n,
         name: site.name,
         bannerAst,
@@ -203,6 +193,8 @@ async function setDocsStateForMessage(partialState: Partial<DocsState>) {
 }
 async function iframeMessagesHandling() {
     if (!isInsidePreviewIframe()) return
+    if (globalThis.postMessageHandlingDone) return
+    globalThis.postMessageHandlingDone = true
     async function onParentPostMessage(e: MessageEvent) {
         onFirstStateMessage()
         try {
@@ -258,9 +250,18 @@ if (typeof window !== 'undefined') {
     iframeMessagesHandling()
 }
 
+declare global {
+    interface Window {
+        websocketHandlingDone?: boolean
+        postMessageHandlingDone?: boolean
+    }
+}
+
 // Function for handling websocket connection based on session cookie
 async function websocketIdHandling(websocketId: string) {
     if (typeof window === 'undefined') return
+    if (globalThis.websocketHandlingDone) return
+    globalThis.websocketHandlingDone = true
 
     console.log('connecting over preview websocketId', websocketId)
     const websocketUrl = `wss://fumabase.com/_tunnel/client?id=${websocketId}`
@@ -437,14 +438,82 @@ function DocsLayoutWrapper({
         }
     }, [])
 
-    // Check for state overrides
-    const { tree } = useDocsState(
+    // Create tree client-side using files and filesInDraft
+    const { filesInDraft } = useDocsState(
         useShallow((state) => {
             return {
-                tree: state.tree || loaderData.tree,
+                filesInDraft: state.filesInDraft,
             }
         }),
     )
+
+    const tree = useMemo(() => {
+        const { files, i18n } = loaderData
+
+        // Create files with filesInDraft included
+        const allFiles: VirtualFile[] = [...files]
+
+        // Add files from draft state
+        Object.entries(filesInDraft).forEach(([githubPath, fileData]) => {
+            if (!fileData) return
+
+            // Determine file type based on extension
+            const isMetaFile = githubPath.endsWith('meta.json')
+            const isPageFile =
+                githubPath.endsWith('.mdx') || githubPath.endsWith('.md')
+
+            if (!isMetaFile && !isPageFile) return
+
+            let draftFile: VirtualFile
+
+            if (isMetaFile) {
+                // Parse JSON for meta files
+                let jsonData
+                try {
+                    jsonData = JSON.parse(fileData.content)
+                } catch {
+                    return // Skip invalid JSON
+                }
+
+                draftFile = {
+                    data: jsonData,
+                    path: githubPath,
+                    type: 'meta',
+                }
+            } else {
+                // Parse frontmatter for page files
+                const { attributes: frontmatter } = frontMatter(
+                    fileData.content,
+                )
+
+                draftFile = {
+                    data: frontmatter,
+                    path: githubPath,
+                    type: 'page',
+                }
+            }
+
+            // Replace existing file or add new one
+            const existingIndex = allFiles.findIndex(
+                (f) => f.path === githubPath,
+            )
+            if (existingIndex >= 0) {
+                allFiles[existingIndex] = draftFile
+            } else {
+                allFiles.push(draftFile)
+            }
+        })
+
+        // Create source and get tree synchronously
+        const source = getFumadocsClientSource({
+            files: allFiles,
+            i18n,
+        })
+
+        const tree = source.getPageTree(i18n?.defaultLanguage || 'en')
+        console.log(tree)
+        return tree
+    }, [loaderData.files, loaderData.i18n, filesInDraft])
 
     // Configure layout based on docsJson
     const navMode = 'auto'
@@ -501,9 +570,8 @@ function DocsLayoutWrapper({
                     title: <Logo docsJson={docsJson} />,
                 }}
                 tabMode={navTabMode}
-                sidebar={{}}
                 i18n={i18n}
-                tree={tree as any}
+                tree={tree}
                 {...{
                     disableThemeSwitch,
                     links,

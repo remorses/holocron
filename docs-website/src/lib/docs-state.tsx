@@ -13,7 +13,7 @@ export type FilesInDraft = Record<
     } | null
 >
 export type DocsState = {
-    tree?: PageTree.Root
+    // tree?: PageTree.Root
     toc?: TOCItemType[]
     currentSlug?: string
     // docsJson?: DocsJsonType

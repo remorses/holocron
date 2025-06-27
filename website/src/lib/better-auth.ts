@@ -7,7 +7,7 @@ import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { env } from './env'
 
 const stripeClient = new Stripe(env.STRIPE_SECRET_KEY || '', {
-    apiVersion: '2025-02-24.acacia',
+    apiVersion: '2025-05-28.basil',
 })
 
 export const auth = betterAuth({
@@ -30,16 +30,16 @@ export const auth = betterAuth({
     logger: console,
 
     baseURL: env.NEXT_PUBLIC_URL?.toString() ?? '',
-    emailAndPassword: {
-        enabled: true,
-        sendEmailVerificationOnSignUp: true,
-        async sendVerificationEmail() {
-            console.log('Send email to verify email address')
-        },
-        async sendResetPassword(url, user) {
-            console.log('Send email to reset password')
-        },
-    },
+    // emailAndPassword: {
+    //     enabled: true,
+    //     // sendEmailVerificationOnSignUp: true,
+    //     async sendVerificationEmail() {
+    //         console.log('Send email to verify email address')
+    //     },
+    //     async sendResetPassword(url, user) {
+    //         console.log('Send email to reset password')
+    //     },
+    // },
     // advanced: {
     //     crossSubDomainCookies: { enabled: false },
     // },
@@ -60,8 +60,8 @@ export const auth = betterAuth({
     },
     plugins: [
         stripe({
-            stripeClient,
-            stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET || '',
+            stripeClient: stripeClient as any,
+            stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET!,
             createCustomerOnSignUp: true,
         }),
     ],

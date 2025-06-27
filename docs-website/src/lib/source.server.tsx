@@ -50,7 +50,7 @@ export async function getFilesForSource({ branchId }) {
 }
 
 export async function getFumadocsSource({
-    branchId,
+    files,
     locales = [] as string[],
     defaultLocale = 'en',
 }) {
@@ -58,7 +58,7 @@ export async function getFumadocsSource({
     if (!languages.includes(defaultLocale)) {
         languages.push(defaultLocale)
     }
-    const files = await getFilesForSource({ branchId })
+
     const source = loader<SourceData, I18nConfig>({
         source: { files },
         baseUrl: '/', // TODO pass here the customer base path

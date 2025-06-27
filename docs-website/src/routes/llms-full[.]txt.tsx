@@ -1,6 +1,6 @@
 import { prisma } from 'db'
 import type { Route } from './+types/llms-full[.]txt'
-import { getFumadocsSource } from '../lib/source.server'
+import { getFilesForSource, getFumadocsSource } from '../lib/source.server'
 
 interface MatchResult {
     context: string
@@ -144,9 +144,10 @@ export async function loader({ request }: Route.LoaderArgs) {
     }
 
     const locales = site.locales.map((x) => x.locale)
+    const files = await getFilesForSource({ branchId: siteBranch.branchId })
     const source = await getFumadocsSource({
         defaultLocale: site.defaultLocale,
-        branchId: siteBranch.branchId,
+        files,
         locales,
     })
 

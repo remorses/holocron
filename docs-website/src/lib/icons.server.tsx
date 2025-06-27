@@ -10,7 +10,7 @@ export function getIconJsx({ provider = 'lucide', key }) {
     }
     if (!key) return null
     const alias = lucideIcons.aliases?.[key]?.parent
-    const icon = lucideIcons[key || alias]
+    const icon = lucideIcons.icons[key || alias]
     if (!icon) {
         console.error(`icon with key ${key} not found`)
         return null
