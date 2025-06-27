@@ -1,6 +1,6 @@
 import { cac } from 'cac'
 import os from 'os'
-import { DocsJsonType } from 'docs-website/src/lib/docs-json'
+import { DocsJsonType } from 'docs-website/src/lib/docs-json.js'
 
 import fs from 'fs'
 import path from 'path'

@@ -1,6 +1,5 @@
 import { cac } from 'cac'
 import os from 'os'
-import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 
 import fs from 'fs'
 import path from 'path'
@@ -8,7 +7,12 @@ import path from 'path'
 import { globby } from 'globby'
 import { createApiClient } from './generated/spiceflow-client.js'
 import { execSync } from 'child_process'
-import { readTopLevelDocsJson, getCurrentGitBranch, openUrlInBrowser } from './utils.js'
+import {
+    readTopLevelDocsJson,
+    getCurrentGitBranch,
+    openUrlInBrowser,
+} from './utils.js'
+import { startWebSocketWithTunnel } from './server.js'
 
 export const cli = cac('fumabase')
 
@@ -26,6 +30,9 @@ const url = process.env.SERVER_URL || 'https://fumabase.com'
 
 const apiClient = createApiClient(url)
 
+cli.command('init', 'Initialize a new fumabase project').action(() => {
+    openUrlInBrowser('https://fumabase.com/login')
+})
 
 cli.command('dev', 'Preview your fumabase website').action(
     async function main(options) {
@@ -70,24 +77,47 @@ cli.command('dev', 'Preview your fumabase website').action(
                     }),
                 ),
             )
-            const siteId = docsJson.siteId
+            const siteId = docsJson?.siteId
             if (!siteId) {
                 console.error('siteId not found in docs.json')
                 return
             }
-            const githubBranch = getCurrentGitBranch()
-            const { data, error } =
-                await apiClient.api.getPreviewUrlForSiteId.post({
-                    githubBranch,
-                    siteId,
-                })
-            const previewUrl = data.previewUrl
-            openUrlInBrowser(previewUrl)
-
-            if (error) {
-                console.error(`cannot get the preview url for this site`)
+            const preferredHost = 'fumabase.com'
+            const previewDomain = (docsJson?.domains || []).sort((a, b) => {
+                const aIsFb = a.endsWith(preferredHost)
+                const bIsFb = b.endsWith(preferredHost)
+                if (aIsFb && !bIsFb) return -1
+                if (!aIsFb && bIsFb) return 1
+                return 0
+            })[0]
+            if (!previewDomain) {
+                console.error(
+                    `This docs.json has no domains, cannot preview the website`,
+                )
                 return
             }
+            const githubBranch = getCurrentGitBranch()
+            const [websocketRes] = await Promise.all([
+                // apiClient.api.getPreviewUrlForSiteId.post({
+                //     githubBranch,
+                //     siteId,
+                // }),
+                startWebSocketWithTunnel(),
+            ])
+
+            const { websocketUrl, wss } = websocketRes
+
+            const previewUrl = new URL(`https://${previewDomain}`)
+            previewUrl.searchParams.set('websocketServer', websocketUrl)
+            console.log(`opening ${previewUrl.toString()} in browser...`)
+            openUrlInBrowser(previewUrl.toString())
+
+            // Wait until there is at least one WebSocket connection before proceeding
+            await new Promise<void>((resolve) => {
+                wss.on('connection', () => resolve())
+            })
+
+            console.log(`browser connected, watching for files...`)
         } catch (error) {
             console.error(error)
 
