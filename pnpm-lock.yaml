@@ -54,9 +54,6 @@ importers:
       cloudflared:
         specifier: ^0.7.0
         version: 0.7.0
-      docs-website:
-        specifier: workspace:*
-        version: link:../docs-website
       globby:
         specifier: ^14.1.0
         version: 14.1.0
@@ -70,6 +67,9 @@ importers:
       '@types/ws':
         specifier: ^8.18.1
         version: 8.18.1
+      docs-website:
+        specifier: workspace:*
+        version: link:../docs-website
 
   containers-example:
     dependencies:

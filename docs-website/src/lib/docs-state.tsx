@@ -11,7 +11,7 @@ export type FilesInDraft = Record<
         githubPath: string
         addedLines?: number
         deletedLines?: number
-    }
+    } | null
 >
 export type DocsState = {
     tree?: PageTree.Root

@@ -86,7 +86,6 @@ export async function loader({ request }: Route.LoaderArgs) {
         throw new Response('Site not found', { status: 404 })
     }
 
-
     if (!siteBranch) {
         console.log('Branch not found for site:', site?.siteId)
         throw new Response('Branch not found', { status: 404 })
@@ -138,22 +137,28 @@ async function messagesHandling() {
                 return
             }
             const data = e.data as IframeRpcMessage
-            const { id, state } = data || {}
+            const { id, state: partialState } = data || {}
 
-            if (state) {
+            if (partialState) {
                 const prevState = useDocsState.getState()
                 if (
-                    state.currentSlug &&
-                    prevState.currentSlug !== state.currentSlug &&
-                    state.currentSlug !== window.location.pathname
+                    partialState.currentSlug &&
+                    prevState.currentSlug !== partialState.currentSlug &&
+                    partialState.currentSlug !== window.location.pathname
                 ) {
                     // return await navigate(state.currentSlug!)
                     // TODO do client side navigation instead
-                    window.location.pathname = state.currentSlug
+                    window.location.pathname = partialState.currentSlug
                 }
-                console.log(`setting docs-state inside iframe`, state)
+                console.log(`setting docs-state inside iframe`, partialState)
                 startTransition(() => {
-                    useDocsState.setState(state)
+                    useDocsState.setState({
+                        ...partialState,
+                        filesInDraft: {
+                            ...useDocsState.getState()?.filesInDraft,
+                            ...partialState.filesInDraft,
+                        },
+                    })
                 })
             }
         } finally {

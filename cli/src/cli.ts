@@ -4,7 +4,7 @@ import os from 'os'
 import fs from 'fs'
 import path from 'path'
 
-import { globby } from 'globby'
+import chokidar from 'chokidar'
 import { createApiClient } from './generated/spiceflow-client.js'
 import { execSync } from 'child_process'
 import {
@@ -48,12 +48,30 @@ cli.command('dev', 'Preview your fumabase website').action(
                 '**/meta.json',
                 '**/docs.json',
             ]
-            const filePaths = await globby(globs, {
+
+            // Create watcher for file changes
+            const watcher = chokidar.watch(globs, {
                 cwd: dir,
-                onlyFiles: true,
-                gitignore: true,
-                ignore: ['**/node_modules/**', '**/.git/**'],
+                ignored: ['**/node_modules/**', '**/.git/**'],
+                ignoreInitial: false,
+                persistent: true,
             })
+
+            const filePaths: string[] = []
+
+            // Wait for initial scan to complete
+            await new Promise<void>((resolve) => {
+                watcher.on('add', (filePath) => {
+                    filePaths.push(filePath)
+                })
+                watcher.on('ready', () => {
+                    console.log(
+                        `Found ${filePaths.length} file${filePaths.length === 1 ? '' : 's'}`,
+                    )
+                    resolve()
+                })
+            })
+
             if (!filePaths.length) {
                 console.error(`No files to upload inside ${dir}`)
                 return
@@ -121,11 +139,55 @@ cli.command('dev', 'Preview your fumabase website').action(
                     }),
                 ),
             )
+            const connectedClients = new Set<
+                ReturnType<typeof createIframeRpcClient>
+            >()
+
             // Wait until there is at least one WebSocket connection before proceeding
             wss.on('connection', (ws) => {
                 console.log(`browser connected, watching for files...`)
                 const client = createIframeRpcClient({ ws })
+                connectedClients.add(client)
                 client.setDocsState({ filesInDraft })
+
+                ws.on('close', () => {
+                    connectedClients.delete(client)
+                })
+            })
+
+            // Watch for file changes and additions
+            const handleFileUpdate = async (filePath: string) => {
+                const fullPath = path.resolve(dir, filePath)
+                const content = await fs.promises.readFile(fullPath, 'utf-8')
+                const githubPath = filePath
+
+                // Update the local filesInDraft
+                filesInDraft[filePath] = {
+                    content,
+                    githubPath,
+                }
+
+                // Send only the updated file to all connected clients
+                const updatedFile = { [filePath]: filesInDraft[filePath] }
+                for (const client of connectedClients) {
+                    client.setDocsState({ filesInDraft: updatedFile })
+                }
+            }
+
+            watcher.on('add', handleFileUpdate)
+            watcher.on('change', handleFileUpdate)
+
+            watcher.on('unlink', (filePath) => {
+                // Handle file deletion
+                if (filesInDraft[filePath]) {
+                    delete filesInDraft[filePath]
+
+                    // Send null value to signal file deletion
+                    const deletedFile = { [filePath]: null }
+                    for (const client of connectedClients) {
+                        client.setDocsState({ filesInDraft: deletedFile })
+                    }
+                }
             })
         } catch (error) {
             console.error(error)
