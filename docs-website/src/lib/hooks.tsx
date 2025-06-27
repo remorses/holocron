@@ -33,7 +33,7 @@ export function usePrevious<T>(value: T): T | undefined {
     return ref.current
 }
 export function useDocsJson(): DocsJsonType {
-    const { branch } = useRouteLoaderData(
+    const { docsJson } = useRouteLoaderData(
         'root',
     ) as Route.ComponentProps['loaderData']
 
@@ -43,16 +43,15 @@ export function useDocsJson(): DocsJsonType {
     )
 
     // Parse docsJsonString if present using useMemo for efficiency
-    const docsJson = useMemo(() => {
+    return useMemo(() => {
         if (docsJsonString) {
             try {
                 return JSON.parse(docsJsonString)
             } catch (e) {
                 console.error('Failed to parse docsJson from state', e)
-                return branch.docsJson
+                return docsJson
             }
         }
-        return branch.docsJson || {}
-    }, [docsJsonString, branch])
-    return docsJson
+        return docsJson || {}
+    }, [docsJsonString, docsJson])
 }

@@ -157,15 +157,20 @@ export async function loader({ request }: Route.LoaderArgs) {
     // Check for preview websocket ID in cookies
     const cookies = parseCookies(request.headers.get('Cookie'))
     const previewWebsocketId = cookies['__websocket_preview'] || null
+    const trieveReadApiKey = siteBranch.trieveReadApiKey
+    const trieveDatasetId = siteBranch.trieveDatasetId
 
     return {
-        site,
-        branch: siteBranch,
+        docsJson: siteBranch.docsJson as DocsJsonType,
         locales,
         tree,
         i18n,
+        name: site.name,
         bannerAst,
+        trieveReadApiKey,
+        trieveDatasetId,
         previewWebsocketId,
+        cssStyles: siteBranch.cssStyles,
     }
 }
 
@@ -299,13 +304,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
     const docsJson = useDocsJson()
     useNProgress()
     // Inline DocsProvider
-    const { site, branch, i18n } = loaderData
-    const locale = site.defaultLocale
+    const { i18n, trieveReadApiKey, trieveDatasetId, cssStyles } = loaderData
+    const locale = i18n?.defaultLanguage
 
-    if (!trieveClient && branch.trieveReadApiKey) {
+    if (!trieveClient && trieveReadApiKey) {
         trieveClient = new TrieveSDK({
-            apiKey: branch.trieveReadApiKey!,
-            datasetId: branch.trieveDatasetId || undefined,
+            apiKey: trieveReadApiKey!,
+            datasetId: trieveDatasetId || undefined,
         })
     }
 
@@ -338,10 +343,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     <RootProvider
                         search={{
                             options: {},
-                            enabled: !!branch.trieveDatasetId,
+                            enabled: !!trieveDatasetId,
                         }}
                         i18n={{
-                            locale,
+                            locale: locale || '',
                             locales: i18n?.languages.map((locale) => {
                                 return {
                                     locale,
@@ -356,10 +361,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                             enableSystem
                             disableTransitionOnChange
                         >
-                            {branch.cssStyles && (
+                            {cssStyles && (
                                 <style
                                     dangerouslySetInnerHTML={{
-                                        __html: branch.cssStyles,
+                                        __html: cssStyles,
                                     }}
                                 />
                             )}
@@ -377,8 +382,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 function CSSVariables({ docsJson }) {
-    const { site } = useLoaderData<typeof loader>()
-
     const cssVariables = docsJson?.cssVariables
 
     if (!cssVariables || Object.keys(cssVariables).length === 0) {
@@ -417,7 +420,7 @@ function DocsLayoutWrapper({
     docsJson: DocsJsonType
 }) {
     const loaderData = useLoaderData<typeof loader>()
-    const { site, i18n, previewWebsocketId } = loaderData
+    const { i18n, previewWebsocketId } = loaderData
 
     useEffect(() => {
         if (previewWebsocketId) {
@@ -581,7 +584,7 @@ function UserBanner({ banner }: { banner?: any }) {
 }
 
 function Logo({ docsJson = {} as DocsJsonType }) {
-    const { site } = useLoaderData<typeof loader>()
+    const { name } = useLoaderData<typeof loader>()
     const { theme, resolvedTheme } = useTheme()
 
     const currentTheme = resolvedTheme || theme || 'light'
@@ -589,7 +592,7 @@ function Logo({ docsJson = {} as DocsJsonType }) {
     if (!docsJson.logo) {
         return (
             <span className='font-medium [.uwu_&]:hidden max-md:hidden'>
-                {docsJson?.name || site.name || 'Documentation'}
+                {docsJson?.name || name || 'Documentation'}
             </span>
         )
     }
