@@ -128,7 +128,7 @@ export default function Chat({}) {
                 ? localStorage.getItem(keyForDocsJson({ chatId }))
                 : undefined
         const docsJsonString =
-            useWebsiteState.getState()?.filesInDraft['docs.json']?.content
+            useWebsiteState.getState()?.filesInDraft['docs.json']?.content || ''
         const data = safeJsonParse(persistedValues || docsJsonString) || null
         if (persistedValues) {
             console.log(`localStorage docs.json: `, data)
@@ -461,7 +461,7 @@ function Footer() {
     const updatedLines = useMemo(() => {
         return Object.values(filesInDraft).reduce(
             (sum, file: FileUpdate) =>
-                sum + (file.addedLines || 0) + (file.deletedLines || 0),
+                sum + (file?.addedLines || 0) + (file?.deletedLines || 0),
             0,
         )
     }, [filesInDraft])
@@ -699,7 +699,7 @@ export const DiffStats = memo(function DiffStats({
     // Only include files that have additions or deletions
     const changedFiles = Object.entries(filesInDraft).filter(
         ([, file]) =>
-            (file.addedLines || 0) > 0 || (file.deletedLines || 0) > 0,
+            (file?.addedLines || 0) > 0 || (file?.deletedLines || 0) > 0,
     )
     const fileCount = changedFiles.length
 
@@ -709,11 +709,11 @@ export const DiffStats = memo(function DiffStats({
     }
 
     const totalAdded = changedFiles.reduce(
-        (sum, [, file]) => sum + (file.addedLines || 0),
+        (sum, [, file]) => sum + (file?.addedLines || 0),
         0,
     )
     const totalDeleted = changedFiles.reduce(
-        (sum, [, file]) => sum + (file.deletedLines || 0),
+        (sum, [, file]) => sum + (file?.deletedLines || 0),
         0,
     )
 

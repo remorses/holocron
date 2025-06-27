@@ -635,7 +635,7 @@ export async function changeGithubTree({
     octokit,
 }: {
     octokit: OctokitRest
-    create: { filePath: string; content: string }[]
+    create: { filePath: string; content: string | null }[]
     move: { oldPath: string; filePath: string; sha: string }[]
     remove: { filePath: string }[]
     owner: string
@@ -655,6 +655,7 @@ export async function changeGithubTree({
         Promise.all(
             create.map(async (x) => {
                 const encoding = 'utf-8'
+                if (x.content === null) return
                 const blobData = await octokit.git.createBlob({
                     owner: owner,
                     repo,
@@ -675,7 +676,7 @@ export async function changeGithubTree({
         octokit,
         owner,
         repo,
-        create: withBlobs,
+        create: withBlobs.filter(isTruthy),
         parentTreeSha: currentCommit.treeSha,
         move,
         remove,
@@ -966,7 +967,7 @@ export async function createPullRequestSuggestion({
     accountLogin: string
     body?: string
     title?: string
-    files: { filePath: string; content: string }[]
+    files: { filePath: string; content: string | null }[]
 }) {
     for (let f of files) {
         if (!f.filePath) {
@@ -1041,7 +1042,7 @@ export async function pushToPrOrBranch({
 }: {
     auth: string
     branch: string
-    files: { filePath: string; content: string }[]
+    files: { filePath: string; content: string | null }[]
     owner: string
     repo: string
     message?: string
@@ -1087,6 +1088,7 @@ export async function pushToPrOrBranch({
         Promise.all(
             files.map(async (x) => {
                 const encoding = 'utf-8'
+                if (x.content === null) return
                 const blobData = await octokit.rest.git.createBlob({
                     owner: baseOwner,
                     repo: baseRepo,
@@ -1106,7 +1108,7 @@ export async function pushToPrOrBranch({
     const { data: newTree } = await octokit.rest.git.createTree({
         owner: baseOwner,
         repo: baseRepo,
-        tree: withBlobs.map(({ blobSha, filePath }) => ({
+        tree: withBlobs.filter(isTruthy).map(({ blobSha, filePath }) => ({
             path: filePath,
             mode: `100644`,
             type: `blob`,

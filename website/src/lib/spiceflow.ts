@@ -585,7 +585,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             const files = Object.entries(filesInDraft).map(
                 ([filePath, fileUpdate]) => ({
                     filePath,
-                    content: fileUpdate.content || '',
+                    content: fileUpdate?.content || '',
                 }),
             )
 
@@ -683,7 +683,8 @@ export const app = new Spiceflow({ basePath: '/api' })
             const files = Object.entries(filesInDraft).map(
                 ([filePath, fileUpdate]) => ({
                     filePath,
-                    content: fileUpdate.content || '',
+                    // support deleting files, if null, delete it.
+                    content: fileUpdate?.content || null,
                 }),
             )
 

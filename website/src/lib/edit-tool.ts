@@ -22,12 +22,14 @@ export function calculateLineChanges(
 
 export type EditToolParamSchema = z.infer<typeof editToolParamsSchema>
 
-export const fileUpdateSchema = z.object({
-    githubPath: z.string(),
-    content: z.string().default(''),
-    addedLines: z.number().optional(),
-    deletedLines: z.number().optional(),
-})
+export const fileUpdateSchema = z
+    .object({
+        githubPath: z.string(),
+        content: z.string().default(''),
+        addedLines: z.number().optional(),
+        deletedLines: z.number().optional(),
+    })
+    .nullable()
 export type FileUpdate = z.infer<typeof fileUpdateSchema>
 
 export function isParameterComplete(args: Partial<EditToolParamSchema>) {
