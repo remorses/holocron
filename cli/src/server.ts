@@ -40,8 +40,9 @@ export function startWebSocketWithTunnel({ port }: { port?: number } = {}) {
         }
 
         // 1) local WebSocket server
-        const wss = new WebSocketServer({ port: actualPort }, () =>
-            console.log(`ws://localhost:${actualPort} ready`),
+        const wss = new WebSocketServer(
+            { port: actualPort, host: '127.0.0.1' },
+            () => console.log(`ws://localhost:${actualPort} ready`),
         )
 
         wss.on('error', (err) => {
@@ -58,7 +59,7 @@ export function startWebSocketWithTunnel({ port }: { port?: number } = {}) {
             const tunnel = await startTunnel({
                 port: actualPort,
                 acceptCloudflareNotice: true,
-                hostname: 'localhost',
+                hostname: '127.0.0.1',
                 protocol: 'http',
             })
             if (!tunnel) throw new Error('Failed to create Cloudflare tunnel')

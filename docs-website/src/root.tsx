@@ -1,4 +1,6 @@
 import { useNProgress } from 'docs-website/src/lib/nprogress'
+import { Banner } from 'fumadocs-ui/components/banner'
+
 import { ReactRouterProvider } from 'fumadocs-core/framework/react-router'
 import {
     isRouteErrorResponse,
@@ -291,12 +293,21 @@ if (typeof window !== 'undefined') {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-    const navigate = useNavigate()
-
-    // useParentPostMessage(async (e: MessageEvent) => {
-
-    // })
+    const loaderData = useLoaderData<typeof loader>()
+    const { previewWebsocketUrl } = loaderData
+    const docsJson = useDocsJson()
     useNProgress()
+    // Inline DocsProvider
+    const { site, branch, i18n } = loaderData
+    const locale = site.defaultLocale
+
+    if (!trieveClient && branch.trieveReadApiKey) {
+        trieveClient = new TrieveSDK({
+            apiKey: branch.trieveReadApiKey!,
+            datasetId: branch.trieveDatasetId || undefined,
+        })
+    }
+
     return (
         <html lang='en' suppressHydrationWarning>
             <head>
@@ -316,7 +327,47 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <Links />
             </head>
             <body>
-                <ReactRouterProvider>{children}</ReactRouterProvider>
+                {previewWebsocketUrl ? (
+                    <PreviewBanner websocketUrl={previewWebsocketUrl || ''} />
+                ) : (
+                    <UserBanner banner={docsJson?.banner} />
+                )}
+
+                <ReactRouterProvider>
+                    <RootProvider
+                        search={{
+                            options: {},
+                            enabled: !!branch.trieveDatasetId,
+                        }}
+                        i18n={{
+                            locale,
+                            locales: i18n?.languages.map((locale) => {
+                                return {
+                                    locale,
+                                    name: LOCALE_LABELS[locale] || '',
+                                }
+                            }),
+                        }}
+                    >
+                        <ThemeProvider
+                            attribute='class'
+                            defaultTheme='system'
+                            enableSystem
+                            disableTransitionOnChange
+                        >
+                            {branch.cssStyles && (
+                                <style
+                                    dangerouslySetInnerHTML={{
+                                        __html: branch.cssStyles,
+                                    }}
+                                />
+                            )}
+                            <DocsLayoutWrapper docsJson={docsJson}>
+                                {children}
+                            </DocsLayoutWrapper>
+                        </ThemeProvider>
+                    </RootProvider>
+                </ReactRouterProvider>
                 <ScrollRestoration />
                 <Scripts />
             </body>
@@ -354,57 +405,16 @@ function CSSVariables({ docsJson }) {
 let trieveClient: TrieveSDK
 
 export default function App() {
-    return (
-        <DocsProvider>
-            <DocsLayoutWrapper>
-                <Outlet />
-            </DocsLayoutWrapper>
-        </DocsProvider>
-    )
+    return <Outlet />
 }
 
-function DocsProvider({ children }: { children: React.ReactNode }) {
-    const { site, branch, i18n } = useLoaderData<typeof loader>()
-    const locale = site.defaultLocale // Will be updated from child route
-
-    if (!trieveClient && branch.trieveReadApiKey) {
-        trieveClient = new TrieveSDK({
-            apiKey: branch.trieveReadApiKey!,
-            datasetId: branch.trieveDatasetId || undefined,
-        })
-    }
-
-    return (
-        <RootProvider
-            search={{
-                options: {},
-                enabled: !!branch.trieveDatasetId,
-            }}
-            i18n={{
-                locale,
-                locales: i18n?.languages.map((locale) => {
-                    return { locale, name: LOCALE_LABELS[locale] || '' }
-                }),
-            }}
-        >
-            <ThemeProvider
-                attribute='class'
-                defaultTheme='system'
-                enableSystem
-                disableTransitionOnChange
-            >
-                {branch.cssStyles && (
-                    <style
-                        dangerouslySetInnerHTML={{ __html: branch.cssStyles }}
-                    />
-                )}
-                {children}
-            </ThemeProvider>
-        </RootProvider>
-    )
-}
-
-function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
+function DocsLayoutWrapper({
+    children,
+    docsJson,
+}: {
+    children: React.ReactNode
+    docsJson: DocsJsonType
+}) {
     const loaderData = useLoaderData<typeof loader>()
     const { site, i18n, previewWebsocketUrl } = loaderData
 
@@ -417,8 +427,6 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
             )
         }
     }, [])
-
-    const docsJson = useDocsJson()
 
     // Check for state overrides
     const { tree } = useDocsState(
@@ -472,10 +480,7 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
     })()
 
     return (
-        <div className='h-full w-full'>
-            {previewWebsocketUrl && (
-                <PreviewBanner websocketUrl={previewWebsocketUrl} />
-            )}
+        <div className='h-full flex flex-col w-full'>
             <DocsLayout
                 searchToggle={{
                     enabled: searchEnabled,
@@ -487,9 +492,7 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
                     title: <Logo docsJson={docsJson} />,
                 }}
                 tabMode={navTabMode}
-                sidebar={{
-                    banner: <Banner banner={docsJson?.banner} />,
-                }}
+                sidebar={{}}
                 i18n={i18n}
                 tree={tree as any}
                 {...{
@@ -504,7 +507,8 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
     )
 }
 
-function PreviewBanner({ websocketUrl }: { websocketUrl: string }) {
+function PreviewBanner({ websocketUrl }: { websocketUrl?: string }) {
+    if (!websocketUrl) return null
     const handleDisconnect = () => {
         // Clear the session cookie by setting it to expire
         document.cookie =
@@ -514,11 +518,11 @@ function PreviewBanner({ websocketUrl }: { websocketUrl: string }) {
     }
 
     return (
-        <div className='sticky top-0 z-50 bg-orange-500 text-white px-4 py-2 flex items-center justify-between mb-4'>
+        <Banner className='sticky top-0 z-50 bg-orange-500 isolate text-white px-4 py-2 flex items-center justify-between mb-4'>
             <div className='flex items-center gap-2'>
                 <div className='w-2 h-2 bg-white rounded-full animate-pulse'></div>
                 <span className='font-medium text-sm'>
-                    Connected to preview: {websocketUrl}
+                    Connected to local preview: {websocketUrl}
                 </span>
             </div>
             <button
@@ -529,11 +533,11 @@ function PreviewBanner({ websocketUrl }: { websocketUrl: string }) {
                 <XIcon className='w-3 h-3' />
                 Disconnect
             </button>
-        </div>
+        </Banner>
     )
 }
 
-function Banner({ banner }: { banner?: any }) {
+function UserBanner({ banner }: { banner?: any }) {
     const [dismissed, setDismissed] = useState(false)
     const { bannerAst } = useLoaderData<typeof loader>()
 
