@@ -110,7 +110,7 @@ const loadLanguageMemo = memoize(
     },
 )
 
-const onMissingLanguage = (highlighter: Highlighter, language: string) => {
+const throwOnMissingLanguage = (highlighter: Highlighter, language: string) => {
     if (alreadyLoadedLanguages.has(language)) {
         console.warn(
             `Skipping language loading for previously loaded language ${language}`,
@@ -142,7 +142,11 @@ setHighlighter()
 
 let processors = new Map<string, any>()
 
-export function processMdxInClient({ extension = 'mdx', markdown }) {
+export function processMdxInClient({
+    extension = 'mdx',
+    onMissingLanguage = throwOnMissingLanguage,
+    markdown,
+}) {
     if (!highlighter) {
         console.warn(
             `suspending markdown processing because of missing highlighter`,
@@ -153,7 +157,7 @@ export function processMdxInClient({ extension = 'mdx', markdown }) {
     if (!processor) {
         processor = getProcessor({
             extension,
-            onMissingLanguage,
+            onMissingLanguage: onMissingLanguage,
             highlighter,
         })
         processors.set(extension, processor)

@@ -1,16 +1,17 @@
-import { useShallow } from 'zustand/react/shallow'
-import { getCacheTagForMediaAsset, getKeyForMediaAsset, s3 } from '../lib/s3'
-import type { Route } from './+types/_catchall.$'
 import { prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
+import { VirtualFile } from 'fumadocs-core/source'
 import {
+    isRouteErrorResponse,
     useLoaderData,
     useRouteLoaderData,
-    isRouteErrorResponse,
 } from 'react-router'
+import { useShallow } from 'zustand/react/shallow'
 import { useDocsState } from '../lib/docs-state'
 import { processMdxInClient } from '../lib/markdown-runtime'
+import { getCacheTagForMediaAsset, getKeyForMediaAsset, s3 } from '../lib/s3'
 import type { Route as RootRoute } from '../root'
+import type { Route } from './+types/_catchall.$'
 
 import {
     PageArticle,
@@ -28,20 +29,21 @@ import {
     PageTOCPopoverContent,
     PageTOCPopoverTrigger,
 } from 'fumadocs-ui/layouts/docs/page-client'
+import {
+    ExternalLinkIcon,
+    GithubIcon,
+    LinkedinIcon,
+    MessageCircleIcon,
+    TwitterIcon,
+} from 'lucide-react'
 import { LLMCopyButton, ViewOptions } from '../components/llm'
 import { PoweredBy } from '../components/poweredby'
 import { Rate } from '../components/rate'
+import { DocsJsonType } from '../lib/docs-json'
+import { useDocsJson } from '../lib/hooks'
 import { LOCALES } from '../lib/locales'
 import { Markdown } from '../lib/markdown'
-import { DocsJsonType } from '../lib/docs-json'
-import {
-    GithubIcon,
-    TwitterIcon,
-    LinkedinIcon,
-    MessageCircleIcon,
-    ExternalLinkIcon,
-} from 'lucide-react'
-import { useDocsJson } from '../lib/hooks'
+import { getFumadocsClientSource } from '../lib/source.client'
 
 export function meta({ data, matches }: Route.MetaArgs) {
     if (!data) return {}
@@ -165,23 +167,28 @@ export async function clientLoader({
             for (const [githubPath, draft] of Object.entries(filesInDraft)) {
                 if (!draft) continue
 
-                // Convert githubPath to potential slug
-                const pathWithoutExtension = githubPath.replace(
-                    /\.(md|mdx)$/,
-                    '',
-                )
-                const potentialSlug =
-                    '/' + pathWithoutExtension.split('/').slice(-1)[0]
-
-                if (
-                    potentialSlug === slug ||
-                    githubPath.includes(slug.slice(1))
-                ) {
+                const source = await getFumadocsClientSource({
+                    files: [{ path: githubPath, data: {}, type: 'page' }],
+                })
+                const page = source.getPage(slugs)
+                if (page) {
                     const extension = githubPath.endsWith('.mdx') ? 'mdx' : 'md'
-                    const data = processMdxInClient({
-                        extension,
-                        markdown: draft.content,
-                    })
+                    const data = await (async function getData() {
+                        while (true) {
+                            try {
+                                return processMdxInClient({
+                                    extension,
+                                    markdown: draft.content,
+                                })
+                            } catch (e: any) {
+                                if (e instanceof Promise) {
+                                    await e
+                                } else {
+                                    throw e
+                                }
+                            }
+                        }
+                    })()
 
                     // Use cached server data as base structure, without fields available in root
                     const baseData = lastServerLoaderData || {

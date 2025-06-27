@@ -10,18 +10,13 @@ import { I18nConfig } from 'fumadocs-core/i18n'
 import { StructuredData } from './mdx'
 import { SourceData } from './source.server'
 
-export async function getFumadocsClientSource(
-    serverSource: LoaderOutput<{ source: SourceData; i18n: true }>,
-) {
-    const files: VirtualFile[] = serverSource.getPages().map((x) => {
-        const { data, path, url } = x
-        let file: VirtualFile = {
-            data,
-            path,
-            type: 'page',
-        }
-        return file
-    })
+export async function getFumadocsClientSource({
+    files,
+    i18n,
+}: {
+    i18n?: I18nConfig
+    files: VirtualFile[]
+}) {
     const source = loader<
         {
             pageData: PageData & {
@@ -33,12 +28,20 @@ export async function getFumadocsClientSource(
     >({
         source: { files },
         baseUrl: '/', // TODO pass here the customer base path
-        i18n: serverSource._i18n,
-        // TODO return image that links icon in the server
-        // icon(icon) {},
+        i18n,
 
-        // url: (slugs: string[], locale?: string) =>
-        //     '/' + (locale ? locale + '/' : '') + slugs.join('/'),
+        icon(icon) {
+            return (
+                <img
+                    src={`/api/icons/lucide/icon/${icon}`}
+                    alt={icon}
+                    style={{ display: 'inline-block', verticalAlign: 'middle' }}
+                    // height={icon.size}
+                    // width={icon.size}
+                    loading='lazy'
+                />
+            )
+        },
     })
 
     return source
