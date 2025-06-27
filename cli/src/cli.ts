@@ -11,6 +11,7 @@ import {
     getCurrentGitBranch,
     openUrlInBrowser,
     readTopLevelDocsJson,
+    safeParseJson,
 } from './utils.js'
 
 export const cli = cac('fumabase')
@@ -155,29 +156,31 @@ cli.command('dev', 'Preview your fumabase website')
             const client = createIframeRpcClient({ ws })
 
             // Wait for first message from browser before sending files
-            await new Promise<void>((resolve) => {
-                console.log(`Waiting for browser to connect...`)
-                ws.once('message', () => {
-                    resolve()
-                })
-            })
-            console.log(
-                `browser connected, showing a preview of your local changes`,
-            )
-            console.log(
-                `to deploy your changes to the production website simply push the changes on GitHub`,
-            )
-            console.log(
-                `fumabase will detect the updates and deploy a new version of the site`,
-            )
 
-            // Send initial files state after browser is connected
-            for (const [key, value] of Object.entries(filesInDraft)) {
-                // console.log(`sending state to website for file: ${key}`)
-                await client.setDocsState({
-                    filesInDraft: { [key]: value },
-                })
-            }
+            console.log(`Waiting for browser to connect...`)
+            ws.on('message', async (message) => {
+                const string = message.toString()
+                const data = safeParseJson(string)
+                // send the full state only on first message from the browser
+                if (data?.type !== 'ready') return
+                console.log(
+                    `browser connected, showing a preview of your local changes`,
+                )
+                console.log(
+                    `to deploy your changes to the production website simply push the changes on GitHub`,
+                )
+                console.log(
+                    `fumabase will detect the updates and deploy a new version of the site`,
+                )
+
+                // Send initial files state after browser is connected
+                for (const [key, value] of Object.entries(filesInDraft)) {
+                    // console.log(`sending state to website for file: ${key}`)
+                    await client.setDocsState({
+                        filesInDraft: { [key]: value },
+                    })
+                }
+            })
 
             // Watch for file changes and additions
             const handleFileUpdate = async (filePath: string) => {

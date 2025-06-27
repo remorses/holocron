@@ -54,3 +54,11 @@ export function openUrlInBrowser(url: string) {
         console.error('Failed to open URL in browser:', error)
     }
 }
+
+export function safeParseJson<T = any>(str: string): T | undefined {
+    try {
+        return JSON.parse(str) as T
+    } catch (e) {
+        return undefined
+    }
+}
