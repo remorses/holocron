@@ -42,10 +42,13 @@ export async function* pagesFromDirectory(
                 frontmatter: data.frontmatter,
                 githubPath: entryRelativePath,
                 githubSha: '',
+                extension: entry.name.split('.').pop() === 'mdx' ? 'mdx' as const : 'md' as const,
+                description: data.description || undefined,
+                structuredData: data.structuredData as any,
             },
-            type: 'page',
+            type: 'page' as const,
             structuredData: data.structuredData,
-        } satisfies AssetForSync | null
+        } satisfies AssetForSync
         if (page) {
             yield { ...page, content: fileContent, filePath: entryRelativePath }
         }

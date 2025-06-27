@@ -159,15 +159,16 @@ model Subscription {
   @@index([orgId])
 }
 
-model Tab {
-  tabId     String   @id @default(cuid())
-  site      Site     @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
-  siteId    String
-  title     String
+model SiteBranch {
+  branchId     String   @id @default(cuid())
+  site         Site     @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
+  siteId       String
+  title        String
+  githubBranch String   @default("main")
   // slug      String
   // enabled   Boolean    @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   pages       MarkdownPage[]
   mediaAssets MediaAsset[]
@@ -177,16 +178,16 @@ model Tab {
 }
 
 model MarkdownPage {
-  pageId       String    @id @default(cuid())
+  pageId       String     @id @default(cuid())
   slug         String
   // id    String @unique @id
-  tabId        String
-  tab          Tab       @relation(fields: [tabId], references: [tabId], onDelete: Cascade)
-  title        String    @db.Text
-  markdown     String    @db.Text
-  createdAt    DateTime  @default(now())
+  branchId     String
+  branch       SiteBranch @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
+  title        String     @db.Text
+  markdown     String     @db.Text
+  createdAt    DateTime   @default(now())
   // updatedAt DateTime @updatedAt
-  lastEditedAt DateTime? @updatedAt
+  lastEditedAt DateTime?  @updatedAt
 
   // ogImage      String?           @db.Text
   description String? @db.Text
@@ -201,8 +202,8 @@ model MarkdownPage {
   githubPath     String
   structuredData Json   @default("{}")
 
-  @@unique([tabId, slug])
-  @@index([tabId])
+  @@unique([branchId, slug])
+  @@index([branchId])
   @@index([slug])
 }
 
@@ -225,12 +226,12 @@ model Site {
   trieveDatasetId  String?
   trieveReadApiKey String?
 
-  tabs Tab[]
+  branches SiteBranch[]
 
-  docsJson            Json                     @default("{}")
-  cssStyles           String                   @default("")
-  githubOwner         String
-  githubBranch        String                   @default("main")
+  docsJson    Json   @default("{}")
+  cssStyles   String @default("")
+  githubOwner String
+
   githubRepo          String
   mediaAssets         MediaAsset[]
   locales             SiteEnabledLocale[]
@@ -244,27 +245,27 @@ model Site {
 
 model MediaAsset {
   siteId     String
-  tabId      String
+  branchId   String
   slug       String
-  tab        Tab    @relation(fields: [tabId], references: [tabId], onDelete: Cascade)
+  branch     SiteBranch @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
   githubSha  String
-  site       Site   @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
+  site       Site       @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
   githubPath String
   width      Int?
   height     Int?
 
-  @@id([slug, tabId])
+  @@id([slug, branchId])
 }
 
 model MetaFile {
   githubPath String
-  tabId      String
+  branchId   String
   jsonData   Json
   githubSha  String
 
-  tab Tab @relation(fields: [tabId], references: [tabId], onDelete: Cascade)
+  branch SiteBranch @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
 
-  @@id([githubPath, tabId])
+  @@id([githubPath, branchId])
 }
 
 enum DomainType {

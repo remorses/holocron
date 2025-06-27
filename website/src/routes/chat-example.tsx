@@ -275,7 +275,7 @@ function Footer() {
             await apiClient.api.generateMessage.post({
                 messages: messages,
                 siteId: 'cmbvdu95n00041yyp88tfgyxt',
-                tabId: 'main',
+                branchId: 'main',
                 currentSlug: '',
                 filesInDraft: {},
                 chatId: 'cmcci07p90033ieypfhp8lhna',

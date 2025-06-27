@@ -30,7 +30,7 @@ export type AssetForSync =
     | {
           type: 'page'
           totalPages: number
-          pageInput: Omit<Prisma.MarkdownPageUncheckedCreateInput, 'tabId'>
+          pageInput: Omit<Prisma.MarkdownPageUncheckedCreateInput, 'branchId'>
           structuredData: StructuredData
       }
     | {
@@ -94,13 +94,13 @@ export function isMediaFile(path: string): boolean {
 export async function syncSite({
     siteId,
     trieveDatasetId,
-    tabId,
+    branchId,
     pages,
 }: {
     siteId: string
     trieveDatasetId?: string
     name?: string
-    tabId: string
+    branchId: string
     orgId: string
     pages: AsyncIterable<AssetForSync>
 }) {
@@ -111,12 +111,12 @@ export async function syncSite({
 
     console.log(`Using site: ${siteId}`)
 
-    // --- 1. Find or create the Tab ---
-    // Use upsert to find or create the tab in a single operation
-    console.log(`Upserting tab with ID: ${tabId} for site: ${siteId}...`)
-    const tab = await prisma.tab.upsert({
+    // --- 1. Find or create the Branch ---
+    // Use upsert to find or create the branch in a single operation
+    console.log(`Upserting branch with ID: ${branchId} for site: ${siteId}...`)
+    const branch = await prisma.siteBranch.upsert({
         where: {
-            tabId: tabId,
+            branchId: branchId,
         },
         update: {
             siteId,
@@ -124,13 +124,13 @@ export async function syncSite({
         create: {
             siteId: siteId,
             title: 'Main',
-            tabId,
+            branchId,
         },
     })
-    console.log(`Tab upsert complete: ${tab.tabId} (${tab.title})`)
+    console.log(`Branch upsert complete: ${branch.branchId} (${branch.title})`)
 
     await syncFiles({
-        tabId,
+        branchId,
         siteId,
         trieveDatasetId,
         files: pages,
@@ -169,7 +169,7 @@ export async function* pagesFromExampleJson(): AsyncGenerator<
 }
 
 export async function syncFiles({
-    tabId,
+    branchId,
     siteId,
     trieveDatasetId,
     files,
@@ -177,7 +177,7 @@ export async function syncFiles({
     signal,
 }: {
     files: AsyncIterable<AssetForSync>
-    tabId: string
+    branchId: string
     siteId: string
     trieveDatasetId?: string
     name?: string
@@ -210,21 +210,21 @@ export async function syncFiles({
             if (asset.type === 'metaFile') {
                 await prisma.metaFile.upsert({
                     where: {
-                        githubPath_tabId: {
+                        githubPath_branchId: {
                             githubPath: asset.githubPath,
-                            tabId,
+                            branchId,
                         },
                     },
                     update: {
                         githubSha: asset.githubSha,
                         githubPath: asset.githubPath,
                         jsonData: asset.jsonData,
-                        tabId,
+                        branchId,
                     },
                     create: {
                         githubPath: asset.githubPath,
                         jsonData: asset.jsonData,
-                        tabId,
+                        branchId,
                         githubSha: asset.githubSha,
                     },
                 })
@@ -294,12 +294,12 @@ export async function syncFiles({
                     if (!response.body) {
                         throw new Error(`Failed to get body for asset ${slug}`)
                     }
-                    const key = getKeyForMediaAsset({ siteId, slug, tabId })
+                    const key = getKeyForMediaAsset({ siteId, slug, branchId })
                     await s3.file(key).write(response.body)
                     const cacheTag = getCacheTagForMediaAsset({
                         siteId,
                         slug,
-                        tabId,
+                        branchId,
                     })
                     cacheTagsToInvalidate.push(cacheTag)
                 }
@@ -308,22 +308,22 @@ export async function syncFiles({
                     upload(),
                     prisma.mediaAsset.upsert({
                         where: {
-                            slug_tabId: {
-                                tabId,
+                            slug_branchId: {
+                                branchId,
                                 slug,
                             },
                         },
                         update: {
                             siteId,
                             slug,
-                            tabId,
+                            branchId,
                         },
                         create: {
                             githubSha: asset.sha,
                             siteId,
                             slug,
                             githubPath: asset.githubPath,
-                            tabId,
+                            branchId,
                         },
                     }),
                 ])
@@ -354,9 +354,9 @@ export async function syncFiles({
                 await Promise.all([
                     prisma.markdownPage
                         .upsert({
-                            where: { tabId_slug: { tabId, slug } },
+                            where: { branchId_slug: { branchId, slug } },
                             update: asset.pageInput,
-                            create: { ...asset.pageInput, tabId },
+                            create: { ...asset.pageInput, branchId },
                         })
                         .then((page) => {
                             console.log(
@@ -450,7 +450,7 @@ export async function* filesFromGithub({
     repo,
     owner,
     installationId,
-    tabId,
+    branchId,
     basePath = '',
     signal,
     onlyGithubPaths = new Set<string>(),
@@ -474,7 +474,7 @@ export async function* filesFromGithub({
         checkGitHubIsInstalled({ installationId }),
         prisma.markdownPage.findMany({
             where: {
-                tabId,
+                branchId,
             },
             select: {
                 githubSha: true,
@@ -484,12 +484,12 @@ export async function* filesFromGithub({
         }),
         prisma.mediaAsset.findMany({
             where: {
-                tabId,
+                branchId,
             },
         }),
         prisma.metaFile.findMany({
             where: {
-                tabId,
+                branchId,
             },
         }),
     ])
@@ -773,14 +773,14 @@ export async function* filesFromGithub({
 export async function deletePages({
     slugs,
     siteId,
-    tabId,
+    branchId,
 }: {
     slugs: string[]
     siteId: string
-    tabId: string
+    branchId: string
 }) {
     console.log(
-        `Deleting pages with slugs: ${slugs.join(', ')} from tab ${tabId} in site ${siteId}`,
+        `Deleting pages with slugs: ${slugs.join(', ')} from branch ${branchId} in site ${siteId}`,
     )
 
     // 1. Get the site to retrieve the Trieve dataset ID
@@ -813,10 +813,10 @@ export async function deletePages({
     // 3. For each slug, find all pages that have that slug or start with that slug + "/"
     for (const rootSlug of slugs) {
         // Find the main page and all its children
-        console.log(`Finding pages for slug ${rootSlug} in tab ${tabId}`)
+        console.log(`Finding pages for slug ${rootSlug} in branch ${branchId}`)
         const pagesToDelete = await prisma.markdownPage.findMany({
             where: {
-                tabId,
+                branchId,
                 OR: [
                     { slug: rootSlug },
                     { slug: { startsWith: `${rootSlug}/` } },
@@ -829,7 +829,7 @@ export async function deletePages({
         })
 
         if (pagesToDelete.length === 0) {
-            console.log(`No pages found for slug ${rootSlug} in tab ${tabId}`)
+            console.log(`No pages found for slug ${rootSlug} in branch ${branchId}`)
             continue
         }
 
@@ -867,7 +867,7 @@ export async function deletePages({
         console.log(`Deleting pages from database for slug ${rootSlug}`)
         const deleteResult = await prisma.markdownPage.deleteMany({
             where: {
-                tabId,
+                branchId,
                 OR: [
                     { slug: rootSlug },
                     { slug: { startsWith: `${rootSlug}/` } },

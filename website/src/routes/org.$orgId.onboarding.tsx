@@ -133,11 +133,11 @@ export async function action({ request, params }: Route.ActionArgs) {
 
         const siteId = site.siteId
         console.log(`created site ${siteId}`)
-        const tabId = cuid()
+        const branchId = cuid()
         await syncSite({
             pages,
             trieveDatasetId: site.trieveDatasetId || undefined,
-            tabId,
+            branchId,
             orgId,
             siteId,
             name: `${githubAccountLogin} docs`,

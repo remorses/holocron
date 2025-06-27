@@ -26,7 +26,7 @@ export async function loader({
             include: {
                 org: true,
                 domains: true,
-                tabs: true,
+                branches: true,
             },
         }),
         prisma.chat.findMany({
@@ -57,14 +57,14 @@ export async function loader({
         iframeUrl.port = '7777'
     }
 
-    const tabId = site.tabs[0].tabId
+    const branchId = site.branches[0].branchId
 
     return {
         site,
         iframeUrl,
         host,
         siteId,
-        tabId,
+        branchId,
         chatHistory,
     }
 }

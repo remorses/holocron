@@ -87,7 +87,7 @@ async function updatePagesFromCommits(
             githubRepo: repoName,
         },
         include: {
-            tabs: true,
+            branches: true,
         },
     })
 
@@ -96,14 +96,14 @@ async function updatePagesFromCommits(
         return
     }
 
-    const tab = site.tabs[0]
-    if (!tab) {
-        logger.log(`No tabs found for site ${site.siteId}`)
+    const branch = site.branches[0]
+    if (!branch) {
+        logger.log(`No branches found for site ${site.siteId}`)
         return
     }
 
     // Handle deletions first
-    await handleDeletions({ site, commits, tabId: tab.tabId })
+    await handleDeletions({ site, commits, branchId: branch.branchId })
 
     // Process non-deleted files using syncFiles
     const changedFiles = filesFromWebhookCommits({
@@ -114,7 +114,7 @@ async function updatePagesFromCommits(
     })
 
     await syncFiles({
-        tabId: tab.tabId,
+        branchId: branch.branchId,
         siteId: site.siteId,
         files: changedFiles,
     })
@@ -287,7 +287,7 @@ async function* filesFromWebhookCommits({
 async function handleDeletions({
     site,
     commits,
-    tabId,
+    branchId,
 }: {
     site: { siteId: string }
     commits: Array<{
@@ -296,7 +296,7 @@ async function handleDeletions({
         modified?: string[]
         removed?: string[]
     }>
-    tabId: string
+    branchId: string
 }) {
     const latestCommit = commits[commits.length - 1]
     const removedFiles = latestCommit.removed || []
@@ -330,7 +330,7 @@ async function handleDeletions({
                 await prisma.markdownPage.deleteMany({
                     where: {
                         githubPath: filePath,
-                        tab: {
+                        branch: {
                             siteId: site.siteId,
                         },
                     },
@@ -358,7 +358,7 @@ async function handleDeletions({
                 await prisma.metaFile.deleteMany({
                     where: {
                         githubPath: filePath,
-                        tab: {
+                        branch: {
                             siteId: site.siteId,
                         },
                     },

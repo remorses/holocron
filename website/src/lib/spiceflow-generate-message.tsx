@@ -56,17 +56,17 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
         messages: z.array(z.custom<UIMessage>()),
         siteId: z.string(),
         chatId: z.string(),
-        tabId: z.string(),
+        branchId: z.string(),
         currentSlug: z.string(),
         filesInDraft: z.record(fileUpdateSchema),
     }),
     async *handler({ request, waitUntil, state: { userId } }) {
-        const { messages, currentSlug, chatId, siteId, tabId, filesInDraft } =
+        const { messages, currentSlug, chatId, siteId, branchId, filesInDraft } =
             await request.json()
-        // First, check if the user can access the requested tab
-        const tab = await prisma.tab.findFirst({
+        // First, check if the user can access the requested branch
+        const branch = await prisma.siteBranch.findFirst({
             where: {
-                tabId,
+                branchId,
                 site: {
                     org: {
                         users: {
@@ -78,15 +78,15 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 },
             },
         })
-        if (!tab) {
-            throw new Error('You do not have access to this tab')
+        if (!branch) {
+            throw new Error('You do not have access to this branch')
         }
         let model = openai.responses('gpt-4.1')
         // model = anthropic('claude-3-5-haiku-latest')
         const editFilesExecute = createEditExecute({
             filesInDraft,
             async getPageContent({ githubPath }) {
-                const content = await getPageContent({ githubPath, tabId })
+                const content = await getPageContent({ githubPath, branchId })
                 return content
             },
             async validateNewContent(x) {
@@ -141,7 +141,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     parameters: z.object({}),
                     execute: async () => {
                         const allFiles = await getTabFilesWithoutContents({
-                            tabId,
+                            branchId,
                         })
                         let filePaths = allFiles.map((x) => {
                             const path = x.githubPath
@@ -384,11 +384,11 @@ async function generateAndSaveChatTitle(params: {
     return chatInfo
 }
 
-export async function getTabFilesWithoutContents({ tabId }) {
+export async function getTabFilesWithoutContents({ branchId }) {
     const [pages, metaFiles, mediaAssets] = await Promise.all([
         prisma.markdownPage.findMany({
             where: {
-                tabId,
+                branchId,
             },
             omit: {
                 markdown: true,
@@ -397,7 +397,7 @@ export async function getTabFilesWithoutContents({ tabId }) {
         }),
         prisma.metaFile.findMany({
             where: {
-                tabId,
+                branchId,
             },
             omit: {
                 jsonData: true,
@@ -405,7 +405,7 @@ export async function getTabFilesWithoutContents({ tabId }) {
         }),
         prisma.mediaAsset.findMany({
             where: {
-                tabId,
+                branchId,
             },
         }),
     ])
@@ -417,43 +417,43 @@ export async function getTabFilesWithoutContents({ tabId }) {
     return allFiles
 }
 
-export async function getPageContent({ githubPath, tabId }) {
+export async function getPageContent({ githubPath, branchId }) {
     // Support for special files: docs.json and styles.css
     if (githubPath === 'docs.json') {
-        const tab = await prisma.site.findFirst({
-            where: { tabs: { some: { tabId } } },
+        const site = await prisma.site.findFirst({
+            where: { branches: { some: { branchId } } },
             select: { docsJson: true },
         })
-        if (!tab || !tab.docsJson) {
-            throw new Error(`Cannot find docs.json for tab ${tabId}`)
+        if (!site || !site.docsJson) {
+            throw new Error(`Cannot find docs.json for branch ${branchId}`)
         }
         return (
             `> Notice that this is the docs.json file before any form updates. Form updates are not saved on the filesystem until save! There is no need to inspect that your changes where succesful. \n\n` +
-            JSON.stringify(tab.docsJson, null, 2)
+            JSON.stringify(site.docsJson, null, 2)
         )
     }
     if (githubPath === 'styles.css') {
-        const tab = await prisma.site.findFirst({
-            where: { tabs: { some: { tabId } } },
+        const site = await prisma.site.findFirst({
+            where: { branches: { some: { branchId } } },
             select: { cssStyles: true },
         })
-        if (!tab) {
-            throw new Error(`Cannot find styles.css for tab ${tabId}`)
+        if (!site) {
+            throw new Error(`Cannot find styles.css for branch ${branchId}`)
         }
         // Could be null if not set
-        return tab.cssStyles || ''
+        return site.cssStyles || ''
     }
     // Otherwise, try page and metaFile
     const [page, metaFile] = await Promise.all([
         prisma.markdownPage.findFirst({
             where: {
-                tabId,
+                branchId,
                 githubPath,
             },
         }),
         prisma.metaFile.findFirst({
             where: {
-                tabId,
+                branchId,
                 githubPath,
             },
         }),

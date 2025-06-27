@@ -16,7 +16,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         },
         include: {
             domains: true,
-            tabs: {
+            branches: {
                 take: 1,
             },
             locales: true,
@@ -27,15 +27,15 @@ export async function loader({ request }: Route.LoaderArgs) {
         throw new Response('Site not found', { status: 404 })
     }
 
-    const tab = site.tabs[0]
-    if (!tab) {
-        throw new Response('Tab not found', { status: 404 })
+    const branch = site.branches[0]
+    if (!branch) {
+        throw new Response('Branch not found', { status: 404 })
     }
 
     const locales = site.locales.map((x) => x.locale)
     const source = await getFumadocsSource({
         defaultLocale: site.defaultLocale,
-        tabId: tab.tabId,
+        branchId: branch.branchId,
         locales,
     })
 

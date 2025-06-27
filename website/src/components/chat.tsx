@@ -324,7 +324,7 @@ function Footer() {
     const siteData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
-    const { siteId, tabId } = siteData
+    const { siteId, branchId } = siteData
 
     const filesInDraft = useWebsiteState((x) => x?.filesInDraft || {})
     const lastPushedFiles = useWebsiteState((x) => x.lastPushedFiles)
@@ -343,7 +343,7 @@ function Footer() {
             await apiClient.api.generateMessage.post({
                 messages: messages,
                 siteId,
-                tabId,
+                branchId,
                 currentSlug,
                 filesInDraft,
                 chatId: chat.chatId,
@@ -352,7 +352,7 @@ function Footer() {
 
         async function getPageContent(x) {
             const { data, error } = await apiClient.api.getPageContent.post({
-                tabId,
+                branchId,
                 githubPath: x.githubPath,
             })
             if (error) return ''

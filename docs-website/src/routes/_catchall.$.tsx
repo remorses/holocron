@@ -141,7 +141,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         },
         include: {
             domains: true,
-            tabs: {
+            branches: {
                 take: 1,
             },
             locales: true,
@@ -153,16 +153,16 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         throw new Response('Site not found', { status: 404 })
     }
 
-    const tab = site.tabs[0]
-    if (!tab) {
-        console.log('Tab not found for site:', site?.siteId)
-        throw new Response('Tab not found', { status: 404 })
+    const branch = site.branches[0]
+    if (!branch) {
+        console.log('Branch not found for site:', site?.siteId)
+        throw new Response('Branch not found', { status: 404 })
     }
     const locales = site.locales.map((x) => x.locale)
     const { getFumadocsSource } = await import('../lib/source.server')
     const source = await getFumadocsSource({
         defaultLocale: site.defaultLocale,
-        tabId: tab.tabId,
+        branchId: branch.branchId,
         locales,
     })
 
@@ -203,24 +203,24 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             where: {
                 slug,
 
-                tabId: tab.tabId,
+                branchId: branch.branchId,
             },
         }),
         prisma.mediaAsset.findFirst({
             where: {
                 slug,
-                tabId: tab.tabId,
+                branchId: branch.branchId,
             },
         }),
     ])
 
     if (!page && mediaAsset) {
         const siteId = site.siteId
-        const tabId = tab.tabId
+        const branchId = branch.branchId
         const key = getKeyForMediaAsset({
             siteId,
             slug,
-            tabId,
+            branchId,
         })
         const file = s3.file(key)
         const [stat, blob] = await Promise.all([file.stat(), file.blob()])
@@ -228,7 +228,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             headers: {
                 'Content-Type': stat.type,
                 'Cache-Control': 'public, max-age=31536000, immutable',
-                'Cache-Tag': getCacheTagForMediaAsset({ siteId, slug, tabId }),
+                'Cache-Tag': getCacheTagForMediaAsset({ siteId, slug, branchId }),
                 'Content-Length': stat.size.toString(),
             },
         })
@@ -240,12 +240,12 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             prisma.markdownPage.findFirst({
                 where: {
                     slug: '/index',
-                    tabId: tab.tabId,
+                    branchId: branch.branchId,
                 },
             }),
             prisma.markdownPage.findFirst({
                 where: {
-                    tabId: tab.tabId,
+                    branchId: branch.branchId,
                 },
                 orderBy: {
                     slug: 'asc',
@@ -281,7 +281,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         markdown: page.markdown,
     })
 
-    const githubBranch = site.githubBranch || 'main'
+    const githubBranch = branch.githubBranch || 'main'
     return {
         ...data,
         slugs,

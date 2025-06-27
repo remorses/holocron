@@ -20,18 +20,18 @@ export async function loader({ request }: Route.LoaderArgs) {
         },
         include: {
             locales: true,
-            tabs: true,
+            branches: true,
         },
     })
-    const tabId = site?.tabs[0]?.tabId
+    const branchId = site?.branches[0]?.branchId
 
-    if (!tabId) {
-        throw new Response('Tab not found', { status: 404 })
+    if (!branchId) {
+        throw new Response('Branch not found', { status: 404 })
     }
 
     const defaultLocale = site?.defaultLocale
     const locales = site?.locales.map((x) => x.locale)
-    const source = await getFumadocsSource({ tabId, defaultLocale, locales })
+    const source = await getFumadocsSource({ branchId, defaultLocale, locales })
     const server = createI18nSearchAPI('advanced', {
         i18n: source._i18n!,
         localeMap: {

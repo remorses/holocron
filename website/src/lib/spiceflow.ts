@@ -100,19 +100,19 @@ export const app = new Spiceflow({ basePath: '/api' })
         method: 'POST',
         path: '/getPageContent',
         request: z.object({
-            tabId: z.string(),
+            branchId: z.string(),
             githubPath: z.string(),
         }),
         async handler({ request, state: { userId } }) {
-            let { tabId, githubPath } = await request.json()
+            let { branchId, githubPath } = await request.json()
             // Remove leading slash from githubPath, if present
             if (githubPath.startsWith('/')) {
                 githubPath = githubPath.slice(1)
             }
-            // First, check if the user can access the requested tab
-            const tab = await prisma.tab.findFirst({
+            // First, check if the user can access the requested branch
+            const branch = await prisma.siteBranch.findFirst({
                 where: {
-                    tabId,
+                    branchId,
                     site: {
                         org: {
                             users: {
@@ -124,11 +124,11 @@ export const app = new Spiceflow({ basePath: '/api' })
                     },
                 },
             })
-            if (!tab) {
-                throw new Error('You do not have access to this tab')
+            if (!branch) {
+                throw new Error('You do not have access to this branch')
             }
 
-            const content = await getPageContent({ githubPath, tabId })
+            const content = await getPageContent({ githubPath, branchId })
 
             return {
                 success: true,
@@ -142,7 +142,6 @@ export const app = new Spiceflow({ basePath: '/api' })
         path: '/githubSync',
         request: z.object({
             siteId: z.string().min(1, 'siteId is required'),
-            // tabId: z.string().min(1, 'tabId is required'),
         }),
         async handler({ request, state: { userId } }) {
             const { siteId } = await request.json()
@@ -152,17 +151,17 @@ export const app = new Spiceflow({ basePath: '/api' })
             }
             const site = await prisma.site.findFirst({
                 where: { siteId, org: { users: { some: { userId } } } },
-                include: { tabs: true, githubInstallations: true },
+                include: { branches: true, githubInstallations: true },
             })
 
             if (!site) {
                 throw new Error('Site not found for this user')
             }
-            const tab = site.tabs.find((x) => x)
-            if (!tab) {
-                throw new Error('Tab not found for this site')
+            const branch = site.branches.find((x) => x)
+            if (!branch) {
+                throw new Error('Branch not found for this site')
             }
-            const tabId = tab.tabId
+            const branchId = branch.branchId
             const orgId = site.orgId
             const name = site.name
             const installation = site.githubInstallations.find(
@@ -176,13 +175,13 @@ export const app = new Spiceflow({ basePath: '/api' })
                 owner: site.githubOwner,
                 repo: site.githubRepo,
                 signal: request.signal,
-                tabId,
+                branchId,
                 // forceFullSync: true,
             })
             await syncSite({
                 orgId,
                 siteId,
-                tabId,
+                branchId,
                 name: site.name || '',
                 trieveDatasetId: site.trieveDatasetId || undefined,
                 pages,
@@ -192,7 +191,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             return {
                 success: true,
                 siteId,
-                tabId,
+                branchId,
                 message: 'Sync route called successfully',
             }
         },

@@ -9,11 +9,11 @@ export const s3 = new S3Client({
     secretAccessKey: env.R2_SECRET_ACCESS_KEY!,
 })
 
-export function getKeyForMediaAsset({ siteId, tabId, slug }) {
-    const key = `site/${siteId}/tab/${tabId}/mediaAssets${slug}`
+export function getKeyForMediaAsset({ siteId, branchId, slug }) {
+    const key = `site/${siteId}/branch/${branchId}/mediaAssets${slug}`
     return key
 }
 
-export function getCacheTagForMediaAsset({ siteId, tabId, slug }) {
-    return `mediaAsset:site:${siteId}:tab:${tabId}:${slug}`
+export function getCacheTagForMediaAsset({ siteId, branchId, slug }) {
+    return `mediaAsset:site:${siteId}:branch:${branchId}:${slug}`
 }

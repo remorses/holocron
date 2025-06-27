@@ -49,8 +49,8 @@ export async function loader({
             select: {
                 githubOwner: true,
                 githubRepo: true,
-                tabs: {
-                    select: { tabId: true },
+                branches: {
+                    select: { branchId: true },
                     take: 1,
                 },
             },
@@ -69,12 +69,12 @@ export async function loader({
         ? `https://github.com/${site.githubOwner}/${site.githubRepo}/pull/${chat.prNumber}`
         : undefined
 
-    // Create mention options from site tab pages using getTabFilesWithoutContents
+    // Create mention options from site branch pages using getTabFilesWithoutContents
     const mentionOptions: string[] = await (async () => {
-        const tabId = site.tabs[0]?.tabId
-        if (!tabId) return []
+        const branchId = site.branches[0]?.branchId
+        if (!branchId) return []
 
-        const allFiles = await getTabFilesWithoutContents({ tabId })
+        const allFiles = await getTabFilesWithoutContents({ branchId })
         return allFiles.map((file) => `@${file.githubPath}`).sort()
     })()
 

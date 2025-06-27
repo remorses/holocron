@@ -5,14 +5,14 @@ import { I18nConfig } from 'fumadocs-core/i18n'
 import { StructuredData } from './mdx'
 
 export async function getFumadocsSource({
-    tabId,
+    branchId,
     locales = [] as string[],
     defaultLocale = 'en',
 }) {
     const [allPages, metaFiles] = await Promise.all([
         prisma.markdownPage.findMany({
             where: {
-                tabId,
+                branchId,
             },
             omit: {
                 // frontmatter: true,
@@ -22,7 +22,7 @@ export async function getFumadocsSource({
         }),
         prisma.metaFile.findMany({
             where: {
-                tabId,
+                branchId,
             },
             omit: {},
         }),
