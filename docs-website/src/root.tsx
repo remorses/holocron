@@ -171,6 +171,11 @@ export async function loader({ request }: Route.LoaderArgs) {
         trieveDatasetId,
         previewWebsocketId,
         cssStyles: siteBranch.cssStyles,
+        githubOwner: site.githubOwner,
+        githubRepo: site.githubRepo,
+        githubBranch: siteBranch.githubBranch || 'main',
+        branchId: siteBranch.branchId,
+        site,
     }
 }
 

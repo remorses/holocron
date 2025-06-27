@@ -1,8 +1,14 @@
 import { betterAuth } from 'better-auth'
 import { prisma } from 'db/'
+import { stripe } from '@better-auth/stripe'
+import Stripe from 'stripe'
 
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { env } from './env'
+
+const stripeClient = new Stripe(env.STRIPE_SECRET_KEY || '', {
+    apiVersion: '2025-02-24.acacia',
+})
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
@@ -52,6 +58,13 @@ export const auth = betterAuth({
         //     clientSecret: process.env.DISCORD_CLIENT_SECRET || '',
         // },
     },
+    plugins: [
+        stripe({
+            stripeClient,
+            stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET || '',
+            createCustomerOnSignUp: true,
+        }),
+    ],
 })
 
 export async function getSession({ request }) {

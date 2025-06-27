@@ -3,8 +3,14 @@ import { getCacheTagForMediaAsset, getKeyForMediaAsset, s3 } from '../lib/s3'
 import type { Route } from './+types/_catchall.$'
 import { prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
-import { useLoaderData, useRouteLoaderData } from 'react-router'
+import {
+    useLoaderData,
+    useRouteLoaderData,
+    isRouteErrorResponse,
+} from 'react-router'
 import { useDocsState } from '../lib/docs-state'
+import { processMdxInClient } from '../lib/markdown-runtime'
+import type { Route as RootRoute } from '../root'
 
 import {
     PageArticle,
@@ -37,11 +43,13 @@ import {
 } from 'lucide-react'
 import { useDocsJson } from '../lib/hooks'
 
-export function meta({ data }: Route.MetaArgs) {
+export function meta({ data, matches }: Route.MetaArgs) {
     if (!data) return {}
-    const site = data.site
-    const docsJson = data.docsJson as DocsJsonType
-    const suffix = site?.name || ''
+    const rootMatch = matches?.find((match) => match?.id === 'root')
+    if (!rootMatch?.data) return {}
+    const rootData = rootMatch.data as RootRoute.ComponentProps['loaderData']
+    const docsJson = rootData?.docsJson as DocsJsonType
+    const suffix = rootData?.name || ''
     const og = '' // TODO generate og image
 
     const favicon = (() => {
@@ -125,6 +133,81 @@ export function meta({ data }: Route.MetaArgs) {
               ]
             : []),
     ].filter(Boolean)
+}
+
+// Global variable to store last successful server loader data
+let lastServerLoaderData: any = null
+
+export async function clientLoader({
+    params,
+    serverLoader,
+}: Route.ClientLoaderArgs) {
+    const docsState = useDocsState.getState()
+    const { filesInDraft } = docsState
+
+    try {
+        // Attempt to load server data
+        const serverData = await serverLoader()
+
+        // Server loader succeeded, store it and check for overrides
+        lastServerLoaderData = serverData
+
+        return serverData
+    } catch (err) {
+        // Check if this is a 404 error
+        if (isRouteErrorResponse(err) && err.status === 404) {
+            // Server loader failed with 404, check if we have draft content to serve
+            const slugs =
+                params['*']?.split('/').filter((v) => v.length > 0) || []
+            const slug = '/' + slugs.join('/')
+
+            // Look for draft files that could serve this slug
+            for (const [githubPath, draft] of Object.entries(filesInDraft)) {
+                if (!draft) continue
+
+                // Convert githubPath to potential slug
+                const pathWithoutExtension = githubPath.replace(
+                    /\.(md|mdx)$/,
+                    '',
+                )
+                const potentialSlug =
+                    '/' + pathWithoutExtension.split('/').slice(-1)[0]
+
+                if (
+                    potentialSlug === slug ||
+                    githubPath.includes(slug.slice(1))
+                ) {
+                    const extension = githubPath.endsWith('.mdx') ? 'mdx' : 'md'
+                    const data = processMdxInClient({
+                        extension,
+                        markdown: draft.content,
+                    })
+
+                    // Use cached server data as base structure, without fields available in root
+                    const baseData = lastServerLoaderData || {
+                        locale: 'en',
+                        i18n: null,
+                    }
+
+                    return {
+                        ...baseData,
+                        toc: data.toc,
+                        title: data.title,
+                        description: data.description,
+                        markdown: draft.content,
+                        ast: data.ast,
+                        githubPath,
+                        slugs,
+                        slug,
+                        lastEditedAt: new Date(),
+                    }
+                }
+            }
+        }
+
+        // No draft content found or not a 404 error, re-throw the error
+        throw err
+    }
 }
 
 export async function loader({ params, request }: Route.LoaderArgs) {
@@ -287,8 +370,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         markdown: page.markdown,
     })
 
-    const branchId = siteBranch.branchId
-    const githubBranch = siteBranch.githubBranch || 'main'
     return {
         toc: data.toc,
         title: data.title,
@@ -300,13 +381,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         locale,
         i18n: source._i18n,
         githubPath: page.githubPath,
-        githubOwner: site.githubOwner,
-        githubRepo: site.githubRepo,
-        githubBranch,
         tree,
-        site,
-        branchId,
-        docsJson,
         lastEditedAt: page.lastEditedAt || new Date(),
     }
 }
@@ -317,9 +392,14 @@ export default function Page(props: Route.ComponentProps) {
 
 function PageContent(props: Route.ComponentProps) {
     const loaderData = props.loaderData
+    const rootData = useRouteLoaderData(
+        'root',
+    ) as RootRoute.ComponentProps['loaderData']
     const { slug, slugs, githubPath, lastEditedAt } = loaderData
-    const owner = loaderData.githubOwner
-    const repo = loaderData.githubRepo
+    const owner = rootData.githubOwner
+    const repo = rootData.githubRepo
+    const githubBranch = rootData.githubBranch
+    const branchId = rootData.branchId
     let { title, description, toc } = useDocsState(
         useShallow((state) => {
             const { title, description } = loaderData
@@ -359,7 +439,7 @@ function PageContent(props: Route.ComponentProps) {
                     />
                     <ViewOptions
                         markdownUrl={`${slug}.mdx`}
-                        githubUrl={`https://github.com/${loaderData.githubOwner}/${loaderData.githubRepo}/blob/${loaderData.githubBranch}/apps/docs/content/docs/${githubPath}`}
+                        githubUrl={`https://github.com/${owner}/${repo}/blob/${githubBranch}/apps/docs/content/docs/${githubPath}`}
                         contextual={docsJson?.contextual}
                     />
                 </div>
@@ -380,7 +460,7 @@ function PageContent(props: Route.ComponentProps) {
                                 'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({
-                                branchId: loaderData.branchId,
+                                branchId,
                                 url,
                                 opinion: feedback.opinion,
                                 message: feedback.message,
@@ -514,40 +594,21 @@ function SocialIcon({ platform }: { platform: string }) {
 
 function DocsMarkdown() {
     const loaderData = useLoaderData<typeof loader>()
-    let { ast, markdown, isStreaming } = useDocsState(
-        useShallow((x) => {
-            const { filesInDraft, isMarkdownStreaming: isStreaming } = x
-
-            const override = filesInDraft[loaderData.githubPath]
-
-            if (override) {
-                return {
-                    markdown: override.content,
-                    isStreaming,
-                    ast: undefined,
-                }
-            }
-            console.log(
-                `no override for githubPath ${loaderData.githubPath}, using loader data`,
-            )
-
-            return {
-                isStreaming,
-
-                ast: loaderData.ast,
-                markdown: '',
-            }
-        }),
+    const { isStreaming } = useDocsState(
+        useShallow((x) => ({
+            isStreaming: x.isMarkdownStreaming,
+        })),
     )
 
+    // With clientLoader, draft content is already processed and available in loaderData
     return (
         <Markdown
             previousMarkdown={loaderData.markdown}
             previousAst={loaderData.ast}
             isStreaming={isStreaming}
             addDiffAttributes={true}
-            markdown={markdown}
-            ast={ast}
+            markdown={''}
+            ast={loaderData.ast}
         />
     )
 }

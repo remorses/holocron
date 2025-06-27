@@ -159,6 +159,30 @@ model Subscription {
   @@index([orgId])
 }
 
+model Site {
+  siteId String  @id @default(cuid())
+  name   String?
+  orgId  String
+
+  defaultLocale String @default("en")
+
+  org Org @relation(fields: [orgId], references: [orgId], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  branches SiteBranch[]
+
+  githubOwner String
+  githubRepo  String
+
+  mediaAssets MediaAsset[]
+  locales     SiteEnabledLocale[]
+
+  githubInstallations SiteGithubInstallation[]
+
+  @@index([createdAt])
+}
+
 model SiteBranch {
   branchId     String @id @default(cuid())
   site         Site   @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
@@ -216,32 +240,6 @@ model MarkdownPage {
 enum MarkdownExtension {
   mdx
   md
-}
-
-model Site {
-  siteId String  @id @default(cuid())
-  name   String?
-  orgId  String
-
-  defaultLocale String @default("en")
-
-  org Org @relation(fields: [orgId], references: [orgId], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  branches SiteBranch[]
-
-  githubOwner String
-
-  githubRepo  String
-  mediaAssets MediaAsset[]
-  locales     SiteEnabledLocale[]
-  // chats       Chat[]
-  // feedback    PageFeedback[]
-
-  githubInstallations SiteGithubInstallation[]
-
-  @@index([createdAt])
 }
 
 model MediaAsset {

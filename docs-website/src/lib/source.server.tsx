@@ -4,11 +4,7 @@ import { getIconJsx } from './icons.server'
 import { I18nConfig } from 'fumadocs-core/i18n'
 import { StructuredData } from './mdx'
 
-export async function getFumadocsSource({
-    branchId,
-    locales = [] as string[],
-    defaultLocale = 'en',
-}) {
+export async function getFilesForSource({ branchId }) {
     const [allPages, metaFiles] = await Promise.all([
         prisma.markdownPage.findMany({
             where: {
@@ -50,11 +46,19 @@ export async function getFumadocsSource({
                 return res
             }),
         )
+    return files
+}
 
+export async function getFumadocsSource({
+    branchId,
+    locales = [] as string[],
+    defaultLocale = 'en',
+}) {
     const languages = locales
     if (!languages.includes(defaultLocale)) {
         languages.push(defaultLocale)
     }
+    const files = await getFilesForSource({ branchId })
     const source = loader<SourceData, I18nConfig>({
         source: { files },
         baseUrl: '/', // TODO pass here the customer base path
@@ -66,11 +70,7 @@ export async function getFumadocsSource({
         icon(icon) {
             return getIconJsx({ key: icon })!
         },
-
-        // url: (slugs: string[], locale?: string) =>
-        //     '/' + (locale ? locale + '/' : '') + slugs.join('/'),
     })
-
 
     return source
 }
