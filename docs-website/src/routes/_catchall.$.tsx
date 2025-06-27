@@ -599,21 +599,40 @@ function SocialIcon({ platform }: { platform: string }) {
 
 function DocsMarkdown() {
     const loaderData = useLoaderData<typeof loader>()
-    const { isStreaming } = useDocsState(
-        useShallow((x) => ({
-            isStreaming: x.isMarkdownStreaming,
-        })),
+    let { ast, markdown, isStreaming } = useDocsState(
+        useShallow((x) => {
+            const { filesInDraft, isMarkdownStreaming: isStreaming } = x
+
+            const override = filesInDraft[loaderData.githubPath]
+
+            if (override) {
+                return {
+                    markdown: override.content,
+                    isStreaming,
+                    ast: undefined,
+                }
+            }
+            console.log(
+                `no override for githubPath ${loaderData.githubPath}, using loader data`,
+            )
+
+            return {
+                isStreaming,
+
+                ast: loaderData.ast,
+                markdown: '',
+            }
+        }),
     )
 
-    // With clientLoader, draft content is already processed and available in loaderData
     return (
         <Markdown
             previousMarkdown={loaderData.markdown}
             previousAst={loaderData.ast}
             isStreaming={isStreaming}
             addDiffAttributes={true}
-            markdown={''}
-            ast={loaderData.ast}
+            markdown={markdown}
+            ast={ast}
         />
     )
 }

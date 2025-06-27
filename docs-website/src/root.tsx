@@ -337,6 +337,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     />
                 )}
                 <Links />
+                <CSSVariables docsJson={docsJson} />
             </head>
             <body>
                 {previewWebsocketId ? (
@@ -439,13 +440,7 @@ function DocsLayoutWrapper({
     }, [])
 
     // Create tree client-side using files and filesInDraft
-    const { filesInDraft } = useDocsState(
-        useShallow((state) => {
-            return {
-                filesInDraft: state.filesInDraft,
-            }
-        }),
-    )
+    const filesInDraft = useDocsState((state) => state.filesInDraft)
 
     const tree = useMemo(() => {
         const { files, i18n } = loaderData
@@ -511,7 +506,9 @@ function DocsLayoutWrapper({
         })
 
         const tree = source.getPageTree(i18n?.defaultLanguage || 'en')
-        console.log(tree)
+        // force rerender
+        tree.$id = Math.random().toString(36).slice(2)
+        // console.log(tree)
         return tree
     }, [loaderData.files, loaderData.i18n, filesInDraft])
 
@@ -564,12 +561,14 @@ function DocsLayoutWrapper({
                     enabled: searchEnabled,
                     components: {},
                 }}
+                // key={Math.random()}
                 nav={{
                     mode: navMode,
                     transparentMode: navTransparentMode,
                     title: <Logo docsJson={docsJson} />,
                 }}
                 tabMode={navTabMode}
+                sidebar={{}}
                 i18n={i18n}
                 tree={tree}
                 {...{
@@ -577,7 +576,6 @@ function DocsLayoutWrapper({
                     links,
                 }}
             >
-                <CSSVariables docsJson={docsJson} />
                 {children}
             </DocsLayout>
         </div>
