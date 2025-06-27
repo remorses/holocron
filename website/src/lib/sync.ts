@@ -25,6 +25,7 @@ import {
     s3,
 } from 'docs-website/src/lib/s3'
 import { cloudflareClient } from './cloudflare'
+import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 
 export type AssetForSync =
     | {
@@ -136,13 +137,93 @@ export async function syncSite({
         files: pages,
     })
 }
-
-export async function* pagesFromExampleJson(): AsyncGenerator<
-    AssetForSync & { filePath: string; content: string }
-> {
-    const totalPages = exampleDocs.length
+export async function* pagesFromExampleJson({
+    docsJson,
+}: {
+    docsJson: DocsJsonType
+}): AsyncGenerator<AssetForSync & { filePath: string; content: string }> {
+    // First handle meta.json files if present in exampleDocs
     for (let doc of exampleDocs) {
         const entryRelativePath = doc.relativePath
+        if (entryRelativePath.endsWith('meta.json')) {
+            let jsonData
+            try {
+                jsonData = JSON.parse(doc.contents)
+            } catch {
+                jsonData = {}
+            }
+            yield {
+                type: 'metaFile',
+                jsonData,
+                githubPath: entryRelativePath,
+                githubSha: '',
+                filePath: entryRelativePath,
+                content: doc.contents,
+            }
+        }
+    }
+
+    // Now yield any docs.json file if docsJson param is provided
+    if (docsJson !== undefined) {
+        yield {
+            type: 'docsJson',
+            jsonData:
+                typeof docsJson === 'string' ? JSON.parse(docsJson) : docsJson,
+            githubPath: 'docs.json',
+            githubSha: '',
+            filePath: 'docs.json',
+            content:
+                typeof docsJson === 'string'
+                    ? docsJson
+                    : JSON.stringify(docsJson),
+        }
+    }
+
+    // Next handle styles.css
+    for (let doc of exampleDocs) {
+        const entryRelativePath = doc.relativePath
+        if (entryRelativePath === 'styles.css') {
+            yield {
+                type: 'stylesCss',
+                content: doc.contents,
+                githubPath: entryRelativePath,
+                githubSha: '',
+                filePath: entryRelativePath,
+                // content: doc.contents,
+            }
+        }
+    }
+
+    // Handle media assets
+    for (let doc of exampleDocs) {
+        const entryRelativePath = doc.relativePath
+        if (isMediaFile(entryRelativePath)) {
+            // As these are local example files, we just use a 'downloadUrl' as a data-url or placeholder
+            // For lack of a real downloadUrl, just pass content in the struct.
+            const slug = entryRelativePath
+                .replace(/\\/g, '/')
+                .replace(/^\/+/, '')
+            yield {
+                type: 'mediaAsset',
+                slug,
+                sha: '',
+                downloadUrl: '', // Could be a data-url if desired
+                githubPath: entryRelativePath,
+                filePath: entryRelativePath,
+                content: doc.contents,
+            }
+        }
+    }
+
+    // Now handle page markdown/MDX files
+    const totalPages = exampleDocs.filter((doc) => {
+        const entryRelativePath = doc.relativePath
+        return isMarkdown(entryRelativePath)
+    }).length
+
+    for (let doc of exampleDocs) {
+        const entryRelativePath = doc.relativePath
+        if (!isMarkdown(entryRelativePath)) continue
         const entrySlug =
             '/' + entryRelativePath.replace(/\\/g, '/').replace(mdxRegex, '')
         const { data } = await processMdxInServer({
@@ -196,7 +277,11 @@ export async function syncFiles({
     })
     if (!trieveDatasetId) {
         try {
-            const { datasetId } = await createTrieveDataset({ siteId, branchId, name })
+            const { datasetId } = await createTrieveDataset({
+                siteId,
+                branchId,
+                name,
+            })
             trieve.datasetId = datasetId
         } catch (e) {
             notifyError(e)
@@ -242,7 +327,7 @@ export async function syncFiles({
                     Array.isArray(asset.jsonData.domains)
                 ) {
                     const existingDomains = await prisma.domain.findMany({
-                        where: { siteId },
+                        where: { branchId },
                         select: { host: true },
                     })
                     const existingHosts = new Set(
@@ -258,11 +343,21 @@ export async function syncFiles({
                             `Connecting ${domainsToConnect.length} new domains for site ${siteId}`,
                         )
                         for (const host of domainsToConnect) {
+                            const domainTaken = await prisma.domain.findFirst({
+                                where: { host },
+                            })
+                            if (domainTaken) {
+                                console.log(
+                                    `Domain ${host} is already taken, skipping.`,
+                                )
+                                // TODO add a way to show errors to the user in cases like this, if domain is already taken, send them an email?
+                                continue
+                            }
                             await cloudflareClient.createDomain(host)
                             await prisma.domain.create({
                                 data: {
                                     host,
-                                    siteId,
+                                    branchId,
                                     domainType: 'customDomain',
                                 },
                             })
@@ -829,7 +924,9 @@ export async function deletePages({
         })
 
         if (pagesToDelete.length === 0) {
-            console.log(`No pages found for slug ${rootSlug} in branch ${branchId}`)
+            console.log(
+                `No pages found for slug ${rootSlug} in branch ${branchId}`,
+            )
             continue
         }
 

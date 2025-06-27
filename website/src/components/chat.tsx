@@ -558,7 +558,7 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
     const siteData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
-    const { siteId } = siteData
+    const { siteId, branchId } = siteData
 
     const filesInDraft = useWebsiteState((x) => x?.filesInDraft || {})
     const lastPushedFiles = useWebsiteState((x) => x.lastPushedFiles)
@@ -599,7 +599,7 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
             const filesInDraft = useWebsiteState.getState()?.filesInDraft || {}
 
             const result = await apiClient.api.createPrSuggestionForChat.post({
-                siteId,
+                branchId,
                 filesInDraft,
                 chatId,
             })

@@ -27,10 +27,32 @@ export async function loader({
         throw redirect(href('/org/:orgId/onboarding', { orgId }))
     }
 
-    // Find the first chat for this user in this site, ordered by creation date (newest first)
+    // Get the site and its branches
+    const site = await prisma.site.findUnique({
+        where: { siteId },
+        include: {
+            branches: {
+                take: 1,
+                orderBy: {
+                    createdAt: 'desc',
+                },
+            },
+        },
+    })
+    
+    if (!site) {
+        throw redirect(href('/org/:orgId/onboarding', { orgId }))
+    }
+    
+    const branchId = site.branches[0]?.branchId
+    if (!branchId) {
+        throw redirect(href('/org/:orgId/onboarding', { orgId }))
+    }
+
+    // Find the first chat for this user in this branch, ordered by creation date (newest first)
     const chat = await prisma.chat.findFirst({
         where: {
-            siteId,
+            branchId,
             userId,
         },
         orderBy: {

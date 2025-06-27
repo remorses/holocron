@@ -77,21 +77,29 @@ export async function action({ request, params }: Route.ActionArgs) {
         const repo = `fumabase-starter`
         console.log('Creating repository...')
         const octokit = await getOctokit(githubInstallation)
-        const pages = pagesFromExampleDocsJson()
+        const name = `${repo}`
+        const siteId = cuid()
+        const randomHash = Math.random().toString(36).substring(2, 10)
+        const internalHost = `${githubAccountLogin}-${randomHash}.${env.APPS_DOMAIN}`
+        const files = pagesFromExampleDocsJson({
+            docsJson: {
+                siteId,
+                name,
+                domains: [internalHost],
+            },
+        })
         const owner = githubAccountLogin
         const exists = await doesRepoExist({
             octokit: octokit.rest,
             owner,
             repo,
         })
-        const randomHash = Math.random().toString(36).substring(2, 10)
-        const internalHost = `${githubAccountLogin}-${randomHash}.${env.APPS_DOMAIN}`
+        const branchId = cuid()
 
-        const cloudflareRes = await cloudflareClient.createDomain(internalHost)
         const [result, site] = await Promise.all([
             !exists &&
                 createNewRepo({
-                    files: await Array.fromAsync(pages),
+                    files: await Array.fromAsync(files),
                     isGithubOrg:
                         githubInstallation.accountType === 'ORGANIZATION',
                     octokit: octokit.rest,
@@ -102,11 +110,9 @@ export async function action({ request, params }: Route.ActionArgs) {
                 }),
             // Create a site for the newly created repository
             prisma.site.create({
-                include: {
-                    chats: true,
-                },
                 data: {
-                    name: repo,
+                    name,
+                    siteId,
                     orgId: orgId,
                     githubOwner: owner,
                     githubRepo: repo,
@@ -116,34 +122,44 @@ export async function action({ request, params }: Route.ActionArgs) {
                             appId: env.GITHUB_APP_ID!,
                         },
                     },
-                    domains: {
+                    branches: {
                         create: {
-                            host: internalHost,
-                            domainType: 'internalDomain',
-                        },
-                    },
-                    chats: {
-                        create: {
-                            userId,
+                            branchId,
+                            title: 'Main',
+                            // domain will be created based on docs.json by syncSite
+                            // domains: {
+                            //     create: {
+                            //         host: internalHost,
+                            //         domainType: 'internalDomain',
+                            //     },
+                            // },
                         },
                     },
                 },
             }),
         ])
 
-        const siteId = site.siteId
         console.log(`created site ${siteId}`)
-        const branchId = cuid()
+
+        // Create the branch with domain
+
         await syncSite({
-            pages,
+            pages: files,
             trieveDatasetId: undefined,
             branchId,
             orgId,
             siteId,
             name: `${githubAccountLogin} docs`,
         })
-        const chatId = site.chats?.find((x) => x)?.chatId
-        if (!chatId) throw new Error('Chat for site not found')
+
+        // Create a chat for the branch
+        const chat = await prisma.chat.create({
+            data: {
+                userId,
+                branchId,
+            },
+        })
+        const chatId = chat.chatId
         throw redirect(
             href('/org/:orgId/site/:siteId/chat/:chatId', {
                 orgId,

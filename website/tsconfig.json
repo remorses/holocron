@@ -12,6 +12,8 @@
             "@types/node"
             // "./worker-configuration.d.ts"
         ],
+        "outDir": "dist",
+        "rootDir": ".",
         "isolatedModules": true,
         "esModuleInterop": true,
         "jsx": "react-jsx",
@@ -22,8 +24,9 @@
         "strict": true,
         "allowJs": true,
         "skipLibCheck": true,
+        "declaration": true,
         "allowArbitraryExtensions": true,
-        "allowImportingTsExtensions": true,
+        // "allowImportingTsExtensions": true,
         "noImplicitAny": false,
         "useUnknownInCatchVariables": false,
         "forceConsistentCasingInFileNames": true,
@@ -32,7 +35,7 @@
         "paths": {
             "website/*": ["./*"]
         },
-        "noEmit": true
+        "noEmit": false
     },
     "include": ["src", "scripts", ".react-router/types/**/*", "./src/worker.ts"]
 }

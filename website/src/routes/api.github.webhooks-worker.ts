@@ -87,6 +87,7 @@ async function updatePagesFromCommits(
             githubRepo: repoName,
         },
         include: {
+            // TODO get the branch for this commit!
             branches: true,
         },
     })

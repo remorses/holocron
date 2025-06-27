@@ -23,6 +23,7 @@
         "@prisma/adapter-pg": "^6.10.1",
         "@prisma/client": "^6.10.1",
         "pg": "^8.13.1",
+        "docs-website": "workspace:*",
         "postgres": "^3.4.7",
         "prisma": "^6.10.1"
     },

@@ -179,7 +179,8 @@ model SiteBranch {
   mediaAssets MediaAsset[]
   metaFiles   MetaFile[]
 
-  chats Chat[]
+  chats    Chat[]
+  feedback PageFeedback[]
 }
 
 model MarkdownPage {
@@ -235,11 +236,10 @@ model Site {
   githubRepo  String
   mediaAssets MediaAsset[]
   locales     SiteEnabledLocale[]
-  chats       Chat[]
-  feedback    PageFeedback[]
+  // chats       Chat[]
+  // feedback    PageFeedback[]
 
   githubInstallations SiteGithubInstallation[]
-  domains             Domain[]
 
   @@index([createdAt])
 }
@@ -275,11 +275,10 @@ enum DomainType {
 }
 
 model Domain {
-  id         String     @id @default(cuid())
-  host       String     @unique
-  siteId     String
+  id   String @id @default(cuid())
+  host String @unique
+
   domainType DomainType
-  site       Site       @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
 
   // isVercelVerified Boolean?
   // lastCheck        DateTime?
@@ -362,8 +361,8 @@ model Chat {
   title           String?
   description     String?
   messages        ChatMessage[]
-  siteId          String
-  site            Site          @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
+  // siteId          String
+  // site            Site          @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
   // a chat is different for each user, this is to prevent the case where 2 users are updating the same chat, causing data loos and override. instead each user sees a different set of chats so they cannot possibly override each other chats.
   userId          String
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -408,12 +407,14 @@ enum PageOpinion {
 
 model PageFeedback {
   id            String      @id @default(cuid())
-  siteId        String
-  site          Site        @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
+  // siteId        String
+  // site          Site        @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
   url           String      @db.Text
   opinion       PageOpinion @default(good)
   message       String?     @db.Text
   discussionUrl String
+  branchId      String
+  branch        SiteBranch  @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
 
   ipHash    String   @default("")
   createdAt DateTime @default(now())

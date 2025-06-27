@@ -188,7 +188,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                             chatId,
                             createdAt: prevChat.createdAt,
                             userId,
-                            siteId,
+                            branchId,
                             currentSlug,
                             filesInDraft: filesInDraft || {},
                             lastPushedFiles: prevChat.lastPushedFiles || {},

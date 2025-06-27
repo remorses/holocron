@@ -32,6 +32,15 @@ export async function loader({
         where: {
             orgId,
         },
+        include: {
+          // TODO change the param siteId to be branchId instead
+            branches: {
+                take: 1,
+                orderBy: {
+                    createdAt: 'desc',
+                },
+            },
+        },
         orderBy: {
             createdAt: 'desc',
         },
@@ -42,9 +51,14 @@ export async function loader({
     }
 
     // Find the first chat for this user in this site, ordered by creation date (newest first)
+    const branchId = site.branches[0]?.branchId
+    if (!branchId) {
+        throw redirect(href('/org/:orgId/onboarding', { orgId }))
+    }
+
     const chat = await prisma.chat.findFirst({
         where: {
-            siteId: site.siteId,
+            branchId,
             userId,
         },
         orderBy: {

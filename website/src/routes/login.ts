@@ -40,25 +40,41 @@ export async function loader({ request }) {
         })
     }
     const orgId = org?.orgId || ''
-    const site = await prisma.site.findFirst({
-        where: {
-            orgId,
-        },
-        orderBy: {
-            createdAt: 'desc',
-        },
-        include: {
-            chats: {
-                orderBy: { createdAt: 'desc' },
-                select: { chatId: true },
+    const [site, chat] = await Promise.all([
+        prisma.site.findFirst({
+            where: {
+                orgId,
             },
-        },
-    })
+            orderBy: {
+                createdAt: 'desc',
+            },
+            include: {
+                branches: {
+                    take: 1,
+                    orderBy: {
+                        createdAt: 'desc',
+                    },
+                },
+            },
+        }),
+        prisma.chat.findFirst({
+            where: {
+                userId,
+                branch: {
+                    site: {
+                        orgId,
+                    },
+                },
+            },
+            orderBy: { createdAt: 'desc' },
+            select: { chatId: true },
+        }),
+    ])
     if (!site) {
         return redirect(href('/org/:orgId/onboarding', { orgId }))
     }
     const siteId = site.siteId
-    const chatId = site.chats[0]?.chatId || ''
+    const chatId = chat?.chatId || ''
     if (!chatId) {
         return redirect(href('/org/:orgId/onboarding', { orgId }))
     }

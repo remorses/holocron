@@ -13,36 +13,47 @@ export async function loader({
     // We need userId for the queries, get it from session
     const { userId } = await getSession({ request })
 
-    const site = await prisma.site.findUnique({
-        where: {
-            siteId: siteId,
-            org: {
-                users: {
-                    some: { userId },
+    // TODO change params to be branchId instead of siteId! then get the branch here
+    const [site, chatHistory] = await Promise.all([
+        prisma.site.findUnique({
+            where: {
+                siteId: siteId,
+                org: {
+                    users: {
+                        some: { userId },
+                    },
                 },
             },
-        },
-        include: {
-            org: true,
-            domains: true,
-            branches: true,
-            chats: {
-                where: { userId },
-                select: {
-                    chatId: true,
-                    title: true,
-                    createdAt: true,
+            include: {
+                org: true,
+                branches: {
+                    include: {
+                        domains: true,
+                    },
                 },
-                orderBy: { createdAt: 'desc' },
             },
-        },
-    })
+        }),
+        prisma.chat.findMany({
+            where: {
+                userId,
+                branch: {
+                    siteId,
+                },
+            },
+            select: {
+                chatId: true,
+                title: true,
+                createdAt: true,
+            },
+            orderBy: { createdAt: 'desc' },
+        }),
+    ])
 
     if (!site) {
         throw new Error('Site not found')
     }
 
-    const host = site.domains.find(
+    const host = site.branches[0]?.domains.find(
         (x) => x.domainType === 'internalDomain',
     )?.host
 
@@ -60,7 +71,7 @@ export async function loader({
         host,
         siteId,
         branchId,
-        chatHistory: site.chats,
+        chatHistory,
     }
 }
 export function Component({ loaderData }: Route.ComponentProps) {

@@ -36,19 +36,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const params = useParams()
     const navigate = useNavigate()
     const { orgId, siteId, chatId } = params
-    const { chatHistory } = siteData
+    const { chatHistory, branchId } = siteData
     const { userSites } = orgData
     const [isCreatingChat, setIsCreatingChat] = React.useState(false)
 
     const handleNewChat = async () => {
-        if (!orgId || !siteId || isCreatingChat) return
+        if (!orgId || !siteId || !branchId || isCreatingChat) return
 
         setIsCreatingChat(true)
 
         try {
             const { data, error } = await apiClient.api.newChat.post({
                 orgId,
-                siteId,
+                branchId,
             })
 
             if (error) {

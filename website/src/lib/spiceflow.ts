@@ -64,7 +64,6 @@ function getClientIp(request: Request): string {
     const realIp = request.headers.get('X-Real-IP')
     if (realIp) return realIp
 
-
     // Default fallback
     return '0.0.0.0'
 }
@@ -141,27 +140,39 @@ export const app = new Spiceflow({ basePath: '/api' })
         method: 'POST',
         path: '/githubSync',
         request: z.object({
-            siteId: z.string().min(1, 'siteId is required'),
+            branchId: z.string().min(1, 'branchId is required'),
         }),
         async handler({ request, state: { userId } }) {
-            const { siteId } = await request.json()
+            const { branchId } = await request.json()
 
             if (!userId) {
                 throw new Error('Missing x-user-id header')
             }
-            const site = await prisma.site.findFirst({
-                where: { siteId, org: { users: { some: { userId } } } },
-                include: { branches: true, githubInstallations: true },
+            const branch = await prisma.siteBranch.findFirst({
+                where: {
+                    branchId,
+                    site: {
+                        org: {
+                            users: {
+                                some: { userId },
+                            },
+                        },
+                    },
+                },
+                include: {
+                    site: {
+                        include: {
+                            githubInstallations: true,
+                        },
+                    },
+                },
             })
 
-            if (!site) {
-                throw new Error('Site not found for this user')
-            }
-            const branch = site.branches.find((x) => x)
             if (!branch) {
-                throw new Error('Branch not found for this site')
+                throw new Error('Branch not found for this user')
             }
-            const branchId = branch.branchId
+            const site = branch.site
+            const siteId = site.siteId
             const orgId = site.orgId
             const name = site.name
             const installation = site.githubInstallations.find(
@@ -261,50 +272,38 @@ export const app = new Spiceflow({ basePath: '/api' })
         method: 'POST',
         path: '/newChat',
         request: z.object({
-            siteId: z.string(),
+            branchId: z.string(),
             orgId: z.string(),
         }),
         async handler({ request, state: { userId } }) {
-            const { siteId, orgId } = await request.json()
+            const { branchId, orgId } = await request.json()
 
             if (!userId) {
                 throw new Error('User not authenticated')
             }
 
-            // Check if user has access to this site through org membership
-            const orgUser = await prisma.orgsUsers.findUnique({
+            // Check if user has access to this branch through org membership
+            const rateBranch = await prisma.siteBranch.findUnique({
                 where: {
-                    userId_orgId: {
-                        userId,
-                        orgId,
-                    },
-                },
-            })
-
-            if (!orgUser) {
-                throw new Error('You do not have access to this organization')
-            }
-
-            // Verify the site exists and user has access
-            const site = await prisma.site.findUnique({
-                where: {
-                    siteId,
-                    org: {
-                        users: {
-                            some: { userId },
+                    branchId,
+                    site: {
+                        org: {
+                            users: {
+                                some: { userId },
+                            },
                         },
                     },
                 },
             })
 
-            if (!site) {
-                throw new Error('Site not found or access denied')
+            if (!rateBranch) {
+                throw new Error('Branch not found or access denied')
             }
 
             // Create a new chat
             const newChat = await prisma.chat.create({
                 data: {
-                    siteId,
+                    branchId,
                     userId,
                     title: null,
                     currentSlug: null,
@@ -324,13 +323,13 @@ export const app = new Spiceflow({ basePath: '/api' })
         method: 'POST',
         path: '/submitRateFeedback',
         request: z.object({
-            siteId: z.string().min(1, 'siteId is required'),
+            branchId: z.string().min(1, 'siteId is required'),
             url: z.string().min(1, 'url is required'),
             opinion: z.enum(['good', 'bad']),
             message: z.string().min(1, 'message is required'),
         }),
         async handler({ request, state: { userId } }) {
-            const { siteId, url, opinion, message } = await request.json()
+            const { branchId, url, opinion, message } = await request.json()
 
             // Get client IP and hash it
             const clientIp = getClientIp(request)
@@ -360,12 +359,9 @@ export const app = new Spiceflow({ basePath: '/api' })
             // Check user has access to the site
             const site = await prisma.site.findFirst({
                 where: {
-                    siteId,
-                    // org: {
-                    //     users: {
-                    //         some: { userId },
-                    //     },
-                    // },
+                    branches: {
+                        some: { branchId },
+                    },
                 },
                 include: {
                     githubInstallations: {
@@ -505,7 +501,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             // Store feedback in database
             await prisma.pageFeedback.create({
                 data: {
-                    siteId,
+                    branchId,
                     url,
                     opinion,
                     message,
@@ -525,39 +521,46 @@ export const app = new Spiceflow({ basePath: '/api' })
         method: 'POST',
         path: '/commitChangesToRepo',
         request: z.object({
-            siteId: z.string().min(1, 'siteId is required'),
+            branchId: z.string().min(1, 'branchId is required'),
             filesInDraft: z.record(fileUpdateSchema),
         }),
         async handler({ request, state: { userId } }) {
-            const { siteId, filesInDraft } = await request.json()
+            const { branchId, filesInDraft } = await request.json()
 
             if (!userId) {
                 throw new AppError('Missing userId')
             }
 
-            // Check user has access to the site
-            const site = await prisma.site.findFirst({
+            // Check user has access to the branch
+            const commitBranch = await prisma.siteBranch.findFirst({
                 where: {
-                    siteId,
-                    org: {
-                        users: {
-                            some: { userId },
+                    branchId,
+                    site: {
+                        org: {
+                            users: {
+                                some: { userId },
+                            },
                         },
                     },
                 },
                 include: {
-                    githubInstallations: {
+                    site: {
                         include: {
-                            github: true,
+                            githubInstallations: {
+                                include: {
+                                    github: true,
+                                },
+                            },
                         },
                     },
                 },
             })
 
-            if (!site) {
-                throw new AppError('Site not found or access denied')
+            if (!commitBranch) {
+                throw new AppError('Branch not found or access denied')
             }
 
+            const site = commitBranch.site
             const githubInstallation = site.githubInstallations.find(
                 (x) => x.appId === env.GITHUB_APP_ID,
             )
@@ -576,7 +579,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 owner,
                 repo,
             })
-            const branch = repoData.default_branch
+            const defaultBranch = repoData.default_branch
 
             // Convert filesInDraft to files format
             const files = Object.entries(filesInDraft).map(
@@ -592,7 +595,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                     files,
                     owner,
                     repo,
-                    branch,
+                    branch: defaultBranch,
                 })
 
                 return {
@@ -609,39 +612,39 @@ export const app = new Spiceflow({ basePath: '/api' })
         method: 'POST',
         path: '/createPrSuggestionForChat',
         request: z.object({
-            siteId: z.string().min(1, 'siteId is required'),
+            branchId: z.string().min(1, 'branchId is required'),
             chatId: z.string().min(1, 'chatId is required'),
-            // branchId: z.string().min(1, 'branchId is required'),
             filesInDraft: z.record(fileUpdateSchema),
         }),
         async handler({ request, state }) {
             const { userId } = state
-            const { siteId, filesInDraft, chatId } = await request.json()
+            const { branchId, filesInDraft, chatId } = await request.json()
 
             if (!userId) {
                 throw new AppError('Missing userId')
             }
 
-            // Check user has access to the site
-            const [site, chat] = await Promise.all([
-                prisma.site.findFirst({
+            // Check user has access to the branch through chat
+            const [prBranch, chat] = await Promise.all([
+                prisma.siteBranch.findFirst({
                     where: {
-                        siteId,
-                        chats: {
-                            some: {
-                                chatId,
-                            },
-                        },
-                        org: {
-                            users: {
-                                some: { userId },
+                        branchId,
+                        site: {
+                            org: {
+                                users: {
+                                    some: { userId },
+                                },
                             },
                         },
                     },
                     include: {
-                        githubInstallations: {
+                        site: {
                             include: {
-                                github: true,
+                                githubInstallations: {
+                                    include: {
+                                        github: true,
+                                    },
+                                },
                             },
                         },
                     },
@@ -650,16 +653,18 @@ export const app = new Spiceflow({ basePath: '/api' })
                     where: {
                         chatId,
                         userId,
+                        branchId,
                     },
                 }),
             ])
 
-            if (!site) {
-                throw new AppError('Site not found or access denied')
+            if (!prBranch) {
+                throw new AppError('Branch not found or access denied')
             }
             if (!chat) {
                 throw new AppError('Chat not found or access denied')
             }
+            const site = prBranch.site
             const githubInstallation = site.githubInstallations.find(
                 (x) => x.appId === env.GITHUB_APP_ID,
             )
@@ -731,14 +736,14 @@ export const app = new Spiceflow({ basePath: '/api' })
                 owner: site.githubOwner,
                 repo: site.githubRepo,
             })
-            const branch = repoData.default_branch
+            const defaultBranch2 = repoData.default_branch
 
             const { url, prNumber } = await createPullRequestSuggestion({
                 files,
                 octokit,
                 owner: site.githubOwner,
                 repo: site.githubRepo,
-                branch,
+                branch: defaultBranch2,
                 accountLogin: '',
                 fork: false,
                 title: chat.title || 'Update documentation',

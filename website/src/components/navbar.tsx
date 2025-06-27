@@ -12,7 +12,8 @@ import {
 } from 'website/src/components/ui/popover'
 import { useThrowingFn } from '../lib/hooks'
 import { apiClient } from '../lib/spiceflow-client'
-import { useParams } from 'react-router'
+import { useParams, useRouteLoaderData } from 'react-router'
+import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 
 // Navigation links array to be used in both desktop and mobile menus
 const navigationLinks = [
@@ -47,10 +48,14 @@ function Logo() {
 
 export default function NavBar() {
     const { siteId } = useParams()
+    const siteData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId',
+    ) as SiteRoute.ComponentProps['loaderData']
+    const { branchId } = siteData
     const { fn: sync, isLoading } = useThrowingFn({
         async fn() {
             const { data, error } = await apiClient.api.githubSync.post({
-                siteId: siteId!,
+                branchId,
             })
             if (error) throw error
         },

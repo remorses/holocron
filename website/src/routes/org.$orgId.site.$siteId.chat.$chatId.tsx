@@ -25,12 +25,11 @@ export async function loader({
 }: Route.LoaderArgs) {
     const { userId } = await getSession({ request })
 
-    // Fetch chat and get site with minimal includes for github info and tabs
+    // Fetch chat and site info separately
     const [chat, site] = await Promise.all([
         prisma.chat.findUnique({
             where: {
                 chatId: chatId,
-                siteId,
                 userId,
             },
             include: {
@@ -47,12 +46,9 @@ export async function loader({
         prisma.site.findUnique({
             where: { siteId },
             select: {
+                siteId: true,
                 githubOwner: true,
                 githubRepo: true,
-                branches: {
-                    select: { branchId: true },
-                    take: 1,
-                },
             },
         }),
     ])
@@ -69,9 +65,9 @@ export async function loader({
         ? `https://github.com/${site.githubOwner}/${site.githubRepo}/pull/${chat.prNumber}`
         : undefined
 
-    // Create mention options from site branch pages using getTabFilesWithoutContents
+    // Create mention options from branch pages using getTabFilesWithoutContents
     const mentionOptions: string[] = await (async () => {
-        const branchId = site.branches[0]?.branchId
+        const branchId = chat.branchId
         if (!branchId) return []
 
         const allFiles = await getTabFilesWithoutContents({ branchId })
