@@ -15,7 +15,7 @@ import './app.css'
 import { useDocsJson, useParentPostMessage } from './lib/hooks'
 import { env } from './lib/env'
 import { startTransition, useMemo, useState } from 'react'
-import { IframeRpcMessage, useDocsState } from './lib/docs-state'
+import { DocsState, IframeRpcMessage, useDocsState } from './lib/docs-state'
 import { isInsidePreviewIframe } from './lib/utils'
 import { prisma } from 'db'
 import { getFumadocsSource } from './lib/source.server'
@@ -126,8 +126,30 @@ export async function loader({ request }: Route.LoaderArgs) {
     }
 }
 
-async function messagesHandling() {
-    async function onParentPostMessage(e) {
+async function setDocsStateForMessage(partialState: Partial<DocsState>) {
+    const prevState = useDocsState.getState()
+    if (
+        partialState.currentSlug &&
+        prevState.currentSlug !== partialState.currentSlug &&
+        partialState.currentSlug !== window.location.pathname
+    ) {
+        // return await navigate(state.currentSlug!)
+        // TODO do client side navigation instead
+        window.location.pathname = partialState.currentSlug
+    }
+    console.log(`setting docs-state inside iframe`, partialState)
+    startTransition(() => {
+        useDocsState.setState({
+            ...partialState,
+            filesInDraft: {
+                ...prevState?.filesInDraft,
+                ...partialState.filesInDraft,
+            },
+        })
+    })
+}
+async function iframeMessagesHandling() {
+    async function onParentPostMessage(e: MessageEvent) {
         onFirstStateMessage()
         try {
             if (!allowedOrigins.includes(e.origin)) {
@@ -140,26 +162,7 @@ async function messagesHandling() {
             const { id, state: partialState } = data || {}
 
             if (partialState) {
-                const prevState = useDocsState.getState()
-                if (
-                    partialState.currentSlug &&
-                    prevState.currentSlug !== partialState.currentSlug &&
-                    partialState.currentSlug !== window.location.pathname
-                ) {
-                    // return await navigate(state.currentSlug!)
-                    // TODO do client side navigation instead
-                    window.location.pathname = partialState.currentSlug
-                }
-                console.log(`setting docs-state inside iframe`, partialState)
-                startTransition(() => {
-                    useDocsState.setState({
-                        ...partialState,
-                        filesInDraft: {
-                            ...useDocsState.getState()?.filesInDraft,
-                            ...partialState.filesInDraft,
-                        },
-                    })
-                })
+                await setDocsStateForMessage(partialState)
             }
         } finally {
             e.source!.postMessage(
@@ -171,29 +174,70 @@ async function messagesHandling() {
         }
     }
     window.addEventListener('message', onParentPostMessage)
-    if (typeof window !== 'undefined' && window.parent) {
-        window.parent?.postMessage?.(
-            { type: 'ready' },
-            {
-                targetOrigin: '*',
-            },
-        )
-    }
-    // Set up ping interval
-    const pingInterval = setInterval(() => {
-        if (typeof window !== 'undefined' && window.parent) {
+    if (typeof window !== 'undefined') {
+        if (window.parent) {
             window.parent?.postMessage?.(
-                { type: 'ping' },
+                { type: 'ready' },
                 {
                     targetOrigin: '*',
                 },
             )
         }
+    }
+    // Set up ping interval
+    setInterval(() => {
+        if (typeof window !== 'undefined') {
+            if (window.parent) {
+                window.parent?.postMessage?.(
+                    { type: 'ping' },
+                    {
+                        targetOrigin: '*',
+                    },
+                )
+            }
+        }
     }, 500)
 }
 
 if (typeof window !== 'undefined') {
-    messagesHandling()
+    iframeMessagesHandling()
+}
+
+// New function for handling websocketUrl in query param and connect WebSocket
+async function websocketUrlHandling() {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const websocketUrl = params.get('websocketUrl')
+    if (websocketUrl) {
+        const ws = new WebSocket(websocketUrl)
+        ws.onopen = () => {
+            ws.send(JSON.stringify({ type: 'ready' }))
+        }
+        ws.onmessage = async (event) => {
+            let data: IframeRpcMessage
+            try {
+                data = JSON.parse(event.data)
+            } catch {
+                console.error(`websocket sent invalid json`, event.data)
+                return
+            }
+            const { id, state: partialState } = data || {}
+            if (partialState) {
+                await setDocsStateForMessage(partialState)
+            }
+            ws.send(JSON.stringify({ id } satisfies IframeRpcMessage))
+        }
+        // ping interval
+        setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'ping' }))
+            }
+        }, 1000)
+    }
+}
+
+if (typeof window !== 'undefined') {
+    websocketUrlHandling()
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
