@@ -1,6 +1,7 @@
 import type { DocsJsonType } from './docs-json'
 
 export const footerSocialsOnlyExample: DocsJsonType = {
+    siteId: '',
     name: 'Documentation with Social Links',
 
     footer: {
@@ -14,7 +15,7 @@ export const footerSocialsOnlyExample: DocsJsonType = {
 
 export const footerLinksOnlyExample: DocsJsonType = {
     name: 'Documentation with Footer Links',
-
+    siteId: '',
     footer: {
         links: [
             {
@@ -52,7 +53,7 @@ export const completeDocsConfigExample: DocsJsonType = {
     name: 'Example Documentation',
     description:
         'Complete example of docs.json configuration showcasing all available options',
-
+    siteId: '',
     logo: {
         light: '/logo-light.svg',
         dark: '/logo-dark.svg',
