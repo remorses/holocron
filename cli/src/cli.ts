@@ -1,20 +1,17 @@
 import { cac } from 'cac'
-import os from 'os'
 
 import fs from 'fs'
 import path from 'path'
 
 import chokidar from 'chokidar'
 import { createApiClient } from './generated/spiceflow-client.js'
-import { execSync } from 'child_process'
-import {
-    readTopLevelDocsJson,
-    getCurrentGitBranch,
-    openUrlInBrowser,
-} from './utils.js'
-import { WebSocket } from 'ws'
 import { startWebSocketWithTunnel } from './server.js'
 import { createIframeRpcClient } from './setstate.js'
+import {
+  getCurrentGitBranch,
+  openUrlInBrowser,
+  readTopLevelDocsJson,
+} from './utils.js'
 
 export const cli = cac('fumabase')
 
@@ -145,7 +142,9 @@ cli.command('dev', 'Preview your fumabase website').action(
 
             // Wait until there is at least one WebSocket connection before proceeding
             wss.on('connection', (ws) => {
-                console.log(`browser connected, watching for files...`)
+                console.log(`browser connected, showing a preview of your local changes`)
+                console.log(`to deploy your changes to the production website simply push the changes on GitHub`)
+                console.log(`fumabase will detect the updates and deploy a new version of the site`)
                 const client = createIframeRpcClient({ ws })
                 connectedClients.add(client)
                 client.setDocsState({ filesInDraft })

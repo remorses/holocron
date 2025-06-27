@@ -3,15 +3,16 @@
     "version": "0.0.0",
     "description": "",
     "type": "module",
-    "repository": "https://github.com/remorses/",
+    "repository": "https://github.com/remorses/fumabase",
     "scripts": {
         "build": "tsc ",
         "watch": "tsc -w"
     },
+    "bin": "./bin.js",
     "files": [
         "dist",
         "src",
-        "esm"
+        "bin.js"
     ],
     "keywords": [],
     "author": "Tommaso De Rossi, morse <beats.by.morse@gmail.com>",
@@ -20,7 +21,6 @@
         "cac": "^6.7.14",
         "chokidar": "^4.0.3",
         "cloudflared": "^0.7.0",
-        "globby": "^14.1.0",
         "spiceflow": "^1.13.2",
         "ws": "^8.18.2"
     },

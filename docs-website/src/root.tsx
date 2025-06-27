@@ -9,6 +9,7 @@ import {
     ScrollRestoration,
     useNavigate,
     useLoaderData,
+    redirect,
 } from 'react-router'
 import type { Route } from './+types/root'
 import './app.css'
@@ -32,6 +33,7 @@ import {
     LinkedinIcon,
     MessageCircleIcon,
     ExternalLinkIcon,
+    XIcon,
 } from 'lucide-react'
 import { processMdxInServer } from './lib/mdx.server'
 import { Markdown } from './lib/markdown'
@@ -52,6 +54,20 @@ export const links: Route.LinksFunction = () => [
 
 const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, '')]
 
+// Helper function to parse cookies from header
+function parseCookies(cookieHeader: string | null): Record<string, string> {
+    const cookies: Record<string, string> = {}
+    if (!cookieHeader) return cookies
+    
+    cookieHeader.split(';').forEach(cookie => {
+        const [name, ...rest] = cookie.trim().split('=')
+        if (name && rest.length > 0) {
+            cookies[name] = decodeURIComponent(rest.join('='))
+        }
+    })
+    return cookies
+}
+
 let onFirstStateMessage = () => {}
 const firstStateReceived = new Promise<void>((resolve) => {
     onFirstStateMessage = resolve
@@ -60,6 +76,25 @@ const firstStateReceived = new Promise<void>((resolve) => {
 export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
+    
+    // Handle websocketUrl in search params - set plain cookie and redirect
+    const websocketUrl = url.searchParams.get('websocketUrl')
+    if (websocketUrl) {
+        // Remove websocketUrl from search params for redirect
+        const redirectUrl = new URL(url)
+        redirectUrl.searchParams.delete('websocketUrl')
+        
+        // Create a plain Set-Cookie header (session cookie, JS-readable)
+        // Using minimal attributes for maximum compatibility
+        const isSecure = process.env.NODE_ENV === 'production'
+        const cookieValue = `__websocket_preview=${encodeURIComponent(websocketUrl)}; Path=/${isSecure ? '; Secure' : ''}`
+        
+        throw redirect(redirectUrl.toString(), {
+            headers: {
+                'Set-Cookie': cookieValue,
+            },
+        })
+    }
 
     const siteBranch = await prisma.siteBranch.findFirst({
         where: {
@@ -116,6 +151,10 @@ export async function loader({ request }: Route.LoaderArgs) {
         }
     }
 
+    // Check for preview websocket URL in cookies
+    const cookies = parseCookies(request.headers.get('Cookie'))
+    const previewWebsocketUrl = cookies['__websocket_preview'] || null
+
     return {
         site,
         branch: siteBranch,
@@ -123,6 +162,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         tree,
         i18n,
         bannerAst,
+        previewWebsocketUrl,
     }
 }
 
@@ -203,11 +243,25 @@ if (typeof window !== 'undefined') {
     iframeMessagesHandling()
 }
 
-// New function for handling websocketUrl in query param and connect WebSocket
+// Helper function to get cookie value by name
+function getCookie(name: string): string | null {
+    const nameEQ = name + '='
+    const cookies = document.cookie.split(';')
+    for (let i = 0; i < cookies.length; i++) {
+        let cookie = cookies[i]
+        while (cookie.charAt(0) === ' ') cookie = cookie.substring(1, cookie.length)
+        if (cookie.indexOf(nameEQ) === 0) return decodeURIComponent(cookie.substring(nameEQ.length, cookie.length))
+    }
+    return null
+}
+
+// Function for handling websocket connection based on session cookie
 async function websocketUrlHandling() {
     if (typeof window === 'undefined') return
-    const params = new URLSearchParams(window.location.search)
-    const websocketUrl = params.get('websocketUrl')
+    
+    // Get websocketUrl from cookie using document.cookie API
+    const websocketUrl = getCookie('__websocket_preview')
+    
     if (websocketUrl) {
         const ws = new WebSocket(websocketUrl)
         ws.onopen = () => {
@@ -354,7 +408,7 @@ function DocsProvider({ children }: { children: React.ReactNode }) {
 
 function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
     const loaderData = useLoaderData<typeof loader>()
-    const { site, i18n } = loaderData
+    const { site, i18n, previewWebsocketUrl } = loaderData
     const locale = site.defaultLocale
 
     const docsJson = useDocsJson()
@@ -423,7 +477,12 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
             }}
             tabMode={navTabMode}
             sidebar={{
-                banner: <Banner banner={docsJson?.banner} />,
+                banner: (
+                    <>
+                        {previewWebsocketUrl && <PreviewBanner websocketUrl={previewWebsocketUrl} />}
+                        <Banner banner={docsJson?.banner} />
+                    </>
+                ),
             }}
             i18n={i18n}
             tree={tree as any}
@@ -435,6 +494,34 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
             <CSSVariables docsJson={docsJson} />
             {children}
         </DocsLayout>
+    )
+}
+
+function PreviewBanner({ websocketUrl }: { websocketUrl: string }) {
+    const handleDisconnect = () => {
+        // Clear the session cookie by setting it to expire
+        document.cookie = '__websocket_preview=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax'
+        // Reload the page to reflect the change
+        window.location.reload()
+    }
+
+    return (
+        <div className='sticky top-0 z-50 bg-orange-500 text-white px-4 py-2 flex items-center justify-between mb-4 rounded-lg'>
+            <div className='flex items-center gap-2'>
+                <div className='w-2 h-2 bg-white rounded-full animate-pulse'></div>
+                <span className='font-medium text-sm'>
+                    Connected to preview: {websocketUrl}
+                </span>
+            </div>
+            <button
+                onClick={handleDisconnect}
+                className='flex items-center gap-1 bg-white/20 hover:bg-white/30 px-2 py-1 rounded text-sm transition-colors'
+                aria-label='Disconnect from preview'
+            >
+                <XIcon className='w-3 h-3' />
+                Disconnect
+            </button>
+        </div>
     )
 }
 
