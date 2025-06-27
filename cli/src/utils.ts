@@ -6,8 +6,8 @@ import path from 'path'
 
 import { execSync } from 'child_process'
 
-export async function readTopLevelDocsJson() {
-    const docsJsonPath = path.resolve(process.cwd(), 'docs.json')
+export async function readTopLevelDocsJson(dir) {
+    const docsJsonPath = path.resolve(dir, 'docs.json')
     if (!fs.existsSync(docsJsonPath)) {
         return
     }

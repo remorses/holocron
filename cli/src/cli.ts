@@ -27,7 +27,7 @@ type FilesInDraft = Record<
 
 const url = process.env.SERVER_URL || 'https://fumabase.com'
 
-const apiClient = createApiClient(url)
+// const apiClient = createApiClient(url)
 
 cli.command('init', 'Initialize a new fumabase project').action(() => {
     openUrlInBrowser('https://fumabase.com/login')
@@ -43,17 +43,11 @@ cli.command('dev', 'Preview your fumabase website')
         dir = path.resolve(dir)
         console.log(`finding files inside ${dir}`)
         try {
-            const globs = [
-                '**/*.md',
-                '**/*.mdx',
-                '**/meta.json',
-                '**/docs.json',
-            ]
+            // Create watcher for file changes (chokidar v4 doesn't support globs)
+            const watcher = chokidar.watch(dir, {
+                // alwaysStat: true,
+                ignored: /[\\/](node_modules|\.git|\.cache)[\\/]/,
 
-            // Create watcher for file changes
-            const watcher = chokidar.watch(globs, {
-                cwd: dir,
-                ignored: ['**/node_modules/**', '**/.git/**'],
                 ignoreInitial: false,
                 persistent: true,
             })
@@ -63,21 +57,31 @@ cli.command('dev', 'Preview your fumabase website')
             // Wait for initial scan to complete
             await new Promise<void>((resolve) => {
                 watcher.on('add', (filePath) => {
-                    filePaths.push(filePath)
+                    console.log(filePath)
+                    if (
+                        filePath.endsWith('.mdx') ||
+                        filePath.endsWith('.md') ||
+                        filePath.endsWith('meta.json') ||
+                        filePath.endsWith('docs.json') ||
+                        filePath.endsWith('styles.css')
+                    ) {
+                        filePaths.push(filePath)
+                    }
                 })
                 watcher.on('ready', () => {
-                    console.log(
-                        `Found ${filePaths.length} file${filePaths.length === 1 ? '' : 's'}`,
-                    )
                     resolve()
                 })
             })
 
             if (!filePaths.length) {
-                console.error(`No files to upload inside ${dir}`)
+                console.error(`No files for project inside ${dir}`)
                 return
             }
-            const docsJson = await readTopLevelDocsJson()
+
+            console.log(
+                `Found ${filePaths.length} file${filePaths.length === 1 ? '' : 's'}`,
+            )
+            const docsJson = await readTopLevelDocsJson(dir)
             if (!docsJson) {
                 console.error(
                     'docs.json file not found at the project root. Use fumabase init to create a new project',
