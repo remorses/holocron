@@ -157,63 +157,60 @@ export async function clientLoader({
         return serverData
     } catch (err) {
         // Check if this is a 404 error
-        if (isRouteErrorResponse(err) && err.status === 404) {
-            // Server loader failed with 404, check if we have draft content to serve
-            const slugs =
-                params['*']?.split('/').filter((v) => v.length > 0) || []
-            const slug = '/' + slugs.join('/')
+        if (!isRouteErrorResponse(err) || err.status !== 404) {
+            throw err
+        }
+        // Server loader failed with 404, check if we have draft content to serve
+        const slugs = params['*']?.split('/').filter((v) => v.length > 0) || []
+        const slug = '/' + slugs.join('/')
 
-            // Look for draft files that could serve this slug
-            for (const [githubPath, draft] of Object.entries(filesInDraft)) {
-                if (!draft) continue
+        // Look for draft files that could serve this slug
+        for (const [githubPath, draft] of Object.entries(filesInDraft)) {
+            if (!draft) continue
 
-                const source = await getFumadocsClientSource({
-                    files: [{ path: githubPath, data: {}, type: 'page' }],
-                })
-                const page = source.getPage(slugs)
-                if (page) {
-                    const extension = githubPath.endsWith('.mdx') ? 'mdx' : 'md'
-                    const data = await (async function getData() {
-                        while (true) {
-                            try {
-                                return processMdxInClient({
-                                    extension,
-                                    markdown: draft.content,
-                                })
-                            } catch (e: any) {
-                                if (e instanceof Promise) {
-                                    await e
-                                } else {
-                                    throw e
-                                }
+            const source = await getFumadocsClientSource({
+                files: [{ path: githubPath, data: {}, type: 'page' }],
+            })
+            const page = source.getPage(slugs)
+            if (page) {
+                const extension = githubPath.endsWith('.mdx') ? 'mdx' : 'md'
+                const data = await (async function getData() {
+                    while (true) {
+                        try {
+                            return processMdxInClient({
+                                extension,
+                                markdown: draft.content,
+                            })
+                        } catch (e: any) {
+                            if (e instanceof Promise) {
+                                await e
+                            } else {
+                                throw e
                             }
                         }
-                    })()
-
-                    // Use cached server data as base structure, without fields available in root
-                    const baseData = lastServerLoaderData || {
-                        locale: 'en',
-                        i18n: null,
                     }
+                })()
 
-                    return {
-                        ...baseData,
-                        toc: data.toc,
-                        title: data.title,
-                        description: data.description,
-                        markdown: draft.content,
-                        ast: data.ast,
-                        githubPath,
-                        slugs,
-                        slug,
-                        lastEditedAt: new Date(),
-                    }
+                // Use cached server data as base structure, without fields available in root
+                const baseData = lastServerLoaderData || {
+                    locale: 'en',
+                    i18n: null,
+                }
+
+                return {
+                    ...baseData,
+                    toc: data.toc,
+                    title: data.title,
+                    description: data.description,
+                    markdown: draft.content,
+                    ast: data.ast,
+                    githubPath,
+                    slugs,
+                    slug,
+                    lastEditedAt: new Date(),
                 }
             }
         }
-
-        // No draft content found or not a 404 error, re-throw the error
-        throw err
     }
 }
 
