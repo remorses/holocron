@@ -78,7 +78,6 @@ function keyForDocsJson({ chatId }) {
 const setDocsJsonState = ({ values, previousJsonString, chatId }) => {
     console.log(`form values changed, sending state to docs iframe`)
     const githubPath = 'docs.json'
-    const filesInDraft = useWebsiteState.getState().filesInDraft || {}
 
     const newJson = JSON.stringify(
         {
@@ -91,18 +90,21 @@ const setDocsJsonState = ({ values, previousJsonString, chatId }) => {
     )
     console.log(`updating docs.json`, newJson)
 
-    const newFilesInDraft: FilesInDraft = {
-        ...useWebsiteState.getState().filesInDraft,
+    const newChanges: FilesInDraft = {
         [githubPath]: {
             content: newJson,
             githubPath,
             ...calculateLineChanges(previousJsonString, newJson),
         },
     }
+    const newFilesInDraft: FilesInDraft = {
+        ...useWebsiteState.getState().filesInDraft,
+        ...newChanges,
+    }
     useWebsiteState.setState({ filesInDraft: newFilesInDraft })
     localStorage.setItem(keyForDocsJson({ chatId }), newJson)
     docsRpcClient.setDocsState({
-        filesInDraft: newFilesInDraft,
+        filesInDraft: newChanges,
     })
 }
 
