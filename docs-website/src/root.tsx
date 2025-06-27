@@ -76,7 +76,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     // Handle websocketId in search params - set plain cookie and redirect
     const websocketId = url.searchParams.get('websocketId')
-    if (websocketId) {
+    if (websocketId != null) {
         // Remove websocketId from search params for redirect
         const redirectUrl = new URL(url)
         redirectUrl.searchParams.delete('websocketId')
@@ -585,11 +585,11 @@ function DocsLayoutWrapper({
 function PreviewBanner({ websocketId }: { websocketId?: string }) {
     if (!websocketId) return null
     const handleDisconnect = () => {
-        // Clear the session cookie by setting it to expire
-        document.cookie =
-            '__websocket_preview=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
-        // Reload the page to reflect the change
-        window.location.reload()
+
+      // Remove websocketId from search params before reloading
+      const url = new URL(window.location.href)
+      url.searchParams.set('websocketId', '')
+      window.location.href = url.toString()
     }
 
     return (
