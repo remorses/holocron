@@ -170,7 +170,7 @@ cli.command('dev', 'Preview your fumabase website')
                 connectedClients.add(client)
 
                 for (const [key, value] of Object.entries(filesInDraft)) {
-                    console.log(`sending state to website for file: ${key}`)
+                    // console.log(`sending state to website for file: ${key}`)
                     await client.setDocsState({
                         filesInDraft: { [key]: value },
                     })
@@ -199,7 +199,7 @@ cli.command('dev', 'Preview your fumabase website')
                 // Send only the updated file to all connected clients
                 const updatedFile = { [githubPath]: filesInDraft[githubPath] }
                 for (const client of connectedClients) {
-                    console.log(`sending websocket message for ${githubPath}`)
+                    console.log(`sending websocket update for ${githubPath}`)
                     client.setDocsState({ filesInDraft: updatedFile })
                 }
             }
