@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { HistoryIcon, PlusIcon, Loader2 } from 'lucide-react'
+import { HistoryIcon, PlusIcon, Loader2, ChevronDown } from 'lucide-react'
 
 import { NavUser } from 'website/src/components/nav-user'
 import {
@@ -126,14 +126,15 @@ function NewChatButton() {
                     <PopoverTrigger asChild>
                         <Button
                             variant='secondary'
-                            size='icon'
+                            className='flex items-center gap-1 px-3'
                             disabled={isCreatingChat}
                         >
                             {isCreatingChat ? (
                                 <Loader2 className='h-4 w-4 animate-spin' />
                             ) : (
-                                <PlusIcon />
+                                <PlusIcon className='h-4 w-4' />
                             )}
+                            <ChevronDown className='h-3 w-3' />
                         </Button>
                     </PopoverTrigger>
                 </TooltipTrigger>
@@ -199,7 +200,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <div className='justify-between w-full row-span-1 gap-2 flex px-6'>
                     <TeamSwitcher className='grow ' sites={userSites} />
 
-                    <div className='flex gap-2'>
+                    <div className='flex items-start gap-2'>
                         <ChatCombobox chatId={chatId} />
 
                         <NewChatButton />
