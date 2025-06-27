@@ -131,7 +131,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
 
-    const site = await prisma.site.findFirst({
+    const siteBranch = await prisma.siteBranch.findFirst({
         where: {
             domains: {
                 some: {
@@ -141,20 +141,23 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         },
         include: {
             domains: true,
-            branches: {
-                take: 1,
+            site: {
+                include: {
+                    locales: true,
+                },
             },
-            locales: true,
         },
     })
+
+    const site = siteBranch?.site
 
     if (!site) {
         console.log('Site not found for domain:', domain)
         throw new Response('Site not found', { status: 404 })
     }
 
-    const branch = site.branches[0]
-    if (!branch) {
+
+    if (!siteBranch) {
         console.log('Branch not found for site:', site?.siteId)
         throw new Response('Branch not found', { status: 404 })
     }
@@ -162,7 +165,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     const { getFumadocsSource } = await import('../lib/source.server')
     const source = await getFumadocsSource({
         defaultLocale: site.defaultLocale,
-        branchId: branch.branchId,
+        branchId: siteBranch.branchId,
         locales,
     })
 
@@ -175,7 +178,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     }
 
     // Check for redirects from docsJson configuration
-    const docsJson: DocsJsonType = branch.docsJson as any
+    const docsJson: DocsJsonType = siteBranch.docsJson as any
     if (docsJson?.redirects) {
         const currentPath = '/' + (params['*'] || '')
         const redirect = docsJson.redirects.find(
@@ -203,20 +206,20 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             where: {
                 slug,
 
-                branchId: branch.branchId,
+                branchId: siteBranch.branchId,
             },
         }),
         prisma.mediaAsset.findFirst({
             where: {
                 slug,
-                branchId: branch.branchId,
+                branchId: siteBranch.branchId,
             },
         }),
     ])
 
     if (!page && mediaAsset) {
         const siteId = site.siteId
-        const branchId = branch.branchId
+        const branchId = siteBranch.branchId
         const key = getKeyForMediaAsset({
             siteId,
             slug,
@@ -240,12 +243,12 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             prisma.markdownPage.findFirst({
                 where: {
                     slug: '/index',
-                    branchId: branch.branchId,
+                    branchId: siteBranch.branchId,
                 },
             }),
             prisma.markdownPage.findFirst({
                 where: {
-                    branchId: branch.branchId,
+                    branchId: siteBranch.branchId,
                 },
                 orderBy: {
                     slug: 'asc',
@@ -281,7 +284,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         markdown: page.markdown,
     })
 
-    const githubBranch = branch.githubBranch || 'main'
+    const githubBranch = siteBranch.githubBranch || 'main'
     return {
         ...data,
         slugs,
@@ -295,6 +298,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         githubBranch,
         tree,
         site,
+        branch: siteBranch,
         docsJson,
         lastEditedAt: page.lastEditedAt || new Date(),
     }
@@ -369,7 +373,7 @@ function PageContent(props: Route.ComponentProps) {
                                 'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({
-                                siteId: loaderData.site.siteId,
+                                branchId: loaderData.branch.branchId,
                                 url,
                                 opinion: feedback.opinion,
                                 message: feedback.message,

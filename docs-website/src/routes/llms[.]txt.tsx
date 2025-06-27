@@ -6,7 +6,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
 
-    const site = await prisma.site.findFirst({
+    const siteBranch = await prisma.siteBranch.findFirst({
         where: {
             domains: {
                 some: {
@@ -16,35 +16,37 @@ export async function loader({ request }: Route.LoaderArgs) {
         },
         include: {
             domains: true,
-            branches: {
-                take: 1,
+            site: {
+                include: {
+                    locales: true,
+                },
             },
-            locales: true,
         },
     })
+
+    const site = siteBranch?.site
 
     if (!site) {
         throw new Response('Site not found', { status: 404 })
     }
 
-    const branch = site.branches[0]
-    if (!branch) {
+    if (!siteBranch) {
         throw new Response('Branch not found', { status: 404 })
     }
 
     const locales = site.locales.map((x) => x.locale)
     const source = await getFumadocsSource({
         defaultLocale: site.defaultLocale,
-        branchId: branch.branchId,
+        branchId: siteBranch.branchId,
         locales,
     })
 
     const siteName = site.name || 'Documentation'
     const baseUrl = `https://${domain}`
-    
+
     // Get all pages from the source
     const pages = source.getPages()
-    
+
     // Format as llms.txt with links ending in .md
     const linksText = pages
         .map((page) => {

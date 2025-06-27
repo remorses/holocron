@@ -115,7 +115,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         .getAll('search')
         .filter((s) => s.trim().length > 0)
 
-    const site = await prisma.site.findFirst({
+    const siteBranch = await prisma.siteBranch.findFirst({
         where: {
             domains: {
                 some: {
@@ -125,26 +125,28 @@ export async function loader({ request }: Route.LoaderArgs) {
         },
         include: {
             domains: true,
-            branches: {
-                take: 1,
+            site: {
+                include: {
+                    locales: true,
+                },
             },
-            locales: true,
         },
     })
+
+    const site = siteBranch?.site
 
     if (!site) {
         throw new Response('Site not found', { status: 404 })
     }
 
-    const branch = site.branches[0]
-    if (!branch) {
+    if (!siteBranch) {
         throw new Response('Branch not found', { status: 404 })
     }
 
     const locales = site.locales.map((x) => x.locale)
     const source = await getFumadocsSource({
         defaultLocale: site.defaultLocale,
-        branchId: branch.branchId,
+        branchId: siteBranch.branchId,
         locales,
     })
 
@@ -171,7 +173,7 @@ export async function loader({ request }: Route.LoaderArgs) {
                             slug: {
                                 in: slugs,
                             },
-                            branchId: branch.branchId,
+                            branchId: siteBranch.branchId,
                         },
                         select: {
                             slug: true,

@@ -61,7 +61,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
 
-    const site = await prisma.site.findFirst({
+    const siteBranch = await prisma.siteBranch.findFirst({
         where: {
             domains: {
                 some: {
@@ -71,20 +71,23 @@ export async function loader({ request }: Route.LoaderArgs) {
         },
         include: {
             domains: true,
-            branches: {
-                take: 1,
+            site: {
+                include: {
+                    locales: true,
+                },
             },
-            locales: true,
         },
     })
+
+    const site = siteBranch?.site
 
     if (!site) {
         console.log('Site not found for domain:', domain)
         throw new Response('Site not found', { status: 404 })
     }
 
-    const branch = site.branches[0]
-    if (!branch) {
+
+    if (!siteBranch) {
         console.log('Branch not found for site:', site?.siteId)
         throw new Response('Branch not found', { status: 404 })
     }
@@ -92,7 +95,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     const locales = site.locales.map((x) => x.locale)
     const source = await getFumadocsSource({
         defaultLocale: site.defaultLocale,
-        branchId: branch.branchId,
+        branchId: siteBranch.branchId,
         locales,
     })
 
@@ -101,7 +104,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     // Process banner markdown if it exists
     let bannerAst: any = null
-    const docsJson = branch.docsJson as any
+    const docsJson = siteBranch.docsJson as any
     if (docsJson?.banner?.content) {
         try {
             const { data } = await processMdxInServer({
@@ -116,7 +119,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     return {
         site,
-        branch,
+        branch: siteBranch,
         locales,
         tree,
         i18n,

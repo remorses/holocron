@@ -363,6 +363,7 @@ export const DocsConfigSchema = z
             .url()
             .optional()
             .describe('Schema URL for IDE autocomplete'),
+        siteId: z.string().describe(`The site id for this folder. This field is required and should never be manually updated.`),
         name: z.string().min(1).describe('Project or product name'),
         // TODO
         navTopLinks: z.array(NavigationAnchorItem).optional(),

@@ -10,7 +10,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
 
-    const site = await prisma.site.findFirst({
+    const siteBranch = await prisma.siteBranch.findFirst({
         where: {
             domains: {
                 some: {
@@ -19,18 +19,23 @@ export async function loader({ request }: Route.LoaderArgs) {
             },
         },
         include: {
-            locales: true,
-            branches: true,
+            site: {
+                include: {
+                    locales: true,
+                },
+            },
         },
     })
-    const branchId = site?.branches[0]?.branchId
+    
+    const site = siteBranch?.site
+    const branchId = siteBranch?.branchId
 
     if (!branchId) {
         throw new Response('Branch not found', { status: 404 })
     }
 
     const defaultLocale = site?.defaultLocale
-    const locales = site?.locales.map((x) => x.locale)
+    const locales = site?.locales?.map((x) => x.locale)
     const source = await getFumadocsSource({ branchId, defaultLocale, locales })
     const server = createI18nSearchAPI('advanced', {
         i18n: source._i18n!,
