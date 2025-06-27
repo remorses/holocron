@@ -2,7 +2,6 @@
 import type { PageTree, TOCItemType } from 'fumadocs-core/server'
 
 import { create } from 'zustand'
-import { DocsJsonType } from './docs-json'
 
 export type FilesInDraft = Record<
     string,

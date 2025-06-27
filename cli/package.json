@@ -6,6 +6,7 @@
     "repository": "https://github.com/remorses/fumabase",
     "scripts": {
         "build": "tsc ",
+        "fumabase": "node bin.js",
         "watch": "tsc -w"
     },
     "bin": "./bin.js",

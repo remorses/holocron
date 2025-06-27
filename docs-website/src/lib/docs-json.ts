@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
-import { extractNamePathsFromSchema } from './schema-path-utils'
+import { extractNamePathsFromSchema } from './schema-path-utils.js'
 
 // === Primitive helper schemas ===
 const Color = z
