@@ -14,14 +14,6 @@ export default {
         env: TunnelEnv,
         ctx?: ExecutionContext,
     ): Promise<Response> {
-        // --- unconditional wildcard CORS for every response ------------
-        const addCors = (r: Response) => {
-            r.headers.set('Access-Control-Allow-Origin', '*')
-            r.headers.set('Access-Control-Allow-Headers', '*')
-            r.headers.set('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-            return r
-        }
-
         // Answer CORS pre-flights (OPTIONS) immediately
         if (req.method === 'OPTIONS')
             return addCors(new Response(null, { status: 204 }))
@@ -56,7 +48,7 @@ export class Tunnel {
 
     async fetch(req) {
         if (req.headers.get('Upgrade') !== 'websocket')
-            return new Response('Upgrade required', { status: 400 })
+            return addCors(new Response('Upgrade required', { status: 400 }))
 
         const url = new URL(req.url)
         const role = url.pathname.startsWith('/upstream') ? 'up' : 'down'
@@ -64,15 +56,18 @@ export class Tunnel {
         const [client, server] = Object.values(pair)
 
         if (role === 'up') {
-            if (this.up) return new Response('Upstream exists', { status: 409 })
+            if (this.up)
+                return addCors(new Response('Upstream exists', { status: 409 }))
             this.up = server
+            server.accept()
             this.bindUp()
         } else {
             this.downs.add(server)
+            server.accept()
             this.bindDown(server)
         }
 
-        return new Response(null, { status: 101, webSocket: client })
+        return addCors(new Response(null, { status: 101, webSocket: client }))
     }
 
     /* ------ wiring helpers ------ */
@@ -103,4 +98,11 @@ export class Tunnel {
         })
         ws.addEventListener('close', () => this.downs.delete(ws))
     }
+}
+
+const addCors = (r: Response) => {
+    r.headers.set('Access-Control-Allow-Origin', '*')
+    r.headers.set('Access-Control-Allow-Headers', '*')
+    r.headers.set('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+    return r
 }
