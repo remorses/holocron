@@ -32,45 +32,10 @@ export function usePrevious<T>(value: T): T | undefined {
 
     return ref.current
 }
-/**
- * This hook sets up a window 'message' event listener using the provided handler function.
- * It will automatically remove the listener when the component is unmounted or handler changes.
- * Additionally, it sends a 'ping' postMessage to the parent window every second.
- */
-export function useParentPostMessage(
-    onParentPostMessage: (event: MessageEvent) => void,
-) {
-    useEffect(() => {
-        window.addEventListener('message', onParentPostMessage)
-        if (typeof window !== 'undefined' && window.parent) {
-            window.parent?.postMessage?.(
-                { type: 'ready' },
-                {
-                    targetOrigin: '*',
-                },
-            )
-        }
-
-        // Set up ping interval
-        const pingInterval = setInterval(() => {
-            if (typeof window !== 'undefined' && window.parent) {
-                window.parent?.postMessage?.(
-                    { type: 'ping' },
-                    {
-                        targetOrigin: '*',
-                    },
-                )
-            }
-        }, 500)
-
-        return () => {
-            window.removeEventListener('message', onParentPostMessage)
-            clearInterval(pingInterval)
-        }
-    }, [onParentPostMessage])
-}
 export function useDocsJson(): DocsJsonType {
-    const { branch } = useRouteLoaderData('root') as Route.ComponentProps['loaderData']
+    const { branch } = useRouteLoaderData(
+        'root',
+    ) as Route.ComponentProps['loaderData']
 
     // Check for state overrides for docsJson
     const docsJsonString = useDocsState(

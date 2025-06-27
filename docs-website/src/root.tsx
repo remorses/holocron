@@ -13,9 +13,9 @@ import {
 } from 'react-router'
 import type { Route } from './+types/root'
 import './app.css'
-import { useDocsJson, useParentPostMessage } from './lib/hooks'
+import { useDocsJson } from './lib/hooks'
 import { env } from './lib/env'
-import { startTransition, useMemo, useState } from 'react'
+import { startTransition, useEffect, useMemo, useState } from 'react'
 import { DocsState, IframeRpcMessage, useDocsState } from './lib/docs-state'
 import { isInsidePreviewIframe } from './lib/utils'
 import { prisma } from 'db'
@@ -190,12 +190,14 @@ async function setDocsStateForMessage(partialState: Partial<DocsState>) {
     })
 }
 async function iframeMessagesHandling() {
+    if (!isInsidePreviewIframe()) return
     async function onParentPostMessage(e: MessageEvent) {
         onFirstStateMessage()
         try {
             if (!allowedOrigins.includes(e.origin)) {
                 console.warn(
                     `Blocked message from disallowed origin: ${e.origin}`,
+                    e.data,
                 )
                 return
             }
@@ -244,59 +246,48 @@ if (typeof window !== 'undefined') {
     iframeMessagesHandling()
 }
 
-// Helper function to get cookie value by name
-function getCookie(name: string): string | null {
-    const nameEQ = name + '='
-    const cookies = document.cookie.split(';')
-    for (let i = 0; i < cookies.length; i++) {
-        let cookie = cookies[i]
-        while (cookie.charAt(0) === ' ')
-            cookie = cookie.substring(1, cookie.length)
-        if (cookie.indexOf(nameEQ) === 0)
-            return decodeURIComponent(
-                cookie.substring(nameEQ.length, cookie.length),
-            )
-    }
-    return null
-}
-
 // Function for handling websocket connection based on session cookie
-async function websocketUrlHandling() {
+async function websocketUrlHandling(websocketUrl: string) {
     if (typeof window === 'undefined') return
 
-    // Get websocketUrl from cookie using document.cookie API
-    const websocketUrl = getCookie('__websocket_preview')
-
-    if (websocketUrl) {
-        const ws = new WebSocket(websocketUrl)
-        ws.onopen = () => {
-            ws.send(JSON.stringify({ type: 'ready' }))
-        }
-        ws.onmessage = async (event) => {
-            let data: IframeRpcMessage
-            try {
-                data = JSON.parse(event.data)
-            } catch {
-                console.error(`websocket sent invalid json`, event.data)
-                return
-            }
-            const { id, state: partialState } = data || {}
-            if (partialState) {
-                await setDocsStateForMessage(partialState)
-            }
-            ws.send(JSON.stringify({ id } satisfies IframeRpcMessage))
-        }
-        // ping interval
-        setInterval(() => {
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ type: 'ping' }))
-            }
-        }, 1000)
+    console.log('connecting over preview websocketUrl', websocketUrl)
+    const ws = new WebSocket(websocketUrl)
+    ws.onopen = () => {
+        ws.send(JSON.stringify({ type: 'ready' }))
     }
+    ws.onmessage = async (event) => {
+        let data: IframeRpcMessage
+        try {
+            data = JSON.parse(event.data)
+        } catch {
+            console.error(`websocket sent invalid json`, event.data)
+            return
+        }
+        const { id, state: partialState } = data || {}
+        if (partialState) {
+            await setDocsStateForMessage(partialState)
+        }
+        ws.send(JSON.stringify({ id } satisfies IframeRpcMessage))
+    }
+    // ping interval
+    setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'ping' }))
+        }
+    }, 1000)
 }
 
 if (typeof window !== 'undefined') {
-    websocketUrlHandling()
+    window.addEventListener(
+        'startPreviewWebsocket',
+        (e: any) => {
+            const websocketUrl = e?.detail?.websocketUrl
+            if (websocketUrl) {
+                websocketUrlHandling(websocketUrl)
+            }
+        },
+        { once: true },
+    )
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -316,10 +307,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 />
                 <Meta />
 
-                <script
-                    crossOrigin='anonymous'
-                    src='//unpkg.com/react-scan/dist/auto.global.js'
-                />
+                {process.env.NODE_ENV === 'development' && (
+                    <script
+                        crossOrigin='anonymous'
+                        src='//unpkg.com/react-scan/dist/auto.global.js'
+                    />
+                )}
                 <Links />
             </head>
             <body>
@@ -414,7 +407,16 @@ function DocsProvider({ children }: { children: React.ReactNode }) {
 function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
     const loaderData = useLoaderData<typeof loader>()
     const { site, i18n, previewWebsocketUrl } = loaderData
-    const locale = site.defaultLocale
+
+    useEffect(() => {
+        if (previewWebsocketUrl) {
+            window.dispatchEvent(
+                new CustomEvent('startPreviewWebsocket', {
+                    detail: { websocketUrl: previewWebsocketUrl },
+                }),
+            )
+        }
+    }, [])
 
     const docsJson = useDocsJson()
 
@@ -470,37 +472,35 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
     })()
 
     return (
-        <DocsLayout
-            searchToggle={{
-                enabled: searchEnabled,
-                components: {},
-            }}
-            nav={{
-                mode: navMode,
-                transparentMode: navTransparentMode,
-                title: <Logo docsJson={docsJson} />,
-            }}
-            tabMode={navTabMode}
-            sidebar={{
-                banner: (
-                    <>
-                        {previewWebsocketUrl && (
-                            <PreviewBanner websocketUrl={previewWebsocketUrl} />
-                        )}
-                        <Banner banner={docsJson?.banner} />
-                    </>
-                ),
-            }}
-            i18n={i18n}
-            tree={tree as any}
-            {...{
-                disableThemeSwitch,
-                links,
-            }}
-        >
-            <CSSVariables docsJson={docsJson} />
-            {children}
-        </DocsLayout>
+        <div className='h-full w-full'>
+            {previewWebsocketUrl && (
+                <PreviewBanner websocketUrl={previewWebsocketUrl} />
+            )}
+            <DocsLayout
+                searchToggle={{
+                    enabled: searchEnabled,
+                    components: {},
+                }}
+                nav={{
+                    mode: navMode,
+                    transparentMode: navTransparentMode,
+                    title: <Logo docsJson={docsJson} />,
+                }}
+                tabMode={navTabMode}
+                sidebar={{
+                    banner: <Banner banner={docsJson?.banner} />,
+                }}
+                i18n={i18n}
+                tree={tree as any}
+                {...{
+                    disableThemeSwitch,
+                    links,
+                }}
+            >
+                <CSSVariables docsJson={docsJson} />
+                {children}
+            </DocsLayout>
+        </div>
     )
 }
 
@@ -514,7 +514,7 @@ function PreviewBanner({ websocketUrl }: { websocketUrl: string }) {
     }
 
     return (
-        <div className='sticky top-0 z-50 bg-orange-500 text-white px-4 py-2 flex items-center justify-between mb-4 rounded-lg'>
+        <div className='sticky top-0 z-50 bg-orange-500 text-white px-4 py-2 flex items-center justify-between mb-4'>
             <div className='flex items-center gap-2'>
                 <div className='w-2 h-2 bg-white rounded-full animate-pulse'></div>
                 <span className='font-medium text-sm'>

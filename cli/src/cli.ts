@@ -57,7 +57,6 @@ cli.command('dev', 'Preview your fumabase website')
             // Wait for initial scan to complete
             await new Promise<void>((resolve) => {
                 watcher.on('add', (filePath) => {
-                    console.log(filePath)
                     if (
                         filePath.endsWith('.mdx') ||
                         filePath.endsWith('.md') ||
@@ -65,6 +64,7 @@ cli.command('dev', 'Preview your fumabase website')
                         filePath.endsWith('docs.json') ||
                         filePath.endsWith('styles.css')
                     ) {
+                        // console.log(filePath)
                         filePaths.push(filePath)
                     }
                 })
@@ -119,8 +119,12 @@ cli.command('dev', 'Preview your fumabase website')
 
             const { websocketUrl, wss } = websocketRes
 
-            const previewUrl = new URL(`https://${previewDomain}`)
-            previewUrl.searchParams.set('websocketServer', websocketUrl)
+            const previewUrl = new URL(
+                previewDomain.includes('.localhost:')
+                    ? `http://${previewDomain}`
+                    : `https://${previewDomain}`,
+            )
+            previewUrl.searchParams.set('websocketUrl', websocketUrl)
             console.log(`opening ${previewUrl.toString()} in browser...`)
             openUrlInBrowser(previewUrl.toString())
 
@@ -132,10 +136,13 @@ cli.command('dev', 'Preview your fumabase website')
                             fullPath,
                             'utf-8',
                         )
-                        // You may want to replace this with your githubPath logic
-                        const githubPath = filePath
+
+                        const githubPath = path.posix.relative(
+                            dir,
+                            filePath.replace(/\\/g, '/'),
+                        )
                         return [
-                            filePath,
+                            githubPath,
                             {
                                 content,
                                 githubPath,
@@ -149,7 +156,7 @@ cli.command('dev', 'Preview your fumabase website')
             >()
 
             // Wait until there is at least one WebSocket connection before proceeding
-            wss.on('connection', (ws) => {
+            wss.on('connection', async (ws) => {
                 console.log(
                     `browser connected, showing a preview of your local changes`,
                 )
@@ -161,7 +168,13 @@ cli.command('dev', 'Preview your fumabase website')
                 )
                 const client = createIframeRpcClient({ ws })
                 connectedClients.add(client)
-                client.setDocsState({ filesInDraft })
+
+                for (const [key, value] of Object.entries(filesInDraft)) {
+                    console.log(`sending state to website for file: ${key}`)
+                    await client.setDocsState({
+                        filesInDraft: { [key]: value },
+                    })
+                }
 
                 ws.on('close', () => {
                     connectedClients.delete(client)
@@ -172,17 +185,21 @@ cli.command('dev', 'Preview your fumabase website')
             const handleFileUpdate = async (filePath: string) => {
                 const fullPath = path.resolve(dir, filePath)
                 const content = await fs.promises.readFile(fullPath, 'utf-8')
-                const githubPath = filePath
+                const githubPath = path.posix.relative(
+                    dir,
+                    filePath.replace(/\\/g, '/'),
+                )
 
                 // Update the local filesInDraft
-                filesInDraft[filePath] = {
+                filesInDraft[githubPath] = {
                     content,
                     githubPath,
                 }
 
                 // Send only the updated file to all connected clients
-                const updatedFile = { [filePath]: filesInDraft[filePath] }
+                const updatedFile = { [githubPath]: filesInDraft[githubPath] }
                 for (const client of connectedClients) {
+                    console.log(`sending websocket message for ${githubPath}`)
                     client.setDocsState({ filesInDraft: updatedFile })
                 }
             }
@@ -198,6 +215,7 @@ cli.command('dev', 'Preview your fumabase website')
                     // Send null value to signal file deletion
                     const deletedFile = { [filePath]: null }
                     for (const client of connectedClients) {
+                        console.log(`sending websocket message`)
                         client.setDocsState({ filesInDraft: deletedFile })
                     }
                 }

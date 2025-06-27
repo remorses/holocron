@@ -44,6 +44,13 @@ export function startWebSocketWithTunnel({ port }: { port?: number } = {}) {
             console.log(`ws://localhost:${actualPort} ready`),
         )
 
+        wss.on('error', (err) => {
+            console.error('WebSocket Server Error:', err)
+        })
+        wss.on('close', () => {
+            console.log('WebSocket Server closed')
+        })
+
         // 2) untun tunnel
         const start = Date.now()
 
@@ -61,9 +68,9 @@ export function startWebSocketWithTunnel({ port }: { port?: number } = {}) {
                 'wss:',
             )
             const elapsed = Date.now() - start
-            console.log(`🌐 Public WebSocket endpoint → ${websocketUrl}`)
+            // console.log(`🌐 Public WebSocket endpoint → ${websocketUrl}`)
             console.log(
-                `⏱ Tunnel URL obtained in ${(elapsed / 1000).toFixed(2)}s`,
+                `Cloudflare Tunnel URL obtained in ${(elapsed / 1000).toFixed(2)}s`,
             )
 
             // 3) graceful shutdown
