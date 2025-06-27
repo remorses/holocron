@@ -156,6 +156,7 @@ export async function action({ request, params }: Route.ActionArgs) {
         const chat = await prisma.chat.create({
             data: {
                 userId,
+
                 branchId,
             },
         })
@@ -312,7 +313,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
                 <p className='text-gray-400 text-sm'>
                     Need help?{' '}
                     <a className='text-primary' href={`mailto:${supportEmail}`}>
-                        Contact support
+                        Email support
                     </a>
                 </p>
             </div>

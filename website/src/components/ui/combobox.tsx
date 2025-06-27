@@ -4,6 +4,7 @@ import * as React from 'react'
 import { Check, ChevronsUpDown } from 'lucide-react'
 
 import { cn } from 'website/src/lib/utils'
+import { Badge } from './badge'
 import { Button } from 'website/src/components/ui/button'
 import {
     Command,
@@ -29,6 +30,7 @@ interface ComboboxProps {
     items: Array<{
         value: string
         label: string
+        branch?: string
     }>
 }
 
@@ -83,7 +85,14 @@ export function Combobox({
                                     }}
                                     className='max-w-full'
                                 >
-                                    <span className='truncate'>{item.label}</span>
+                                    <div className='flex items-center justify-between gap-4 min-w-0 w-full'>
+                                        <span className='truncate'>{item.label}</span>
+                                        {item.branch && (
+                                            <Badge variant='outline' className='text-xs shrink-0 truncate'>
+                                                {item.branch}
+                                            </Badge>
+                                        )}
+                                    </div>
                                     <Check
                                         className={cn(
                                             'ml-auto h-4 w-4 shrink-0',

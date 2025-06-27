@@ -20,6 +20,7 @@ import Chat from './chat'
 import { Button } from './ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { Combobox } from './ui/combobox'
+import { Badge } from './ui/badge'
 import { useRouteLoaderData, useParams, useNavigate } from 'react-router'
 import { href } from 'react-router'
 import type { Route as SiteRoute } from 'website/src/routes/org.$orgId.site.$siteId'
@@ -82,6 +83,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const chatHistoryItems = chatHistory.map((chat) => ({
         value: chat.chatId,
         label: chat.title || 'Untitled Chat',
+        branch: chat.branch.githubBranch,
     }))
 
     return (

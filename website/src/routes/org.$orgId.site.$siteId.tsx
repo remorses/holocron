@@ -38,6 +38,11 @@ export async function loader({
                 chatId: true,
                 title: true,
                 createdAt: true,
+                branch: {
+                    select: {
+                        githubBranch: true,
+                    },
+                },
             },
             orderBy: { createdAt: 'desc' },
         }),
