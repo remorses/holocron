@@ -116,6 +116,8 @@ if (navigation.state === 'loading' || navigation.state === 'submitting') {
 }
 ```
 
+> when making changes to the website code only use the `pnpm typecheck` script to validate changes, NEVER run `pnpm build` unless asked. It is too slow.
+
 ## react-router layout routes
 
 react-router layout routes are simply routes that share a prefix with some children routes. these routes will run their loaders and components also when the children paths are fetched.

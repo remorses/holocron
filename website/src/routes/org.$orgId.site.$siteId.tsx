@@ -13,7 +13,7 @@ export async function loader({
     const { userId } = await getSession({ request })
 
     // TODO change params to be branchId instead of siteId! then get the branch here
-    const [site, chatHistory] = await Promise.all([
+    const [site, chatHistory, siteBranches] = await Promise.all([
         prisma.site.findUnique({
             where: {
                 siteId: siteId,
@@ -46,6 +46,18 @@ export async function loader({
             },
             orderBy: { createdAt: 'desc' },
         }),
+        prisma.siteBranch.findMany({
+            where: {
+                siteId,
+            },
+            select: {
+                branchId: true,
+                githubBranch: true,
+            },
+            orderBy: {
+                createdAt: 'asc',
+            },
+        }),
     ])
 
     if (!site) {
@@ -54,9 +66,9 @@ export async function loader({
 
     return {
         site,
-
         siteId,
         chatHistory,
+        siteBranches,
     }
 }
 export function Component({ loaderData }: Route.ComponentProps) {
