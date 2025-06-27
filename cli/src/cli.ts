@@ -40,13 +40,18 @@ cli.command('dev', 'Preview your fumabase website').action(
         const {} = options
         const dir = process.cwd()
         try {
-            const filePaths = await globby(
-                ['**/*.md', '**/*.mdx', '**/meta.json', '**/docs.json'],
-                {
-                    cwd: dir,
-                    onlyFiles: true,
-                },
-            )
+            const globs = [
+                '**/*.md',
+                '**/*.mdx',
+                '**/meta.json',
+                '**/docs.json',
+            ]
+            const filePaths = await globby(globs, {
+                cwd: dir,
+                onlyFiles: true,
+                gitignore: true,
+                ignore: ['**/node_modules/**', '**/.git/**'],
+            })
             if (!filePaths.length) {
                 console.error(`No files to upload inside ${dir}`)
                 return
@@ -118,6 +123,8 @@ cli.command('dev', 'Preview your fumabase website').action(
             })
 
             console.log(`browser connected, watching for files...`)
+            wss.emit(JSON.stringify())
+
         } catch (error) {
             console.error(error)
 

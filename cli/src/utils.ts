@@ -1,12 +1,9 @@
-import { cac } from 'cac'
+import type { DocsJsonType } from 'docs-website/src/lib/docs-json.js'
 import os from 'os'
-import { DocsJsonType } from 'docs-website/src/lib/docs-json.js'
 
 import fs from 'fs'
 import path from 'path'
 
-import { globby } from 'globby'
-import { createApiClient } from './generated/spiceflow-client.js'
 import { execSync } from 'child_process'
 
 export async function readTopLevelDocsJson() {
