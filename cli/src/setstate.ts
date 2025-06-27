@@ -25,7 +25,6 @@ export function createIframeRpcClient({
         state: DocsState,
         idempotenceId?: string,
     ): Promise<any> => {
-
         if (!ws || ws.readyState !== 1) {
             throw new Error('WebSocket instance not open.')
         }
