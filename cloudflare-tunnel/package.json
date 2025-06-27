@@ -1,0 +1,25 @@
+{
+    "name": "cloudflare-tunnel",
+    "version": "0.0.0",
+    "description": "",
+    "type": "module",
+    "repository": "https://github.com/remorses/",
+    "scripts": {
+        "deployment": "wrangler deploy",
+        "dev": "wrangler dev"
+    },
+    "files": [
+        "dist",
+        "src",
+        "esm"
+    ],
+    "keywords": [],
+    "author": "Tommaso De Rossi, morse <beats.by.morse@gmail.com>",
+    "license": "",
+    "devDependencies": {
+        "@cloudflare/workers-types": "^4.20250520.0",
+        "wrangler": "^4.16.1"
+    },
+    "dependencies": {},
+    "peerDependencies": {}
+}

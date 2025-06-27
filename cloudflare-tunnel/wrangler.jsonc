@@ -1,0 +1,23 @@
+// wrangler.jsonc
+{
+    "$schema": "./node_modules/wrangler/config-schema.json",
+    "name": "ws-tunnel",
+    "main": "src/tunnel.ts",
+    "compatibility_date": "2025-06-27",
+
+    "workers_dev": false,
+
+    // ↓ narrower pattern
+    "routes": [
+        {
+            "pattern": "fumabase.com/_tunnel/*",
+            "zone_name": "fumabase.com",
+        },
+    ],
+
+    "durable_objects": {
+        "bindings": [{ "name": "TUNNEL_DO", "class_name": "Tunnel" }],
+    },
+
+    "migrations": [{ "tag": "v1", "new_classes": ["Tunnel"] }],
+}

@@ -68,6 +68,15 @@ importers:
         specifier: workspace:*
         version: link:../docs-website
 
+  cloudflare-tunnel:
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20250520.0
+        version: 4.20250614.0
+      wrangler:
+        specifier: ^4.16.1
+        version: 4.22.0(@cloudflare/workers-types@4.20250614.0)
+
   containers-example:
     dependencies:
       '@cloudflare/containers':
