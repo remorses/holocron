@@ -38,6 +38,7 @@ import {
 import { processMdxInServer } from './lib/mdx.server'
 import { Markdown } from './lib/markdown'
 import { useTheme } from 'next-themes'
+import { DocsJsonType } from './lib/docs-json'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -58,8 +59,8 @@ const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, '')]
 function parseCookies(cookieHeader: string | null): Record<string, string> {
     const cookies: Record<string, string> = {}
     if (!cookieHeader) return cookies
-    
-    cookieHeader.split(';').forEach(cookie => {
+
+    cookieHeader.split(';').forEach((cookie) => {
         const [name, ...rest] = cookie.trim().split('=')
         if (name && rest.length > 0) {
             cookies[name] = decodeURIComponent(rest.join('='))
@@ -76,19 +77,19 @@ const firstStateReceived = new Promise<void>((resolve) => {
 export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
-    
+
     // Handle websocketUrl in search params - set plain cookie and redirect
     const websocketUrl = url.searchParams.get('websocketUrl')
     if (websocketUrl) {
         // Remove websocketUrl from search params for redirect
         const redirectUrl = new URL(url)
         redirectUrl.searchParams.delete('websocketUrl')
-        
+
         // Create a plain Set-Cookie header (session cookie, JS-readable)
         // Explicitly set HttpOnly=false for JavaScript access
         const isSecure = process.env.NODE_ENV === 'production'
         const cookieValue = `__websocket_preview=${encodeURIComponent(websocketUrl)}; Path=/; HttpOnly=false${isSecure ? '; Secure' : ''}`
-        
+
         throw redirect(redirectUrl.toString(), {
             headers: {
                 'Set-Cookie': cookieValue,
@@ -249,8 +250,12 @@ function getCookie(name: string): string | null {
     const cookies = document.cookie.split(';')
     for (let i = 0; i < cookies.length; i++) {
         let cookie = cookies[i]
-        while (cookie.charAt(0) === ' ') cookie = cookie.substring(1, cookie.length)
-        if (cookie.indexOf(nameEQ) === 0) return decodeURIComponent(cookie.substring(nameEQ.length, cookie.length))
+        while (cookie.charAt(0) === ' ')
+            cookie = cookie.substring(1, cookie.length)
+        if (cookie.indexOf(nameEQ) === 0)
+            return decodeURIComponent(
+                cookie.substring(nameEQ.length, cookie.length),
+            )
     }
     return null
 }
@@ -258,10 +263,10 @@ function getCookie(name: string): string | null {
 // Function for handling websocket connection based on session cookie
 async function websocketUrlHandling() {
     if (typeof window === 'undefined') return
-    
+
     // Get websocketUrl from cookie using document.cookie API
     const websocketUrl = getCookie('__websocket_preview')
-    
+
     if (websocketUrl) {
         const ws = new WebSocket(websocketUrl)
         ws.onopen = () => {
@@ -479,7 +484,9 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
             sidebar={{
                 banner: (
                     <>
-                        {previewWebsocketUrl && <PreviewBanner websocketUrl={previewWebsocketUrl} />}
+                        {previewWebsocketUrl && (
+                            <PreviewBanner websocketUrl={previewWebsocketUrl} />
+                        )}
                         <Banner banner={docsJson?.banner} />
                     </>
                 ),
@@ -500,7 +507,8 @@ function DocsLayoutWrapper({ children }: { children: React.ReactNode }) {
 function PreviewBanner({ websocketUrl }: { websocketUrl: string }) {
     const handleDisconnect = () => {
         // Clear the session cookie by setting it to expire
-        document.cookie = '__websocket_preview=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
+        document.cookie =
+            '__websocket_preview=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
         // Reload the page to reflect the change
         window.location.reload()
     }
@@ -567,7 +575,7 @@ function Banner({ banner }: { banner?: any }) {
     )
 }
 
-function Logo({ docsJson }) {
+function Logo({ docsJson = {} as DocsJsonType }) {
     const { site } = useLoaderData<typeof loader>()
     const { theme, resolvedTheme } = useTheme()
 

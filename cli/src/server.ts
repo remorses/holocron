@@ -1,5 +1,5 @@
 import { WebSocketServer } from 'ws'
-import { Tunnel } from 'cloudflared'
+import { startTunnel } from 'untun'
 import net from 'net'
 
 /**
@@ -44,23 +44,49 @@ export function startWebSocketWithTunnel({ port }: { port?: number } = {}) {
             console.log(`ws://localhost:${actualPort} ready`),
         )
 
-        // 2) Cloudflare Tunnel (npm "cloudflared")
-        const tunnel = Tunnel.quick(`http://localhost:${actualPort}`, {
-            '--no-autoupdate': true,
-            '--loglevel': 'info',
-        })
+        // 2) untun tunnel
         const start = Date.now()
 
-        let tunnelUrl: string | undefined
+        try {
+            const tunnel = await startTunnel({
+                port: actualPort,
+                acceptCloudflareNotice: true,
+                hostname: 'localhost',
+                protocol: 'http',
+            })
+            if (!tunnel) throw new Error('Failed to create Cloudflare tunnel')
 
-        tunnel.on('url', (url: string) => {
-            tunnelUrl = `ws://${url.slice(8)}`
+            const websocketUrl = (await tunnel.getURL()).replace(
+                /^https?:/,
+                'wss:',
+            )
             const elapsed = Date.now() - start
-            const websocketUrl = tunnelUrl.replace(/^ws:/, 'wss:')
             console.log(`🌐 Public WebSocket endpoint → ${websocketUrl}`)
             console.log(
                 `⏱ Tunnel URL obtained in ${(elapsed / 1000).toFixed(2)}s`,
             )
+
+            // 3) graceful shutdown
+            const stop = () => {
+                console.log('\n⏹ shutting down…')
+                if (
+                    tunnel &&
+                    'close' in tunnel &&
+                    typeof tunnel.close === 'function'
+                ) {
+                    tunnel.close()
+                }
+                wss.close()
+            }
+
+            const shutdown = () => {
+                stop()
+                process.exit()
+            }
+
+            process.on('SIGINT', shutdown)
+            process.on('SIGTERM', shutdown)
+
             resolve({
                 wss,
                 tunnel,
@@ -68,28 +94,8 @@ export function startWebSocketWithTunnel({ port }: { port?: number } = {}) {
                 websocketUrl,
                 stop,
             })
-        })
-
-        tunnel.on('error', (err: any) => {
+        } catch (err) {
             reject(err)
-        })
-
-        // tunnel.on('stdout', (d: any) => process.stdout.write(`[cf] ${d}`))
-        // tunnel.on('stderr', (d: any) => process.stderr.write(`[cf] ${d}`))
-
-        // 3) graceful shutdown
-        const stop = () => {
-            console.log('\n⏹ shutting down…')
-            tunnel.stop()
-            wss.close()
         }
-
-        const shutdown = () => {
-            stop()
-            process.exit()
-        }
-
-        process.on('SIGINT', shutdown)
-        process.on('SIGTERM', shutdown)
     })
 }

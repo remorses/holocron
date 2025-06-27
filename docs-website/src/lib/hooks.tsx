@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useLoaderData, useNavigate } from 'react-router'
+import { Route } from '../root'
+import { useLoaderData, useNavigate, useRouteLoaderData } from 'react-router'
 import { useDocsState } from './docs-state'
+import { DocsJsonType } from './docs-json'
 
 export function useDebounce<T>(value: T, delayMs = 1000): T {
     const [debouncedValue, setDebouncedValue] = useState(value)
@@ -67,9 +69,8 @@ export function useParentPostMessage(
         }
     }, [onParentPostMessage])
 }
-
-export function useDocsJson() {
-    const { site } = useLoaderData()
+export function useDocsJson(): DocsJsonType {
+    const { branch } = useRouteLoaderData('root') as Route.ComponentProps['loaderData']
 
     // Check for state overrides for docsJson
     const docsJsonString = useDocsState(
@@ -83,10 +84,10 @@ export function useDocsJson() {
                 return JSON.parse(docsJsonString)
             } catch (e) {
                 console.error('Failed to parse docsJson from state', e)
-                return site.docsJson as any
+                return branch.docsJson
             }
         }
-        return site.docsJson as any
-    }, [docsJsonString, site.docsJson])
+        return branch.docsJson || {}
+    }, [docsJsonString, branch])
     return docsJson
 }
