@@ -199,7 +199,7 @@ function WelcomeMessage() {
                 markdown='Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:'
                 className='prose-sm'
             />
-            <div className='flex flex-col items-start gap-3 mt-3'>
+            <div className='grid -mx-2 grid-cols-2 gap-3 mt-3'>
                 <ChatSuggestionButton
                     icon={<PaletteIcon />}
                     userMessage='Change theme color'
@@ -217,6 +217,12 @@ function WelcomeMessage() {
                     userMessage='Add a new doc page'
                 >
                     Add a new doc page
+                </ChatSuggestionButton>
+                <ChatSuggestionButton
+                    icon={<ListTreeIcon />}
+                    userMessage='Edit navigation menu'
+                >
+                    Edit navigation menu
                 </ChatSuggestionButton>
             </div>
         </ChatAssistantMessage>
