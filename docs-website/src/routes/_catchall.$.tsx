@@ -156,7 +156,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         throw new Response('Site not found', { status: 404 })
     }
 
-
     if (!siteBranch) {
         console.log('Branch not found for site:', site?.siteId)
         throw new Response('Branch not found', { status: 404 })
@@ -231,7 +230,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             headers: {
                 'Content-Type': stat.type,
                 'Cache-Control': 'public, max-age=31536000, immutable',
-                'Cache-Tag': getCacheTagForMediaAsset({ siteId, slug, branchId }),
+                'Cache-Tag': getCacheTagForMediaAsset({
+                    siteId,
+                    slug,
+                    branchId,
+                }),
                 'Content-Length': stat.size.toString(),
             },
         })
@@ -284,21 +287,25 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         markdown: page.markdown,
     })
 
+    const branchId = siteBranch.branchId
     const githubBranch = siteBranch.githubBranch || 'main'
     return {
-        ...data,
+        toc: data.toc,
+        title: data.title,
+        description: data.description,
+        markdown: data.markdown,
+        ast: data.ast,
         slugs,
         slug,
         locale,
         i18n: source._i18n,
-        page,
         githubPath: page.githubPath,
         githubOwner: site.githubOwner,
         githubRepo: site.githubRepo,
         githubBranch,
         tree,
         site,
-        branch: siteBranch,
+        branchId,
         docsJson,
         lastEditedAt: page.lastEditedAt || new Date(),
     }
@@ -373,7 +380,7 @@ function PageContent(props: Route.ComponentProps) {
                                 'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({
-                                branchId: loaderData.branch.branchId,
+                                branchId: loaderData.branchId,
                                 url,
                                 opinion: feedback.opinion,
                                 message: feedback.message,
