@@ -67,9 +67,10 @@ export async function getFumadocsSource({
             languages,
             hideLocale: 'default-locale',
         },
-        icon(icon) {
-            return getIconJsx({ key: icon })!
-        },
+        // icons are currently not used in server
+        // icon(icon) {
+        //     return getIconJsx({ key: icon })!
+        // },
     })
 
     return source
