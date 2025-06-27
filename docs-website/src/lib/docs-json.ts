@@ -365,8 +365,8 @@ export const DocsConfigSchema = z
             .describe('Schema URL for IDE autocomplete'),
         siteId: z.string().describe(`The site id for this folder. This field is required and should never be manually updated.`),
         name: z.string().min(1).describe('Project or product name'),
-        // TODO
-        navTopLinks: z.array(NavigationAnchorItem).optional(),
+
+        // navTopLinks: z.array(NavigationAnchorItem).optional(),
         description: z.string().optional().describe('SEO description'),
         logo: LogoSchema.optional().describe('Logo config'),
         favicon: FaviconSchema.optional().describe('Favicon config'),

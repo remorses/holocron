@@ -1,6 +1,20 @@
 {
-    "$schema": "https://fumabase.com/docs.json",
+    "$schema": "https://fumabase.com/docs-schema.json",
     "siteId": "cmcesinp20000pwyptynxghjs",
+    "footer": {
+        "socials": {
+            "github": "https://github.com/your-github-username",
+            "x": "https://x.com/your-x-username"
+        }
+    },
+    "contextual": { "options": ["claude", "copy"] },
+    "logo": {
+        "dark": "https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg"
+    },
 
+    "navbar": {
+        "links": [{ "label": "something" }]
+    },
+    "navTopLinks": [{ "anchor": "A link", "href": "x" }],
     "domains": ["remorses-3khurr6i.localhost:7777"]
 }

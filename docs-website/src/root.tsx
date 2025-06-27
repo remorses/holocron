@@ -388,7 +388,7 @@ function CSSVariables({ docsJson }) {
     const cssText = Object.entries(cssVariables)
         .map(([key, value]) => {
             // Ensure the key starts with --
-            const cssVar = key.startsWith('--') ? key : `--${key}`
+            const cssVar = key?.startsWith('--') ? key : `--${key}`
             return `${cssVar}: ${value};`
         })
         .join('\n  ')
@@ -450,10 +450,10 @@ function DocsLayoutWrapper({
         const primary = docsJson?.navbar?.primary
 
         const mainLinks: LinkItemType[] = navbarLinks.map((link: any) => ({
-            text: link.label,
-            url: link.href,
+            text: link.label || '',
+            url: link.href || '#',
             icon: link.icon,
-            external: !link.href.startsWith('/'),
+            external: !link.href?.startsWith('/'),
         }))
 
         // Add primary CTA if configured
@@ -461,16 +461,16 @@ function DocsLayoutWrapper({
             if (primary.type === 'button') {
                 mainLinks.push({
                     type: 'button',
-                    text: primary.label,
-                    url: primary.href,
-                    external: !primary.href.startsWith('/'),
+                    text: primary.label || '',
+                    url: primary.href || '#',
+                    external: !primary.href?.startsWith('/'),
                 })
             } else if (primary.type === 'github') {
                 mainLinks.push({
                     type: 'icon',
                     icon: <GithubIcon className='w-4 h-4' />,
                     text: 'GitHub',
-                    url: primary.href,
+                    url: primary.href || '#',
                     external: true,
                 })
             }
@@ -609,7 +609,7 @@ function Logo({ docsJson = {} as DocsJsonType }) {
         <img
             alt='logo'
             src={logoImageUrl}
-            className='hidden h-8 [.uwu_&]:block'
+            className='h-8 [.uwu_&]:block'
             aria-label='logo'
         />
     )
