@@ -8,9 +8,9 @@ import { createApiClient } from './generated/spiceflow-client.js'
 import { startWebSocketWithTunnel } from './server.js'
 import { createIframeRpcClient } from './setstate.js'
 import {
-  getCurrentGitBranch,
-  openUrlInBrowser,
-  readTopLevelDocsJson,
+    getCurrentGitBranch,
+    openUrlInBrowser,
+    readTopLevelDocsJson,
 } from './utils.js'
 
 export const cli = cac('fumabase')
@@ -33,11 +33,15 @@ cli.command('init', 'Initialize a new fumabase project').action(() => {
     openUrlInBrowser('https://fumabase.com/login')
 })
 
-cli.command('dev', 'Preview your fumabase website').action(
-    async function main(options) {
+cli.command('dev', 'Preview your fumabase website')
+    .option('--dir <dir>', 'Directory with the docs.json', {
+        default: process.cwd(),
+    })
+    .action(async function main(options) {
         // console.log({ options })
-        const {} = options
-        const dir = process.cwd()
+        let { dir } = options
+        dir = path.resolve(dir)
+        console.log(`finding files inside ${dir}`)
         try {
             const globs = [
                 '**/*.md',
@@ -142,9 +146,15 @@ cli.command('dev', 'Preview your fumabase website').action(
 
             // Wait until there is at least one WebSocket connection before proceeding
             wss.on('connection', (ws) => {
-                console.log(`browser connected, showing a preview of your local changes`)
-                console.log(`to deploy your changes to the production website simply push the changes on GitHub`)
-                console.log(`fumabase will detect the updates and deploy a new version of the site`)
+                console.log(
+                    `browser connected, showing a preview of your local changes`,
+                )
+                console.log(
+                    `to deploy your changes to the production website simply push the changes on GitHub`,
+                )
+                console.log(
+                    `fumabase will detect the updates and deploy a new version of the site`,
+                )
                 const client = createIframeRpcClient({ ws })
                 connectedClients.add(client)
                 client.setDocsState({ filesInDraft })
@@ -193,5 +203,4 @@ cli.command('dev', 'Preview your fumabase website').action(
 
             throw error
         }
-    },
-)
+    })
