@@ -23,6 +23,7 @@ export const webhookWorkerRequestSchema = z.object({
     installationId: z.number(),
     owner: z.string(),
     repoName: z.string(),
+    githubBranch: z.string(),
     commits: z.array(
         z.object({
             id: z.string(),
@@ -39,7 +40,7 @@ const app = new Spiceflow({ basePath: '/api/github' })
         path: '/webhooks-worker',
         request: webhookWorkerRequestSchema,
         async handler({ request }) {
-            const { secret, installationId, owner, repoName, commits } =
+            const { secret, installationId, owner, repoName, githubBranch, commits } =
                 await request.json()
 
             if (secret !== env.SECRET) {
@@ -51,6 +52,7 @@ const app = new Spiceflow({ basePath: '/api/github' })
                     installationId,
                     owner,
                     repoName,
+                    githubBranch,
                     commits,
                     secret,
                 })
@@ -75,36 +77,32 @@ const app = new Spiceflow({ basePath: '/api/github' })
 async function updatePagesFromCommits(
     args: z.infer<typeof webhookWorkerRequestSchema>,
 ) {
-    const { installationId, owner, repoName, commits } = args
-    const site = await prisma.site.findFirst({
+    const { installationId, owner, repoName, githubBranch, commits } = args
+    const siteBranch = await prisma.siteBranch.findFirst({
         where: {
-            githubInstallations: {
-                some: {
-                    installationId,
+            githubBranch,
+            site: {
+                githubInstallations: {
+                    some: {
+                        installationId,
+                    },
                 },
+                githubOwner: owner,
+                githubRepo: repoName,
             },
-            githubOwner: owner,
-            githubRepo: repoName,
         },
         include: {
-            // TODO get the branch for this commit!
-            branches: true,
+            site: true,
         },
     })
 
-    if (!site) {
-        logger.log(`No site found for ${owner}/${repoName}`)
-        return
-    }
-
-    const branch = site.branches[0]
-    if (!branch) {
-        logger.log(`No branches found for site ${site.siteId}`)
+    if (!siteBranch) {
+        logger.log(`No branch found for ${githubBranch} in ${owner}/${repoName}`)
         return
     }
 
     // Handle deletions first
-    await handleDeletions({ site, commits, branchId: branch.branchId })
+    await handleDeletions({ site: siteBranch.site, commits, branchId: siteBranch.branchId })
 
     // Process non-deleted files using syncFiles
     const changedFiles = filesFromWebhookCommits({
@@ -115,8 +113,8 @@ async function updatePagesFromCommits(
     })
 
     await syncFiles({
-        branchId: branch.branchId,
-        siteId: site.siteId,
+        branchId: siteBranch.branchId,
+        siteId: siteBranch.site.siteId,
         files: changedFiles,
     })
 }

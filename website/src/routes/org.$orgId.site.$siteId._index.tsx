@@ -34,16 +34,16 @@ export async function loader({
             branches: {
                 take: 1,
                 orderBy: {
-                    createdAt: 'desc',
+                    createdAt: 'asc',
                 },
             },
         },
     })
-    
+
     if (!site) {
         throw redirect(href('/org/:orgId/onboarding', { orgId }))
     }
-    
+
     const branchId = site.branches[0]?.branchId
     if (!branchId) {
         throw redirect(href('/org/:orgId/onboarding', { orgId }))

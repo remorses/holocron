@@ -14,6 +14,7 @@ import { useThrowingFn } from '../lib/hooks'
 import { apiClient } from '../lib/spiceflow-client'
 import { useParams, useRouteLoaderData } from 'react-router'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
+import type { Route as ChatRoute } from '../routes/org.$orgId.site.$siteId.chat.$chatId'
 
 // Navigation links array to be used in both desktop and mobile menus
 const navigationLinks = [
@@ -51,9 +52,13 @@ export default function NavBar() {
     const siteData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
-    const { branchId } = siteData
+    const chatData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId.chat.$chatId',
+    ) as ChatRoute.ComponentProps['loaderData'] | undefined
+    const branchId = chatData?.branchId
     const { fn: sync, isLoading } = useThrowingFn({
         async fn() {
+            if (!branchId) return
             const { data, error } = await apiClient.api.githubSync.post({
                 branchId,
             })

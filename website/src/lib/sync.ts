@@ -26,6 +26,7 @@ import {
 } from 'docs-website/src/lib/s3'
 import { cloudflareClient } from './cloudflare'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
+import { DomainType } from 'db/src/generated/enums'
 
 export type AssetForSync =
     | {
@@ -350,15 +351,20 @@ export async function syncFiles({
                                 console.log(
                                     `Domain ${host} is already taken, skipping.`,
                                 )
-                                // TODO add a way to show errors to the user in cases like this, if domain is already taken, send them an email?
+                                // TODO add a way to show errors to the user in cases like this (domain already taken), if domain is already taken, send them an email?
                                 continue
                             }
                             await cloudflareClient.createDomain(host)
+                            const domainType: DomainType = host.endsWith(
+                                '.' + env.APPS_DOMAIN,
+                            )
+                                ? 'internalDomain'
+                                : 'customDomain'
                             await prisma.domain.create({
                                 data: {
                                     host,
                                     branchId,
-                                    domainType: 'customDomain',
+                                    domainType,
                                 },
                             })
                         }

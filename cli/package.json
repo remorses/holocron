@@ -18,8 +18,10 @@
     "license": "",
     "dependencies": {
         "cac": "^6.7.14",
-        "globby": "^14.1.0",
+        "cloudflared": "^0.7.0",
         "docs-website": "workspace:*",
-        "spiceflow": "^1.13.2"
+        "globby": "^14.1.0",
+        "spiceflow": "^1.13.2",
+        "ws": "^8.18.2"
     }
 }

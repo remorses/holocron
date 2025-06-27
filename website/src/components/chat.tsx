@@ -117,13 +117,10 @@ export default function Chat({}) {
     })
     const { reset, subscribe } = methods
 
-    const { site } = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId',
-    ) as SiteRoute.ComponentProps['loaderData']
-    const branch = site.branches[0]
+    const { siteBranch } = useLoaderData() as Route.ComponentProps['loaderData']
     const previousJsonString = useMemo(() => {
-        return JSON.stringify(branch.docsJson, null, 2)
-    }, [branch.docsJson])
+        return JSON.stringify(siteBranch.docsJson, null, 2)
+    }, [siteBranch?.docsJson])
 
     useEffect(() => {
         const persistedValues =
@@ -320,12 +317,12 @@ function Footer() {
     const isPending = useChatState((x) => x.isGenerating)
     const text = useChatState((x) => x.text || '')
     const revalidator = useRevalidator()
-    const { chat, prUrl, mentionOptions } =
+    const { chat, prUrl, mentionOptions, branchId } =
         useLoaderData() as Route.ComponentProps['loaderData']
     const siteData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
-    const { siteId, branchId } = siteData
+    const { siteId } = siteData
 
     const filesInDraft = useWebsiteState((x) => x?.filesInDraft || {})
     const lastPushedFiles = useWebsiteState((x) => x.lastPushedFiles)
@@ -553,12 +550,12 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
     const [errorMessage, setErrorMessage] = useState('')
     const [buttonText, setButtonText] = useTemporaryState('', 2000)
 
-    const { chatId, chat } =
+    const { chatId, chat, branchId } =
         useLoaderData() as Route.ComponentProps['loaderData']
     const siteData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
-    const { siteId, branchId } = siteData
+    const { siteId } = siteData
 
     const filesInDraft = useWebsiteState((x) => x?.filesInDraft || {})
     const lastPushedFiles = useWebsiteState((x) => x.lastPushedFiles)

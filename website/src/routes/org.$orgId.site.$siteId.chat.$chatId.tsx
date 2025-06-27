@@ -26,7 +26,7 @@ export async function loader({
     const { userId } = await getSession({ request })
 
     // Fetch chat and site info separately
-    const [chat, site] = await Promise.all([
+    const [chat, site, siteBranch] = await Promise.all([
         prisma.chat.findUnique({
             where: {
                 chatId: chatId,
@@ -44,11 +44,30 @@ export async function loader({
             },
         }),
         prisma.site.findUnique({
-            where: { siteId },
+            where: {
+                siteId,
+                org: {
+                    users: { some: { userId } },
+                },
+            },
             select: {
                 siteId: true,
                 githubOwner: true,
                 githubRepo: true,
+            },
+        }),
+        // Fetch the siteBranch that this chat is part of
+        prisma.siteBranch.findFirst({
+            where: {
+                siteId,
+                chats: {
+                    some: { chatId },
+                },
+            },
+            select: {
+                branchId: true,
+                domains: true,
+                docsJson: true,
             },
         }),
     ])
@@ -58,6 +77,9 @@ export async function loader({
     }
     if (!site) {
         throw new Error('Site not found')
+    }
+    if (!siteBranch) {
+        throw new Error('siteBranch not found')
     }
 
     // Create PR URL if chat has a PR number
@@ -74,11 +96,27 @@ export async function loader({
         return allFiles.map((file) => `@${file.githubPath}`).sort()
     })()
 
+    const host = siteBranch.domains.find(
+        (x) => x.domainType === 'internalDomain',
+    )?.host
+
+    const iframeUrl = new URL(`https://${host}`)
+    if (host?.endsWith('.localhost')) {
+        iframeUrl.protocol = 'http:'
+        iframeUrl.port = '7777'
+    }
+
+    const branchId = chat.branchId
+
     return {
         chatId,
         chat,
         prUrl,
         mentionOptions,
+        iframeUrl,
+        host,
+        branchId,
+        siteBranch,
     }
 }
 
@@ -135,11 +173,10 @@ export default function Page({
 }
 
 function Content() {
-    const { chat } = useLoaderData<typeof loader>()
+    const { chat, iframeUrl, host } = useLoaderData<typeof loader>()
     const siteData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
-    const { iframeUrl } = siteData
 
     const iframeRef = useRef<HTMLIFrameElement>(null)
     useEffect(() => {

@@ -3,7 +3,6 @@ import { Outlet } from 'react-router'
 import { getSession } from '../lib/better-auth'
 import type { Route } from './+types/org.$orgId.site.$siteId'
 
-
 export type { Route }
 
 export async function loader({
@@ -26,11 +25,6 @@ export async function loader({
             },
             include: {
                 org: true,
-                branches: {
-                    include: {
-                        domains: true,
-                    },
-                },
             },
         }),
         prisma.chat.findMany({
@@ -53,24 +47,10 @@ export async function loader({
         throw new Error('Site not found')
     }
 
-    const host = site.branches[0]?.domains.find(
-        (x) => x.domainType === 'internalDomain',
-    )?.host
-
-    const iframeUrl = new URL(`https://${host}`)
-    if (host?.endsWith('.localhost')) {
-        iframeUrl.protocol = 'http:'
-        iframeUrl.port = '7777'
-    }
-
-    const branchId = site.branches[0].branchId
-
     return {
         site,
-        iframeUrl,
-        host,
+
         siteId,
-        branchId,
         chatHistory,
     }
 }

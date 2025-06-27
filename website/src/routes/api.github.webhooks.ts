@@ -120,6 +120,7 @@ function getWebhooks() {
                 installationId: Number(installationId),
                 owner: repo.owner.login,
                 repoName: repo.name,
+                githubBranch: event.payload.ref?.replace('refs/heads/', '') || 'main',
                 commits,
             })
 
