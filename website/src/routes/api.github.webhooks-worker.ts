@@ -304,8 +304,8 @@ async function handleDeletions({
     for (const filePath of removedFiles) {
         try {
             if (isDocsJsonFile(filePath)) {
-                await prisma.site.update({
-                    where: { siteId: site.siteId },
+                await prisma.siteBranch.update({
+                    where: { branchId },
                     data: { docsJson: {} },
                 })
                 logger.log(
@@ -315,8 +315,8 @@ async function handleDeletions({
             }
 
             if (isStylesCssFile(filePath)) {
-                await prisma.site.update({
-                    where: { siteId: site.siteId },
+                await prisma.siteBranch.update({
+                    where: { branchId },
                     data: { cssStyles: '' },
                 })
                 logger.log(`Deleted styles.css for site ${site.siteId}`)

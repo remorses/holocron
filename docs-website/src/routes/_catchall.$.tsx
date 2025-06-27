@@ -40,39 +40,39 @@ import { useDocsJson } from '../lib/hooks'
 export function meta({ data }: Route.MetaArgs) {
     if (!data) return {}
     const site = data.site
-    const docsConfig = site?.docsJson as any
+    const docsJson = data.docsJson as DocsJsonType
     const suffix = site?.name || ''
     const og = '' // TODO generate og image
 
     const favicon = (() => {
-        if (!docsConfig?.favicon) {
+        if (!docsJson?.favicon) {
             return undefined
         }
-        if (typeof docsConfig.favicon === 'string') {
-            return docsConfig.favicon
+        if (typeof docsJson.favicon === 'string') {
+            return docsJson.favicon
         }
-        if (docsConfig.favicon?.light) {
-            return docsConfig.favicon.light
+        if (docsJson.favicon?.light) {
+            return docsJson.favicon.light
         }
         return undefined
     })()
 
     const faviconDark = (() => {
-        if (!docsConfig?.favicon) {
+        if (!docsJson?.favicon) {
             return undefined
         }
-        if (typeof docsConfig.favicon === 'string') {
-            return docsConfig.favicon
+        if (typeof docsJson.favicon === 'string') {
+            return docsJson.favicon
         }
-        if (docsConfig.favicon?.dark) {
-            return docsConfig.favicon.dark
+        if (docsJson.favicon?.dark) {
+            return docsJson.favicon.dark
         }
         return undefined
     })()
 
     // Custom meta tags from docsJson.seo.metatags
-    const customMetaTags = docsConfig?.seo?.metatags
-        ? Object.entries(docsConfig.seo.metatags).map(([name, content]) => ({
+    const customMetaTags = docsJson?.seo?.metatags
+        ? Object.entries(docsJson.seo.metatags).map(([name, content]) => ({
               name,
               content,
           }))
@@ -86,7 +86,7 @@ export function meta({ data }: Route.MetaArgs) {
         },
         {
             name: 'description',
-            content: data.description || docsConfig?.description,
+            content: data.description || docsJson?.description,
         },
         ...customMetaTags,
         ...(og
@@ -175,7 +175,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     }
 
     // Check for redirects from docsJson configuration
-    const docsJson: DocsJsonType = site.docsJson as any
+    const docsJson: DocsJsonType = branch.docsJson as any
     if (docsJson?.redirects) {
         const currentPath = '/' + (params['*'] || '')
         const redirect = docsJson.redirects.find(

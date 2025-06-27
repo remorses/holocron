@@ -16,7 +16,8 @@
     "keywords": [],
     "author": "Tommaso De Rossi, morse <beats.by.morse@gmail.com>",
     "license": "",
-    "devDependencies": {},
-    "dependencies": {},
-    "peerDependencies": {}
+    "dependencies": {
+        "cac": "^6.7.14",
+        "globby": "^14.1.0"
+    }
 }

@@ -120,9 +120,10 @@ export default function Chat({}) {
     const { site } = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
+    const branch = site.branches[0]
     const previousJsonString = useMemo(() => {
-        return JSON.stringify(site.docsJson, null, 2)
-    }, [site.docsJson])
+        return JSON.stringify(branch.docsJson, null, 2)
+    }, [branch.docsJson])
 
     useEffect(() => {
         const persistedValues =

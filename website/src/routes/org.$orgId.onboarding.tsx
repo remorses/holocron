@@ -136,7 +136,7 @@ export async function action({ request, params }: Route.ActionArgs) {
         const branchId = cuid()
         await syncSite({
             pages,
-            trieveDatasetId: site.trieveDatasetId || undefined,
+            trieveDatasetId: undefined,
             branchId,
             orgId,
             siteId,

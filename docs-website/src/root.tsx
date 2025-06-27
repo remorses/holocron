@@ -101,7 +101,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     // Process banner markdown if it exists
     let bannerAst: any = null
-    const docsJson = site.docsJson as any
+    const docsJson = branch.docsJson as any
     if (docsJson?.banner?.content) {
         try {
             const { data } = await processMdxInServer({
@@ -260,13 +260,13 @@ export default function App() {
 }
 
 function DocsProvider({ children }: { children: React.ReactNode }) {
-    const { site, i18n } = useLoaderData<typeof loader>()
+    const { site, branch, i18n } = useLoaderData<typeof loader>()
     const locale = site.defaultLocale // Will be updated from child route
 
-    if (!trieveClient && site.trieveReadApiKey) {
+    if (!trieveClient && branch.trieveReadApiKey) {
         trieveClient = new TrieveSDK({
-            apiKey: site.trieveReadApiKey!,
-            datasetId: site.trieveDatasetId || undefined,
+            apiKey: branch.trieveReadApiKey!,
+            datasetId: branch.trieveDatasetId || undefined,
         })
     }
 
@@ -274,7 +274,7 @@ function DocsProvider({ children }: { children: React.ReactNode }) {
         <RootProvider
             search={{
                 options: {},
-                enabled: !!site.trieveDatasetId,
+                enabled: !!branch.trieveDatasetId,
             }}
             i18n={{
                 locale,
@@ -289,9 +289,9 @@ function DocsProvider({ children }: { children: React.ReactNode }) {
                 enableSystem
                 disableTransitionOnChange
             >
-                {site.cssStyles && (
+                {branch.cssStyles && (
                     <style
-                        dangerouslySetInnerHTML={{ __html: site.cssStyles }}
+                        dangerouslySetInnerHTML={{ __html: branch.cssStyles }}
                     />
                 )}
                 {children}

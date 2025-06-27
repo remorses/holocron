@@ -183,7 +183,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 siteId,
                 branchId,
                 name: site.name || '',
-                trieveDatasetId: site.trieveDatasetId || undefined,
+                trieveDatasetId: branch.trieveDatasetId || undefined,
                 pages,
             })
             // Implement your sync logic here

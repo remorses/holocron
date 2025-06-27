@@ -160,21 +160,26 @@ model Subscription {
 }
 
 model SiteBranch {
-  branchId     String   @id @default(cuid())
-  site         Site     @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
+  branchId     String @id @default(cuid())
+  site         Site   @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
   siteId       String
   title        String
-  githubBranch String   @default("main")
-  // slug      String
-  // enabled   Boolean    @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  githubBranch String @default("main")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  trieveDatasetId  String?
+  trieveReadApiKey String?
+  docsJson         Json     @default("{}")
+  cssStyles        String   @default("")
+  domains          Domain[]
 
   pages       MarkdownPage[]
   mediaAssets MediaAsset[]
   metaFiles   MetaFile[]
 
-  // @@unique([siteId, slug])
+  chats Chat[]
 }
 
 model MarkdownPage {
@@ -223,22 +228,18 @@ model Site {
 
   createdAt DateTime @default(now())
 
-  trieveDatasetId  String?
-  trieveReadApiKey String?
-
   branches SiteBranch[]
 
-  docsJson    Json   @default("{}")
-  cssStyles   String @default("")
   githubOwner String
 
-  githubRepo          String
-  mediaAssets         MediaAsset[]
-  locales             SiteEnabledLocale[]
-  chats               Chat[]
-  feedback            PageFeedback[]
-  domains             Domain[]
+  githubRepo  String
+  mediaAssets MediaAsset[]
+  locales     SiteEnabledLocale[]
+  chats       Chat[]
+  feedback    PageFeedback[]
+
   githubInstallations SiteGithubInstallation[]
+  domains             Domain[]
 
   @@index([createdAt])
 }
@@ -282,6 +283,8 @@ model Domain {
 
   // isVercelVerified Boolean?
   // lastCheck        DateTime?
+  branch   SiteBranch? @relation(fields: [branchId], references: [branchId])
+  branchId String?
 }
 
 model SiteGithubInstallation {
@@ -369,6 +372,8 @@ model Chat {
   filesInDraft    Json          @default("{}")
   lastPushedFiles Json          @default("{}")
   prNumber        Int?
+  branchId        String
+  branch          SiteBranch    @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
   // addedLines   Int           @default(0)
   // deletedLines Int           @default(0)
 }

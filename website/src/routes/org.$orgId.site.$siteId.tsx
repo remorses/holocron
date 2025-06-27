@@ -13,35 +13,30 @@ export async function loader({
     // We need userId for the queries, get it from session
     const { userId } = await getSession({ request })
 
-    const [site, chatHistory] = await Promise.all([
-        prisma.site.findUnique({
-            where: {
-                siteId: siteId,
-                org: {
-                    users: {
-                        some: { userId },
-                    },
+    const site = await prisma.site.findUnique({
+        where: {
+            siteId: siteId,
+            org: {
+                users: {
+                    some: { userId },
                 },
             },
-            include: {
-                org: true,
-                domains: true,
-                branches: true,
+        },
+        include: {
+            org: true,
+            domains: true,
+            branches: true,
+            chats: {
+                where: { userId },
+                select: {
+                    chatId: true,
+                    title: true,
+                    createdAt: true,
+                },
+                orderBy: { createdAt: 'desc' },
             },
-        }),
-        prisma.chat.findMany({
-            where: {
-                siteId,
-                userId,
-            },
-            select: {
-                chatId: true,
-                title: true,
-                createdAt: true,
-            },
-            orderBy: { createdAt: 'desc' },
-        }),
-    ])
+        },
+    })
 
     if (!site) {
         throw new Error('Site not found')
@@ -65,7 +60,7 @@ export async function loader({
         host,
         siteId,
         branchId,
-        chatHistory,
+        chatHistory: site.chats,
     }
 }
 export function Component({ loaderData }: Route.ComponentProps) {

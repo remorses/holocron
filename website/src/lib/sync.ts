@@ -196,7 +196,7 @@ export async function syncFiles({
     })
     if (!trieveDatasetId) {
         try {
-            const { datasetId } = await createTrieveDataset({ siteId, name })
+            const { datasetId } = await createTrieveDataset({ siteId, branchId, name })
             trieve.datasetId = datasetId
         } catch (e) {
             notifyError(e)
@@ -230,9 +230,9 @@ export async function syncFiles({
                 })
             }
             if (asset.type === 'docsJson') {
-                console.log(`Updating docsJson for site ${siteId}`)
-                await prisma.site.update({
-                    where: { siteId },
+                console.log(`Updating docsJson for branch ${branchId}`)
+                await prisma.siteBranch.update({
+                    where: { branchId },
                     data: { docsJson: asset.jsonData },
                 })
 
@@ -271,9 +271,9 @@ export async function syncFiles({
                 }
             }
             if (asset.type === 'stylesCss') {
-                console.log(`Updating stylesCss for site ${siteId}`)
-                await prisma.site.update({
-                    where: { siteId },
+                console.log(`Updating stylesCss for branch ${branchId}`)
+                await prisma.siteBranch.update({
+                    where: { branchId },
                     data: { cssStyles: asset.content },
                 })
             }
@@ -783,26 +783,26 @@ export async function deletePages({
         `Deleting pages with slugs: ${slugs.join(', ')} from branch ${branchId} in site ${siteId}`,
     )
 
-    // 1. Get the site to retrieve the Trieve dataset ID
-    const site = await prisma.site.findUnique({
-        where: { siteId },
+    // 1. Get the branch to retrieve the Trieve dataset ID
+    const branch = await prisma.siteBranch.findUnique({
+        where: { branchId },
         select: { trieveDatasetId: true },
     })
 
-    if (!site) {
-        throw new Error(`Site with ID ${siteId} not found`)
+    if (!branch) {
+        throw new Error(`Branch with ID ${branchId} not found`)
     }
 
     // 2. Initialize Trieve SDK if we have a dataset ID
     let trieve: TrieveSDK | undefined
-    if (site.trieveDatasetId) {
+    if (branch.trieveDatasetId) {
         trieve = new TrieveSDK({
             apiKey: env.TRIEVE_API_KEY!,
             organizationId: env.TRIEVE_ORGANIZATION_ID!,
-            datasetId: site.trieveDatasetId,
+            datasetId: branch.trieveDatasetId,
         })
         console.log(
-            `Initialized Trieve SDK with dataset ID: ${site.trieveDatasetId}`,
+            `Initialized Trieve SDK with dataset ID: ${branch.trieveDatasetId}`,
         )
     } else {
         console.log(
@@ -838,7 +838,7 @@ export async function deletePages({
         )
 
         // 4. Delete chunks from Trieve if available (do this before deleting pages from DB)
-        if (trieve && site.trieveDatasetId) {
+        if (trieve && branch.trieveDatasetId) {
             for (const page of pagesToDelete) {
                 try {
                     console.log(
@@ -848,7 +848,7 @@ export async function deletePages({
                     await trieve.deleteGroup({
                         deleteChunks: true,
                         groupId: page.slug,
-                        trDataset: site.trieveDatasetId,
+                        trDataset: branch.trieveDatasetId,
                     })
 
                     console.log(
@@ -943,7 +943,7 @@ function processForTrieve(page: DocumentRecord & { pageSlug: string }) {
     return chunks
 }
 
-async function createTrieveDataset({ siteId, name }) {
+async function createTrieveDataset({ siteId, branchId, name }) {
     const trieve = new TrieveSDK({
         apiKey: env.TRIEVE_API_KEY!,
         organizationId: env.TRIEVE_ORGANIZATION_ID!,
@@ -989,8 +989,8 @@ async function createTrieveDataset({ siteId, name }) {
 
     trieve.datasetId = datasetId
     console.log(`Updating site record with Trieve dataset information...`)
-    await prisma.site.update({
-        where: { siteId },
+    await prisma.siteBranch.update({
+        where: { branchId },
         data: {
             trieveDatasetId: datasetId,
             trieveReadApiKey: token.api_key,

@@ -420,28 +420,28 @@ export async function getTabFilesWithoutContents({ branchId }) {
 export async function getPageContent({ githubPath, branchId }) {
     // Support for special files: docs.json and styles.css
     if (githubPath === 'docs.json') {
-        const site = await prisma.site.findFirst({
-            where: { branches: { some: { branchId } } },
+        const branch = await prisma.siteBranch.findFirst({
+            where: { branchId },
             select: { docsJson: true },
         })
-        if (!site || !site.docsJson) {
+        if (!branch || !branch.docsJson) {
             throw new Error(`Cannot find docs.json for branch ${branchId}`)
         }
         return (
             `> Notice that this is the docs.json file before any form updates. Form updates are not saved on the filesystem until save! There is no need to inspect that your changes where succesful. \n\n` +
-            JSON.stringify(site.docsJson, null, 2)
+            JSON.stringify(branch.docsJson, null, 2)
         )
     }
     if (githubPath === 'styles.css') {
-        const site = await prisma.site.findFirst({
-            where: { branches: { some: { branchId } } },
+        const branch = await prisma.siteBranch.findFirst({
+            where: { branchId },
             select: { cssStyles: true },
         })
-        if (!site) {
+        if (!branch) {
             throw new Error(`Cannot find styles.css for branch ${branchId}`)
         }
         // Could be null if not set
-        return site.cssStyles || ''
+        return branch.cssStyles || ''
     }
     // Otherwise, try page and metaFile
     const [page, metaFile] = await Promise.all([
