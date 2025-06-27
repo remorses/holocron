@@ -9,8 +9,8 @@ export type FilesInDraft = Record<
     {
         content: string
         githubPath: string
-        addedLines: number
-        deletedLines: number
+        addedLines?: number
+        deletedLines?: number
     }
 >
 export type DocsState = {

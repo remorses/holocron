@@ -12,7 +12,9 @@ import {
     getCurrentGitBranch,
     openUrlInBrowser,
 } from './utils.js'
+import { WebSocket } from 'ws'
 import { startWebSocketWithTunnel } from './server.js'
+import { createIframeRpcClient } from './setstate.js'
 
 export const cli = cac('fumabase')
 
@@ -61,27 +63,9 @@ cli.command('dev', 'Preview your fumabase website').action(
                 console.error(
                     'docs.json file not found at the project root. Use fumabase init to create a new project',
                 )
+                return
             }
-            const filesInDraft: FilesInDraft = Object.fromEntries(
-                await Promise.all(
-                    filePaths.map(async (filePath) => {
-                        const fullPath = path.resolve(dir, filePath)
-                        const content = await fs.promises.readFile(
-                            fullPath,
-                            'utf-8',
-                        )
-                        // You may want to replace this with your githubPath logic
-                        const githubPath = filePath
-                        return [
-                            filePath,
-                            {
-                                content,
-                                githubPath,
-                            },
-                        ]
-                    }),
-                ),
-            )
+
             const siteId = docsJson?.siteId
             if (!siteId) {
                 console.error('siteId not found in docs.json')
@@ -117,14 +101,32 @@ cli.command('dev', 'Preview your fumabase website').action(
             console.log(`opening ${previewUrl.toString()} in browser...`)
             openUrlInBrowser(previewUrl.toString())
 
+            const filesInDraft: FilesInDraft = Object.fromEntries(
+                await Promise.all(
+                    filePaths.map(async (filePath) => {
+                        const fullPath = path.resolve(dir, filePath)
+                        const content = await fs.promises.readFile(
+                            fullPath,
+                            'utf-8',
+                        )
+                        // You may want to replace this with your githubPath logic
+                        const githubPath = filePath
+                        return [
+                            filePath,
+                            {
+                                content,
+                                githubPath,
+                            },
+                        ]
+                    }),
+                ),
+            )
             // Wait until there is at least one WebSocket connection before proceeding
-            await new Promise<void>((resolve) => {
-                wss.on('connection', () => resolve())
+            wss.on('connection', (ws) => {
+                console.log(`browser connected, watching for files...`)
+                const client = createIframeRpcClient({ ws })
+                client.setDocsState({ filesInDraft })
             })
-
-            console.log(`browser connected, watching for files...`)
-            wss.emit(JSON.stringify())
-
         } catch (error) {
             console.error(error)
 

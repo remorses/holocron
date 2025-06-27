@@ -1,16 +1,14 @@
-import { createSpiceflowClient, SpiceflowClient } from 'spiceflow/client'
 import type {
     DocsState,
     IframeRpcMessage,
 } from 'docs-website/src/lib/docs-state.js'
+import type { WebSocket } from 'ws'
 
 export function createIframeRpcClient({
-    iframeRef,
-    targetOrigin,
-    defaultTimeout = 3000,
+    ws,
+    defaultTimeout = 1000 * 5,
 }: {
-    iframeRef: React.RefObject<HTMLIFrameElement | null>
-    targetOrigin?: string
+    ws: WebSocket
     defaultTimeout?: number
 }) {
     const pendingRequests = new Map<
@@ -27,11 +25,10 @@ export function createIframeRpcClient({
         state: DocsState,
         idempotenceId?: string,
     ): Promise<any> => {
-        console.log(`sending state to docs iframe`)
-        // contentWindow is accessible even for cross-origin iframes, but you cannot access *properties* of the window if it's cross-origin.
-        // Here, we just need to postMessage, which is allowed on cross-origin frames.
-        const w = iframeRef.current?.contentWindow
-        if (!w) throw new Error('iframe not ready')
+        console.log(`sending state to docs via ws`)
+        if (!ws || ws.readyState !== 1) {
+            throw new Error('WebSocket instance not open.')
+        }
 
         const id = crypto.randomUUID()
 
@@ -59,17 +56,24 @@ export function createIframeRpcClient({
 
             pendingRequests.set(id, { resolve, reject, timeout })
 
-            w.postMessage(message, {
-                targetOrigin: '*',
-            })
+            ws.send(JSON.stringify(message))
             if (idempotenceId) {
                 usedIdempotenceIds.add(idempotenceId)
             }
         })
     }
-    function onMessage(e: MessageEvent) {
-        if (targetOrigin && e.origin !== targetOrigin) return
-        const { id, state, error } = (e.data ?? {}) as IframeRpcMessage
+    function onMessage(data: WebSocket.RawData, isBinary: boolean) {
+        let msg: IframeRpcMessage | undefined
+        try {
+            // Only parse if not binary
+            if (isBinary) return
+            msg = JSON.parse(data.toString())
+        } catch (err) {
+            // ignore parse errors
+            return
+        }
+        if (!msg) return
+        const { id, state, error } = msg
 
         if (!id) return
 
@@ -86,9 +90,15 @@ export function createIframeRpcClient({
         }
     }
 
-    window.addEventListener('message', onMessage)
+    // Attach ws 'message' event handler
+    // handle multiple calls gracefully
+    function messageHandler(data: WebSocket.RawData, isBinary: boolean) {
+        onMessage(data, isBinary)
+    }
+
+    ws.on('message', messageHandler)
     docsRpcClient.cleanup = () => {
-        window.removeEventListener('message', onMessage)
+        ws.off('message', messageHandler)
         // Clean up any pending requests
         for (const [id, pending] of pendingRequests) {
             clearTimeout(pending.timeout)
@@ -100,7 +110,7 @@ export function createIframeRpcClient({
     return docsRpcClient
 }
 
-export let docsRpcClient = {
+let docsRpcClient = {
     async setDocsState(
         state: Partial<DocsState>,
         idempotenceId?: string,
