@@ -409,5 +409,6 @@ model PageFeedback {
   message       String?     @db.Text
   discussionUrl String
 
+  ipHash    String   @default("")
   createdAt DateTime @default(now())
 }

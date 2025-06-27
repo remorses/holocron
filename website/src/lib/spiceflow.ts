@@ -45,6 +45,34 @@ import {
     generateMessageApp,
     getPageContent,
 } from './spiceflow-generate-message'
+import { createHash } from 'crypto'
+
+// Utility to get client IP from request, handling Cloudflare proxy headers
+function getClientIp(request: Request): string {
+    // Cloudflare adds the real IP in CF-Connecting-IP header
+    const cfIp = request.headers.get('CF-Connecting-IP')
+    if (cfIp) return cfIp
+
+    // Fallback to X-Forwarded-For
+    const forwardedFor = request.headers.get('X-Forwarded-For')
+    if (forwardedFor) {
+        // X-Forwarded-For can contain multiple IPs, take the first one
+        return forwardedFor.split(',')[0].trim()
+    }
+
+    // Fallback to X-Real-IP
+    const realIp = request.headers.get('X-Real-IP')
+    if (realIp) return realIp
+
+
+    // Default fallback
+    return '0.0.0.0'
+}
+
+// Utility to hash IP address using SHA-256
+function hashIp(ip: string): string {
+    return createHash('sha256').update(ip).digest('hex')
+}
 
 // Create the main spiceflow app with comprehensive routes and features
 export const app = new Spiceflow({ basePath: '/api' })
@@ -305,6 +333,27 @@ export const app = new Spiceflow({ basePath: '/api' })
         async handler({ request, state: { userId } }) {
             const { siteId, url, opinion, message } = await request.json()
 
+            // Get client IP and hash it
+            const clientIp = getClientIp(request)
+            const ipHash = hashIp(clientIp)
+
+            // Check rate limit: max 5 feedbacks per hour per IP
+            const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
+            const recentFeedbackCount = await prisma.pageFeedback.count({
+                where: {
+                    ipHash,
+                    createdAt: {
+                        gte: oneHourAgo,
+                    },
+                },
+            })
+
+            if (recentFeedbackCount >= 5) {
+                throw new AppError(
+                    'You have reached the feedback limit. Please try again later (max 5 feedbacks per hour).',
+                )
+            }
+
             // if (!userId) {
             //     throw new AppError('User not authenticated')
             // }
@@ -462,6 +511,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                     opinion,
                     message,
                     discussionUrl,
+                    ipHash,
                 },
             })
 

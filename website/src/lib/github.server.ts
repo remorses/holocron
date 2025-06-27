@@ -429,6 +429,7 @@ export async function createNewRepo({
         private: privateRepo,
         description: `Repository created using Unframer`,
         has_wiki: false,
+        has_discussions: true,
         auto_init: true,
     }).catch((e) => {
         if (e.status === 422) {
