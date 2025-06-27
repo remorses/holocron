@@ -80,17 +80,17 @@ export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
 
-    // Handle websocketUrl in search params - set plain cookie and redirect
-    const websocketUrl = url.searchParams.get('websocketUrl')
-    if (websocketUrl) {
-        // Remove websocketUrl from search params for redirect
+    // Handle websocketId in search params - set plain cookie and redirect
+    const websocketId = url.searchParams.get('websocketId')
+    if (websocketId) {
+        // Remove websocketId from search params for redirect
         const redirectUrl = new URL(url)
-        redirectUrl.searchParams.delete('websocketUrl')
+        redirectUrl.searchParams.delete('websocketId')
 
         // Create a plain Set-Cookie header (session cookie, JS-readable)
         // Explicitly set HttpOnly=false for JavaScript access
         const isSecure = process.env.NODE_ENV === 'production'
-        const cookieValue = `__websocket_preview=${encodeURIComponent(websocketUrl)}; Path=/; HttpOnly=false${isSecure ? '; Secure' : ''}`
+        const cookieValue = `__websocket_preview=${encodeURIComponent(websocketId)}; Path=/; HttpOnly=false${isSecure ? '; Secure' : ''}`
 
         throw redirect(redirectUrl.toString(), {
             headers: {
@@ -154,9 +154,9 @@ export async function loader({ request }: Route.LoaderArgs) {
         }
     }
 
-    // Check for preview websocket URL in cookies
+    // Check for preview websocket ID in cookies
     const cookies = parseCookies(request.headers.get('Cookie'))
-    const previewWebsocketUrl = cookies['__websocket_preview'] || null
+    const previewWebsocketId = cookies['__websocket_preview'] || null
 
     return {
         site,
@@ -165,7 +165,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         tree,
         i18n,
         bannerAst,
-        previewWebsocketUrl,
+        previewWebsocketId,
     }
 }
 
@@ -249,10 +249,11 @@ if (typeof window !== 'undefined') {
 }
 
 // Function for handling websocket connection based on session cookie
-async function websocketUrlHandling(websocketUrl: string) {
+async function websocketIdHandling(websocketId: string) {
     if (typeof window === 'undefined') return
 
-    console.log('connecting over preview websocketUrl', websocketUrl)
+    console.log('connecting over preview websocketId', websocketId)
+    const websocketUrl = `wss://fumabase.com/_tunnel/client?id=${websocketId}`
     const ws = new WebSocket(websocketUrl)
     ws.onopen = () => {
         ws.send(JSON.stringify({ type: 'ready' }))
@@ -283,9 +284,9 @@ if (typeof window !== 'undefined') {
     window.addEventListener(
         'startPreviewWebsocket',
         (e: any) => {
-            const websocketUrl = e?.detail?.websocketUrl
-            if (websocketUrl) {
-                websocketUrlHandling(websocketUrl)
+            const websocketId = e?.detail?.websocketId
+            if (websocketId) {
+                websocketIdHandling(websocketId)
             }
         },
         { once: true },
@@ -294,7 +295,7 @@ if (typeof window !== 'undefined') {
 
 export function Layout({ children }: { children: React.ReactNode }) {
     const loaderData = useLoaderData<typeof loader>()
-    const { previewWebsocketUrl } = loaderData
+    const { previewWebsocketId } = loaderData
     const docsJson = useDocsJson()
     useNProgress()
     // Inline DocsProvider
@@ -327,8 +328,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <Links />
             </head>
             <body>
-                {previewWebsocketUrl ? (
-                    <PreviewBanner websocketUrl={previewWebsocketUrl || ''} />
+                {previewWebsocketId ? (
+                    <PreviewBanner websocketId={previewWebsocketId || ''} />
                 ) : (
                     <UserBanner banner={docsJson?.banner} />
                 )}
@@ -416,13 +417,13 @@ function DocsLayoutWrapper({
     docsJson: DocsJsonType
 }) {
     const loaderData = useLoaderData<typeof loader>()
-    const { site, i18n, previewWebsocketUrl } = loaderData
+    const { site, i18n, previewWebsocketId } = loaderData
 
     useEffect(() => {
-        if (previewWebsocketUrl) {
+        if (previewWebsocketId) {
             window.dispatchEvent(
                 new CustomEvent('startPreviewWebsocket', {
-                    detail: { websocketUrl: previewWebsocketUrl },
+                    detail: { websocketId: previewWebsocketId },
                 }),
             )
         }
@@ -507,8 +508,8 @@ function DocsLayoutWrapper({
     )
 }
 
-function PreviewBanner({ websocketUrl }: { websocketUrl?: string }) {
-    if (!websocketUrl) return null
+function PreviewBanner({ websocketId }: { websocketId?: string }) {
+    if (!websocketId) return null
     const handleDisconnect = () => {
         // Clear the session cookie by setting it to expire
         document.cookie =
@@ -522,7 +523,7 @@ function PreviewBanner({ websocketUrl }: { websocketUrl?: string }) {
             <div className='flex items-center gap-2'>
                 <div className='w-2 h-2 bg-white rounded-full animate-pulse'></div>
                 <span className='font-medium text-sm'>
-                    Connected to local preview: {websocketUrl}
+                    Connected to local preview
                 </span>
             </div>
             <button

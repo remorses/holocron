@@ -25,10 +25,6 @@ type FilesInDraft = Record<
     }
 >
 
-const url = process.env.SERVER_URL || 'https://fumabase.com'
-
-// const apiClient = createApiClient(url)
-
 cli.command('init', 'Initialize a new fumabase project').action(() => {
     // I want to let people create a new website just by using the CLI instead of going to the website. How can I do that? Well, one thing is, sure, I need to connect the GitHub app and I need to create a login for the user. And this is, this requires a website so it's impossible.
     // Instead, what I can do is add an option for the user if they already have a GitHub repository. And in that case, I also remove the administration scope if possible. I also remove the app, which makes people that are scared to connect a GitHub app this way less scared. We also let them choose the repo after connecting the app. After they choose the repo, I would need to open a pull request that adds the docs.json. And then... And then... When the merge happens, the website becomes available. What if instead I push the docs.json directly to a branch I want? To use... Instead... I want... To use... Instead... ... That would be scary for them. Instead I can create a branch for the PR, push there with Docs.Jazel and then show a preview for that branch in the website dashboard.
@@ -120,14 +116,14 @@ cli.command('dev', 'Preview your fumabase website')
                 startWebSocketWithTunnel(),
             ])
 
-            const { websocketUrl, wss } = websocketRes
+            const { websocketId, ws } = websocketRes
 
             const previewUrl = new URL(
                 previewDomain.includes('.localhost:')
                     ? `http://${previewDomain}`
                     : `https://${previewDomain}`,
             )
-            previewUrl.searchParams.set('websocketUrl', websocketUrl)
+            previewUrl.searchParams.set('websocketId', websocketId)
             console.log(`opening ${previewUrl.toString()} in browser...`)
             openUrlInBrowser(previewUrl.toString())
 
@@ -154,35 +150,34 @@ cli.command('dev', 'Preview your fumabase website')
                     }),
                 ),
             )
-            const connectedClients = new Set<
-                ReturnType<typeof createIframeRpcClient>
-            >()
 
-            // Wait until there is at least one WebSocket connection before proceeding
-            wss.on('connection', async (ws) => {
-                console.log(
-                    `browser connected, showing a preview of your local changes`,
-                )
-                console.log(
-                    `to deploy your changes to the production website simply push the changes on GitHub`,
-                )
-                console.log(
-                    `fumabase will detect the updates and deploy a new version of the site`,
-                )
-                const client = createIframeRpcClient({ ws })
-                connectedClients.add(client)
+            // Create RPC client with the upstream WebSocket
+            const client = createIframeRpcClient({ ws })
 
-                for (const [key, value] of Object.entries(filesInDraft)) {
-                    // console.log(`sending state to website for file: ${key}`)
-                    await client.setDocsState({
-                        filesInDraft: { [key]: value },
-                    })
-                }
-
-                ws.on('close', () => {
-                    connectedClients.delete(client)
+            // Wait for first message from browser before sending files
+            await new Promise<void>((resolve) => {
+                console.log(`Waiting for browser to connect...`)
+                ws.once('message', () => {
+                    resolve()
                 })
             })
+            console.log(
+                `browser connected, showing a preview of your local changes`,
+            )
+            console.log(
+                `to deploy your changes to the production website simply push the changes on GitHub`,
+            )
+            console.log(
+                `fumabase will detect the updates and deploy a new version of the site`,
+            )
+
+            // Send initial files state after browser is connected
+            for (const [key, value] of Object.entries(filesInDraft)) {
+                // console.log(`sending state to website for file: ${key}`)
+                await client.setDocsState({
+                    filesInDraft: { [key]: value },
+                })
+            }
 
             // Watch for file changes and additions
             const handleFileUpdate = async (filePath: string) => {
@@ -199,12 +194,10 @@ cli.command('dev', 'Preview your fumabase website')
                     githubPath,
                 }
 
-                // Send only the updated file to all connected clients
+                // Send only the updated file through the tunnel to all browsers
                 const updatedFile = { [githubPath]: filesInDraft[githubPath] }
-                for (const client of connectedClients) {
-                    console.log(`sending websocket update for ${githubPath}`)
-                    client.setDocsState({ filesInDraft: updatedFile })
-                }
+                console.log(`sending websocket update for ${githubPath}`)
+                client.setDocsState({ filesInDraft: updatedFile })
             }
 
             watcher.on('add', handleFileUpdate)
@@ -217,10 +210,8 @@ cli.command('dev', 'Preview your fumabase website')
 
                     // Send null value to signal file deletion
                     const deletedFile = { [filePath]: null }
-                    for (const client of connectedClients) {
-                        console.log(`sending websocket message`)
-                        client.setDocsState({ filesInDraft: deletedFile })
-                    }
+                    console.log(`sending websocket message for deleted file`)
+                    client.setDocsState({ filesInDraft: deletedFile })
                 }
             })
         } catch (error) {

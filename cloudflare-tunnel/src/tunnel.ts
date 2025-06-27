@@ -101,8 +101,15 @@ export class Tunnel {
 }
 
 const addCors = (r: Response) => {
-    r.headers.set('Access-Control-Allow-Origin', '*')
-    r.headers.set('Access-Control-Allow-Headers', '*')
-    r.headers.set('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-    return r
+    // Clone the response, merging headers so we don't try to mutate immutable headers
+    const newHeaders = new Headers(r.headers)
+    newHeaders.set('Access-Control-Allow-Origin', '*')
+    newHeaders.set('Access-Control-Allow-Headers', '*')
+    newHeaders.set('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+    return new Response(r.body, {
+        status: r.status,
+        statusText: r.statusText,
+        headers: newHeaders,
+        webSocket: (r as any).webSocket, // for 101 upgrade case; safe cast for Do-workers
+    })
 }
