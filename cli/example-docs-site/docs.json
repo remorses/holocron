@@ -15,6 +15,5 @@
     "navbar": {
         "links": [{ "label": "something" }]
     },
-    "navTopLinks": [{ "anchor": "A link", "href": "x" }],
     "domains": ["remorses-3khurr6i.localhost:7777"]
 }
