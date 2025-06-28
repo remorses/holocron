@@ -39,6 +39,7 @@ type UserConfig = {
         orgId: string
         name?: string
     }>
+    lastWebsocketId?: string
 }
 
 const url = process.env.SERVER_URL || 'https://fumabase.com'
@@ -54,6 +55,10 @@ function getUserConfig(): UserConfig {
     } catch (error) {
         throw new Error('Not logged in. Please run: fumabase login')
     }
+}
+
+async function saveUserConfig(config: UserConfig): Promise<void> {
+    await fs.promises.writeFile(configPath, JSON.stringify(config, null, 2))
 }
 
 async function findProjectFiles() {
@@ -565,15 +570,30 @@ cli.command('dev', 'Preview your fumabase website')
                 process.exit(1)
             }
             // const githubBranch = getCurrentGitBranch()
+            
+            // Get config to check for lastWebsocketId
+            let config: UserConfig | null = null
+            try {
+                config = getUserConfig()
+            } catch (error) {
+                // Ignore error if not logged in, dev command can work without login
+            }
+            
             const [websocketRes] = await Promise.all([
                 // apiClient.api.getPreviewUrlForSiteId.post({
                 //     githubBranch,
                 //     siteId,
                 // }),
-                startWebSocketWithTunnel(),
+                startWebSocketWithTunnel(config?.lastWebsocketId),
             ])
 
             const { websocketId, ws } = websocketRes
+            
+            // Save the websocket ID for next time if we have a config
+            if (config && websocketId !== config.lastWebsocketId) {
+                config.lastWebsocketId = websocketId
+                await saveUserConfig(config)
+            }
 
             const previewUrl = new URL(
                 previewDomain.includes('.localhost:') ||

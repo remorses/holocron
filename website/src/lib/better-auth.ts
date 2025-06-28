@@ -96,9 +96,9 @@ export async function getSession({ request }) {
     const headers = new Headers()
     const data = await auth.api.getSession({ headers: request.headers })
     if (!data) {
-        return { userId: '', headers, redirectTo: '/login' }
+        return { userId: '', headers, redirectTo: '/login', user: null }
     }
     const { session, user } = data
     const { id: userId, email, emailVerified, name, image } = user
-    return { userId, email, headers, ...data }
+    return { userId, email, headers, redirectTo: undefined, ...data }
 }

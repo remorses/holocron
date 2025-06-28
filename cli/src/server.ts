@@ -7,13 +7,13 @@ type WebSocketWithTunnel = {
     websocketId: string
 }
 
-export function startWebSocketWithTunnel() {
+export function startWebSocketWithTunnel(existingWebsocketId?: string) {
     return new Promise<WebSocketWithTunnel>((resolve, reject) => {
         const start = Date.now()
 
         try {
-            // Generate a strong unique websocket ID
-            const websocketId = crypto.randomBytes(8).toString('hex')
+            // Use existing websocket ID if provided, otherwise generate a new one
+            const websocketId = existingWebsocketId || crypto.randomBytes(8).toString('hex')
 
             // Connect to the upstream WebSocket
             const upstreamUrl = `wss://fumabase.com/_tunnel/upstream?id=${websocketId}`

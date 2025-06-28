@@ -28,15 +28,16 @@ import type { Route } from './+types/org.$orgId.onboarding'
 import { cloudflareClient } from '../lib/cloudflare'
 
 export async function loader({ request, params }: Route.LoaderArgs) {
-    const { userId, redirectTo } = await getSession({ request })
-    if (redirectTo) {
-        throw redirect(redirectTo)
+    const sessionData = await getSession({ request })
+    if (sessionData.redirectTo) {
+        throw redirect(sessionData.redirectTo)
     }
 
     const url = new URL(request.url)
     const currentStep = parseInt(url.searchParams.get('currentStep') || '0', 10)
     const orgId = params.orgId
-    return { currentStep, orgId }
+    const name = sessionData?.user?.name || 'there'
+    return { currentStep, orgId, name }
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
@@ -292,7 +293,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
             <div className='space-y-4'>
                 <div>
                     <h1 className='text-2xl font-bold text-white'>
-                        Hello, test
+                        Hello, {loaderData.name}
                     </h1>
                     <p className='text-gray-400'>
                         Let's set up your first documentation deployment
