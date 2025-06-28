@@ -188,7 +188,7 @@ function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
     const navigation = useNavigation()
     const isLoading = navigation.state === 'submitting'
     return (
-        <Stepper defaultValue={currentStep + 1} orientation='vertical'>
+        <Stepper className='lg:min-w-[500px]' defaultValue={currentStep + 1} orientation='vertical'>
             <StepperItem
                 step={1}
                 className='relative items-start not-last:flex-1'
@@ -315,7 +315,7 @@ function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
 
 export default function Index({ loaderData }: Route.ComponentProps) {
     return (
-        <div className='flex flex-col gap-12 max-w-2xl mx-auto p-8'>
+        <div className='flex flex-col h-full grow justify-center gap-12 max-w-2xl mx-auto p-8'>
             <div className='space-y-4'>
                 <div>
                     <h1 className='text-2xl capitalize font-bold text-white'>
