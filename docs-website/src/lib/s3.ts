@@ -14,6 +14,16 @@ export function getKeyForMediaAsset({ siteId, branchId, slug }) {
     return key
 }
 
+export function parseKeyForMediaAsset(key: string): {
+    siteId?: string
+    branchId?: string
+} {
+    const match = key.match(/^site\/([^/]+)\/branch\/([^/]+)\//)
+    if (!match) return {}
+    const [, siteId, branchId] = match
+    return { siteId, branchId }
+}
+
 export function getCacheTagForMediaAsset({ siteId, branchId, slug }) {
     return `mediaAsset:site:${siteId}:branch:${branchId}:${slug}`
 }

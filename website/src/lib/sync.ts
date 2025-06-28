@@ -2,6 +2,7 @@ import { Sema } from 'sema4'
 import { request } from 'undici'
 import { findMatchInPaths } from 'docs-website/src/lib/html.server'
 import { MarkdownExtension, Prisma, prisma } from 'db'
+import { createHash } from 'crypto'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { DocumentRecord, StructuredData } from 'docs-website/src/lib/mdx'
@@ -26,6 +27,23 @@ import {
 import { cloudflareClient } from './cloudflare'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { DomainType } from 'db/src/generated/enums'
+
+export function gitBlobSha(
+    content: string | Buffer,
+    algo: 'sha1' | 'sha256' = 'sha1',
+): string {
+    const body = Buffer.isBuffer(content)
+        ? content
+        : Buffer.from(content, 'utf8')
+
+    // Build the canonical Git header:  `blob <size>\0`
+    const header = Buffer.from(`blob ${body.length}\0`, 'utf8')
+
+    // Concatenate header + body and hash
+    return createHash(algo)
+        .update(Buffer.concat([header, body]))
+        .digest('hex')
+}
 
 export type AssetForSync =
     | {
@@ -146,7 +164,9 @@ export async function* pagesFromFilesList({
     docsJson?: DocsJsonType
 }): AsyncGenerator<AssetForSync & { filePath: string; content: string }> {
     // First handle meta.json files
-    const metaFiles = files.filter(file => file.relativePath.endsWith('meta.json'))
+    const metaFiles = files.filter((file) =>
+        file.relativePath.endsWith('meta.json'),
+    )
     for (const file of metaFiles) {
         let jsonData
         try {
@@ -158,7 +178,7 @@ export async function* pagesFromFilesList({
             type: 'metaFile',
             jsonData,
             githubPath: file.relativePath,
-            githubSha: '',
+            githubSha: gitBlobSha(file.contents),
             filePath: file.relativePath,
             content: file.contents,
         }
@@ -166,40 +186,43 @@ export async function* pagesFromFilesList({
 
     // Now yield docs.json if provided
     if (docsJson !== undefined) {
+        const content =
+            typeof docsJson === 'string'
+                ? docsJson
+                : JSON.stringify(docsJson, null, 2)
         yield {
             type: 'docsJson',
             jsonData:
                 typeof docsJson === 'string' ? JSON.parse(docsJson) : docsJson,
             githubPath: 'docs.json',
-            githubSha: '',
+            githubSha: gitBlobSha(content),
             filePath: 'docs.json',
-            content:
-                typeof docsJson === 'string'
-                    ? docsJson
-                    : JSON.stringify(docsJson),
+            content,
         }
     }
 
     // Handle styles.css
-    const stylesCssFile = files.find(file => file.relativePath === 'styles.css')
+    const stylesCssFile = files.find(
+        (file) => file.relativePath === 'styles.css',
+    )
     if (stylesCssFile) {
         yield {
             type: 'stylesCss',
             content: stylesCssFile.contents,
             githubPath: stylesCssFile.relativePath,
-            githubSha: '',
+            githubSha: gitBlobSha(stylesCssFile.contents),
             filePath: stylesCssFile.relativePath,
         }
     }
 
     // Handle media assets
-    const mediaFiles = files.filter(file => isMediaFile(file.relativePath))
+    const mediaFiles = files.filter((file) => isMediaFile(file.relativePath))
     for (const file of mediaFiles) {
         const slug = file.relativePath.replace(/\\/g, '/').replace(/^\/+/, '')
         yield {
             type: 'mediaAsset',
             slug,
-            sha: '',
+            sha: gitBlobSha(file.contents),
             downloadUrl: '', // For local files, we don't have a download URL
             githubPath: file.relativePath,
             filePath: file.relativePath,
@@ -208,18 +231,19 @@ export async function* pagesFromFilesList({
     }
 
     // Handle markdown/MDX files
-    const markdownFiles = files.filter(file => isMarkdown(file.relativePath))
+    const markdownFiles = files.filter((file) => isMarkdown(file.relativePath))
     const totalPages = markdownFiles.length
 
     for (const file of markdownFiles) {
-        const entrySlug = '/' + file.relativePath.replace(/\\/g, '/').replace(mdxRegex, '')
+        const entrySlug =
+            '/' + file.relativePath.replace(/\\/g, '/').replace(mdxRegex, '')
         const extension = file.relativePath.endsWith('.mdx') ? 'mdx' : 'md'
-        
+
         const { data } = await processMdxInServer({
             markdown: file.contents,
             extension,
         })
-        
+
         const page = {
             type: 'page',
             totalPages,
@@ -229,11 +253,11 @@ export async function* pagesFromFilesList({
                 markdown: file.contents,
                 frontmatter: data.frontmatter,
                 githubPath: file.relativePath,
-                githubSha: '',
+                githubSha: gitBlobSha(file.contents),
             },
             structuredData: data.structuredData,
         } satisfies AssetForSync
-        
+
         yield { ...page, content: file.contents, filePath: file.relativePath }
     }
 }
@@ -372,6 +396,19 @@ export async function syncFiles({
                 const downloadUrl = asset.downloadUrl
 
                 async function upload() {
+                    if (!downloadUrl) return
+                    // Skip downloading/uploading if the downloadUrl is from our own uploads base URL
+                    if (
+                        downloadUrl &&
+                        isValidUrl(downloadUrl) &&
+                        downloadUrl.startsWith(env.UPLOADS_BASE_URL!)
+                    ) {
+                        console.log(
+                            `Skipping upload for asset ${slug} as it is already hosted at UPLOADS_BASE_URL (${env.UPLOADS_BASE_URL})`,
+                        )
+                        return
+                    }
+
                     const response = await request(downloadUrl, { signal })
                     const ok =
                         response.statusCode >= 200 && response.statusCode < 300

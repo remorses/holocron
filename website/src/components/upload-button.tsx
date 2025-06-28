@@ -13,11 +13,15 @@ export function UploadButton({
     accept = '*',
     children,
     onUploadFinished,
+    branchId,
+    siteId,
     ...rest
 }: {
     bg?: string
     children?: React.ReactNode
     accept?: string
+    branchId: string
+    siteId: string
     onUploadFinished: (data: { src: string }) => void
 } & ComponentPropsWithoutRef<typeof Button>) {
     const [filename, setFilename] = useState('')
@@ -31,12 +35,13 @@ export function UploadButton({
             const contentType = file.type
             const { error, data } =
                 await apiClient.api.createUploadSignedUrl.post({
-                    key: filename,
-                    contentType,
+                    branchId,
+                    siteId,
+                    files: [{ slug: filename, contentType }],
                 })
             if (error) throw error
 
-            const { signedUrl, finalUrl } = data
+            const { signedUrl, finalUrl } = data.files[0]
             // Do a PUT to the signed URL
             const uploadResp = await fetch(signedUrl, {
                 method: 'PUT',

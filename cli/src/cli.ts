@@ -43,6 +43,37 @@ function getUserConfig() {
     }
 }
 
+async function findProjectFiles() {
+    // Find files using globby
+    const filePaths = await globby(
+        ['**/*.{md,mdx}', 'meta.json', 'styles.css'],
+        {
+            ignore: [
+                '**/node_modules/**',
+                '**/.git/**',
+                '**/.cache/**',
+            ],
+            gitignore: true,
+        },
+    )
+
+    // Read file contents
+    const files = await Promise.all(
+        filePaths.map(async (filePath) => {
+            const content = await fs.promises.readFile(
+                filePath,
+                'utf-8',
+            )
+            return {
+                relativePath: filePath,
+                contents: content,
+            }
+        }),
+    )
+
+    return { filePaths, files }
+}
+
 function getGitHubInfo() {
     try {
         const remoteUrl = execSync('git remote get-url origin', {
@@ -141,44 +172,90 @@ cli.command('init', 'Initialize a new fumabase project')
             const gitBranch = await getCurrentGitBranch()
 
             // Find files using globby
-            const filePaths = await globby(
-                ['**/*.{md,mdx}', 'meta.json', 'styles.css'],
-                {
-                    ignore: [
-                        '**/node_modules/**',
-                        '**/.git/**',
-                        '**/.cache/**',
-                    ],
-                    gitignore: true,
-                },
-            )
+            let { filePaths, files } = await findProjectFiles()
 
-            // Ensure there are at least 2 markdown files
+            // Check markdown files and handle different scenarios
             const markdownFiles = filePaths.filter(
                 (file) => file.endsWith('.md') || file.endsWith('.mdx'),
             )
-            if (markdownFiles.length < 2) {
-                console.log(
-                    'At least 2 markdown files (**/*.md, **/*.mdx) are required to initialize a fumabase project.',
-                )
-                process.exit(1)
+            
+            let shouldDownloadTemplate = false
+            
+            if (markdownFiles.length === 0) {
+                // No markdown files found - ask if user wants to download starter template
+                const response = await prompts({
+                    type: 'confirm',
+                    name: 'downloadTemplate',
+                    message: 'No markdown files found. Do you want to download the starter template files in the current directory?',
+                    initial: true,
+                })
+                
+                if (!response.downloadTemplate) {
+                    console.log('Cannot initialize a fumabase project without markdown files.')
+                    process.exit(1)
+                }
+                
+                shouldDownloadTemplate = true
+            } else if (markdownFiles.length < 2) {
+                // Some markdown files but not enough - ask user to choose
+                const response = await prompts({
+                    type: 'select',
+                    name: 'choice',
+                    message: `Found ${markdownFiles.length} markdown file(s), but at least 2 are required. What would you like to do?`,
+                    choices: [
+                        { title: 'Use existing markdown files and continue anyway', value: 'continue' },
+                        { title: 'Download starter template files', value: 'template' },
+                    ],
+                })
+                
+                if (response.choice === 'template') {
+                    shouldDownloadTemplate = true
+                } else if (response.choice === 'continue') {
+                    // Continue with existing files even if less than 2
+                    console.log('Continuing with existing files...')
+                } else {
+                    console.log('Operation cancelled.')
+                    process.exit(1)
+                }
+            }
+            
+            if (shouldDownloadTemplate) {
+                console.log('Downloading starter template...')
+                
+                // Download starter template
+                const { data, error } = await apiClient.api.getStarterTemplate.get()
+                if (error || !data?.success) {
+                    console.error(
+                        'Failed to download starter template:',
+                        error?.message || 'Unknown error',
+                    )
+                    process.exit(1)
+                }
+
+                // Write starter template files to filesystem
+                console.log(`Writing ${data.files.length} starter template files...`)
+                for (const file of data.files) {
+                    const filePath = file.relativePath
+                    const dirPath = path.dirname(filePath)
+                    
+                    // Create directories if they don't exist
+                    if (dirPath !== '.') {
+                        await fs.promises.mkdir(dirPath, { recursive: true })
+                    }
+                    
+                    // Write file
+                    await fs.promises.writeFile(filePath, file.contents, 'utf-8')
+                }
+
+                console.log('Starter template files written successfully!')
+                
+                // Re-run file discovery
+                const result = await findProjectFiles()
+                filePaths = result.filePaths
+                files = result.files
             }
 
             console.log(`Found ${filePaths.length} files`)
-
-            // Read file contents
-            const files = await Promise.all(
-                filePaths.map(async (filePath) => {
-                    const content = await fs.promises.readFile(
-                        filePath,
-                        'utf-8',
-                    )
-                    return {
-                        relativePath: filePath,
-                        contents: content,
-                    }
-                }),
-            )
 
             console.log('Creating site...')
 

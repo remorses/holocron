@@ -14,7 +14,11 @@ import {
 } from 'ai'
 import cuid from '@bugsnag/cuid'
 import { prisma } from 'db'
-import { s3 } from 'docs-website/src/lib/s3'
+import {
+    getKeyForMediaAsset,
+    parseKeyForMediaAsset,
+    s3,
+} from 'docs-website/src/lib/s3'
 import { Spiceflow } from 'spiceflow'
 import { cors } from 'spiceflow/cors'
 import { openapi } from 'spiceflow/openapi'
@@ -29,6 +33,7 @@ import {
 } from './github.server'
 import { filesFromGithub, pagesFromFilesList, syncSite } from './sync'
 import { mdxRegex } from './utils'
+import exampleDocs from 'website/scripts/example-docs.json'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import path from 'path'
@@ -147,7 +152,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             const { branchId } = await request.json()
 
             if (!userId) {
-                throw new Error('Missing x-user-id header')
+                throw new Error('Missing userId')
             }
             const branch = await prisma.siteBranch.findFirst({
                 where: {
@@ -249,23 +254,49 @@ export const app = new Spiceflow({ basePath: '/api' })
         method: 'POST',
         path: '/createUploadSignedUrl',
         request: z.object({
-            key: z.string().min(1, 'Key is required'),
-            contentType: z.string().optional(),
+            siteId: z.string().min(1, 'siteId is required'),
+            branchId: z.string().min(1, 'branchId is required'),
+            files: z
+                .array(
+                    z.object({
+                        slug: z.string().min(1, 'slug is required'),
+                        contentType: z.string().optional(),
+                    }),
+                )
+                .min(1, 'At least one file is required'),
         }),
-        async handler({ request, state }) {
+        async handler({ request, state: { userId } }) {
             const body = await request.json()
+            if (!userId) {
+                throw new AppError('User not authenticated')
+            }
 
-            const signedUrl = s3.presign(body.key, {
-                method: 'PUT',
+            const signedFiles = body.files.map((file) => {
+                const key = getKeyForMediaAsset({
+                    siteId: body.siteId,
+                    branchId: body.branchId,
+                    slug: file.slug,
+                })
+                const signedUrl = s3.presign(key, {
+                    method: 'PUT',
+                    ...(file.contentType
+                        ? { contentType: file.contentType }
+                        : {}),
+                })
+                const finalUrl = new URL(
+                    file.slug,
+                    env.UPLOADS_BASE_URL,
+                ).toString()
+                return {
+                    path: file.slug,
+                    signedUrl,
+                    finalUrl,
+                }
             })
-
-            const finalUrl = new URL(body.key, env.UPLOADS_BASE_URL).toString()
 
             return {
                 success: true,
-                path: body.key,
-                signedUrl,
-                finalUrl,
+                files: signedFiles,
             }
         },
     })
@@ -772,7 +803,9 @@ export const app = new Spiceflow({ basePath: '/api' })
         method: 'POST',
         path: '/getCliSession',
         request: z.object({
-            secret: z.string().regex(/^\d{6}$/, 'Secret must be a 6-digit code'),
+            secret: z
+                .string()
+                .regex(/^\d{6}$/, 'Secret must be a 6-digit code'),
         }),
         async handler({ request }) {
             const { secret } = await request.json()
@@ -780,7 +813,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             // Find the CLI login session
             const session = await prisma.cliLoginSession.findUnique({
                 where: { secret },
-                include: { 
+                include: {
                     user: {
                         include: {
                             orgs: {
@@ -827,17 +860,26 @@ export const app = new Spiceflow({ basePath: '/api' })
         path: '/createSiteFromFiles',
         request: z.object({
             name: z.string().min(1, 'Name is required'),
-            files: z.array(z.object({
-                relativePath: z.string(),
-                contents: z.string(),
-            })),
+            files: z.array(
+                z.object({
+                    relativePath: z.string(),
+                    contents: z.string(),
+                }),
+            ),
             orgId: z.string().min(1, 'Organization ID is required'),
             githubOwner: z.string().optional(),
             githubRepo: z.string().optional(),
             githubBranch: z.string().optional(),
         }),
         async handler({ request, state: { userId } }) {
-            const { name, files, orgId, githubOwner, githubRepo, githubBranch } = await request.json()
+            const {
+                name,
+                files,
+                orgId,
+                githubOwner,
+                githubRepo,
+                githubBranch,
+            } = await request.json()
 
             if (!userId) {
                 throw new AppError('User not authenticated')
@@ -910,6 +952,16 @@ export const app = new Spiceflow({ basePath: '/api' })
                 siteId,
                 branchId,
                 docsJson: branch?.docsJson || {},
+            }
+        },
+    })
+    .route({
+        method: 'GET',
+        path: '/getStarterTemplate',
+        async handler() {
+            return {
+                success: true,
+                files: exampleDocs,
             }
         },
     })
