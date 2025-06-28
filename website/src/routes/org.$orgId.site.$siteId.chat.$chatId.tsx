@@ -16,6 +16,7 @@ import type { Route as SiteRoute } from './org.$orgId.site.$siteId'
 
 import { UIMessage } from 'ai'
 import { ChatProvider, ChatState } from '../components/chat/chat-provider'
+import { env } from 'docs-website/src/lib/env'
 
 export type { Route }
 
@@ -24,6 +25,52 @@ export async function loader({
     params: { orgId, siteId, chatId },
 }: Route.LoaderArgs) {
     const { userId } = await getSession({ request })
+
+    const url = new URL(request.url)
+
+    if (url.searchParams.get('installGithubApp')) {
+        const githubAccountLogin = url.searchParams.get('githubAccountLogin')
+        const githubInstallation = await prisma.githubInstallation.findFirst({
+            where: {
+                orgs: {
+                    some: {
+                        orgId,
+                        appId: env.GITHUB_APP_ID,
+                    },
+                },
+                accountLogin: githubAccountLogin || '',
+            },
+        })
+
+        if (!githubInstallation) {
+            throw new Error(
+                `GitHub installation not found for ${githubAccountLogin}`,
+            )
+        }
+        await prisma.siteGithubInstallation.upsert({
+            where: {
+                installationId_appId_siteId: {
+                    installationId: githubInstallation.installationId,
+                    appId: env.GITHUB_APP_ID!,
+                    siteId,
+                },
+            },
+            create: {
+                installationId: githubInstallation.installationId,
+                appId: env.GITHUB_APP_ID!,
+                siteId,
+            },
+            update: {},
+        })
+        // Redirect to the same route but remove search params
+        const pathname = url.pathname
+        throw new Response(null, {
+            status: 302,
+            headers: {
+                Location: pathname,
+            },
+        })
+    }
 
     // Fetch chat and site info separately
     const [chat, site, siteBranch] = await Promise.all([
