@@ -204,13 +204,6 @@ function RenderField({ field }: RenderFieldProps) {
                             <UploadButton
                                 onUploadFinished={({ src }) => onChange(src)}
                             />
-                            {value && (
-                                <img
-                                    src={value}
-                                    alt='preview'
-                                    className='h-24 border rounded mt-2'
-                                />
-                            )}
                         </>
                     )}
                 />

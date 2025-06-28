@@ -102,7 +102,7 @@ export function UploadButton({
             >
                 {children || 'Upload File'}
             </Button>
-            {/* <div className="mt-2 text-sm opacity-60">{filename}</div> */}
+            <div className="mt-1 text-sm opacity-60">{filename}</div>
         </>
     )
 }
