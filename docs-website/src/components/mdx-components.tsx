@@ -41,7 +41,7 @@ function TodoItem({
     )
 }
 
-function ColumnList({ children }: { children?: React.ReactNode }) {
+function ColumnGroup({ children }: { children?: React.ReactNode }) {
     return (
         <div className='flex flex-row flex-wrap gap-4 my-4'>{children}</div>
     )
@@ -158,27 +158,99 @@ function Check({ children }: { children: React.ReactNode }) {
     return <Callout type="success">{children}</Callout>
 }
 
-// API documentation components
-function ParamField({
-    body,
-    query,
-    path,
-    header,
-    required,
-    type,
+// Mintlify-style Card component with correct props
+function MintlifyCard({
+    title,
+    icon,
+    iconType,
+    color,
+    href,
+    horizontal,
+    img,
+    cta,
+    arrow,
     children
 }: {
-    body?: string;
-    query?: string;
-    path?: string;
-    header?: string;
-    required?: boolean;
-    type?: string;
+    title: string;
+    icon?: string;
+    iconType?: "regular" | "solid" | "light" | "thin" | "sharp-solid" | "duotone" | "brands";
+    color?: string;
+    href?: string;
+    horizontal?: boolean;
+    img?: string;
+    cta?: string;
+    arrow?: boolean;
     children?: React.ReactNode;
 }) {
-    const paramName = body || query || path || header || 'parameter'
+    // Use fumadocs Card as base but with Mintlify prop mapping
+    return (
+        <Card
+            title={title}
+            description={children}
+            href={href}
+            icon={icon}
+            {...(img && { image: img })}
+        />
+    )
+}
+
+// CodeGroup component for tabbed code blocks
+function CodeGroup({ children }: { children: React.ReactNode }) {
+    // Use fumadocs Tabs for CodeGroup functionality
+    return <TabsComponents.Tabs>{children}</TabsComponents.Tabs>
+}
+
+// Frame component with caption support
+function Frame({
+    caption,
+    children
+}: {
+    caption?: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <div className="my-4">
+            <div className="border border-border rounded-lg p-4">
+                {children}
+            </div>
+            {caption && (
+                <div className="text-center text-sm text-muted-foreground mt-2">
+                    {caption}
+                </div>
+            )}
+        </div>
+    )
+}
+
+// API documentation components
+function ParamField({
+    path,
+    body,
+    query,
+    header,
+    type,
+    required,
+    deprecated,
+    default: defaultValue,
+    initialValue,
+    placeholder,
+    children
+}: {
+    path?: string;
+    body?: string;
+    query?: string;
+    header?: string;
+    type?: string;
+    required?: boolean;
+    deprecated?: boolean;
+    default?: string;
+    initialValue?: any;
+    placeholder?: string;
+    children?: React.ReactNode;
+}) {
+    const paramName = path || body || query || header || 'parameter'
     const paramType = type || 'string'
-    const location = body ? 'body' : query ? 'query' : path ? 'path' : header ? 'header' : 'parameter'
+    const location = path ? 'path' : body ? 'body' : query ? 'query' : header ? 'header' : 'parameter'
 
     return (
         <div className="border border-border rounded-lg p-4 mb-4">
@@ -192,9 +264,19 @@ function ParamField({
                         required
                     </span>
                 )}
+                {deprecated && (
+                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                        deprecated
+                    </span>
+                )}
                 <span className="text-xs text-muted-foreground">
                     {paramType}
                 </span>
+                {defaultValue && (
+                    <span className="text-xs text-muted-foreground">
+                        default: {defaultValue}
+                    </span>
+                )}
             </div>
             {children && <div className="text-sm text-muted-foreground">{children}</div>}
         </div>
@@ -205,35 +287,62 @@ function ResponseField({
     name,
     type,
     required,
+    deprecated,
+    default: defaultValue,
+    pre,
+    post,
     children
 }: {
-    name?: string;
-    type?: string;
+    name: string;
+    type: string;
     required?: boolean;
+    deprecated?: boolean;
+    default?: string;
+    pre?: string[];
+    post?: string[];
     children?: React.ReactNode;
 }) {
-    const fieldName = name || 'field'
-    const fieldType = type || 'string'
-
     return (
         <div className="border-l-4 border-green-200 pl-4 mb-3">
             <div className="flex items-center gap-2 mb-1">
+                {pre && pre.map((label, i) => (
+                    <span key={i} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        {label}
+                    </span>
+                ))}
                 <code className="text-sm font-mono">
-                    {fieldName}
+                    {name}
                 </code>
                 {required && (
                     <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
                         required
                     </span>
                 )}
+                {deprecated && (
+                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                        deprecated
+                    </span>
+                )}
                 <span className="text-xs text-muted-foreground">
-                    {fieldType}
+                    {type}
                 </span>
+                {defaultValue && (
+                    <span className="text-xs text-muted-foreground">
+                        default: {defaultValue}
+                    </span>
+                )}
+                {post && post.map((label, i) => (
+                    <span key={i} className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">
+                        {label}
+                    </span>
+                ))}
             </div>
             {children && <div className="text-sm text-muted-foreground">{children}</div>}
         </div>
     )
 }
+
+
 
 export const mdxComponents = {
     ...fumadocsComponents,
@@ -241,12 +350,13 @@ export const mdxComponents = {
     details: 'details',
     Math,
     // TodoItem,
-    ColumnList,
+    ColumnGroup,
     Column,
     ...TabsComponents,
     ...FilesComponents,
     Accordion,
     Accordions,
+    AccordionGroup: Accordions,
     // Mintlify-style callout components
     Note,
     Warning,
@@ -254,12 +364,15 @@ export const mdxComponents = {
     Tip,
     Check,
     // Mintlify-style other components
-    Card,
+    Card: MintlifyCard,
     Cards,
+    CardGroup: Cards,
     Steps,
     Step,
+    CodeGroup,
+    Frame,
     // API documentation components
-    // ParamField, // TODO, make sure param fields look good
+    // ParamField,
     // ResponseField,
     // Embed,
     // File,
