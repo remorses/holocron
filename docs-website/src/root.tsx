@@ -21,6 +21,7 @@ import {
 } from 'react-router'
 import { TrieveSDK } from 'trieve-ts-sdk'
 import { useShallow } from 'zustand/react/shallow'
+// @ts-ignore
 import type { Route } from './+types/root'
 import './app.css'
 import { DocsJsonType } from './lib/docs-json'
