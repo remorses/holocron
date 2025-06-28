@@ -1,17 +1,47 @@
-import {
-    loader,
-    LoaderOutput,
-    MetaData,
-    PageData,
-    VirtualFile,
-} from 'fumadocs-core/source'
+import { loader, MetaData, PageData, VirtualFile } from 'fumadocs-core/source'
 
 import { I18nConfig } from 'fumadocs-core/i18n'
+import React, { lazy, Suspense } from 'react'
+import { useHydrated } from './hooks'
 import { StructuredData } from './mdx-heavy'
-import { icons } from 'lucide-react'
-import { SourceData } from './source.server'
-import { createElement } from 'react'
-import { pascalcase } from './utils'
+
+// simple in-memory cache so every icon is fetched only once
+const cache: Record<string, React.ComponentType<any>> = {}
+
+type DynamicIconProps = { name: string } & React.SVGProps<SVGSVGElement>
+
+
+export function DynamicIconInner({ name, ...rest }: DynamicIconProps) {
+    const hidrated = useHydrated()
+    if (!hidrated) return null
+    const Icon =
+        cache[name] ||
+        (cache[name] = lazy(
+            () =>
+                import(
+                    /* @vite-ignore */
+                    `https://esm.sh/lucide-react@0.525.0/es2022/dist/esm/icons/${name}.mjs`
+                ),
+        ))
+
+    return (
+        <span className='inline-block w-4 h-4 align-middle animate-fade-in'>
+            <Icon {...rest} className={(rest.className ?? '') + ' w-full'} />
+        </span>
+    )
+}
+
+export function DynamicIcon({ name, ...rest }: DynamicIconProps) {
+    return (
+        <Suspense
+            fallback={
+                <span className='inline-block w-4 h-4 rounded transition-opacity opacity-0' />
+            }
+        >
+            <DynamicIconInner name={name} {...rest} />
+        </Suspense>
+    )
+}
 
 export function getFumadocsClientSource({
     files,
@@ -35,9 +65,11 @@ export function getFumadocsClientSource({
 
         icon(icon) {
             if (!icon) return
-            icon = pascalcase(icon)
-            if (icon && icon in icons)
-                return createElement(icons[icon as keyof typeof icons])
+            return (
+                <React.Suspense fallback={null}>
+                    <DynamicIcon name={icon as any} />
+                </React.Suspense>
+            )
         },
         // TODO loading using an img would be better, but no support for currentColor and good size
         // icon(icon) {

@@ -28,6 +28,23 @@ export default defineConfig({
     },
     build: {
         sourcemap: true,
+
+        // rollupOptions: {
+        //     output: {
+        //         // 👉 put every async chunk that comes from shiki in its own folder
+        //         chunkFileNames: (c) =>
+        //             /[\\/]shiki[\\/]/.test(c.facadeModuleId ?? '')
+        //                 ? 'assets/shiki/[name]-[hash].js'
+        //                 : 'assets/[name]-[hash].js',
+
+        //         // 👉 and do the same for the raw grammar JSON that shiki
+        //         //     turns into JS modules
+        //         assetFileNames: (a) =>
+        //             a.name?.endsWith('.tmLanguage.json')
+        //                 ? 'assets/shiki/[name]-[hash][extname]'
+        //                 : 'assets/[name]-[hash][extname]',
+        //     },
+        // },
     },
 
     plugins: [

@@ -77,7 +77,7 @@
         "json-schema": "^0.4.0",
         "json-schema-library": "^10.1.2",
         "lean-s3": "^0.2.1",
-        "lucide-react": "^0.514.0",
+        "lucide-react": "^0.525.0",
         "marked": "^15.0.12",
         "match-sorter": "^8.0.3",
         "micro-memoize": "^4.1.3",

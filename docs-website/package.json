@@ -67,7 +67,7 @@
         "js-yaml": "^4.1.0",
         "katex": "^0.16.22",
         "lean-s3": "^0.2.1",
-        "lucide-react": "^0.522.0",
+        "lucide-react": "^0.525.0",
         "marked": "^15.0.12",
         "mdast-util-mdx-jsx": "^3.2.0",
         "mdast-util-to-markdown": "^2.1.2",

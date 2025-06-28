@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    useSyncExternalStore,
+} from 'react'
 import { Route } from '../root'
 import { useLoaderData, useNavigate, useRouteLoaderData } from 'react-router'
 import { useDocsState } from './docs-state'
@@ -54,4 +60,15 @@ export function useDocsJson(): DocsJsonType {
         }
         return docsJson || {}
     }, [docsJsonString, docsJson])
+}
+
+const fn = (callback) => {
+    return () => {}
+}
+export function useHydrated() {
+    return useSyncExternalStore(
+        fn,
+        () => true, // client snapshot
+        () => false, // server snapshot (always false)
+    )
 }
