@@ -165,6 +165,7 @@ export async function loader({
         host,
         branchId,
         siteBranch,
+        siteId,
     }
 }
 

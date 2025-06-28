@@ -16,6 +16,7 @@ import {
 import { Slider } from './ui/slider'
 import { Switch } from './ui/switch'
 import { Textarea } from './ui/textarea'
+import { UploadButton } from './upload-button'
 
 type RenderFormPreviewProps = {
     args: { fields: UIField[] }
@@ -194,11 +195,24 @@ function RenderField({ field }: RenderFieldProps) {
             return <Input key={key} type='date' {...register(field.name)} />
         case 'image_upload':
             return (
-                <Input
-                    key={key}
-                    type='file'
-                    accept='image/*'
-                    {...register(field.name)}
+                <Controller
+                    name={field.name}
+                    control={control}
+                    defaultValue=''
+                    render={({ field: { value, onChange } }) => (
+                        <>
+                            <UploadButton
+                                onUploadFinished={({ src }) => onChange(src)}
+                            />
+                            {value && (
+                                <img
+                                    src={value}
+                                    alt='preview'
+                                    className='h-24 border rounded mt-2'
+                                />
+                            )}
+                        </>
+                    )}
                 />
             )
         case 'button':

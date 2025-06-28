@@ -1,8 +1,11 @@
 import { UploadIcon } from 'lucide-react'
 import { ComponentPropsWithoutRef, useState, useRef } from 'react'
+import { useRouteLoaderData } from 'react-router'
 import { v4 } from 'uuid'
 
 import { useThrowingFn } from 'website/src/lib/hooks'
+import type { Route as ChatRoute } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId'
+import type { Route as SiteRoute } from 'website/src/routes/org.$orgId.site.$siteId'
 
 import { Button } from './ui/button'
 import { apiClient } from '../lib/spiceflow-client'
@@ -13,22 +16,28 @@ export function UploadButton({
     accept = '*',
     children,
     onUploadFinished,
-    branchId,
-    siteId,
     ...rest
 }: {
     bg?: string
     children?: React.ReactNode
     accept?: string
-    branchId: string
-    siteId: string
     onUploadFinished: (data: { src: string }) => void
 } & ComponentPropsWithoutRef<typeof Button>) {
+    const chatData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId.chat.$chatId',
+    ) as ChatRoute.ComponentProps['loaderData']
+
+    const branchId = chatData.branchId
+    const siteId = chatData.siteId
     const [filename, setFilename] = useState('')
 
     const inputRef = useRef<any>(undefined)
     const { fn: up, isLoading } = useThrowingFn({
         async fn(file) {
+            if (!branchId) {
+                throw new Error('No branch available for upload')
+            }
+
             const filename = encodeURIComponent(
                 slugKebabCase(`${v4()}-${file.name || 'image'}`),
             )
