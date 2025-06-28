@@ -1,6 +1,6 @@
 {
     "name": "fumabase",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "description": "",
     "type": "module",
     "repository": "https://github.com/remorses/fumabase",
@@ -24,14 +24,17 @@
         "cac": "^6.7.14",
         "chokidar": "^4.0.3",
         "globby": "^14.1.0",
+        "mime-types": "^2.1.35",
         "prompts": "^2.4.2",
+        "sema4": "^0.1.3",
         "spiceflow": "^1.13.2",
         "ws": "^8.18.2"
     },
     "devDependencies": {
+        "@types/mime-types": "^2.1.4",
+        "docs-website": "file:../docs-website",
+        "website": "file:../website",
         "@types/prompts": "^2.4.9",
-        "@types/ws": "^8.18.1",
-        "docs-website": "*",
-        "website": "*"
+        "@types/ws": "^8.18.1"
     }
 }

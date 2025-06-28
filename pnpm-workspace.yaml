@@ -5,6 +5,8 @@ packages:
   - fumadocs/
 
 autoInstallPeers: false
+preferSymlinkedExecutables: true
+hoistWorkspacePackages: true
 
 neverBuiltDependencies: []
 

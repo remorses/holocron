@@ -420,12 +420,11 @@ export async function syncFiles({
                     if (!response.body) {
                         throw new Error(`Failed to get body for asset ${slug}`)
                     }
-                    const key = getKeyForMediaAsset({ siteId, slug, branchId })
+                    const key = getKeyForMediaAsset({ siteId, slug })
                     await s3.file(key).write(response.body)
                     const cacheTag = getCacheTagForMediaAsset({
                         siteId,
                         slug,
-                        branchId,
                     })
                     cacheTagsToInvalidate.push(cacheTag)
                 }

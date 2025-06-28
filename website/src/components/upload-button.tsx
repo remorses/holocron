@@ -44,7 +44,6 @@ export function UploadButton({
             const contentType = file.type
             const { error, data } =
                 await apiClient.api.createUploadSignedUrl.post({
-                    branchId,
                     siteId,
                     files: [{ slug: filename, contentType }],
                 })

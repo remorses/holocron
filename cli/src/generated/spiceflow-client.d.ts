@@ -26,8 +26,8 @@ export declare const apiClient: {
         };
         getPageContent: {
             post: (request: {
-                branchId: string;
                 githubPath: string;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -41,17 +41,17 @@ export declare const apiClient: {
         };
         generateMessage: {
             post: (request: {
-                branchId: string;
                 siteId: string;
-                messages: import("ai").UIMessage[];
                 chatId: string;
-                currentSlug: string;
+                messages: import("ai").UIMessage[];
                 filesInDraft: Record<string, {
-                    githubPath: string;
                     content: string;
+                    githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
+                currentSlug: string;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -180,102 +180,102 @@ export declare const apiClient: {
                                 label: import("zod").ZodString;
                                 value: import("zod").ZodString;
                             }, "strip", import("zod").ZodTypeAny, {
-                                value: string;
                                 label: string;
+                                value: string;
                             }, {
-                                value: string;
                                 label: string;
+                                value: string;
                             }>, "many">>;
                             href: import("zod").ZodNullable<import("zod").ZodString>;
                         }, "strip", import("zod").ZodTypeAny, {
-                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
                             name: string;
-                            description: string | null;
                             href: string | null;
+                            type: "number" | "input" | "button" | "select" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            description: string | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }, {
-                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
                             name: string;
-                            description: string | null;
                             href: string | null;
+                            type: "number" | "input" | "button" | "select" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            description: string | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }>, "many">;
                     }, "strip", import("zod").ZodTypeAny, {
                         fields: {
-                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
                             name: string;
-                            description: string | null;
                             href: string | null;
+                            type: "number" | "input" | "button" | "select" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            description: string | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }[];
                     }, {
                         fields: {
-                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
                             name: string;
-                            description: string | null;
                             href: string | null;
+                            type: "number" | "input" | "button" | "select" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            description: string | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }[];
                     }>, "rendered form to the user" | {
                         errors: string[];
                     }> & {
                         execute: (args: {
                             fields: {
-                                type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                                options: {
-                                    value: string;
-                                    label: string;
-                                }[] | null;
                                 name: string;
-                                description: string | null;
                                 href: string | null;
+                                type: "number" | "input" | "button" | "select" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                                 label: string;
-                                required: boolean | null;
-                                placeholder: string | null;
-                                initialValue: string | number | boolean | null;
-                                min: number | null;
                                 max: number | null;
+                                min: number | null;
+                                placeholder: string | null;
+                                required: boolean | null;
                                 step: number | null;
+                                description: string | null;
+                                options: {
+                                    label: string;
+                                    value: string;
+                                }[] | null;
+                                initialValue: string | number | boolean | null;
                             }[];
                         }, options: import("ai").ToolExecutionOptions) => PromiseLike<"rendered form to the user" | {
                             errors: string[];
@@ -304,7 +304,6 @@ export declare const apiClient: {
         };
         createUploadSignedUrl: {
             post: (request: {
-                branchId: string;
                 siteId: string;
                 files: {
                     slug: string;
@@ -327,8 +326,8 @@ export declare const apiClient: {
         };
         newChat: {
             post: (request: {
-                branchId: string;
                 orgId: string;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -342,9 +341,9 @@ export declare const apiClient: {
         };
         submitRateFeedback: {
             post: (request: {
+                url: string;
                 message: string;
                 branchId: string;
-                url: string;
                 opinion: "good" | "bad";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
@@ -359,13 +358,13 @@ export declare const apiClient: {
         };
         commitChangesToRepo: {
             post: (request: {
-                branchId: string;
                 filesInDraft: Record<string, {
-                    githubPath: string;
                     content: string;
+                    githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -380,14 +379,14 @@ export declare const apiClient: {
         };
         createPrSuggestionForChat: {
             post: (request: {
-                branchId: string;
                 chatId: string;
                 filesInDraft: Record<string, {
-                    githubPath: string;
                     content: string;
+                    githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -424,12 +423,12 @@ export declare const apiClient: {
         };
         createSiteFromFiles: {
             post: (request: {
+                orgId: string;
                 name: string;
                 files: {
-                    relativePath: string;
                     contents: string;
+                    relativePath: string;
                 }[];
-                orgId: string;
                 githubBranch?: string | undefined;
                 githubOwner?: string | undefined;
                 githubRepo?: string | undefined;
@@ -490,8 +489,8 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         getPageContent: {
             post: (request: {
-                branchId: string;
                 githubPath: string;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -505,17 +504,17 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         generateMessage: {
             post: (request: {
-                branchId: string;
                 siteId: string;
-                messages: import("ai").UIMessage[];
                 chatId: string;
-                currentSlug: string;
+                messages: import("ai").UIMessage[];
                 filesInDraft: Record<string, {
-                    githubPath: string;
                     content: string;
+                    githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
+                currentSlug: string;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -644,102 +643,102 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                                 label: import("zod").ZodString;
                                 value: import("zod").ZodString;
                             }, "strip", import("zod").ZodTypeAny, {
-                                value: string;
                                 label: string;
+                                value: string;
                             }, {
-                                value: string;
                                 label: string;
+                                value: string;
                             }>, "many">>;
                             href: import("zod").ZodNullable<import("zod").ZodString>;
                         }, "strip", import("zod").ZodTypeAny, {
-                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
                             name: string;
-                            description: string | null;
                             href: string | null;
+                            type: "number" | "input" | "button" | "select" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            description: string | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }, {
-                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
                             name: string;
-                            description: string | null;
                             href: string | null;
+                            type: "number" | "input" | "button" | "select" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            description: string | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }>, "many">;
                     }, "strip", import("zod").ZodTypeAny, {
                         fields: {
-                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
                             name: string;
-                            description: string | null;
                             href: string | null;
+                            type: "number" | "input" | "button" | "select" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            description: string | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }[];
                     }, {
                         fields: {
-                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
                             name: string;
-                            description: string | null;
                             href: string | null;
+                            type: "number" | "input" | "button" | "select" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            description: string | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }[];
                     }>, "rendered form to the user" | {
                         errors: string[];
                     }> & {
                         execute: (args: {
                             fields: {
-                                type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                                options: {
-                                    value: string;
-                                    label: string;
-                                }[] | null;
                                 name: string;
-                                description: string | null;
                                 href: string | null;
+                                type: "number" | "input" | "button" | "select" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                                 label: string;
-                                required: boolean | null;
-                                placeholder: string | null;
-                                initialValue: string | number | boolean | null;
-                                min: number | null;
                                 max: number | null;
+                                min: number | null;
+                                placeholder: string | null;
+                                required: boolean | null;
                                 step: number | null;
+                                description: string | null;
+                                options: {
+                                    label: string;
+                                    value: string;
+                                }[] | null;
+                                initialValue: string | number | boolean | null;
                             }[];
                         }, options: import("ai").ToolExecutionOptions) => PromiseLike<"rendered form to the user" | {
                             errors: string[];
@@ -768,7 +767,6 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         createUploadSignedUrl: {
             post: (request: {
-                branchId: string;
                 siteId: string;
                 files: {
                     slug: string;
@@ -791,8 +789,8 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         newChat: {
             post: (request: {
-                branchId: string;
                 orgId: string;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -806,9 +804,9 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         submitRateFeedback: {
             post: (request: {
+                url: string;
                 message: string;
                 branchId: string;
-                url: string;
                 opinion: "good" | "bad";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
@@ -823,13 +821,13 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         commitChangesToRepo: {
             post: (request: {
-                branchId: string;
                 filesInDraft: Record<string, {
-                    githubPath: string;
                     content: string;
+                    githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -844,14 +842,14 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         createPrSuggestionForChat: {
             post: (request: {
-                branchId: string;
                 chatId: string;
                 filesInDraft: Record<string, {
-                    githubPath: string;
                     content: string;
+                    githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -888,12 +886,12 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         createSiteFromFiles: {
             post: (request: {
+                orgId: string;
                 name: string;
                 files: {
-                    relativePath: string;
                     contents: string;
+                    relativePath: string;
                 }[];
-                orgId: string;
                 githubBranch?: string | undefined;
                 githubOwner?: string | undefined;
                 githubRepo?: string | undefined;

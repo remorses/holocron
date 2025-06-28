@@ -234,7 +234,7 @@ export const app = new Spiceflow({ basePath: '/api' })
         path: '/createUploadSignedUrl',
         request: z.object({
             siteId: z.string().min(1, 'siteId is required'),
-            branchId: z.string().min(1, 'branchId is required'),
+            // branchId: z.string().min(1, 'branchId is required'),
             files: z
                 .array(
                     z.object({
@@ -253,7 +253,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             const signedFiles = body.files.map((file) => {
                 const key = getKeyForMediaAsset({
                     siteId: body.siteId,
-                    branchId: body.branchId,
+                    // branchId: body.branchId,
                     slug: file.slug,
                 })
                 const signedUrl = s3.presign(key, {

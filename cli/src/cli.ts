@@ -18,6 +18,8 @@ import {
 import { randomInt } from 'crypto'
 import { homedir } from 'os'
 import prompts from 'prompts'
+import { lookup } from 'mime-types'
+import { Sema } from 'sema4'
 
 export const cli = cac('fumabase')
 
@@ -61,6 +63,28 @@ async function saveUserConfig(config: UserConfig): Promise<void> {
     await fs.promises.writeFile(configPath, JSON.stringify(config, null, 2))
 }
 
+// Media file extensions that should be uploaded
+const MEDIA_EXTENSIONS = [
+    'jpg',
+    'jpeg',
+    'png',
+    'gif',
+    'webp',
+    'svg',
+    'ico',
+    'mp4',
+    'webm',
+    'mov',
+    'avi',
+    'mp3',
+    'wav',
+    'ogg',
+    'pdf',
+    'doc',
+    'docx',
+    'zip',
+]
+
 async function findProjectFiles() {
     // Find files using globby
     const filePaths = await globby(
@@ -71,7 +95,16 @@ async function findProjectFiles() {
         },
     )
 
-    // Read file contents
+    // Find media files separately
+    const mediaFilePaths = await globby(
+        [`**/*.{${MEDIA_EXTENSIONS.join(',')}}`],
+        {
+            ignore: ['**/node_modules/**', '**/.git/**', '**/.cache/**'],
+            gitignore: true,
+        },
+    )
+
+    // Read file contents for text files
     const files = await Promise.all(
         filePaths.map(async (filePath) => {
             const content = await fs.promises.readFile(filePath, 'utf-8')
@@ -82,7 +115,83 @@ async function findProjectFiles() {
         }),
     )
 
-    return { filePaths, files }
+    return { filePaths, files, mediaFilePaths }
+}
+
+async function uploadMediaFiles(mediaFilePaths: string[], siteId: string) {
+    if (mediaFilePaths.length === 0) {
+        return []
+    }
+
+    console.log(`Uploading ${mediaFilePaths.length} media files...`)
+
+    // Prepare files for upload
+    const filesToUpload = mediaFilePaths.map((filePath) => ({
+        slug: filePath,
+        contentType: getContentType(filePath),
+    }))
+
+    // Get signed URLs for upload
+    const { data, error } = await apiClient.api.createUploadSignedUrl.post({
+        siteId,
+        files: filesToUpload,
+    })
+
+    if (error || !data?.success) {
+        console.error(
+            'Failed to get upload URLs:',
+            error?.message || 'Unknown error',
+        )
+        return []
+    }
+
+    // Create semaphore to limit concurrent uploads (max 5 concurrent uploads)
+    const sema = new Sema(5)
+
+    // Upload each file with concurrency limiting
+    const uploadPromises = data.files.map(async (fileInfo, index) => {
+        await sema.acquire()
+
+        try {
+            const filePath = mediaFilePaths[index]
+            const fileBuffer = await fs.promises.readFile(filePath)
+            const contentType = getContentType(filePath)
+
+            const response = await fetch(fileInfo.signedUrl, {
+                method: 'PUT',
+                body: fileBuffer,
+                headers: {
+                    'Content-Type': contentType,
+                },
+            })
+
+            if (!response.ok) {
+                console.error(
+                    `Failed to upload ${filePath}: ${response.statusText}`,
+                )
+                return null
+            }
+
+            console.log(`✓ Uploaded ${filePath}`)
+            return {
+                relativePath: filePath,
+                contents: '', // Empty contents for media files
+                uploadedUrl: fileInfo.finalUrl,
+            }
+        } finally {
+            sema.release()
+        }
+    })
+
+    const uploadResults = await Promise.all(uploadPromises)
+    const successfulUploads = uploadResults.filter(Boolean)
+
+    console.log(`Successfully uploaded ${successfulUploads.length} media files`)
+    return successfulUploads
+}
+
+function getContentType(filePath: string): string {
+    return lookup(filePath) || 'application/octet-stream'
 }
 
 function getGitHubInfo() {
@@ -289,7 +398,7 @@ cli.command('init', 'Initialize a new fumabase project')
             const gitBranch = await getCurrentGitBranch()
 
             // Find files using globby
-            let { filePaths, files } = await findProjectFiles()
+            let { filePaths, files, mediaFilePaths } = await findProjectFiles()
 
             // Check markdown files and handle different scenarios
             const markdownFiles = filePaths.filter(
@@ -343,17 +452,27 @@ cli.command('init', 'Initialize a new fumabase project')
                 const result = await findProjectFiles()
                 filePaths = result.filePaths
                 files = result.files
+                mediaFilePaths = result.mediaFilePaths
             }
 
             console.log(`Found ${filePaths.length} files`)
+            if (mediaFilePaths.length > 0) {
+                console.log(`Found ${mediaFilePaths.length} media files`)
+            }
 
             console.log('Creating site...')
 
-            // Call the API
+            // Call the API to create site first
             const { data, error } =
                 await apiClient.api.createSiteFromFiles.post({
                     name: siteName,
-                    files,
+                    files: [
+                        ...files,
+                        ...mediaFilePaths.map((path) => ({
+                            relativePath: path,
+                            contents: '',
+                        })),
+                    ],
                     orgId,
                     githubOwner: githubInfo?.githubOwner || '',
                     githubRepo: githubInfo?.githubRepo || '',
@@ -366,6 +485,11 @@ cli.command('init', 'Initialize a new fumabase project')
                     error?.message || 'Unknown error',
                 )
                 process.exit(1)
+            }
+
+            // Upload media files if any exist
+            if (mediaFilePaths.length > 0) {
+                await uploadMediaFiles(mediaFilePaths, data.siteId)
             }
 
             // Save fumabase.json locally
@@ -518,13 +642,18 @@ cli.command('dev', 'Preview your fumabase website')
             // Wait for initial scan to complete
             await new Promise<void>((resolve) => {
                 watcher.on('add', (filePath) => {
-                    if (
+                    const isTextFile =
                         filePath.endsWith('.mdx') ||
                         filePath.endsWith('.md') ||
                         filePath.endsWith('meta.json') ||
                         filePath.endsWith('fumabase.json') ||
                         filePath.endsWith('styles.css')
-                    ) {
+
+                    const isMediaFile = MEDIA_EXTENSIONS.some((ext) =>
+                        filePath.toLowerCase().endsWith(`.${ext}`),
+                    )
+
+                    if (isTextFile || isMediaFile) {
                         // console.log(filePath)
                         filePaths.push(filePath)
                     }
@@ -609,14 +738,20 @@ cli.command('dev', 'Preview your fumabase website')
                 await Promise.all(
                     filePaths.map(async (filePath) => {
                         const fullPath = path.resolve(dir, filePath)
-                        const content = await fs.promises.readFile(
-                            fullPath,
-                            'utf-8',
+
+                        // Check if it's a media file
+                        const isMediaFile = MEDIA_EXTENSIONS.some((ext) =>
+                            filePath.toLowerCase().endsWith(`.${ext}`),
                         )
+
+                        // For media files, use empty content (they're handled separately)
+                        const content = isMediaFile
+                            ? ''
+                            : await fs.promises.readFile(fullPath, 'utf-8')
 
                         const githubPath = path.posix.relative(
                             dir,
-                            filePath.replace(/\\/g, '/'),
+                            filePath.replace(/\\\\/g, '/'),
                         )
                         return [
                             githubPath,
@@ -662,10 +797,19 @@ cli.command('dev', 'Preview your fumabase website')
             // Watch for file changes and additions
             const handleFileUpdate = async (filePath: string) => {
                 const fullPath = path.resolve(dir, filePath)
-                const content = await fs.promises.readFile(fullPath, 'utf-8')
+
+                // Check if it's a media file
+                const isMediaFile = MEDIA_EXTENSIONS.some((ext) =>
+                    filePath.toLowerCase().endsWith(`.${ext}`),
+                )
+
+                // For media files, use empty content (they're handled separately)
+                const content = isMediaFile
+                    ? ''
+                    : await fs.promises.readFile(fullPath, 'utf-8')
                 const githubPath = path.posix.relative(
                     dir,
-                    filePath.replace(/\\/g, '/'),
+                    filePath.replace(/\\\\/g, '/'),
                 )
 
                 // Update the local filesInDraft

@@ -8,6 +8,8 @@ try to run commands inside the package folder that you are working on. for examp
 
 if you need to install packages always use pnpm
 
+instead of adding packages directly in package.json use `pnpm install package` inside the right workspace folder.
+
 # typescript
 
 - ALWAYS use normal imports instead of dynamic imports. Unless there is an issues with es module only packages and you are in a commonjs package (this is rare).
@@ -387,6 +389,6 @@ use lucide-react to import icons. always add the Icon import name, for example `
 
 ## cli folder
 
-the cli uses cac npm package. 
+the cli uses cac npm package.
 
 notice that if you add a route in the spiceflow server you will need to run `pnpm --filter website gen-client` to update the apiClient inside cli.
