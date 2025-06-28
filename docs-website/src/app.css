@@ -18,7 +18,7 @@ summary {
 
 :root {
     --color-fd-primary: hsl(220, 91%, 54%);
-    --fd-layout-width: 1600px;
+    --fd-layout-width: 1460px;
 }
 
 /* show added content as green in diff, improve for dark mode */
