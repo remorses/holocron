@@ -25,6 +25,7 @@ export async function loader({
             },
             include: {
                 org: true,
+                githubInstallations: true,
             },
         }),
         prisma.chat.findMany({

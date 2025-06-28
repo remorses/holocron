@@ -68,6 +68,7 @@ export async function loader({
                 branchId: true,
                 domains: true,
                 docsJson: true,
+                githubBranch: true,
             },
         }),
     ])

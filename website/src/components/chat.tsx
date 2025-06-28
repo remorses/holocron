@@ -50,6 +50,7 @@ import {
     X,
 } from 'lucide-react'
 import {
+    href,
     useLoaderData,
     useParams,
     useRevalidator,
@@ -497,12 +498,16 @@ function Footer() {
 
                             {showCreatePR && (
                                 <div className='justify-end flex grow'>
-                                    <PrButton
-                                        disabled={
-                                            !hasNonPushedChanges ||
-                                            !updatedLines
-                                        }
-                                    />
+                                    {siteData.site.githubInstallations?.length ? (
+                                        <PrButton
+                                            disabled={
+                                                !hasNonPushedChanges ||
+                                                !updatedLines
+                                            }
+                                        />
+                                    ) : (
+                                        <InstallGithubApp />
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -574,29 +579,50 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
 
     const revalidator = useRevalidator()
 
-    const isButtonDisabled =
-        disabled ||
-        !hasNonPushedChanges ||
-        isLoading ||
-        isChatGenerating ||
-        !!errorMessage
+    const isButtonDisabled: boolean = (() => {
+        if (isLoading) {
+            return true
+        }
+        if (isChatGenerating) {
+            return true
+        }
+        if (errorMessage) {
+            return true
+        }
+        if (disabled || !hasNonPushedChanges) {
+            return true
+        }
+        return false
+    })()
 
-    const getTooltipMessage = () => {
-        if (disabled || !hasNonPushedChanges)
+    const getTooltipMessage = (): string | null => {
+        if (disabled || !hasNonPushedChanges) {
             return 'No unsaved changes to create PR'
-        if (isChatGenerating) return 'Wait for chat to finish generating'
-        if (isLoading) return 'Creating PR...'
-        if (errorMessage) return 'Fix error before creating PR'
+        }
+        if (isChatGenerating) {
+            return 'Wait for chat to finish generating'
+        }
+        if (isLoading) {
+            return 'Creating PR...'
+        }
+        if (errorMessage) {
+            return 'Fix error before creating PR'
+        }
         return null
     }
 
-    const displayButtonText =
-        buttonText ||
-        (isLoading
-            ? 'loading...'
-            : chat.prNumber
-              ? `Push to PR #${chat.prNumber}`
-              : 'Create Github PR')
+    const displayButtonText: string = (() => {
+        if (buttonText) {
+            return buttonText
+        }
+        if (isLoading) {
+            return 'loading...'
+        }
+        if (chat.prNumber) {
+            return `Push to PR #${chat.prNumber}`
+        }
+        return 'Create Github PR'
+    })()
 
     const handleCreatePr = async () => {
         setIsLoading(true)
@@ -647,7 +673,7 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
                                     </div>
                                 </Button>
                             </TooltipTrigger>
-                            {isButtonDisabled && getTooltipMessage() && (
+                            {Boolean(isButtonDisabled && getTooltipMessage()) && (
                                 <TooltipContent>
                                     {getTooltipMessage()}
                                 </TooltipContent>
@@ -683,6 +709,41 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
                     </div>
                 </PopoverContent>
             </Popover>
+        </div>
+    )
+}
+
+function InstallGithubApp() {
+    const { orgId } = useParams()
+
+    const handleInstallGithub = () => {
+        const currentUrl = new URL(window.location.href)
+        currentUrl.searchParams.set('installGithubApp', 'true')
+        const setupUrl = href('/api/github/install')
+        const setupUrlWithNext = `${setupUrl}?next=${encodeURIComponent(currentUrl.toString())}`
+        window.location.href = setupUrlWithNext
+    }
+
+    return (
+        <div className='flex items-center gap-2'>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button
+                        variant='default'
+                        onClick={handleInstallGithub}
+                        size={'sm'}
+                        className='bg-purple-600 hover:bg-purple-700 text-white'
+                    >
+                        <div className='flex items-center gap-2'>
+                            <GitBranch className='size-4' />
+                            Connect GitHub
+                        </div>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    Connect GitHub to create PRs
+                </TooltipContent>
+            </Tooltip>
         </div>
     )
 }

@@ -146,39 +146,47 @@ export const app = new Spiceflow({ basePath: '/api' })
         method: 'POST',
         path: '/githubSync',
         request: z.object({
-            branchId: z.string().min(1, 'branchId is required'),
+            siteId: z.string().min(1, 'siteId is required'),
+            githubBranch: z.string().min(1, 'githubBranch is required'),
         }),
         async handler({ request, state: { userId } }) {
-            const { branchId } = await request.json()
+            const { siteId, githubBranch } = await request.json()
 
             if (!userId) {
-                throw new Error('Missing userId')
+                throw new AppError('Missing userId')
             }
-            const branch = await prisma.siteBranch.findFirst({
+
+            // Find site and check user access
+            const site = await prisma.site.findFirst({
                 where: {
-                    branchId,
-                    site: {
-                        org: {
-                            users: {
-                                some: { userId },
-                            },
+                    siteId,
+                    org: {
+                        users: {
+                            some: { userId },
                         },
                     },
                 },
                 include: {
-                    site: {
-                        include: {
-                            githubInstallations: true,
+                    githubInstallations: true,
+                    branches: {
+                        where: {
+                            githubBranch,
                         },
                     },
                 },
             })
 
-            if (!branch) {
-                throw new Error('Branch not found for this user')
+            if (!site) {
+                throw new AppError('Site not found or user has no access')
             }
-            const site = branch.site
-            const siteId = site.siteId
+
+            // Find the branch for this GitHub branch
+            const branch = site.branches[0]
+            if (!branch) {
+                throw new AppError(`Branch '${githubBranch}' not found for this site`)
+            }
+
+            const branchId = branch.branchId
             const orgId = site.orgId
             const name = site.name
             const installation = site.githubInstallations.find(
@@ -186,7 +194,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             )
             const installationId = installation?.installationId
             if (!installationId)
-                throw new Error(`no installationId found for site`)
+                throw new AppError(`no installationId found for site`)
             const pages = filesFromGithub({
                 installationId,
                 owner: site.githubOwner,
@@ -203,12 +211,11 @@ export const app = new Spiceflow({ basePath: '/api' })
                 trieveDatasetId: branch.trieveDatasetId || undefined,
                 pages,
             })
-            // Implement your sync logic here
-            // For now, just echo back the input
             return {
                 success: true,
                 siteId,
                 branchId,
+                githubBranch,
                 message: 'Sync route called successfully',
             }
         },

@@ -55,12 +55,13 @@ export default function NavBar() {
     const chatData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId.chat.$chatId',
     ) as ChatRoute.ComponentProps['loaderData'] | undefined
-    const branchId = chatData?.branchId
+    const githubBranch = chatData?.siteBranch?.githubBranch || siteData?.siteBranches?.[0]?.githubBranch || 'main'
     const { fn: sync, isLoading } = useThrowingFn({
         async fn() {
-            if (!branchId) return
+            if (!siteId || !githubBranch) return
             const { data, error } = await apiClient.api.githubSync.post({
-                branchId,
+                siteId,
+                githubBranch,
             })
             if (error) throw error
         },

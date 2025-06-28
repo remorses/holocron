@@ -680,3 +680,62 @@ cli.command('dev', 'Preview your fumabase website')
             throw error
         }
     })
+
+cli.command('sync', 'Sync current branch with GitHub')
+    .action(async () => {
+        try {
+            const config = getUserConfig()
+
+            // Get current git branch
+            const gitBranch = await getCurrentGitBranch()
+            if (!gitBranch) {
+                console.error('Error: Cannot determine current git branch')
+                console.error('Make sure you are in a git repository with a valid branch')
+                process.exit(1)
+            }
+
+            // Get GitHub info to validate this is a GitHub repo
+            const githubInfo = getGitHubInfo()
+            if (!githubInfo) {
+                console.error('Error: Cannot determine GitHub repository information')
+                console.error('Make sure you are in a GitHub repository with a valid remote origin')
+                process.exit(1)
+            }
+
+            // Read docs.json to get siteId
+            const docsJson = await readTopLevelDocsJson(process.cwd())
+            if (!docsJson?.siteId) {
+                console.error('Error: docs.json not found or missing siteId')
+                console.error('Run "fumabase init" to initialize this project')
+                process.exit(1)
+            }
+
+            const siteId = docsJson.siteId
+
+            console.log(`Syncing branch "${gitBranch}" for site ${siteId}...`)
+
+            // Call the sync API
+            const { data, error } = await apiClient.api.githubSync.post({
+                siteId,
+                githubBranch: gitBranch,
+            })
+
+            if (error) {
+                console.error('Sync failed:', error.message || 'Unknown error')
+                process.exit(1)
+            }
+
+            if (data?.success) {
+                console.log('✅ Sync completed successfully!')
+                console.log(`Site ID: ${data.siteId}`)
+                console.log(`Branch ID: ${data.branchId}`)
+                console.log(`GitHub Branch: ${data.githubBranch}`)
+            } else {
+                console.error('Sync failed: Invalid response from server')
+                process.exit(1)
+            }
+        } catch (error) {
+            console.error('Error during sync:', error.message || error)
+            process.exit(1)
+        }
+    })
