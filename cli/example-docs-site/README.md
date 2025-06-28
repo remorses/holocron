@@ -1,5 +1,13 @@
 # Fumabase Starter Kit
 
+test content
+
+does this work well???
+
+> a quote
+
+something interesting
+
 Click on `Use this template` to copy the Fumabase starter kit. The starter kit contains examples including
 
 - Guide pages

@@ -593,11 +593,11 @@ function PreviewBanner({ websocketId }: { websocketId?: string }) {
     }
 
     return (
-        <Banner className='sticky top-0 z-50 bg-orange-500 isolate text-white px-4 py-2 flex items-center justify-between mb-4'>
+        <Banner className='sticky top-0 z-50 bg-fd-muted text-fd-accent-foreground isolate px-4 py-1 flex items-center justify-between'>
             <div className='flex items-center gap-2'>
-                <div className='w-2 h-2 bg-white rounded-full animate-pulse'></div>
+                <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse'></div>
                 <span className='font-medium text-sm'>
-                    Connected to local preview
+                    Connected to local preview. Added content will be highlighted green
                 </span>
             </div>
             <button

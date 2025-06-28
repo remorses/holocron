@@ -31,13 +31,23 @@ type FilesInDraft = Record<
     }
 >
 
+type UserConfig = {
+    apiKey: string
+    userId: string
+    userEmail: string
+    orgs: Array<{
+        orgId: string
+        name?: string
+    }>
+}
+
 const url = process.env.SERVER_URL || 'https://fumabase.com'
 const configPath = path.join(homedir(), '.fumabase.json')
 
 // Check if running in TTY environment
 const isTTY = process.stdout.isTTY && process.stdin.isTTY
 
-function getUserConfig() {
+function getUserConfig(): UserConfig {
     try {
         const configData = fs.readFileSync(configPath, 'utf-8')
         return JSON.parse(configData)
@@ -51,11 +61,7 @@ async function findProjectFiles() {
     const filePaths = await globby(
         ['**/*.{md,mdx}', 'meta.json', 'styles.css'],
         {
-            ignore: [
-                '**/node_modules/**',
-                '**/.git/**',
-                '**/.cache/**',
-            ],
+            ignore: ['**/node_modules/**', '**/.git/**', '**/.cache/**'],
             gitignore: true,
         },
     )
@@ -63,10 +69,7 @@ async function findProjectFiles() {
     // Read file contents
     const files = await Promise.all(
         filePaths.map(async (filePath) => {
-            const content = await fs.promises.readFile(
-                filePath,
-                'utf-8',
-            )
+            const content = await fs.promises.readFile(filePath, 'utf-8')
             return {
                 relativePath: filePath,
                 contents: content,
@@ -111,8 +114,12 @@ async function determineTemplateDownload({
 
     if (markdownFileCount === 0) {
         if (!isInteractive) {
-            console.error('Error: No markdown files found in non-interactive environment')
-            console.error('Use --from-template to download starter template files')
+            console.error(
+                'Error: No markdown files found in non-interactive environment',
+            )
+            console.error(
+                'Use --from-template to download starter template files',
+            )
             console.error('Usage: fumabase init --from-template')
             process.exit(1)
         }
@@ -120,12 +127,15 @@ async function determineTemplateDownload({
         const response = await prompts({
             type: 'confirm',
             name: 'downloadTemplate',
-            message: 'No markdown files found. Do you want to download the starter template files in the current directory?',
+            message:
+                'No markdown files found. Do you want to download the starter template files in the current directory?',
             initial: true,
         })
 
         if (!response.downloadTemplate) {
-            console.log('Cannot initialize a fumabase project without markdown files.')
+            console.log(
+                'Cannot initialize a fumabase project without markdown files.',
+            )
             process.exit(1)
         }
 
@@ -134,8 +144,12 @@ async function determineTemplateDownload({
 
     if (markdownFileCount <= 1) {
         if (!isInteractive) {
-            console.error(`Error: Found ${markdownFileCount} markdown file(s), but at least 2 are required`)
-            console.error('Use --from-template to download starter template files, or add more markdown files')
+            console.error(
+                `Error: Found ${markdownFileCount} markdown file(s), but at least 2 are required`,
+            )
+            console.error(
+                'Use --from-template to download starter template files, or add more markdown files',
+            )
             console.error('Usage: fumabase init --from-template')
             process.exit(1)
         }
@@ -145,7 +159,10 @@ async function determineTemplateDownload({
             name: 'choice',
             message: `Found ${markdownFileCount} markdown file(s), but at least 2 are required. What would you like to do?`,
             choices: [
-                { title: 'Use existing markdown files for the website', value: 'continue' },
+                {
+                    title: 'Use existing markdown files for the website',
+                    value: 'continue',
+                },
                 { title: 'Download starter template files', value: 'template' },
             ],
         })
@@ -208,7 +225,9 @@ cli.command('init', 'Initialize a new fumabase project')
                 if (githubInfo?.name) {
                     siteName = githubInfo.name
                 } else if (!isTTY) {
-                    console.error('Error: --name is required in non-interactive environments')
+                    console.error(
+                        'Error: --name is required in non-interactive environments',
+                    )
                     console.error('Usage: fumabase init --name "My Site Name"')
                     process.exit(1)
                 } else {
@@ -231,10 +250,14 @@ cli.command('init', 'Initialize a new fumabase project')
             let orgId = options.org || config.orgs[0].orgId
             if (!options.org && config.orgs.length > 1) {
                 if (!isTTY) {
-                    console.error('Error: --org is required when multiple organizations are available in non-interactive environments')
+                    console.error(
+                        'Error: --org is required when multiple organizations are available in non-interactive environments',
+                    )
                     console.error('Available organizations:')
                     config.orgs.forEach((org) => {
-                        console.error(`  ${org.orgId} (${org.name || 'No name'})`)
+                        console.error(
+                            `  ${org.orgId} (${org.name || 'No name'})`,
+                        )
                     })
                     console.error('Usage: fumabase init --org <orgId>')
                     process.exit(1)
@@ -278,7 +301,8 @@ cli.command('init', 'Initialize a new fumabase project')
                 console.log('Downloading starter template...')
 
                 // Download starter template
-                const { data, error } = await apiClient.api.getStarterTemplate.get()
+                const { data, error } =
+                    await apiClient.api.getStarterTemplate.get()
                 if (error || !data?.success) {
                     console.error(
                         'Failed to download starter template:',
@@ -288,7 +312,9 @@ cli.command('init', 'Initialize a new fumabase project')
                 }
 
                 // Write starter template files to filesystem
-                console.log(`Writing ${data.files.length} starter template files...`)
+                console.log(
+                    `Writing ${data.files.length} starter template files...`,
+                )
                 for (const file of data.files) {
                     const filePath = file.relativePath
                     const dirPath = path.dirname(filePath)
@@ -299,7 +325,11 @@ cli.command('init', 'Initialize a new fumabase project')
                     }
 
                     // Write file
-                    await fs.promises.writeFile(filePath, file.contents, 'utf-8')
+                    await fs.promises.writeFile(
+                        filePath,
+                        file.contents,
+                        'utf-8',
+                    )
                 }
 
                 console.log('Starter template files written successfully!')
@@ -354,106 +384,110 @@ cli.command('init', 'Initialize a new fumabase project')
 cli.command('login', 'Login to fumabase')
     .option('--no-browser', 'Skip automatic browser opening')
     .action(async (options) => {
-    const cliSessionSecret = Array.from({ length: 6 }, () =>
-        randomInt(0, 10),
-    ).join('')
+        const cliSessionSecret = Array.from({ length: 6 }, () =>
+            randomInt(0, 10),
+        ).join('')
 
-    console.log('\nFumabase CLI Login')
-    console.log('═'.repeat(50))
+        console.log('\nFumabase CLI Login')
+        console.log('═'.repeat(50))
 
-    console.log('\nVerification Code:')
+        console.log('\nVerification Code:')
 
-    const formattedCode = cliSessionSecret.split('').join(' ')
-    const padding = 3
-    const contentWidth = formattedCode.length + padding * 2
+        const formattedCode = cliSessionSecret.split('').join(' ')
+        const padding = 3
+        const contentWidth = formattedCode.length + padding * 2
 
-    console.log(`\n    ╔${'═'.repeat(contentWidth)}╗`)
-    console.log(
-        `    ║${' '.repeat(padding)}${formattedCode}${' '.repeat(padding)}║`,
-    )
-    console.log(`    ╚${'═'.repeat(contentWidth)}╝`)
-    console.log('\nMake sure this code matches the one shown in your browser.')
-    console.log('═'.repeat(50))
+        console.log(`\n    ╔${'═'.repeat(contentWidth)}╗`)
+        console.log(
+            `    ║${' '.repeat(padding)}${formattedCode}${' '.repeat(padding)}║`,
+        )
+        console.log(`    ╚${'═'.repeat(contentWidth)}╝`)
+        console.log(
+            '\nMake sure this code matches the one shown in your browser.',
+        )
+        console.log('═'.repeat(50))
 
-    const loginUrl = new URL(`${url}/login`)
-    loginUrl.searchParams.set(
-        'callbackUrl',
-        `/after-cli-login?cliSessionSecret=${cliSessionSecret}`,
-    )
-    const fullUrl = loginUrl.toString()
+        const loginUrl = new URL(`${url}/login`)
+        loginUrl.searchParams.set(
+            'callbackUrl',
+            `/after-cli-login?cliSessionSecret=${cliSessionSecret}`,
+        )
+        const fullUrl = loginUrl.toString()
 
-    console.log(`\nReady to open: ${fullUrl}`)
+        console.log(`\nReady to open: ${fullUrl}`)
 
-    let shouldOpenBrowser = !options.noBrowser
+        let shouldOpenBrowser = !options.noBrowser
 
-    if (!options.noBrowser && !isTTY) {
-        console.log('\nNon-interactive environment detected.')
-        console.log('Please manually open the URL above in your browser to continue.')
-        shouldOpenBrowser = false
-    } else if (!options.noBrowser && isTTY) {
-        const response = await prompts({
-            type: 'confirm',
-            name: 'openBrowser',
-            message: 'Open browser to authorize CLI?',
-            initial: true,
-        })
-
-        if (!response.openBrowser) {
+        if (!options.noBrowser && !isTTY) {
+            console.log('\nNon-interactive environment detected.')
             console.log(
-                '\nLogin cancelled. You can manually open the URL above to continue.',
+                'Please manually open the URL above in your browser to continue.',
             )
-            process.exit(0)
-        }
-    }
-
-    if (shouldOpenBrowser) {
-        console.log('\nOpening browser...')
-        openUrlInBrowser(fullUrl)
-    }
-
-    console.log('\nWaiting for authorization...')
-
-    const maxAttempts = 60
-    let attempts = 0
-    let dots = 0
-
-    while (attempts < maxAttempts) {
-        try {
-            const { data, error } = await apiClient.api.getCliSession.post({
-                secret: cliSessionSecret,
+            shouldOpenBrowser = false
+        } else if (!options.noBrowser && isTTY) {
+            const response = await prompts({
+                type: 'confirm',
+                name: 'openBrowser',
+                message: 'Open browser to authorize CLI?',
+                initial: true,
             })
 
-            if (data?.apiKey) {
-                const config = {
-                    apiKey: data.apiKey,
-                    userId: data.userId,
-                    userEmail: data.userEmail,
-                    orgs: data.orgs || [],
-                }
-
-                await fs.promises.writeFile(
-                    configPath,
-                    JSON.stringify(config, null, 2),
+            if (!response.openBrowser) {
+                console.log(
+                    '\nLogin cancelled. You can manually open the URL above to continue.',
                 )
-                console.log('\nLogin successful!')
-                console.log(`API key saved to: ${configPath}`)
-                console.log(`Logged in as: ${data.userEmail}`)
-                console.log('\nYou can now use the Fumabase CLI!')
-                return
+                process.exit(0)
             }
-        } catch (error) {
-            // Continue polling
         }
 
-        dots++
+        if (shouldOpenBrowser) {
+            console.log('\nOpening browser...')
+            openUrlInBrowser(fullUrl)
+        }
 
-        await new Promise((resolve) => setTimeout(resolve, 2000))
-        attempts++
-    }
+        console.log('\nWaiting for authorization...')
 
-    console.error('\n\nLogin timeout. Please try again.')
-    process.exit(1)
-})
+        const maxAttempts = 60
+        let attempts = 0
+        let dots = 0
+
+        while (attempts < maxAttempts) {
+            try {
+                const { data, error } = await apiClient.api.getCliSession.post({
+                    secret: cliSessionSecret,
+                })
+
+                if (data?.apiKey) {
+                    const config: UserConfig = {
+                        apiKey: data.apiKey,
+                        userId: data.userId,
+                        userEmail: data.userEmail,
+                        orgs: data.orgs || [],
+                    }
+
+                    await fs.promises.writeFile(
+                        configPath,
+                        JSON.stringify(config, null, 2),
+                    )
+                    console.log('\nLogin successful!')
+                    console.log(`API key saved to: ${configPath}`)
+                    console.log(`Logged in as: ${data.userEmail}`)
+                    console.log('\nRun `fumabase init` to start a new project')
+                    return
+                }
+            } catch (error) {
+                // Continue polling
+            }
+
+            dots++
+
+            await new Promise((resolve) => setTimeout(resolve, 2000))
+            attempts++
+        }
+
+        console.error('\n\nLogin timeout. Please try again.')
+        process.exit(1)
+    })
 
 cli.command('dev', 'Preview your fumabase website')
     .option('--dir <dir>', 'Directory with the docs.json', {
@@ -542,7 +576,8 @@ cli.command('dev', 'Preview your fumabase website')
             const { websocketId, ws } = websocketRes
 
             const previewUrl = new URL(
-                previewDomain.includes('.localhost:')
+                previewDomain.includes('.localhost:') ||
+                previewDomain.endsWith('.localhost')
                     ? `http://${previewDomain}`
                     : `https://${previewDomain}`,
             )
