@@ -41,9 +41,14 @@ function TodoItem({
     )
 }
 
-function ColumnGroup({ children }: { children?: React.ReactNode }) {
+function Columns({ children, cols = 2 }: { children?: React.ReactNode; cols?: number }) {
     return (
-        <div className='flex flex-row flex-wrap gap-4 my-4'>{children}</div>
+        <div
+            className={`grid gap-4 my-4`}
+            style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        >
+            {children}
+        </div>
     )
 }
 
@@ -350,7 +355,7 @@ export const mdxComponents = {
     details: 'details',
     Math,
     // TodoItem,
-    ColumnGroup,
+    Columns,
     Column,
     ...TabsComponents,
     ...FilesComponents,
