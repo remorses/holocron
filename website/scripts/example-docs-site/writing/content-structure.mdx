@@ -1,0 +1,196 @@
+---
+title: 'Content Structure That Works'
+description: 'Learn how to organize documentation that guides users to success with clear hierarchy and logical flow.'
+---
+
+# Content Structure That Works
+
+Great documentation isn't just about having the right information—it's about organizing that information so users can find and understand it quickly.
+
+## Start with User Intent
+
+Before writing a single word, understand what your users are trying to accomplish. Are they trying to solve a problem, learn a concept, or complete a task?
+
+<Tip>
+Always lead with the outcome. Tell users what they'll achieve before explaining how to do it.
+</Tip>
+
+### The Inverted Pyramid Approach
+
+Structure your content like a news article—most important information first, supporting details after.
+
+<Steps>
+<Step title="Lead with the outcome">
+    Start each section by describing what the user will accomplish or learn.
+
+    ```markdown
+    # Setting Up Authentication
+    
+    By the end of this guide, you'll have secure API authentication 
+    working in your application with proper error handling.
+    ```
+</Step>
+
+<Step title="Provide essential context">
+    Give users the background they need to understand the instructions.
+
+    <Note>
+    Include prerequisites, assumptions, and any important warnings upfront.
+    </Note>
+</Step>
+
+<Step title="Detail the implementation">
+    Break down the actual steps, code examples, and configuration details.
+</Step>
+</Steps>
+
+## Progressive Information Disclosure
+
+Reveal complexity gradually. Start with the simplest case that works, then build up to more sophisticated scenarios.
+
+<Tabs>
+<Tab title="Basic Example">
+```javascript
+// Start with the minimal working example
+const response = await fetch('/api/users');
+const users = await response.json();
+```
+</Tab>
+
+<Tab title="With Error Handling">
+```javascript
+// Then show error handling
+try {
+    const response = await fetch('/api/users');
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const users = await response.json();
+} catch (error) {
+    console.error('Failed to fetch users:', error);
+}
+```
+</Tab>
+
+<Tab title="Production Ready">
+```javascript
+// Finally, show production-ready implementation
+const fetchUsers = async (options = {}) => {
+    const { timeout = 5000, retries = 3 } = options;
+    
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            
+            const response = await fetch('/api/users', {
+                signal: controller.signal,
+                headers: {
+                    'Authorization': `Bearer ${getToken()}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            if (attempt === retries) throw error;
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
+    }
+};
+```
+</Tab>
+</Tabs>
+
+## Scannable Content Design
+
+Most users scan before they read. Design your content to support this behavior.
+
+### Effective Heading Hierarchy
+
+Use headings to create a clear content outline:
+
+```markdown
+# Main Topic (H1)
+## Primary Sections (H2)
+### Subsections (H3)
+#### Details (H4 - use sparingly)
+```
+
+<Warning>
+Never skip heading levels. Going from H2 to H4 breaks screen readers and confuses users.
+</Warning>
+
+### Strategic Use of Lists
+
+Break up dense text with lists when you have:
+- Multiple related items
+- Sequential steps
+- Options or alternatives
+- Key points to emphasize
+
+<AccordionGroup>
+<Accordion title="When to use numbered lists">
+Use numbered lists for:
+- Sequential procedures
+- Ranked items
+- References to specific steps
+</Accordion>
+
+<Accordion title="When to use bullet points">
+Use bullet points for:
+- Related but unordered items
+- Feature lists
+- Benefits or advantages
+- Non-sequential information
+</Accordion>
+</AccordionGroup>
+
+## Context and Prerequisites
+
+Never assume users have the same context you do. Explicitly state what they need to know or have ready.
+
+<CodeGroup>
+```markdown Good Example
+# Installing the CLI Tool
+
+**Prerequisites:**
+- Node.js 18 or higher
+- npm or yarn package manager
+- Basic familiarity with command line
+
+**What you'll need:**
+- API key from your dashboard
+- 10 minutes to complete setup
+```
+
+```markdown Poor Example
+# Installing the CLI Tool
+
+Just run the install command and configure your API key.
+```
+</CodeGroup>
+
+## Next Steps Navigation
+
+End each section by guiding users to their next logical action.
+
+<CardGroup cols={2}>
+<Card title="Quick Start Guide" icon="rocket" href="/quickstart">
+Ready to implement? Follow our step-by-step setup guide.
+</Card>
+
+<Card title="Advanced Configuration" icon="cog" href="/config">
+Need custom behavior? Explore advanced configuration options.
+</Card>
+</CardGroup>
+
+<Info>
+Good content structure makes documentation feel effortless to navigate, even for complex topics.
+</Info>

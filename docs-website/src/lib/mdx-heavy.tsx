@@ -1,4 +1,6 @@
 import remarkFrontmatter from 'remark-frontmatter'
+import { remarkInstall } from 'fumadocs-docgen';
+
 
 import YAML from 'js-yaml'
 import { RenderNode,  } from 'safe-mdx'
@@ -190,6 +192,7 @@ export const getProcessor = function getProcessor({
                 // .use(mdxPluginsFumadocs.remarkImage)
                 .use(remarkSteps)
                 .use(remarkStructure)
+                .use(remarkInstall)
                 .use(remarkMarkAndUnravel)
                 .use(remarkCodeToHtml({ highlighter, onMissingLanguage }))
                 .use(remarkExtractFirstHeading)
@@ -208,6 +211,7 @@ export const getProcessor = function getProcessor({
                 // .use(mdxPluginsFumadocs.remarkImage)
                 .use(remarkSteps)
                 .use(remarkStructure)
+                .use(remarkInstall)
                 // .use(remarkMarkAndUnravel)
                 .use(remarkCodeToHtml({ highlighter, onMissingLanguage }))
                 .use(remarkExtractFirstHeading)

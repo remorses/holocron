@@ -1,0 +1,332 @@
+---
+title: 'Writing Accessible Documentation'
+description: 'Create documentation that works for everyone by following accessibility principles and inclusive design practices.'
+---
+
+# Writing Accessible Documentation
+
+Accessible documentation isn't just about compliance—it creates better experiences for all users by prioritizing clarity, structure, and multiple ways to consume information.
+
+## Clear Language and Structure
+
+Accessible writing starts with clear, direct language that reduces cognitive load for all readers.
+
+### Write for Clarity
+
+Use simple, direct language that communicates efficiently:
+
+<CodeGroup>
+```markdown ❌ Complex Language
+Subsequently, in order to implement the aforementioned functionality, 
+it is necessary to instantiate the configuration object with the 
+appropriate parameters as delineated in the following example.
+```
+
+```markdown ✅ Clear Language
+Next, create a configuration object with these settings:
+```
+</CodeGroup>
+
+### Meaningful Headings
+
+Write headings that describe content accurately and help users navigate efficiently:
+
+<Tabs>
+<Tab title="Poor Headings">
+```markdown
+# Introduction
+## Getting Started  
+## More Information
+## Advanced Stuff
+```
+</Tab>
+
+<Tab title="Descriptive Headings">
+```markdown
+# User Authentication Setup
+## Installing the Authentication SDK
+## Configuring Your First Login Flow  
+## Handling Authentication Errors
+## Multi-Factor Authentication Options
+```
+</Tab>
+</Tabs>
+
+<Tip>
+**Screen Reader Test:** Read only your headings aloud. Can someone understand your document structure and find what they need?
+</Tip>
+
+## Alternative Text and Media
+
+Provide meaningful descriptions for all visual content so information isn't lost for users who can't see images.
+
+### Effective Alt Text
+
+Write alt text that conveys the same information the image provides:
+
+<Frame>
+<img src="/images/api-response-structure.png" alt="JSON response object showing nested user data with id, email, profile object containing name and avatar_url fields, and timestamps array" />
+</Frame>
+
+<Steps>
+<Step title="Describe the purpose, not appearance">
+    Focus on what information the image conveys, not how it looks.
+
+    ```markdown
+    ❌ "Screenshot of a dashboard"
+    ✅ "Dashboard showing 3 active integrations, 1,247 API calls today, 
+        and 99.8% uptime status"
+    ```
+</Step>
+
+<Step title="Include relevant text content">
+    If the image contains important text, include it in the alt text.
+
+    ```markdown
+    ❌ "Error message dialog box"
+    ✅ "Error dialog stating 'Invalid API key. Please check your 
+        configuration and try again.' with a retry button"
+    ```
+</Step>
+
+<Step title="Provide context for complex visuals">
+    For diagrams and charts, describe the key relationships and data.
+
+    <Frame caption="API request flow showing authentication, validation, and response steps">
+    <img src="/images/api-flow-diagram.png" alt="Flow diagram showing: 1) Client sends request with API key, 2) Server validates key against database, 3) If valid, processes request and returns data, 4) If invalid, returns 401 error with helpful message" />
+    </Frame>
+</Step>
+</Steps>
+
+### Video and Interactive Content
+
+Provide text alternatives for multimedia content:
+
+<AccordionGroup>
+<Accordion title="Video transcripts">
+Include complete transcripts for instructional videos:
+
+```markdown
+## Video: Setting Up Webhooks (3:42)
+
+[Full transcript available]
+
+**0:00 - 0:15** Introduction: "In this video, we'll configure webhooks 
+to receive real-time notifications when events occur in your application."
+
+**0:16 - 0:45** Navigate to dashboard: "First, log into your dashboard 
+and click the 'Webhooks' tab in the sidebar. You'll see a list of 
+existing webhooks or an empty state if this is your first time."
+
+**0:46 - 1:20** Creating a webhook: "Click 'Add Webhook' and enter your 
+endpoint URL. This should be a publicly accessible HTTPS URL that can 
+receive POST requests..."
+```
+</Accordion>
+
+<Accordion title="Interactive demonstrations">
+Provide step-by-step text instructions alongside interactive demos:
+
+```markdown
+## Interactive Demo: API Testing
+
+Try our live API explorer below, or follow these equivalent steps:
+
+1. **Set your API key:** Enter your test key in the authorization field
+2. **Choose an endpoint:** Select 'GET /users' from the dropdown
+3. **Add parameters:** Set limit=10 for the first 10 users
+4. **Send request:** Click 'Execute' to see the live response
+5. **Review response:** Examine the returned JSON structure
+
+[Interactive API Explorer Component]
+```
+</Accordion>
+</AccordionGroup>
+
+## Logical Content Structure
+
+Organize information in a predictable hierarchy that assistive technologies can navigate effectively.
+
+### Consistent Navigation Patterns
+
+Use consistent patterns throughout your documentation:
+
+<CardGroup cols={2}>
+<Card title="Page Structure" icon="layout">
+- Page title (H1)
+- Introduction paragraph
+- Main sections (H2)
+- Subsections (H3)
+- Code examples
+- Next steps
+</Card>
+
+<Card title="Section Patterns" icon="list">
+- Descriptive heading
+- Brief overview
+- Step-by-step instructions
+- Code example
+- Expected outcome
+- Troubleshooting
+</Card>
+</CardGroup>
+
+### Skip Links and Landmarks
+
+Help users navigate efficiently through content:
+
+<Info>
+**Navigation Strategy:** Users with screen readers often navigate by headings, landmarks, or links. Ensure your content structure supports these navigation methods.
+</Info>
+
+## Color and Visual Accessibility
+
+Don't rely solely on color to convey important information.
+
+### Color-Independent Information Design
+
+Use multiple visual cues to communicate status and importance:
+
+<CodeGroup>
+```markdown ❌ Color-Only Indicators
+❌ Red text: "Error occurred"
+🟡 Yellow text: "Warning message"  
+✅ Green text: "Success"
+```
+
+```markdown ✅ Multiple Visual Cues
+❌ **Error:** Invalid API key provided
+⚠️ **Warning:** Rate limit approaching (80% used)
+✅ **Success:** Configuration saved successfully
+```
+</CodeGroup>
+
+### High Contrast Content
+
+Ensure sufficient contrast between text and backgrounds:
+
+<Warning>
+**Contrast Requirements:** Text should have at least a 4.5:1 contrast ratio against its background. Large text (18pt+) needs at least 3:1 contrast.
+</Warning>
+
+## Keyboard Navigation Support
+
+Ensure all interactive elements work with keyboard navigation:
+
+### Focus Management
+
+Design content flow that makes sense when navigating with keyboard:
+
+<Steps>
+<Step title="Logical tab order">
+    Interactive elements should follow reading order (left-to-right, top-to-bottom).
+
+    ```markdown
+    ## API Key Configuration
+    
+    1. [Input field: API Key]
+    2. [Button: Test Connection]  
+    3. [Button: Save Configuration]
+    4. [Link: Advanced Settings]
+    ```
+</Step>
+
+<Step title="Clear focus indicators">
+    Users should always know which element has focus.
+
+    <Note>
+    **Focus Indicators:** Ensure buttons, links, and form fields have visible focus states that are clearly distinguishable.
+    </Note>
+</Step>
+
+<Step title="Skip links for efficiency">
+    Provide ways to skip repetitive content.
+
+    ```html
+    <a href="#main-content" class="skip-link">
+        Skip to main content
+    </a>
+    ```
+</Step>
+</Steps>
+
+## Testing Your Content
+
+Regularly test your documentation with accessibility tools and real users:
+
+<Tabs>
+<Tab title="Automated Testing">
+```bash
+# Test with accessibility scanners
+npm install -g @axe-core/cli
+axe-cli https://your-docs-site.com
+
+# Check color contrast
+npm install -g colour-contrast-checker
+contrast-checker "#333333" "#ffffff"
+```
+</Tab>
+
+<Tab title="Manual Testing">
+**Keyboard Navigation Test:**
+1. Unplug your mouse
+2. Navigate your entire documentation using only keyboard
+3. Can you access all information and functionality?
+
+**Screen Reader Test:**
+1. Enable your OS screen reader (VoiceOver on Mac, NVDA on Windows)
+2. Navigate through your content
+3. Is all information available audibly?
+</Tab>
+
+<Tab title="User Testing">
+**Include Diverse Users:**
+- Users with visual impairments
+- Users with motor disabilities  
+- Users with cognitive differences
+- Users with limited technical experience
+
+**Ask Specific Questions:**
+- Can you find how to authenticate API requests?
+- What steps would you take if you got an error?
+- Is any information unclear or confusing?
+</Tab>
+</Tabs>
+
+## Error Messages and Help Text
+
+Write error messages and help text that are clear and actionable:
+
+<AccordionGroup>
+<Accordion title="Specific error descriptions">
+```javascript
+❌ "Authentication failed"
+✅ "Authentication failed: API key is missing or invalid. 
+    Check that you've included the Authorization header 
+    with format 'Bearer your-api-key'"
+```
+</Accordion>
+
+<Accordion title="Recovery instructions">
+```javascript
+❌ "Network error occurred"
+✅ "Network error: Unable to connect to API server. 
+    Check your internet connection and try again. 
+    If the problem persists, check our status page 
+    at status.example.com"
+```
+</Accordion>
+
+<Accordion title="Helpful context">
+```javascript
+❌ "Invalid format"
+✅ "Invalid email format: Please enter a valid email address 
+    like 'user@example.com'. Special characters are allowed 
+    in the local part (before @)."
+```
+</Accordion>
+</AccordionGroup>
+
+<Check>
+Accessible documentation creates better experiences for everyone—users with disabilities, non-native speakers, people in low-bandwidth environments, and anyone trying to quickly find information.
+</Check>

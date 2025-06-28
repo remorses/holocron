@@ -218,28 +218,6 @@ function CodeGroup({ children }: { children: React.ReactNode }) {
     return <TabsComponents.Tabs>{children}</TabsComponents.Tabs>
 }
 
-// Frame component with caption support
-function Frame({
-    caption,
-    children,
-}: {
-    caption?: string
-    children: React.ReactNode
-}) {
-    return (
-        <div className='my-4'>
-            <div className='border border-border rounded-lg p-4'>
-                {children}
-            </div>
-            {caption && (
-                <div className='text-center text-sm text-muted-foreground mt-2'>
-                    {caption}
-                </div>
-            )}
-        </div>
-    )
-}
-
 // API documentation components
 function ParamField({
     path,
@@ -374,6 +352,36 @@ function ResponseField({
             {children && (
                 <div className='text-sm text-muted-foreground'>{children}</div>
             )}
+        </div>
+    )
+}
+
+function Frame({
+    caption,
+    children,
+    style,
+}: {
+    caption?: React.ReactNode
+    children: React.ReactNode
+    style?: React.CSSProperties
+}) {
+    return (
+        <div
+            data-name='frame'
+            className={clsx(
+                'frame p-2 not-prose relative bg-gray-50/50 rounded-2xl overflow-hidden dark:bg-gray-800/25',
+            )}
+            style={style}
+        >
+            <div className='relative rounded-xl overflow-hidden flex justify-center'>
+                {children}
+            </div>
+            {caption && (
+                <div className='relative rounded-2xl flex justify-center mt-3 pt-0 px-8 pb-2 text-sm text-gray-700 dark:text-gray-400'>
+                    {typeof caption === 'string' ? <p>{caption}</p> : caption}
+                </div>
+            )}
+            <div className='absolute inset-0 pointer-events-none border border-black/5 rounded-2xl dark:border-white/5'></div>
         </div>
     )
 }
