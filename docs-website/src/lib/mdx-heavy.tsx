@@ -1,9 +1,10 @@
 import remarkFrontmatter from 'remark-frontmatter'
-import { remarkInstall } from 'fumadocs-docgen';
+import remarkStringify from 'remark-stringify'
 
+import { remarkInstall } from 'fumadocs-docgen'
 
 import YAML from 'js-yaml'
-import { RenderNode,  } from 'safe-mdx'
+import { RenderNode } from 'safe-mdx'
 import { remarkMarkAndUnravel } from 'safe-mdx/parse'
 
 import {
@@ -179,7 +180,27 @@ export const getProcessor = function getProcessor({
     highlighter: Highlighter
     onMissingLanguage: OnMissingLanguage
 }) {
-    if (typeof extension === 'string' && extension.endsWith('mdx')) {
+    console.log({ extension })
+    if (typeof extension === 'string' && extension.endsWith('md')) {
+        return (
+            remark()
+                // .use(remarkMdx)
+                .use(remarkFrontmatter, ['yaml'])
+                .use(remarkGfm)
+                // .use(remarkGitHubBlockquotes) // TODO remarkGitHubBlockquotes cannot be stringified later because the mdx ast nodes are not valid md
+                .use(remarkAdmonition)
+                .use(remarkCodeTab)
+                .use(remarkHeading)
+                // .use(mdxPluginsFumadocs.remarkImage)
+                .use(remarkStructure)
+                .use(remarkInstall)
+                // .use(remarkMarkAndUnravel)
+                .use(remarkCodeToHtml({ highlighter, onMissingLanguage }))
+                .use(remarkExtractFirstHeading)
+                .use(injectData)
+                .use(remarkStringify)
+        )
+    } else {
         return (
             remark()
                 .use(remarkMdx)
@@ -197,25 +218,7 @@ export const getProcessor = function getProcessor({
                 .use(remarkCodeToHtml({ highlighter, onMissingLanguage }))
                 .use(remarkExtractFirstHeading)
                 .use(injectData)
-        )
-    } else {
-        return (
-            remark()
-                // .use(remarkMdx)
-                .use(remarkFrontmatter, ['yaml'])
-                .use(remarkGfm)
-                // .use(remarkGitHubBlockquotes) // TODO remarkGitHubBlockquotes cannot be stringified later because the mdx ast nodes are not valid md
-                .use(remarkAdmonition)
-                .use(remarkCodeTab)
-                .use(remarkHeading)
-                // .use(mdxPluginsFumadocs.remarkImage)
-                .use(remarkSteps)
-                .use(remarkStructure)
-                .use(remarkInstall)
-                // .use(remarkMarkAndUnravel)
-                .use(remarkCodeToHtml({ highlighter, onMissingLanguage }))
-                .use(remarkExtractFirstHeading)
-                .use(injectData)
+                .use(remarkStringify)
         )
     }
 }

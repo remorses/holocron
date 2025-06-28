@@ -31,6 +31,7 @@ export async function* pagesFromDirectory(
 
         const { data } = await processMdxInServer({
             markdown: fileContent,
+            githubPath: entryRelativePath,
             extension: entry.name.split('.').pop() === 'mdx' ? 'mdx' : 'md',
         })
         const page = {
@@ -42,7 +43,10 @@ export async function* pagesFromDirectory(
                 frontmatter: data.frontmatter,
                 githubPath: entryRelativePath,
                 githubSha: '',
-                extension: entry.name.split('.').pop() === 'mdx' ? 'mdx' as const : 'md' as const,
+                extension:
+                    entry.name.split('.').pop() === 'mdx'
+                        ? ('mdx' as const)
+                        : ('md' as const),
                 description: data.description || undefined,
                 structuredData: data.structuredData as any,
             },

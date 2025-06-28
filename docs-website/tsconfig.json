@@ -23,6 +23,7 @@
         "noEmit": true,
         "noImplicitAny": false,
         "resolveJsonModule": true,
+        "useUnknownInCatchVariables": false,
         "skipLibCheck": true,
         "strict": true
     }

@@ -11,7 +11,7 @@ import { describe, expect, test } from 'vitest'
 import { markAddedNodes } from './diff'
 
 async function parseWithPositions(markdown: string) {
-    const res = await processMdxInServer({ markdown, extension: 'mdx' })
+    const res = await processMdxInServer({ markdown, githubPath: '', extension: 'mdx' })
     return res.data?.ast
 }
 
@@ -20,8 +20,6 @@ function diffMarkdowns(oldMarkdown, newMarkdown, ast) {
     const diffs: Change[] = diffWordsWithSpace(oldMarkdown, newMarkdown)
     return markAddedNodes(diffs, ast)
 }
-
-
 
 // Helper to extract relevant test data from AST
 async function extractTestData(ast: Root) {
@@ -534,12 +532,14 @@ const new = "code"
 
     test('detects added code blocks', async () => {
         const old = await parseWithPositions('# Hello\n\nSome text.')
-        const new_ = await parseWithPositions('# Hello\n\nSome text.\n\n```js\nconsole.log("added")\n```')
+        const new_ = await parseWithPositions(
+            '# Hello\n\nSome text.\n\n```js\nconsole.log("added")\n```',
+        )
 
         diffMarkdowns(
             '# Hello\n\nSome text.',
             '# Hello\n\nSome text.\n\n```js\nconsole.log("added")\n```',
-            new_
+            new_,
         )
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`

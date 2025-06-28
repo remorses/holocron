@@ -23,6 +23,7 @@
     "dependencies": {
         "cac": "^6.7.14",
         "chokidar": "^4.0.3",
+        "cli-table3": "^0.6.5",
         "globby": "^14.1.0",
         "mime-types": "^2.1.35",
         "prompts": "^2.4.2",
@@ -32,9 +33,9 @@
     },
     "devDependencies": {
         "@types/mime-types": "^2.1.4",
-        "docs-website": "file:../docs-website",
-        "website": "file:../website",
         "@types/prompts": "^2.4.9",
-        "@types/ws": "^8.18.1"
+        "@types/ws": "^8.18.1",
+        "docs-website": "file:../docs-website",
+        "website": "file:../website"
     }
 }

@@ -41,8 +41,14 @@ const app = new Spiceflow({ basePath: '/api/github' })
         path: '/webhooks-worker',
         request: webhookWorkerRequestSchema,
         async handler({ request }) {
-            const { secret, installationId, owner, repoName, githubBranch, commits } =
-                await request.json()
+            const {
+                secret,
+                installationId,
+                owner,
+                repoName,
+                githubBranch,
+                commits,
+            } = await request.json()
 
             if (secret !== env.SECRET) {
                 throw new Error('Invalid secret')
@@ -77,9 +83,7 @@ const app = new Spiceflow({ basePath: '/api/github' })
 
 type WebhookWorkerRequest = z.infer<typeof webhookWorkerRequestSchema>
 
-async function updatePagesFromCommits(
-    args: WebhookWorkerRequest,
-) {
+async function updatePagesFromCommits(args: WebhookWorkerRequest) {
     const { installationId, owner, repoName, githubBranch, commits } = args
     let siteBranch = await prisma.siteBranch.findFirst({
         where: {
@@ -100,13 +104,17 @@ async function updatePagesFromCommits(
     })
 
     if (!siteBranch) {
-        logger.log(`No branch found for ${githubBranch} in ${owner}/${repoName}`)
+        logger.log(
+            `No branch found for ${githubBranch} in ${owner}/${repoName}`,
+        )
 
         // Check if there's a fumabase.json in the commits with a new domain
         const newBranch = await tryCreateBranchFromDocsJson(args)
 
         if (!newBranch) {
-            logger.log(`No fumabase.json with available domain found for ${githubBranch}`)
+            logger.log(
+                `No fumabase.json with available domain found for ${githubBranch}`,
+            )
             return
         }
 
@@ -114,7 +122,11 @@ async function updatePagesFromCommits(
     }
 
     // Handle deletions first
-    await handleDeletions({ site: siteBranch.site, commits, branchId: siteBranch.branchId })
+    await handleDeletions({
+        site: siteBranch.site,
+        commits,
+        branchId: siteBranch.branchId,
+    })
 
     // Process non-deleted files using syncFiles
     const changedFiles = filesFromWebhookCommits({
@@ -227,6 +239,7 @@ async function* filesFromWebhookCommits({
 
                 const { data: processedData } = await processMdxInServer({
                     markdown: content,
+                    githubPath: filePath,
                     extension,
                 })
 
@@ -383,9 +396,7 @@ async function handleDeletions({
     }
 }
 
-async function tryCreateBranchFromDocsJson(
-    args: WebhookWorkerRequest,
-) {
+async function tryCreateBranchFromDocsJson(args: WebhookWorkerRequest) {
     const { installationId, owner, repoName, githubBranch, commits } = args
     const octokit = await getOctokit({ installationId })
 
@@ -424,8 +435,14 @@ async function tryCreateBranchFromDocsJson(
         const docsJson: DocsJsonType = safeJsonParse(content, {})
 
         // Check if fumabase.json has domains field with at least one domain
-        if (!docsJson.domains || !Array.isArray(docsJson.domains) || docsJson.domains.length === 0) {
-            logger.log(`fumabase.json found but no valid domains field in ${githubBranch}`)
+        if (
+            !docsJson.domains ||
+            !Array.isArray(docsJson.domains) ||
+            docsJson.domains.length === 0
+        ) {
+            logger.log(
+                `fumabase.json found but no valid domains field in ${githubBranch}`,
+            )
             return null
         }
 
@@ -434,21 +451,27 @@ async function tryCreateBranchFromDocsJson(
         const existingDomains = await prisma.domain.findMany({
             where: {
                 host: {
-                    in: domains
-                }
+                    in: domains,
+                },
             },
         })
 
-        const takenDomains = existingDomains.map(d => d.host)
-        const availableDomains = domains.filter(domain => !takenDomains.includes(domain))
+        const takenDomains = existingDomains.map((d) => d.host)
+        const availableDomains = domains.filter(
+            (domain) => !takenDomains.includes(domain),
+        )
 
         if (availableDomains.length === 0) {
-            logger.log(`All domains ${domains.join(', ')} are already taken, cannot create branch ${githubBranch}`)
+            logger.log(
+                `All domains ${domains.join(', ')} are already taken, cannot create branch ${githubBranch}`,
+            )
             return null
         }
 
         if (takenDomains.length > 0) {
-            logger.log(`Domains ${takenDomains.join(', ')} are already taken, creating branch ${githubBranch} with available domains: ${availableDomains.join(', ')}`)
+            logger.log(
+                `Domains ${takenDomains.join(', ')} are already taken, creating branch ${githubBranch} with available domains: ${availableDomains.join(', ')}`,
+            )
         }
 
         // Find the site for this repo
@@ -489,9 +512,10 @@ async function tryCreateBranchFromDocsJson(
             },
         })
 
-        logger.log(`Created new branch ${githubBranch} with available domains ${availableDomains.join(', ')}`)
+        logger.log(
+            `Created new branch ${githubBranch} with available domains ${availableDomains.join(', ')}`,
+        )
         return newBranch
-
     } catch (error) {
         logger.error(`Error creating branch from fumabase.json:`, error)
         return null

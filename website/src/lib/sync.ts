@@ -1,13 +1,21 @@
+import { createHash } from 'crypto'
+import { MarkdownExtension, Prisma, prisma } from 'db'
 import { Sema } from 'sema4'
 import { request } from 'undici'
-import { findMatchInPaths } from 'docs-website/src/lib/html.server'
-import { MarkdownExtension, Prisma, prisma } from 'db'
-import { createHash } from 'crypto'
 
-import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
+import { DomainType } from 'db/src/generated/enums'
+import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { DocumentRecord, StructuredData } from 'docs-website/src/lib/mdx-heavy'
+import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
+import {
+    getCacheTagForMediaAsset,
+    getKeyForMediaAsset,
+    s3,
+} from 'docs-website/src/lib/s3'
+import { generateSlugFromPath } from 'docs-website/src/lib/utils'
 import path from 'path'
 import { ChunkReqPayload, TrieveSDK } from 'trieve-ts-sdk'
+import { cloudflareClient } from './cloudflare'
 import { env } from './env'
 import { notifyError } from './errors'
 import {
@@ -17,16 +25,7 @@ import {
     getRepoFiles,
     isMarkdown,
 } from './github.server'
-import { yieldTasksInParallel, mdxRegex } from './utils'
-import { generateSlugFromPath, isAbsoluteUrl } from 'docs-website/src/lib/utils'
-import {
-    getCacheTagForMediaAsset,
-    getKeyForMediaAsset,
-    s3,
-} from 'docs-website/src/lib/s3'
-import { cloudflareClient } from './cloudflare'
-import { DocsJsonType } from 'docs-website/src/lib/docs-json'
-import { DomainType } from 'db/src/generated/enums'
+import { mdxRegex, yieldTasksInParallel } from './utils'
 
 export function gitBlobSha(
     content: string | Buffer,
@@ -241,6 +240,7 @@ export async function* pagesFromFilesList({
 
         const { data } = await processMdxInServer({
             markdown: file.contents,
+            githubPath: file.relativePath,
             extension,
         })
 
@@ -868,7 +868,7 @@ export async function* filesFromGithub({
         slugsFound.add(slug)
         const { data } = await processMdxInServer({
             markdown: x.content,
-
+            githubPath: x.githubPath,
             extension,
         })
 

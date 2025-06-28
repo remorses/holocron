@@ -20,6 +20,7 @@ import { homedir } from 'os'
 import prompts from 'prompts'
 import { lookup } from 'mime-types'
 import { Sema } from 'sema4'
+import Table from 'cli-table3'
 
 export const cli = cac('fumabase')
 
@@ -320,8 +321,18 @@ cli.command('init', 'Initialize a new fumabase project')
     .option('--name <name>', 'Name for the documentation site')
     .option('--from-template', 'Download starter template files')
     .option('--org <orgId>', 'Organization ID to use')
+    .option('--dir <dir>', 'Directory to initialize project in')
     .action(async (options) => {
         try {
+            // Change to specified directory if provided
+            if (options.dir) {
+                const targetDir = path.resolve(options.dir)
+                if (!fs.existsSync(targetDir)) {
+                    fs.mkdirSync(targetDir, { recursive: true })
+                }
+                process.chdir(targetDir)
+            }
+
             const config = getUserConfig()
 
             if (!config.apiKey || !config.orgs?.length) {
@@ -499,11 +510,47 @@ cli.command('init', 'Initialize a new fumabase project')
                 JSON.stringify(data.docsJson, null, 2),
             )
 
-            console.log('Site created successfully!')
-            console.log(`fumabase.json saved to: ${docsJsonPath}`)
-            console.log(`Site ID: ${data.siteId}`)
-            console.log(`Branch ID: ${data.branchId}`)
-            console.log('\nYou can now run: fumabase dev')
+            // Create success table
+            console.log('\n✅ Site created successfully!\n')
+            
+            const table = new Table({
+                head: ['Property', 'Value'],
+                colWidths: [20, 50],
+                style: {
+                    head: ['cyan', 'bold'],
+                    border: ['grey']
+                }
+            })
+
+            // Extract website URL from docsJson
+            const domains = data.docsJson?.domains || []
+            const websiteUrl = domains.length > 0 
+                ? `https://${domains[0]}` 
+                : 'No domain configured yet'
+
+            table.push(
+                ['Site Name', siteName],
+                ['Site ID', data.siteId],
+                ['Branch ID', data.branchId],
+                ['Website URL', websiteUrl],
+                ['Organization', orgId],
+                ['Config File', docsJsonPath],
+                ['Files Uploaded', `${filePaths.length} text files${mediaFilePaths.length > 0 ? `, ${mediaFilePaths.length} media files` : ''}`]
+            )
+
+            if (githubInfo) {
+                table.push(
+                    ['GitHub', `${githubInfo.githubOwner}/${githubInfo.githubRepo}`],
+                    ['Branch', gitBranch || 'main']
+                )
+            }
+
+            console.log(table.toString())
+            
+            console.log('\n🚀 Next steps:')
+            console.log('   1. Run: fumabase dev')
+            console.log('   2. Open your browser to preview changes')
+            console.log('   3. Push to GitHub to deploy automatically\n')
         } catch (error) {
             console.error('Error initializing project:', error.message || error)
             process.exit(1)

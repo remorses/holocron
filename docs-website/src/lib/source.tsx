@@ -1,7 +1,7 @@
 import { loader, MetaData, PageData, VirtualFile } from 'fumadocs-core/source'
 
 import { I18nConfig } from 'fumadocs-core/i18n'
-import React, { lazy, Suspense } from 'react'
+import React, { Fragment, lazy, Suspense } from 'react'
 import { useHydrated } from './hooks'
 import { StructuredData } from './mdx-heavy'
 import { prefetchDNS, preconnect } from 'react-dom'
@@ -18,19 +18,25 @@ export function DynamicIconInner({ name, ...rest }: DynamicIconProps) {
     if (!hidrated) return null
     const Icon =
         cache[name] ||
-        (cache[name] = lazy(
-            () =>
-                import(
-                    /* @vite-ignore */
-                    `https://esm.sh/lucide-react@0.525.0/es2022/dist/esm/icons/${name}.mjs`
-                ),
+        (cache[name] = lazy(() =>
+            import(
+                /* @vite-ignore */
+                `https://esm.sh/lucide-react@0.525.0/es2022/dist/esm/icons/${name}.mjs`
+            ).catch((e) => ({ default: EmptyIcon })),
         ))
 
+    if (!Icon || EmptyIcon === Icon) {
+        return null
+    }
     return (
         <span className='inline-block w-4 h-4 align-middle animate-fade-in'>
             <Icon {...rest} className={(rest.className ?? '') + ' w-full'} />
         </span>
     )
+}
+
+function EmptyIcon() {
+    return null
 }
 
 export function DynamicIcon({ name, ...rest }: DynamicIconProps) {

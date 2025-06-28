@@ -1,19 +1,7 @@
 {
-    "$schema": "https://fumabase.com/docs-schema.json",
-    "siteId": "cmcesinp20000pwyptynxghjs",
-    "footer": {
-        "socials": {
-            "github": "https://github.com/your-github-username",
-            "x": "https://x.com/your-x-username"
-        }
-    },
-    "contextual": { "options": ["claude", "copy"] },
-    "logo": {
-        "dark": "https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg"
-    },
-
-    "navbar": {
-        "links": [{ "label": "something" }]
-    },
-    "domains": ["remorses-3khurr6i.localhost:7777"]
+  "name": "fumabase",
+  "siteId": "cmcgiqdxs000c7nyp85xw1uvu",
+  "domains": [
+    "fumabase-pa1291p2.localhost"
+  ]
 }

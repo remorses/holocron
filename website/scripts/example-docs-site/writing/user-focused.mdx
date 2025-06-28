@@ -19,7 +19,7 @@ Before documenting any feature, understand the jobs users are trying to do. Docu
 The WebhookManager class provides methods for webhook management:
 
 - `create(url, events)` - Creates a webhook
-- `update(id, options)` - Updates webhook settings  
+- `update(id, options)` - Updates webhook settings
 - `delete(id)` - Removes a webhook
 - `list()` - Returns all webhooks
 ```
@@ -29,7 +29,7 @@ The WebhookManager class provides methods for webhook management:
 ```markdown
 # Getting Notified of Events
 
-Set up webhooks to automatically receive notifications when important 
+Set up webhooks to automatically receive notifications when important
 events happen in your application, like new orders or payment completions.
 
 ## Quick Setup
@@ -41,7 +41,7 @@ Get real-time notifications in under 5 minutes:
 3. Test the connection
 4. Go live
 
-By the end of this guide, you'll receive automatic notifications 
+By the end of this guide, you'll receive automatic notifications
 whenever customers place orders.
 ```
 </Tab>
@@ -153,14 +153,14 @@ npm install -g @company/cli
 ```
 
 <Info>
-**Why global?** Installing globally lets you run `company-cli` from any 
+**Why global?** Installing globally lets you run `company-cli` from any
 directory, which is essential for initializing new projects.
 </Info>
 
-**Already have an older version?** Update with the same command. 
+**Already have an older version?** Update with the same command.
 The installer will replace your existing version.
 
-**Permission errors on macOS/Linux?** Try `sudo npm install -g @company/cli` 
+**Permission errors on macOS/Linux?** Try `sudo npm install -g @company/cli`
 or use a Node version manager like nvm to avoid permission issues.
 ```
 
@@ -172,7 +172,7 @@ or use a Node version manager like nvm to avoid permission issues.
 
 **Causes:**
 - Using test key in production (or vice versa)
-- Key has expired or been revoked  
+- Key has expired or been revoked
 - Missing `Bearer ` prefix in Authorization header
 
 **Solutions:**
@@ -218,6 +218,7 @@ Extract the user's email from the response:
 Customize error messages for better UX:
 `config.errorMessages.invalid = "Please check your input"`
 ```
+
 </CodeGroup>
 
 ## Validate User Success
@@ -231,7 +232,7 @@ Help users confirm they're on the right track with clear success indicators.
     ```
 
     <Check>
-    **Success indicator:** You should see the package added to your `package.json` 
+    **Success indicator:** You should see the package added to your `package.json`
     dependencies and a confirmation message in your terminal.
     </Check>
 </Step>
@@ -239,17 +240,17 @@ Help users confirm they're on the right track with clear success indicators.
 <Step title="Test the connection">
     ```javascript
     import { Client } from '@company/sdk';
-    
+
     const client = new Client('your-api-key');
     const health = await client.health.check();
     console.log(health);
     ```
 
     <Check>
-    **Expected output:** 
+    **Expected output:**
     ```json
-    { 
-        "status": "healthy", 
+    {
+        "status": "healthy",
         "timestamp": "2024-01-15T10:30:00Z",
         "region": "us-east-1"
     }
@@ -272,7 +273,7 @@ Connect features to business outcomes so users understand the value of implement
 Implementing proper rate limiting protects your application from:
 
 - **Service outages** from traffic spikes (saves potential downtime costs)
-- **Unexpected API bills** from runaway scripts (prevents budget overruns)  
+- **Unexpected API bills** from runaway scripts (prevents budget overruns)
 - **Poor user experience** during peak usage (maintains customer satisfaction)
 
 ## Implementation Impact

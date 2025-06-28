@@ -25,8 +25,8 @@ Structure your content like a news article—most important information first, s
 
     ```markdown
     # Setting Up Authentication
-    
-    By the end of this guide, you'll have secure API authentication 
+
+    By the end of this guide, you'll have secure API authentication
     working in your application with proper error handling.
     ```
 </Step>
@@ -77,12 +77,12 @@ try {
 // Finally, show production-ready implementation
 const fetchUsers = async (options = {}) => {
     const { timeout = 5000, retries = 3 } = options;
-    
+
     for (let attempt = 1; attempt <= retries; attempt++) {
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), timeout);
-            
+
             const response = await fetch('/api/users', {
                 signal: controller.signal,
                 headers: {
@@ -90,13 +90,13 @@ const fetchUsers = async (options = {}) => {
                     'Content-Type': 'application/json'
                 }
             });
-            
+
             clearTimeout(timeoutId);
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            
+
             return await response.json();
         } catch (error) {
             if (attempt === retries) throw error;

@@ -6,7 +6,6 @@ import { visit } from 'unist-util-visit'
 import { Root } from 'mdast'
 import { processMdxInServer } from './mdx.server'
 
-
 describe('GitHub Blockquotes Plugin', () => {
     test('transforms GitHub-style blockquotes correctly', async () => {
         // Example markdown with GitHub-style blockquotes
@@ -18,11 +17,15 @@ describe('GitHub Blockquotes Plugin', () => {
 
         `
 
-        const result = await processMdxInServer({ markdown, extension: 'mdx' })
+        const result = await processMdxInServer({
+            markdown,
+            githubPath: '',
+            extension: 'mdx',
+        })
         const data = result.data as { ast: Root }
 
         // Check the full output
-        expect((result)).toMatchInlineSnapshot(`
+        expect(result).toMatchInlineSnapshot(`
           {
             "data": {
               "ast": {

@@ -61,8 +61,14 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
         filesInDraft: z.record(fileUpdateSchema),
     }),
     async *handler({ request, waitUntil, state: { userId } }) {
-        const { messages, currentSlug, chatId, siteId, branchId, filesInDraft } =
-            await request.json()
+        const {
+            messages,
+            currentSlug,
+            chatId,
+            siteId,
+            branchId,
+            filesInDraft,
+        } = await request.json()
         // First, check if the user can access the requested branch
         const branch = await prisma.siteBranch.findFirst({
             where: {
@@ -93,6 +99,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 if (mdxRegex.test(x.githubPath)) {
                     await processMdxInServer({
                         markdown: x.content,
+                        githubPath: x.githubPath,
                         extension: path.extname(x.githubPath),
                     })
                 }

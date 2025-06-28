@@ -15,9 +15,11 @@ const processorCache = new Map<
 export async function processMdxInServer({
     markdown,
     extension,
+    githubPath,
 }: {
     markdown: string
     extension?: string
+    githubPath: string
 }) {
     if (extension) {
         extension = extension.startsWith('.') ? extension.slice(1) : extension
@@ -33,13 +35,25 @@ export async function processMdxInServer({
         })
         processorCache.set(extension, processor)
     }
-    const file = processor.processSync(markdown)
-    const data = file.data as ProcessorData
+    try {
+        const file = processor.processSync(markdown)
+        const data = file.data as ProcessorData
 
-    return {
-        data: {
-            ...data,
-            markdown,
-        },
+        return {
+            data: {
+                ...data,
+                markdown,
+            },
+        }
+    } catch (e) {
+        // Log the error's constructor name
+        console.error('Error type:', e.constructor?.name)
+
+        if ('line' in e) {
+            throw new Error(
+                `Invalid ${extension || 'mdx'} found in ${githubPath}:${e.line} \`${e.message}\``,
+            )
+        }
+        throw e
     }
 }
