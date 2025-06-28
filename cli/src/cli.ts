@@ -178,9 +178,9 @@ cli.command('init', 'Initialize a new fumabase project')
             const markdownFiles = filePaths.filter(
                 (file) => file.endsWith('.md') || file.endsWith('.mdx'),
             )
-            
+
             let shouldDownloadTemplate = false
-            
+
             if (markdownFiles.length === 0) {
                 // No markdown files found - ask if user wants to download starter template
                 const response = await prompts({
@@ -189,12 +189,12 @@ cli.command('init', 'Initialize a new fumabase project')
                     message: 'No markdown files found. Do you want to download the starter template files in the current directory?',
                     initial: true,
                 })
-                
+
                 if (!response.downloadTemplate) {
                     console.log('Cannot initialize a fumabase project without markdown files.')
                     process.exit(1)
                 }
-                
+
                 shouldDownloadTemplate = true
             } else if (markdownFiles.length < 2) {
                 // Some markdown files but not enough - ask user to choose
@@ -203,11 +203,11 @@ cli.command('init', 'Initialize a new fumabase project')
                     name: 'choice',
                     message: `Found ${markdownFiles.length} markdown file(s), but at least 2 are required. What would you like to do?`,
                     choices: [
-                        { title: 'Use existing markdown files and continue anyway', value: 'continue' },
+                        { title: 'Use existing markdown files for the website', value: 'continue' },
                         { title: 'Download starter template files', value: 'template' },
                     ],
                 })
-                
+
                 if (response.choice === 'template') {
                     shouldDownloadTemplate = true
                 } else if (response.choice === 'continue') {
@@ -218,10 +218,10 @@ cli.command('init', 'Initialize a new fumabase project')
                     process.exit(1)
                 }
             }
-            
+
             if (shouldDownloadTemplate) {
                 console.log('Downloading starter template...')
-                
+
                 // Download starter template
                 const { data, error } = await apiClient.api.getStarterTemplate.get()
                 if (error || !data?.success) {
@@ -237,18 +237,18 @@ cli.command('init', 'Initialize a new fumabase project')
                 for (const file of data.files) {
                     const filePath = file.relativePath
                     const dirPath = path.dirname(filePath)
-                    
+
                     // Create directories if they don't exist
                     if (dirPath !== '.') {
                         await fs.promises.mkdir(dirPath, { recursive: true })
                     }
-                    
+
                     // Write file
                     await fs.promises.writeFile(filePath, file.contents, 'utf-8')
                 }
 
                 console.log('Starter template files written successfully!')
-                
+
                 // Re-run file discovery
                 const result = await findProjectFiles()
                 filePaths = result.filePaths
