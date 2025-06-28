@@ -1,29 +1,33 @@
 {
-  "$schema": "https://fumabase.com/fumabase.json",
-  "name": "Fumabase Starter Kit",
-  "favicon": "/favicon.svg",
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@fumabase.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.fumabase.com"
+    "$schema": "https://fumabase.com/fumabase.json",
+    "siteId": "",
+    "name": "Fumabase Starter Kit",
+    "description": "",
+    "logo": {
+        "light": "/logo/light.svg",
+        "dark": "/logo/dark.svg"
+    },
+    "favicon": {
+        "light": "/favicon.svg",
+        "dark": "/favicon.svg"
+    },
+    "navbar": {
+        "links": [
+            {
+                "label": "Support",
+                "href": "mailto:hi@fumabase.com"
+            }
+        ],
+        "primary": {
+            "type": "button",
+            "label": "Dashboard",
+            "href": "https://dashboard.fumabase.com"
+        }
+    },
+    "footer": {
+        "socials": {
+            "x": "https://x.com/__morse",
+            "github": "https://github.com/remorses/fumabase"
+        }
     }
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/fumabase",
-      "github": "https://github.com/fumabase",
-      "linkedin": "https://linkedin.com/company/fumabase"
-    }
-  }
 }

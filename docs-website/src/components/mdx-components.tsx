@@ -1,12 +1,12 @@
 import clsx from 'clsx'
-import * as FilesComponents from 'fumadocs-ui/components/files';
-import * as TabsComponents from 'fumadocs-ui/components/tabs';
-import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
-import { Callout } from 'fumadocs-ui/components/callout';
-import { Card, Cards } from 'fumadocs-ui/components/card';
-import { Steps, Step } from 'fumadocs-ui/components/steps';
+import * as FilesComponents from 'fumadocs-ui/components/files'
+import * as TabsComponents from 'fumadocs-ui/components/tabs'
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion'
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Card, Cards } from 'fumadocs-ui/components/card'
+import { Steps, Step } from 'fumadocs-ui/components/steps'
 
-import { Math } from './math'
+import { Latex } from './math'
 import { CSSProperties } from 'react'
 import fumadocsComponents from 'fumadocs-ui/mdx'
 
@@ -41,7 +41,13 @@ function TodoItem({
     )
 }
 
-function Columns({ children, cols = 2 }: { children?: React.ReactNode; cols?: number }) {
+function Columns({
+    children,
+    cols = 2,
+}: {
+    children?: React.ReactNode
+    cols?: number
+}) {
     return (
         <div
             className={`grid gap-4 my-4`}
@@ -144,15 +150,15 @@ function Video({ src, children }: { src: string; children?: string }) {
 
 // Mintlify-style callout components using fumadocs Callout
 function Note({ children }: { children: React.ReactNode }) {
-    return <Callout type="info">{children}</Callout>
+    return <Callout type='info'>{children}</Callout>
 }
 
 function Warning({ children }: { children: React.ReactNode }) {
-    return <Callout type="warn">{children}</Callout>
+    return <Callout type='warn'>{children}</Callout>
 }
 
 function Info({ children }: { children: React.ReactNode }) {
-    return <Callout type="info">{children}</Callout>
+    return <Callout type='info'>{children}</Callout>
 }
 
 function Tip({ children }: { children: React.ReactNode }) {
@@ -160,7 +166,7 @@ function Tip({ children }: { children: React.ReactNode }) {
 }
 
 function Check({ children }: { children: React.ReactNode }) {
-    return <Callout type="success">{children}</Callout>
+    return <Callout type='success'>{children}</Callout>
 }
 
 // Mintlify-style Card component with correct props
@@ -174,18 +180,25 @@ function MintlifyCard({
     img,
     cta,
     arrow,
-    children
+    children,
 }: {
-    title: string;
-    icon?: string;
-    iconType?: "regular" | "solid" | "light" | "thin" | "sharp-solid" | "duotone" | "brands";
-    color?: string;
-    href?: string;
-    horizontal?: boolean;
-    img?: string;
-    cta?: string;
-    arrow?: boolean;
-    children?: React.ReactNode;
+    title: string
+    icon?: string
+    iconType?:
+        | 'regular'
+        | 'solid'
+        | 'light'
+        | 'thin'
+        | 'sharp-solid'
+        | 'duotone'
+        | 'brands'
+    color?: string
+    href?: string
+    horizontal?: boolean
+    img?: string
+    cta?: string
+    arrow?: boolean
+    children?: React.ReactNode
 }) {
     // Use fumadocs Card as base but with Mintlify prop mapping
     return (
@@ -208,18 +221,18 @@ function CodeGroup({ children }: { children: React.ReactNode }) {
 // Frame component with caption support
 function Frame({
     caption,
-    children
+    children,
 }: {
-    caption?: string;
-    children: React.ReactNode;
+    caption?: string
+    children: React.ReactNode
 }) {
     return (
-        <div className="my-4">
-            <div className="border border-border rounded-lg p-4">
+        <div className='my-4'>
+            <div className='border border-border rounded-lg p-4'>
                 {children}
             </div>
             {caption && (
-                <div className="text-center text-sm text-muted-foreground mt-2">
+                <div className='text-center text-sm text-muted-foreground mt-2'>
                     {caption}
                 </div>
             )}
@@ -239,51 +252,63 @@ function ParamField({
     default: defaultValue,
     initialValue,
     placeholder,
-    children
+    children,
 }: {
-    path?: string;
-    body?: string;
-    query?: string;
-    header?: string;
-    type?: string;
-    required?: boolean;
-    deprecated?: boolean;
-    default?: string;
-    initialValue?: any;
-    placeholder?: string;
-    children?: React.ReactNode;
+    path?: string
+    body?: string
+    query?: string
+    header?: string
+    type?: string
+    required?: boolean
+    deprecated?: boolean
+    default?: string
+    initialValue?: any
+    placeholder?: string
+    children?: React.ReactNode
 }) {
     const paramName = path || body || query || header || 'parameter'
     const paramType = type || 'string'
-    const location = path ? 'path' : body ? 'body' : query ? 'query' : header ? 'header' : 'parameter'
+    const location = path
+        ? 'path'
+        : body
+          ? 'body'
+          : query
+            ? 'query'
+            : header
+              ? 'header'
+              : 'parameter'
 
     return (
-        <div className="border border-border rounded-lg p-4 mb-4">
-            <div className="flex items-center gap-2 mb-2">
-                <code className="text-sm font-mono bg-muted px-2 py-1 rounded">
+        <div className='border border-border rounded-lg p-4 mb-4'>
+            <div className='flex items-center gap-2 mb-2'>
+                <code className='text-sm font-mono bg-muted px-2 py-1 rounded'>
                     {paramName}
                 </code>
-                <span className="text-xs text-muted-foreground">{location}</span>
+                <span className='text-xs text-muted-foreground'>
+                    {location}
+                </span>
                 {required && (
-                    <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                    <span className='text-xs bg-red-100 text-red-800 px-2 py-1 rounded'>
                         required
                     </span>
                 )}
                 {deprecated && (
-                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                    <span className='text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded'>
                         deprecated
                     </span>
                 )}
-                <span className="text-xs text-muted-foreground">
+                <span className='text-xs text-muted-foreground'>
                     {paramType}
                 </span>
                 {defaultValue && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className='text-xs text-muted-foreground'>
                         default: {defaultValue}
                     </span>
                 )}
             </div>
-            {children && <div className="text-sm text-muted-foreground">{children}</div>}
+            {children && (
+                <div className='text-sm text-muted-foreground'>{children}</div>
+            )}
         </div>
     )
 }
@@ -296,64 +321,68 @@ function ResponseField({
     default: defaultValue,
     pre,
     post,
-    children
+    children,
 }: {
-    name: string;
-    type: string;
-    required?: boolean;
-    deprecated?: boolean;
-    default?: string;
-    pre?: string[];
-    post?: string[];
-    children?: React.ReactNode;
+    name: string
+    type: string
+    required?: boolean
+    deprecated?: boolean
+    default?: string
+    pre?: string[]
+    post?: string[]
+    children?: React.ReactNode
 }) {
     return (
-        <div className="border-l-4 border-green-200 pl-4 mb-3">
-            <div className="flex items-center gap-2 mb-1">
-                {pre && pre.map((label, i) => (
-                    <span key={i} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                        {label}
-                    </span>
-                ))}
-                <code className="text-sm font-mono">
-                    {name}
-                </code>
+        <div className='border-l-4 border-green-200 pl-4 mb-3'>
+            <div className='flex items-center gap-2 mb-1'>
+                {pre &&
+                    pre.map((label, i) => (
+                        <span
+                            key={i}
+                            className='text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded'
+                        >
+                            {label}
+                        </span>
+                    ))}
+                <code className='text-sm font-mono'>{name}</code>
                 {required && (
-                    <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                    <span className='text-xs bg-red-100 text-red-800 px-2 py-1 rounded'>
                         required
                     </span>
                 )}
                 {deprecated && (
-                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                    <span className='text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded'>
                         deprecated
                     </span>
                 )}
-                <span className="text-xs text-muted-foreground">
-                    {type}
-                </span>
+                <span className='text-xs text-muted-foreground'>{type}</span>
                 {defaultValue && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className='text-xs text-muted-foreground'>
                         default: {defaultValue}
                     </span>
                 )}
-                {post && post.map((label, i) => (
-                    <span key={i} className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">
-                        {label}
-                    </span>
-                ))}
+                {post &&
+                    post.map((label, i) => (
+                        <span
+                            key={i}
+                            className='text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded'
+                        >
+                            {label}
+                        </span>
+                    ))}
             </div>
-            {children && <div className="text-sm text-muted-foreground">{children}</div>}
+            {children && (
+                <div className='text-sm text-muted-foreground'>{children}</div>
+            )}
         </div>
     )
 }
-
-
 
 export const mdxComponents = {
     ...fumadocsComponents,
     summary: 'summary',
     details: 'details',
-    Math,
+    Latex: Latex,
     // TodoItem,
     Columns,
     Column,
