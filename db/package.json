@@ -1,6 +1,5 @@
 {
     "name": "db",
-    "version": "0.0.0",
     "private": true,
     "type": "module",
     "main": "src/prisma.ts",

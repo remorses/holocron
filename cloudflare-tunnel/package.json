@@ -1,8 +1,8 @@
 {
     "name": "cloudflare-tunnel",
-    "version": "0.0.0",
     "description": "",
     "type": "module",
+    "private": true,
     "repository": "https://github.com/remorses/",
     "scripts": {
         "deployment": "wrangler deploy",

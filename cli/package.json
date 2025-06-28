@@ -1,12 +1,13 @@
 {
     "name": "fumabase",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "description": "",
     "type": "module",
     "repository": "https://github.com/remorses/fumabase",
     "scripts": {
         "build": "tsc ",
         "typecheck": "tsc",
+        "prepublishOnly": "tsc",
         "fumabase": "node bin.js",
         "watch": "tsc -w"
     },
@@ -30,7 +31,7 @@
     "devDependencies": {
         "@types/prompts": "^2.4.9",
         "@types/ws": "^8.18.1",
-        "docs-website": "workspace:*",
-        "website": "workspace:*"
+        "docs-website": "*",
+        "website": "*"
     }
 }

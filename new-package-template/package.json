@@ -1,6 +1,6 @@
 {
     "name": "new-package-template",
-    "version": "0.0.0",
+    "private": true,
     "description": "",
     "type": "module",
     "repository": "https://github.com/remorses/",
