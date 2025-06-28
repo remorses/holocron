@@ -13,8 +13,9 @@ import {
     useScrollToFirstAddedIfAtTop,
 } from './diff-highlight'
 import { MarkdownRendererProps } from './markdown'
-import { customTransformer, getProcessor, ProcessorData } from './mdx'
+import { getProcessor, ProcessorData } from './mdx-heavy'
 import { parseMarkdownIncremental } from './incremental-markdown-parser'
+import { renderNode } from './mdx-code-block'
 
 export const StreamingMarkdownRuntimeComponent = memo(
     function MarkdownRuntimeComponent({
@@ -89,7 +90,7 @@ export const StreamingMarkdownRuntimeComponent = memo(
                     return (
                         <SafeMdxRenderer
                             key={index}
-                            customTransformer={customTransformer}
+                            renderNode={renderNode}
                             components={mdxComponents}
                             mdast={block}
                         />

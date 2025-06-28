@@ -1,7 +1,7 @@
 import { createHighlighter, bundledLanguages } from 'shiki/bundle/full'
 import path from 'path'
 import YAML from 'js-yaml'
-import { getProcessor, ProcessorData } from './mdx'
+import { getProcessor, ProcessorData } from './mdx-heavy'
 
 const highlighter = await createHighlighter({
     themes: ['github-dark', 'github-light'],

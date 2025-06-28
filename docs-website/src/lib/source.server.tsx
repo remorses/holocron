@@ -2,7 +2,7 @@ import { prisma } from 'db'
 import { loader, MetaData, PageData, VirtualFile } from 'fumadocs-core/source'
 import { getIconJsx } from './icons.server'
 import { I18nConfig } from 'fumadocs-core/i18n'
-import { StructuredData } from './mdx'
+import { StructuredData } from './mdx-heavy'
 
 export async function getFilesForSource({ branchId }) {
     const [allPages, metaFiles] = await Promise.all([

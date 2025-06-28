@@ -7,7 +7,7 @@ import {
 } from 'fumadocs-core/source'
 
 import { I18nConfig } from 'fumadocs-core/i18n'
-import { StructuredData } from './mdx'
+import { StructuredData } from './mdx-heavy'
 import { icons } from 'lucide-react'
 import { SourceData } from './source.server'
 import { createElement } from 'react'

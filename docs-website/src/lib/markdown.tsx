@@ -1,10 +1,10 @@
 import { mdxComponents } from 'docs-website/src/components/mdx-components'
 
-import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
-import React, { lazy, Suspense } from 'react'
-import { CustomTransformer, SafeMdxRenderer } from 'safe-mdx'
-import { customTransformer } from './mdx'
+import { lazy } from 'react'
+import { SafeMdxRenderer } from 'safe-mdx'
+
 import { cn } from './cn'
+import { renderNode } from './mdx-code-block'
 
 const MarkdownRuntimeComponent = lazy(() =>
     import('./markdown-runtime').then((mod) => ({
@@ -29,9 +29,11 @@ export const Markdown = function MarkdownRender(props: MarkdownRendererProps) {
         return <MarkdownRuntimeComponent {...props} />
     }
     return (
-        <div className={cn('contents prose dark:prose-invert', props.className)}>
+        <div
+            className={cn('contents prose dark:prose-invert', props.className)}
+        >
             <SafeMdxRenderer
-                customTransformer={customTransformer}
+                renderNode={renderNode}
                 components={mdxComponents}
                 mdast={ast}
             />

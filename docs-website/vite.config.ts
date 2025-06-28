@@ -7,6 +7,7 @@ import { reactRouterHonoServer } from 'react-router-hono-server/dev'
 import { defineConfig } from 'vite'
 import EnvironmentPlugin from 'vite-plugin-environment'
 import tsconfigPaths from 'vite-tsconfig-paths'
+import { analyzer } from 'vite-bundle-analyzer'
 
 const NODE_ENV = JSON.stringify(process.env.NODE_ENV || 'production')
 
@@ -36,8 +37,12 @@ export default defineConfig({
         !process.env.VITEST && reactRouterHonoServer(),
         !process.env.VITEST ? reactRouter() : react(),
         tsconfigPaths(),
-        viteExternalsPlugin({ externals: ['pg', 'shiki', 'json-schema-library'] }),
+        viteExternalsPlugin({
+            externals: ['pg', 'shiki', 'json-schema-library'],
+        }),
         !process.env.VITEST && tailwindcss(),
+        process.env.ANALYZE &&
+            analyzer({ openAnalyzer: false, analyzerMode: 'static' }),
     ],
 
     // legacy: {
