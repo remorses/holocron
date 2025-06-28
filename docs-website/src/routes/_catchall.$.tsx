@@ -285,7 +285,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     }
     // const slug = '/' + slugs.join('/')
     const fumadocsPage = source.getPage(slugs, locale)
-    
+
     const slug = fumadocsPage?.url || '/' + slugs.join('/')
 
     let [page, mediaAsset] = await Promise.all([
@@ -309,7 +309,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         const key = getKeyForMediaAsset({
             siteId,
             slug,
-            branchId,
         })
         const file = s3.file(key)
         const [stat, blob] = await Promise.all([file.stat(), file.blob()])
@@ -320,7 +319,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                 'Cache-Tag': getCacheTagForMediaAsset({
                     siteId,
                     slug,
-                    branchId,
                 }),
                 'Content-Length': stat.size.toString(),
             },

@@ -1,30 +1,18 @@
 # Fumabase Starter Kit
 
-test content
-
-does this work well???
-
-> a quote
-
-something interesting
-
-Click on `Use this template` to copy the Fumabase starter kit. The starter kit contains examples including
-
-- Guide pages
-- Navigation
-- Customizations
-- API Reference pages
-- Use of popular components
-
 ### Development
 
-Install the [Fumabase CLI](https://www.npmjs.com/package/fumabase) to preview the documentation changes locally. To install, use the following command
+## 1. Install the Fumabase CLI
+
+To preview your documentation changes locally, first install the [Fumabase CLI](https://www.npmjs.com/package/fumabase). Use the following command:
 
 ```
 npm i -g fumabase
 ```
 
-Run the following command at the root of your documentation (where fumabase.json is)
+## 2. Start the Local Development Server
+
+At the root of your documentation project (where `fumabase.json` is located), start the development server with:
 
 ```
 fumabase dev
@@ -32,9 +20,6 @@ fumabase dev
 
 ### Publishing Changes
 
-Install our Github App to auto propagate changes from your repo to your deployment. Changes will be deployed to production automatically after pushing to the default branch. Find the link to install on your dashboard.
+## 3. Set Up Automatic Deployments
 
-#### Troubleshooting
-
-- Fumabase dev isn't running - Run `fumabase install` it'll re-install dependencies.
-- Page loads as a 404 - Make sure you are running in a folder with `fumabase.json`
+Install our GitHub App to enable automated deployments from your repository. After pushing changes to your default branch, your documentation will be deployed to production automatically. You can find the installation link on your dashboard.

@@ -1,7 +1,14 @@
 import clsx from 'clsx'
+import * as FilesComponents from 'fumadocs-ui/components/files';
+import * as TabsComponents from 'fumadocs-ui/components/tabs';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+
 import { Math } from './math'
 import { CSSProperties } from 'react'
-import defaultMdxComponents from 'fumadocs-ui/mdx'
+import fumadocsComponents from 'fumadocs-ui/mdx'
 
 function TodoItem({
     checked,
@@ -130,17 +137,133 @@ function Video({ src, children }: { src: string; children?: string }) {
     )
 }
 
+// Mintlify-style callout components using fumadocs Callout
+function Note({ children }: { children: React.ReactNode }) {
+    return <Callout type="info">{children}</Callout>
+}
+
+function Warning({ children }: { children: React.ReactNode }) {
+    return <Callout type="warn">{children}</Callout>
+}
+
+function Info({ children }: { children: React.ReactNode }) {
+    return <Callout type="info">{children}</Callout>
+}
+
+function Tip({ children }: { children: React.ReactNode }) {
+    return <Callout>{children}</Callout>
+}
+
+function Check({ children }: { children: React.ReactNode }) {
+    return <Callout type="success">{children}</Callout>
+}
+
+// API documentation components
+function ParamField({
+    body,
+    query,
+    path,
+    header,
+    required,
+    type,
+    children
+}: {
+    body?: string;
+    query?: string;
+    path?: string;
+    header?: string;
+    required?: boolean;
+    type?: string;
+    children?: React.ReactNode;
+}) {
+    const paramName = body || query || path || header || 'parameter'
+    const paramType = type || 'string'
+    const location = body ? 'body' : query ? 'query' : path ? 'path' : header ? 'header' : 'parameter'
+
+    return (
+        <div className="border border-border rounded-lg p-4 mb-4">
+            <div className="flex items-center gap-2 mb-2">
+                <code className="text-sm font-mono bg-muted px-2 py-1 rounded">
+                    {paramName}
+                </code>
+                <span className="text-xs text-muted-foreground">{location}</span>
+                {required && (
+                    <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                        required
+                    </span>
+                )}
+                <span className="text-xs text-muted-foreground">
+                    {paramType}
+                </span>
+            </div>
+            {children && <div className="text-sm text-muted-foreground">{children}</div>}
+        </div>
+    )
+}
+
+function ResponseField({
+    name,
+    type,
+    required,
+    children
+}: {
+    name?: string;
+    type?: string;
+    required?: boolean;
+    children?: React.ReactNode;
+}) {
+    const fieldName = name || 'field'
+    const fieldType = type || 'string'
+
+    return (
+        <div className="border-l-4 border-green-200 pl-4 mb-3">
+            <div className="flex items-center gap-2 mb-1">
+                <code className="text-sm font-mono">
+                    {fieldName}
+                </code>
+                {required && (
+                    <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                        required
+                    </span>
+                )}
+                <span className="text-xs text-muted-foreground">
+                    {fieldType}
+                </span>
+            </div>
+            {children && <div className="text-sm text-muted-foreground">{children}</div>}
+        </div>
+    )
+}
+
 export const mdxComponents = {
-    ...defaultMdxComponents,
+    ...fumadocsComponents,
     summary: 'summary',
     details: 'details',
     Math,
-    TodoItem,
+    // TodoItem,
     ColumnList,
     Column,
-    Embed,
-    File,
-    Audio,
-    NotionIcon,
-    Video,
+    ...TabsComponents,
+    ...FilesComponents,
+    Accordion,
+    Accordions,
+    // Mintlify-style callout components
+    Note,
+    Warning,
+    Info,
+    Tip,
+    Check,
+    // Mintlify-style other components
+    Card,
+    Cards,
+    Steps,
+    Step,
+    // API documentation components
+    // ParamField, // TODO, make sure param fields look good
+    // ResponseField,
+    // Embed,
+    // File,
+    // Audio,
+    // NotionIcon,
+    // Video,
 }
