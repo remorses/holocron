@@ -292,7 +292,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
         <div className='flex flex-col gap-12 max-w-2xl mx-auto p-8'>
             <div className='space-y-4'>
                 <div>
-                    <h1 className='text-2xl font-bold text-white'>
+                    <h1 className='text-2xl capitalize font-bold text-white'>
                         Hello, {loaderData.name}
                     </h1>
                     <p className='text-gray-400'>
