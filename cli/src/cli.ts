@@ -45,7 +45,9 @@ function getUserConfig() {
 
 function getGitHubInfo() {
     try {
-        const remoteUrl = execSync('git remote get-url origin', { encoding: 'utf-8' }).trim()
+        const remoteUrl = execSync('git remote get-url origin', {
+            encoding: 'utf-8',
+        }).trim()
         const match = remoteUrl.match(/github\.com[\/:]([^\/]+)\/([^\/\.]+)/)
         if (match) {
             return {
@@ -74,7 +76,7 @@ const apiClient = createApiClient(url, {
         } catch (error) {
             // Continue without API key
         }
-        
+
         return {}
     },
 })
@@ -84,7 +86,7 @@ cli.command('init', 'Initialize a new fumabase project')
     .action(async (options) => {
         try {
             const config = getUserConfig()
-            
+
             if (!config.apiKey || !config.orgs?.length) {
                 console.log('You need to be logged in to initialize a project.')
                 console.log('Please run: fumabase login')
@@ -93,7 +95,7 @@ cli.command('init', 'Initialize a new fumabase project')
 
             // Get GitHub info first
             const githubInfo = getGitHubInfo()
-            
+
             // Get site name
             let siteName = options.name
             if (!siteName) {
@@ -139,13 +141,26 @@ cli.command('init', 'Initialize a new fumabase project')
             const gitBranch = await getCurrentGitBranch()
 
             // Find files using globby
-            const filePaths = await globby('**/*.{md,mdx,json,css}', {
-                ignore: ['**/node_modules/**', '**/.git/**', '**/.cache/**'],
-                gitignore: true,
-            })
+            const filePaths = await globby(
+                ['**/*.{md,mdx}', 'meta.json', 'styles.css'],
+                {
+                    ignore: [
+                        '**/node_modules/**',
+                        '**/.git/**',
+                        '**/.cache/**',
+                    ],
+                    gitignore: true,
+                },
+            )
 
-            if (!filePaths.length) {
-                console.log('No files found matching pattern: **/*.{md,mdx,json,css}')
+            // Ensure there are at least 2 markdown files
+            const markdownFiles = filePaths.filter(
+                (file) => file.endsWith('.md') || file.endsWith('.mdx'),
+            )
+            if (markdownFiles.length < 2) {
+                console.log(
+                    'At least 2 markdown files (**/*.md, **/*.mdx) are required to initialize a fumabase project.',
+                )
                 process.exit(1)
             }
 
@@ -154,28 +169,35 @@ cli.command('init', 'Initialize a new fumabase project')
             // Read file contents
             const files = await Promise.all(
                 filePaths.map(async (filePath) => {
-                    const content = await fs.promises.readFile(filePath, 'utf-8')
+                    const content = await fs.promises.readFile(
+                        filePath,
+                        'utf-8',
+                    )
                     return {
                         relativePath: filePath,
                         contents: content,
                     }
-                })
+                }),
             )
 
             console.log('Creating site...')
 
             // Call the API
-            const { data, error } = await apiClient.api.createSiteFromFiles.post({
-                name: siteName,
-                files,
-                orgId,
-                githubOwner: githubInfo?.githubOwner || '',
-                githubRepo: githubInfo?.githubRepo || '',
-                githubBranch: gitBranch || '',
-            })
+            const { data, error } =
+                await apiClient.api.createSiteFromFiles.post({
+                    name: siteName,
+                    files,
+                    orgId,
+                    githubOwner: githubInfo?.githubOwner || '',
+                    githubRepo: githubInfo?.githubRepo || '',
+                    githubBranch: gitBranch || '',
+                })
 
             if (error || !data?.success) {
-                console.error('Failed to create site:', error?.message || 'Unknown error')
+                console.error(
+                    'Failed to create site:',
+                    error?.message || 'Unknown error',
+                )
                 process.exit(1)
             }
 
@@ -183,7 +205,7 @@ cli.command('init', 'Initialize a new fumabase project')
             const docsJsonPath = path.join(process.cwd(), 'docs.json')
             await fs.promises.writeFile(
                 docsJsonPath,
-                JSON.stringify(data.docsJson, null, 2)
+                JSON.stringify(data.docsJson, null, 2),
             )
 
             console.log('Site created successfully!')
@@ -191,7 +213,6 @@ cli.command('init', 'Initialize a new fumabase project')
             console.log(`Site ID: ${data.siteId}`)
             console.log(`Branch ID: ${data.branchId}`)
             console.log('\nYou can now run: fumabase dev')
-
         } catch (error) {
             console.error('Error initializing project:', error.message || error)
             process.exit(1)
