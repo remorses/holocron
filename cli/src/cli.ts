@@ -34,6 +34,9 @@ type FilesInDraft = Record<
 const url = process.env.SERVER_URL || 'https://fumabase.com'
 const configPath = path.join(homedir(), '.fumabase.json')
 
+// Check if running in TTY environment
+const isTTY = process.stdout.isTTY && process.stdin.isTTY
+
 function getUserConfig() {
     try {
         const configData = fs.readFileSync(configPath, 'utf-8')
@@ -93,6 +96,76 @@ function getGitHubInfo() {
     return null
 }
 
+async function determineTemplateDownload({
+    markdownFileCount,
+    fromTemplateFlag,
+    isInteractive,
+}: {
+    markdownFileCount: number
+    fromTemplateFlag: boolean
+    isInteractive: boolean
+}): Promise<boolean> {
+    if (fromTemplateFlag) {
+        return true
+    }
+
+    if (markdownFileCount === 0) {
+        if (!isInteractive) {
+            console.error('Error: No markdown files found in non-interactive environment')
+            console.error('Use --from-template to download starter template files')
+            console.error('Usage: fumabase init --from-template')
+            process.exit(1)
+        }
+
+        const response = await prompts({
+            type: 'confirm',
+            name: 'downloadTemplate',
+            message: 'No markdown files found. Do you want to download the starter template files in the current directory?',
+            initial: true,
+        })
+
+        if (!response.downloadTemplate) {
+            console.log('Cannot initialize a fumabase project without markdown files.')
+            process.exit(1)
+        }
+
+        return true
+    }
+
+    if (markdownFileCount <= 1) {
+        if (!isInteractive) {
+            console.error(`Error: Found ${markdownFileCount} markdown file(s), but at least 2 are required`)
+            console.error('Use --from-template to download starter template files, or add more markdown files')
+            console.error('Usage: fumabase init --from-template')
+            process.exit(1)
+        }
+
+        const response = await prompts({
+            type: 'select',
+            name: 'choice',
+            message: `Found ${markdownFileCount} markdown file(s), but at least 2 are required. What would you like to do?`,
+            choices: [
+                { title: 'Use existing markdown files for the website', value: 'continue' },
+                { title: 'Download starter template files', value: 'template' },
+            ],
+        })
+
+        if (response.choice === 'template') {
+            return true
+        }
+
+        if (response.choice === 'continue') {
+            console.log('Continuing with existing files...')
+            return false
+        }
+
+        console.log('Operation cancelled.')
+        process.exit(1)
+    }
+
+    return false
+}
+
 const apiClient = createApiClient(url, {
     onRequest() {
         try {
@@ -114,6 +187,8 @@ const apiClient = createApiClient(url, {
 
 cli.command('init', 'Initialize a new fumabase project')
     .option('--name <name>', 'Name for the documentation site')
+    .option('--from-template', 'Download starter template files')
+    .option('--org <orgId>', 'Organization ID to use')
     .action(async (options) => {
         try {
             const config = getUserConfig()
@@ -132,6 +207,10 @@ cli.command('init', 'Initialize a new fumabase project')
             if (!siteName) {
                 if (githubInfo?.name) {
                     siteName = githubInfo.name
+                } else if (!isTTY) {
+                    console.error('Error: --name is required in non-interactive environments')
+                    console.error('Usage: fumabase init --name "My Site Name"')
+                    process.exit(1)
                 } else {
                     const response = await prompts({
                         type: 'text',
@@ -149,18 +228,28 @@ cli.command('init', 'Initialize a new fumabase project')
             }
 
             // Select organization
-            let orgId = config.orgs[0].orgId
-            if (config.orgs.length > 1) {
-                const response = await prompts({
-                    type: 'select',
-                    name: 'orgId',
-                    message: 'Select an organization:',
-                    choices: config.orgs.map((org) => ({
-                        title: org.name || org.orgId,
-                        value: org.orgId,
-                    })),
-                })
-                orgId = response.orgId
+            let orgId = options.org || config.orgs[0].orgId
+            if (!options.org && config.orgs.length > 1) {
+                if (!isTTY) {
+                    console.error('Error: --org is required when multiple organizations are available in non-interactive environments')
+                    console.error('Available organizations:')
+                    config.orgs.forEach((org) => {
+                        console.error(`  ${org.orgId} (${org.name || 'No name'})`)
+                    })
+                    console.error('Usage: fumabase init --org <orgId>')
+                    process.exit(1)
+                } else {
+                    const response = await prompts({
+                        type: 'select',
+                        name: 'orgId',
+                        message: 'Select an organization:',
+                        choices: config.orgs.map((org) => ({
+                            title: org.name || org.orgId,
+                            value: org.orgId,
+                        })),
+                    })
+                    orgId = response.orgId
+                }
             }
 
             if (!orgId) {
@@ -179,45 +268,11 @@ cli.command('init', 'Initialize a new fumabase project')
                 (file) => file.endsWith('.md') || file.endsWith('.mdx'),
             )
 
-            let shouldDownloadTemplate = false
-
-            if (markdownFiles.length === 0) {
-                // No markdown files found - ask if user wants to download starter template
-                const response = await prompts({
-                    type: 'confirm',
-                    name: 'downloadTemplate',
-                    message: 'No markdown files found. Do you want to download the starter template files in the current directory?',
-                    initial: true,
-                })
-
-                if (!response.downloadTemplate) {
-                    console.log('Cannot initialize a fumabase project without markdown files.')
-                    process.exit(1)
-                }
-
-                shouldDownloadTemplate = true
-            } else if (markdownFiles.length < 2) {
-                // Some markdown files but not enough - ask user to choose
-                const response = await prompts({
-                    type: 'select',
-                    name: 'choice',
-                    message: `Found ${markdownFiles.length} markdown file(s), but at least 2 are required. What would you like to do?`,
-                    choices: [
-                        { title: 'Use existing markdown files for the website', value: 'continue' },
-                        { title: 'Download starter template files', value: 'template' },
-                    ],
-                })
-
-                if (response.choice === 'template') {
-                    shouldDownloadTemplate = true
-                } else if (response.choice === 'continue') {
-                    // Continue with existing files even if less than 2
-                    console.log('Continuing with existing files...')
-                } else {
-                    console.log('Operation cancelled.')
-                    process.exit(1)
-                }
-            }
+            const shouldDownloadTemplate = await determineTemplateDownload({
+                markdownFileCount: markdownFiles.length,
+                fromTemplateFlag: options.fromTemplate,
+                isInteractive: isTTY,
+            })
 
             if (shouldDownloadTemplate) {
                 console.log('Downloading starter template...')
@@ -296,7 +351,9 @@ cli.command('init', 'Initialize a new fumabase project')
         }
     })
 
-cli.command('login', 'Login to fumabase').action(async () => {
+cli.command('login', 'Login to fumabase')
+    .option('--no-browser', 'Skip automatic browser opening')
+    .action(async (options) => {
     const cliSessionSecret = Array.from({ length: 6 }, () =>
         randomInt(0, 10),
     ).join('')
@@ -327,22 +384,32 @@ cli.command('login', 'Login to fumabase').action(async () => {
 
     console.log(`\nReady to open: ${fullUrl}`)
 
-    const response = await prompts({
-        type: 'confirm',
-        name: 'openBrowser',
-        message: 'Open browser to authorize CLI?',
-        initial: true,
-    })
+    let shouldOpenBrowser = !options.noBrowser
 
-    if (!response.openBrowser) {
-        console.log(
-            '\nLogin cancelled. You can manually open the URL above to continue.',
-        )
-        process.exit(0)
+    if (!options.noBrowser && !isTTY) {
+        console.log('\nNon-interactive environment detected.')
+        console.log('Please manually open the URL above in your browser to continue.')
+        shouldOpenBrowser = false
+    } else if (!options.noBrowser && isTTY) {
+        const response = await prompts({
+            type: 'confirm',
+            name: 'openBrowser',
+            message: 'Open browser to authorize CLI?',
+            initial: true,
+        })
+
+        if (!response.openBrowser) {
+            console.log(
+                '\nLogin cancelled. You can manually open the URL above to continue.',
+            )
+            process.exit(0)
+        }
     }
 
-    console.log('\nOpening browser...')
-    openUrlInBrowser(fullUrl)
+    if (shouldOpenBrowser) {
+        console.log('\nOpening browser...')
+        openUrlInBrowser(fullUrl)
+    }
 
     console.log('\nWaiting for authorization...')
 
