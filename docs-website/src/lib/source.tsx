@@ -4,14 +4,16 @@ import { I18nConfig } from 'fumadocs-core/i18n'
 import React, { lazy, Suspense } from 'react'
 import { useHydrated } from './hooks'
 import { StructuredData } from './mdx-heavy'
+import { prefetchDNS, preconnect } from 'react-dom'
 
 // simple in-memory cache so every icon is fetched only once
 const cache: Record<string, React.ComponentType<any>> = {}
 
 type DynamicIconProps = { name: string } & React.SVGProps<SVGSVGElement>
 
-
 export function DynamicIconInner({ name, ...rest }: DynamicIconProps) {
+    prefetchDNS('https://esm.sh')
+    preconnect('https://esm.sh')
     const hidrated = useHydrated()
     if (!hidrated) return null
     const Icon =
