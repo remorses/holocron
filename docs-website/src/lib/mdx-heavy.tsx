@@ -147,7 +147,7 @@ const remarkExtractFirstHeading = () => {
 import { TOCItemType } from 'fumadocs-core/server'
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
 import { trySync } from './utils'
-import { remarkCodeGroup, remarkSingleAccordionItems } from './remark-plugins'
+import { remarkCodeGroup, remarkMermaidCode, remarkSingleAccordionItems } from './remark-plugins'
 
 const injectData = () => {
     return (tree, file) => {
@@ -220,6 +220,7 @@ export const getProcessor = function getProcessor({
                 .use(remarkExtractFirstHeading)
                 .use(injectData)
                 .use(remarkCodeGroup)
+                .use(remarkMermaidCode)
                 .use(remarkSingleAccordionItems)
                 .use(remarkStringify)
         )

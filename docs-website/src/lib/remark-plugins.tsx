@@ -107,6 +107,35 @@ export function remarkCodeGroup({
     }
 }
 
+export function remarkMermaidCode(): Transformer<Root, Root> {
+    return (tree) => {
+        visit(tree, 'code', (node, index, parent) => {
+            if (
+                node.type !== 'code' ||
+                node.lang !== 'mermaid' ||
+                !parent ||
+                typeof index !== 'number'
+            ) {
+                return
+            }
+
+            const newNode = {
+                type: 'mdxJsxFlowElement',
+                name: 'Mermaid',
+                attributes: [
+                    {
+                        type: 'mdxJsxAttribute',
+                        name: 'chart',
+                        value: node.value,
+                    },
+                ],
+                children: [],
+            }
+
+            parent.children.splice(index, 1, newNode as any)
+        })
+    }
+}
 
 // adds wrapper AccordionGroup if using a single Accordion without a parent for it
 export function remarkSingleAccordionItems(): Transformer<Root, Root> {

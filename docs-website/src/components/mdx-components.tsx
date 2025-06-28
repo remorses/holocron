@@ -13,6 +13,8 @@ import { DynamicIcon } from '../lib/icon'
 import React from 'react'
 import { MdxParentsProvider } from './mdx-context'
 
+const Mermaid = React.lazy(() => import('./mermaid'))
+
 function TodoItem({
     checked,
     onChange,
@@ -469,11 +471,9 @@ function Tabs(props: React.ComponentProps<typeof TabsComponents.Tabs>) {
 
     return (
         <TabsComponents.Tabs {...props} items={items}>
-          <MdxParentsProvider tag='Tabs'>
-            {normalizedChildren}
-          </MdxParentsProvider>
-
-
+            <MdxParentsProvider tag='Tabs'>
+                {normalizedChildren}
+            </MdxParentsProvider>
         </TabsComponents.Tabs>
     )
 }
@@ -509,6 +509,7 @@ export const mdxComponents = {
     Step,
     CodeGroup: Tabs,
     Frame,
+    Mermaid,
     // API documentation components
     // ParamField,
     // ResponseField,
