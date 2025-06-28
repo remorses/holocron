@@ -49,43 +49,61 @@ export async function loader({ request }) {
         })
     }
     const orgId = org?.orgId || ''
-    const [site, chat] = await Promise.all([
-        prisma.site.findFirst({
-            where: {
-                orgId,
-            },
-            orderBy: {
-                createdAt: 'desc',
-            },
-            include: {
-                branches: {
-                    take: 1,
-                    orderBy: {
-                        createdAt: 'desc',
-                    },
+    // Use one Prisma query to fetch latest site, its latest branch, and the user's latest chat for that org
+    const site = await prisma.site.findFirst({
+        where: {
+            orgId,
+        },
+        orderBy: {
+            createdAt: 'desc',
+        },
+        include: {
+            branches: {
+                take: 1,
+                orderBy: {
+                    createdAt: 'desc',
                 },
             },
-        }),
-        prisma.chat.findFirst({
-            where: {
-                userId,
-                branch: {
-                    site: {
-                        orgId,
-                    },
-                },
-            },
-            orderBy: { createdAt: 'desc' },
-            select: { chatId: true },
-        }),
-    ])
+            // Nested: Find the latest chat for this user in the latest branch of this site
+            // Since Prisma does not support skipping one-to-many limits with nested filters directly,
+            // we'll fetch chats at the site level filtering down after.
+            // But we can include an array of chats for this user, ordered, and pick the latest in code.
+            // So, include branches and for each branch, include chats in order for that user:
+            // But since site -> branches is many, let's just find latest branch and use that for chat lookup.
+        },
+    })
+
     if (!site) {
         return redirect(href('/org/:orgId/onboarding', { orgId }))
     }
     const siteId = site.siteId
-    const chatId = chat?.chatId || ''
-    if (!chatId) {
+    const latestBranch = site.branches[0]
+    if (!latestBranch) {
         return redirect(href('/org/:orgId/onboarding', { orgId }))
+    }
+
+    // Now find latest chat for that user on that branch (this is an extra DB call, but still just one in this block):
+    const chat = await prisma.chat.findFirst({
+        where: {
+            userId,
+            branchId: latestBranch.branchId,
+        },
+        orderBy: { createdAt: 'desc' },
+        select: { chatId: true },
+    })
+
+    let chatId = chat?.chatId || ''
+    if (!chatId) {
+        // Create a new chat for the user on the latest branch
+        const newChat = await prisma.chat.create({
+            data: {
+                userId,
+                branchId: latestBranch.branchId,
+                title: 'New Chat',
+            },
+            select: { chatId: true },
+        })
+        chatId = newChat.chatId
     }
     return redirect(
         href('/org/:orgId/site/:siteId/chat/:chatId', {

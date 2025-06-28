@@ -1,27 +1,10 @@
-import { openai, OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
-import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
-
-import dedent from 'string-dedent'
-
-import { anthropic } from '@ai-sdk/anthropic'
-import {
-    appendResponseMessages,
-    generateObject,
-    Message,
-    streamText,
-    tool,
-    UIMessage,
-} from 'ai'
 import cuid from '@bugsnag/cuid'
 import { prisma } from 'db'
-import {
-    getKeyForMediaAsset,
-    parseKeyForMediaAsset,
-    s3,
-} from 'docs-website/src/lib/s3'
+import { getKeyForMediaAsset, s3 } from 'docs-website/src/lib/s3'
 import { Spiceflow } from 'spiceflow'
 import { cors } from 'spiceflow/cors'
 import { openapi } from 'spiceflow/openapi'
+import exampleDocs from 'website/scripts/example-docs.json'
 import { z } from 'zod'
 import { getSession } from './better-auth'
 import { env } from './env'
@@ -32,26 +15,13 @@ import {
     pushToPrOrBranch,
 } from './github.server'
 import { filesFromGithub, pagesFromFilesList, syncSite } from './sync'
-import { mdxRegex } from './utils'
-import exampleDocs from 'website/scripts/example-docs.json'
 
-import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
-import path from 'path'
-import { printDirectoryTree } from '../components/directory-tree'
-import {
-    createEditExecute,
-    editToolParamsSchema,
-    fileUpdateSchema,
-} from './edit-tool'
-import {
-    createRenderFormExecute,
-    RenderFormParameters,
-} from './render-form-tool'
+import { createHash } from 'crypto'
+import { fileUpdateSchema } from './edit-tool'
 import {
     generateMessageApp,
     getPageContent,
 } from './spiceflow-generate-message'
-import { createHash } from 'crypto'
 
 // Utility to get client IP from request, handling Cloudflare proxy headers
 function getClientIp(request: Request): string {
@@ -183,7 +153,9 @@ export const app = new Spiceflow({ basePath: '/api' })
             // Find the branch for this GitHub branch
             const branch = site.branches[0]
             if (!branch) {
-                throw new AppError(`Branch '${githubBranch}' not found for this site`)
+                throw new AppError(
+                    `Branch '${githubBranch}' not found for this site`,
+                )
             }
 
             const branchId = branch.branchId
@@ -935,6 +907,16 @@ export const app = new Spiceflow({ basePath: '/api' })
                             githubBranch: githubBranch || 'main',
                         },
                     },
+                },
+            })
+
+            // Create a default chat for the new site branch and user
+            await prisma.chat.create({
+                data: {
+                    branchId,
+                    userId,
+                    title: `Welcome Chat for ${name}`,
+                    description: 'This is your first chat for the new site.',
                 },
             })
 
