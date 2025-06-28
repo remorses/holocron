@@ -102,11 +102,11 @@ async function updatePagesFromCommits(
     if (!siteBranch) {
         logger.log(`No branch found for ${githubBranch} in ${owner}/${repoName}`)
 
-        // Check if there's a docs.json in the commits with a new domain
+        // Check if there's a fumabase.json in the commits with a new domain
         const newBranch = await tryCreateBranchFromDocsJson(args)
 
         if (!newBranch) {
-            logger.log(`No docs.json with available domain found for ${githubBranch}`)
+            logger.log(`No fumabase.json with available domain found for ${githubBranch}`)
             return
         }
 
@@ -320,7 +320,7 @@ async function handleDeletions({
                     data: { docsJson: {} },
                 })
                 logger.log(
-                    `Deleted docs.json/docs.jsonc for site ${site.siteId}`,
+                    `Deleted fumabase.json/fumabase.jsonc for site ${site.siteId}`,
                 )
                 continue
             }
@@ -389,7 +389,7 @@ async function tryCreateBranchFromDocsJson(
     const { installationId, owner, repoName, githubBranch, commits } = args
     const octokit = await getOctokit({ installationId })
 
-    // Look for docs.json in the commits
+    // Look for fumabase.json in the commits
     const docsJsonFiles: string[] = []
     for (const commit of commits) {
         const added = commit.added || []
@@ -406,8 +406,8 @@ async function tryCreateBranchFromDocsJson(
         return null
     }
 
-    // Get the latest docs.json content
-    const docsJsonPath = docsJsonFiles[0] // Use first found docs.json
+    // Get the latest fumabase.json content
+    const docsJsonPath = docsJsonFiles[0] // Use first found fumabase.json
     try {
         const { data } = await octokit.rest.repos.getContent({
             owner,
@@ -423,9 +423,9 @@ async function tryCreateBranchFromDocsJson(
         const content = Buffer.from(data.content, 'base64').toString('utf-8')
         const docsJson: DocsJsonType = safeJsonParse(content, {})
 
-        // Check if docs.json has domains field with at least one domain
+        // Check if fumabase.json has domains field with at least one domain
         if (!docsJson.domains || !Array.isArray(docsJson.domains) || docsJson.domains.length === 0) {
-            logger.log(`docs.json found but no valid domains field in ${githubBranch}`)
+            logger.log(`fumabase.json found but no valid domains field in ${githubBranch}`)
             return null
         }
 
@@ -493,7 +493,7 @@ async function tryCreateBranchFromDocsJson(
         return newBranch
 
     } catch (error) {
-        logger.error(`Error creating branch from docs.json:`, error)
+        logger.error(`Error creating branch from fumabase.json:`, error)
         return null
     }
 }

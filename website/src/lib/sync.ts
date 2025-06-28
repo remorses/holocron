@@ -184,7 +184,7 @@ export async function* pagesFromFilesList({
         }
     }
 
-    // Now yield docs.json if provided
+    // Now yield fumabase.json if provided
     if (docsJson !== undefined) {
         const content =
             typeof docsJson === 'string'
@@ -194,9 +194,9 @@ export async function* pagesFromFilesList({
             type: 'docsJson',
             jsonData:
                 typeof docsJson === 'string' ? JSON.parse(docsJson) : docsJson,
-            githubPath: 'docs.json',
+            githubPath: 'fumabase.json',
             githubSha: gitBlobSha(content),
-            filePath: 'docs.json',
+            filePath: 'fumabase.json',
             content,
         }
     }
@@ -564,7 +564,7 @@ export function isMetaFile(path: string) {
 
 export function isDocsJsonFile(path: string): boolean {
     if (!path) return false
-    return path === 'docs.json' || path === 'docs.jsonc'
+    return path === 'fumabase.json' || path === 'fumabase.jsonc'
 }
 
 export function isStylesCssFile(path: string): boolean {
@@ -658,7 +658,7 @@ export async function* filesFromGithub({
                 !isStylesCssFile(pathWithFrontSlash)
             ) {
                 console.log(
-                    `Skipping file ${file.path} because it is not a markdown, meta, docs.json, or styles.css file`,
+                    `Skipping file ${file.path} because it is not a markdown, meta, fumabase.json, or styles.css file`,
                 )
                 return false
             }
@@ -755,7 +755,7 @@ export async function* filesFromGithub({
         yield meta
     }
 
-    // Process docs.json file (root only)
+    // Process fumabase.json file (root only)
     const docsJsonFile = files.find((x) => {
         if (
             x.content == null ||
@@ -780,7 +780,7 @@ export async function* filesFromGithub({
             yield docsJson
         } else {
             console.log(
-                'skipping docs.json file for invalid json',
+                'skipping fumabase.json file for invalid json',
                 docsJsonFile.githubPath,
             )
         }

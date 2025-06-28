@@ -1,5 +1,5 @@
 {
-  "$schema": "https://fumabase.com/docs.json",
+  "$schema": "https://fumabase.com/fumabase.json",
   "theme": "mint",
   "name": "Mint Starter Kit",
   "colors": {

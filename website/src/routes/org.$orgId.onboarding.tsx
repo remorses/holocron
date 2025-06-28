@@ -126,7 +126,7 @@ export async function action({ request, params }: Route.ActionArgs) {
                         create: {
                             branchId,
                             title: 'Main',
-                            // domain will be created based on docs.json by syncSite
+                            // domain will be created based on fumabase.json by syncSite
                         },
                     },
                 },

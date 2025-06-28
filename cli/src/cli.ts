@@ -368,15 +368,15 @@ cli.command('init', 'Initialize a new fumabase project')
                 process.exit(1)
             }
 
-            // Save docs.json locally
-            const docsJsonPath = path.join(process.cwd(), 'docs.json')
+            // Save fumabase.json locally
+            const docsJsonPath = path.join(process.cwd(), 'fumabase.json')
             await fs.promises.writeFile(
                 docsJsonPath,
                 JSON.stringify(data.docsJson, null, 2),
             )
 
             console.log('Site created successfully!')
-            console.log(`docs.json saved to: ${docsJsonPath}`)
+            console.log(`fumabase.json saved to: ${docsJsonPath}`)
             console.log(`Site ID: ${data.siteId}`)
             console.log(`Branch ID: ${data.branchId}`)
             console.log('\nYou can now run: fumabase dev')
@@ -495,7 +495,7 @@ cli.command('login', 'Login to fumabase')
     })
 
 cli.command('dev', 'Preview your fumabase website')
-    .option('--dir <dir>', 'Directory with the docs.json', {
+    .option('--dir <dir>', 'Directory with the fumabase.json', {
         default: process.cwd(),
     })
     .action(async function main(options) {
@@ -522,7 +522,7 @@ cli.command('dev', 'Preview your fumabase website')
                         filePath.endsWith('.mdx') ||
                         filePath.endsWith('.md') ||
                         filePath.endsWith('meta.json') ||
-                        filePath.endsWith('docs.json') ||
+                        filePath.endsWith('fumabase.json') ||
                         filePath.endsWith('styles.css')
                     ) {
                         // console.log(filePath)
@@ -545,14 +545,14 @@ cli.command('dev', 'Preview your fumabase website')
             const docsJson = await readTopLevelDocsJson(dir)
             if (!docsJson) {
                 console.error(
-                    'docs.json file not found at the project root. Use fumabase init to create a new project',
+                    'fumabase.json file not found at the project root. Use fumabase init to create a new project',
                 )
                 process.exit(1)
             }
 
             const siteId = docsJson?.siteId
             if (!siteId) {
-                console.error('siteId not found in docs.json')
+                console.error('siteId not found in fumabase.json')
                 process.exit(1)
             }
             const preferredHost = 'fumabase.com'
@@ -565,12 +565,12 @@ cli.command('dev', 'Preview your fumabase website')
             })[0]
             if (!previewDomain) {
                 console.error(
-                    `This docs.json has no domains, cannot preview the website`,
+                    `This fumabase.json has no domains, cannot preview the website`,
                 )
                 process.exit(1)
             }
             // const githubBranch = getCurrentGitBranch()
-            
+
             // Get config to check for lastWebsocketId
             let config: UserConfig | null = null
             try {
@@ -578,7 +578,7 @@ cli.command('dev', 'Preview your fumabase website')
             } catch (error) {
                 // Ignore error if not logged in, dev command can work without login
             }
-            
+
             const [websocketRes] = await Promise.all([
                 // apiClient.api.getPreviewUrlForSiteId.post({
                 //     githubBranch,
@@ -588,7 +588,7 @@ cli.command('dev', 'Preview your fumabase website')
             ])
 
             const { websocketId, ws } = websocketRes
-            
+
             // Save the websocket ID for next time if we have a config
             if (config && websocketId !== config.lastWebsocketId) {
                 config.lastWebsocketId = websocketId
@@ -598,7 +598,7 @@ cli.command('dev', 'Preview your fumabase website')
             const previewUrl = new URL(
                 previewDomain.includes('.localhost:') ||
                 previewDomain.endsWith('.localhost')
-                    ? `http://${previewDomain}`
+                    ? `http://${previewDomain}:7777`
                     : `https://${previewDomain}`,
             )
             previewUrl.searchParams.set('websocketId', websocketId)
@@ -701,61 +701,66 @@ cli.command('dev', 'Preview your fumabase website')
         }
     })
 
-cli.command('sync', 'Sync current branch with GitHub')
-    .action(async () => {
-        try {
-            const config = getUserConfig()
+cli.command('sync', 'Sync current branch with GitHub').action(async () => {
+    try {
+        const config = getUserConfig()
 
-            // Get current git branch
-            const gitBranch = await getCurrentGitBranch()
-            if (!gitBranch) {
-                console.error('Error: Cannot determine current git branch')
-                console.error('Make sure you are in a git repository with a valid branch')
-                process.exit(1)
-            }
-
-            // Get GitHub info to validate this is a GitHub repo
-            const githubInfo = getGitHubInfo()
-            if (!githubInfo) {
-                console.error('Error: Cannot determine GitHub repository information')
-                console.error('Make sure you are in a GitHub repository with a valid remote origin')
-                process.exit(1)
-            }
-
-            // Read docs.json to get siteId
-            const docsJson = await readTopLevelDocsJson(process.cwd())
-            if (!docsJson?.siteId) {
-                console.error('Error: docs.json not found or missing siteId')
-                console.error('Run "fumabase init" to initialize this project')
-                process.exit(1)
-            }
-
-            const siteId = docsJson.siteId
-
-            console.log(`Syncing branch "${gitBranch}" for site ${siteId}...`)
-
-            // Call the sync API
-            const { data, error } = await apiClient.api.githubSync.post({
-                siteId,
-                githubBranch: gitBranch,
-            })
-
-            if (error) {
-                console.error('Sync failed:', error.message || 'Unknown error')
-                process.exit(1)
-            }
-
-            if (data?.success) {
-                console.log('✅ Sync completed successfully!')
-                console.log(`Site ID: ${data.siteId}`)
-                console.log(`Branch ID: ${data.branchId}`)
-                console.log(`GitHub Branch: ${data.githubBranch}`)
-            } else {
-                console.error('Sync failed: Invalid response from server')
-                process.exit(1)
-            }
-        } catch (error) {
-            console.error('Error during sync:', error.message || error)
+        // Get current git branch
+        const gitBranch = await getCurrentGitBranch()
+        if (!gitBranch) {
+            console.error('Error: Cannot determine current git branch')
+            console.error(
+                'Make sure you are in a git repository with a valid branch',
+            )
             process.exit(1)
         }
-    })
+
+        // Get GitHub info to validate this is a GitHub repo
+        const githubInfo = getGitHubInfo()
+        if (!githubInfo) {
+            console.error(
+                'Error: Cannot determine GitHub repository information',
+            )
+            console.error(
+                'Make sure you are in a GitHub repository with a valid remote origin',
+            )
+            process.exit(1)
+        }
+
+        // Read fumabase.json to get siteId
+        const docsJson = await readTopLevelDocsJson(process.cwd())
+        if (!docsJson?.siteId) {
+            console.error('Error: fumabase.json not found or missing siteId')
+            console.error('Run "fumabase init" to initialize this project')
+            process.exit(1)
+        }
+
+        const siteId = docsJson.siteId
+
+        console.log(`Syncing branch "${gitBranch}" for site ${siteId}...`)
+
+        // Call the sync API
+        const { data, error } = await apiClient.api.githubSync.post({
+            siteId,
+            githubBranch: gitBranch,
+        })
+
+        if (error) {
+            console.error('Sync failed:', error.message || 'Unknown error')
+            process.exit(1)
+        }
+
+        if (data?.success) {
+            console.log('✅ Sync completed successfully!')
+            console.log(`Site ID: ${data.siteId}`)
+            console.log(`Branch ID: ${data.branchId}`)
+            console.log(`GitHub Branch: ${data.githubBranch}`)
+        } else {
+            console.error('Sync failed: Invalid response from server')
+            process.exit(1)
+        }
+    } catch (error) {
+        console.error('Error during sync:', error.message || error)
+        process.exit(1)
+    }
+})

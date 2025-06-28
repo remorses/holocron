@@ -42,7 +42,7 @@ fumabase init
 The init command will:
 - Scan your directory for markdown files (`.md` and `.mdx`)
 - Create a new site on Fumabase
-- Generate a `docs.json` configuration file
+- Generate a `fumabase.json` configuration file
 - If no markdown files are found, it will offer to download a starter template
 
 **Requirements:**
@@ -58,16 +58,16 @@ fumabase dev
 ```
 
 **Options:**
-- `--dir <dir>` - Specify the directory containing your `docs.json` file (defaults to current directory)
+- `--dir <dir>` - Specify the directory containing your `fumabase.json` file (defaults to current directory)
 
 The dev command will:
-- Watch for changes to your markdown files, `meta.json`, `docs.json`, and `styles.css`
+- Watch for changes to your markdown files, `meta.json`, `fumabase.json`, and `styles.css`
 - Open a preview of your site in the browser
 - Automatically reload when you make changes
 - Display a preview URL with live updates
 
 **Requirements:**
-- A valid `docs.json` file in your project root (created by `fumabase init`)
+- A valid `fumabase.json` file in your project root (created by `fumabase init`)
 
 ### `fumabase sync`
 
@@ -84,7 +84,7 @@ The sync command will:
 
 **Requirements:**
 - You must be in a Git repository with a GitHub remote
-- A valid `docs.json` file with a `siteId`
+- A valid `fumabase.json` file with a `siteId`
 - You must be logged in
 
 ## Getting Started
@@ -112,7 +112,7 @@ Fumabase recognizes the following files:
 - `**/*.md` - Markdown documentation files
 - `**/*.mdx` - MDX documentation files (Markdown with JSX)
 - `meta.json` - Navigation and metadata configuration
-- `docs.json` - Site configuration (auto-generated)
+- `fumabase.json` - Site configuration (auto-generated)
 - `styles.css` - Custom styles for your documentation
 
 ## Deployment

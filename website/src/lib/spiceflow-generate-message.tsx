@@ -36,15 +36,15 @@ function createSystemPrompt({}) {
 
   You have access to an edit tool to edit files in the project. You can use another tool to list all the files in the project.
 
-  You can always edit a top level docs.json file, this file has the following json schema:
+  You can always edit a top level fumabase.json file, this file has the following json schema:
 
-  \`\`\`json title="docs.json schema"
+  \`\`\`json title="fumabase.json schema"
   ${JSON.stringify(docsJsonSchema, null, 2)}
   \`\`\`
 
-  To edit the docs.json file you MUST always use the render_form tool to display nice UI forms to the user.
+  To edit the fumabase.json file you MUST always use the render_form tool to display nice UI forms to the user.
 
-  The docs.json file will be stale when using the render_form tool, so do not use it with the edit tool.
+  The fumabase.json file will be stale when using the render_form tool, so do not use it with the edit tool.
 
   `
 }
@@ -152,7 +152,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                             return { path, title }
                         })
                         filePaths.push({
-                            path: 'docs.json',
+                            path: 'fumabase.json',
                             title: 'Use the render_form tool to update these values',
                         })
                         // filePaths.push({ path: 'styles.css', title: 'The CSS styles for the website. Only update this file for advanced CSS customisations' })
@@ -418,17 +418,17 @@ export async function getTabFilesWithoutContents({ branchId }) {
 }
 
 export async function getPageContent({ githubPath, branchId }) {
-    // Support for special files: docs.json and styles.css
-    if (githubPath === 'docs.json') {
+    // Support for special files: fumabase.json and styles.css
+    if (githubPath === 'fumabase.json') {
         const branch = await prisma.siteBranch.findFirst({
             where: { branchId },
             select: { docsJson: true },
         })
         if (!branch || !branch.docsJson) {
-            throw new Error(`Cannot find docs.json for branch ${branchId}`)
+            throw new Error(`Cannot find fumabase.json for branch ${branchId}`)
         }
         return (
-            `> Notice that this is the docs.json file before any form updates. Form updates are not saved on the filesystem until save! There is no need to inspect that your changes where succesful. \n\n` +
+            `> Notice that this is the fumabase.json file before any form updates. Form updates are not saved on the filesystem until save! There is no need to inspect that your changes where succesful. \n\n` +
             JSON.stringify(branch.docsJson, null, 2)
         )
     }

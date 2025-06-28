@@ -73,12 +73,12 @@ import { AnimatePresence, motion } from 'unframer'
 import { FilesInDraft } from 'docs-website/src/lib/docs-state'
 
 function keyForDocsJson({ chatId }) {
-    return `docs.json-${chatId}`
+    return `fumabase.json-${chatId}`
 }
 
 const setDocsJsonState = ({ values, previousJsonString, chatId }) => {
     console.log(`form values changed, sending state to docs iframe`)
-    const githubPath = 'docs.json'
+    const githubPath = 'fumabase.json'
 
     const newJson = JSON.stringify(
         {
@@ -89,7 +89,7 @@ const setDocsJsonState = ({ values, previousJsonString, chatId }) => {
         null,
         2,
     )
-    console.log(`updating docs.json`, newJson)
+    console.log(`updating fumabase.json`, newJson)
 
     const newChanges: FilesInDraft = {
         [githubPath]: {
@@ -131,12 +131,12 @@ export default function Chat({}) {
                 ? localStorage.getItem(keyForDocsJson({ chatId }))
                 : undefined
         const docsJsonString =
-            useWebsiteState.getState()?.filesInDraft['docs.json']?.content || ''
+            useWebsiteState.getState()?.filesInDraft['fumabase.json']?.content || ''
         const data = safeJsonParse(persistedValues || docsJsonString) || null
         if (persistedValues) {
-            console.log(`localStorage docs.json: `, data)
+            console.log(`localStorage fumabase.json: `, data)
         } else {
-            console.log('docs.json', data)
+            console.log('fumabase.json', data)
         }
         if (!data) return
 

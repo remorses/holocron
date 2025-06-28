@@ -52,7 +52,7 @@ export const completeDocsConfigExample: DocsJsonType = {
     $schema: 'https://example.com/docs-schema.json',
     name: 'Example Documentation',
     description:
-        'Complete example of docs.json configuration showcasing all available options',
+        'Complete example of fumabase.json configuration showcasing all available options',
     siteId: '',
     logo: {
         light: '/logo-light.svg',

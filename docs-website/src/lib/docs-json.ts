@@ -355,7 +355,7 @@ const CSSVariablesSchema = z
         'Object of CSS variable names and their values. Variables defined here will be injected into the website as CSS custom properties.',
     )
 
-// === Main docs.json schema ===
+// === Main fumabase.json schema ===
 export const DocsConfigSchema = z
     .object({
         $schema: z
@@ -390,11 +390,11 @@ export const DocsConfigSchema = z
             .array(z.string())
             .optional()
             .describe(
-                'Custom domains to connect to this documentation site. Each domain should point to cname.fumabase.com via CNAME record. Domains will be connected when docs.json is pushed to the main branch.',
+                'Custom domains to connect to this documentation site. Each domain should point to cname.fumabase.com via CNAME record. Domains will be connected when fumabase.json is pushed to the main branch.',
             ),
     })
     .strict()
-    .describe('Schema for docs.json configuration')
+    .describe('Schema for fumabase.json configuration')
 
 export type DocsJsonType = z.infer<typeof DocsConfigSchema>
 

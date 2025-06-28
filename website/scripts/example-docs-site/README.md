@@ -16,7 +16,7 @@ Install the [Fumabase CLI](https://www.npmjs.com/package/fumabase) to preview th
 npm i -g fumabase
 ```
 
-Run the following command at the root of your documentation (where docs.json is)
+Run the following command at the root of your documentation (where fumabase.json is)
 
 ```
 fumabase dev
@@ -29,4 +29,4 @@ Install our Github App to auto propagate changes from your repo to your deployme
 #### Troubleshooting
 
 - Fumabase dev isn't running - Run `fumabase install` it'll re-install dependencies.
-- Page loads as a 404 - Make sure you are running in a folder with `docs.json`
+- Page loads as a 404 - Make sure you are running in a folder with `fumabase.json`
