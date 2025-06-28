@@ -33,7 +33,7 @@ export const renderNode: RenderNode = (node, transform) => {
     }
 }
 
-function parseMetaString(
+export function parseMetaString(
     meta: string | null | undefined,
 ): Record<string, string> {
     if (!meta) {

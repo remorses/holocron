@@ -147,6 +147,7 @@ const remarkExtractFirstHeading = () => {
 import { TOCItemType } from 'fumadocs-core/server'
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
 import { trySync } from './utils'
+import { remarkCodeGroup } from './remark-plugins'
 
 const injectData = () => {
     return (tree, file) => {
@@ -218,6 +219,7 @@ export const getProcessor = function getProcessor({
                 .use(remarkCodeToHtml({ highlighter, onMissingLanguage }))
                 .use(remarkExtractFirstHeading)
                 .use(injectData)
+                .use(remarkCodeGroup)
                 .use(remarkStringify)
         )
     }

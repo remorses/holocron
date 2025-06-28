@@ -190,7 +190,7 @@ describe('markRemarkAstAdditions', () => {
 
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
-            <pre><code>console.log(&quot;hello&quot;)</code></pre>
+            <pre><code class="language-ts">console.log(&quot;hello&quot;)</code></pre>
           </html>
           "
         `)
@@ -405,7 +405,7 @@ const new = "code"
                 <p data-added="true"><span data-added="true">List item 3</span></p>
               </li>
             </ul>
-            <pre><code>const new = &quot;code&quot;</code></pre>
+            <pre><code class="language-ts">const new = &quot;code&quot;</code></pre>
           </html>
           "
         `)
@@ -545,7 +545,9 @@ const new = "code"
         expect(await extractTestData(new_)).toMatchInlineSnapshot(`
           "<html>
             <p>Some text.</p>
-            <pre data-added="true"><code>console.log(&quot;added&quot;)</code></pre>
+            <pre
+              data-added="true"
+            ><code class="language-js">console.log(&quot;added&quot;)</code></pre>
           </html>
           "
         `)

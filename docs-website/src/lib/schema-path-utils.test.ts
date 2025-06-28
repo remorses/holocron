@@ -23,13 +23,8 @@ describe('schema-path-utils', () => {
             )
             expect(paths).toMatchInlineSnapshot(`
               [
+                "siteId",
                 "name",
-                "navTopLinks.{index}.anchor",
-                "navTopLinks.{index}.icon",
-                "navTopLinks.{index}.color.light",
-                "navTopLinks.{index}.color.dark",
-                "navTopLinks.{index}.hidden",
-                "navTopLinks.{index}.href",
                 "description",
                 "logo.light",
                 "logo.dark",
