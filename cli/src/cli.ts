@@ -13,6 +13,9 @@ import {
     readTopLevelDocsJson,
     safeParseJson,
 } from './utils.js'
+import { randomInt } from 'crypto'
+import { homedir } from 'os'
+import prompts from 'prompts'
 
 export const cli = cac('fumabase')
 
@@ -26,11 +29,126 @@ type FilesInDraft = Record<
     }
 >
 
+const url = process.env.SERVER_URL || 'https://fumabase.com'
+const configPath = path.join(homedir(), '.fumabase.json')
+
+const apiClient = createApiClient(url, {
+    onRequest() {
+        try {
+            const configData = fs.readFileSync(configPath, 'utf-8')
+            const config = JSON.parse(configData)
+            if (config.apiKey) {
+                return {
+                    headers: {
+                        'x-api-key': config.apiKey,
+                    },
+                }
+            }
+        } catch (error) {
+            // Continue without API key
+        }
+        
+        return {}
+    },
+})
+
 cli.command('init', 'Initialize a new fumabase project').action(() => {
     // I want to let people create a new website just by using the CLI instead of going to the website. How can I do that? Well, one thing is, sure, I need to connect the GitHub app and I need to create a login for the user. And this is, this requires a website so it's impossible.
     // Instead, what I can do is add an option for the user if they already have a GitHub repository. And in that case, I also remove the administration scope if possible. I also remove the app, which makes people that are scared to connect a GitHub app this way less scared. We also let them choose the repo after connecting the app. After they choose the repo, I would need to open a pull request that adds the docs.json. And then... And then... When the merge happens, the website becomes available. What if instead I push the docs.json directly to a branch I want? To use... Instead... I want... To use... Instead... ... That would be scary for them. Instead I can create a branch for the PR, push there with Docs.Jazel and then show a preview for that branch in the website dashboard.
     // Another option would be to use GitHub Action instead of GitHub App Connection. But that would limit me a lot, for example, for features where you can mention the bot. What if there is a variant of a website that is not connected to GitHub App? And I show the button to connect the GitHub App to keep it in sync. The website changes will be pushed directly to the website. And locally I would pull the changes. Using a special command pull. Using a special command pull. And during deployment I would need to tell the user if there are changes in the website on the database you should first pull instead of deploying. This way you can create a website just with a Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login.
     openUrlInBrowser('https://fumabase.com/login')
+})
+
+cli.command('login', 'Login to fumabase').action(async () => {
+    const cliSessionSecret = Array.from({ length: 6 }, () =>
+        randomInt(0, 10),
+    ).join('')
+
+    console.log('\nFumabase CLI Login')
+    console.log('═'.repeat(50))
+
+    console.log('\nVerification Code:')
+
+    const formattedCode = cliSessionSecret.split('').join(' ')
+    const padding = 3
+    const contentWidth = formattedCode.length + padding * 2
+
+    console.log(`\n    ╔${'═'.repeat(contentWidth)}╗`)
+    console.log(
+        `    ║${' '.repeat(padding)}${formattedCode}${' '.repeat(padding)}║`,
+    )
+    console.log(`    ╚${'═'.repeat(contentWidth)}╝`)
+    console.log('\nMake sure this code matches the one shown in your browser.')
+    console.log('═'.repeat(50))
+
+    const loginUrl = new URL(`${url}/login`)
+    loginUrl.searchParams.set(
+        'callbackUrl',
+        `/after-cli-login?cliSessionSecret=${cliSessionSecret}`,
+    )
+    const fullUrl = loginUrl.toString()
+
+    console.log(`\nReady to open: ${fullUrl}`)
+
+    const response = await prompts({
+        type: 'confirm',
+        name: 'openBrowser',
+        message: 'Open browser to authorize CLI?',
+        initial: true,
+    })
+
+    if (!response.openBrowser) {
+        console.log(
+            '\nLogin cancelled. You can manually open the URL above to continue.',
+        )
+        process.exit(0)
+    }
+
+    console.log('\nOpening browser...')
+    openUrlInBrowser(fullUrl)
+
+    console.log('\nWaiting for authorization...')
+
+    const maxAttempts = 60
+    let attempts = 0
+    let dots = 0
+
+    while (attempts < maxAttempts) {
+        try {
+            const result = await apiClient.api.getCliSession.post({
+                secret: cliSessionSecret,
+            })
+
+            if (result.data?.apiKey) {
+                const config = {
+                    apiKey: result.data.apiKey,
+                    userId: result.data.userId,
+                    userEmail: result.data.userEmail,
+                    orgs: result.data.orgs || [],
+                }
+
+                await fs.promises.writeFile(
+                    configPath,
+                    JSON.stringify(config, null, 2),
+                )
+                console.log('\nLogin successful!')
+                console.log(`API key saved to: ${configPath}`)
+                console.log(`Logged in as: ${result.data.userEmail}`)
+                console.log('\nYou can now use the Fumabase CLI!')
+                return
+            }
+        } catch (error) {
+            // Continue polling
+        }
+
+        dots++
+
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+        attempts++
+    }
+
+    console.error('\n\nLogin timeout. Please try again.')
+    process.exit(1)
 })
 
 cli.command('dev', 'Preview your fumabase website')

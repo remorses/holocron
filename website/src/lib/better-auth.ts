@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth'
 import { prisma } from 'db/'
 import { stripe } from '@better-auth/stripe'
+import { apiKey } from 'better-auth/plugins'
 import Stripe from 'stripe'
 
 import { prismaAdapter } from 'better-auth/adapters/prisma'
@@ -17,6 +18,7 @@ export const auth = betterAuth({
     account: {
         modelName: 'Account',
     },
+
     user: {
         modelName: 'User',
     },
@@ -63,6 +65,29 @@ export const auth = betterAuth({
             stripeClient: stripeClient as any,
             stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET!,
             createCustomerOnSignUp: true,
+        }),
+        apiKey({
+            // Store first 6 characters of API key for UI display
+            startingCharactersConfig: {
+                shouldStore: true,
+                charactersLength: 6,
+            },
+            schema: {
+                apikey: { modelName: 'ApiKey' },
+            },
+            // Default key settings
+            defaultKeyLength: 64,
+            defaultPrefix: 'fuma_', // Prefix to identify fumabase API keys
+            // Rate limiting defaults
+            rateLimit: {
+                enabled: true,
+                timeWindow: 1000 * 60 * 60 * 24, // 24 hours
+                maxRequests: 1000, // 1000 requests per day by default
+            },
+            // Enable metadata for storing custom data with API keys
+            enableMetadata: true,
+            // API keys can act as session replacements
+            disableSessionForAPIKeys: false,
         }),
     ],
 })

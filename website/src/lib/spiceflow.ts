@@ -12,6 +12,7 @@ import {
     tool,
     UIMessage,
 } from 'ai'
+import cuid from '@bugsnag/cuid'
 import { prisma } from 'db'
 import { s3 } from 'docs-website/src/lib/s3'
 import { Spiceflow } from 'spiceflow'
@@ -26,7 +27,7 @@ import {
     getOctokit,
     pushToPrOrBranch,
 } from './github.server'
-import { filesFromGithub, syncSite } from './sync'
+import { filesFromGithub, pagesFromFilesList, syncSite } from './sync'
 import { mdxRegex } from './utils'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
@@ -765,6 +766,150 @@ export const app = new Spiceflow({ basePath: '/api' })
             })
 
             return { prUrl: url }
+        },
+    })
+    .route({
+        method: 'POST',
+        path: '/getCliSession',
+        request: z.object({
+            secret: z.string().regex(/^\d{6}$/, 'Secret must be a 6-digit code'),
+        }),
+        async handler({ request }) {
+            const { secret } = await request.json()
+
+            // Find the CLI login session
+            const session = await prisma.cliLoginSession.findUnique({
+                where: { secret },
+                include: { 
+                    user: {
+                        include: {
+                            orgs: {
+                                include: {
+                                    org: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            })
+
+            if (!session) {
+                return {}
+            }
+
+            // Check if session is expired
+            if (new Date() > session.expiresAt) {
+                // Clean up expired session
+                await prisma.cliLoginSession.delete({
+                    where: { secret },
+                })
+                throw new AppError('Session expired')
+            }
+
+            // Return the API key and user info if session has an API key
+            if (!session.apiKey) {
+                throw new AppError('Session not ready yet')
+            }
+
+            return {
+                apiKey: session.apiKey,
+                userId: session.userId,
+                userEmail: session.user.email,
+                orgs: session.user.orgs.map(({ org }) => ({
+                    orgId: org.orgId,
+                    name: org.name,
+                })),
+            }
+        },
+    })
+    .route({
+        method: 'POST',
+        path: '/createSiteFromFiles',
+        request: z.object({
+            name: z.string().min(1, 'Name is required'),
+            files: z.array(z.object({
+                relativePath: z.string(),
+                contents: z.string(),
+            })),
+            orgId: z.string().min(1, 'Organization ID is required'),
+            githubRepo: z.string().optional(),
+            githubBranch: z.string().optional(),
+        }),
+        async handler({ request, state: { userId } }) {
+            const { name, files, orgId, githubRepo, githubBranch } = await request.json()
+
+            if (!userId) {
+                throw new AppError('User not authenticated')
+            }
+
+            // Check if user has access to the organization
+            const orgUser = await prisma.orgsUsers.findFirst({
+                where: {
+                    userId,
+                    orgId,
+                },
+            })
+
+            if (!orgUser) {
+                throw new AppError('Access denied to organization')
+            }
+
+            // Create site with generated IDs
+            const siteId = cuid()
+            const branchId = cuid()
+            const randomHash = Math.random().toString(36).substring(2, 10)
+            const internalHost = `${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${randomHash}.${env.APPS_DOMAIN}`
+
+            // Convert files to pages format
+            const pages = pagesFromFilesList({
+                files,
+                docsJson: {
+                    siteId,
+                    name,
+                    domains: [internalHost],
+                },
+            })
+
+            // Create site in database
+            const site = await prisma.site.create({
+                data: {
+                    name,
+                    siteId,
+                    orgId,
+                    githubOwner: '', // No repo for this route
+                    githubRepo: githubRepo || '',
+                    branches: {
+                        create: {
+                            branchId,
+                            title: 'Main',
+                            githubBranch: githubBranch || 'main',
+                        },
+                    },
+                },
+            })
+
+            // Sync site content
+            await syncSite({
+                pages,
+                trieveDatasetId: undefined,
+                branchId,
+                orgId,
+                siteId,
+                name,
+            })
+
+            // Get the generated docsJson
+            const branch = await prisma.siteBranch.findUnique({
+                where: { branchId },
+                select: { docsJson: true },
+            })
+
+            return {
+                success: true,
+                siteId,
+                branchId,
+                docsJson: branch?.docsJson || {},
+            }
         },
     })
     .onError(({ error }) => {

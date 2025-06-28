@@ -22,10 +22,8 @@ import {
 import { getSession } from '../lib/better-auth'
 import { env, supportEmail } from '../lib/env'
 import { createNewRepo, doesRepoExist, getOctokit } from '../lib/github.server'
-import {
-    pagesFromExampleJson as pagesFromExampleDocsJson,
-    syncSite,
-} from '../lib/sync'
+import { pagesFromFilesList, syncSite } from '../lib/sync'
+import exampleDocs from 'website/scripts/example-docs.json'
 import type { Route } from './+types/org.$orgId.onboarding'
 import { cloudflareClient } from '../lib/cloudflare'
 
@@ -81,7 +79,8 @@ export async function action({ request, params }: Route.ActionArgs) {
         const siteId = cuid()
         const randomHash = Math.random().toString(36).substring(2, 10)
         const internalHost = `${githubAccountLogin}-${randomHash}.${env.APPS_DOMAIN}`
-        const files = pagesFromExampleDocsJson({
+        const files = pagesFromFilesList({
+            files: exampleDocs,
             docsJson: {
                 siteId,
                 name,
@@ -127,12 +126,6 @@ export async function action({ request, params }: Route.ActionArgs) {
                             branchId,
                             title: 'Main',
                             // domain will be created based on docs.json by syncSite
-                            // domains: {
-                            //     create: {
-                            //         host: internalHost,
-                            //         domainType: 'internalDomain',
-                            //     },
-                            // },
                         },
                     },
                 },

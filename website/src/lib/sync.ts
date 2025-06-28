@@ -2,7 +2,6 @@ import { Sema } from 'sema4'
 import { request } from 'undici'
 import { findMatchInPaths } from 'docs-website/src/lib/html.server'
 import { MarkdownExtension, Prisma, prisma } from 'db'
-import exampleDocs from 'website/scripts/example-docs.json'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { DocumentRecord, StructuredData } from 'docs-website/src/lib/mdx'
@@ -138,33 +137,34 @@ export async function syncSite({
         files: pages,
     })
 }
-export async function* pagesFromExampleJson({
+
+export async function* pagesFromFilesList({
+    files,
     docsJson,
 }: {
-    docsJson: DocsJsonType
+    files: { relativePath: string; contents: string }[]
+    docsJson?: DocsJsonType
 }): AsyncGenerator<AssetForSync & { filePath: string; content: string }> {
-    // First handle meta.json files if present in exampleDocs
-    for (let doc of exampleDocs) {
-        const entryRelativePath = doc.relativePath
-        if (entryRelativePath.endsWith('meta.json')) {
-            let jsonData
-            try {
-                jsonData = JSON.parse(doc.contents)
-            } catch {
-                jsonData = {}
-            }
-            yield {
-                type: 'metaFile',
-                jsonData,
-                githubPath: entryRelativePath,
-                githubSha: '',
-                filePath: entryRelativePath,
-                content: doc.contents,
-            }
+    // First handle meta.json files
+    const metaFiles = files.filter(file => file.relativePath.endsWith('meta.json'))
+    for (const file of metaFiles) {
+        let jsonData
+        try {
+            jsonData = JSON.parse(file.contents)
+        } catch {
+            jsonData = {}
+        }
+        yield {
+            type: 'metaFile',
+            jsonData,
+            githubPath: file.relativePath,
+            githubSha: '',
+            filePath: file.relativePath,
+            content: file.contents,
         }
     }
 
-    // Now yield any docs.json file if docsJson param is provided
+    // Now yield docs.json if provided
     if (docsJson !== undefined) {
         yield {
             type: 'docsJson',
@@ -180,73 +180,61 @@ export async function* pagesFromExampleJson({
         }
     }
 
-    // Next handle styles.css
-    for (let doc of exampleDocs) {
-        const entryRelativePath = doc.relativePath
-        if (entryRelativePath === 'styles.css') {
-            yield {
-                type: 'stylesCss',
-                content: doc.contents,
-                githubPath: entryRelativePath,
-                githubSha: '',
-                filePath: entryRelativePath,
-                // content: doc.contents,
-            }
+    // Handle styles.css
+    const stylesCssFile = files.find(file => file.relativePath === 'styles.css')
+    if (stylesCssFile) {
+        yield {
+            type: 'stylesCss',
+            content: stylesCssFile.contents,
+            githubPath: stylesCssFile.relativePath,
+            githubSha: '',
+            filePath: stylesCssFile.relativePath,
         }
     }
 
     // Handle media assets
-    for (let doc of exampleDocs) {
-        const entryRelativePath = doc.relativePath
-        if (isMediaFile(entryRelativePath)) {
-            // As these are local example files, we just use a 'downloadUrl' as a data-url or placeholder
-            // For lack of a real downloadUrl, just pass content in the struct.
-            const slug = entryRelativePath
-                .replace(/\\/g, '/')
-                .replace(/^\/+/, '')
-            yield {
-                type: 'mediaAsset',
-                slug,
-                sha: '',
-                downloadUrl: '', // Could be a data-url if desired
-                githubPath: entryRelativePath,
-                filePath: entryRelativePath,
-                content: doc.contents,
-            }
+    const mediaFiles = files.filter(file => isMediaFile(file.relativePath))
+    for (const file of mediaFiles) {
+        const slug = file.relativePath.replace(/\\/g, '/').replace(/^\/+/, '')
+        yield {
+            type: 'mediaAsset',
+            slug,
+            sha: '',
+            downloadUrl: '', // For local files, we don't have a download URL
+            githubPath: file.relativePath,
+            filePath: file.relativePath,
+            content: file.contents,
         }
     }
 
-    // Now handle page markdown/MDX files
-    const totalPages = exampleDocs.filter((doc) => {
-        const entryRelativePath = doc.relativePath
-        return isMarkdown(entryRelativePath)
-    }).length
+    // Handle markdown/MDX files
+    const markdownFiles = files.filter(file => isMarkdown(file.relativePath))
+    const totalPages = markdownFiles.length
 
-    for (let doc of exampleDocs) {
-        const entryRelativePath = doc.relativePath
-        if (!isMarkdown(entryRelativePath)) continue
-        const entrySlug =
-            '/' + entryRelativePath.replace(/\\/g, '/').replace(mdxRegex, '')
+    for (const file of markdownFiles) {
+        const entrySlug = '/' + file.relativePath.replace(/\\/g, '/').replace(mdxRegex, '')
+        const extension = file.relativePath.endsWith('.mdx') ? 'mdx' : 'md'
+        
         const { data } = await processMdxInServer({
-            markdown: doc.contents,
-            extension:
-                doc.relativePath.split('.').pop() === 'mdx' ? 'mdx' : 'md',
+            markdown: file.contents,
+            extension,
         })
+        
         const page = {
             type: 'page',
             totalPages,
             pageInput: {
                 slug: entrySlug,
                 title: data.title || '',
-                markdown: doc.contents,
+                markdown: file.contents,
                 frontmatter: data.frontmatter,
-                githubPath: entryRelativePath,
+                githubPath: file.relativePath,
                 githubSha: '',
             },
-
             structuredData: data.structuredData,
         } satisfies AssetForSync
-        yield { ...page, content: doc.contents, filePath: entryRelativePath }
+        
+        yield { ...page, content: file.contents, filePath: file.relativePath }
     }
 }
 

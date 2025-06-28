@@ -28,6 +28,8 @@ model User {
   twofactors       TwoFactor[]
   orgs             OrgsUsers[]
   chats            Chat[]
+  cliLoginSessions CliLoginSession[]
+  apikeys           ApiKey[]
 
   @@unique([email])
   @@unique([username])
@@ -416,4 +418,40 @@ model PageFeedback {
 
   ipHash    String   @default("")
   createdAt DateTime @default(now())
+}
+
+
+model CliLoginSession {
+  secret String @id
+  userId String
+  apiKey String?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model ApiKey {
+  id                  String    @id
+  name                String?
+  start               String?
+  prefix              String?
+  key                 String
+  userId              String
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refillInterval      Int?
+  refillAmount        Int?
+  lastRefillAt        DateTime?
+  enabled             Boolean?
+  rateLimitEnabled    Boolean?
+  rateLimitTimeWindow Int?
+  rateLimitMax        Int?
+  requestCount        Int?
+  remaining           Int?
+  lastRequest         DateTime?
+  expiresAt           DateTime?
+  createdAt           DateTime
+  updatedAt           DateTime
+  permissions         String?
+  metadata            String?
+
 }

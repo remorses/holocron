@@ -51,7 +51,7 @@ export declare const apiClient: {
                     githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
-                }>;
+                } | null>;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -188,32 +188,32 @@ export declare const apiClient: {
                             }>, "many">>;
                             href: import("zod").ZodNullable<import("zod").ZodString>;
                         }, "strip", import("zod").ZodTypeAny, {
-                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            label: string;
-                            description: string | null;
                             name: string;
+                            required: boolean | null;
+                            type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                             options: {
                                 label: string;
                                 value: string;
                             }[] | null;
+                            label: string;
+                            description: string | null;
                             href: string | null;
-                            required: boolean | null;
                             placeholder: string | null;
                             initialValue: string | number | boolean | null;
                             min: number | null;
                             max: number | null;
                             step: number | null;
                         }, {
-                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            label: string;
-                            description: string | null;
                             name: string;
+                            required: boolean | null;
+                            type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                             options: {
                                 label: string;
                                 value: string;
                             }[] | null;
+                            label: string;
+                            description: string | null;
                             href: string | null;
-                            required: boolean | null;
                             placeholder: string | null;
                             initialValue: string | number | boolean | null;
                             min: number | null;
@@ -222,16 +222,16 @@ export declare const apiClient: {
                         }>, "many">;
                     }, "strip", import("zod").ZodTypeAny, {
                         fields: {
-                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            label: string;
-                            description: string | null;
                             name: string;
+                            required: boolean | null;
+                            type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                             options: {
                                 label: string;
                                 value: string;
                             }[] | null;
+                            label: string;
+                            description: string | null;
                             href: string | null;
-                            required: boolean | null;
                             placeholder: string | null;
                             initialValue: string | number | boolean | null;
                             min: number | null;
@@ -240,16 +240,16 @@ export declare const apiClient: {
                         }[];
                     }, {
                         fields: {
-                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            label: string;
-                            description: string | null;
                             name: string;
+                            required: boolean | null;
+                            type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                             options: {
                                 label: string;
                                 value: string;
                             }[] | null;
+                            label: string;
+                            description: string | null;
                             href: string | null;
-                            required: boolean | null;
                             placeholder: string | null;
                             initialValue: string | number | boolean | null;
                             min: number | null;
@@ -261,16 +261,16 @@ export declare const apiClient: {
                     }> & {
                         execute: (args: {
                             fields: {
-                                type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                                label: string;
-                                description: string | null;
                                 name: string;
+                                required: boolean | null;
+                                type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                                 options: {
                                     label: string;
                                     value: string;
                                 }[] | null;
+                                label: string;
+                                description: string | null;
                                 href: string | null;
-                                required: boolean | null;
                                 placeholder: string | null;
                                 initialValue: string | number | boolean | null;
                                 min: number | null;
@@ -286,7 +286,7 @@ export declare const apiClient: {
         };
         githubSync: {
             post: (request: {
-                siteId: string;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -351,13 +351,13 @@ export declare const apiClient: {
         };
         commitChangesToRepo: {
             post: (request: {
-                siteId: string;
+                branchId: string;
                 filesInDraft: Record<string, {
                     content: string;
                     githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
-                }>;
+                } | null>;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -372,14 +372,14 @@ export declare const apiClient: {
         };
         createPrSuggestionForChat: {
             post: (request: {
-                siteId: string;
+                branchId: string;
                 chatId: string;
                 filesInDraft: Record<string, {
                     content: string;
                     githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
-                }>;
+                } | null>;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -387,6 +387,53 @@ export declare const apiClient: {
             } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
                 200: {
                     prUrl: string;
+                };
+            }>>;
+        };
+        getCliSession: {
+            post: (request: {
+                secret: string;
+            }, options?: {
+                headers?: Record<string, unknown> | undefined;
+                query?: Record<string, unknown> | undefined;
+                fetch?: RequestInit | undefined;
+            } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                200: {
+                    apiKey?: undefined;
+                    userId?: undefined;
+                    userEmail?: undefined;
+                    orgs?: undefined;
+                } | {
+                    apiKey: string;
+                    userId: string;
+                    userEmail: string;
+                    orgs: {
+                        orgId: string;
+                        name: string;
+                    }[];
+                };
+            }>>;
+        };
+        createSiteFromFiles: {
+            post: (request: {
+                name: string;
+                files: {
+                    relativePath: string;
+                    contents: string;
+                }[];
+                orgId: string;
+                githubBranch?: string | undefined;
+                githubRepo?: string | undefined;
+            }, options?: {
+                headers?: Record<string, unknown> | undefined;
+                query?: Record<string, unknown> | undefined;
+                fetch?: RequestInit | undefined;
+            } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                200: {
+                    success: boolean;
+                    siteId: any;
+                    branchId: any;
+                    docsJson: string | number | true | import("@prisma/client/runtime/client").JsonObject | import("@prisma/client/runtime/client").JsonArray;
                 };
             }>>;
         };
@@ -444,7 +491,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
-                }>;
+                } | null>;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -581,32 +628,32 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                             }>, "many">>;
                             href: import("zod").ZodNullable<import("zod").ZodString>;
                         }, "strip", import("zod").ZodTypeAny, {
-                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            label: string;
-                            description: string | null;
                             name: string;
+                            required: boolean | null;
+                            type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                             options: {
                                 label: string;
                                 value: string;
                             }[] | null;
+                            label: string;
+                            description: string | null;
                             href: string | null;
-                            required: boolean | null;
                             placeholder: string | null;
                             initialValue: string | number | boolean | null;
                             min: number | null;
                             max: number | null;
                             step: number | null;
                         }, {
-                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            label: string;
-                            description: string | null;
                             name: string;
+                            required: boolean | null;
+                            type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                             options: {
                                 label: string;
                                 value: string;
                             }[] | null;
+                            label: string;
+                            description: string | null;
                             href: string | null;
-                            required: boolean | null;
                             placeholder: string | null;
                             initialValue: string | number | boolean | null;
                             min: number | null;
@@ -615,16 +662,16 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         }>, "many">;
                     }, "strip", import("zod").ZodTypeAny, {
                         fields: {
-                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            label: string;
-                            description: string | null;
                             name: string;
+                            required: boolean | null;
+                            type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                             options: {
                                 label: string;
                                 value: string;
                             }[] | null;
+                            label: string;
+                            description: string | null;
                             href: string | null;
-                            required: boolean | null;
                             placeholder: string | null;
                             initialValue: string | number | boolean | null;
                             min: number | null;
@@ -633,16 +680,16 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         }[];
                     }, {
                         fields: {
-                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            label: string;
-                            description: string | null;
                             name: string;
+                            required: boolean | null;
+                            type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                             options: {
                                 label: string;
                                 value: string;
                             }[] | null;
+                            label: string;
+                            description: string | null;
                             href: string | null;
-                            required: boolean | null;
                             placeholder: string | null;
                             initialValue: string | number | boolean | null;
                             min: number | null;
@@ -654,16 +701,16 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     }> & {
                         execute: (args: {
                             fields: {
-                                type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                                label: string;
-                                description: string | null;
                                 name: string;
+                                required: boolean | null;
+                                type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                                 options: {
                                     label: string;
                                     value: string;
                                 }[] | null;
+                                label: string;
+                                description: string | null;
                                 href: string | null;
-                                required: boolean | null;
                                 placeholder: string | null;
                                 initialValue: string | number | boolean | null;
                                 min: number | null;
@@ -679,7 +726,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         githubSync: {
             post: (request: {
-                siteId: string;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -744,13 +791,13 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         commitChangesToRepo: {
             post: (request: {
-                siteId: string;
+                branchId: string;
                 filesInDraft: Record<string, {
                     content: string;
                     githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
-                }>;
+                } | null>;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -765,14 +812,14 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         createPrSuggestionForChat: {
             post: (request: {
-                siteId: string;
+                branchId: string;
                 chatId: string;
                 filesInDraft: Record<string, {
                     content: string;
                     githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
-                }>;
+                } | null>;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -780,6 +827,53 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
             } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
                 200: {
                     prUrl: string;
+                };
+            }>>;
+        };
+        getCliSession: {
+            post: (request: {
+                secret: string;
+            }, options?: {
+                headers?: Record<string, unknown> | undefined;
+                query?: Record<string, unknown> | undefined;
+                fetch?: RequestInit | undefined;
+            } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                200: {
+                    apiKey?: undefined;
+                    userId?: undefined;
+                    userEmail?: undefined;
+                    orgs?: undefined;
+                } | {
+                    apiKey: string;
+                    userId: string;
+                    userEmail: string;
+                    orgs: {
+                        orgId: string;
+                        name: string;
+                    }[];
+                };
+            }>>;
+        };
+        createSiteFromFiles: {
+            post: (request: {
+                name: string;
+                files: {
+                    relativePath: string;
+                    contents: string;
+                }[];
+                orgId: string;
+                githubBranch?: string | undefined;
+                githubRepo?: string | undefined;
+            }, options?: {
+                headers?: Record<string, unknown> | undefined;
+                query?: Record<string, unknown> | undefined;
+                fetch?: RequestInit | undefined;
+            } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                200: {
+                    success: boolean;
+                    siteId: any;
+                    branchId: any;
+                    docsJson: string | number | true | import("@prisma/client/runtime/client").JsonObject | import("@prisma/client/runtime/client").JsonArray;
                 };
             }>>;
         };
