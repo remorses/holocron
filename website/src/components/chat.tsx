@@ -498,7 +498,8 @@ function Footer() {
 
                             {showCreatePR && (
                                 <div className='justify-end flex grow'>
-                                    {siteData.site.githubInstallations?.length ? (
+                                    {!!siteData.site.githubInstallations
+                                        ?.length ? (
                                         <PrButton
                                             disabled={
                                                 !hasNonPushedChanges ||
@@ -673,7 +674,9 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
                                     </div>
                                 </Button>
                             </TooltipTrigger>
-                            {Boolean(isButtonDisabled && getTooltipMessage()) && (
+                            {Boolean(
+                                isButtonDisabled && getTooltipMessage(),
+                            ) && (
                                 <TooltipContent>
                                     {getTooltipMessage()}
                                 </TooltipContent>
@@ -740,9 +743,7 @@ function InstallGithubApp() {
                         </div>
                     </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                    Connect GitHub to create PRs
-                </TooltipContent>
+                <TooltipContent>Connect GitHub to create PRs</TooltipContent>
             </Tooltip>
         </div>
     )
