@@ -3,12 +3,13 @@ import * as FilesComponents from 'fumadocs-ui/components/files'
 import * as TabsComponents from 'fumadocs-ui/components/tabs'
 import { Accordion, Accordions } from 'fumadocs-ui/components/accordion'
 import { Callout } from 'fumadocs-ui/components/callout'
-import { Card, Cards } from 'fumadocs-ui/components/card'
+import * as CardsComponents from 'fumadocs-ui/components/card'
 import { Steps, Step } from 'fumadocs-ui/components/steps'
 
 import { Latex } from './math'
 import { CSSProperties } from 'react'
 import fumadocsComponents from 'fumadocs-ui/mdx'
+import { DynamicIcon } from '../lib/icon'
 
 function TodoItem({
     checked,
@@ -202,11 +203,11 @@ function MintlifyCard({
 }) {
     // Use fumadocs Card as base but with Mintlify prop mapping
     return (
-        <Card
+        <CardsComponents.Card
             title={title}
             description={children}
             href={href}
-            icon={icon}
+            icon={typeof icon === 'string' ? <DynamicIcon icon={icon} /> : icon}
             {...(img && { image: img })}
         />
     )
@@ -386,6 +387,64 @@ function Frame({
     )
 }
 
+function Tab({
+    children,
+    title,
+    ...props
+}: {
+    children: React.ReactNode
+    title?: string
+}) {
+    return (
+        <TabsComponents.Tab value={title} {...props}>
+            {children}
+        </TabsComponents.Tab>
+    )
+}
+
+function Tabs(props) {
+    // Helper to find tab titles recursively in children
+    function extractTitles(children: React.ReactNode): string[] {
+        const titles: string[] = []
+
+        function recurse(node: React.ReactNode) {
+            if (Array.isArray(node)) {
+                node.forEach(recurse)
+                return
+            }
+            if (node && typeof node === 'object') {
+                // React elements have 'props'
+                // The type is unknown, so use any
+                const el: any = node
+                const value =
+                    el['props'] &&
+                    (el['props']['title'] ?? el['props']['value'])
+                if (typeof value === 'string') {
+                    titles.push(value)
+                }
+                // Recurse into children if they exist
+                if (el['props'] && el['props']['children']) {
+                    recurse(el['props']['children'])
+                }
+            }
+        }
+
+        recurse(children)
+        return titles
+    }
+
+    if (props.items) {
+        return <TabsComponents.Tabs {...props} />
+    }
+    const items = extractTitles(props['children'])
+    // Pass items as prop to TabsComponents.Tabs
+    return (
+        <TabsComponents.Tabs {...props} items={items}>
+            {props['children']}
+        </TabsComponents.Tabs>
+    )
+}
+
 export const mdxComponents = {
     ...fumadocsComponents,
     summary: 'summary',
@@ -394,7 +453,9 @@ export const mdxComponents = {
     // TodoItem,
     Columns,
     Column,
-    ...TabsComponents,
+    Tabs: Tabs,
+    Tab: Tab,
+
     ...FilesComponents,
     Accordion,
     Accordions,
@@ -407,8 +468,8 @@ export const mdxComponents = {
     Check,
     // Mintlify-style other components
     Card: MintlifyCard,
-    Cards,
-    CardGroup: Cards,
+    Cards: CardsComponents.Cards,
+    CardGroup: CardsComponents.Cards,
     Steps,
     Step,
     CodeGroup,

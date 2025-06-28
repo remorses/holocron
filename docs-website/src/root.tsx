@@ -577,7 +577,10 @@ function DocsLayoutWrapper({
                     title: <Logo docsJson={docsJson} />,
                 }}
                 tabMode={navTabMode}
-                sidebar={{}}
+                sidebar={{
+                    defaultOpenLevel: 2,
+                    collapsible: true,
+                }}
                 i18n={i18n}
                 tree={tree}
                 {...{
