@@ -136,6 +136,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         try {
             const { data } = await processMdxInServer({
                 extension: '.md',
+                githubPath: '',
                 markdown: docsJson.banner.content,
             })
             bannerAst = data.ast

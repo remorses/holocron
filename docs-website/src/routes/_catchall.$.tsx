@@ -369,6 +369,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
     const { data } = await processMdxInServer({
         extension: page.extension,
+        githubPath: page.githubPath,
         markdown: page.markdown,
     })
 
