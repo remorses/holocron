@@ -34,7 +34,7 @@ import { getFumadocsSource, getFilesForSource } from './lib/source.server'
 import { getFumadocsClientSource } from './lib/source'
 import { VirtualFile } from 'fumadocs-core/source'
 import frontMatter from 'front-matter'
-import { isInsidePreviewIframe } from './lib/utils'
+import { cn, isInsidePreviewIframe } from './lib/utils'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -267,7 +267,15 @@ async function websocketIdHandling(websocketId: string) {
     const websocketUrl = `wss://fumabase.com/_tunnel/client?id=${websocketId}`
     const ws = new WebSocket(websocketUrl)
     ws.onopen = () => {
+        useDocsState.setState({
+            websocketServerPreviewConnected: true,
+        })
         ws.send(JSON.stringify({ type: 'ready' }))
+    }
+    ws.onclose = () => {
+        useDocsState.setState({
+            websocketServerPreviewConnected: false,
+        })
     }
     ws.onmessage = async (event) => {
         let data: IframeRpcMessage
@@ -585,19 +593,31 @@ function DocsLayoutWrapper({
 function PreviewBanner({ websocketId }: { websocketId?: string }) {
     if (!websocketId) return null
     const handleDisconnect = () => {
-
-      // Remove websocketId from search params before reloading
-      const url = new URL(window.location.href)
-      url.searchParams.set('websocketId', '')
-      window.location.href = url.toString()
+        // Remove websocketId from search params before reloading
+        const url = new URL(window.location.href)
+        url.searchParams.set('websocketId', '')
+        window.location.href = url.toString()
     }
+
+    const websocketServerPreviewConnected = useDocsState(
+        (state) => state.websocketServerPreviewConnected,
+    )
 
     return (
         <Banner className='sticky top-0 z-50 bg-fd-muted text-fd-accent-foreground isolate px-4 py-1 flex items-center justify-between'>
             <div className='flex items-center gap-2'>
-                <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse'></div>
+                <div
+                    className={cn(
+                        'w-2 h-2 rounded-full animate-pulse',
+                        websocketServerPreviewConnected
+                            ? 'bg-green-500'
+                            : 'bg-red-500',
+                    )}
+                ></div>
                 <span className='font-medium text-sm'>
-                    Connected to local preview. Added content will be highlighted green
+                    {websocketServerPreviewConnected
+                        ? 'Connected to local preview. Added content will be highlighted green'
+                        : 'Server disconnected. Please restart the preview server'}
                 </span>
             </div>
             <button
