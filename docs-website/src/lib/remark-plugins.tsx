@@ -1,4 +1,6 @@
 import type { Code, Root } from 'mdast'
+import type { Expression, Program } from 'estree'
+import { parseMetaString } from './mdx-code-block'
 import type { Transformer } from 'unified'
 import { visit } from 'unist-util-visit'
 
@@ -105,8 +107,36 @@ export function remarkCodeGroup({
     }
 }
 
-import type { Expression, Program } from 'estree'
-import { parseMetaString } from './mdx-code-block'
+
+// adds wrapper AccordionGroup if using a single Accordion without a parent for it
+export function remarkSingleAccordionItems(): Transformer<Root, Root> {
+    return (tree) => {
+        visit(tree, 'mdxJsxFlowElement', (node, index, parent) => {
+            if (
+                node.type !== 'mdxJsxFlowElement' ||
+                node.name !== 'Accordion' ||
+                !Array.isArray(parent?.children)
+            ) {
+                return
+            }
+
+            // Check if immediate parent is AccordionGroup or Accordions
+            if (
+                parent.type === 'mdxJsxFlowElement' &&
+                (parent.name === 'AccordionGroup' ||
+                    parent.name === 'Accordions')
+            ) {
+                return
+            }
+
+            // node is a single Accordion without a group, wrap into AccordionGroup
+            const newNode = createElement('AccordionGroup', [], [node])
+
+            // Replace the Accordion node with the wrapped group
+            parent.children.splice(index!, 1, newNode as any)
+        })
+    }
+}
 
 export function createElement(
     name: string,
