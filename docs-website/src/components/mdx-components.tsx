@@ -10,6 +10,8 @@ import { Latex } from './math'
 import { CSSProperties } from 'react'
 import fumadocsComponents from 'fumadocs-ui/mdx'
 import { DynamicIcon } from '../lib/icon'
+import React from 'react'
+import { MdxParentsProvider } from './mdx-context'
 
 function TodoItem({
     checked,
@@ -213,12 +215,6 @@ function MintlifyCard({
     )
 }
 
-// CodeGroup component for tabbed code blocks
-function CodeGroup({ children }: { children: React.ReactNode }) {
-    // Use fumadocs Tabs for CodeGroup functionality
-    return <TabsComponents.Tabs>{children}</TabsComponents.Tabs>
-}
-
 // API documentation components
 function ParamField({
     path,
@@ -396,54 +392,93 @@ function Tab({
     title?: string
 }) {
     return (
-        <TabsComponents.Tab value={title} {...props}>
-            {children}
-        </TabsComponents.Tab>
+        <MdxParentsProvider tag='Tab'>
+            <TabsComponents.Tab value={title} {...props}>
+                {children}
+            </TabsComponents.Tab>
+        </MdxParentsProvider>
     )
 }
 
-function Tabs(props) {
-    // Helper to find tab titles recursively in children
+Tab.displayName = 'Tab'
+
+function Tabs(props: React.ComponentProps<typeof TabsComponents.Tabs>) {
+    // Helper to check if a node is a Tab
+    const isTab = (el: any) => {
+        if (!el || typeof el !== 'object' || !el.type) return false
+        // Accept both imported Tab component or a TabsComponents.Tab function/component
+        return (
+            el.type === Tab ||
+            el.type === TabsComponents.Tab ||
+            (typeof el.type === 'function' && el.type.displayName === 'Tab')
+        )
+    }
+
+    // Normalize children: wrap non-Tab children in a Tab using title/value if possible
+    function normalizeChildren(children: React.ReactNode): React.ReactNode[] {
+        const arr = React.Children.toArray(children)
+        return arr.map((child, idx) => {
+            if (isTab(child)) {
+                return child
+            }
+            // Try to use .props.title or .props.value if available
+            const asElement = child as any
+            const tabTitle =
+                (asElement?.props?.title as string) ??
+                (asElement?.props?.value as string) ??
+                `Tab ${idx + 1}`
+
+            return (
+                <Tab title={tabTitle} key={asElement?.key ?? idx}>
+                    {child}
+                </Tab>
+            )
+        })
+    }
+
+    // Extract tab titles from children (whether already Tab or wrapped)
     function extractTitles(children: React.ReactNode): string[] {
+        const arr = React.Children.toArray(children)
         const titles: string[] = []
-
-        function recurse(node: React.ReactNode) {
-            if (Array.isArray(node)) {
-                node.forEach(recurse)
-                return
+        arr.forEach((child, idx) => {
+            const asElement = child as any
+            if (
+                asElement &&
+                asElement.props &&
+                (typeof asElement.props.title === 'string' ||
+                    typeof asElement.props.value === 'string')
+            ) {
+                titles.push(
+                    (asElement.props.title as string) ??
+                        (asElement.props.value as string) ??
+                        `Tab ${idx + 1}`,
+                )
+            } else {
+                titles.push(`Tab ${idx + 1}`)
             }
-            if (node && typeof node === 'object') {
-                // React elements have 'props'
-                // The type is unknown, so use any
-                const el: any = node
-                const value =
-                    el['props'] &&
-                    (el['props']['title'] ?? el['props']['value'])
-                if (typeof value === 'string') {
-                    titles.push(value)
-                }
-                // Recurse into children if they exist
-                if (el['props'] && el['props']['children']) {
-                    recurse(el['props']['children'])
-                }
-            }
-        }
-
-        recurse(children)
+        })
         return titles
     }
 
     if (props.items) {
         return <TabsComponents.Tabs {...props} />
     }
-    const items = extractTitles(props['children'])
-    // Pass items as prop to TabsComponents.Tabs
+
+    const normalizedChildren = normalizeChildren(props.children)
+    const items = extractTitles(normalizedChildren)
+
     return (
         <TabsComponents.Tabs {...props} items={items}>
-            {props['children']}
+          <MdxParentsProvider tag='Tabs'>
+            {normalizedChildren}
+          </MdxParentsProvider>
+
+
         </TabsComponents.Tabs>
     )
 }
+
+Tabs.displayName = 'Tabs'
 
 export const mdxComponents = {
     ...fumadocsComponents,
@@ -472,7 +507,7 @@ export const mdxComponents = {
     CardGroup: CardsComponents.Cards,
     Steps,
     Step,
-    CodeGroup,
+    CodeGroup: Tabs,
     Frame,
     // API documentation components
     // ParamField,
