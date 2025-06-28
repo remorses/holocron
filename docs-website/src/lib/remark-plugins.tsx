@@ -66,13 +66,14 @@ export function remarkCodeGroup({
                               },
                           ]
                         : []),
-                    expressionToAttribute('items', {
-                        type: 'ArrayExpression',
-                        elements: tabBlocks.map((block) => ({
-                            type: 'Literal',
-                            value: block.title,
-                        })),
-                    }),
+                    {
+                        type: 'mdxJsxAttribute',
+                        name: 'items',
+                        value: {
+                            type: 'mdxJsxAttributeValueExpression',
+                            value: `[${tabBlocks.map((block) => JSON.stringify(block.title)).join(', ')}]`,
+                        },
+                    },
                 ],
                 tabBlocks.map((block) => ({
                     type: 'mdxJsxFlowElement',
@@ -86,8 +87,10 @@ export function remarkCodeGroup({
                     ],
                     children: [
                         {
+                            ...block.code,
                             type: 'code',
                             lang: block.code.lang,
+                            meta: '',
                             value: block.code.value,
                         } satisfies Code,
                     ],

@@ -23,7 +23,7 @@ console.log('Hello' as string)
 
         const result = await processor.process(input)
         expect(String(result)).toMatchInlineSnapshot(`
-          "<Tabs items={}>
+          "<Tabs items={["JavaScript", "TypeScript"]}>
             <Tab value="JavaScript">
               \`\`\`js
               console.log('Hello')
@@ -47,11 +47,11 @@ console.log('Hello' as string)
 
         const input = `<CodeGroup>
 
-\`\`\`python
+\`\`\`python title 1
 print("Hello")
 \`\`\`
 
-\`\`\`ruby
+\`\`\`ruby title 2
 puts "Hello"
 \`\`\`
 
@@ -59,14 +59,14 @@ puts "Hello"
 
         const result = await processor.process(input)
         expect(String(result)).toMatchInlineSnapshot(`
-          "<Tabs items={}>
-            <Tab value="python">
+          "<Tabs items={["title 1", "title 2"]}>
+            <Tab value="title 1">
               \`\`\`python
               print("Hello")
               \`\`\`
             </Tab>
 
-            <Tab value="ruby">
+            <Tab value="title 2">
               \`\`\`ruby
               puts "Hello"
               \`\`\`
@@ -101,7 +101,7 @@ pnpm add package
 
         const result = await processor.process(input)
         expect(String(result)).toMatchInlineSnapshot(`
-          "<Tabs groupId="package-manager" persist items={}>
+          "<Tabs groupId="package-manager" persist items={["npm", "yarn", "pnpm"]}>
             <Tab value="npm">
               \`\`\`bash
               npm install package
@@ -148,7 +148,7 @@ name: test
 
         const result = await processor.process(input)
         expect(String(result)).toMatchInlineSnapshot(`
-          "<CustomTabs items={}>
+          "<CustomTabs items={["Config", "YAML Config"]}>
             <CustomTab value="Config">
               \`\`\`json
               {
@@ -205,7 +205,7 @@ More text
 
         const result = await processor.process(input)
         expect(String(result)).toMatchInlineSnapshot(`
-          "<Tabs items={}>
+          "<Tabs items={["Example", "Styles"]}>
             <Tab value="Example">
               \`\`\`js
               const x = 1
@@ -241,7 +241,7 @@ another block
 
         const result = await processor.process(input)
         expect(String(result)).toMatchInlineSnapshot(`
-          "<Tabs items={}>
+          "<Tabs items={["Code", "Code"]}>
             <Tab value="Code">
               \`\`\`
               plain text code
@@ -276,7 +276,7 @@ function MyComponent() {
 
         const result = await processor.process(input)
         expect(String(result)).toMatchInlineSnapshot(`
-          "<Tabs items={}>
+          "<Tabs items={["Component"]}>
             <Tab value="Component">
               \`\`\`js
               function MyComponent() {
