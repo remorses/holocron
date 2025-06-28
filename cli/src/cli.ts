@@ -2,6 +2,8 @@ import { cac } from 'cac'
 
 import fs from 'fs'
 import path from 'path'
+import { execSync } from 'child_process'
+import { globby } from 'globby'
 
 import chokidar from 'chokidar'
 import { createApiClient } from './generated/spiceflow-client.js'
@@ -32,11 +34,36 @@ type FilesInDraft = Record<
 const url = process.env.SERVER_URL || 'https://fumabase.com'
 const configPath = path.join(homedir(), '.fumabase.json')
 
+function getUserConfig() {
+    try {
+        const configData = fs.readFileSync(configPath, 'utf-8')
+        return JSON.parse(configData)
+    } catch (error) {
+        throw new Error('Not logged in. Please run: fumabase login')
+    }
+}
+
+function getGitHubInfo() {
+    try {
+        const remoteUrl = execSync('git remote get-url origin', { encoding: 'utf-8' }).trim()
+        const match = remoteUrl.match(/github\.com[\/:]([^\/]+)\/([^\/\.]+)/)
+        if (match) {
+            return {
+                githubOwner: match[1],
+                githubRepo: match[2],
+                name: match[2],
+            }
+        }
+    } catch (error) {
+        // No git remote or not a git repo
+    }
+    return null
+}
+
 const apiClient = createApiClient(url, {
     onRequest() {
         try {
-            const configData = fs.readFileSync(configPath, 'utf-8')
-            const config = JSON.parse(configData)
+            const config = getUserConfig()
             if (config.apiKey) {
                 return {
                     headers: {
@@ -52,12 +79,124 @@ const apiClient = createApiClient(url, {
     },
 })
 
-cli.command('init', 'Initialize a new fumabase project').action(() => {
-    // I want to let people create a new website just by using the CLI instead of going to the website. How can I do that? Well, one thing is, sure, I need to connect the GitHub app and I need to create a login for the user. And this is, this requires a website so it's impossible.
-    // Instead, what I can do is add an option for the user if they already have a GitHub repository. And in that case, I also remove the administration scope if possible. I also remove the app, which makes people that are scared to connect a GitHub app this way less scared. We also let them choose the repo after connecting the app. After they choose the repo, I would need to open a pull request that adds the docs.json. And then... And then... When the merge happens, the website becomes available. What if instead I push the docs.json directly to a branch I want? To use... Instead... I want... To use... Instead... ... That would be scary for them. Instead I can create a branch for the PR, push there with Docs.Jazel and then show a preview for that branch in the website dashboard.
-    // Another option would be to use GitHub Action instead of GitHub App Connection. But that would limit me a lot, for example, for features where you can mention the bot. What if there is a variant of a website that is not connected to GitHub App? And I show the button to connect the GitHub App to keep it in sync. The website changes will be pushed directly to the website. And locally I would pull the changes. Using a special command pull. Using a special command pull. And during deployment I would need to tell the user if there are changes in the website on the database you should first pull instead of deploying. This way you can create a website just with a Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login. The Google login.
-    openUrlInBrowser('https://fumabase.com/login')
-})
+cli.command('init', 'Initialize a new fumabase project')
+    .option('--name <name>', 'Name for the documentation site')
+    .action(async (options) => {
+        try {
+            const config = getUserConfig()
+            
+            if (!config.apiKey || !config.orgs?.length) {
+                console.log('You need to be logged in to initialize a project.')
+                console.log('Please run: fumabase login')
+                process.exit(1)
+            }
+
+            // Get GitHub info first
+            const githubInfo = getGitHubInfo()
+            
+            // Get site name
+            let siteName = options.name
+            if (!siteName) {
+                if (githubInfo?.name) {
+                    siteName = githubInfo.name
+                } else {
+                    const response = await prompts({
+                        type: 'text',
+                        name: 'name',
+                        message: 'What is the name of your documentation site?',
+                        initial: path.basename(process.cwd()),
+                    })
+                    siteName = response.name
+                }
+            }
+
+            if (!siteName) {
+                console.log('Site name is required')
+                process.exit(1)
+            }
+
+            // Select organization
+            let orgId = config.orgs[0].orgId
+            if (config.orgs.length > 1) {
+                const response = await prompts({
+                    type: 'select',
+                    name: 'orgId',
+                    message: 'Select an organization:',
+                    choices: config.orgs.map((org) => ({
+                        title: org.name || org.orgId,
+                        value: org.orgId,
+                    })),
+                })
+                orgId = response.orgId
+            }
+
+            if (!orgId) {
+                console.log('Organization selection is required')
+                process.exit(1)
+            }
+
+            // Get git branch
+            const gitBranch = await getCurrentGitBranch()
+
+            // Find files using globby
+            const filePaths = await globby('**/*.{md,mdx,json,css}', {
+                ignore: ['**/node_modules/**', '**/.git/**', '**/.cache/**'],
+                gitignore: true,
+            })
+
+            if (!filePaths.length) {
+                console.log('No files found matching pattern: **/*.{md,mdx,json,css}')
+                process.exit(1)
+            }
+
+            console.log(`Found ${filePaths.length} files`)
+
+            // Read file contents
+            const files = await Promise.all(
+                filePaths.map(async (filePath) => {
+                    const content = await fs.promises.readFile(filePath, 'utf-8')
+                    return {
+                        relativePath: filePath,
+                        contents: content,
+                    }
+                })
+            )
+
+            console.log('Creating site...')
+
+            // Call the API
+            const { data, error } = await apiClient.api.createSiteFromFiles.post({
+                name: siteName,
+                files,
+                orgId,
+                githubOwner: githubInfo?.githubOwner || '',
+                githubRepo: githubInfo?.githubRepo || '',
+                githubBranch: gitBranch || '',
+            })
+
+            if (error || !data?.success) {
+                console.error('Failed to create site:', error?.message || 'Unknown error')
+                process.exit(1)
+            }
+
+            // Save docs.json locally
+            const docsJsonPath = path.join(process.cwd(), 'docs.json')
+            await fs.promises.writeFile(
+                docsJsonPath,
+                JSON.stringify(data.docsJson, null, 2)
+            )
+
+            console.log('Site created successfully!')
+            console.log(`docs.json saved to: ${docsJsonPath}`)
+            console.log(`Site ID: ${data.siteId}`)
+            console.log(`Branch ID: ${data.branchId}`)
+            console.log('\nYou can now run: fumabase dev')
+
+        } catch (error) {
+            console.error('Error initializing project:', error.message || error)
+            process.exit(1)
+        }
+    })
 
 cli.command('login', 'Login to fumabase').action(async () => {
     const cliSessionSecret = Array.from({ length: 6 }, () =>
@@ -115,16 +254,16 @@ cli.command('login', 'Login to fumabase').action(async () => {
 
     while (attempts < maxAttempts) {
         try {
-            const result = await apiClient.api.getCliSession.post({
+            const { data, error } = await apiClient.api.getCliSession.post({
                 secret: cliSessionSecret,
             })
 
-            if (result.data?.apiKey) {
+            if (data?.apiKey) {
                 const config = {
-                    apiKey: result.data.apiKey,
-                    userId: result.data.userId,
-                    userEmail: result.data.userEmail,
-                    orgs: result.data.orgs || [],
+                    apiKey: data.apiKey,
+                    userId: data.userId,
+                    userEmail: data.userEmail,
+                    orgs: data.orgs || [],
                 }
 
                 await fs.promises.writeFile(
@@ -133,7 +272,7 @@ cli.command('login', 'Login to fumabase').action(async () => {
                 )
                 console.log('\nLogin successful!')
                 console.log(`API key saved to: ${configPath}`)
-                console.log(`Logged in as: ${result.data.userEmail}`)
+                console.log(`Logged in as: ${data.userEmail}`)
                 console.log('\nYou can now use the Fumabase CLI!')
                 return
             }

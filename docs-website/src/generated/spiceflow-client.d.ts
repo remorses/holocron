@@ -47,8 +47,8 @@ export declare const apiClient: {
                 chatId: string;
                 currentSlug: string;
                 filesInDraft: Record<string, {
-                    content: string;
                     githubPath: string;
+                    content: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
@@ -116,7 +116,7 @@ export declare const apiClient: {
                         view_range: import("zod").ZodNullable<import("zod").ZodArray<import("zod").ZodNumber, "many">>;
                     }, "strip", import("zod").ZodTypeAny, {
                         path: string;
-                        command: "create" | "view" | "str_replace" | "insert" | "undo_edit";
+                        command: "view" | "create" | "str_replace" | "insert" | "undo_edit";
                         file_text: string | null;
                         insert_line: number | null;
                         new_str: string | null;
@@ -124,7 +124,7 @@ export declare const apiClient: {
                         view_range: number[] | null;
                     }, {
                         path: string;
-                        command: "create" | "view" | "str_replace" | "insert" | "undo_edit";
+                        command: "view" | "create" | "str_replace" | "insert" | "undo_edit";
                         file_text: string | null;
                         insert_line: number | null;
                         new_str: string | null;
@@ -143,7 +143,7 @@ export declare const apiClient: {
                     }> & {
                         execute: (args: {
                             path: string;
-                            command: "create" | "view" | "str_replace" | "insert" | "undo_edit";
+                            command: "view" | "create" | "str_replace" | "insert" | "undo_edit";
                             file_text: string | null;
                             insert_line: number | null;
                             new_str: string | null;
@@ -180,40 +180,40 @@ export declare const apiClient: {
                                 label: import("zod").ZodString;
                                 value: import("zod").ZodString;
                             }, "strip", import("zod").ZodTypeAny, {
-                                label: string;
                                 value: string;
+                                label: string;
                             }, {
-                                label: string;
                                 value: string;
+                                label: string;
                             }>, "many">>;
                             href: import("zod").ZodNullable<import("zod").ZodString>;
                         }, "strip", import("zod").ZodTypeAny, {
-                            name: string;
-                            required: boolean | null;
-                            type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
+                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                             options: {
-                                label: string;
                                 value: string;
+                                label: string;
                             }[] | null;
-                            label: string;
+                            name: string;
                             description: string | null;
                             href: string | null;
+                            label: string;
+                            required: boolean | null;
                             placeholder: string | null;
                             initialValue: string | number | boolean | null;
                             min: number | null;
                             max: number | null;
                             step: number | null;
                         }, {
-                            name: string;
-                            required: boolean | null;
-                            type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
+                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                             options: {
-                                label: string;
                                 value: string;
+                                label: string;
                             }[] | null;
-                            label: string;
+                            name: string;
                             description: string | null;
                             href: string | null;
+                            label: string;
+                            required: boolean | null;
                             placeholder: string | null;
                             initialValue: string | number | boolean | null;
                             min: number | null;
@@ -222,16 +222,16 @@ export declare const apiClient: {
                         }>, "many">;
                     }, "strip", import("zod").ZodTypeAny, {
                         fields: {
-                            name: string;
-                            required: boolean | null;
-                            type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
+                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                             options: {
-                                label: string;
                                 value: string;
+                                label: string;
                             }[] | null;
-                            label: string;
+                            name: string;
                             description: string | null;
                             href: string | null;
+                            label: string;
+                            required: boolean | null;
                             placeholder: string | null;
                             initialValue: string | number | boolean | null;
                             min: number | null;
@@ -240,16 +240,16 @@ export declare const apiClient: {
                         }[];
                     }, {
                         fields: {
-                            name: string;
-                            required: boolean | null;
-                            type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
+                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                             options: {
-                                label: string;
                                 value: string;
+                                label: string;
                             }[] | null;
-                            label: string;
+                            name: string;
                             description: string | null;
                             href: string | null;
+                            label: string;
+                            required: boolean | null;
                             placeholder: string | null;
                             initialValue: string | number | boolean | null;
                             min: number | null;
@@ -261,16 +261,16 @@ export declare const apiClient: {
                     }> & {
                         execute: (args: {
                             fields: {
-                                name: string;
-                                required: boolean | null;
-                                type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
+                                type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                                 options: {
-                                    label: string;
                                     value: string;
+                                    label: string;
                                 }[] | null;
-                                label: string;
+                                name: string;
                                 description: string | null;
                                 href: string | null;
+                                label: string;
+                                required: boolean | null;
                                 placeholder: string | null;
                                 initialValue: string | number | boolean | null;
                                 min: number | null;
@@ -334,8 +334,8 @@ export declare const apiClient: {
         };
         submitRateFeedback: {
             post: (request: {
-                branchId: string;
                 message: string;
+                branchId: string;
                 url: string;
                 opinion: "good" | "bad";
             }, options?: {
@@ -353,8 +353,8 @@ export declare const apiClient: {
             post: (request: {
                 branchId: string;
                 filesInDraft: Record<string, {
-                    content: string;
                     githubPath: string;
+                    content: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
@@ -375,8 +375,8 @@ export declare const apiClient: {
                 branchId: string;
                 chatId: string;
                 filesInDraft: Record<string, {
-                    content: string;
                     githubPath: string;
+                    content: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
@@ -423,6 +423,7 @@ export declare const apiClient: {
                 }[];
                 orgId: string;
                 githubBranch?: string | undefined;
+                githubOwner?: string | undefined;
                 githubRepo?: string | undefined;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
@@ -487,8 +488,8 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                 chatId: string;
                 currentSlug: string;
                 filesInDraft: Record<string, {
-                    content: string;
                     githubPath: string;
+                    content: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
@@ -556,7 +557,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         view_range: import("zod").ZodNullable<import("zod").ZodArray<import("zod").ZodNumber, "many">>;
                     }, "strip", import("zod").ZodTypeAny, {
                         path: string;
-                        command: "create" | "view" | "str_replace" | "insert" | "undo_edit";
+                        command: "view" | "create" | "str_replace" | "insert" | "undo_edit";
                         file_text: string | null;
                         insert_line: number | null;
                         new_str: string | null;
@@ -564,7 +565,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         view_range: number[] | null;
                     }, {
                         path: string;
-                        command: "create" | "view" | "str_replace" | "insert" | "undo_edit";
+                        command: "view" | "create" | "str_replace" | "insert" | "undo_edit";
                         file_text: string | null;
                         insert_line: number | null;
                         new_str: string | null;
@@ -583,7 +584,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     }> & {
                         execute: (args: {
                             path: string;
-                            command: "create" | "view" | "str_replace" | "insert" | "undo_edit";
+                            command: "view" | "create" | "str_replace" | "insert" | "undo_edit";
                             file_text: string | null;
                             insert_line: number | null;
                             new_str: string | null;
@@ -620,40 +621,40 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                                 label: import("zod").ZodString;
                                 value: import("zod").ZodString;
                             }, "strip", import("zod").ZodTypeAny, {
-                                label: string;
                                 value: string;
+                                label: string;
                             }, {
-                                label: string;
                                 value: string;
+                                label: string;
                             }>, "many">>;
                             href: import("zod").ZodNullable<import("zod").ZodString>;
                         }, "strip", import("zod").ZodTypeAny, {
-                            name: string;
-                            required: boolean | null;
-                            type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
+                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                             options: {
-                                label: string;
                                 value: string;
+                                label: string;
                             }[] | null;
-                            label: string;
+                            name: string;
                             description: string | null;
                             href: string | null;
+                            label: string;
+                            required: boolean | null;
                             placeholder: string | null;
                             initialValue: string | number | boolean | null;
                             min: number | null;
                             max: number | null;
                             step: number | null;
                         }, {
-                            name: string;
-                            required: boolean | null;
-                            type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
+                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                             options: {
-                                label: string;
                                 value: string;
+                                label: string;
                             }[] | null;
-                            label: string;
+                            name: string;
                             description: string | null;
                             href: string | null;
+                            label: string;
+                            required: boolean | null;
                             placeholder: string | null;
                             initialValue: string | number | boolean | null;
                             min: number | null;
@@ -662,16 +663,16 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         }>, "many">;
                     }, "strip", import("zod").ZodTypeAny, {
                         fields: {
-                            name: string;
-                            required: boolean | null;
-                            type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
+                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                             options: {
-                                label: string;
                                 value: string;
+                                label: string;
                             }[] | null;
-                            label: string;
+                            name: string;
                             description: string | null;
                             href: string | null;
+                            label: string;
+                            required: boolean | null;
                             placeholder: string | null;
                             initialValue: string | number | boolean | null;
                             min: number | null;
@@ -680,16 +681,16 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         }[];
                     }, {
                         fields: {
-                            name: string;
-                            required: boolean | null;
-                            type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
+                            type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                             options: {
-                                label: string;
                                 value: string;
+                                label: string;
                             }[] | null;
-                            label: string;
+                            name: string;
                             description: string | null;
                             href: string | null;
+                            label: string;
+                            required: boolean | null;
                             placeholder: string | null;
                             initialValue: string | number | boolean | null;
                             min: number | null;
@@ -701,16 +702,16 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     }> & {
                         execute: (args: {
                             fields: {
-                                name: string;
-                                required: boolean | null;
-                                type: "number" | "input" | "select" | "button" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
+                                type: "number" | "select" | "button" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
                                 options: {
-                                    label: string;
                                     value: string;
+                                    label: string;
                                 }[] | null;
-                                label: string;
+                                name: string;
                                 description: string | null;
                                 href: string | null;
+                                label: string;
+                                required: boolean | null;
                                 placeholder: string | null;
                                 initialValue: string | number | boolean | null;
                                 min: number | null;
@@ -774,8 +775,8 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         submitRateFeedback: {
             post: (request: {
-                branchId: string;
                 message: string;
+                branchId: string;
                 url: string;
                 opinion: "good" | "bad";
             }, options?: {
@@ -793,8 +794,8 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
             post: (request: {
                 branchId: string;
                 filesInDraft: Record<string, {
-                    content: string;
                     githubPath: string;
+                    content: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
@@ -815,8 +816,8 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                 branchId: string;
                 chatId: string;
                 filesInDraft: Record<string, {
-                    content: string;
                     githubPath: string;
+                    content: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
@@ -863,6 +864,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                 }[];
                 orgId: string;
                 githubBranch?: string | undefined;
+                githubOwner?: string | undefined;
                 githubRepo?: string | undefined;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;

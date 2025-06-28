@@ -832,11 +832,12 @@ export const app = new Spiceflow({ basePath: '/api' })
                 contents: z.string(),
             })),
             orgId: z.string().min(1, 'Organization ID is required'),
+            githubOwner: z.string().optional(),
             githubRepo: z.string().optional(),
             githubBranch: z.string().optional(),
         }),
         async handler({ request, state: { userId } }) {
-            const { name, files, orgId, githubRepo, githubBranch } = await request.json()
+            const { name, files, orgId, githubOwner, githubRepo, githubBranch } = await request.json()
 
             if (!userId) {
                 throw new AppError('User not authenticated')
@@ -876,7 +877,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                     name,
                     siteId,
                     orgId,
-                    githubOwner: '', // No repo for this route
+                    githubOwner: githubOwner || '',
                     githubRepo: githubRepo || '',
                     branches: {
                         create: {

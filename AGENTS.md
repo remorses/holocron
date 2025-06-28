@@ -10,6 +10,8 @@ if you need to install packages always use pnpm
 
 # typescript
 
+- ALWAYS use normal imports instead of dynamic imports. Unless there is an issues with es module only packages and you are in a commonjs package (this is rare).
+
 - use a single object argument instead of multiple positional args: use object arguments for new typescript functions if the function would accept more than one argument, so it is more readable, ({a,b,c}) instead of (a,b,c), this way you can use the object as a sort of named argument feature, where order of arguments does not matter and it's easier to discover parameters.
 
 - always add the {} block body in arrow functions: arrow functions should never be written as `onClick={(x) => setState('')}`. NEVER. Instead you should ALWAYS write `onClick={() => {setState('')}}`. This way it's easy to add new statements in the arrow function without refactoring it.
@@ -258,6 +260,8 @@ Spiceflow has support for client side type safe rpc, use this client when you ne
 > SUPER IMPORTANT! if you add a new route to a spiceflow app, use the spiceflow app state like `userId` to add authorization to the route. If there is no state then you can use functions like `getSession({request})` or similar.
 > Make sure the current userId has access to the fetched or updated rows. This can be done by checking that the parent row or current row has a relation with the current userId. For example `prisma.site.findFirst({where: {users: {some: {userId }}}})`
 
+Always use `const {data, error} = await apiClient...` when calling spiceflow rpc. If data is already declared, give it a different name with `const {data: data2, error} = await apiClient...` This patten of destructuring is preferred over for all apis that return data and error object fields.
+
 ## getting spiceflow docs
 
 spiceflow is a little known api framework. If you add server routes to a file that includes spiceflow in the name or you are using the apiClient rpc you always need to fetch the Spiceflow docs first, using the @fetch tool on https://getspiceflow.com/
@@ -380,3 +384,9 @@ You can swap out the topic with text you want to search docs for. You can also l
 ## lucide icons
 
 use lucide-react to import icons. always add the Icon import name, for example `ImageIcon` instead of just `Image`.
+
+## cli folder
+
+the cli uses cac npm package. 
+
+notice that if you add a route in the spiceflow server you will need to run `pnpm --filter website gen-client` to update the apiClient inside cli.

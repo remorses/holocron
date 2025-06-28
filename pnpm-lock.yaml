@@ -51,6 +51,9 @@ importers:
       chokidar:
         specifier: ^4.0.3
         version: 4.0.3
+      globby:
+        specifier: ^14.1.0
+        version: 14.1.0
       prompts:
         specifier: ^2.4.2
         version: 2.4.2
