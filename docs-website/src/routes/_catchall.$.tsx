@@ -285,16 +285,13 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     }
     // const slug = '/' + slugs.join('/')
     const fumadocsPage = source.getPage(slugs, locale)
-    if (!fumadocsPage) {
-        throw new Response('Page not found', { status: 404 })
-    }
-    const slug = fumadocsPage.url
+    
+    const slug = fumadocsPage?.url || '/' + slugs.join('/')
 
     let [page, mediaAsset] = await Promise.all([
         prisma.markdownPage.findFirst({
             where: {
                 slug,
-
                 branchId: siteBranch.branchId,
             },
         }),
