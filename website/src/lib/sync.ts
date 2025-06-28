@@ -5,7 +5,7 @@ import { MarkdownExtension, Prisma, prisma } from 'db'
 import { createHash } from 'crypto'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
-import { DocumentRecord, StructuredData } from 'docs-website/src/lib/mdx'
+import { DocumentRecord, StructuredData } from 'docs-website/src/lib/mdx-heavy'
 import path from 'path'
 import { ChunkReqPayload, TrieveSDK } from 'trieve-ts-sdk'
 import { env } from './env'
