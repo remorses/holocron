@@ -1,8 +1,5 @@
-import { diffWordsWithSpace } from 'diff'
 import { processMdxInClient } from './markdown-runtime'
 
-import remarkMdx from 'remark-mdx'
-import { Root, Content } from 'mdast'
 
 /* ─────────── types ─────────── */
 interface Offset {

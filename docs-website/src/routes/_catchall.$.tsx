@@ -8,7 +8,7 @@ import {
 } from 'react-router'
 import { useShallow } from 'zustand/react/shallow'
 import { useDocsState } from '../lib/docs-state'
-import { processMdxInClient } from '../lib/markdown-runtime'
+
 import { getCacheTagForMediaAsset, getKeyForMediaAsset, s3 } from '../lib/s3'
 import type { Route as RootRoute } from '../root'
 import type { Route } from './+types/_catchall.$'
@@ -148,6 +148,8 @@ export async function clientLoader({
     const docsState = useDocsState.getState()
     const { filesInDraft } = docsState
 
+    // Use dynamic import for processMdxInClient
+    const { processMdxInClient } = await import('../lib/markdown-runtime')
     try {
         // Attempt to load server data
         const serverData = await serverLoader()
