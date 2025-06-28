@@ -6,6 +6,7 @@
         "build": "NODE_ENV=production doppler run -c production --preserve-env -- react-router build",
         "dev": "doppler run -- react-router dev --port 7664",
         "fly": "fly --app fumabase-website-prod",
+        "generate-example-docs-json": "pnpm tsx scripts/generate-example-docs-json.ts",
         "test": "doppler run -- pnpm vitest",
         "framer": "pnpm unframer 6ea1ba37e05fac32 --outDir src/framer --external --jsx",
         "framer-orin": "pnpm unframer dfa04aa1c5bdec07 --outDir src/framer-orin --external --jsx",
