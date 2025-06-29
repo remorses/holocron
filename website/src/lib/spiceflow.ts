@@ -843,6 +843,10 @@ export const app = new Spiceflow({ basePath: '/api' })
                 z.object({
                     relativePath: z.string(),
                     contents: z.string(),
+                    metadata: z.object({
+                        width: z.number().optional(),
+                        height: z.number().optional(),
+                    }).optional(),
                 }),
             ),
             orgId: z.string().min(1, 'Organization ID is required'),

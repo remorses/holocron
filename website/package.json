@@ -73,6 +73,7 @@
         "fumadocs-core": "workspace:*",
         "fumadocs-ui": "workspace:*",
         "hono": "^4.7.11",
+        "image-dimensions": "^2.3.0",
         "isbot": "^5.1.28",
         "js-yaml": "^4.1.0",
         "json-schema": "^0.4.0",

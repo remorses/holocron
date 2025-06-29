@@ -21,6 +21,7 @@ import prompts from 'prompts'
 import { lookup } from 'mime-types'
 import { Sema } from 'sema4'
 import Table from 'cli-table3'
+import { imageDimensionsFromData } from 'image-dimensions'
 
 export const cli = cac('fumabase')
 
@@ -473,16 +474,44 @@ cli.command('init', 'Initialize a new fumabase project')
 
             console.log('Creating site...')
 
+            // Process media files to get metadata
+            const mediaFilesWithMetadata = await Promise.all(
+                mediaFilePaths.map(async (filePath) => {
+                    const fileBuffer = await fs.promises.readFile(filePath)
+                    const bytes = fileBuffer.length
+                    
+                    let width: number | undefined
+                    let height: number | undefined
+                    
+                    try {
+                        const dimensions = imageDimensionsFromData(fileBuffer)
+                        if (dimensions) {
+                            width = dimensions.width
+                            height = dimensions.height
+                        }
+                    } catch (error) {
+                        // Not an image or couldn't get dimensions
+                    }
+                    
+                    return {
+                        relativePath: filePath,
+                        contents: '',
+                        metadata: {
+                            width,
+                            height,
+                            bytes,
+                        },
+                    }
+                }),
+            )
+
             // Call the API to create site first
             const { data, error } =
                 await apiClient.api.createSiteFromFiles.post({
                     name: siteName,
                     files: [
                         ...files,
-                        ...mediaFilePaths.map((path) => ({
-                            relativePath: path,
-                            contents: '',
-                        })),
+                        ...mediaFilesWithMetadata,
                     ],
                     orgId,
                     githubOwner: githubInfo?.githubOwner || '',
@@ -904,6 +933,49 @@ cli.command('sync', 'Sync current branch with GitHub').action(async () => {
                 'Make sure you are in a git repository with a valid branch',
             )
             process.exit(1)
+        }
+
+        // Check for uncommitted changes
+        try {
+            const gitStatus = execSync('git status --porcelain', {
+                encoding: 'utf-8',
+            }).trim()
+            
+            if (gitStatus) {
+                console.error('Error: You have uncommitted changes')
+                console.error('The sync command only syncs files that are already pushed to GitHub')
+                console.error('Please commit and push your changes first before running sync')
+                process.exit(1)
+            }
+        } catch (error) {
+            console.error('Error checking git status:', error.message)
+            process.exit(1)
+        }
+
+        // Check for unpushed commits
+        try {
+            const unpushedCommits = execSync(
+                `git log origin/${gitBranch}..${gitBranch} --oneline`,
+                { encoding: 'utf-8' }
+            ).trim()
+            
+            if (unpushedCommits) {
+                console.error('Error: You have unpushed commits')
+                console.error('The sync command only syncs files that are already pushed to GitHub')
+                console.error('Please push your commits first before running sync')
+                console.error('\nUnpushed commits:')
+                console.error(unpushedCommits)
+                process.exit(1)
+            }
+        } catch (error) {
+            // If the command fails, it might be because the remote branch doesn't exist
+            // In that case, we should still inform the user
+            if (error.message.includes('unknown revision')) {
+                console.error('Error: Remote branch not found')
+                console.error('Please push your branch to GitHub first before running sync')
+                process.exit(1)
+            }
+            // For other errors, just continue - the sync might still work
         }
 
         // Get GitHub info to validate this is a GitHub repo

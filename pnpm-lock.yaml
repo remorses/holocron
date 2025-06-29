@@ -57,6 +57,9 @@ importers:
       globby:
         specifier: ^14.1.0
         version: 14.1.0
+      image-dimensions:
+        specifier: ^2.3.0
+        version: 2.3.0
       mime-types:
         specifier: ^2.1.35
         version: 2.1.35
@@ -1502,6 +1505,9 @@ importers:
       hono:
         specifier: ^4.7.11
         version: 4.7.11
+      image-dimensions:
+        specifier: ^2.3.0
+        version: 2.3.0
       isbot:
         specifier: ^5.1.28
         version: 5.1.28
@@ -8565,6 +8571,11 @@ packages:
   ignore@7.0.5:
     resolution: {integrity: sha512-Hs59xBNfUIunMFgWAbGX5cq6893IbWg4KnrjbYwX3tx0ztorVgTDA6B2sxf8ejHJ4wz8BqGUMYlnzNBer5NvGg==}
     engines: {node: '>= 4'}
+
+  image-dimensions@2.3.0:
+    resolution: {integrity: sha512-8Ar3lsO6+/JLfnUeHnR8Jp/IyQR85Jut5t4Swy1yiXNwj/xM9h5V53v5KE/m/ZSMG4qGRopnSy37uPzKyQCv0A==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   image-size@2.0.2:
     resolution: {integrity: sha512-IRqXKlaXwgSMAMtpNzZa1ZAe8m+Sa1770Dhk8VkSsP9LS+iHD62Zd8FQKs8fbPiagBE7BzoFX23cxFnwshpV6w==}
@@ -19507,6 +19518,7 @@ snapshots:
       mdast-util-to-markdown: 2.1.2
       mdast-util-to-string: 4.0.0
       mdast-util-toc: 7.1.0
+      mermaid: 11.7.0
       micro-memoize: 4.1.3
       next-themes: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       notion-types: 7.4.2
@@ -20856,6 +20868,8 @@ snapshots:
   ignore@5.3.2: {}
 
   ignore@7.0.5: {}
+
+  image-dimensions@2.3.0: {}
 
   image-size@2.0.2: {}
 

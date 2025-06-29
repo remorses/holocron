@@ -254,6 +254,7 @@ model MediaAsset {
   githubPath String
   width      Int?
   height     Int?
+  bytes Int @default(0)
 
   @@id([slug, branchId])
 }

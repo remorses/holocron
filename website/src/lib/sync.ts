@@ -2,6 +2,7 @@ import { createHash } from 'crypto'
 import { MarkdownExtension, Prisma, prisma } from 'db'
 import { Sema } from 'sema4'
 import { request } from 'undici'
+import { Readable } from 'node:stream'
 
 import { DomainType } from 'db/src/generated/enums'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
@@ -26,6 +27,7 @@ import {
     isMarkdown,
 } from './github.server'
 import { mdxRegex, yieldTasksInParallel } from './utils'
+import { imageDimensionsFromData } from 'image-dimensions'
 
 export function gitBlobSha(
     content: string | Buffer,
@@ -57,6 +59,9 @@ export type AssetForSync =
           sha: string
           downloadUrl: string
           githubPath: string
+          width?: number
+          height?: number
+          bytes?: number
       }
     | {
           type: 'metaFile'
@@ -159,7 +164,11 @@ export async function* pagesFromFilesList({
     files,
     docsJson,
 }: {
-    files: { relativePath: string; contents: string }[]
+    files: {
+        relativePath: string
+        contents: string
+        metadata?: { width?: number; height?: number; bytes?: number }
+    }[]
     docsJson?: DocsJsonType
 }): AsyncGenerator<AssetForSync & { filePath: string; content: string }> {
     // First handle meta.json files
@@ -221,9 +230,13 @@ export async function* pagesFromFilesList({
         yield {
             type: 'mediaAsset',
             slug,
+
             sha: gitBlobSha(file.contents),
             downloadUrl: '', // For local files, we don't have a download URL
             githubPath: file.relativePath,
+            width: file.metadata?.width,
+            height: file.metadata?.height,
+            bytes: file.metadata?.bytes,
             filePath: file.relativePath,
             content: file.contents,
         }
@@ -392,11 +405,30 @@ export async function syncFiles({
             }
             if (asset.type === 'mediaAsset') {
                 const slug = asset.slug
-
                 const downloadUrl = asset.downloadUrl
 
-                async function upload() {
-                    if (!downloadUrl) return
+                let imageMetadata = {
+                    width: asset.width,
+                    height: asset.height,
+                    bytes: asset.bytes,
+                }
+
+                // Check if this is an image file based on extension
+                const isImage = [
+                    '.jpg',
+                    '.jpeg',
+                    '.png',
+                    '.gif',
+                    '.bmp',
+                    '.webp',
+                    '.tif',
+                    '.tiff',
+                    '.avif',
+                ].some((ext) => asset.githubPath.toLowerCase().endsWith(ext))
+
+                async function uploadAndGetMetadata() {
+                    if (!downloadUrl) return imageMetadata
+
                     // Skip downloading/uploading if the downloadUrl is from our own uploads base URL
                     if (
                         downloadUrl &&
@@ -406,52 +438,86 @@ export async function syncFiles({
                         console.log(
                             `Skipping upload for asset ${slug} as it is already hosted at UPLOADS_BASE_URL (${env.UPLOADS_BASE_URL})`,
                         )
-                        return
+                        return imageMetadata
                     }
 
-                    const response = await request(downloadUrl, { signal })
+                    const readable = await request(downloadUrl, { signal })
+
                     const ok =
-                        response.statusCode >= 200 && response.statusCode < 300
+                        readable.statusCode >= 200 && readable.statusCode < 300
                     if (!ok) {
                         throw new Error(
-                            `Failed to download asset ${response.statusCode} ${slug}`,
+                            `Failed to download asset ${readable.statusCode} ${slug}`,
                         )
                     }
-                    if (!response.body) {
+                    if (!readable.body) {
                         throw new Error(`Failed to get body for asset ${slug}`)
                     }
+
                     const key = getKeyForMediaAsset({ siteId, slug })
-                    await s3.file(key).write(response.body)
+
+                    // Download the full file
+                    const buffer = Buffer.from(
+                        await readable.body.arrayBuffer(),
+                    )
+                    imageMetadata.bytes = buffer.length
+
+                    // For images, extract dimensions
+                    if (isImage) {
+                        try {
+                            const dimensions = imageDimensionsFromData(buffer)
+                            if (dimensions) {
+                                imageMetadata.width = dimensions.width
+                                imageMetadata.height = dimensions.height
+                            }
+                        } catch (error) {
+                            // Continue without dimensions
+                        }
+                    }
+
+                    await s3.file(key).write(buffer)
+
                     const cacheTag = getCacheTagForMediaAsset({
                         siteId,
                         slug,
                     })
                     cacheTagsToInvalidate.push(cacheTag)
+
+                    return imageMetadata
                 }
+
                 console.log(`uploading media asset ${asset.githubPath}`)
-                await Promise.all([
-                    upload(),
-                    prisma.mediaAsset.upsert({
-                        where: {
-                            slug_branchId: {
-                                branchId,
-                                slug,
-                            },
-                        },
-                        update: {
-                            siteId,
-                            slug,
+
+                // First download and get metadata
+                const metadata = await uploadAndGetMetadata()
+
+                // Then update database with the metadata
+                await prisma.mediaAsset.upsert({
+                    where: {
+                        slug_branchId: {
                             branchId,
-                        },
-                        create: {
-                            githubSha: asset.sha,
-                            siteId,
                             slug,
-                            githubPath: asset.githubPath,
-                            branchId,
                         },
-                    }),
-                ])
+                    },
+                    update: {
+                        siteId,
+                        slug,
+                        branchId,
+                        width: metadata.width,
+                        height: metadata.height,
+                        bytes: metadata.bytes,
+                    },
+                    create: {
+                        githubSha: asset.sha,
+                        siteId,
+                        slug,
+                        githubPath: asset.githubPath,
+                        branchId,
+                        width: metadata.width,
+                        height: metadata.height,
+                        bytes: metadata.bytes || 0,
+                    },
+                })
             }
             if (asset.type === 'page') {
                 const { slug, title } = asset.pageInput
