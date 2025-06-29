@@ -13,7 +13,8 @@ import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
 import { RiAttachment2 } from '@remixicon/react'
 import { createIdGenerator, UIMessage } from 'ai'
 import { Markdown } from 'docs-website/src/lib/markdown'
-import { startTransition, useState } from 'react'
+import { startTransition } from 'react'
+import { AnimatePresence, motion } from 'unframer'
 import {
     ChatAssistantMessage,
     ChatErrorMessage,
@@ -31,16 +32,13 @@ import {
 } from '../components/chat/chat-provider'
 import {
     Drawer,
-    DrawerTrigger,
     DrawerContent,
+    DrawerDescription,
     DrawerHeader,
     DrawerTitle,
-    DrawerDescription,
-    DrawerFooter,
-    DrawerClose,
+    DrawerTrigger,
 } from '../components/ui/drawer'
 import { cn } from '../lib/cn'
-import { AnimatePresence, motion } from 'unframer'
 
 export type { Route }
 
@@ -302,9 +300,12 @@ function Footer() {
                 <motion.div
                     layoutId='textarea'
                     className={cn(
-                        ' w-full rounded-[20px] border bg-muted flex flex-col max-w-3xl mx-auto space-y-3',
+                        ' w-full rounded-[10px] border bg-background flex flex-col max-w-3xl mx-auto space-y-3',
                     )}
                 >
+                    <Button variant='ghost' className='border self-start ml-2 my-2'>
+                        @ Add context
+                    </Button>
                     <ChatTextarea
                         onSubmit={() => handleSubmit()}
                         disabled={false}
@@ -335,7 +336,7 @@ function Footer() {
 
                         <div className='flex items-center gap-2'>
                             <Button
-                                className='rounded-full h-8'
+                                className='rounded-md h-8'
                                 onClick={() => handleSubmit()}
                                 disabled={isPending || !text.trim()}
                             >
