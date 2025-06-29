@@ -124,14 +124,14 @@ export async function syncSite({
     siteId,
     trieveDatasetId,
     branchId,
-    pages,
+    files: pages,
 }: {
     siteId: string
     trieveDatasetId?: string
     name?: string
     branchId: string
     orgId: string
-    pages: AsyncIterable<AssetForSync>
+    files: AsyncIterable<AssetForSync>
 }) {
     console.log('Starting import script...')
 

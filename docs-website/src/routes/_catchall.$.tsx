@@ -46,6 +46,7 @@ import { Markdown } from '../lib/markdown'
 import { getFumadocsClientSource } from '../lib/source'
 import { getFilesForSource, getFumadocsSource } from '../lib/source.server'
 import { ProcessorDataFrontmatter } from '../lib/mdx-heavy'
+import { mdxComponents } from '../components/mdx-components'
 
 export function meta({ data, matches }: Route.MetaArgs) {
     if (!data) return {}
@@ -297,6 +298,13 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                 slug,
                 branchId: siteBranch.branchId,
             },
+            include: {
+                mediaAssets: {
+                    include: {
+                        asset: true,
+                    },
+                },
+            },
         }),
         prisma.mediaAsset.findFirst({
             where: {
@@ -336,6 +344,13 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                     slug: '/index',
                     branchId: siteBranch.branchId,
                 },
+                include: {
+                    mediaAssets: {
+                        include: {
+                            asset: true,
+                        },
+                    },
+                },
             }),
             prisma.markdownPage.findFirst({
                 where: {
@@ -343,6 +358,13 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                 },
                 orderBy: {
                     slug: 'asc',
+                },
+                include: {
+                    mediaAssets: {
+                        include: {
+                            asset: true,
+                        },
+                    },
                 },
             }),
         ])
@@ -390,6 +412,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         githubPath: page.githubPath,
         tree,
         lastEditedAt: page.lastEditedAt || new Date(),
+        mediaAssets: page.mediaAssets || [],
     }
 }
 
@@ -599,6 +622,29 @@ function SocialIcon({ platform }: { platform: string }) {
     }
 }
 
+const components = {
+    ...mdxComponents,
+    // TODO do the same for Image?
+    img(props) {
+        const src = props.src || ''
+        const { mediaAssets } =
+            useLoaderData() as Route.ComponentProps['loaderData']
+
+        const media = mediaAssets.find((asset) => asset.slug === src)
+
+        if (media) {
+            return (
+                <mdxComponents.img
+                    width={media.width}
+                    height={media.height}
+                    {...props}
+                />
+            )
+        }
+        return <mdxComponents.img {...props} />
+    },
+}
+
 function DocsMarkdown() {
     const loaderData = useLoaderData<typeof loader>()
     let { ast, markdown, isStreaming } = useDocsState(
@@ -634,6 +680,7 @@ function DocsMarkdown() {
             isStreaming={isStreaming}
             addDiffAttributes={true}
             markdown={markdown}
+            components={components}
             ast={ast}
         />
     )

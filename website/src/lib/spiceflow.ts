@@ -1,5 +1,6 @@
 import cuid from '@bugsnag/cuid'
-import { prisma } from 'db'
+
+import { Prisma, prisma, Site } from 'db'
 import { getKeyForMediaAsset, s3 } from 'docs-website/src/lib/s3'
 import { Spiceflow } from 'spiceflow'
 import { cors } from 'spiceflow/cors'
@@ -22,6 +23,7 @@ import {
     generateMessageApp,
     getPageContent,
 } from './spiceflow-generate-message'
+import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 
 // Utility to get client IP from request, handling Cloudflare proxy headers
 function getClientIp(request: Request): string {
@@ -181,7 +183,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 branchId,
                 name: site.name || '',
                 trieveDatasetId: branch.trieveDatasetId || undefined,
-                pages,
+                files: pages,
             })
             return {
                 success: true,
@@ -836,7 +838,7 @@ export const app = new Spiceflow({ basePath: '/api' })
     })
     .route({
         method: 'POST',
-        path: '/createSiteFromFiles',
+        path: '/upsertSiteFromFiles',
         request: z.object({
             name: z.string().min(1, 'Name is required'),
             files: z.array(
@@ -844,16 +846,19 @@ export const app = new Spiceflow({ basePath: '/api' })
                     relativePath: z.string(),
                     contents: z.string(),
                     downloadUrl: z.string().optional(),
-                    metadata: z.object({
-                        width: z.number().optional(),
-                        height: z.number().optional(),
-                    }).optional(),
+                    metadata: z
+                        .object({
+                            width: z.number().optional(),
+                            height: z.number().optional(),
+                        })
+                        .optional(),
                 }),
             ),
             orgId: z.string().min(1, 'Organization ID is required'),
             githubOwner: z.string().optional(),
             githubRepo: z.string().optional(),
             githubBranch: z.string().optional(),
+            siteId: z.string().optional(),
         }),
         async handler({ request, state: { userId } }) {
             const {
@@ -863,6 +868,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 githubOwner,
                 githubRepo,
                 githubBranch,
+                siteId,
             } = await request.json()
 
             if (!userId) {
@@ -881,70 +887,139 @@ export const app = new Spiceflow({ basePath: '/api' })
                 throw new AppError('Access denied to organization')
             }
 
-            // Create site with generated IDs
-            const siteId = cuid()
-            const branchId = cuid()
-            const randomHash = Math.random().toString(36).substring(2, 10)
-            const internalHost = `${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${randomHash}.${env.APPS_DOMAIN}`
+            let finalSiteId: string
+            let finalBranchId: string
 
-            // Convert files to pages format
-            const pages = pagesFromFilesList({
-                files,
-                docsJson: {
-                    siteId,
-                    name,
-                    domains: [internalHost],
-                },
-            })
+            if (siteId) {
+                // Update existing site
+                const existingSite = await prisma.site.findFirst({
+                    where: {
+                        siteId,
+                        org: {
+                            users: {
+                                some: { userId },
+                            },
+                        },
+                    },
+                    include: {
+                        branches: {
+                            where: {
+                                githubBranch: githubBranch || 'main',
+                            },
+                        },
+                    },
+                })
 
-            // Create site in database
-            const site = await prisma.site.create({
-                data: {
-                    name,
-                    siteId,
-                    orgId,
-                    githubOwner: githubOwner || '',
-                    githubRepo: githubRepo || '',
-                    branches: {
-                        create: {
-                            branchId,
+                if (!existingSite) {
+                    throw new AppError('Site not found or access denied')
+                }
+
+                // Update site info
+                const site = await prisma.site.update({
+                    where: { siteId },
+                    data: {
+                        name,
+                        githubOwner: githubOwner || existingSite.githubOwner,
+                        githubRepo: githubRepo || existingSite.githubRepo,
+                    },
+                })
+
+                finalSiteId = siteId
+
+                // Find or create branch for this GitHub branch
+                let branch = existingSite.branches[0]
+                if (!branch) {
+                    branch = await prisma.siteBranch.create({
+                        data: {
+                            branchId: cuid(),
+                            siteId,
                             title: 'Main',
                             githubBranch: githubBranch || 'main',
                         },
-                    },
-                },
-            })
+                    })
+                }
+                finalBranchId = branch.branchId
+            } else {
+                // Create new site
+                finalSiteId = cuid()
+                finalBranchId = cuid()
+                const randomHash = Math.random().toString(36).substring(2, 10)
+                const internalHost = `${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${randomHash}.${env.APPS_DOMAIN}`
 
-            // Create a default chat for the new site branch and user
-            await prisma.chat.create({
-                data: {
-                    branchId,
-                    userId,
-                    title: `Welcome Chat for ${name}`,
-                    description: 'This is your first chat for the new site.',
-                },
+                const site = await prisma.site.create({
+                    data: {
+                        name,
+                        siteId: finalSiteId,
+                        orgId,
+                        githubOwner: githubOwner || '',
+                        githubRepo: githubRepo || '',
+                        branches: {
+                            create: {
+                                branchId: finalBranchId,
+                                title: 'Main',
+                                githubBranch: githubBranch || 'main',
+                            },
+                        },
+                    },
+                })
+
+                // Create a default chat for the new site branch and user
+                await prisma.chat.create({
+                    data: {
+                        branchId: finalBranchId,
+                        userId,
+                        title: `Welcome Chat for ${name}`,
+                        description:
+                            'This is your first chat for the new site.',
+                    },
+                })
+            }
+
+            // Get or create internal host for new sites
+            let docsJson = {} as DocsJsonType
+            if (!siteId) {
+                const randomHash = Math.random().toString(36).substring(2, 10)
+                const internalHost = `${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${randomHash}.${env.APPS_DOMAIN}`
+                docsJson = {
+                    siteId: finalSiteId,
+                    name,
+                    domains: [internalHost],
+                }
+            } else {
+                // For updates, fetch the branch's latest docsJson
+                const branch = await prisma.siteBranch.findFirst({
+                    where: { branchId: finalBranchId },
+                    select: { docsJson: true, siteId: true },
+                })
+                docsJson = branch?.docsJson as any
+            }
+
+            // Convert files to pages format
+            const assets = pagesFromFilesList({
+                files,
+                docsJson,
             })
 
             // Sync site content
             await syncSite({
-                pages,
+                files: assets,
                 trieveDatasetId: undefined,
-                branchId,
+                branchId: finalBranchId,
                 orgId,
-                siteId,
+                siteId: finalSiteId,
                 name,
             })
 
             // Get the generated docsJson and any sync errors
             const [branch, syncErrors] = await Promise.all([
                 prisma.siteBranch.findUnique({
-                    where: { branchId },
+                    where: { branchId: finalBranchId },
                     select: { docsJson: true },
                 }),
                 prisma.markdownPageSyncError.findMany({
                     where: {
                         page: {
-                            branchId,
+                            branchId: finalBranchId,
                         },
                     },
                     include: {
@@ -967,8 +1042,8 @@ export const app = new Spiceflow({ basePath: '/api' })
 
             return {
                 success: true,
-                siteId,
-                branchId,
+                siteId: finalSiteId,
+                branchId: finalBranchId,
                 docsJson: branch?.docsJson || {},
                 errors,
             }

@@ -21,6 +21,7 @@ export type MarkdownRendererProps = {
     previousMarkdown?: any
     previousAst?: any
     addDiffAttributes?: any
+    components?: any
 }
 
 export const Markdown = function MarkdownRender(props: MarkdownRendererProps) {
@@ -34,7 +35,7 @@ export const Markdown = function MarkdownRender(props: MarkdownRendererProps) {
         >
             <SafeMdxRenderer
                 renderNode={renderNode}
-                components={mdxComponents}
+                components={props.components || mdxComponents}
                 mdast={ast}
             />
         </div>

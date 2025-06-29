@@ -26,6 +26,7 @@ export const StreamingMarkdownRuntimeComponent = memo(
         previousAst,
         className,
         addDiffAttributes = false,
+        components,
     }: MarkdownRendererProps & {}) {
         const container = useRef<HTMLDivElement>(null)
 
@@ -91,7 +92,7 @@ export const StreamingMarkdownRuntimeComponent = memo(
                         <SafeMdxRenderer
                             key={index}
                             renderNode={renderNode}
-                            components={mdxComponents}
+                            components={components || mdxComponents}
                             mdast={block}
                         />
                     )

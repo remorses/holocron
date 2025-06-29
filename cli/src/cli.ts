@@ -22,6 +22,7 @@ import { lookup } from 'mime-types'
 import { Sema } from 'sema4'
 import Table from 'cli-table3'
 import { imageDimensionsFromData } from 'image-dimensions'
+import { DocsJsonType } from 'docs-website/src/lib/docs-json.js'
 
 export const cli = cac('fumabase')
 
@@ -318,7 +319,7 @@ const apiClient = createApiClient(url, {
     },
 })
 
-cli.command('init', 'Initialize a new fumabase project')
+cli.command('init', 'Initialize or deploy a fumabase project')
     .option('--name <name>', 'Name for the documentation site')
     .option('--from-template', 'Download starter template files')
     .option('--org <orgId>', 'Organization ID to use')
@@ -334,6 +335,18 @@ cli.command('init', 'Initialize a new fumabase project')
                 process.chdir(targetDir)
             }
 
+            const docsJsonPath = path.join(options.dir, 'fumabase.json')
+            let existingDocsJson = undefined as DocsJsonType | undefined
+            try {
+                const existingContent = await fs.promises.readFile(
+                    docsJsonPath,
+                    'utf-8',
+                )
+                existingDocsJson = JSON.parse(existingContent)
+            } catch (error) {
+                // File doesn't exist or invalid JSON, continue with new site creation
+            }
+
             const config = getUserConfig()
 
             if (!config.apiKey || !config.orgs?.length) {
@@ -346,7 +359,7 @@ cli.command('init', 'Initialize a new fumabase project')
             const githubInfo = getGitHubInfo()
 
             // Get site name
-            let siteName = options.name
+            let siteName = options.name || existingDocsJson?.name
             if (!siteName) {
                 if (githubInfo?.name) {
                     siteName = githubInfo.name
@@ -532,15 +545,16 @@ cli.command('init', 'Initialize a new fumabase project')
                 }),
             )
 
-            // Call the API to create site first
+            // Call the API to create or update site
             const { data, error } =
-                await apiClient.api.createSiteFromFiles.post({
+                await apiClient.api.upsertSiteFromFiles.post({
                     name: siteName,
                     files: [...files, ...mediaFilesWithMetadata],
                     orgId,
                     githubOwner: githubInfo?.githubOwner || '',
                     githubRepo: githubInfo?.githubRepo || '',
                     githubBranch: gitBranch || '',
+                    siteId: existingDocsJson?.siteId,
                 })
 
             if (error || !data?.success) {
@@ -560,20 +574,20 @@ cli.command('init', 'Initialize a new fumabase project')
             const errors = data.errors
             if (errors && errors.length > 0) {
                 console.log('\nPage Processing Errors:')
-                
+
                 const errorTable = new Table({
                     head: ['File', 'Error Message'],
                     colWidths: [40, 60],
                     style: {
                         head: ['red', 'bold'],
-                        border: ['grey']
-                    }
+                        border: ['grey'],
+                    },
                 })
 
                 for (const error of errors) {
                     errorTable.push([
                         `${error.githubPath}:${error.line}`,
-                        error.errorMessage
+                        error.errorMessage,
                     ])
                 }
 
@@ -581,20 +595,20 @@ cli.command('init', 'Initialize a new fumabase project')
                 console.log(
                     `\nFound ${errors.length} error(s) in your documentation files.`,
                 )
-                console.log(
-                    'Fix the issues above and run the command again.\n',
-                )
+                console.log('Fix the issues above and run the command again.\n')
             }
 
             // Save fumabase.json locally
-            const docsJsonPath = path.join(process.cwd(), 'fumabase.json')
             await fs.promises.writeFile(
                 docsJsonPath,
                 JSON.stringify(data.docsJson, null, 2),
             )
 
             // Create success table
-            console.log('\n✅ Site created successfully!\n')
+            const isUpdate = existingDocsJson?.siteId
+            console.log(
+                `\n✅ Site ${isUpdate ? 'updated' : 'created'} successfully!\n`,
+            )
 
             const table = new Table({
                 head: ['Property', 'Value'],

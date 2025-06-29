@@ -139,7 +139,7 @@ export async function action({ request, params }: Route.ActionArgs) {
         // Create the branch with domain
 
         await syncSite({
-            pages: files,
+            files: files,
             trieveDatasetId: undefined,
             branchId,
             orgId,
@@ -225,7 +225,7 @@ function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
                                                 </Button>
                                             </Link>
                                             <div className='pt-2'>
-                                                <button 
+                                                <button
                                                     className='text-gray-400 text-xs hover:text-gray-300'
                                                     onClick={() => {setShowAlternative(true)}}
                                                 >
@@ -243,7 +243,7 @@ function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
                                                     npx fumabase init
                                                 </div>
                                             </div>
-                                            <button 
+                                            <button
                                                 className='text-gray-400 text-xs hover:text-gray-300'
                                                 onClick={() => {setShowAlternative(false)}}
                                             >
