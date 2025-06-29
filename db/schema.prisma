@@ -177,7 +177,7 @@ model Site {
   githubOwner String
   githubRepo  String
 
-  mediaAssets MediaAsset[]
+
   locales     SiteEnabledLocale[]
 
   githubInstallations SiteGithubInstallation[]
@@ -233,6 +233,7 @@ model MarkdownPage {
   githubPath     String
   structuredData Json   @default("{}")
   syncErrors MarkdownPageSyncError[]
+  mediaAssets PageMediaAsset[]
 
   @@unique([branchId, slug])
   @@index([branchId])
@@ -245,12 +246,12 @@ enum MarkdownExtension {
 }
 
 model MediaAsset {
-  siteId     String
+
   branchId   String
   slug       String
   branch     SiteBranch @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
   githubSha  String
-  site       Site       @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
+  pages PageMediaAsset[]
   githubPath String
   width      Int?
   height     Int?
@@ -258,6 +259,20 @@ model MediaAsset {
 
   @@id([slug, branchId])
 }
+
+
+model PageMediaAsset {
+  pageId    String
+  assetSlug String
+  branchId  String
+
+  page   MarkdownPage @relation(fields: [pageId], references: [pageId], onDelete: Cascade)
+  asset  MediaAsset   @relation(fields: [assetSlug, branchId], references: [slug, branchId], onDelete: Cascade)
+
+  @@id([pageId, assetSlug, branchId])
+  @@index([assetSlug, branchId])
+}
+
 
 model MetaFile {
   githubPath String

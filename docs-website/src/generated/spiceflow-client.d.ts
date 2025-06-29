@@ -41,7 +41,9 @@ export declare const apiClient: {
         };
         generateMessage: {
             post: (request: {
+                branchId: string;
                 siteId: string;
+                messages: import("ai").UIMessage[];
                 chatId: string;
                 currentSlug: string;
                 filesInDraft: Record<string, {
@@ -50,8 +52,6 @@ export declare const apiClient: {
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
-                branchId: string;
-                messages: import("ai").UIMessage[];
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -189,33 +189,33 @@ export declare const apiClient: {
                             href: import("zod").ZodNullable<import("zod").ZodString>;
                         }, "strip", import("zod").ZodTypeAny, {
                             description: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
+                            label: string;
                             name: string;
-                            required: boolean | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "password" | "slider" | "color_picker" | "date_picker" | "image_upload";
+                            href: string | null;
                             options: {
                                 value: string;
                                 label: string;
                             }[] | null;
-                            href: string | null;
-                            initialValue: string | number | boolean | null;
-                            label: string;
+                            required: boolean | null;
                             placeholder: string | null;
+                            initialValue: string | number | boolean | null;
                             min: number | null;
                             max: number | null;
                             step: number | null;
                         }, {
                             description: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
+                            label: string;
                             name: string;
-                            required: boolean | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "password" | "slider" | "color_picker" | "date_picker" | "image_upload";
+                            href: string | null;
                             options: {
                                 value: string;
                                 label: string;
                             }[] | null;
-                            href: string | null;
-                            initialValue: string | number | boolean | null;
-                            label: string;
+                            required: boolean | null;
                             placeholder: string | null;
+                            initialValue: string | number | boolean | null;
                             min: number | null;
                             max: number | null;
                             step: number | null;
@@ -223,17 +223,17 @@ export declare const apiClient: {
                     }, "strip", import("zod").ZodTypeAny, {
                         fields: {
                             description: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
+                            label: string;
                             name: string;
-                            required: boolean | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "password" | "slider" | "color_picker" | "date_picker" | "image_upload";
+                            href: string | null;
                             options: {
                                 value: string;
                                 label: string;
                             }[] | null;
-                            href: string | null;
-                            initialValue: string | number | boolean | null;
-                            label: string;
+                            required: boolean | null;
                             placeholder: string | null;
+                            initialValue: string | number | boolean | null;
                             min: number | null;
                             max: number | null;
                             step: number | null;
@@ -241,17 +241,17 @@ export declare const apiClient: {
                     }, {
                         fields: {
                             description: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
+                            label: string;
                             name: string;
-                            required: boolean | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "password" | "slider" | "color_picker" | "date_picker" | "image_upload";
+                            href: string | null;
                             options: {
                                 value: string;
                                 label: string;
                             }[] | null;
-                            href: string | null;
-                            initialValue: string | number | boolean | null;
-                            label: string;
+                            required: boolean | null;
                             placeholder: string | null;
+                            initialValue: string | number | boolean | null;
                             min: number | null;
                             max: number | null;
                             step: number | null;
@@ -262,17 +262,17 @@ export declare const apiClient: {
                         execute: (args: {
                             fields: {
                                 description: string | null;
+                                type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
+                                label: string;
                                 name: string;
-                                required: boolean | null;
-                                type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "password" | "slider" | "color_picker" | "date_picker" | "image_upload";
+                                href: string | null;
                                 options: {
                                     value: string;
                                     label: string;
                                 }[] | null;
-                                href: string | null;
-                                initialValue: string | number | boolean | null;
-                                label: string;
+                                required: boolean | null;
                                 placeholder: string | null;
+                                initialValue: string | number | boolean | null;
                                 min: number | null;
                                 max: number | null;
                                 step: number | null;
@@ -326,8 +326,8 @@ export declare const apiClient: {
         };
         newChat: {
             post: (request: {
-                orgId: string;
                 branchId: string;
+                orgId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -358,13 +358,13 @@ export declare const apiClient: {
         };
         commitChangesToRepo: {
             post: (request: {
+                branchId: string;
                 filesInDraft: Record<string, {
                     content: string;
                     githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
-                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -379,6 +379,7 @@ export declare const apiClient: {
         };
         createPrSuggestionForChat: {
             post: (request: {
+                branchId: string;
                 chatId: string;
                 filesInDraft: Record<string, {
                     content: string;
@@ -386,7 +387,6 @@ export declare const apiClient: {
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
-                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -423,7 +423,6 @@ export declare const apiClient: {
         };
         createSiteFromFiles: {
             post: (request: {
-                orgId: string;
                 name: string;
                 files: {
                     relativePath: string;
@@ -434,9 +433,10 @@ export declare const apiClient: {
                         height?: number | undefined;
                     } | undefined;
                 }[];
+                orgId: string;
+                githubBranch?: string | undefined;
                 githubOwner?: string | undefined;
                 githubRepo?: string | undefined;
-                githubBranch?: string | undefined;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -447,6 +447,12 @@ export declare const apiClient: {
                     siteId: any;
                     branchId: any;
                     docsJson: string | number | true | import("@prisma/client/runtime/client").JsonObject | import("@prisma/client/runtime/client").JsonArray;
+                    errors: {
+                        githubPath: string;
+                        line: number;
+                        errorMessage: string;
+                        errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
+                    }[];
                 };
             }>>;
         };
@@ -514,7 +520,9 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         generateMessage: {
             post: (request: {
+                branchId: string;
                 siteId: string;
+                messages: import("ai").UIMessage[];
                 chatId: string;
                 currentSlug: string;
                 filesInDraft: Record<string, {
@@ -523,8 +531,6 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
-                branchId: string;
-                messages: import("ai").UIMessage[];
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -662,33 +668,33 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                             href: import("zod").ZodNullable<import("zod").ZodString>;
                         }, "strip", import("zod").ZodTypeAny, {
                             description: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
+                            label: string;
                             name: string;
-                            required: boolean | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "password" | "slider" | "color_picker" | "date_picker" | "image_upload";
+                            href: string | null;
                             options: {
                                 value: string;
                                 label: string;
                             }[] | null;
-                            href: string | null;
-                            initialValue: string | number | boolean | null;
-                            label: string;
+                            required: boolean | null;
                             placeholder: string | null;
+                            initialValue: string | number | boolean | null;
                             min: number | null;
                             max: number | null;
                             step: number | null;
                         }, {
                             description: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
+                            label: string;
                             name: string;
-                            required: boolean | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "password" | "slider" | "color_picker" | "date_picker" | "image_upload";
+                            href: string | null;
                             options: {
                                 value: string;
                                 label: string;
                             }[] | null;
-                            href: string | null;
-                            initialValue: string | number | boolean | null;
-                            label: string;
+                            required: boolean | null;
                             placeholder: string | null;
+                            initialValue: string | number | boolean | null;
                             min: number | null;
                             max: number | null;
                             step: number | null;
@@ -696,17 +702,17 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     }, "strip", import("zod").ZodTypeAny, {
                         fields: {
                             description: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
+                            label: string;
                             name: string;
-                            required: boolean | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "password" | "slider" | "color_picker" | "date_picker" | "image_upload";
+                            href: string | null;
                             options: {
                                 value: string;
                                 label: string;
                             }[] | null;
-                            href: string | null;
-                            initialValue: string | number | boolean | null;
-                            label: string;
+                            required: boolean | null;
                             placeholder: string | null;
+                            initialValue: string | number | boolean | null;
                             min: number | null;
                             max: number | null;
                             step: number | null;
@@ -714,17 +720,17 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     }, {
                         fields: {
                             description: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
+                            label: string;
                             name: string;
-                            required: boolean | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "password" | "slider" | "color_picker" | "date_picker" | "image_upload";
+                            href: string | null;
                             options: {
                                 value: string;
                                 label: string;
                             }[] | null;
-                            href: string | null;
-                            initialValue: string | number | boolean | null;
-                            label: string;
+                            required: boolean | null;
                             placeholder: string | null;
+                            initialValue: string | number | boolean | null;
                             min: number | null;
                             max: number | null;
                             step: number | null;
@@ -735,17 +741,17 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         execute: (args: {
                             fields: {
                                 description: string | null;
+                                type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
+                                label: string;
                                 name: string;
-                                required: boolean | null;
-                                type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "password" | "slider" | "color_picker" | "date_picker" | "image_upload";
+                                href: string | null;
                                 options: {
                                     value: string;
                                     label: string;
                                 }[] | null;
-                                href: string | null;
-                                initialValue: string | number | boolean | null;
-                                label: string;
+                                required: boolean | null;
                                 placeholder: string | null;
+                                initialValue: string | number | boolean | null;
                                 min: number | null;
                                 max: number | null;
                                 step: number | null;
@@ -799,8 +805,8 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         newChat: {
             post: (request: {
-                orgId: string;
                 branchId: string;
+                orgId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -831,13 +837,13 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         commitChangesToRepo: {
             post: (request: {
+                branchId: string;
                 filesInDraft: Record<string, {
                     content: string;
                     githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
-                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -852,6 +858,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         createPrSuggestionForChat: {
             post: (request: {
+                branchId: string;
                 chatId: string;
                 filesInDraft: Record<string, {
                     content: string;
@@ -859,7 +866,6 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
-                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -896,7 +902,6 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         createSiteFromFiles: {
             post: (request: {
-                orgId: string;
                 name: string;
                 files: {
                     relativePath: string;
@@ -907,9 +912,10 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         height?: number | undefined;
                     } | undefined;
                 }[];
+                orgId: string;
+                githubBranch?: string | undefined;
                 githubOwner?: string | undefined;
                 githubRepo?: string | undefined;
-                githubBranch?: string | undefined;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -920,6 +926,12 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     siteId: any;
                     branchId: any;
                     docsJson: string | number | true | import("@prisma/client/runtime/client").JsonObject | import("@prisma/client/runtime/client").JsonArray;
+                    errors: {
+                        githubPath: string;
+                        line: number;
+                        errorMessage: string;
+                        errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
+                    }[];
                 };
             }>>;
         };

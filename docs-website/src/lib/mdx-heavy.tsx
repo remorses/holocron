@@ -188,17 +188,11 @@ export const getProcessor = function getProcessor({
     if (typeof extension === 'string' && extension.endsWith('md')) {
         return (
             remark()
-                // .use(remarkMdx)
                 .use(remarkFrontmatter, ['yaml'])
                 .use(remarkGfm)
-                // .use(remarkGitHubBlockquotes) // TODO remarkGitHubBlockquotes cannot be stringified later because the mdx ast nodes are not valid md
-                .use(remarkAdmonition)
                 .use(remarkCodeTab)
                 .use(remarkHeading)
-                // .use(mdxPluginsFumadocs.remarkImage)
                 .use(remarkStructure)
-                .use(remarkInstall)
-                // .use(remarkMarkAndUnravel)
                 .use(remarkCodeToHtml({ highlighter, onMissingLanguage }))
                 .use(remarkExtractFirstHeading)
                 .use(injectData)

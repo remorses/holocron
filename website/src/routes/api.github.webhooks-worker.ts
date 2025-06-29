@@ -344,7 +344,7 @@ async function handleDeletions({
                 await prisma.mediaAsset.deleteMany({
                     where: {
                         githubPath: filePath,
-                        site: {
+                        branch: {
                             siteId: site.siteId,
                         },
                     },

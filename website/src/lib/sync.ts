@@ -300,6 +300,13 @@ export async function syncFiles({
     }
     const cacheTagsToInvalidate = [] as string[]
     const processedSlugs = new Set<string>()
+
+    // Get all media assets for this branch upfront
+    const allMediaAssets = await prisma.mediaAsset.findMany({
+        where: { branchId },
+        select: { slug: true },
+    })
+    const mediaAssetSlugs = new Set(allMediaAssets.map((asset) => asset.slug))
     for await (const asset of files) {
         await semaphore.acquire() // Acquire permit for file processing
         try {
@@ -403,9 +410,8 @@ export async function syncFiles({
                 })
             }
             if (asset.type === 'mediaAsset') {
-                const slug = asset.githubPath
-                    .replace(/\\/g, '/')
-                    .replace(/^\/+/, '')
+                let slug = '/' + asset.githubPath.replace(/\\+/g, '/')
+                mediaAssetSlugs.add(slug)
                 const downloadUrl = asset.downloadUrl
 
                 let imageMetadata = {
@@ -501,7 +507,6 @@ export async function syncFiles({
                         },
                     },
                     update: {
-                        siteId,
                         slug,
                         branchId,
                         width: metadata.width,
@@ -510,7 +515,6 @@ export async function syncFiles({
                     },
                     create: {
                         githubSha: asset.githubSha,
-                        siteId,
                         slug,
                         githubPath: asset.githubPath,
                         branchId,
@@ -537,12 +541,13 @@ export async function syncFiles({
 
                 let data: ProcessorData
                 let errors: Array<{
-                    errorMessage: string;
-                    line: number;
+                    errorMessage: string
+                    line: number
                     errorType: 'mdxParse' | 'mdParse' | 'render'
                 }> = []
 
                 let markdown = asset.markdown
+                const relativeImagesSlugs = [] as string[]
                 try {
                     const result = await processMdxInServer({
                         markdown: asset.markdown,
@@ -550,13 +555,28 @@ export async function syncFiles({
                         extension: extension as MarkdownExtension,
                     })
                     data = result.data
-
-                    // Run safe-mdx validation to discover component errors
                     try {
+                        function registerRelativeImagePaths({ src }) {
+                            if (
+                                typeof src === 'string' &&
+                                src.startsWith('/')
+                            ) {
+                                // Convert relative path to slug (remove leading slash)
+                                const assetSlug = src
+                                // Only add if the media asset exists
+                                if (mediaAssetSlugs.has(assetSlug)) {
+                                    relativeImagesSlugs.push(src)
+                                }
+                            }
+                        }
                         const visitor = new MdastToJsx({
                             markdown: asset.markdown,
                             mdast: data.ast,
-                            components: mdxComponents,
+                            components: {
+                                ...mdxComponents,
+                                img: registerRelativeImagePaths,
+                                Image: registerRelativeImagePaths,
+                            },
                         })
                         visitor.run()
 
@@ -574,7 +594,7 @@ export async function syncFiles({
                         markdown = ''
                         // If safe-mdx throws an error, add it as a render error
                         errors.push({
-                            errorMessage: `Component validation error: ${safeMdxError.message}`,
+                            errorMessage: `rendering error: ${safeMdxError.message}`,
                             line: 1,
                             errorType: 'render',
                         })
@@ -586,7 +606,8 @@ export async function syncFiles({
                             ? error.line
                             : 1
                     // Determine error type based on the extension
-                    const errorType = extension === 'mdx' ? 'mdxParse' : 'mdParse'
+                    const errorType =
+                        extension === 'mdx' ? 'mdxParse' : 'mdParse'
                     errors.push({
                         errorMessage: error.message,
                         line,
@@ -661,6 +682,24 @@ export async function syncFiles({
                                     },
                                 })
                             }
+                        }
+
+                        // Delete existing PageMediaAsset records for this page
+                        await prisma.pageMediaAsset.deleteMany({
+                            where: { pageId: page.pageId },
+                        })
+
+                        // Create new PageMediaAsset records for relative image paths
+                        for (const imageSrc of relativeImagesSlugs) {
+                            const assetSlug = imageSrc
+
+                            await prisma.pageMediaAsset.create({
+                                data: {
+                                    pageId: page.pageId,
+                                    assetSlug,
+                                    branchId,
+                                },
+                            })
                         }
 
                         console.log(

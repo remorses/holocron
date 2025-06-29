@@ -935,17 +935,42 @@ export const app = new Spiceflow({ basePath: '/api' })
                 name,
             })
 
-            // Get the generated docsJson
-            const branch = await prisma.siteBranch.findUnique({
-                where: { branchId },
-                select: { docsJson: true },
-            })
+            // Get the generated docsJson and any sync errors
+            const [branch, syncErrors] = await Promise.all([
+                prisma.siteBranch.findUnique({
+                    where: { branchId },
+                    select: { docsJson: true },
+                }),
+                prisma.markdownPageSyncError.findMany({
+                    where: {
+                        page: {
+                            branchId,
+                        },
+                    },
+                    include: {
+                        page: {
+                            select: {
+                                githubPath: true,
+                                slug: true,
+                            },
+                        },
+                    },
+                }),
+            ])
+
+            const errors = syncErrors.map((error) => ({
+                githubPath: error.page.githubPath,
+                line: error.line,
+                errorMessage: error.errorMessage,
+                errorType: error.errorType,
+            }))
 
             return {
                 success: true,
                 siteId,
                 branchId,
                 docsJson: branch?.docsJson || {},
+                errors,
             }
         },
     })

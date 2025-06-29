@@ -453,16 +453,26 @@ cli.command('init', 'Initialize a new fumabase project')
                     // Handle files with downloadUrl (media files)
                     if (file.downloadUrl && !file.contents) {
                         try {
-                            console.log(`Downloading ${filePath} from ${file.downloadUrl}`)
+                            console.log(
+                                `Downloading ${filePath} from ${file.downloadUrl}`,
+                            )
                             const response = await fetch(file.downloadUrl)
                             if (!response.ok) {
-                                console.error(`Failed to download ${filePath}: ${response.statusText}`)
+                                console.error(
+                                    `Failed to download ${filePath}: ${response.statusText}`,
+                                )
                                 continue
                             }
                             const buffer = await response.arrayBuffer()
-                            await fs.promises.writeFile(filePath, Buffer.from(buffer))
+                            await fs.promises.writeFile(
+                                filePath,
+                                Buffer.from(buffer),
+                            )
                         } catch (error) {
-                            console.error(`Error downloading ${filePath}:`, error.message)
+                            console.error(
+                                `Error downloading ${filePath}:`,
+                                error.message,
+                            )
                             continue
                         }
                     } else {
@@ -496,10 +506,10 @@ cli.command('init', 'Initialize a new fumabase project')
                 mediaFilePaths.map(async (filePath) => {
                     const fileBuffer = await fs.promises.readFile(filePath)
                     const bytes = fileBuffer.length
-                    
+
                     let width: number | undefined
                     let height: number | undefined
-                    
+
                     try {
                         const dimensions = imageDimensionsFromData(fileBuffer)
                         if (dimensions) {
@@ -509,7 +519,7 @@ cli.command('init', 'Initialize a new fumabase project')
                     } catch (error) {
                         // Not an image or couldn't get dimensions
                     }
-                    
+
                     return {
                         relativePath: filePath,
                         contents: '',
@@ -526,10 +536,7 @@ cli.command('init', 'Initialize a new fumabase project')
             const { data, error } =
                 await apiClient.api.createSiteFromFiles.post({
                     name: siteName,
-                    files: [
-                        ...files,
-                        ...mediaFilesWithMetadata,
-                    ],
+                    files: [...files, ...mediaFilesWithMetadata],
                     orgId,
                     githubOwner: githubInfo?.githubOwner || '',
                     githubRepo: githubInfo?.githubRepo || '',
@@ -549,6 +556,36 @@ cli.command('init', 'Initialize a new fumabase project')
                 await uploadMediaFiles(mediaFilePaths, data.siteId)
             }
 
+            // Display any page processing errors
+            const errors = data.errors
+            if (errors && errors.length > 0) {
+                console.log('\nPage Processing Errors:')
+                
+                const errorTable = new Table({
+                    head: ['File', 'Error Message'],
+                    colWidths: [40, 60],
+                    style: {
+                        head: ['red', 'bold'],
+                        border: ['grey']
+                    }
+                })
+
+                for (const error of errors) {
+                    errorTable.push([
+                        `${error.githubPath}:${error.line}`,
+                        error.errorMessage
+                    ])
+                }
+
+                console.log(errorTable.toString())
+                console.log(
+                    `\nFound ${errors.length} error(s) in your documentation files.`,
+                )
+                console.log(
+                    'Fix the issues above and run the command again.\n',
+                )
+            }
+
             // Save fumabase.json locally
             const docsJsonPath = path.join(process.cwd(), 'fumabase.json')
             await fs.promises.writeFile(
@@ -558,21 +595,22 @@ cli.command('init', 'Initialize a new fumabase project')
 
             // Create success table
             console.log('\n✅ Site created successfully!\n')
-            
+
             const table = new Table({
                 head: ['Property', 'Value'],
                 colWidths: [20, 50],
                 style: {
                     head: ['cyan', 'bold'],
-                    border: ['grey']
-                }
+                    border: ['grey'],
+                },
             })
 
             // Extract website URL from docsJson
             const domains = data.docsJson?.domains || []
-            const websiteUrl = domains.length > 0 
-                ? `https://${domains[0]}` 
-                : 'No domain configured yet'
+            const websiteUrl =
+                domains.length > 0
+                    ? `https://${domains[0]}`
+                    : 'No domain configured yet'
 
             table.push(
                 ['Site Name', siteName],
@@ -581,18 +619,24 @@ cli.command('init', 'Initialize a new fumabase project')
                 ['Website URL', websiteUrl],
                 ['Organization', orgId],
                 ['Config File', docsJsonPath],
-                ['Files Uploaded', `${filePaths.length} text files${mediaFilePaths.length > 0 ? `, ${mediaFilePaths.length} media files` : ''}`]
+                [
+                    'Files Uploaded',
+                    `${filePaths.length} text files${mediaFilePaths.length > 0 ? `, ${mediaFilePaths.length} media files` : ''}`,
+                ],
             )
 
             if (githubInfo) {
                 table.push(
-                    ['GitHub', `${githubInfo.githubOwner}/${githubInfo.githubRepo}`],
-                    ['Branch', gitBranch || 'main']
+                    [
+                        'GitHub',
+                        `${githubInfo.githubOwner}/${githubInfo.githubRepo}`,
+                    ],
+                    ['Branch', gitBranch || 'main'],
                 )
             }
 
             console.log(table.toString())
-            
+
             console.log('\n🚀 Next steps:')
             console.log('   1. Run: fumabase dev')
             console.log('   2. Open your browser to preview changes')
@@ -957,11 +1001,15 @@ cli.command('sync', 'Sync current branch with GitHub').action(async () => {
             const gitStatus = execSync('git status --porcelain', {
                 encoding: 'utf-8',
             }).trim()
-            
+
             if (gitStatus) {
                 console.error('Error: You have uncommitted changes')
-                console.error('The sync command only syncs files that are already pushed to GitHub')
-                console.error('Please commit and push your changes first before running sync')
+                console.error(
+                    'The sync command only syncs files that are already pushed to GitHub',
+                )
+                console.error(
+                    'Please commit and push your changes first before running sync',
+                )
                 process.exit(1)
             }
         } catch (error) {
@@ -973,13 +1021,17 @@ cli.command('sync', 'Sync current branch with GitHub').action(async () => {
         try {
             const unpushedCommits = execSync(
                 `git log origin/${gitBranch}..${gitBranch} --oneline`,
-                { encoding: 'utf-8' }
+                { encoding: 'utf-8' },
             ).trim()
-            
+
             if (unpushedCommits) {
                 console.error('Error: You have unpushed commits')
-                console.error('The sync command only syncs files that are already pushed to GitHub')
-                console.error('Please push your commits first before running sync')
+                console.error(
+                    'The sync command only syncs files that are already pushed to GitHub',
+                )
+                console.error(
+                    'Please push your commits first before running sync',
+                )
                 console.error('\nUnpushed commits:')
                 console.error(unpushedCommits)
                 process.exit(1)
@@ -989,7 +1041,9 @@ cli.command('sync', 'Sync current branch with GitHub').action(async () => {
             // In that case, we should still inform the user
             if (error.message.includes('unknown revision')) {
                 console.error('Error: Remote branch not found')
-                console.error('Please push your branch to GitHub first before running sync')
+                console.error(
+                    'Please push your branch to GitHub first before running sync',
+                )
                 process.exit(1)
             }
             // For other errors, just continue - the sync might still work
