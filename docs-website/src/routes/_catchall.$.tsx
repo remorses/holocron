@@ -45,6 +45,7 @@ import { LOCALES } from '../lib/locales'
 import { Markdown } from '../lib/markdown'
 import { getFumadocsClientSource } from '../lib/source'
 import { getFilesForSource, getFumadocsSource } from '../lib/source.server'
+import { ProcessorDataFrontmatter } from '../lib/mdx-heavy'
 
 export function meta({ data, matches }: Route.MetaArgs) {
     if (!data) return {}
@@ -200,11 +201,13 @@ export async function clientLoader({
                     i18n: null,
                 }
 
+                const frontmatter: ProcessorDataFrontmatter =
+                    (data.frontmatter as any) || {}
                 return {
                     ...baseData,
                     toc: data.toc,
-                    title: data.title,
-                    description: data.description,
+                    title: frontmatter.title,
+                    description: frontmatter.description,
                     markdown: draft.content,
                     ast: data.ast,
                     githubPath,
@@ -372,11 +375,12 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         githubPath: page.githubPath,
         markdown: page.markdown,
     })
+    const frontmatter = data.frontmatter
 
     return {
         toc: data.toc,
-        title: data.title,
-        description: data.description,
+        title: frontmatter.title,
+        description: frontmatter.description,
         markdown: data.markdown,
         ast: data.ast,
         slugs,

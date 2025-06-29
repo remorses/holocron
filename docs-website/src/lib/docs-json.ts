@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 import { extractNamePathsFromSchema } from './schema-path-utils.js'
+import dedent from 'dedent'
 
 // === Primitive helper schemas ===
 const Color = z
@@ -350,10 +351,14 @@ const IntegrationsSchema = z
     .describe('Third-party integration configs')
 
 const CSSVariablesSchema = z
-    .record(z.string())
-    .describe(
-        'Object of CSS variable names and their values. Variables defined here will be injected into the website as CSS custom properties.',
-    )
+    .object({
+        light: z.record(z.string()),
+        dark: z.record(z.string()),
+    })
+    .strict().describe(dedent`
+        Object mapping "light" and "dark" to CSS variable name/value pairs to inject into the website as CSS custom properties.
+        All keys should start with --. The same keys should be specified to both light and dark.
+    `)
 
 // === Main fumabase.json schema ===
 export const DocsConfigSchema = z
@@ -363,7 +368,11 @@ export const DocsConfigSchema = z
             .url()
             .optional()
             .describe('Schema URL for IDE autocomplete'),
-        siteId: z.string().describe(`The site id for this folder. This field is required and should never be manually updated.`),
+        siteId: z
+            .string()
+            .describe(
+                `The site id for this folder. This field is required and should never be manually updated.`,
+            ),
         name: z.string().min(1).describe('Project or product name'),
 
         // navTopLinks: z.array(NavigationAnchorItem).optional(),

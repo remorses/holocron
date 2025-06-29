@@ -1,10 +1,9 @@
 import { Route } from './+types/api.github.webhooks-worker'
 import { Spiceflow } from 'spiceflow'
 import { z } from 'zod'
-import { MarkdownExtension, prisma } from 'db'
+import { prisma } from 'db'
 import { env } from 'website/src/lib/env'
 import { notifyError } from 'website/src/lib/errors'
-import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { generateSlugFromPath } from 'docs-website/src/lib/utils'
 import { isMarkdown, getOctokit } from 'website/src/lib/github.server'
 import {
@@ -186,11 +185,10 @@ async function* filesFromWebhookCommits({
                 const content = Buffer.from(data.content, 'base64').toString(
                     'utf-8',
                 )
-                const jsonData = safeJsonParse(content, {})
 
                 yield {
                     type: 'docsJson',
-                    jsonData,
+                    content,
                     githubPath: filePath,
                     githubSha: latestCommit.id,
                 }
@@ -231,40 +229,19 @@ async function* filesFromWebhookCommits({
                 const content = Buffer.from(data.content, 'base64').toString(
                     'utf-8',
                 )
-                const extension: MarkdownExtension = filePath.endsWith('.mdx')
-                    ? 'mdx'
-                    : 'md'
-                const pathWithFrontSlash = `/${filePath}`
-                const slug = generateSlugFromPath(pathWithFrontSlash, '')
-
-                const { data: processedData } = await processMdxInServer({
-                    markdown: content,
-                    githubPath: filePath,
-                    extension,
-                })
 
                 yield {
                     type: 'page',
                     totalPages: 1,
-                    pageInput: {
-                        slug,
-                        title: processedData.title || '',
-                        description: processedData.description,
-                        markdown: content,
-                        frontmatter: processedData.frontmatter,
-                        githubSha: latestCommit.id,
-                        githubPath: filePath,
-                        extension,
-                        structuredData: processedData.structuredData as any,
-                    },
-                    structuredData: processedData.structuredData,
+                    markdown: content,
+                    githubPath: filePath,
+                    githubSha: latestCommit.id,
                 }
             }
             continue
         }
 
         if (isMediaFile(filePath)) {
-            const slug = generateSlugFromPath(`/${filePath}`, '')
             const res = await octokit.rest.repos.getContent({
                 owner,
                 repo,
@@ -274,8 +251,7 @@ async function* filesFromWebhookCommits({
             if ('download_url' in res.data && res.data.download_url) {
                 yield {
                     type: 'mediaAsset',
-                    slug,
-                    sha: latestCommit.id,
+                    githubSha: latestCommit.id,
                     githubPath: filePath,
                     downloadUrl: res.data.download_url,
                 }
@@ -294,11 +270,10 @@ async function* filesFromWebhookCommits({
                 const content = Buffer.from(data.content, 'base64').toString(
                     'utf-8',
                 )
-                const jsonData = safeJsonParse(content, {})
 
                 yield {
                     type: 'metaFile',
-                    jsonData,
+                    content,
                     githubPath: filePath,
                     githubSha: latestCommit.id,
                 }

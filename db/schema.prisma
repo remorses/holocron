@@ -227,7 +227,6 @@ model MarkdownPage {
   icon        String?
   /// [FrontmatterJson]
   frontmatter Json?
-
   extension MarkdownExtension @default(mdx)
 
   githubSha      String

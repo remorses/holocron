@@ -6,8 +6,14 @@ import { Readable } from 'node:stream'
 
 import { DomainType } from 'db/src/generated/enums'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
-import { DocumentRecord, StructuredData } from 'docs-website/src/lib/mdx-heavy'
+import {
+    DocumentRecord,
+    StructuredData,
+    ProcessorData,
+} from 'docs-website/src/lib/mdx-heavy'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
+import { MdastToJsx } from 'safe-mdx'
+import { mdxComponents } from 'docs-website/src/components/mdx-components'
 import {
     getCacheTagForMediaAsset,
     getKeyForMediaAsset,
@@ -50,17 +56,13 @@ export type AssetForSync =
     | {
           type: 'page'
           totalPages: number
-          pageInput: Omit<Prisma.MarkdownPageUncheckedCreateInput, 'branchId'>
-          structuredData: StructuredData
-          errors?: Array<{
-              errorMessage: string
-              line: number
-          }>
+          markdown: string
+          githubPath: string
+          githubSha: string
       }
     | {
           type: 'mediaAsset'
-          slug: string
-          sha: string
+          githubSha: string
           downloadUrl: string
           githubPath: string
           width?: number
@@ -69,13 +71,13 @@ export type AssetForSync =
       }
     | {
           type: 'metaFile'
-          jsonData: any
+          content: string
           githubPath: string
           githubSha: string
       }
     | {
           type: 'docsJson'
-          jsonData: any
+          content: string
           githubPath: string
           githubSha: string
       }
@@ -189,11 +191,10 @@ export async function* pagesFromFilesList({
         }
         yield {
             type: 'metaFile',
-            jsonData,
+            content: file.contents,
             githubPath: file.relativePath,
             githubSha: gitBlobSha(file.contents),
             filePath: file.relativePath,
-            content: file.contents,
         }
     }
 
@@ -205,12 +206,10 @@ export async function* pagesFromFilesList({
                 : JSON.stringify(docsJson, null, 2)
         yield {
             type: 'docsJson',
-            jsonData:
-                typeof docsJson === 'string' ? JSON.parse(docsJson) : docsJson,
+            content,
             githubPath: 'fumabase.json',
             githubSha: gitBlobSha(content),
             filePath: 'fumabase.json',
-            content,
         }
     }
 
@@ -231,11 +230,9 @@ export async function* pagesFromFilesList({
     // Handle media assets
     const mediaFiles = files.filter((file) => isMediaFile(file.relativePath))
     for (const file of mediaFiles) {
-        const slug = file.relativePath.replace(/\\/g, '/').replace(/^\/+/, '')
         yield {
             type: 'mediaAsset',
-            slug,
-            sha: gitBlobSha(file.contents || file.downloadUrl || ''),
+            githubSha: gitBlobSha(file.contents || file.downloadUrl || ''),
             downloadUrl: file.downloadUrl || '', // Use provided downloadUrl or empty for local files
             githubPath: file.relativePath,
             width: file.metadata?.width,
@@ -251,55 +248,15 @@ export async function* pagesFromFilesList({
     const totalPages = markdownFiles.length
 
     for (const file of markdownFiles) {
-        const entrySlug =
-            '/' + file.relativePath.replace(/\\/g, '/').replace(mdxRegex, '')
-        const extension = file.relativePath.endsWith('.mdx') ? 'mdx' : 'md'
-
-        let data: any
-        let errors: Array<{ errorMessage: string; line: number }> = []
-
-        try {
-            const result = await processMdxInServer({
-                markdown: file.contents,
-                githubPath: file.relativePath,
-                extension,
-            })
-            data = result.data
-        } catch (error: any) {
-            const line = ('line' in error && typeof error.line === 'number') ? error.line : 1
-            errors.push({
-                errorMessage: error.message,
-                line,
-            })
-            console.error(`Failed to process ${file.relativePath}:`, error.message)
-            // Create placeholder data for failed processing
-            data = {
-                title: file.relativePath.replace(/\//g, ' ').replace(/\.(mdx?|md)$/, ''),
-                frontmatter: {},
-                structuredData: {},
-                description: undefined,
-            }
-        }
-
-        const page = {
+        yield {
             type: 'page',
             totalPages,
-            pageInput: {
-                slug: entrySlug,
-                title: data.title || '',
-                markdown: errors.length > 0 ? '' : file.contents, // Empty markdown for failed pages
-                frontmatter: data.frontmatter,
-                githubPath: file.relativePath,
-                githubSha: gitBlobSha(file.contents),
-                extension: extension as MarkdownExtension,
-                description: data.description || undefined,
-                structuredData: data.structuredData as any,
-            },
-            structuredData: data.structuredData,
-            errors: errors.length > 0 ? errors : undefined,
-        } satisfies AssetForSync
-
-        yield { ...page, content: file.contents, filePath: file.relativePath }
+            markdown: file.contents,
+            githubPath: file.relativePath,
+            githubSha: gitBlobSha(file.contents),
+            filePath: file.relativePath,
+            content: file.contents,
+        }
     }
 }
 
@@ -347,6 +304,12 @@ export async function syncFiles({
         await semaphore.acquire() // Acquire permit for file processing
         try {
             if (asset.type === 'metaFile') {
+                let jsonData
+                try {
+                    jsonData = JSON.parse(asset.content)
+                } catch {
+                    jsonData = {}
+                }
                 await prisma.metaFile.upsert({
                     where: {
                         githubPath_branchId: {
@@ -357,12 +320,12 @@ export async function syncFiles({
                     update: {
                         githubSha: asset.githubSha,
                         githubPath: asset.githubPath,
-                        jsonData: asset.jsonData,
+                        jsonData,
                         branchId,
                     },
                     create: {
                         githubPath: asset.githubPath,
-                        jsonData: asset.jsonData,
+                        jsonData,
                         branchId,
                         githubSha: asset.githubSha,
                     },
@@ -370,16 +333,24 @@ export async function syncFiles({
             }
             if (asset.type === 'docsJson') {
                 console.log(`Updating docsJson for branch ${branchId}`)
+                let jsonData
+                try {
+                    // TODO add support for jsonc
+                    jsonData = JSON.parse(asset.content)
+                } catch {
+                    console.error(
+                        `Failed to parse docsJson content, using empty object. Content:`,
+                        asset.content,
+                    )
+                    jsonData = {}
+                }
                 await prisma.siteBranch.update({
                     where: { branchId },
-                    data: { docsJson: asset.jsonData },
+                    data: { docsJson: jsonData },
                 })
 
                 // Handle domain connections
-                if (
-                    asset.jsonData.domains &&
-                    Array.isArray(asset.jsonData.domains)
-                ) {
+                if (jsonData.domains && Array.isArray(jsonData.domains)) {
                     const existingDomains = await prisma.domain.findMany({
                         where: { branchId },
                         select: { host: true },
@@ -388,7 +359,7 @@ export async function syncFiles({
                         existingDomains.map((d) => d.host),
                     )
 
-                    const domainsToConnect = asset.jsonData.domains.filter(
+                    const domainsToConnect = jsonData.domains.filter(
                         (domain: string) => !existingHosts.has(domain),
                     )
 
@@ -432,7 +403,9 @@ export async function syncFiles({
                 })
             }
             if (asset.type === 'mediaAsset') {
-                const slug = asset.slug
+                const slug = asset.githubPath
+                    .replace(/\\/g, '/')
+                    .replace(/^\/+/, '')
                 const downloadUrl = asset.downloadUrl
 
                 let imageMetadata = {
@@ -536,7 +509,7 @@ export async function syncFiles({
                         bytes: metadata.bytes,
                     },
                     create: {
-                        githubSha: asset.sha,
+                        githubSha: asset.githubSha,
                         siteId,
                         slug,
                         githubPath: asset.githubPath,
@@ -548,35 +521,127 @@ export async function syncFiles({
                 })
             }
             if (asset.type === 'page') {
-                const { slug, title } = asset.pageInput
-                const structuredData = asset.structuredData
-                if (processedSlugs.has(slug)) {
+                const entrySlug =
+                    '/' +
+                    asset.githubPath.replace(/\\/g, '/').replace(mdxRegex, '')
+                const extension = asset.githubPath.endsWith('.mdx')
+                    ? 'mdx'
+                    : 'md'
+
+                if (processedSlugs.has(entrySlug)) {
                     console.log(
-                        `Skipping duplicate page with slug: ${slug}, title: ${title}`,
+                        `Skipping duplicate page with slug: ${entrySlug}`,
                     )
                     continue
                 }
 
+                let data: ProcessorData
+                let errors: Array<{
+                    errorMessage: string;
+                    line: number;
+                    errorType: 'mdxParse' | 'mdParse' | 'render'
+                }> = []
+
+                let markdown = asset.markdown
+                try {
+                    const result = await processMdxInServer({
+                        markdown: asset.markdown,
+                        githubPath: asset.githubPath,
+                        extension: extension as MarkdownExtension,
+                    })
+                    data = result.data
+
+                    // Run safe-mdx validation to discover component errors
+                    try {
+                        const visitor = new MdastToJsx({
+                            markdown: asset.markdown,
+                            mdast: data.ast,
+                            components: mdxComponents,
+                        })
+                        visitor.run()
+
+                        // Add safe-mdx errors as render errors
+                        if (visitor.errors && visitor.errors.length > 0) {
+                            for (const safeMdxError of visitor.errors) {
+                                errors.push({
+                                    errorMessage: safeMdxError.message,
+                                    line: safeMdxError.line || 1,
+                                    errorType: 'render',
+                                })
+                            }
+                        }
+                    } catch (safeMdxError: any) {
+                        markdown = ''
+                        // If safe-mdx throws an error, add it as a render error
+                        errors.push({
+                            errorMessage: `Component validation error: ${safeMdxError.message}`,
+                            line: 1,
+                            errorType: 'render',
+                        })
+                    }
+                } catch (error: any) {
+                    markdown = ''
+                    const line =
+                        'line' in error && typeof error.line === 'number'
+                            ? error.line
+                            : 1
+                    // Determine error type based on the extension
+                    const errorType = extension === 'mdx' ? 'mdxParse' : 'mdParse'
+                    errors.push({
+                        errorMessage: error.message,
+                        line,
+                        errorType,
+                    })
+                    console.error(
+                        `Failed to process ${asset.githubPath}:`,
+                        error.message,
+                    )
+                    // Create placeholder data for failed processing
+                    data = {
+                        title: asset.githubPath,
+                        frontmatter: {},
+                        structuredData: { headings: [], contents: [] },
+                        ast: { type: 'root', children: [] },
+                        toc: [],
+                    }
+                }
+
+                const pageInput = {
+                    slug: entrySlug,
+                    title: data.title || '',
+                    markdown, // Empty markdown for failed pages
+                    frontmatter: data.frontmatter,
+                    githubPath: asset.githubPath,
+                    githubSha: asset.githubSha,
+                    extension: extension as MarkdownExtension,
+                    description: data?.frontmatter?.description || '',
+                    structuredData: data.structuredData as any,
+                }
+
+                const structuredData = data.structuredData
+
                 chunksToSync.push(
                     ...processForTrieve({
-                        _id: slug,
-                        title: title || slug,
-                        url: slug,
+                        _id: entrySlug,
+                        title: pageInput.title || entrySlug,
+                        url: entrySlug,
                         structured: structuredData,
-                        pageSlug: slug,
+                        pageSlug: entrySlug,
                     }),
                 )
 
                 console.log(
-                    `Upserting page with slug: ${slug}, title: ${title}...`,
+                    `Upserting page with slug: ${entrySlug}, title: ${pageInput.title}...`,
                 )
                 await Promise.all([
                     prisma.$transaction(async (prisma) => {
                         // Upsert the page
                         const page = await prisma.markdownPage.upsert({
-                            where: { branchId_slug: { branchId, slug } },
-                            update: asset.pageInput,
-                            create: { ...asset.pageInput, branchId },
+                            where: {
+                                branchId_slug: { branchId, slug: entrySlug },
+                            },
+                            update: pageInput,
+                            create: { ...pageInput, branchId },
                         })
 
                         // Delete existing sync errors for this page
@@ -585,32 +650,21 @@ export async function syncFiles({
                         })
 
                         // Create new sync errors if there were processing errors
-                        if (asset.errors && asset.errors.length > 0) {
-                            for (const error of asset.errors) {
-                                // Determine error type based on error message
-                                const errorType = (() => {
-                                    if (error.errorMessage.includes('mdx')) {
-                                        return 'mdxParse' as const
-                                    }
-                                    if (error.errorMessage.includes('md')) {
-                                        return 'mdParse' as const
-                                    }
-                                    return 'render' as const
-                                })()
-
+                        if (errors.length > 0) {
+                            for (const error of errors) {
                                 await prisma.markdownPageSyncError.create({
                                     data: {
                                         pageId: page.pageId,
                                         line: error.line,
                                         errorMessage: error.errorMessage,
-                                        errorType,
+                                        errorType: error.errorType,
                                     },
                                 })
                             }
                         }
 
                         console.log(
-                            `Page upsert complete: ${page.pageId} (${page.title})${asset.errors && asset.errors.length > 0 ? ` with ${asset.errors.length} error(s)` : ''}`,
+                            `Page upsert complete: ${page.pageId} (${page.title})${errors.length > 0 ? ` with ${errors.length} error(s)` : ''}`,
                         )
 
                         return page
@@ -629,8 +683,10 @@ export async function syncFiles({
                             chunksToSync = chunksToSync.slice(chunkSize)
                         })(),
                 ])
-                processedSlugs.add(slug)
-                console.log(` -> Upserted page: ${title} (ID: ${slug})`)
+                processedSlugs.add(entrySlug)
+                console.log(
+                    ` -> Upserted page: ${pageInput.title} (ID: ${entrySlug})`,
+                )
             }
         } catch (e: any) {
             if (
@@ -839,8 +895,7 @@ export async function* filesFromGithub({
                 const downloadUrl = res.data.download_url || ''
                 const asset: AssetForSync = {
                     type: 'mediaAsset',
-                    slug,
-                    sha: x.sha,
+                    githubSha: x.sha,
                     githubPath: x.githubPath,
                     downloadUrl,
                 }
@@ -867,14 +922,9 @@ export async function* filesFromGithub({
         })
 
     for (let file of onlyMetaFiles) {
-        const jsonData = safeJsonParse(file.content || '{}')
-        if (!jsonData) {
-            console.log('skipping meta file for invalid json', file.githubPath)
-            continue
-        }
         const meta: AssetForSync = {
             type: 'metaFile',
-            jsonData,
+            content: file.content || '{}',
             githubPath: file.githubPath,
             githubSha: file.sha,
         }
@@ -895,21 +945,13 @@ export async function* filesFromGithub({
     })
 
     if (docsJsonFile) {
-        const jsonData = safeJsonParse(docsJsonFile.content || '{}')
-        if (jsonData) {
-            const docsJson: AssetForSync = {
-                type: 'docsJson',
-                jsonData,
-                githubPath: docsJsonFile.githubPath,
-                githubSha: docsJsonFile.sha,
-            }
-            yield docsJson
-        } else {
-            console.log(
-                'skipping fumabase.json file for invalid json',
-                docsJsonFile.githubPath,
-            )
+        const docsJson: AssetForSync = {
+            type: 'docsJson',
+            content: docsJsonFile.content || '{}',
+            githubPath: docsJsonFile.githubPath,
+            githubSha: docsJsonFile.sha,
         }
+        yield docsJson
     }
 
     // Process styles.css file (root only)
@@ -993,31 +1035,13 @@ export async function* filesFromGithub({
             continue
         }
         slugsFound.add(slug)
-        const { data } = await processMdxInServer({
-            markdown: x.content,
-            githubPath: x.githubPath,
-            extension,
-        })
-
-        let frontmatter = data.frontmatter
-        let title = frontmatter?.title
 
         yield {
-            pageInput: {
-                slug,
-                title: title || '',
-                markdown: content,
-                frontmatter: frontmatter,
-                githubSha: x.sha,
-                githubPath: x.githubPath,
-                description: data.description,
-                extension,
-                structuredData: data.structuredData as any,
-                // ast: data.ast
-            },
-            structuredData: data.structuredData,
-            totalPages,
             type: 'page',
+            totalPages,
+            markdown: content,
+            githubPath: x.githubPath,
+            githubSha: x.sha,
         } satisfies AssetForSync
     }
 }
