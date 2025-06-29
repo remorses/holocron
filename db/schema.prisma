@@ -233,6 +233,7 @@ model MarkdownPage {
   githubSha      String
   githubPath     String
   structuredData Json   @default("{}")
+  syncErrors MarkdownPageSyncError[]
 
   @@unique([branchId, slug])
   @@index([branchId])
@@ -454,5 +455,24 @@ model ApiKey {
   updatedAt           DateTime
   permissions         String?
   metadata            String?
+
+}
+
+enum MarkdownPageSyncErrorType {
+   render
+   mdxParse
+   mdParse
+}
+
+
+model MarkdownPageSyncError {
+
+  pageId String
+  line Int
+  errorMessage String
+  page MarkdownPage @relation(fields: [pageId], references: [pageId], onDelete: Cascade)
+  errorType MarkdownPageSyncErrorType
+
+  @@id([pageId, line])
 
 }

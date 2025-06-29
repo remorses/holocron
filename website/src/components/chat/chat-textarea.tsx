@@ -10,15 +10,11 @@ import { cn } from 'website/src/lib/cn'
 import { ScrollArea } from '../ui/scroll-area'
 
 interface MentionsTextAreaProps {
-    // value: string
-    // onChange: (value: string) => void
+    ref?: any
     onSubmit: () => Promise<void> | void
     disabled?: boolean
     placeholder?: string
     className?: string
-
-    // autocompleteStrings?: string[]
-
     mentionOptions?: string[]
 }
 
@@ -242,8 +238,8 @@ export function ChatTextarea({
                     )}
                     render={
                         <textarea
-                            ref={ref}
                             rows={5}
+                            ref={ref}
                             value={value}
                             placeholder={placeholder}
                             disabled={disabled}

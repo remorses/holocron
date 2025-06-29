@@ -52,6 +52,10 @@ export type AssetForSync =
           totalPages: number
           pageInput: Omit<Prisma.MarkdownPageUncheckedCreateInput, 'branchId'>
           structuredData: StructuredData
+          errors?: Array<{
+              errorMessage: string
+              line: number
+          }>
       }
     | {
           type: 'mediaAsset'
@@ -251,11 +255,31 @@ export async function* pagesFromFilesList({
             '/' + file.relativePath.replace(/\\/g, '/').replace(mdxRegex, '')
         const extension = file.relativePath.endsWith('.mdx') ? 'mdx' : 'md'
 
-        const { data } = await processMdxInServer({
-            markdown: file.contents,
-            githubPath: file.relativePath,
-            extension,
-        })
+        let data: any
+        let errors: Array<{ errorMessage: string; line: number }> = []
+
+        try {
+            const result = await processMdxInServer({
+                markdown: file.contents,
+                githubPath: file.relativePath,
+                extension,
+            })
+            data = result.data
+        } catch (error: any) {
+            const line = ('line' in error && typeof error.line === 'number') ? error.line : 1
+            errors.push({
+                errorMessage: error.message,
+                line,
+            })
+            console.error(`Failed to process ${file.relativePath}:`, error.message)
+            // Create placeholder data for failed processing
+            data = {
+                title: file.relativePath.replace(/\//g, ' ').replace(/\.(mdx?|md)$/, ''),
+                frontmatter: {},
+                structuredData: {},
+                description: undefined,
+            }
+        }
 
         const page = {
             type: 'page',
@@ -263,12 +287,16 @@ export async function* pagesFromFilesList({
             pageInput: {
                 slug: entrySlug,
                 title: data.title || '',
-                markdown: file.contents,
+                markdown: errors.length > 0 ? '' : file.contents, // Empty markdown for failed pages
                 frontmatter: data.frontmatter,
                 githubPath: file.relativePath,
                 githubSha: gitBlobSha(file.contents),
+                extension: extension as MarkdownExtension,
+                description: data.description || undefined,
+                structuredData: data.structuredData as any,
             },
             structuredData: data.structuredData,
+            errors: errors.length > 0 ? errors : undefined,
         } satisfies AssetForSync
 
         yield { ...page, content: file.contents, filePath: file.relativePath }
@@ -543,17 +571,50 @@ export async function syncFiles({
                     `Upserting page with slug: ${slug}, title: ${title}...`,
                 )
                 await Promise.all([
-                    prisma.markdownPage
-                        .upsert({
+                    prisma.$transaction(async (prisma) => {
+                        // Upsert the page
+                        const page = await prisma.markdownPage.upsert({
                             where: { branchId_slug: { branchId, slug } },
                             update: asset.pageInput,
                             create: { ...asset.pageInput, branchId },
                         })
-                        .then((page) => {
-                            console.log(
-                                `Page upsert complete: ${page.pageId} (${page.title})`,
-                            )
-                        }),
+
+                        // Delete existing sync errors for this page
+                        await prisma.markdownPageSyncError.deleteMany({
+                            where: { pageId: page.pageId },
+                        })
+
+                        // Create new sync errors if there were processing errors
+                        if (asset.errors && asset.errors.length > 0) {
+                            for (const error of asset.errors) {
+                                // Determine error type based on error message
+                                const errorType = (() => {
+                                    if (error.errorMessage.includes('mdx')) {
+                                        return 'mdxParse' as const
+                                    }
+                                    if (error.errorMessage.includes('md')) {
+                                        return 'mdParse' as const
+                                    }
+                                    return 'render' as const
+                                })()
+
+                                await prisma.markdownPageSyncError.create({
+                                    data: {
+                                        pageId: page.pageId,
+                                        line: error.line,
+                                        errorMessage: error.errorMessage,
+                                        errorType,
+                                    },
+                                })
+                            }
+                        }
+
+                        console.log(
+                            `Page upsert complete: ${page.pageId} (${page.title})${asset.errors && asset.errors.length > 0 ? ` with ${asset.errors.length} error(s)` : ''}`,
+                        )
+
+                        return page
+                    }),
                     chunksToSync.length >= chunkSize &&
                         (async () => {
                             if (trieve.datasetId) {

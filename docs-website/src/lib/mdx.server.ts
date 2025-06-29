@@ -46,8 +46,7 @@ export async function processMdxInServer({
             },
         }
     } catch (e) {
-        // Log the error's constructor name
-        console.error('Error type:', e.constructor?.name)
+        throw e
 
         if ('line' in e) {
             throw new Error(
