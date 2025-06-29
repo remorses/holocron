@@ -121,7 +121,7 @@ async function findProjectFiles() {
     return { filePaths, files, mediaFilePaths }
 }
 
-async function uploadMediaFiles(mediaFilePaths: string[], siteId: string) {
+async function uploadMediaFiles({ mediaFilePaths, siteId }: { mediaFilePaths: string[], siteId: string }) {
     if (mediaFilePaths.length === 0) {
         return []
     }
@@ -571,7 +571,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
 
             // Upload media files if any exist
             if (mediaFilePaths.length > 0) {
-                await uploadMediaFiles(mediaFilePaths, data.siteId)
+                await uploadMediaFiles({ mediaFilePaths, siteId: data.siteId })
             }
 
             // Display any page processing errors

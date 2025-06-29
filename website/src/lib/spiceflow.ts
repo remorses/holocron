@@ -264,6 +264,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                         ? { contentType: file.contentType }
                         : {}),
                 })
+                console.log('uploaded',file.slug)
                 const finalUrl = new URL(
                     file.slug,
                     env.UPLOADS_BASE_URL,

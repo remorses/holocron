@@ -6,6 +6,9 @@
 
 To preview your documentation changes locally, first install the [Fumabase CLI](https://www.npmjs.com/package/fumabase). Use the following command:
 
+![Fumadocs image](/images/fumadocs.jpeg)
+
+
 ```
 npm i -g fumabase
 ```

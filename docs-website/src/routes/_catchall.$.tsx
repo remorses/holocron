@@ -292,7 +292,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
     const slug = fumadocsPage?.url || '/' + slugs.join('/')
 
-    let [page, mediaAsset] = await Promise.all([
+    let [page] = await Promise.all([
         prisma.markdownPage.findFirst({
             where: {
                 slug,
@@ -306,37 +306,9 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                 },
             },
         }),
-        prisma.mediaAsset.findFirst({
-            where: {
-                slug,
-                branchId: siteBranch.branchId,
-            },
-        }),
     ])
 
-    if (!page && mediaAsset) {
-        const siteId = site.siteId
-        const branchId = siteBranch.branchId
-        const key = getKeyForMediaAsset({
-            siteId,
-            slug,
-        })
-        const file = s3.file(key)
-        const [stat, blob] = await Promise.all([file.stat(), file.blob()])
-        throw new Response(blob, {
-            headers: {
-                'Content-Type': stat.type,
-                'Cache-Control': 'public, max-age=31536000, immutable',
-                'Cache-Tag': getCacheTagForMediaAsset({
-                    siteId,
-                    slug,
-                }),
-                'Content-Length': stat.size.toString(),
-            },
-        })
-    }
-
-    if (!page) {
+    if (!page && slug === '/') {
         // try to find index page if no page found
         let [indexPage, anotherPage] = await Promise.all([
             prisma.markdownPage.findFirst({
