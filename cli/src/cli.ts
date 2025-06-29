@@ -335,7 +335,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                 process.chdir(targetDir)
             }
 
-            const docsJsonPath = path.join(options.dir, 'fumabase.json')
+            const docsJsonPath = path.resolve('fumabase.json')
             let existingDocsJson = undefined as DocsJsonType | undefined
             try {
                 const existingContent = await fs.promises.readFile(
@@ -512,7 +512,11 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                 console.log(`Found ${mediaFilePaths.length} media files`)
             }
 
-            console.log('Creating site...')
+            if (existingDocsJson?.siteId) {
+                console.log('Updating site...')
+            } else {
+                console.log('Creating site...')
+            }
 
             // Process media files to get metadata
             const mediaFilesWithMetadata = await Promise.all(
@@ -628,11 +632,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
 
             table.push(
                 ['Site Name', siteName],
-                ['Site ID', data.siteId],
-                ['Branch ID', data.branchId],
                 ['Website URL', websiteUrl],
-                ['Organization', orgId],
-                ['Config File', docsJsonPath],
                 [
                     'Files Uploaded',
                     `${filePaths.length} text files${mediaFilePaths.length > 0 ? `, ${mediaFilePaths.length} media files` : ''}`,
@@ -656,7 +656,8 @@ cli.command('init', 'Initialize or deploy a fumabase project')
             console.log('   2. Open your browser to preview changes')
             console.log('   3. Push to GitHub to deploy automatically\n')
         } catch (error) {
-            console.error('Error initializing project:', error.message || error)
+            console.error('Error initializing project:')
+            console.error(error)
             process.exit(1)
         }
     })

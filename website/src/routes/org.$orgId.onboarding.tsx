@@ -81,12 +81,19 @@ export async function action({ request, params }: Route.ActionArgs) {
         const siteId = cuid()
         const randomHash = Math.random().toString(36).substring(2, 10)
         const internalHost = `${githubAccountLogin}-${randomHash}.${env.APPS_DOMAIN}`
+        const domains =
+            process.env.NODE_ENV === 'development'
+                ? [
+                      `${githubAccountLogin}-${randomHash}.localhost`,
+                      internalHost,
+                  ]
+                : [internalHost]
         const files = pagesFromFilesList({
             files: exampleDocs,
             docsJson: {
                 siteId,
                 name,
-                domains: [internalHost],
+                domains,
             },
         })
         const owner = githubAccountLogin
@@ -188,7 +195,11 @@ function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
     const navigation = useNavigation()
     const isLoading = navigation.state === 'submitting'
     return (
-        <Stepper className='lg:min-w-[500px]' defaultValue={currentStep + 1} orientation='vertical'>
+        <Stepper
+            className='lg:min-w-[500px]'
+            defaultValue={currentStep + 1}
+            orientation='vertical'
+        >
             <StepperItem
                 step={1}
                 className='relative items-start not-last:flex-1'
@@ -208,7 +219,9 @@ function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
                                 <div className='pt-4'>
                                     {!showAlternative ? (
                                         <>
-                                            <Link to={githubInstallUrl.toString()}>
+                                            <Link
+                                                to={githubInstallUrl.toString()}
+                                            >
                                                 <Button className=''>
                                                     <svg
                                                         className='w-4 h-4'
@@ -227,9 +240,12 @@ function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
                                             <div className='pt-2'>
                                                 <button
                                                     className='text-gray-400 text-xs hover:text-gray-300'
-                                                    onClick={() => {setShowAlternative(true)}}
+                                                    onClick={() => {
+                                                        setShowAlternative(true)
+                                                    }}
                                                 >
-                                                    Don't want to authorize GitHub Auth? ▼
+                                                    Don't want to authorize
+                                                    GitHub Auth? ▼
                                                 </button>
                                             </div>
                                         </>
@@ -237,7 +253,9 @@ function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
                                         <div className='space-y-4'>
                                             <div className='p-4 bg-gray-800/50 rounded-lg border'>
                                                 <p className='text-sm text-gray-300 mb-3'>
-                                                    Run this command to download a template docs folder and deploy it:
+                                                    Run this command to download
+                                                    a template docs folder and
+                                                    deploy it:
                                                 </p>
                                                 <div className='bg-black/50 p-3 rounded font-mono text-sm text-green-400'>
                                                     npx fumabase init
@@ -245,7 +263,9 @@ function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
                                             </div>
                                             <button
                                                 className='text-gray-400 text-xs hover:text-gray-300'
-                                                onClick={() => {setShowAlternative(false)}}
+                                                onClick={() => {
+                                                    setShowAlternative(false)
+                                                }}
                                             >
                                                 ← Back to GitHub Auth
                                             </button>

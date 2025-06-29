@@ -1,6 +1,5 @@
 import { processMdxInClient } from './markdown-runtime'
 
-
 /* ─────────── types ─────────── */
 interface Offset {
     offset: number
@@ -92,8 +91,8 @@ export const parseMarkdownIncremental = ({
     children
         .slice(0, trailingNodes ? -trailingNodes : undefined)
         .forEach((node) => {
-            const start = node.position.start.offset
-            const end = node.position.end.offset
+            const start = node.position?.start.offset
+            const end = node.position?.end.offset
             const slice = text.slice(start, end)
             cache.set(start, {
                 len: slice.length,

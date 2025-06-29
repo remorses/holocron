@@ -164,8 +164,8 @@ const injectData = () => {
         let frontmatter: Record<string, any> = {}
         if (frontmatterYaml) {
             frontmatter = YAML.load(frontmatterYaml) as any
-            data.frontmatter = frontmatter
         }
+        data.frontmatter = frontmatter
         if (!frontmatter.title && data.title) {
             frontmatter.title = data.title
         }
@@ -186,18 +186,16 @@ export const getProcessor = function getProcessor({
 }) {
     console.log({ extension })
     if (typeof extension === 'string' && extension.endsWith('md')) {
-        return (
-            remark()
-                .use(remarkFrontmatter, ['yaml'])
-                .use(remarkGfm)
-                .use(remarkCodeTab)
-                .use(remarkHeading)
-                .use(remarkStructure)
-                .use(remarkCodeToHtml({ highlighter, onMissingLanguage }))
-                .use(remarkExtractFirstHeading)
-                .use(injectData)
-                .use(remarkStringify)
-        )
+        return remark()
+            .use(remarkFrontmatter, ['yaml'])
+            .use(remarkGfm)
+            .use(remarkCodeTab)
+            .use(remarkHeading)
+            .use(remarkStructure)
+            .use(remarkCodeToHtml({ highlighter, onMissingLanguage }))
+            .use(remarkExtractFirstHeading)
+            .use(injectData)
+            .use(remarkStringify)
     } else {
         return (
             remark()

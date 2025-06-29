@@ -397,11 +397,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         githubPath: page.githubPath,
         markdown: page.markdown,
     })
-    const frontmatter = data.frontmatter
+    const frontmatter = data.frontmatter || {}
 
     return {
         toc: data.toc,
-        title: frontmatter.title,
+        title: data.title,
         description: frontmatter.description,
         markdown: data.markdown,
         ast: data.ast,

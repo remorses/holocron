@@ -980,10 +980,17 @@ export const app = new Spiceflow({ basePath: '/api' })
             if (!siteId) {
                 const randomHash = Math.random().toString(36).substring(2, 10)
                 const internalHost = `${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${randomHash}.${env.APPS_DOMAIN}`
+                const domains =
+                    process.env.NODE_ENV === 'development'
+                        ? [
+                              `${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${randomHash}.localhost`,
+                              internalHost,
+                          ]
+                        : [internalHost]
                 docsJson = {
                     siteId: finalSiteId,
                     name,
-                    domains: [internalHost],
+                    domains,
                 }
             } else {
                 // For updates, fetch the branch's latest docsJson
