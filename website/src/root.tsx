@@ -10,7 +10,7 @@ import {
 
 export function meta() {
     return [
-        { title: 'Website' },
+        { title: 'Fumabase' },
         { name: 'description', content: 'Host Fumadocs websites without effort' },
         { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' },
     ]
