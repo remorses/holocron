@@ -46,6 +46,8 @@ function createSystemPrompt({}) {
 
   The fumabase.json file will be stale when using the render_form tool, so do not use it with the edit tool.
 
+  When the user message contains references with @ for example @path/to/file.mdx it means the user is referencing a file, the @ character is not part of the filename.
+
   `
 }
 

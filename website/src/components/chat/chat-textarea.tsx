@@ -28,6 +28,7 @@ export function ChatTextarea({
     placeholder = 'Type @',
     className = '',
     mentionOptions,
+    ...props
 }: MentionsTextAreaProps) {
     const ref = React.useRef<HTMLTextAreaElement>(null)
     const [trigger, setTrigger] = React.useState<string | null>(null)
@@ -225,6 +226,7 @@ export function ChatTextarea({
 
             <ScrollArea className='[&>div>div]:grow flex flex-col box-border my-1 max-h-28 w-full 2xl:max-h-40'>
                 <Ariakit.Combobox
+                    {...props}
                     store={mentionsCombobox}
                     autoSelect
                     value={selectedAutocompleteText || value}

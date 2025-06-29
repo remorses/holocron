@@ -79,6 +79,7 @@ import {
     CommandGroup,
     CommandItem,
 } from 'website/src/components/ui/command'
+import React from 'react'
 
 function keyForDocsJson({ chatId }) {
     return `fumabase.json-${chatId}`
@@ -330,17 +331,26 @@ const AUTOCOMPLETE_SUGGESTIONS = [
     'setup custom domain configuration',
     'add analytics tracking code',
 ]
-
-function ContextButton({ contextOptions }) {
+function ContextButton({
+    contextOptions,
+    textareaRef,
+}: {
+    contextOptions: string[]
+    textareaRef: React.RefObject<HTMLTextAreaElement |null>
+}) {
     const [open, setOpen] = useState(false)
 
-    const handleContextSelect = (selectedValue) => {
+    const handleContextSelect = (selectedValue: string) => {
         if (!selectedValue) return
 
         const currentText = useChatState.getState().text || ''
         const newText = currentText + (currentText ? ' ' : '') + selectedValue
         useChatState.setState({ text: newText })
         setOpen(false)
+        // Focus the textarea if provided
+        if (textareaRef?.current) {
+            textareaRef.current.focus()
+        }
     }
 
     return (
@@ -360,7 +370,7 @@ function ContextButton({ contextOptions }) {
                         <CommandList>
                             <CommandEmpty>No context found.</CommandEmpty>
                             <CommandGroup>
-                                {contextOptions.map((option) => (
+                                {contextOptions.map((option: string) => (
                                     <CommandItem
                                         key={option}
                                         value={option}
@@ -532,7 +542,7 @@ function Footer() {
         )
     }, [filesInDraft])
     const showCreatePR = hasFilesInDraft || prUrl
-
+    const textareaRef = React.useRef<HTMLTextAreaElement>(null)
     return (
         <AnimatePresence mode='popLayout'>
             <motion.div
@@ -579,10 +589,12 @@ function Footer() {
                         <div className='relative rounded-[20px] border bg-popover'>
                             <div className='flex'>
                                 <ContextButton
+                                    textareaRef={textareaRef}
                                     contextOptions={mentionOptions || []}
                                 />
                             </div>
                             <ChatTextarea
+                                ref={textareaRef}
                                 onSubmit={() => handleSubmit()}
                                 disabled={false}
                                 placeholder='Ask me anything...'
