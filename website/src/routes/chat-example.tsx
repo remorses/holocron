@@ -1,7 +1,20 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 import { Button } from 'website/src/components/ui/button'
 import { ScrollArea } from 'website/src/components/ui/scroll-area'
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from 'website/src/components/ui/command'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from 'website/src/components/ui/popover'
 
 import { useStickToBottom } from 'use-stick-to-bottom'
 
@@ -106,7 +119,7 @@ Let me know what you'd like to do first!
 exampleMessages = []
 
 export default function Page({ loaderData }: Route.ComponentProps) {
-    const initialChatState = useMemo<ChatState>(
+    const initialChatState = useMemo<Partial<ChatState>>(
         () => ({
             messages: exampleMessages,
             isGenerating: false,
@@ -262,6 +275,58 @@ const AUTOCOMPLETE_SUGGESTIONS = [
     'add analytics tracking code',
 ]
 
+function ContextButton({ contextOptions }) {
+    const [open, setOpen] = useState(false)
+
+    const handleContextSelect = (selectedValue) => {
+        if (!selectedValue) return
+
+        const currentText = useChatState.getState().text || ''
+        const newText = currentText + (currentText ? ' ' : '') + selectedValue
+        useChatState.setState({ text: newText })
+        setOpen(false)
+    }
+
+    return (
+        <div className='ml-2 my-2 self-start'>
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                    <Button variant='ghost' className='border'>
+                        @ Add context
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className='p-0 max-w-full' align='start'>
+                    <Command>
+                        <CommandInput
+                            placeholder='Search context...'
+                            className='h-9'
+                        />
+                        <CommandList>
+                            <CommandEmpty>No context found.</CommandEmpty>
+                            <CommandGroup>
+                                {contextOptions.map((option) => (
+                                    <CommandItem
+                                        key={option}
+                                        value={option}
+                                        onSelect={() => {
+                                            handleContextSelect(option)
+                                        }}
+                                        className='max-w-full'
+                                    >
+                                        <span className='truncate'>
+                                            {option}
+                                        </span>
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+        </div>
+    )
+}
+
 function Footer() {
     const isPending = useChatState((x) => x.isGenerating)
     const text = useChatState((x) => x.text || '')
@@ -294,6 +359,14 @@ function Footer() {
         }
     }
 
+    const mentionsCombobox = useChatState((x) => x.mentionsCombobox)
+
+    const contextOptions = [
+        '@/docs/README.md',
+        '@/docs/setup.md',
+        '@/docs/changelog.md',
+        '@/docs/faq.md',
+    ]
     return (
         <AnimatePresence mode='popLayout'>
             <div className=' sticky bottom-4 z-50 w-full mt-4'>
@@ -303,20 +376,13 @@ function Footer() {
                         ' w-full rounded-[10px] border bg-background flex flex-col max-w-3xl mx-auto space-y-3',
                     )}
                 >
-                    <Button variant='ghost' className='border self-start ml-2 my-2'>
-                        @ Add context
-                    </Button>
+                    <ContextButton contextOptions={contextOptions} />
                     <ChatTextarea
                         onSubmit={() => handleSubmit()}
                         disabled={false}
                         placeholder='Ask me anything...'
                         className={cn('')}
-                        mentionOptions={[
-                            '@/docs/README.md',
-                            '@/docs/setup.md',
-                            '@/docs/changelog.md',
-                            '@/docs/faq.md',
-                        ]}
+                        mentionOptions={contextOptions}
                     />
 
                     <div className='flex items-center justify-between gap-2 p-3 py-2'>

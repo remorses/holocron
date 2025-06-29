@@ -125,9 +125,9 @@ export function ChatTextarea({
         }
     }, [onSubmit])
 
-    const combobox = Ariakit.useComboboxStore()
+    const mentionsCombobox = useChatState((x) => x.mentionsCombobox)
 
-    const searchValue = Ariakit.useStoreState(combobox, 'value')
+    const searchValue = Ariakit.useStoreState(mentionsCombobox, 'value')
     const deferredSearchValue = React.useDeferredValue(searchValue)
 
     const mentionMatches = React.useMemo(() => {
@@ -143,8 +143,8 @@ export function ChatTextarea({
     const hasMatches = !!mentionMatches.length
 
     React.useLayoutEffect(() => {
-        combobox.setOpen(hasMatches)
-    }, [combobox, hasMatches])
+        mentionsCombobox.setOpen(hasMatches)
+    }, [mentionsCombobox, hasMatches])
 
     React.useLayoutEffect(() => {
         if (caretOffset != null) {
@@ -154,7 +154,7 @@ export function ChatTextarea({
 
     // Re-calculates the position of the combobox popover in case the changes on
     // the textarea value have shifted the trigger character.
-    React.useEffect(combobox.render, [combobox, value])
+    React.useEffect(mentionsCombobox.render, [mentionsCombobox, value])
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (event.isPropagationStopped()) {
@@ -168,7 +168,7 @@ export function ChatTextarea({
 
         // Handle mentions combobox
         if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-            combobox.hide()
+            mentionsCombobox.hide()
         }
 
         // Handle form submission - prevent if mentions combobox is open or autocomplete is showing
@@ -193,18 +193,18 @@ export function ChatTextarea({
         // before the caret is the trigger.
         if (trigger) {
             setTrigger(trigger)
-            combobox.show()
+            mentionsCombobox.show()
         }
         // There will be no trigger and no search value if the trigger character has
         // just been deleted.
         else if (!searchValue) {
             setTrigger(null)
-            combobox.hide()
+            mentionsCombobox.hide()
         }
         // Sets our textarea value.
         onUserTextChange(event.target.value)
         // Sets the combobox value that will be used to search in the list.
-        combobox.setValue(searchValue)
+        mentionsCombobox.setValue(searchValue)
     }
 
     const onMentionClick = (itemValue: string) => () => {
@@ -225,7 +225,7 @@ export function ChatTextarea({
 
             <ScrollArea className='[&>div>div]:grow flex flex-col box-border my-1 max-h-28 w-full 2xl:max-h-40'>
                 <Ariakit.Combobox
-                    store={combobox}
+                    store={mentionsCombobox}
                     autoSelect
                     value={selectedAutocompleteText || value}
                     // We'll overwrite how the combobox popover is shown, so we disable
@@ -246,8 +246,8 @@ export function ChatTextarea({
                             placeholder={placeholder}
                             disabled={disabled}
                             onKeyDown={handleKeyDown}
-                            onScroll={combobox.render}
-                            onPointerDown={combobox.hide}
+                            onScroll={mentionsCombobox.render}
+                            onPointerDown={mentionsCombobox.hide}
                             onChange={handleChange}
                             className='box-border border-0 outline-none [field-sizing:content] whitespace-pre-wrap break-words resize-none'
                         />
@@ -256,7 +256,7 @@ export function ChatTextarea({
             </ScrollArea>
 
             <Ariakit.ComboboxPopover
-                store={combobox}
+                store={mentionsCombobox}
                 hidden={!hasMatches}
                 unmountOnHide
                 fitViewport

@@ -183,7 +183,7 @@ export default function Page({
         }),
         [loaderData],
     )
-    const initialChatState = useMemo<ChatState>(
+    const initialChatState = useMemo<Partial<ChatState>>(
         () => ({
             messages: chat.messages.map((x) => {
                 const message: UIMessage = {
