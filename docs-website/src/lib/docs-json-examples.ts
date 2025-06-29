@@ -175,13 +175,25 @@ export const completeDocsConfigExample: DocsJsonType = {
     },
 
     cssVariables: {
-        '--primary-color': '#3b82f6',
-        '--primary-hover': '#2563eb',
-        '--secondary-color': '#10b981',
-        '--border-radius': '8px',
-        '--font-family-heading': "'Inter', system-ui, sans-serif",
-        '--font-family-body': "'Inter', system-ui, sans-serif",
-        '--sidebar-width': '280px',
-        '--content-max-width': '1200px',
+        light: {
+            '--primary-color': '#3b82f6',
+            '--primary-hover': '#2563eb',
+            '--secondary-color': '#10b981',
+            '--border-radius': '8px',
+            '--font-family-heading': "'Inter', system-ui, sans-serif",
+            '--font-family-body': "'Inter', system-ui, sans-serif",
+            '--sidebar-width': '280px',
+            '--content-max-width': '1200px',
+        },
+        dark: {
+            '--primary-color': '#2563eb',
+            '--primary-hover': '#1e40af',
+            '--secondary-color': '#059669',
+            '--border-radius': '8px',
+            '--font-family-heading': "'Inter', system-ui, sans-serif",
+            '--font-family-body': "'Inter', system-ui, sans-serif",
+            '--sidebar-width': '280px',
+            '--content-max-width': '1200px',
+        },
     },
 }
