@@ -176,3 +176,22 @@
         transform: rotate(405deg);
     }
 }
+
+
+/* Custom scrollbar styles: shadcn-inspired */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 12px;
+    background: transparent;
+    border-radius: var(--radius-md);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-muted);
+    border-radius: var(--radius-md);
+    border: 2px solid var(--color-background);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-muted-foreground);
+}

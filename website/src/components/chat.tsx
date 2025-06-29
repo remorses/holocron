@@ -71,6 +71,14 @@ import { useChatState } from './chat/chat-provider'
 import { ChatSuggestionButton } from './chat/chat-suggestion'
 import { AnimatePresence, motion } from 'unframer'
 import { FilesInDraft } from 'docs-website/src/lib/docs-state'
+import {
+    Command,
+    CommandInput,
+    CommandList,
+    CommandEmpty,
+    CommandGroup,
+    CommandItem,
+} from 'website/src/components/ui/command'
 
 function keyForDocsJson({ chatId }) {
     return `fumabase.json-${chatId}`
@@ -131,7 +139,8 @@ export default function Chat({}) {
                 ? localStorage.getItem(keyForDocsJson({ chatId }))
                 : undefined
         const docsJsonString =
-            useWebsiteState.getState()?.filesInDraft['fumabase.json']?.content || ''
+            useWebsiteState.getState()?.filesInDraft['fumabase.json']
+                ?.content || ''
         const data = safeJsonParse(persistedValues || docsJsonString) || null
         if (persistedValues) {
             console.log(`localStorage fumabase.json: `, data)
@@ -321,6 +330,60 @@ const AUTOCOMPLETE_SUGGESTIONS = [
     'setup custom domain configuration',
     'add analytics tracking code',
 ]
+
+function ContextButton({ contextOptions }) {
+    const [open, setOpen] = useState(false)
+
+    const handleContextSelect = (selectedValue) => {
+        if (!selectedValue) return
+
+        const currentText = useChatState.getState().text || ''
+        const newText = currentText + (currentText ? ' ' : '') + selectedValue
+        useChatState.setState({ text: newText })
+        setOpen(false)
+    }
+
+    return (
+        <div className='ml-2 my-2 self-start'>
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                    <Button variant='ghost' className='border'>
+                        @ Add context
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className='p-0 max-w-full' align='start'>
+                    <Command>
+                        <CommandInput
+                            placeholder='Search context...'
+                            className='h-9'
+                        />
+                        <CommandList>
+                            <CommandEmpty>No context found.</CommandEmpty>
+                            <CommandGroup>
+                                {contextOptions.map((option) => (
+                                    <CommandItem
+                                        key={option}
+                                        value={option}
+                                        onSelect={() => {
+                                            handleContextSelect(option)
+                                        }}
+                                        className='max-w-full my-[2px]'
+                                    >
+                                        <span className='truncate'>
+                                            {option.startsWith('@')
+                                                ? option.slice(1)
+                                                : option}
+                                        </span>
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+        </div>
+    )
+}
 
 function Footer() {
     const isPending = useChatState((x) => x.isGenerating)
@@ -513,7 +576,12 @@ function Footer() {
                             )}
                         </div>
 
-                        <div className='relative rounded-[20px] border bg-muted'>
+                        <div className='relative rounded-[20px] border bg-popover'>
+                            <div className='flex'>
+                                <ContextButton
+                                    contextOptions={mentionOptions || []}
+                                />
+                            </div>
                             <ChatTextarea
                                 onSubmit={() => handleSubmit()}
                                 disabled={false}
