@@ -843,6 +843,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 z.object({
                     relativePath: z.string(),
                     contents: z.string(),
+                    downloadUrl: z.string().optional(),
                     metadata: z.object({
                         width: z.number().optional(),
                         height: z.number().optional(),

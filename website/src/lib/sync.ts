@@ -167,6 +167,7 @@ export async function* pagesFromFilesList({
     files: {
         relativePath: string
         contents: string
+        downloadUrl?: string
         metadata?: { width?: number; height?: number; bytes?: number }
     }[]
     docsJson?: DocsJsonType
@@ -230,9 +231,8 @@ export async function* pagesFromFilesList({
         yield {
             type: 'mediaAsset',
             slug,
-
-            sha: gitBlobSha(file.contents),
-            downloadUrl: '', // For local files, we don't have a download URL
+            sha: gitBlobSha(file.contents || file.downloadUrl || ''),
+            downloadUrl: file.downloadUrl || '', // Use provided downloadUrl or empty for local files
             githubPath: file.relativePath,
             width: file.metadata?.width,
             height: file.metadata?.height,

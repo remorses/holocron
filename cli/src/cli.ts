@@ -450,12 +450,29 @@ cli.command('init', 'Initialize a new fumabase project')
                         await fs.promises.mkdir(dirPath, { recursive: true })
                     }
 
-                    // Write file
-                    await fs.promises.writeFile(
-                        filePath,
-                        file.contents,
-                        'utf-8',
-                    )
+                    // Handle files with downloadUrl (media files)
+                    if (file.downloadUrl && !file.contents) {
+                        try {
+                            console.log(`Downloading ${filePath} from ${file.downloadUrl}`)
+                            const response = await fetch(file.downloadUrl)
+                            if (!response.ok) {
+                                console.error(`Failed to download ${filePath}: ${response.statusText}`)
+                                continue
+                            }
+                            const buffer = await response.arrayBuffer()
+                            await fs.promises.writeFile(filePath, Buffer.from(buffer))
+                        } catch (error) {
+                            console.error(`Error downloading ${filePath}:`, error.message)
+                            continue
+                        }
+                    } else {
+                        // Write text file
+                        await fs.promises.writeFile(
+                            filePath,
+                            file.contents,
+                            'utf-8',
+                        )
+                    }
                 }
 
                 console.log('Starter template files written successfully!')

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 interface DocFile {
   contents: string;
   relativePath: string;
+  downloadUrl?: string;
 }
 
 async function generateExampleDocsJson() {
@@ -16,23 +17,39 @@ async function generateExampleDocsJson() {
   try {
     console.log('Reading markdown files from:', exampleDocsDir);
 
-    // Find all .md and .mdx files recursively
-    const files = await glob('**/*.{md,mdx}', {
+    // Find all .md, .mdx, and media files recursively
+    const files = await glob('**/*.{md,mdx,jpg,jpeg,png,gif,bmp,webp,svg,ico,tif,tiff,avif,mp4,mov,avi,wmv,flv,webm,mkv,m4v,3gp,ogg,ogv}', {
       cwd: exampleDocsDir,
       absolute: true
     });
 
-    console.log(`Found ${files.length} markdown files`);
+    console.log(`Found ${files.length} files (markdown and media)`);
 
     // Read contents and create DocFile objects
     const docFiles: DocFile[] = files.map(filePath => {
-      const contents = fs.readFileSync(filePath, 'utf-8');
       const relativePath = relative(exampleDocsDir, filePath);
+      const isMediaFile = /\.(jpg|jpeg|png|gif|bmp|webp|svg|ico|tif|tiff|avif|mp4|mov|avi|wmv|flv|webm|mkv|m4v|3gp|ogg|ogv)$/i.test(relativePath);
 
-      return {
-        contents,
-        relativePath
-      };
+      if (isMediaFile) {
+        // For media files, use empty contents and add downloadUrl
+        const baseUrl = 'https://raw.githubusercontent.com';
+        const repo = 'remorses/fumabase';
+        const branch = 'main';
+        const docsPath = 'website/scripts/example-docs-site';
+        const downloadUrl = `${baseUrl}/${repo}/${branch}/${docsPath}/${relativePath}`;
+        return {
+          contents: '',
+          relativePath,
+          downloadUrl
+        };
+      } else {
+        // For text files, read contents normally
+        const contents = fs.readFileSync(filePath, 'utf-8');
+        return {
+          contents,
+          relativePath
+        };
+      }
     });
 
     // Sort by relative path for consistent output

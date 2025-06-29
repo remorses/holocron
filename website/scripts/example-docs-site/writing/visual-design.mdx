@@ -21,9 +21,7 @@ Use callouts to break users out of autopilot reading and draw attention to criti
 You can also use the advanced configuration options.
 </Note>
 
-<Warning>  
-This might not work in all cases.
-</Warning>
+<Warning>This might not work in all cases.</Warning>
 
 <Tip>
 There are several ways to do this.
@@ -36,7 +34,8 @@ There are several ways to do this.
 </Warning>
 
 <Tip>
-**Performance Optimization:** Set `batchSize: 100` for datasets larger than 10,000 records to avoid memory issues and improve processing speed.
+    **Performance Optimization:** Set `batchSize: 100` for datasets larger than
+    10,000 records to avoid memory issues and improve processing speed.
 </Tip>
 
 <Check>
@@ -55,7 +54,7 @@ Create clear information hierarchy using heading levels, text styling, and spaci
 
     ```markdown
     # Main Feature (H1)
-    ## Setup Process (H2)  
+    ## Setup Process (H2)
     ### Individual Steps (H3)
     #### Implementation Details (H4)
     ```
@@ -63,18 +62,20 @@ Create clear information hierarchy using heading levels, text styling, and spaci
     <Info>
     **Heading Strategy:** Users scan headings first. Make them descriptive and outcome-focused rather than feature-focused.
     </Info>
+
 </Step>
 
 <Step title="Use emphasis purposefully">
     **Bold text** for critical terms and concepts users need to remember.
-    
+
     *Italic text* for emphasis within sentences and technical terms.
-    
+
     `Code formatting` for exact values, filenames, and commands.
 
     <Note>
     Avoid overusing emphasis—when everything is highlighted, nothing stands out.
     </Note>
+
 </Step>
 </Steps>
 
@@ -88,7 +89,7 @@ Use Fumabase's color system to create consistent visual meaning throughout your 
 <Accordion title="Success States (Green/Check)">
 Use green and check icons for:
 - Successful completions
-- Positive confirmations  
+- Positive confirmations
 - Achievement indicators
 - Correct examples
 
@@ -138,17 +139,18 @@ const result = await fetch('/api/users/123', {headers: {'Authorization': 'Bearer
 ```javascript ✅ Easy to Scan
 const result = await fetch('/api/users/123', {
     headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-    }
-});
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+    },
+})
 
 if (!result.ok) {
-    throw new Error(`HTTP error! status: ${result.status}`);
+    throw new Error(`HTTP error! status: ${result.status}`)
 }
 
-const userData = await result.json();
+const userData = await result.json()
 ```
+
 </CodeGroup>
 
 ### Progressive Information Disclosure
@@ -208,23 +210,21 @@ Design visual pathways that guide users through complex processes.
     <Card title="User Management" icon="users" href="/api/users">
     Create, update, and manage user accounts
     </Card>
-    
+
     <Card title="Payment Processing" icon="credit-card" href="/api/payments">
     Handle payments and subscription billing
     </Card>
     </CardGroup>
+
 </Step>
 
 <Step title="Set up authentication">
     Generate API keys and configure your application for secure access.
 
-    <Frame>
-    <img src="/images/api-key-generation.png" alt="API key generation interface showing create new key button" />
-    </Frame>
-
     <Tip>
     **Security Best Practice:** Store API keys as environment variables, never in your source code.
     </Tip>
+
 </Step>
 
 <Step title="Test your integration">
@@ -244,6 +244,7 @@ Design visual pathways that guide users through complex processes.
         "permissions": ["read", "write"]
     }
     ```
+
 </Step>
 </Steps>
 
@@ -262,6 +263,7 @@ npx @company/quickstart
 ```
 
 Perfect for: Learning the basics, proof of concepts
+
 </Tab>
 
 <Tab title="I'm building a prototype">
@@ -276,6 +278,7 @@ npm run dev
 ```
 
 Perfect for: MVP development, internal demos
+
 </Tab>
 
 <Tab title="I'm going to production">
@@ -284,11 +287,12 @@ Perfect for: MVP development, internal demos
 Complete setup with security, monitoring, and scaling considerations:
 
 - Security configuration and key management
-- Error handling and retry logic  
+- Error handling and retry logic
 - Monitoring and alerting setup
 - Performance optimization
 
 Perfect for: Customer-facing applications, production workloads
+
 </Tab>
 </Tabs>
 
@@ -298,16 +302,18 @@ Use visual media strategically to clarify complex concepts and processes.
 
 ### Effective Screenshot Usage
 
-<Frame caption="Dashboard overview showing key metrics and navigation">
-<img src="/images/dashboard-overview.png" alt="Application dashboard with navigation sidebar, metrics cards showing 1.2K users and $45K revenue, and a chart displaying growth trends over time" />
+<Frame caption='Dashboard overview showing key metrics and navigation'>
+    <img
+        src='/images/fumadocs.jpeg'
+        alt='Application dashboard with navigation sidebar, metrics cards showing 1.2K users and $45K revenue, and a chart displaying growth trends over time'
+    />
 </Frame>
 
 <Tip>
-**Screenshot Best Practices:**
-- Use consistent browser/app styling across all screenshots
-- Highlight interactive elements with subtle borders or arrows
-- Include realistic but safe data (no real user information)
-- Keep images up-to-date with current UI
+    **Screenshot Best Practices:** - Use consistent browser/app styling across
+    all screenshots - Highlight interactive elements with subtle borders or
+    arrows - Include realistic but safe data (no real user information) - Keep
+    images up-to-date with current UI
 </Tip>
 
 ### Conceptual Diagrams
@@ -326,9 +332,11 @@ graph TD
 ```
 
 <Warning>
-**Accessibility Note:** Always include descriptive alt text for images and provide text alternatives for diagram information.
+    **Accessibility Note:** Always include descriptive alt text for images and
+    provide text alternatives for diagram information.
 </Warning>
 
 <Check>
-Great visual design makes documentation feel effortless to navigate, even when covering complex technical topics.
+    Great visual design makes documentation feel effortless to navigate, even
+    when covering complex technical topics.
 </Check>

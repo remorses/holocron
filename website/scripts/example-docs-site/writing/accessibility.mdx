@@ -17,8 +17,8 @@ Use simple, direct language that communicates efficiently:
 
 <CodeGroup>
 ```markdown ❌ Complex Language
-Subsequently, in order to implement the aforementioned functionality, 
-it is necessary to instantiate the configuration object with the 
+Subsequently, in order to implement the aforementioned functionality,
+it is necessary to instantiate the configuration object with the
 appropriate parameters as delineated in the following example.
 ```
 
@@ -35,7 +35,7 @@ Write headings that describe content accurately and help users navigate efficien
 <Tab title="Poor Headings">
 ```markdown
 # Introduction
-## Getting Started  
+## Getting Started
 ## More Information
 ## Advanced Stuff
 ```
@@ -45,7 +45,7 @@ Write headings that describe content accurately and help users navigate efficien
 ```markdown
 # User Authentication Setup
 ## Installing the Authentication SDK
-## Configuring Your First Login Flow  
+## Configuring Your First Login Flow
 ## Handling Authentication Errors
 ## Multi-Factor Authentication Options
 ```
@@ -64,17 +64,13 @@ Provide meaningful descriptions for all visual content so information isn't lost
 
 Write alt text that conveys the same information the image provides:
 
-<Frame>
-<img src="/images/api-response-structure.png" alt="JSON response object showing nested user data with id, email, profile object containing name and avatar_url fields, and timestamps array" />
-</Frame>
-
 <Steps>
 <Step title="Describe the purpose, not appearance">
     Focus on what information the image conveys, not how it looks.
 
     ```markdown
     ❌ "Screenshot of a dashboard"
-    ✅ "Dashboard showing 3 active integrations, 1,247 API calls today, 
+    ✅ "Dashboard showing 3 active integrations, 1,247 API calls today,
         and 99.8% uptime status"
     ```
 </Step>
@@ -84,19 +80,12 @@ Write alt text that conveys the same information the image provides:
 
     ```markdown
     ❌ "Error message dialog box"
-    ✅ "Error dialog stating 'Invalid API key. Please check your 
+    ✅ "Error dialog stating 'Invalid API key. Please check your
         configuration and try again.' with a retry button"
     ```
 </Step>
 
-<Step title="Provide context for complex visuals">
-    For diagrams and charts, describe the key relationships and data.
 
-    <Frame caption="API request flow showing authentication, validation, and response steps">
-    <img src="/images/api-flow-diagram.png" alt="Flow diagram showing: 1) Client sends request with API key, 2) Server validates key against database, 3) If valid, processes request and returns data, 4) If invalid, returns 401 error with helpful message" />
-    </Frame>
-</Step>
-</Steps>
 
 ### Video and Interactive Content
 
@@ -111,15 +100,15 @@ Include complete transcripts for instructional videos:
 
 [Full transcript available]
 
-**0:00 - 0:15** Introduction: "In this video, we'll configure webhooks 
+**0:00 - 0:15** Introduction: "In this video, we'll configure webhooks
 to receive real-time notifications when events occur in your application."
 
-**0:16 - 0:45** Navigate to dashboard: "First, log into your dashboard 
-and click the 'Webhooks' tab in the sidebar. You'll see a list of 
+**0:16 - 0:45** Navigate to dashboard: "First, log into your dashboard
+and click the 'Webhooks' tab in the sidebar. You'll see a list of
 existing webhooks or an empty state if this is your first time."
 
-**0:46 - 1:20** Creating a webhook: "Click 'Add Webhook' and enter your 
-endpoint URL. This should be a publicly accessible HTTPS URL that can 
+**0:46 - 1:20** Creating a webhook: "Click 'Add Webhook' and enter your
+endpoint URL. This should be a publicly accessible HTTPS URL that can
 receive POST requests..."
 ```
 </Accordion>
@@ -190,7 +179,7 @@ Use multiple visual cues to communicate status and importance:
 <CodeGroup>
 ```markdown ❌ Color-Only Indicators
 ❌ Red text: "Error occurred"
-🟡 Yellow text: "Warning message"  
+🟡 Yellow text: "Warning message"
 ✅ Green text: "Success"
 ```
 
@@ -223,9 +212,9 @@ Design content flow that makes sense when navigating with keyboard:
 
     ```markdown
     ## API Key Configuration
-    
+
     1. [Input field: API Key]
-    2. [Button: Test Connection]  
+    2. [Button: Test Connection]
     3. [Button: Save Configuration]
     4. [Link: Advanced Settings]
     ```
@@ -282,7 +271,7 @@ contrast-checker "#333333" "#ffffff"
 <Tab title="User Testing">
 **Include Diverse Users:**
 - Users with visual impairments
-- Users with motor disabilities  
+- Users with motor disabilities
 - Users with cognitive differences
 - Users with limited technical experience
 
@@ -301,8 +290,8 @@ Write error messages and help text that are clear and actionable:
 <Accordion title="Specific error descriptions">
 ```javascript
 ❌ "Authentication failed"
-✅ "Authentication failed: API key is missing or invalid. 
-    Check that you've included the Authorization header 
+✅ "Authentication failed: API key is missing or invalid.
+    Check that you've included the Authorization header
     with format 'Bearer your-api-key'"
 ```
 </Accordion>
@@ -310,9 +299,9 @@ Write error messages and help text that are clear and actionable:
 <Accordion title="Recovery instructions">
 ```javascript
 ❌ "Network error occurred"
-✅ "Network error: Unable to connect to API server. 
-    Check your internet connection and try again. 
-    If the problem persists, check our status page 
+✅ "Network error: Unable to connect to API server.
+    Check your internet connection and try again.
+    If the problem persists, check our status page
     at status.example.com"
 ```
 </Accordion>
@@ -320,8 +309,8 @@ Write error messages and help text that are clear and actionable:
 <Accordion title="Helpful context">
 ```javascript
 ❌ "Invalid format"
-✅ "Invalid email format: Please enter a valid email address 
-    like 'user@example.com'. Special characters are allowed 
+✅ "Invalid email format: Please enter a valid email address
+    like 'user@example.com'. Special characters are allowed
     in the local part (before @)."
 ```
 </Accordion>
