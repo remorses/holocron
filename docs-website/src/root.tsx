@@ -360,7 +360,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     <RootProvider
                         search={{
                             options: {},
-                            enabled: !!trieveDatasetId,
+                            // enabled: !!trieveDatasetId,
                         }}
                         i18n={{
                             locale: locale || '',

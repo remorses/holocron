@@ -49,7 +49,7 @@ export async function getFilesForSource({ branchId }) {
     return files
 }
 
-export async function getFumadocsSource({
+export function getFumadocsSource({
     files,
     locales = [] as string[],
     defaultLocale = 'en',
