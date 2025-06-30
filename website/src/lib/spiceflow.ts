@@ -191,6 +191,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             await syncSite({
                 orgId,
                 siteId,
+                githubFolder: site.githubFolder,
                 branchId,
                 name: site.name || '',
                 trieveDatasetId: branch.trieveDatasetId || undefined,
@@ -886,16 +887,18 @@ export const app = new Spiceflow({ basePath: '/api' })
             githubOwner: z.string().optional(),
             githubRepo: z.string().optional(),
             githubBranch: z.string().optional(),
+            githubFolder: z.string().optional(),
             siteId: z.string().optional(),
         }),
         async handler({ request, state: { userId } }) {
-            const {
+            let {
                 name,
                 files,
                 orgId,
                 githubOwner,
                 githubRepo,
                 githubBranch,
+                githubFolder,
                 siteId,
             } = await request.json()
 
@@ -942,6 +945,9 @@ export const app = new Spiceflow({ basePath: '/api' })
                     throw new AppError('Site not found or access denied')
                 }
 
+                if (githubFolder === '.') {
+                    githubFolder = ''
+                }
                 // Update site info
                 const site = await prisma.site.update({
                     where: { siteId },
@@ -949,6 +955,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                         name,
                         githubOwner: githubOwner || existingSite.githubOwner,
                         githubRepo: githubRepo || existingSite.githubRepo,
+                        githubFolder: githubFolder || existingSite.githubFolder,
                     },
                 })
 
@@ -981,6 +988,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                         orgId,
                         githubOwner: githubOwner || '',
                         githubRepo: githubRepo || '',
+                        githubFolder: githubFolder || '',
                         branches: {
                             create: {
                                 branchId: finalBranchId,
@@ -1045,6 +1053,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             await syncSite({
                 files: assets,
                 trieveDatasetId: undefined,
+                githubFolder: githubFolder || '',
                 branchId: finalBranchId,
                 orgId,
                 siteId: finalSiteId,
@@ -1055,6 +1064,9 @@ export const app = new Spiceflow({ basePath: '/api' })
             const [branch, syncErrors] = await Promise.all([
                 prisma.siteBranch.findUnique({
                     where: { branchId: finalBranchId },
+                    include: {
+                        site: true,
+                    },
                 }),
                 prisma.markdownPageSyncError.findMany({
                     where: {
@@ -1089,6 +1101,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             )
 
             return {
+                ...branch?.site,
                 success: true,
                 docsJsonWithComments,
                 siteId: finalSiteId,

@@ -36,7 +36,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     const defaultLocale = site?.defaultLocale
     const locales = site?.locales?.map((x) => x.locale)
-    const files = await getFilesForSource({ branchId: siteBranch.branchId })
+    const files = await getFilesForSource({ branchId: siteBranch.branchId, githubFolder: siteBranch.site?.githubFolder ||'' })
     const source = await getFumadocsSource({ files, defaultLocale, locales })
     const server = createI18nSearchAPI('advanced', {
         i18n: source._i18n!,

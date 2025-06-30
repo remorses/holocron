@@ -4,7 +4,7 @@ import { getIconJsx } from './icons.server'
 import { I18nConfig } from 'fumadocs-core/i18n'
 import { StructuredData } from './mdx-heavy'
 
-export async function getFilesForSource({ branchId }) {
+export async function getFilesForSource({ branchId, githubFolder }) {
     const [allPages, metaFiles] = await Promise.all([
         prisma.markdownPage.findMany({
             where: {
@@ -27,9 +27,13 @@ export async function getFilesForSource({ branchId }) {
     const files = allPages
         .map((x) => {
             const structuredData = x.structuredData
+            let githubPath = x.githubPath
+            if (githubPath.startsWith(githubFolder)) {
+                githubPath = githubPath.slice(githubFolder.length)
+            }
             const res: VirtualFile = {
                 data: { ...(x.frontmatter as any), structuredData },
-                path: x.githubPath,
+                path: githubPath,
                 type: 'page',
 
                 // slugs
@@ -38,9 +42,13 @@ export async function getFilesForSource({ branchId }) {
         })
         .concat(
             metaFiles.map((x) => {
+                let githubPath = x.githubPath
+                if (githubPath.startsWith(githubFolder)) {
+                    githubPath = githubPath.slice(githubFolder.length)
+                }
                 const res: VirtualFile = {
                     data: x.jsonData,
-                    path: x.githubPath,
+                    path: githubPath,
                     type: 'meta',
                 }
                 return res

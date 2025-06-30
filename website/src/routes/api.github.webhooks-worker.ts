@@ -126,6 +126,7 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
         site: siteBranch.site,
         commits,
         branchId: siteBranch.branchId,
+        githubFolder: siteBranch.site.githubFolder,
     })
 
     // Process non-deleted files using syncFiles
@@ -134,11 +135,13 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
         installationId,
         owner,
         repo: repoName,
+        githubFolder: siteBranch.site.githubFolder,
     })
 
     await syncFiles({
         branchId: siteBranch.branchId,
         siteId: siteBranch.site.siteId,
+        githubFolder: siteBranch.site.githubFolder,
         files: changedFiles,
     })
 }
@@ -148,6 +151,7 @@ async function* filesFromWebhookCommits({
     installationId,
     owner,
     repo,
+    githubFolder,
 }: {
     commits: Array<{
         id: string
@@ -158,11 +162,20 @@ async function* filesFromWebhookCommits({
     installationId: number
     owner: string
     repo: string
+    githubFolder: string
 }): AsyncGenerator<AssetForSync> {
     const octokit = await getOctokit({ installationId })
     const latestCommit = commits[commits.length - 1]
 
-    // Collect all non-deleted files
+    // Helper function to check if file is within githubFolder
+    const isFileInFolder = (filePath: string): boolean => {
+        if (!githubFolder) return true
+        return (
+            filePath.startsWith(githubFolder + '/') || filePath === githubFolder
+        )
+    }
+
+    // Collect all non-deleted files within githubFolder
     const allChangedFiles = new Set<string>()
     for (const commit of commits) {
         const added = commit.added || []
@@ -170,7 +183,9 @@ async function* filesFromWebhookCommits({
         // Don't include removed files here as we handle deletions separately
 
         for (const file of [...added, ...modified]) {
-            allChangedFiles.add(file)
+            if (isFileInFolder(file)) {
+                allChangedFiles.add(file)
+            }
         }
     }
 
@@ -288,6 +303,7 @@ async function handleDeletions({
     site,
     commits,
     branchId,
+    githubFolder,
 }: {
     site: { siteId: string }
     commits: Array<{
@@ -297,11 +313,24 @@ async function handleDeletions({
         removed?: string[]
     }>
     branchId: string
+    githubFolder: string
 }) {
+    // Helper function to check if file is within githubFolder
+    const isFileInFolder = (filePath: string): boolean => {
+        if (!githubFolder) return true
+        return (
+            filePath.startsWith(githubFolder + '/') || filePath === githubFolder
+        )
+    }
+
     const latestCommit = commits[commits.length - 1]
     const removedFiles = latestCommit.removed || []
 
     for (const filePath of removedFiles) {
+        // Skip files outside of githubFolder
+        if (!isFileInFolder(filePath)) {
+            continue
+        }
         try {
             if (isDocsJsonFile(filePath)) {
                 await prisma.siteBranch.update({

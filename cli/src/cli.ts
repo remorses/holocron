@@ -89,44 +89,73 @@ const MEDIA_EXTENSIONS = [
     'zip',
 ]
 
-async function findProjectFiles() {
-    // Find files using globby
-    const filePaths = await globby(
-        ['**/*.{md,mdx}', 'meta.json', 'styles.css'],
-        {
-            ignore: ['**/node_modules/**', '**/.git/**', '**/.cache/**'],
-            gitignore: true,
-        },
-    )
+async function findProjectFiles(workingDir: string = process.cwd()) {
+    const repoRoot = getGitRepoRoot()
+    if (!repoRoot) {
+        throw new Error('Not inside a git repository')
+    }
 
-    // Find media files separately
-    const mediaFilePaths = await globby(
-        [`**/*.{${MEDIA_EXTENSIONS.join(',')}}`],
-        {
-            ignore: ['**/node_modules/**', '**/.git/**', '**/.cache/**'],
-            gitignore: true,
-        },
-    )
+    // Calculate githubFolder - the relative path from repo root to working directory
+    const githubFolder = path.posix.relative(repoRoot, workingDir) || '.'
+    // console.log({ githubFolder, repoRoot })
+    // process.exit(0)
 
-    // Read file contents for text files
-    const files = await Promise.all(
-        filePaths.map(async (filePath) => {
-            const content = await fs.promises.readFile(filePath, 'utf-8')
-            return {
-                relativePath: filePath,
-                contents: content,
-            }
-        }),
-    )
+    try {
+        // Find files using globby
+        const filePaths = await globby(
+            ['**/*.{md,mdx}', 'meta.json', 'styles.css'],
+            {
+                ignore: ['**/node_modules/**', '**/.git/**', '**/.cache/**'],
+                gitignore: true,
+                absolute: true,
+            },
+        )
 
-    return { filePaths, files, mediaFilePaths }
+        // Find media files separately
+        const mediaFilePaths = await globby(
+            [`**/*.{${MEDIA_EXTENSIONS.join(',')}}`],
+            {
+                ignore: ['**/node_modules/**', '**/.git/**', '**/.cache/**'],
+                gitignore: true,
+                absolute: true,
+            },
+        )
+
+        // Read file contents for text files
+        const files = await Promise.all(
+            filePaths.map(async (filePath) => {
+                const content = await fs.promises.readFile(filePath, 'utf-8')
+                return {
+                    absFilePath: filePath,
+
+                    contents: content,
+                }
+            }),
+        )
+
+        return {
+            filePaths,
+            files,
+            mediaFilePaths: mediaFilePaths.map((x) => {
+                const absFilePath = x
+                const slug = '/' + path.relative(workingDir, absFilePath)
+                return {
+                    absFilePath,
+                    slug,
+                }
+            }),
+            githubFolder,
+            repoRoot,
+        }
+    } finally {
+    }
 }
 
 async function uploadMediaFiles({
     mediaFilePaths,
     siteId,
 }: {
-    mediaFilePaths: string[]
+    mediaFilePaths: { slug: string; absFilePath: string }[]
     siteId: string
 }) {
     if (mediaFilePaths.length === 0) {
@@ -136,10 +165,10 @@ async function uploadMediaFiles({
     console.log(`Uploading ${mediaFilePaths.length} media files...`)
 
     // Prepare files for upload
-    const filesToUpload = mediaFilePaths.map((filePath) => ({
-        slug: filePath,
-        contentLength: fs.statSync(filePath).size,
-        contentType: getContentType(filePath),
+    const filesToUpload = mediaFilePaths.map((x) => ({
+        slug: x.slug,
+        contentLength: fs.statSync(x.absFilePath).size,
+        contentType: getContentType(x.absFilePath),
     }))
 
     // Get signed URLs for upload
@@ -164,7 +193,7 @@ async function uploadMediaFiles({
         await sema.acquire()
 
         try {
-            const filePath = mediaFilePaths[index]
+            const filePath = mediaFilePaths[index]?.absFilePath
             const fileBuffer = await fs.promises.readFile(filePath)
             const contentType = getContentType(filePath)
 
@@ -203,6 +232,18 @@ async function uploadMediaFiles({
 
 function getContentType(filePath: string): string {
     return lookup(filePath) || 'application/octet-stream'
+}
+
+function getGitRepoRoot(): string | null {
+    try {
+        const repoRoot = execSync('git rev-parse --show-toplevel', {
+            encoding: 'utf-8',
+        }).trim()
+        return path.resolve(repoRoot)
+    } catch (error) {
+        // Not a git repo
+        return null
+    }
 }
 
 function getGitHubInfo() {
@@ -334,6 +375,10 @@ cli.command('init', 'Initialize or deploy a fumabase project')
     .option('--dir <dir>', 'Directory to initialize project in')
     .action(async (options) => {
         try {
+            const repoRoot = getGitRepoRoot()
+            if (!repoRoot) {
+                throw new Error('Not inside a git repository')
+            }
             // Change to specified directory if provided
             if (options.dir) {
                 const targetDir = path.resolve(options.dir)
@@ -431,7 +476,8 @@ cli.command('init', 'Initialize or deploy a fumabase project')
             const gitBranch = await getCurrentGitBranch()
 
             // Find files using globby
-            let { filePaths, files, mediaFilePaths } = await findProjectFiles()
+            let { filePaths, files, mediaFilePaths, githubFolder } =
+                await findProjectFiles()
 
             // Check markdown files and handle different scenarios
             const markdownFiles = filePaths.filter(
@@ -528,8 +574,8 @@ cli.command('init', 'Initialize or deploy a fumabase project')
 
             // Process media files to get metadata
             const mediaFilesWithMetadata = await Promise.all(
-                mediaFilePaths.map(async (filePath) => {
-                    const fileBuffer = await fs.promises.readFile(filePath)
+                mediaFilePaths.map(async (x) => {
+                    const fileBuffer = await fs.promises.readFile(x.absFilePath)
                     const bytes = fileBuffer.length
 
                     let width: number | undefined
@@ -546,7 +592,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                     }
 
                     return {
-                        relativePath: filePath,
+                        relativePath: path.relative(repoRoot, x.absFilePath),
                         contents: '',
                         metadata: {
                             width,
@@ -561,11 +607,23 @@ cli.command('init', 'Initialize or deploy a fumabase project')
             const { data, error } =
                 await apiClient.api.upsertSiteFromFiles.post({
                     name: siteName,
-                    files: [...files, ...mediaFilesWithMetadata],
+                    files: [
+                        ...files.map((x) => {
+                            return {
+                                ...x,
+                                relativePath: path.relative(
+                                    repoRoot,
+                                    x.absFilePath,
+                                ),
+                            }
+                        }),
+                        ...mediaFilesWithMetadata,
+                    ],
                     orgId,
                     githubOwner: githubInfo?.githubOwner || '',
                     githubRepo: githubInfo?.githubRepo || '',
                     githubBranch: gitBranch || '',
+                    githubFolder,
                     siteId: existingDocsJson?.siteId,
                 })
 
@@ -642,17 +700,12 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                     'Files Uploaded',
                     `${filePaths.length} text files${mediaFilePaths.length > 0 ? `, ${mediaFilePaths.length} media files` : ''}`,
                 ],
+                [
+                    'GitHub',
+                    `${data.githubOwner}/${data.githubRepo}/${data.githubFolder}`,
+                ],
+                ['Branch', gitBranch || 'main'],
             )
-
-            if (githubInfo) {
-                table.push(
-                    [
-                        'GitHub',
-                        `${githubInfo.githubOwner}/${githubInfo.githubRepo}`,
-                    ],
-                    ['Branch', gitBranch || 'main'],
-                )
-            }
 
             console.log(table.toString())
 
@@ -783,7 +836,20 @@ cli.command('dev', 'Preview your fumabase website')
         // console.log({ options })
         let { dir } = options
         dir = path.resolve(dir)
-        console.log(`finding files inside ${dir}`)
+
+        // Get git repository root for calculating relative paths
+        const repoRoot = getGitRepoRoot()
+        if (!repoRoot) {
+            console.error('Error: Not inside a git repository')
+            process.exit(1)
+        }
+
+        // Calculate githubFolder relative to repo root
+        const githubFolder = path.posix.relative(repoRoot, dir) || '.'
+
+        console.log(
+            `finding files inside ${dir}, relative to ${githubFolder || '.'}`,
+        )
         try {
             // Create watcher for file changes (chokidar v4 doesn't support globs)
             const watcher = chokidar.watch(dir, {
@@ -909,9 +975,12 @@ cli.command('dev', 'Preview your fumabase website')
                             ? ''
                             : await fs.promises.readFile(fullPath, 'utf-8')
 
-                        const githubPath = path.posix.relative(
-                            dir,
-                            filePath.replace(/\\\\/g, '/'),
+                        const githubPath = path.posix.join(
+                            githubFolder,
+                            path.posix.relative(
+                                dir,
+                                filePath.replace(/\\\\/g, '/'),
+                            ),
                         )
                         return [
                             githubPath,
@@ -967,9 +1036,9 @@ cli.command('dev', 'Preview your fumabase website')
                 const content = isMediaFile
                     ? ''
                     : await fs.promises.readFile(fullPath, 'utf-8')
-                const githubPath = path.posix.relative(
-                    dir,
-                    filePath.replace(/\\\\/g, '/'),
+                const githubPath = path.posix.join(
+                    githubFolder,
+                    path.posix.relative(dir, filePath.replace(/\\\\/g, '/')),
                 )
 
                 // Update the local filesInDraft

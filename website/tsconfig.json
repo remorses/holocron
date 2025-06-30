@@ -9,7 +9,7 @@
         "types": [
             "@react-router/node",
             "vite/client",
-            "src/env.d.ts",
+            "./src/env.d.ts",
             "@types/node"
             // "./worker-configuration.d.ts"
         ],

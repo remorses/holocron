@@ -166,6 +166,7 @@ model Site {
   name   String?
   orgId  String
 
+
   defaultLocale String @default("en")
 
   org Org @relation(fields: [orgId], references: [orgId], onDelete: Cascade)
@@ -173,7 +174,8 @@ model Site {
   createdAt DateTime @default(now())
 
   branches SiteBranch[]
-
+  /// should never start with / and if it is the base it should be '' and not '.'
+  githubFolder String @default("")
   githubOwner String
   githubRepo  String
 

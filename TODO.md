@@ -1,4 +1,5 @@
 - support for deleting pages using null as value for filesInDraft
+- implement deletion of pages, test it
 - support for adding new pages during preview, use clientLoader and add the page to the tree. do this based on new pages added to `filesInDraft` that are not in the current loader tree.
 - support changing and adding media files with fumabase cli
 - support deleting pages during preview

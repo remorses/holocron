@@ -42,10 +42,9 @@ export declare const apiClient: {
         };
         generateMessage: {
             post: (request: {
-                messages: import("ai").UIMessage[];
+                branchId: string;
                 siteId: string;
                 chatId: string;
-                branchId: string;
                 currentSlug: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
@@ -53,6 +52,7 @@ export declare const apiClient: {
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
+                messages: import("ai").UIMessage[];
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -181,102 +181,102 @@ export declare const apiClient: {
                                 label: import("zod").ZodString;
                                 value: import("zod").ZodString;
                             }, "strip", import("zod").ZodTypeAny, {
-                                value: string;
                                 label: string;
+                                value: string;
                             }, {
-                                value: string;
                                 label: string;
+                                value: string;
                             }>, "many">>;
                             href: import("zod").ZodNullable<import("zod").ZodString>;
                         }, "strip", import("zod").ZodTypeAny, {
-                            type: "number" | "button" | "select" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
-                            name: string;
                             description: string | null;
+                            name: string;
                             href: string | null;
+                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }, {
-                            type: "number" | "button" | "select" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
-                            name: string;
                             description: string | null;
+                            name: string;
                             href: string | null;
+                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }>, "many">;
                     }, "strip", import("zod").ZodTypeAny, {
                         fields: {
-                            type: "number" | "button" | "select" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
-                            name: string;
                             description: string | null;
+                            name: string;
                             href: string | null;
+                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }[];
                     }, {
                         fields: {
-                            type: "number" | "button" | "select" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
-                            name: string;
                             description: string | null;
+                            name: string;
                             href: string | null;
+                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }[];
                     }>, "rendered form to the user" | {
                         errors: string[];
                     }> & {
                         execute: (args: {
                             fields: {
-                                type: "number" | "button" | "select" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                                options: {
-                                    value: string;
-                                    label: string;
-                                }[] | null;
-                                name: string;
                                 description: string | null;
+                                name: string;
                                 href: string | null;
+                                type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                                 label: string;
-                                required: boolean | null;
-                                placeholder: string | null;
-                                initialValue: string | number | boolean | null;
-                                min: number | null;
                                 max: number | null;
+                                min: number | null;
+                                placeholder: string | null;
+                                required: boolean | null;
                                 step: number | null;
+                                options: {
+                                    label: string;
+                                    value: string;
+                                }[] | null;
+                                initialValue: string | number | boolean | null;
                             }[];
                         }, options: import("ai").ToolExecutionOptions) => PromiseLike<"rendered form to the user" | {
                             errors: string[];
@@ -305,12 +305,12 @@ export declare const apiClient: {
         };
         createUploadSignedUrl: {
             post: (request: {
-                siteId: string;
                 files: {
                     slug: string;
                     contentLength: number;
                     contentType?: string | undefined;
                 }[];
+                siteId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -343,9 +343,9 @@ export declare const apiClient: {
         };
         submitRateFeedback: {
             post: (request: {
-                message: string;
                 branchId: string;
                 url: string;
+                message: string;
                 opinion: "good" | "bad";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
@@ -381,8 +381,8 @@ export declare const apiClient: {
         };
         createPrSuggestionForChat: {
             post: (request: {
-                chatId: string;
                 branchId: string;
+                chatId: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
                     content: string;
@@ -427,15 +427,16 @@ export declare const apiClient: {
             post: (request: {
                 name: string;
                 files: {
-                    relativePath: string;
                     contents: string;
-                    downloadUrl?: string | undefined;
+                    relativePath: string;
                     metadata?: {
-                        width?: number | undefined;
                         height?: number | undefined;
+                        width?: number | undefined;
                     } | undefined;
+                    downloadUrl?: string | undefined;
                 }[];
                 orgId: string;
+                githubFolder?: string | undefined;
                 siteId?: string | undefined;
                 githubBranch?: string | undefined;
                 githubOwner?: string | undefined;
@@ -457,6 +458,13 @@ export declare const apiClient: {
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
+                    githubFolder?: string | undefined;
+                    createdAt?: Date | undefined;
+                    name?: string | null | undefined;
+                    defaultLocale?: string | undefined;
+                    orgId?: string | undefined;
+                    githubOwner?: string | undefined;
+                    githubRepo?: string | undefined;
                 };
             }>>;
         };
@@ -536,10 +544,9 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         generateMessage: {
             post: (request: {
-                messages: import("ai").UIMessage[];
+                branchId: string;
                 siteId: string;
                 chatId: string;
-                branchId: string;
                 currentSlug: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
@@ -547,6 +554,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
+                messages: import("ai").UIMessage[];
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -675,102 +683,102 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                                 label: import("zod").ZodString;
                                 value: import("zod").ZodString;
                             }, "strip", import("zod").ZodTypeAny, {
-                                value: string;
                                 label: string;
+                                value: string;
                             }, {
-                                value: string;
                                 label: string;
+                                value: string;
                             }>, "many">>;
                             href: import("zod").ZodNullable<import("zod").ZodString>;
                         }, "strip", import("zod").ZodTypeAny, {
-                            type: "number" | "button" | "select" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
-                            name: string;
                             description: string | null;
+                            name: string;
                             href: string | null;
+                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }, {
-                            type: "number" | "button" | "select" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
-                            name: string;
                             description: string | null;
+                            name: string;
                             href: string | null;
+                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }>, "many">;
                     }, "strip", import("zod").ZodTypeAny, {
                         fields: {
-                            type: "number" | "button" | "select" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
-                            name: string;
                             description: string | null;
+                            name: string;
                             href: string | null;
+                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }[];
                     }, {
                         fields: {
-                            type: "number" | "button" | "select" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
-                            name: string;
                             description: string | null;
+                            name: string;
                             href: string | null;
+                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }[];
                     }>, "rendered form to the user" | {
                         errors: string[];
                     }> & {
                         execute: (args: {
                             fields: {
-                                type: "number" | "button" | "select" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                                options: {
-                                    value: string;
-                                    label: string;
-                                }[] | null;
-                                name: string;
                                 description: string | null;
+                                name: string;
                                 href: string | null;
+                                type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                                 label: string;
-                                required: boolean | null;
-                                placeholder: string | null;
-                                initialValue: string | number | boolean | null;
-                                min: number | null;
                                 max: number | null;
+                                min: number | null;
+                                placeholder: string | null;
+                                required: boolean | null;
                                 step: number | null;
+                                options: {
+                                    label: string;
+                                    value: string;
+                                }[] | null;
+                                initialValue: string | number | boolean | null;
                             }[];
                         }, options: import("ai").ToolExecutionOptions) => PromiseLike<"rendered form to the user" | {
                             errors: string[];
@@ -799,12 +807,12 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         createUploadSignedUrl: {
             post: (request: {
-                siteId: string;
                 files: {
                     slug: string;
                     contentLength: number;
                     contentType?: string | undefined;
                 }[];
+                siteId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -837,9 +845,9 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         submitRateFeedback: {
             post: (request: {
-                message: string;
                 branchId: string;
                 url: string;
+                message: string;
                 opinion: "good" | "bad";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
@@ -875,8 +883,8 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         createPrSuggestionForChat: {
             post: (request: {
-                chatId: string;
                 branchId: string;
+                chatId: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
                     content: string;
@@ -921,15 +929,16 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
             post: (request: {
                 name: string;
                 files: {
-                    relativePath: string;
                     contents: string;
-                    downloadUrl?: string | undefined;
+                    relativePath: string;
                     metadata?: {
-                        width?: number | undefined;
                         height?: number | undefined;
+                        width?: number | undefined;
                     } | undefined;
+                    downloadUrl?: string | undefined;
                 }[];
                 orgId: string;
+                githubFolder?: string | undefined;
                 siteId?: string | undefined;
                 githubBranch?: string | undefined;
                 githubOwner?: string | undefined;
@@ -951,6 +960,13 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
+                    githubFolder?: string | undefined;
+                    createdAt?: Date | undefined;
+                    name?: string | null | undefined;
+                    defaultLocale?: string | undefined;
+                    orgId?: string | undefined;
+                    githubOwner?: string | undefined;
+                    githubRepo?: string | undefined;
                 };
             }>>;
         };
@@ -1031,10 +1047,9 @@ export declare const apiClientWithDurableFetch: {
         };
         generateMessage: {
             post: (request: {
-                messages: import("ai").UIMessage[];
+                branchId: string;
                 siteId: string;
                 chatId: string;
-                branchId: string;
                 currentSlug: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
@@ -1042,6 +1057,7 @@ export declare const apiClientWithDurableFetch: {
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
+                messages: import("ai").UIMessage[];
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -1170,102 +1186,102 @@ export declare const apiClientWithDurableFetch: {
                                 label: import("zod").ZodString;
                                 value: import("zod").ZodString;
                             }, "strip", import("zod").ZodTypeAny, {
-                                value: string;
                                 label: string;
+                                value: string;
                             }, {
-                                value: string;
                                 label: string;
+                                value: string;
                             }>, "many">>;
                             href: import("zod").ZodNullable<import("zod").ZodString>;
                         }, "strip", import("zod").ZodTypeAny, {
-                            type: "number" | "button" | "select" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
-                            name: string;
                             description: string | null;
+                            name: string;
                             href: string | null;
+                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }, {
-                            type: "number" | "button" | "select" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
-                            name: string;
                             description: string | null;
+                            name: string;
                             href: string | null;
+                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }>, "many">;
                     }, "strip", import("zod").ZodTypeAny, {
                         fields: {
-                            type: "number" | "button" | "select" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
-                            name: string;
                             description: string | null;
+                            name: string;
                             href: string | null;
+                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }[];
                     }, {
                         fields: {
-                            type: "number" | "button" | "select" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                            options: {
-                                value: string;
-                                label: string;
-                            }[] | null;
-                            name: string;
                             description: string | null;
+                            name: string;
                             href: string | null;
+                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
-                            required: boolean | null;
-                            placeholder: string | null;
-                            initialValue: string | number | boolean | null;
-                            min: number | null;
                             max: number | null;
+                            min: number | null;
+                            placeholder: string | null;
+                            required: boolean | null;
                             step: number | null;
+                            options: {
+                                label: string;
+                                value: string;
+                            }[] | null;
+                            initialValue: string | number | boolean | null;
                         }[];
                     }>, "rendered form to the user" | {
                         errors: string[];
                     }> & {
                         execute: (args: {
                             fields: {
-                                type: "number" | "button" | "select" | "input" | "password" | "textarea" | "slider" | "switch" | "color_picker" | "date_picker" | "image_upload";
-                                options: {
-                                    value: string;
-                                    label: string;
-                                }[] | null;
-                                name: string;
                                 description: string | null;
+                                name: string;
                                 href: string | null;
+                                type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                                 label: string;
-                                required: boolean | null;
-                                placeholder: string | null;
-                                initialValue: string | number | boolean | null;
-                                min: number | null;
                                 max: number | null;
+                                min: number | null;
+                                placeholder: string | null;
+                                required: boolean | null;
                                 step: number | null;
+                                options: {
+                                    label: string;
+                                    value: string;
+                                }[] | null;
+                                initialValue: string | number | boolean | null;
                             }[];
                         }, options: import("ai").ToolExecutionOptions) => PromiseLike<"rendered form to the user" | {
                             errors: string[];
@@ -1294,12 +1310,12 @@ export declare const apiClientWithDurableFetch: {
         };
         createUploadSignedUrl: {
             post: (request: {
-                siteId: string;
                 files: {
                     slug: string;
                     contentLength: number;
                     contentType?: string | undefined;
                 }[];
+                siteId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -1332,9 +1348,9 @@ export declare const apiClientWithDurableFetch: {
         };
         submitRateFeedback: {
             post: (request: {
-                message: string;
                 branchId: string;
                 url: string;
+                message: string;
                 opinion: "good" | "bad";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
@@ -1370,8 +1386,8 @@ export declare const apiClientWithDurableFetch: {
         };
         createPrSuggestionForChat: {
             post: (request: {
-                chatId: string;
                 branchId: string;
+                chatId: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
                     content: string;
@@ -1416,15 +1432,16 @@ export declare const apiClientWithDurableFetch: {
             post: (request: {
                 name: string;
                 files: {
-                    relativePath: string;
                     contents: string;
-                    downloadUrl?: string | undefined;
+                    relativePath: string;
                     metadata?: {
-                        width?: number | undefined;
                         height?: number | undefined;
+                        width?: number | undefined;
                     } | undefined;
+                    downloadUrl?: string | undefined;
                 }[];
                 orgId: string;
+                githubFolder?: string | undefined;
                 siteId?: string | undefined;
                 githubBranch?: string | undefined;
                 githubOwner?: string | undefined;
@@ -1446,6 +1463,13 @@ export declare const apiClientWithDurableFetch: {
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
+                    githubFolder?: string | undefined;
+                    createdAt?: Date | undefined;
+                    name?: string | null | undefined;
+                    defaultLocale?: string | undefined;
+                    orgId?: string | undefined;
+                    githubOwner?: string | undefined;
+                    githubRepo?: string | undefined;
                 };
             }>>;
         };

@@ -130,9 +130,11 @@ export async function syncSite({
     trieveDatasetId,
     branchId,
     files: pages,
+    githubFolder,
 }: {
     siteId: string
     trieveDatasetId?: string
+    githubFolder: string
     name?: string
     branchId: string
     orgId: string
@@ -168,6 +170,7 @@ export async function syncSite({
         siteId,
         trieveDatasetId,
         files: pages,
+        githubFolder,
     })
 }
 
@@ -275,9 +278,11 @@ export async function syncFiles({
     files,
     name,
     signal,
+    githubFolder,
 }: {
     files: AsyncIterable<AssetForSync>
     branchId: string
+    githubFolder: string
     siteId: string
     trieveDatasetId?: string
     name?: string
@@ -348,7 +353,9 @@ export async function syncFiles({
             }
             if (asset.type === 'docsJson') {
                 console.log(`Updating docsJson for branch ${branchId}`)
-                const { data: jsonData, comments } = extractJsonCComments(asset.content)
+                const { data: jsonData, comments } = extractJsonCComments(
+                    asset.content,
+                )
                 await prisma.siteBranch.update({
                     where: { branchId },
                     data: { docsJson: jsonData, docsJsonComments: comments },
@@ -408,7 +415,12 @@ export async function syncFiles({
                 })
             }
             if (asset.type === 'mediaAsset') {
-                let slug = '/' + asset.githubPath.replace(/\\+/g, '/')
+                let slug =
+                    '/' +
+                    getSlugFromPath({
+                        githubPath: asset.githubPath,
+                        githubFolder,
+                    })
                 mediaAssetSlugs.add(slug)
                 const downloadUrl = asset.downloadUrl
 
@@ -523,17 +535,17 @@ export async function syncFiles({
                 })
             }
             if (asset.type === 'page') {
-                const entrySlug =
-                    '/' +
-                    asset.githubPath.replace(/\\/g, '/').replace(mdxRegex, '')
+                const slug = getSlugFromPath({
+                    githubPath: asset.githubPath,
+                    githubFolder,
+                })
+
                 const extension = asset.githubPath.endsWith('.mdx')
                     ? 'mdx'
                     : 'md'
 
-                if (processedSlugs.has(entrySlug)) {
-                    console.log(
-                        `Skipping duplicate page with slug: ${entrySlug}`,
-                    )
+                if (processedSlugs.has(slug)) {
+                    console.log(`Skipping duplicate page with slug: ${slug}`)
                     continue
                 }
 
@@ -626,7 +638,7 @@ export async function syncFiles({
                 }
 
                 const pageInput = {
-                    slug: entrySlug,
+                    slug: slug,
                     title: data.title || '',
                     markdown, // Empty markdown for failed pages
                     frontmatter: data.frontmatter,
@@ -641,23 +653,23 @@ export async function syncFiles({
 
                 chunksToSync.push(
                     ...processForTrieve({
-                        _id: entrySlug,
-                        title: pageInput.title || entrySlug,
-                        url: entrySlug,
+                        _id: slug,
+                        title: pageInput.title || slug,
+                        url: slug,
                         structured: structuredData,
-                        pageSlug: entrySlug,
+                        pageSlug: slug,
                     }),
                 )
 
                 console.log(
-                    `Upserting page with slug: ${entrySlug}, title: ${pageInput.title}...`,
+                    `Upserting page with slug: ${slug}, title: ${pageInput.title}...`,
                 )
                 await Promise.all([
                     prisma.$transaction(async (prisma) => {
                         // Upsert the page
                         const page = await prisma.markdownPage.upsert({
                             where: {
-                                branchId_slug: { branchId, slug: entrySlug },
+                                branchId_slug: { branchId, slug: slug },
                             },
                             update: pageInput,
                             create: { ...pageInput, branchId },
@@ -720,9 +732,9 @@ export async function syncFiles({
                             chunksToSync = chunksToSync.slice(chunkSize)
                         })(),
                 ])
-                processedSlugs.add(entrySlug)
+                processedSlugs.add(slug)
                 console.log(
-                    ` -> Upserted page: ${pageInput.title} (ID: ${entrySlug})`,
+                    ` -> Upserted page: ${pageInput.title} (ID: ${slug}, path: ${asset.githubPath})`,
                 )
             }
         } catch (e: any) {
@@ -1331,4 +1343,24 @@ export async function publicFileMapUrl({
 
 function isValidUrl(string: string): boolean {
     return string.startsWith('http://') || string.startsWith('https://')
+}
+
+function getSlugFromPath({ githubPath = '', githubFolder }) {
+    githubPath = githubPath.replace(/\\+/g, '/')
+    if (githubPath.startsWith('/')) {
+        githubPath = githubPath.substring(1)
+    }
+    if (githubFolder.startsWith('/')) {
+        githubFolder = githubFolder.substring(1)
+    }
+    if (githubPath.startsWith(githubFolder)) {
+        githubPath = githubPath.substring(githubFolder.length)
+    }
+    // replace again after base path removal
+    if (githubPath.startsWith('/')) {
+        githubPath = githubPath.substring(1)
+    }
+
+    githubPath = githubPath.replace(mdxRegex, '')
+    return '/' + githubPath
 }

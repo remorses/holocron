@@ -35,7 +35,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     }
 
     const locales = site.locales.map((x) => x.locale)
-    const files = await getFilesForSource({ branchId: siteBranch.branchId })
+    const files = await getFilesForSource({ branchId: siteBranch.branchId, githubFolder: siteBranch.site?.githubFolder ||'' })
     const source = await getFumadocsSource({
         defaultLocale: site.defaultLocale,
         files,

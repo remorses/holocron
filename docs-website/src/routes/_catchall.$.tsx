@@ -255,7 +255,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         throw new Response('Branch not found', { status: 404 })
     }
     const locales = site.locales.map((x) => x.locale)
-    const files = await getFilesForSource({ branchId: siteBranch.branchId })
+    const files = await getFilesForSource({ branchId: siteBranch.branchId, githubFolder: siteBranch.site?.githubFolder ||'' })
     const source = await getFumadocsSource({
         defaultLocale: site.defaultLocale,
         files,
