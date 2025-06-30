@@ -46,9 +46,11 @@ function AttachmentButton({
 export function ChatUploadButton({
     siteId,
     onFilesChange,
+    accept = '*',
 }: {
     siteId: string
     onFilesChange?: (files: UploadedFile[]) => void
+    accept?: string
 }) {
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
     const [isPopoverOpen, setIsPopoverOpen] = useState(false)
@@ -105,10 +107,12 @@ export function ChatUploadButton({
     })
 
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (!file) return
+        const files = Array.from(e.target.files || [])
+        if (files.length === 0) return
 
-        await uploadFile(file)
+        for (const file of files) {
+            await uploadFile(file)
+        }
 
         if (inputRef.current) {
             inputRef.current.value = ''
@@ -134,9 +138,10 @@ export function ChatUploadButton({
             <input
                 ref={inputRef}
                 type='file'
+                multiple
                 onChange={handleFileSelect}
                 style={{ display: 'none' }}
-                accept='*'
+                accept={accept}
             />
 
             {uploadedFiles.length > 0 && (

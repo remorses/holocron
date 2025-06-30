@@ -429,6 +429,7 @@ function Footer() {
                     <div className='flex items-center justify-between gap-2 p-3 py-2'>
                         <ChatUploadButton
                             siteId='cmchyql7f0002apypi7b7o3kw'
+                            accept='image/*,text/*,.pdf,.docx,.doc'
                             onFilesChange={(files) => {
                                 // TODO: Wire uploaded files to messages
                                 console.log('Files uploaded:', files)
