@@ -48,6 +48,7 @@ function createSystemPrompt({}) {
 
   When the user message contains references with @ for example @path/to/file.mdx it means the user is referencing a file, the @ character is not part of the filename.
 
+  The str_replace_editor tool should never be used to edit the file fumabase.jsonc, instead use the render_form tool for that.
   `
 }
 

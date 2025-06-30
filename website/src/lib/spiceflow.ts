@@ -718,6 +718,17 @@ export const app = new Spiceflow({ basePath: '/api' })
                 }),
             )
 
+            const docsJsonFile = files.find(
+                (x) => x.filePath === 'fumabase.jsonc',
+            )
+            if (docsJsonFile) {
+                // apply previous present comments to the json
+                docsJsonFile.content = applyJsonCComments(
+                    JSON.parse(docsJsonFile.content || '{}'),
+                    (prBranch.docsJsonComments as any) || {},
+                )
+            }
+
             // If chat already has a PR, push to the existing PR branch
             if (chat.prNumber) {
                 console.log(
