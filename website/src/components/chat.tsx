@@ -80,6 +80,7 @@ import {
     CommandItem,
 } from 'website/src/components/ui/command'
 import React from 'react'
+import { RecordButton } from 'website/src/components/record-button'
 
 function keyForDocsJson({ chatId }) {
     return `fumabase.json-${chatId}`
@@ -412,6 +413,28 @@ function Footer() {
         return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
     }, [filesInDraft, lastPushedFiles])
 
+    const transcribeAudio = async (audioFile: File): Promise<string> => {
+        try {
+            const formData = new FormData()
+            formData.append('audio', audioFile)
+
+            const response = await fetch('/api/transcribeAudio', {
+                method: 'POST',
+                body: formData,
+            })
+
+            if (!response.ok) {
+                throw new Error('Transcription failed')
+            }
+
+            const { text } = await response.json()
+            return text || ''
+        } catch (error) {
+            console.error('Transcription error:', error)
+            return ''
+        }
+    }
+
     const handleSubmit = async () => {
         const messages = useChatState.getState()?.messages
         const generateId = createIdGenerator()
@@ -616,6 +639,7 @@ function Footer() {
                                             aria-hidden='true'
                                         />
                                     </Button>
+                                    <RecordButton transcribeAudio={transcribeAudio} />
                                 </div>
                                 {/* Right buttons */}
                                 <div className='flex items-center gap-2'>

@@ -52,6 +52,7 @@ import {
     DrawerTrigger,
 } from '../components/ui/drawer'
 import { cn } from '../lib/cn'
+import { RecordButton } from '../components/record-button'
 
 export type { Route }
 
@@ -137,7 +138,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
 
 export function DrawerDemo() {
     return (
-        <Drawer direction='right'>
+        <Drawer defaultOpen direction='right'>
             <div className='flex flex-col items-center justify-center h-full '>
                 <DrawerTrigger asChild>
                     <Button variant='outline'>Open Drawer</Button>
@@ -330,6 +331,29 @@ function ContextButton({ contextOptions }) {
 function Footer() {
     const isPending = useChatState((x) => x.isGenerating)
     const text = useChatState((x) => x.text || '')
+    
+    const transcribeAudio = async (audioFile: File): Promise<string> => {
+        try {
+            const formData = new FormData()
+            formData.append('audio', audioFile)
+
+            const response = await fetch('/api/transcribeAudio', {
+                method: 'POST',
+                body: formData,
+            })
+
+            if (!response.ok) {
+                throw new Error('Transcription failed')
+            }
+
+            const { text } = await response.json()
+            return text || ''
+        } catch (error) {
+            console.error('Transcription error:', error)
+            return ''
+        }
+    }
+    
     const handleSubmit = async () => {
         const messages = useChatState.getState()?.messages
         const generateId = createIdGenerator()
@@ -401,6 +425,7 @@ function Footer() {
                         </div>
 
                         <div className='flex items-center gap-2'>
+                            <RecordButton transcribeAudio={transcribeAudio} />
                             <Button
                                 className='rounded-md h-8'
                                 onClick={() => handleSubmit()}

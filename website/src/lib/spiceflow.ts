@@ -24,6 +24,8 @@ import {
     getPageContent,
 } from './spiceflow-generate-message'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
+import { openai } from '@ai-sdk/openai'
+import { experimental_transcribe as transcribe } from 'ai'
 
 // Utility to get client IP from request, handling Cloudflare proxy headers
 function getClientIp(request: Request): string {
@@ -1064,6 +1066,47 @@ export const app = new Spiceflow({ basePath: '/api' })
             return {
                 success: true,
                 files: exampleDocs,
+            }
+        },
+    })
+    .route({
+        method: 'POST',
+        path: '/transcribeAudio',
+        async handler({ request, state: { userId } }) {
+            if (!userId) {
+                throw new AppError('User not authenticated')
+            }
+
+            const formData = await request.formData()
+            const audioFile = formData.get('audio') as File | null
+
+            if (!audioFile) {
+                throw new AppError('No audio file provided')
+            }
+
+            // Validate file type
+            if (!audioFile.type.startsWith('audio/')) {
+                throw new AppError('Invalid file type. Please provide an audio file.')
+            }
+
+            try {
+                // Convert File to Buffer for the ai package
+                const arrayBuffer = await audioFile.arrayBuffer()
+                const buffer = Buffer.from(arrayBuffer)
+
+                // Use the ai package to transcribe
+                const result = await transcribe({
+                    model: openai.transcription('whisper-1'),
+                    audio: buffer,
+                })
+
+                return {
+                    success: true,
+                    text: result.text,
+                }
+            } catch (error) {
+                console.error('Transcription error:', error)
+                throw new AppError(`Failed to transcribe audio: ${error.message}`)
             }
         },
     })
