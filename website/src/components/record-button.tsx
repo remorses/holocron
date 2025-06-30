@@ -29,16 +29,16 @@ export function RecordButton({ transcribeAudio }: RecordButtonProps) {
                 setIsDark(hasDarkAncestor)
             }
         }
-        
+
         checkDarkMode()
         // Listen for class changes
         const observer = new MutationObserver(checkDarkMode)
-        observer.observe(document.documentElement, { 
-            attributes: true, 
+        observer.observe(document.documentElement, {
+            attributes: true,
             attributeFilter: ['class'],
-            subtree: true 
+            subtree: true,
         })
-        
+
         return () => observer.disconnect()
     }, [])
 
@@ -64,7 +64,9 @@ export function RecordButton({ transcribeAudio }: RecordButtonProps) {
 
             mediaRecorder.onstop = async () => {
                 // Create audio blob from chunks
-                const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' })
+                const audioBlob = new Blob(chunksRef.current, {
+                    type: 'audio/webm',
+                })
                 await handleTranscription(audioBlob)
             }
 
@@ -78,12 +80,12 @@ export function RecordButton({ transcribeAudio }: RecordButtonProps) {
     const stopRecording = () => {
         if (mediaRecorderRef.current && isRecording) {
             mediaRecorderRef.current.stop()
-            
+
             // Stop all tracks
             if (audio) {
                 audio.getTracks().forEach((track) => track.stop())
             }
-            
+
             setIsRecording(false)
             setAudio(null)
         }
@@ -92,9 +94,11 @@ export function RecordButton({ transcribeAudio }: RecordButtonProps) {
     const handleTranscription = async (audioBlob: Blob) => {
         setIsTranscribing(true)
         try {
-            const audioFile = new File([audioBlob], 'recording.webm', { type: 'audio/webm' })
+            const audioFile = new File([audioBlob], 'recording.webm', {
+                type: 'audio/webm',
+            })
             const text = await transcribeAudio(audioFile)
-            
+
             // Add transcribed text to chat input
             if (text) {
                 const currentText = useChatState.getState().text || ''
@@ -109,25 +113,17 @@ export function RecordButton({ transcribeAudio }: RecordButtonProps) {
         }
     }
 
-    const handleCancel = () => {
-        stopRecording()
-        setIsRecording(false)
-    }
 
     return (
         <div className='record-button-container'>
             <Button
-                variant='outline'
+                variant='ghost'
                 size='icon'
-                className='rounded-full size-8 border-none hover:bg-accent hover:text-accent-foreground transition-all'
+                className='text-popover-foreground'
                 onClick={startRecording}
                 disabled={isRecording || isTranscribing}
             >
-                <MicIcon
-                    className='text-muted-foreground/70 size-5'
-                    size={20}
-                    aria-hidden='true'
-                />
+                <MicIcon className='size-5' size={20} aria-hidden='true' />
             </Button>
 
             <AnimatePresence>
@@ -141,19 +137,28 @@ export function RecordButton({ transcribeAudio }: RecordButtonProps) {
                         <div className='w-full h-full flex flex-col items-center justify-center gap-4 p-4'>
                             {isRecording ? (
                                 <>
-                                    <div className='text-sm text-foreground/70 font-medium'>Recording...</div>
-                                    
+                                    <div className='text-sm text-foreground/70 font-medium'>
+                                        Recording...
+                                    </div>
+
                                     <div className='w-full max-w-md h-24'>
-                                        <Visualizer 
-                                            audio={audio} 
-                                            strokeColor={isDark ? 'white' : 'hsl(var(--foreground))'}
+                                        <Visualizer
+                                            audio={audio}
+                                            strokeColor={
+                                                isDark
+                                                    ? 'white'
+                                                    : 'hsl(var(--foreground))'
+                                            }
                                             autoStart={true}
                                         >
                                             {({ canvasRef }) => (
-                                                <canvas 
-                                                    ref={canvasRef} 
+                                                <canvas
+                                                    ref={canvasRef}
                                                     className='w-full h-full'
-                                                    style={{ width: '100%', height: '100%' }}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '100%',
+                                                    }}
                                                 />
                                             )}
                                         </Visualizer>
@@ -161,21 +166,12 @@ export function RecordButton({ transcribeAudio }: RecordButtonProps) {
 
                                     <div className='flex gap-2'>
                                         <Button
-                                            variant='ghost'
-                                            size='sm'
-                                            className='rounded-full hover:bg-destructive/10 hover:text-destructive'
-                                            onClick={handleCancel}
-                                        >
-                                            <XIcon className='size-4 mr-1' />
-                                            Cancel
-                                        </Button>
-                                        <Button
                                             variant='default'
                                             size='sm'
                                             className='rounded-full'
                                             onClick={stopRecording}
                                         >
-                                            <StopCircleIcon className='size-4 mr-1' />
+                                            {/* <StopCircleIcon className='size-4 mr-1' /> */}
                                             Stop Recording
                                         </Button>
                                     </div>
@@ -183,7 +179,9 @@ export function RecordButton({ transcribeAudio }: RecordButtonProps) {
                             ) : (
                                 <div className='flex flex-col items-center gap-3'>
                                     <Loader2Icon className='size-8 text-primary animate-spin' />
-                                    <div className='text-sm text-muted-foreground font-medium'>Transcribing audio...</div>
+                                    <div className='text-sm text-muted-foreground font-medium'>
+                                        Transcribing audio...
+                                    </div>
                                 </div>
                             )}
                         </div>
