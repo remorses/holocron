@@ -12,7 +12,7 @@ interface RecordButtonProps {
     transcribeAudio: (audioFile: File) => Promise<string>
 }
 
-export function RecordButton({ transcribeAudio }: RecordButtonProps) {
+export function ChatRecordButton({ transcribeAudio }: RecordButtonProps) {
     const [isRecording, setIsRecording] = useState(false)
     const [audio, setAudio] = useState<MediaStream | null>(null)
     const [isTranscribing, setIsTranscribing] = useState(false)

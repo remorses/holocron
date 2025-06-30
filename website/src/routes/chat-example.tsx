@@ -52,7 +52,7 @@ import {
     DrawerTrigger,
 } from '../components/ui/drawer'
 import { cn } from '../lib/cn'
-import { RecordButton } from '../components/record-button'
+import { ChatRecordButton } from '../components/chat/chat-record-button'
 
 export type { Route }
 
@@ -331,7 +331,7 @@ function ContextButton({ contextOptions }) {
 function Footer() {
     const isPending = useChatState((x) => x.isGenerating)
     const text = useChatState((x) => x.text || '')
-    
+
     const transcribeAudio = async (audioFile: File): Promise<string> => {
         try {
             const formData = new FormData()
@@ -353,7 +353,7 @@ function Footer() {
             return ''
         }
     }
-    
+
     const handleSubmit = async () => {
         const messages = useChatState.getState()?.messages
         const generateId = createIdGenerator()
@@ -425,7 +425,7 @@ function Footer() {
                         </div>
 
                         <div className='flex items-center gap-2'>
-                            <RecordButton transcribeAudio={transcribeAudio} />
+                            <ChatRecordButton transcribeAudio={transcribeAudio} />
                             <Button
                                 className='rounded-md h-8'
                                 onClick={() => handleSubmit()}

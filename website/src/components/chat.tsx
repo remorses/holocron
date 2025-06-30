@@ -80,7 +80,7 @@ import {
     CommandItem,
 } from 'website/src/components/ui/command'
 import React from 'react'
-import { RecordButton } from 'website/src/components/record-button'
+import { ChatRecordButton } from 'website/src/components/chat/chat-record-button'
 
 function keyForDocsJson({ chatId }) {
     return `fumabase.json-${chatId}`
@@ -337,7 +337,7 @@ function ContextButton({
     textareaRef,
 }: {
     contextOptions: string[]
-    textareaRef: React.RefObject<HTMLTextAreaElement |null>
+    textareaRef: React.RefObject<HTMLTextAreaElement | null>
 }) {
     const [open, setOpen] = useState(false)
 
@@ -639,7 +639,9 @@ function Footer() {
                                             aria-hidden='true'
                                         />
                                     </Button>
-                                    <RecordButton transcribeAudio={transcribeAudio} />
+                                    <ChatRecordButton
+                                        transcribeAudio={transcribeAudio}
+                                    />
                                 </div>
                                 {/* Right buttons */}
                                 <div className='flex items-center gap-2'>
