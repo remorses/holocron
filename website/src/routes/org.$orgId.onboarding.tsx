@@ -21,6 +21,7 @@ import {
     StepperTrigger,
 } from '../components/ui/stepper'
 import { getSession } from '../lib/better-auth'
+import { defaultDocsJsonComments, defaultStartingFumabaseJson } from 'docs-website/src/lib/docs-json-examples'
 import { env, supportEmail } from '../lib/env'
 import { createNewRepo, doesRepoExist, getOctokit } from '../lib/github.server'
 import { pagesFromFilesList, syncSite } from '../lib/sync'
@@ -91,9 +92,13 @@ export async function action({ request, params }: Route.ActionArgs) {
         const files = pagesFromFilesList({
             files: exampleDocs,
             docsJson: {
+                ...defaultStartingFumabaseJson,
                 siteId,
                 name,
                 domains,
+            },
+            docsJsonComments: {
+                ...defaultDocsJsonComments,
             },
         })
         const owner = githubAccountLogin

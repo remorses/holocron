@@ -1,5 +1,59 @@
 import type { DocsJsonType } from './docs-json'
 
+export const defaultDocsJsonComments = {
+    domains: `// to add new domains you can simply add them here, then add a CNAME record to cname.fumabase.com`,
+    logo: `// the logo shown in the top left`,
+    'navbar.links': `// the links shown in the top right`,
+    'navbar.links.0.icon': `// you can use any lucide valid icon names: https://lucide.dev/icons/`,
+    'navbar.primary': `// a button shown on the top right`,
+}
+
+export const defaultStartingFumabaseJson: DocsJsonType = {
+    siteId: '',
+    name: 'Docs',
+    $schema: `https://fumabase.com/fumabase.json`,
+    favicon: {
+        light: '/favicon.svg',
+        dark: '/favicon.svg',
+    },
+    logo: {
+        light: '/logo.svg',
+        dark: '/logo.svg',
+    },
+    navbar: {
+        links: [
+            {
+                label: 'Home',
+                href: 'https://fumabase.com',
+                icon: 'document',
+            },
+        ],
+        primary: {
+            type: 'button',
+            label: 'Get Started',
+            href: 'https://fumabase.com/login',
+        },
+    },
+
+    footer: {
+        socials: {
+            twitter: 'https://x.com/__morse',
+            github: 'https://github.com/remorses',
+        },
+        links: [
+            {
+                header: 'Documentation',
+                items: [
+                    {
+                        label: 'Fumabase',
+                        href: 'https://fumabase.com',
+                    },
+                ],
+            },
+        ],
+    },
+}
+
 export const footerSocialsOnlyExample: DocsJsonType = {
     siteId: '',
     name: 'Documentation with Social Links',

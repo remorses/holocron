@@ -1,4 +1,8 @@
 import cuid from '@bugsnag/cuid'
+import {
+    defaultDocsJsonComments,
+    defaultStartingFumabaseJson,
+} from 'docs-website/src/lib/docs-json-examples'
 
 import { Prisma, prisma, Site } from 'db'
 import {
@@ -989,6 +993,7 @@ export const app = new Spiceflow({ basePath: '/api' })
 
             // Get or create internal host for new sites
             let docsJson = {} as DocsJsonType
+            let docsJsonComments = {}
             if (!siteId) {
                 const randomHash = Math.random().toString(36).substring(2, 10)
                 const internalHost = `${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${randomHash}.${env.APPS_DOMAIN}`
@@ -1000,6 +1005,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                           ]
                         : [internalHost]
                 docsJson = {
+                    ...defaultStartingFumabaseJson,
                     siteId: finalSiteId,
                     name,
                     domains,
@@ -1008,15 +1014,19 @@ export const app = new Spiceflow({ basePath: '/api' })
                 // For updates, fetch the branch's latest docsJson
                 const branch = await prisma.siteBranch.findFirst({
                     where: { branchId: finalBranchId },
-                    select: { docsJson: true, siteId: true },
                 })
                 docsJson = branch?.docsJson as any
+                docsJsonComments = branch?.docsJsonComments as any
             }
 
             // Convert files to pages format
             const assets = pagesFromFilesList({
                 files,
                 docsJson,
+                docsJsonComments: {
+                    ...defaultDocsJsonComments,
+                    ...docsJsonComments,
+                },
             })
 
             // Sync site content
@@ -1033,7 +1043,6 @@ export const app = new Spiceflow({ basePath: '/api' })
             const [branch, syncErrors] = await Promise.all([
                 prisma.siteBranch.findUnique({
                     where: { branchId: finalBranchId },
-                    select: { docsJson: true },
                 }),
                 prisma.markdownPageSyncError.findMany({
                     where: {
