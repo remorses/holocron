@@ -121,7 +121,13 @@ async function findProjectFiles() {
     return { filePaths, files, mediaFilePaths }
 }
 
-async function uploadMediaFiles({ mediaFilePaths, siteId }: { mediaFilePaths: string[], siteId: string }) {
+async function uploadMediaFiles({
+    mediaFilePaths,
+    siteId,
+}: {
+    mediaFilePaths: string[]
+    siteId: string
+}) {
     if (mediaFilePaths.length === 0) {
         return []
     }
@@ -131,6 +137,7 @@ async function uploadMediaFiles({ mediaFilePaths, siteId }: { mediaFilePaths: st
     // Prepare files for upload
     const filesToUpload = mediaFilePaths.map((filePath) => ({
         slug: filePath,
+        contentLength: fs.statSync(filePath).size,
         contentType: getContentType(filePath),
     }))
 
@@ -603,10 +610,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
             }
 
             // Save fumabase.json locally
-            await fs.promises.writeFile(
-                docsJsonPath,
-                JSON.stringify(data.docsJson, null, 2),
-            )
+            await fs.promises.writeFile(docsJsonPath, data.docsJsonWithComments)
 
             // Create success table
             const isUpdate = existingDocsJson?.siteId

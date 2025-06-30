@@ -34,6 +34,7 @@ import {
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { openai } from '@ai-sdk/openai'
 import { experimental_transcribe as transcribe } from 'ai'
+import { applyJsonCComments } from './json-c-comments'
 
 // Utility to get client IP from request, handling Cloudflare proxy headers
 function getClientIp(request: Request): string {
@@ -1068,8 +1069,17 @@ export const app = new Spiceflow({ basePath: '/api' })
                 errorType: error.errorType,
             }))
 
+            const docsJsonWithComments = applyJsonCComments(
+                branch?.docsJson || {},
+                {
+                    ...defaultDocsJsonComments,
+                    ...docsJsonComments,
+                },
+            )
+
             return {
                 success: true,
+                docsJsonWithComments,
                 siteId: finalSiteId,
                 branchId: finalBranchId,
                 docsJson: branch?.docsJson || {},
