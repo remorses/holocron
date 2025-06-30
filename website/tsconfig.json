@@ -9,6 +9,7 @@
         "types": [
             "@react-router/node",
             "vite/client",
+            "src/env.d.ts",
             "@types/node"
             // "./worker-configuration.d.ts"
         ],
@@ -16,6 +17,7 @@
         "rootDir": ".",
         "isolatedModules": true,
         "esModuleInterop": true,
+
         "jsx": "react-jsx",
         "module": "ESNext",
         "moduleResolution": "Bundler",

@@ -26,31 +26,11 @@ import {
     createRenderFormExecute,
 } from './render-form-tool'
 import { mdxRegex } from './utils'
+import Handlebars from 'handlebars'
 import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
+import agentPrompt from '../prompts/agent.md?raw'
 
-function createSystemPrompt({}) {
-    return dedent`
-  This is a documentation website using .md and .mdx files
-
-  You are a professional content writer with the task of improving this documentation website and follow the user tasks
-
-  You have access to an edit tool to edit files in the project. You can use another tool to list all the files in the project.
-
-  You can always edit a top level fumabase.jsonc file, this file has the following json schema:
-
-  \`\`\`json title="fumabase.jsonc schema"
-  ${JSON.stringify(docsJsonSchema, null, 2)}
-  \`\`\`
-
-  To edit the fumabase.jsonc file you MUST always use the render_form tool to display nice UI forms to the user.
-
-  The fumabase.jsonc file will be stale when using the render_form tool, so do not use it with the edit tool.
-
-  When the user message contains references with @ for example @path/to/file.mdx it means the user is referencing a file, the @ character is not part of the filename.
-
-  The str_replace_editor tool should never be used to edit the file fumabase.jsonc, instead use the render_form tool for that.
-  `
-}
+const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
 export const generateMessageApp = new Spiceflow().state('userId', '').route({
     method: 'POST',
@@ -130,7 +110,9 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             messages: [
                 {
                     role: 'system',
-                    content: createSystemPrompt({}),
+                    content: agentPromptTemplate({
+                        docsJsonSchema: JSON.stringify(docsJsonSchema, null, 2),
+                    }),
                 },
                 ...messages.filter((x) => x.role !== 'system'),
             ],
