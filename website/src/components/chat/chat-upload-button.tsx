@@ -1,5 +1,5 @@
 import { RiAttachment2, RiCloseLine, RiAddLine } from '@remixicon/react'
-import { useState, useRef } from 'react'
+import { useState, useRef, forwardRef } from 'react'
 import { v4 } from 'uuid'
 
 import { Button } from '../ui/button'
@@ -16,17 +16,17 @@ interface UploadedFile {
     contentType: string
 }
 
-function AttachmentButton({
-    count,
-    onClick,
-    disabled,
-}: {
-    count?: number
-    onClick: () => void
-    disabled?: boolean
-}) {
+const AttachmentButton = forwardRef<
+    HTMLButtonElement,
+    {
+        count?: number
+        onClick: () => void
+        disabled?: boolean
+    }
+>(({ count, onClick, disabled }, ref) => {
     return (
         <Button
+            ref={ref}
             variant='ghost'
             size='icon'
             className='relative '
@@ -41,7 +41,7 @@ function AttachmentButton({
             )}
         </Button>
     )
-}
+})
 
 export function ChatUploadButton({
     siteId,
@@ -164,7 +164,7 @@ export function ChatUploadButton({
                                 }}
                             >
                                 <span>add more files</span>
-                                <RiAddLine className='h-4 w-4' />
+                                <RiAddLine className='size-5' />
                             </div>
 
                             {uploadedFiles.map((file) => (
@@ -175,14 +175,12 @@ export function ChatUploadButton({
                                     <span className='truncate flex-1 mr-2'>
                                         {file.name}
                                     </span>
-                                    <Button
-                                        variant='ghost'
-                                        size='icon'
-                                        className='size-7 hover:bg-destructive/20'
+                                    <button
+                                        className='p-0 cursor-pointer'
                                         onClick={() => removeFile(file.id)}
                                     >
-                                        <RiCloseLine className='size-7' />
-                                    </Button>
+                                        <RiCloseLine className='size-5' />
+                                    </button>
                                 </div>
                             ))}
                         </div>
