@@ -65,7 +65,7 @@ export function ChatRecordButton({ transcribeAudio }: RecordButtonProps) {
             mediaRecorder.onstop = async () => {
                 // Create audio blob from chunks
                 const audioBlob = new Blob(chunksRef.current, {
-                    type: 'audio/webm',
+                    type: 'audio/wav',
                 })
                 await handleTranscription(audioBlob)
             }
@@ -94,8 +94,8 @@ export function ChatRecordButton({ transcribeAudio }: RecordButtonProps) {
     const handleTranscription = async (audioBlob: Blob) => {
         setIsTranscribing(true)
         try {
-            const audioFile = new File([audioBlob], 'recording.webm', {
-                type: 'audio/webm',
+            const audioFile = new File([audioBlob], 'recording.wav', {
+                type: 'audio/wav',
             })
             const text = await transcribeAudio(audioFile)
 
@@ -112,7 +112,6 @@ export function ChatRecordButton({ transcribeAudio }: RecordButtonProps) {
             setIsTranscribing(false)
         }
     }
-
 
     return (
         <div className='record-button-container'>
@@ -168,6 +167,7 @@ export function ChatRecordButton({ transcribeAudio }: RecordButtonProps) {
                                         <Button
                                             variant='default'
                                             size='sm'
+                                            autoFocus
                                             className='rounded-full'
                                             onClick={stopRecording}
                                         >
