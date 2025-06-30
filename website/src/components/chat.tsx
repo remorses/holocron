@@ -81,6 +81,7 @@ import {
 } from 'website/src/components/ui/command'
 import React from 'react'
 import { ChatRecordButton } from 'website/src/components/chat/chat-record-button'
+import { ChatUploadButton } from './chat/chat-upload-button'
 
 function keyForDocsJson({ chatId }) {
     return `fumabase.json-${chatId}`
@@ -628,17 +629,17 @@ function Footer() {
                             <div className='flex items-center justify-between gap-2 p-3'>
                                 {/* Left buttons */}
                                 <div className='flex items-center gap-2'>
-                                    <Button
-                                        variant='outline'
-                                        size='icon'
-                                        className='rounded-full size-8 border-none hover:bg-background hover:shadow-md transition-[box-shadow]'
-                                    >
-                                        <RiAttachment2
-                                            className='text-muted-foreground/70 size-5'
-                                            size={20}
-                                            aria-hidden='true'
-                                        />
-                                    </Button>
+                                    <ChatUploadButton
+                                        siteId={siteId}
+                                        accept='image/*,text/*,.pdf,.docx,.doc'
+                                        onFilesChange={(files) => {
+                                            // TODO: Wire uploaded files to messages
+                                            console.log(
+                                                'Files uploaded:',
+                                                files,
+                                            )
+                                        }}
+                                    />
                                     <ChatRecordButton
                                         transcribeAudio={transcribeAudio}
                                     />
