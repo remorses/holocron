@@ -38,6 +38,7 @@ import {
     ChatTextarea,
 } from 'website/src/components/chat/chat-textarea'
 import { ToolInvocationRenderer } from 'website/src/components/tools-preview'
+import { DurableFetchClient } from 'durablefetch'
 import {
     ChatProvider,
     ChatState,
@@ -54,6 +55,9 @@ import {
 import { cn } from '../lib/cn'
 
 export type { Route }
+
+const CHAT_ID = 'cmcci07p90033ieypfhp8lhna'
+const df = new DurableFetchClient()
 
 let exampleMessages: UIMessage[] = [
     {
@@ -333,16 +337,22 @@ function Footer() {
     const handleSubmit = async () => {
         const messages = useChatState.getState()?.messages
         const generateId = createIdGenerator()
+        const url = `/api/generateMessage?chatId=${CHAT_ID}`
+
+        await df.delete(url)
 
         const { data: generator, error } =
-            await apiClient.api.generateMessage.post({
-                messages: messages,
-                siteId: 'cmbvdu95n00041yyp88tfgyxt',
-                branchId: 'main',
-                currentSlug: '',
-                filesInDraft: {},
-                chatId: 'cmcci07p90033ieypfhp8lhna',
-            })
+            await apiClient.api.generateMessage.post(
+                {
+                    messages: messages,
+                    siteId: 'cmbvdu95n00041yyp88tfgyxt',
+                    branchId: 'main',
+                    currentSlug: '',
+                    filesInDraft: {},
+                    chatId: CHAT_ID,
+                },
+                { fetch: df.fetch, query: { chatId: CHAT_ID } },
+            )
         if (error) throw error
 
         const stateIter = fullStreamToUIMessages({
