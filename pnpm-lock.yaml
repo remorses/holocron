@@ -209,6 +209,9 @@ importers:
       async-sema:
         specifier: ^3.1.1
         version: 3.1.1
+      aws4fetch:
+        specifier: ^1.0.20
+        version: 1.0.20
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -239,6 +242,9 @@ importers:
       domutils:
         specifier: ^3.2.2
         version: 3.2.2
+      durablefetch:
+        specifier: ^0.1.0
+        version: 0.1.0
       fast-json-stable-stringify:
         specifier: ^2.1.0
         version: 2.1.0
@@ -288,8 +294,8 @@ importers:
         specifier: ^0.16.22
         version: 0.16.22
       lean-s3:
-        specifier: ^0.2.1
-        version: 0.2.1
+        specifier: ^0.6.3
+        version: 0.6.3
       lucide-react:
         specifier: ^0.525.0
         version: 0.525.0(react@19.1.0)
@@ -746,7 +752,7 @@ importers:
         version: 1.121.41(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@tanstack/react-start':
         specifier: ^1.121.35
-        version: 1.121.41(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.41(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@vitejs/plugin-react@4.6.0(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)))(idb-keyval@6.2.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)
+        version: 1.121.41(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.41(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@vitejs/plugin-react@4.6.0(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)))(aws4fetch@1.0.20)(idb-keyval@6.2.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)
       '@types/mdx':
         specifier: ^2.0.13
         version: 2.0.13
@@ -800,7 +806,7 @@ importers:
         version: 5.8.3
       vinxi:
         specifier: ^0.5.7
-        version: 0.5.7(@azure/storage-blob@12.27.0)(@types/node@24.0.3)(db0@0.3.2)(idb-keyval@6.2.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)
+        version: 0.5.7(@azure/storage-blob@12.27.0)(@types/node@24.0.3)(aws4fetch@1.0.20)(db0@0.3.2)(idb-keyval@6.2.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)
       vite:
         specifier: ^7.0.0
         version: 7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)
@@ -1493,6 +1499,9 @@ importers:
       docs-website:
         specifier: workspace:*
         version: link:../docs-website
+      durablefetch:
+        specifier: ^0.1.0
+        version: 0.1.0
       fast-json-stable-stringify:
         specifier: ^2.1.0
         version: 2.1.0
@@ -1524,8 +1533,8 @@ importers:
         specifier: ^10.1.2
         version: 10.1.2
       lean-s3:
-        specifier: ^0.2.1
-        version: 0.2.1
+        specifier: ^0.6.3
+        version: 0.6.3
       lucide-react:
         specifier: ^0.525.0
         version: 0.525.0(react@19.1.0)
@@ -6722,6 +6731,9 @@ packages:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
 
+  aws4fetch@1.0.20:
+    resolution: {integrity: sha512-/djoAN709iY65ETD6LKCtyyEI04XIBP5xVvfmNxsEP0uJB5tyaGBztSryRr4HqMStr9R06PisQE7m9zDTXKu6g==}
+
   b4a@1.6.7:
     resolution: {integrity: sha512-OnAYlL5b7LEkALw87fUVafQw5rVR9RjwGd4KUwNQ6DrrNmaVaUCgLipfVlzrPQ4tWOR9P0IXGNOx50jYCCdSJg==}
 
@@ -7689,6 +7701,9 @@ packages:
 
   duplexer@0.1.2:
     resolution: {integrity: sha512-jtD6YG370ZCIi/9GTaJKQxWTZD045+4R4hTk/x1UyoqadyJ9x9CgSi1RlVDQF8U2sxLLSnFkCaMihqljHIWgMg==}
+
+  durablefetch@0.1.0:
+    resolution: {integrity: sha512-4DLTxvQc1cftKL+ycnjY8Vth3J8BtK+HMV+OL2sW6KCZrly0G4YmrR686IiOg7LtMLFq+UxsG2ISO47BEK9/nQ==}
 
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
@@ -9077,9 +9092,9 @@ packages:
     resolution: {integrity: sha512-b94GiNHQNy6JNTrt5w6zNyffMrNkXZb3KTkCZJb2V1xaEGCk093vkZ2jk3tpaeP33/OiXC+WvK9AxUebnf5nbw==}
     engines: {node: '>= 0.6.3'}
 
-  lean-s3@0.2.1:
-    resolution: {integrity: sha512-ran/EqxVEw1d1KwAOB345sgjF3Zn/R9AmuJ6jKRjRHBSX5LK+b8hfoI5HT6YNbRV0CzlOa7bJrM6nWZVHTLUKQ==}
-    engines: {node: ^20.19.0 || ^22.14.0 || ^24.0.0}
+  lean-s3@0.6.3:
+    resolution: {integrity: sha512-QsTI9FQkcCcef+6bi0jCrZ8Tot0bXB/RXRUcssXnqD3AYRGS+gV88IJW4Nc3Skxg+I/+mDss9UedxBA/ZDJY9Q==}
+    engines: {node: ^20.19.2 || ^22.16.0 || ^24.2.0}
 
   leven@4.0.0:
     resolution: {integrity: sha512-puehA3YKku3osqPlNuzGDUHq8WpwXupUg1V6NXdV38G+gr+gkBwFC8g1b/+YcIvp8gnqVIus+eJCH/eGsRmJNw==}
@@ -11631,6 +11646,10 @@ packages:
 
   undici@7.10.0:
     resolution: {integrity: sha512-u5otvFBOBZvmdjWLVW+5DAc9Nkq8f24g0O9oY7qw2JVIF1VocIFoyz9JFkuVOS2j41AufeO0xnlweJ2RLT8nGw==}
+    engines: {node: '>=20.18.1'}
+
+  undici@7.11.0:
+    resolution: {integrity: sha512-heTSIac3iLhsmZhUCjyS3JQEkZELateufzZuBaVM5RHXdSBMb1LPMQf5x+FH7qjsZYDP0ttAc3nnVpUB+wYbOg==}
     engines: {node: '>=20.18.1'}
 
   unenv@1.10.0:
@@ -16901,9 +16920,9 @@ snapshots:
       tiny-invariant: 1.3.3
       tiny-warning: 1.0.3
 
-  '@tanstack/react-start-plugin@1.121.41(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.41(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@vitejs/plugin-react@4.6.0(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)))(idb-keyval@6.2.2)(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)':
+  '@tanstack/react-start-plugin@1.121.41(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.41(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@vitejs/plugin-react@4.6.0(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)))(aws4fetch@1.0.20)(idb-keyval@6.2.2)(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)':
     dependencies:
-      '@tanstack/start-plugin-core': 1.121.41(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.41(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(idb-keyval@6.2.2)(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)
+      '@tanstack/start-plugin-core': 1.121.41(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.41(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(aws4fetch@1.0.20)(idb-keyval@6.2.2)(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)
       '@vitejs/plugin-react': 4.6.0(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))
       vite: 7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)
       zod: 3.25.67
@@ -16951,10 +16970,10 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
 
-  '@tanstack/react-start@1.121.41(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.41(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@vitejs/plugin-react@4.6.0(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)))(idb-keyval@6.2.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)':
+  '@tanstack/react-start@1.121.41(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.41(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@vitejs/plugin-react@4.6.0(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)))(aws4fetch@1.0.20)(idb-keyval@6.2.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)':
     dependencies:
       '@tanstack/react-start-client': 1.121.41(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@tanstack/react-start-plugin': 1.121.41(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.41(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@vitejs/plugin-react@4.6.0(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)))(idb-keyval@6.2.2)(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)
+      '@tanstack/react-start-plugin': 1.121.41(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.41(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@vitejs/plugin-react@4.6.0(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)))(aws4fetch@1.0.20)(idb-keyval@6.2.2)(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)
       '@tanstack/react-start-server': 1.121.41(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@tanstack/start-server-functions-client': 1.121.40(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))
       '@tanstack/start-server-functions-server': 1.121.36(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))
@@ -17080,7 +17099,7 @@ snapshots:
       tiny-invariant: 1.3.3
       tiny-warning: 1.0.3
 
-  '@tanstack/start-plugin-core@1.121.41(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.41(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(idb-keyval@6.2.2)(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)':
+  '@tanstack/start-plugin-core@1.121.41(@azure/storage-blob@12.27.0)(@tanstack/react-router@1.121.41(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(aws4fetch@1.0.20)(idb-keyval@6.2.2)(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)':
     dependencies:
       '@babel/code-frame': 7.26.2
       '@babel/core': 7.27.4
@@ -17096,7 +17115,7 @@ snapshots:
       babel-dead-code-elimination: 1.0.10
       cheerio: 1.1.0
       h3: 1.13.0
-      nitropack: 2.11.12(@azure/storage-blob@12.27.0)(idb-keyval@6.2.2)
+      nitropack: 2.11.12(@azure/storage-blob@12.27.0)(aws4fetch@1.0.20)(idb-keyval@6.2.2)
       pathe: 2.0.3
       ufo: 1.6.1
       vite: 7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)
@@ -18513,6 +18532,8 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
+  aws4fetch@1.0.20: {}
+
   b4a@1.6.7: {}
 
   babel-dead-code-elimination@1.0.10:
@@ -18784,7 +18805,7 @@ snapshots:
       parse5: 7.3.0
       parse5-htmlparser2-tree-adapter: 7.1.0
       parse5-parser-stream: 7.1.2
-      undici: 7.10.0
+      undici: 7.11.0
       whatwg-mimetype: 4.0.0
 
   chevrotain-allstar@0.3.1(chevrotain@11.0.3):
@@ -19500,6 +19521,7 @@ snapshots:
       '@xmorse/markdown-rs': 0.0.3
       ai: 4.3.16(react@19.1.0)(zod@3.25.67)
       async-sema: 3.1.1
+      aws4fetch: 1.0.20
       class-variance-authority: 0.7.1
       clsx: 2.1.1
       db: link:db
@@ -19510,6 +19532,7 @@ snapshots:
       dom-serializer: 2.0.0
       domhandler: 5.0.3
       domutils: 3.2.2
+      durablefetch: 0.1.0
       fast-json-stable-stringify: 2.1.0
       flat-cache: 6.1.10
       front-matter: 4.0.2
@@ -19526,7 +19549,7 @@ snapshots:
       isbot: 5.1.28
       js-yaml: 4.1.0
       katex: 0.16.22
-      lean-s3: 0.2.1
+      lean-s3: 0.6.3
       lucide-react: 0.525.0(react@19.1.0)
       marked: 15.0.12
       mdast-util-mdx-jsx: 3.2.0
@@ -19640,6 +19663,8 @@ snapshots:
       gopd: 1.2.0
 
   duplexer@0.1.2: {}
+
+  durablefetch@0.1.0: {}
 
   eastasianwidth@0.2.0: {}
 
@@ -21321,10 +21346,10 @@ snapshots:
     dependencies:
       readable-stream: 2.3.8
 
-  lean-s3@0.2.1:
+  lean-s3@0.6.3:
     dependencies:
       fast-xml-parser: 5.2.5
-      undici: 7.10.0
+      undici: 7.11.0
 
   leven@4.0.0: {}
 
@@ -22241,7 +22266,7 @@ snapshots:
       - '@babel/core'
       - babel-plugin-macros
 
-  nitropack@2.11.12(@azure/storage-blob@12.27.0)(idb-keyval@6.2.2):
+  nitropack@2.11.12(@azure/storage-blob@12.27.0)(aws4fetch@1.0.20)(idb-keyval@6.2.2):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.0
       '@netlify/functions': 3.1.10(rollup@4.43.0)
@@ -22309,7 +22334,7 @@ snapshots:
       unenv: 2.0.0-rc.17
       unimport: 5.0.1
       unplugin-utils: 0.2.4
-      unstorage: 1.16.0(@azure/storage-blob@12.27.0)(db0@0.3.2)(idb-keyval@6.2.2)(ioredis@5.6.1)
+      unstorage: 1.16.0(@azure/storage-blob@12.27.0)(aws4fetch@1.0.20)(db0@0.3.2)(idb-keyval@6.2.2)(ioredis@5.6.1)
       untyped: 2.0.0
       unwasm: 0.3.9
       youch: 4.1.0-beta.8
@@ -24725,6 +24750,8 @@ snapshots:
 
   undici@7.10.0: {}
 
+  undici@7.11.0: {}
+
   unenv@1.10.0:
     dependencies:
       consola: 3.4.2
@@ -24839,7 +24866,7 @@ snapshots:
       picomatch: 4.0.2
       webpack-virtual-modules: 0.6.2
 
-  unstorage@1.16.0(@azure/storage-blob@12.27.0)(db0@0.3.2)(idb-keyval@6.2.2)(ioredis@5.6.1):
+  unstorage@1.16.0(@azure/storage-blob@12.27.0)(aws4fetch@1.0.20)(db0@0.3.2)(idb-keyval@6.2.2)(ioredis@5.6.1):
     dependencies:
       anymatch: 3.1.3
       chokidar: 4.0.3
@@ -24851,6 +24878,7 @@ snapshots:
       ufo: 1.6.1
     optionalDependencies:
       '@azure/storage-blob': 12.27.0
+      aws4fetch: 1.0.20
       db0: 0.3.2
       idb-keyval: 6.2.2
       ioredis: 5.6.1
@@ -24966,7 +24994,7 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.2
 
-  vinxi@0.5.7(@azure/storage-blob@12.27.0)(@types/node@24.0.3)(db0@0.3.2)(idb-keyval@6.2.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0):
+  vinxi@0.5.7(@azure/storage-blob@12.27.0)(@types/node@24.0.3)(aws4fetch@1.0.20)(db0@0.3.2)(idb-keyval@6.2.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0):
     dependencies:
       '@babel/core': 7.27.4
       '@babel/plugin-syntax-jsx': 7.27.1(@babel/core@7.27.4)
@@ -24987,7 +25015,7 @@ snapshots:
       hookable: 5.5.3
       http-proxy: 1.18.1
       micromatch: 4.0.8
-      nitropack: 2.11.12(@azure/storage-blob@12.27.0)(idb-keyval@6.2.2)
+      nitropack: 2.11.12(@azure/storage-blob@12.27.0)(aws4fetch@1.0.20)(idb-keyval@6.2.2)
       node-fetch-native: 1.6.6
       path-to-regexp: 6.3.0
       pathe: 1.1.2
@@ -24999,7 +25027,7 @@ snapshots:
       ufo: 1.6.1
       unctx: 2.4.1
       unenv: 1.10.0
-      unstorage: 1.16.0(@azure/storage-blob@12.27.0)(db0@0.3.2)(idb-keyval@6.2.2)(ioredis@5.6.1)
+      unstorage: 1.16.0(@azure/storage-blob@12.27.0)(aws4fetch@1.0.20)(db0@0.3.2)(idb-keyval@6.2.2)(ioredis@5.6.1)
       vite: 6.3.5(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)
       zod: 3.25.67
     transitivePeerDependencies:
@@ -25449,6 +25477,7 @@ snapshots:
       db: link:db
       diff: 8.0.2
       docs-website: link:docs-website
+      durablefetch: 0.1.0
       fast-json-stable-stringify: 2.1.0
       flat-cache: 6.1.10
       fumadocs-core: link:fumadocs/packages/core
@@ -25459,7 +25488,7 @@ snapshots:
       js-yaml: 4.1.0
       json-schema: 0.4.0
       json-schema-library: 10.1.2
-      lean-s3: 0.2.1
+      lean-s3: 0.6.3
       lucide-react: 0.525.0(react@19.1.0)
       marked: 15.0.12
       match-sorter: 8.0.3
@@ -25475,6 +25504,7 @@ snapshots:
       react-markdown: 10.1.0(@types/react@19.1.8)(react@19.1.0)
       react-router: 7.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-router-hono-server: 2.13.0(@cloudflare/workers-types@4.20250614.0)(@react-router/dev@7.6.2(@react-router/serve@7.6.2(react-router@7.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.3)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.22.0(@cloudflare/workers-types@4.20250614.0))(yaml@2.8.0))(@types/react@19.1.8)(react-router@7.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(vite@7.0.0(@types/node@24.0.3)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.22.0(@cloudflare/workers-types@4.20250614.0))
+      react-sound-visualizer: 1.4.0(react@19.1.0)
       safe-mdx: 1.1.0(react@19.1.0)
       sema4: 0.1.3
       sentries: 0.2.2(@cloudflare/workers-types@4.20250614.0)

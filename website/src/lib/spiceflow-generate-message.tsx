@@ -188,22 +188,24 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 console.log(resultMessages)
 
                 await prisma.$transaction(async (prisma) => {
-                    const prevChat = await prisma.chat.delete({
-                        where: { chatId },
-                    })
+                    const prevChat = await prisma.chat
+                        .delete({
+                            where: { chatId },
+                        })
+                        .catch((e) => null)
 
                     const chatRow = await prisma.chat.create({
                         data: {
                             chatId,
-                            createdAt: prevChat.createdAt,
+                            createdAt: prevChat?.createdAt,
                             userId,
                             branchId,
                             currentSlug,
                             filesInDraft: filesInDraft || {},
-                            lastPushedFiles: prevChat.lastPushedFiles || {},
-                            title: prevChat.title,
-                            prNumber: prevChat.prNumber,
-                            description: prevChat.description,
+                            lastPushedFiles: prevChat?.lastPushedFiles || {},
+                            title: prevChat?.title,
+                            prNumber: prevChat?.prNumber,
+                            description: prevChat?.description,
                         },
                     })
 

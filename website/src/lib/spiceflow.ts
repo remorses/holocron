@@ -1,7 +1,11 @@
 import cuid from '@bugsnag/cuid'
 
 import { Prisma, prisma, Site } from 'db'
-import { getKeyForMediaAsset, s3 } from 'docs-website/src/lib/s3'
+import {
+    getKeyForMediaAsset,
+    getPresignedUrl,
+    s3,
+} from 'docs-website/src/lib/s3'
 import { Spiceflow } from 'spiceflow'
 import { cors } from 'spiceflow/cors'
 import { openapi } from 'spiceflow/openapi'
@@ -243,6 +247,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 .array(
                     z.object({
                         slug: z.string().min(1, 'slug is required'),
+                        contentLength: z.number(),
                         contentType: z.string().optional(),
                     }),
                 )
@@ -254,29 +259,33 @@ export const app = new Spiceflow({ basePath: '/api' })
                 throw new AppError('User not authenticated')
             }
 
-            const signedFiles = body.files.map((file) => {
-                const key = getKeyForMediaAsset({
-                    siteId: body.siteId,
-                    // branchId: body.branchId,
-                    slug: file.slug,
-                })
-                const signedUrl = s3.presign(key, {
-                    method: 'PUT',
-                    ...(file.contentType
-                        ? { contentType: file.contentType }
-                        : {}),
-                })
-                console.log('uploaded',file.slug)
-                const finalUrl = new URL(
-                    file.slug,
-                    env.UPLOADS_BASE_URL,
-                ).toString()
-                return {
-                    path: file.slug,
-                    signedUrl,
-                    finalUrl,
-                }
-            })
+            const signedFiles = await Promise.all(
+                body.files.map(async (file) => {
+                    const key = getKeyForMediaAsset({
+                        siteId: body.siteId,
+                        // branchId: body.branchId,
+                        slug: file.slug,
+                    })
+                    const signedUrl = await getPresignedUrl({
+                        method: 'PUT',
+                        key,
+                        headers: {
+                            'content-type': file.contentType,
+                            'Content-Length': file.contentLength,
+                        },
+                    })
+                    console.log('signed', file.slug)
+                    const finalUrl = new URL(
+                        file.slug,
+                        env.UPLOADS_BASE_URL,
+                    ).toString()
+                    return {
+                        path: file.slug,
+                        signedUrl,
+                        finalUrl,
+                    }
+                }),
+            )
 
             return {
                 success: true,
@@ -1086,7 +1095,9 @@ export const app = new Spiceflow({ basePath: '/api' })
 
             // Validate file type
             if (!audioFile.type.startsWith('audio/')) {
-                throw new AppError('Invalid file type. Please provide an audio file.')
+                throw new AppError(
+                    'Invalid file type. Please provide an audio file.',
+                )
             }
 
             try {
@@ -1106,7 +1117,9 @@ export const app = new Spiceflow({ basePath: '/api' })
                 }
             } catch (error) {
                 console.error('Transcription error:', error)
-                throw new AppError(`Failed to transcribe audio: ${error.message}`)
+                throw new AppError(
+                    `Failed to transcribe audio: ${error.message}`,
+                )
             }
         },
     })

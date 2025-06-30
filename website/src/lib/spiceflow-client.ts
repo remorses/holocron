@@ -1,5 +1,6 @@
 import { createSpiceflowClient } from 'spiceflow/client'
 import { SpiceflowApp } from './spiceflow'
+import { DurableFetchClient } from 'durablefetch'
 
 export const apiClient = createSpiceflowClient<SpiceflowApp>('/', {
     onRequest() {
@@ -17,3 +18,16 @@ export function createApiClient(
         ...options,
     })
 }
+
+export const durableFetchClient = new DurableFetchClient()
+
+export const apiClientWithDurableFetch = createSpiceflowClient<SpiceflowApp>(
+    '/',
+    {
+        onRequest() {
+            return { credentials: 'include' }
+        },
+
+        fetch: durableFetchClient.fetch,
+    },
+)

@@ -1,7 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Button } from 'website/src/components/ui/button'
-import { ScrollArea } from 'website/src/components/ui/scroll-area'
 import {
     Command,
     CommandEmpty,
@@ -15,15 +14,14 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from 'website/src/components/ui/popover'
+import { ScrollArea } from 'website/src/components/ui/scroll-area'
 
 import { useStickToBottom } from 'use-stick-to-bottom'
 
 import { fullStreamToUIMessages } from '../lib/process-chat'
-import { apiClient } from '../lib/spiceflow-client'
 
 import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
 
-import { RiAttachment2 } from '@remixicon/react'
 import { createIdGenerator, UIMessage } from 'ai'
 import { Markdown } from 'docs-website/src/lib/markdown'
 import { startTransition } from 'react'
@@ -43,6 +41,8 @@ import {
     ChatState,
     useChatState,
 } from '../components/chat/chat-provider'
+import { ChatRecordButton } from '../components/chat/chat-record-button'
+import { ChatUploadButton } from '../components/chat/chat-upload-button'
 import {
     Drawer,
     DrawerContent,
@@ -52,9 +52,14 @@ import {
     DrawerTrigger,
 } from '../components/ui/drawer'
 import { cn } from '../lib/cn'
-import { ChatRecordButton } from '../components/chat/chat-record-button'
+import {
+    apiClientWithDurableFetch,
+    durableFetchClient,
+} from '../lib/spiceflow-client'
 
 export type { Route }
+
+const CHAT_ID = 'cmcci07p90033ieypfhp8lhna'
 
 let exampleMessages: UIMessage[] = [
     {
@@ -331,7 +336,15 @@ function ContextButton({ contextOptions }) {
 function Footer() {
     const isPending = useChatState((x) => x.isGenerating)
     const text = useChatState((x) => x.text || '')
+    const durableUrl = `/api/generateMessage?chatId=${CHAT_ID}`
 
+    useEffect(() => {
+        durableFetchClient.isInProgress(durableUrl).then(({ inProgress }) => {
+            if (inProgress) {
+                handleSubmit()
+            }
+        })
+    }, [])
     const transcribeAudio = async (audioFile: File): Promise<string> => {
         try {
             const formData = new FormData()
@@ -357,16 +370,22 @@ function Footer() {
     const handleSubmit = async () => {
         const messages = useChatState.getState()?.messages
         const generateId = createIdGenerator()
+        const url = `/api/generateMessage?chatId=${CHAT_ID}`
+
+        await durableFetchClient.delete(url)
 
         const { data: generator, error } =
-            await apiClient.api.generateMessage.post({
-                messages: messages,
-                siteId: 'cmbvdu95n00041yyp88tfgyxt',
-                branchId: 'main',
-                currentSlug: '',
-                filesInDraft: {},
-                chatId: 'cmcci07p90033ieypfhp8lhna',
-            })
+            await apiClientWithDurableFetch.api.generateMessage.post(
+                {
+                    messages: messages,
+                    siteId: 'cmchyql7f0002apypi7b7o3kw',
+                    branchId: 'cmchyql7f0003apyp3wxw3rkc',
+                    currentSlug: '',
+                    filesInDraft: {},
+                    chatId: CHAT_ID,
+                },
+                { query: { chatId: CHAT_ID } },
+            )
         if (error) throw error
 
         const stateIter = fullStreamToUIMessages({
@@ -382,8 +401,6 @@ function Footer() {
             })
         }
     }
-
-    const mentionsCombobox = useChatState((x) => x.mentionsCombobox)
 
     const contextOptions = [
         '@/docs/README.md',
@@ -410,30 +427,22 @@ function Footer() {
                     />
 
                     <div className='flex items-center justify-between gap-2 p-3 py-2'>
-                        <div className='flex items-center gap-2'>
-                            <Button
-                                variant='outline'
-                                size='icon'
-                                className='rounded-full size-8 border-none hover:bg-background hover:shadow-md transition-[box-shadow]'
-                            >
-                                <RiAttachment2
-                                    className='text-muted-foreground/70 size-5'
-                                    size={20}
-                                    aria-hidden='true'
-                                />
-                            </Button>
-                        </div>
-
-                        <div className='flex items-center gap-2'>
-                            <ChatRecordButton transcribeAudio={transcribeAudio} />
-                            <Button
-                                className='rounded-md h-8'
-                                onClick={() => handleSubmit()}
-                                disabled={isPending || !text.trim()}
-                            >
-                                {isPending ? 'Loading...' : 'Generate'}
-                            </Button>
-                        </div>
+                        <ChatUploadButton
+                            siteId='cmchyql7f0002apypi7b7o3kw'
+                            onFilesChange={(files) => {
+                                // TODO: Wire uploaded files to messages
+                                console.log('Files uploaded:', files)
+                            }}
+                        />
+                        <ChatRecordButton transcribeAudio={transcribeAudio} />
+                        <div className='grow'></div>
+                        <Button
+                            className='rounded-md h-8'
+                            onClick={() => handleSubmit()}
+                            disabled={isPending || !text.trim()}
+                        >
+                            {isPending ? 'Loading...' : 'Generate'}
+                        </Button>
                     </div>
                 </motion.div>
                 <ChatAutocomplete

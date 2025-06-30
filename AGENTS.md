@@ -231,6 +231,8 @@ This is preferable other aliases like @/ because i can easily move the code from
 
 - to join many classes together use the `cn('class-1', 'class-2')` utility instead of `${}` or other methods. this utility is usually used in shadcn compatible projects and mine is exported from `website/src/lib/cn` usually. Prefer doing `cn(bool && 'class')` instead of `cn(bool ? 'class' : '')`
 
+- prefer `size-4` over `w-4 h-4`
+
 ## components
 
 This project uses shadcn components placed in the website/src/components/ui folder. never add a new shadcn component yourself writing code, instead use the shadcn cli installed locally instead.

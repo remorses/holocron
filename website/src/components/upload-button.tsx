@@ -45,7 +45,7 @@ export function UploadButton({
             const { error, data } =
                 await apiClient.api.createUploadSignedUrl.post({
                     siteId,
-                    files: [{ slug: filename, contentType }],
+                    files: [{ slug: filename, contentType, contentLength: file.size }],
                 })
             if (error) throw error
 
