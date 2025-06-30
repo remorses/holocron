@@ -419,12 +419,10 @@ export async function syncFiles({
                 })
             }
             if (asset.type === 'mediaAsset') {
-                let slug =
-                    '/' +
-                    getSlugFromPath({
-                        githubPath: asset.githubPath,
-                        githubFolder,
-                    })
+                let slug = getSlugFromPath({
+                    githubPath: asset.githubPath,
+                    githubFolder,
+                })
                 mediaAssetSlugs.add(slug)
                 const downloadUrl = asset.downloadUrl
 
