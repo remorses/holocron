@@ -16,6 +16,10 @@ export type State = {
 export const [WebsiteStateProvider, useWebsiteState] =
     createZustandContext<State>((initial) => create((set) => ({ ...initial })))
 
+if (typeof window !== 'undefined') {
+    window['useWebsiteState'] = useWebsiteState
+}
+
 export function doFilesInDraftNeedPush(
     currentFilesInDraft: Record<string, FileUpdate>,
     lastPushedFiles: Record<string, FileUpdate>,
