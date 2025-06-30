@@ -1,4 +1,5 @@
 import { Route } from './+types/api.github.webhooks-worker'
+import JSONC from 'tiny-jsonc'
 import { Spiceflow } from 'spiceflow'
 import { z } from 'zod'
 import { prisma } from 'db'
@@ -407,7 +408,7 @@ async function tryCreateBranchFromDocsJson(args: WebhookWorkerRequest) {
         }
 
         const content = Buffer.from(data.content, 'base64').toString('utf-8')
-        const docsJson: DocsJsonType = safeJsonParse(content, {})
+        const docsJson: DocsJsonType = safeJsoncParse(content, {})
 
         // Check if fumabase.json has domains field with at least one domain
         if (
@@ -497,9 +498,9 @@ async function tryCreateBranchFromDocsJson(args: WebhookWorkerRequest) {
     }
 }
 
-function safeJsonParse(str: string, defaultValue = {}) {
+function safeJsoncParse(str: string, defaultValue = {}) {
     try {
-        return JSON.parse(str)
+        return JSONC.parse(str)
     } catch {
         return defaultValue
     }

@@ -1,4 +1,5 @@
 import { cac } from 'cac'
+import JSONC from 'tiny-jsonc'
 
 import fs from 'fs'
 import path from 'path'
@@ -349,7 +350,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                     docsJsonPath,
                     'utf-8',
                 )
-                existingDocsJson = JSON.parse(existingContent)
+                existingDocsJson = JSONC.parse(existingContent)
             } catch (error) {
                 // File doesn't exist or invalid JSON, continue with new site creation
             }

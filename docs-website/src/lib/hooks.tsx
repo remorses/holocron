@@ -1,10 +1,12 @@
 import {
+
     useEffect,
     useMemo,
     useRef,
     useState,
     useSyncExternalStore,
 } from 'react'
+import JSONC from 'tiny-jsonc'
 import { Route } from '../root'
 import { useLoaderData, useNavigate, useRouteLoaderData } from 'react-router'
 import { useDocsState } from './docs-state'
@@ -52,7 +54,7 @@ export function useDocsJson(): DocsJsonType {
     return useMemo(() => {
         if (docsJsonString) {
             try {
-                return JSON.parse(docsJsonString)
+                return JSONC.parse(docsJsonString)
             } catch (e) {
                 console.error('Failed to parse docsJson from state', e)
                 return docsJson

@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { cn } from './cn'
-
+import JSONC from 'tiny-jsonc'
 export const sleep = (ms: number): Promise<void> => {
     return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -12,9 +12,9 @@ export const isTruthy = <T>(value: T): value is NonNullable<T> => {
     return Boolean(value)
 }
 
-export const safeJsonParse = <T = unknown>(json: string): T | null => {
+export const safeJsoncParse = <T = unknown>(json: string): T | null => {
     try {
-        return JSON.parse(json)
+        return JSONC.parse(json)
     } catch {
         return null
     }

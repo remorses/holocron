@@ -1,6 +1,6 @@
 import type { DocsJsonType } from 'docs-website/src/lib/docs-json.js'
 import os from 'os'
-
+import JSONC from 'tiny-jsonc'
 import fs from 'fs'
 import path from 'path'
 
@@ -13,7 +13,7 @@ export async function readTopLevelDocsJson(dir) {
     }
     const content = await fs.promises.readFile(docsJsonPath, 'utf-8')
     try {
-        return JSON.parse(content) as DocsJsonType
+        return JSONC.parse(content) as DocsJsonType
     } catch (e) {
         console.error('Error parsing fumabase.json:', e.message)
         return

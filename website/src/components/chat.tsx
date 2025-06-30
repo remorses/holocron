@@ -64,7 +64,7 @@ import {
     FileUpdate,
     isParameterComplete,
 } from '../lib/edit-tool'
-import { debounce, safeJsonParse, teeAsyncIterable } from '../lib/utils'
+import { debounce, safeJsoncParse, teeAsyncIterable } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import { useChatState } from './chat/chat-provider'
@@ -93,7 +93,7 @@ const setDocsJsonState = ({ values, previousJsonString, chatId }) => {
 
     const newJson = JSON.stringify(
         {
-            ...safeJsonParse(previousJsonString),
+            ...safeJsoncParse(previousJsonString),
 
             ...values,
         },
@@ -144,7 +144,7 @@ export default function Chat({}) {
         const docsJsonString =
             useWebsiteState.getState()?.filesInDraft['fumabase.json']
                 ?.content || ''
-        const data = safeJsonParse(persistedValues || docsJsonString) || null
+        const data = safeJsoncParse(persistedValues || docsJsonString) || null
         if (persistedValues) {
             console.log(`localStorage fumabase.json: `, data)
         } else {

@@ -7,7 +7,7 @@ import {
 import { App, OAuthApp } from 'octokit'
 
 import { env } from 'website/src/lib/env'
-import { safeJsonParse } from 'website/src/lib/utils'
+import { safeJsoncParse } from 'website/src/lib/utils'
 
 import { GithubAccountType, Prisma, prisma } from 'db'
 import { getSession } from '../lib/better-auth'
@@ -26,7 +26,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
     const query = url.searchParams
     let stateStr = query.get('state') || ('' as string)
-    const state: GithubState | null = safeJsonParse(
+    const state: GithubState | null = safeJsoncParse(
         decodeURIComponent(stateStr),
     )
     // const userId = session?.user?.id

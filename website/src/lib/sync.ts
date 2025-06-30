@@ -34,7 +34,11 @@ import {
 } from './github.server'
 import { mdxRegex, yieldTasksInParallel } from './utils'
 import { imageDimensionsFromData } from 'image-dimensions'
-import { applyJsonCComments, JsonCComments } from './json-c-comments'
+import {
+    applyJsonCComments,
+    extractJsonCComments,
+    JsonCComments,
+} from './json-c-comments'
 
 export function gitBlobSha(
     content: string | Buffer,
@@ -186,12 +190,6 @@ export async function* pagesFromFilesList({
         file.relativePath.endsWith('meta.json'),
     )
     for (const file of metaFiles) {
-        let jsonData
-        try {
-            jsonData = JSON.parse(file.contents)
-        } catch {
-            jsonData = {}
-        }
         yield {
             type: 'metaFile',
             content: file.contents,
@@ -321,11 +319,11 @@ export async function syncFiles({
         await semaphore.acquire() // Acquire permit for file processing
         try {
             if (asset.type === 'metaFile') {
-                let jsonData
+                let metaJsonData
                 try {
-                    jsonData = JSON.parse(asset.content)
+                    metaJsonData = JSON.parse(asset.content)
                 } catch {
-                    jsonData = {}
+                    metaJsonData = {}
                 }
                 await prisma.metaFile.upsert({
                     where: {
@@ -337,12 +335,12 @@ export async function syncFiles({
                     update: {
                         githubSha: asset.githubSha,
                         githubPath: asset.githubPath,
-                        jsonData,
+                        jsonData: metaJsonData,
                         branchId,
                     },
                     create: {
                         githubPath: asset.githubPath,
-                        jsonData,
+                        jsonData: metaJsonData,
                         branchId,
                         githubSha: asset.githubSha,
                     },
@@ -350,20 +348,10 @@ export async function syncFiles({
             }
             if (asset.type === 'docsJson') {
                 console.log(`Updating docsJson for branch ${branchId}`)
-                let jsonData
-                try {
-                    // TODO add support for jsonc
-                    jsonData = JSON.parse(asset.content)
-                } catch {
-                    console.error(
-                        `Failed to parse docsJson content, using empty object. Content:`,
-                        asset.content,
-                    )
-                    jsonData = {}
-                }
+                const { data: jsonData, comments } = extractJsonCComments(asset.content)
                 await prisma.siteBranch.update({
                     where: { branchId },
-                    data: { docsJson: jsonData },
+                    data: { docsJson: jsonData, docsJsonComments: comments },
                 })
 
                 // Handle domain connections
@@ -1343,12 +1331,4 @@ export async function publicFileMapUrl({
 
 function isValidUrl(string: string): boolean {
     return string.startsWith('http://') || string.startsWith('https://')
-}
-
-function safeJsonParse(str: string, defaultValue: any = {}) {
-    try {
-        return JSON.parse(str)
-    } catch {
-        return defaultValue
-    }
 }
