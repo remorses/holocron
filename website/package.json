@@ -79,6 +79,7 @@
         "js-yaml": "^4.1.0",
         "json-schema": "^0.4.0",
         "json-schema-library": "^10.1.2",
+        "jsonc-parser": "^3.3.1",
         "lean-s3": "^0.6.3",
         "lucide-react": "^0.525.0",
         "marked": "^15.0.12",

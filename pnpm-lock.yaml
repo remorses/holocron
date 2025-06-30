@@ -1532,6 +1532,9 @@ importers:
       json-schema-library:
         specifier: ^10.1.2
         version: 10.1.2
+      jsonc-parser:
+        specifier: ^3.3.1
+        version: 3.3.1
       lean-s3:
         specifier: ^0.6.3
         version: 0.6.3
@@ -8997,6 +9000,9 @@ packages:
     resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
     engines: {node: '>=6'}
     hasBin: true
+
+  jsonc-parser@3.3.1:
+    resolution: {integrity: sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==}
 
   jsondiffpatch@0.6.0:
     resolution: {integrity: sha512-3QItJOXp2AP1uv7waBkao5nCvhEv+QmJAd38Ybq7wNI74Q+BBmnLn4EDKz6yI9xGAIQoUF87qHt+kc1IVxB4zQ==}
@@ -21260,6 +21266,8 @@ snapshots:
   json-stringify-deterministic@1.0.12: {}
 
   json5@2.2.3: {}
+
+  jsonc-parser@3.3.1: {}
 
   jsondiffpatch@0.6.0:
     dependencies:
