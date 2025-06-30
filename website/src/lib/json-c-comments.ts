@@ -57,10 +57,8 @@ export function extractJsonCComments(jsonCString: string): ExtractJsonCCommentsR
         onObjectProperty: (property: string, offset: number, length: number, startLine: number, startCharacter: number, pathSupplier: () => any[]) => {
             const path = pathSupplier()
             
-            // For properties inside array objects, we want to use the base path without array indices
-            // This matches the expected test behavior
-            const cleanPath = path.filter(p => typeof p !== 'number')
-            const fullPath = [...cleanPath, property].join('.')
+            // Convert path to dot notation, treating numbers as string indices
+            const fullPath = [...path, property].join('.')
             
             const comment = getCommentsAboveLine(startLine)
             if (comment) {

@@ -142,11 +142,11 @@ describe('extractJsonCComments', () => {
           {
             "products": "// Product catalog",
             "products.0": "// Electronics category",
+            "products.0.name": "// Product name",
+            "products.0.price": "// Product price",
             "products.1": "// Books category",
-            "products.author": "// Book author",
-            "products.name": "// Product name",
-            "products.price": "// Product price",
-            "products.title": "// Book title",
+            "products.1.author": "// Book author",
+            "products.1.title": "// Book title",
           }
         `)
     })
@@ -343,5 +343,216 @@ describe('applyJsonCComments', () => {
             price: 999,
             colors: ["black", "silver"]
         })
+    })
+})
+
+describe('applyJsonCComments - Edge Cases', () => {
+    test('handles comments for non-existent fields gracefully', () => {
+        const obj = {
+            name: 'John',
+            age: 30
+        }
+        
+        const comments = {
+            'name': '// User name',
+            'nonExistentField': '// This field does not exist',
+            'deep.nested.field': '// This path does not exist'
+        }
+        
+        const result = applyJsonCComments(obj, comments, 2)
+        expect(result).toMatchInlineSnapshot(`
+          "{
+            // User name
+            "name": "John",
+            "age": 30
+          }"
+        `)
+    })
+    
+    test('handles type mismatches - treating object as array', () => {
+        const obj = {
+            user: {
+                name: 'John',
+                age: 30
+            }
+        }
+        
+        const comments = {
+            'user': '// User object',
+            'user.0': '// Trying to access object as array',
+            'user.1': '// Another array-style access on object',
+            'user.name': '// Valid property access'
+        }
+        
+        const result = applyJsonCComments(obj, comments, 2)
+        expect(result).toMatchInlineSnapshot(`
+          "{
+            // User object
+            "user": {
+              // Valid property access
+              "name": "John",
+              "age": 30
+            }
+          }"
+        `)
+    })
+    
+    test('handles type mismatches - treating array as object', () => {
+        const obj = {
+            colors: ['red', 'blue', 'green']
+        }
+        
+        const comments = {
+            'colors': '// Color array',
+            'colors.0': '// Valid array index access',
+            'colors.name': '// Trying to access array as object property',
+            'colors.length': '// Another object-style access on array'
+        }
+        
+        const result = applyJsonCComments(obj, comments, 2)
+        expect(result).toMatchInlineSnapshot(`
+          "{
+            // Color array
+            "colors": [
+              // Valid array index access
+              "red",
+              "blue",
+              "green"
+            ]
+          }"
+        `)
+    })
+    
+    test('handles accessing properties on primitive values', () => {
+        const obj = {
+            name: 'John',
+            age: 30,
+            isActive: true
+        }
+        
+        const comments = {
+            'name': '// Valid string comment',
+            'name.length': '// Trying to access property on string',
+            'name.0': '// Trying to access string as array',
+            'age': '// Valid number comment',
+            'age.toString': '// Trying to access method on number',
+            'isActive': '// Valid boolean comment',
+            'isActive.valueOf': '// Trying to access method on boolean'
+        }
+        
+        const result = applyJsonCComments(obj, comments, 2)
+        expect(result).toMatchInlineSnapshot(`
+          "{
+            // Valid string comment
+            "name": "John",
+            // Valid number comment
+            "age": 30,
+            // Valid boolean comment
+            "isActive": true
+          }"
+        `)
+    })
+    
+    test('handles deeply nested non-existent paths', () => {
+        const obj = {
+            level1: {
+                level2: {
+                    level3: 'deep value'
+                }
+            }
+        }
+        
+        const comments = {
+            'level1': '// Level 1 exists',
+            'level1.level2': '// Level 2 exists',
+            'level1.level2.level3': '// Level 3 exists',
+            'level1.level2.level3.level4': '// Level 4 does not exist',
+            'level1.level2.nonExistent': '// Non-existent at level 3',
+            'level1.nonExistent.anything': '// Breaks at level 2'
+        }
+        
+        const result = applyJsonCComments(obj, comments, 2)
+        expect(result).toMatchInlineSnapshot(`
+          "{
+            // Level 1 exists
+            "level1": {
+              // Level 2 exists
+              "level2": {
+                // Level 3 exists
+                "level3": "deep value"
+              }
+            }
+          }"
+        `)
+    })
+    
+    test('handles mixed valid and invalid paths in arrays', () => {
+        const obj = {
+            items: [
+                { name: 'item1', id: 1 },
+                { name: 'item2', id: 2 },
+                'stringItem'
+            ]
+        }
+        
+        const comments = {
+            'items': '// Items array',
+            'items.0': '// First item object',
+            'items.0.name': '// First item name',
+            'items.1.id': '// Second item id',
+            'items.2': '// String item',
+            'items.2.length': '// Accessing property on string in array',
+            'items.3': '// Out of bounds index',
+            'items.3.name': '// Property on non-existent item'
+        }
+        
+        const result = applyJsonCComments(obj, comments, 2)
+        expect(result).toMatchInlineSnapshot(`
+          "{
+            // Items array
+            "items": [
+              // First item object
+              {
+                "name": "item1",
+                "id": 1
+              },
+              {
+                "name": "item2",
+                "id": 2
+              },
+              // String item
+              "stringItem"
+            ]
+          }"
+        `)
+    })
+    
+    test('handles empty object and array edge cases', () => {
+        const obj = {
+            emptyObject: {},
+            emptyArray: [],
+            nullValue: null
+        }
+        
+        const comments = {
+            'emptyObject': '// Empty object',
+            'emptyObject.someField': '// Field in empty object',
+            'emptyArray': '// Empty array',
+            'emptyArray.0': '// First element of empty array',
+            'nullValue': '// Null value',
+            'nullValue.property': '// Property on null'
+        }
+        
+        const result = applyJsonCComments(obj, comments, 2)
+        expect(result).toMatchInlineSnapshot(`
+          "{
+            // Empty object
+            "emptyObject": {},
+            // Empty array
+            "emptyArray": [],
+            // Null value
+            "nullValue": null
+          }"
+        `)
     })
 })

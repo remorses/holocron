@@ -198,6 +198,7 @@ model SiteBranch {
   trieveDatasetId  String?
   trieveReadApiKey String?
   docsJson         Json     @default("{}")
+  docsJsonComments         Json     @default("{}")
   cssStyles        String   @default("")
   domains          Domain[]
 

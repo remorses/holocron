@@ -34,6 +34,7 @@ import {
 } from './github.server'
 import { mdxRegex, yieldTasksInParallel } from './utils'
 import { imageDimensionsFromData } from 'image-dimensions'
+import { applyJsonCComments, JsonCComments } from './json-c-comments'
 
 export function gitBlobSha(
     content: string | Buffer,
@@ -169,6 +170,7 @@ export async function syncSite({
 export async function* pagesFromFilesList({
     files,
     docsJson,
+    docsJsonComments,
 }: {
     files: {
         relativePath: string
@@ -177,6 +179,7 @@ export async function* pagesFromFilesList({
         metadata?: { width?: number; height?: number; bytes?: number }
     }[]
     docsJson?: DocsJsonType
+    docsJsonComments?: JsonCComments
 }): AsyncGenerator<AssetForSync & { filePath: string; content: string }> {
     // First handle meta.json files
     const metaFiles = files.filter((file) =>
@@ -200,10 +203,17 @@ export async function* pagesFromFilesList({
 
     // Now yield fumabase.json if provided
     if (docsJson !== undefined) {
-        const content =
-            typeof docsJson === 'string'
-                ? docsJson
-                : JSON.stringify(docsJson, null, 2)
+        let content: string
+        if (typeof docsJson === 'string') {
+            content = docsJson
+        } else {
+            // Apply comments if provided
+            if (docsJsonComments) {
+                content = applyJsonCComments(docsJson, docsJsonComments, 2)
+            } else {
+                content = JSON.stringify(docsJson, null, 2)
+            }
+        }
         yield {
             type: 'docsJson',
             content,
