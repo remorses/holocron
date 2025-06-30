@@ -44,7 +44,7 @@ type UserConfig = {
         orgId: string
         name?: string
     }>
-    lastWebsocketId?: string
+    websocketIds?: Record<string, string> // Map of siteId to websocketId
 }
 
 const url = process.env.SERVER_URL || 'https://fumabase.com'
@@ -865,14 +865,17 @@ cli.command('dev', 'Preview your fumabase website')
                 //     githubBranch,
                 //     siteId,
                 // }),
-                startWebSocketWithTunnel(config?.lastWebsocketId),
+                startWebSocketWithTunnel(config?.websocketIds?.[siteId]),
             ])
 
             const { websocketId, ws } = websocketRes
 
             // Save the websocket ID for next time if we have a config
-            if (config && websocketId !== config.lastWebsocketId) {
-                config.lastWebsocketId = websocketId
+            if (config && websocketId !== config.websocketIds?.[siteId]) {
+                if (!config.websocketIds) {
+                    config.websocketIds = {}
+                }
+                config.websocketIds[siteId] = websocketId
                 await saveUserConfig(config)
             }
 
