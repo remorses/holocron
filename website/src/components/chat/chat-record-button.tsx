@@ -63,9 +63,16 @@ export function ChatRecordButton({ transcribeAudio }: RecordButtonProps) {
             }
 
             mediaRecorder.onstop = async () => {
+                // Stop all tracks to ensure recording indicator is removed
+                if (audio) {
+                    audio.getTracks().forEach((track) => {
+                        track.stop()
+                    })
+                }
+                
                 // Create audio blob from chunks
                 const audioBlob = new Blob(chunksRef.current, {
-                    type: 'audio/wav',
+                    type: 'audio/webm',
                 })
                 await handleTranscription(audioBlob)
             }
@@ -81,21 +88,24 @@ export function ChatRecordButton({ transcribeAudio }: RecordButtonProps) {
         if (mediaRecorderRef.current && isRecording) {
             mediaRecorderRef.current.stop()
 
-            // Stop all tracks
+            // Stop all tracks to remove recording indicator
             if (audio) {
-                audio.getTracks().forEach((track) => track.stop())
+                audio.getTracks().forEach((track) => {
+                    track.stop()
+                })
             }
 
             setIsRecording(false)
             setAudio(null)
+            mediaRecorderRef.current = null
         }
     }
 
     const handleTranscription = async (audioBlob: Blob) => {
         setIsTranscribing(true)
         try {
-            const audioFile = new File([audioBlob], 'recording.wav', {
-                type: 'audio/wav',
+            const audioFile = new File([audioBlob], 'recording.webm', {
+                type: 'audio/webm',
             })
             const text = await transcribeAudio(audioFile)
 
