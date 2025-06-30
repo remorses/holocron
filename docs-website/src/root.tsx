@@ -207,7 +207,7 @@ async function iframeMessagesHandling() {
         try {
             if (!allowedOrigins.includes(e.origin)) {
                 console.warn(
-                    `Blocked message from disallowed origin: ${e.origin}`,
+                    `ignoring message from disallowed origin: ${e.origin}`,
                     e.data,
                 )
                 return

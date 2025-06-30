@@ -291,6 +291,19 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             // },
         })
 
+        const lastUserMessage = messages.findLast((x) => x.role === 'user')
+        if (lastUserMessage) {
+          // create the user message so it shows up when resuming chat
+            await prisma.chatMessage.create({
+                data: {
+                    chatId,
+                    createdAt: lastUserMessage.createdAt,
+                    id: lastUserMessage.id,
+                    content: lastUserMessage.content,
+                    role: 'user',
+                },
+            })
+        }
         for await (const part of result.fullStream) {
             if ('request' in part) {
                 part.request = null as any

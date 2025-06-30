@@ -370,9 +370,6 @@ function Footer() {
     const handleSubmit = async () => {
         const messages = useChatState.getState()?.messages
         const generateId = createIdGenerator()
-        const url = `/api/generateMessage?chatId=${CHAT_ID}`
-
-        await durableFetchClient.delete(url)
 
         const { data: generator, error } =
             await apiClientWithDurableFetch.api.generateMessage.post(
@@ -401,6 +398,7 @@ function Footer() {
             })
         }
     }
+    const url = `/api/generateMessage?chatId=${CHAT_ID}`
 
     const contextOptions = [
         '@/docs/README.md',
@@ -419,7 +417,10 @@ function Footer() {
                 >
                     <ContextButton contextOptions={contextOptions} />
                     <ChatTextarea
-                        onSubmit={() => handleSubmit()}
+                        onSubmit={async () => {
+                            await durableFetchClient.delete(url)
+                            await handleSubmit()
+                        }}
                         disabled={false}
                         placeholder='Ask me anything...'
                         className={cn('')}
