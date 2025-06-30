@@ -49,9 +49,9 @@ import { ProcessorDataFrontmatter } from '../lib/mdx-heavy'
 import { mdxComponents } from '../components/mdx-components'
 
 export function meta({ data, matches }: Route.MetaArgs) {
-    if (!data) return {}
+    if (!data) return []
     const rootMatch = matches?.find((match) => match?.id === 'root')
-    if (!rootMatch?.data) return {}
+    if (!rootMatch?.data) return []
     const rootData = rootMatch.data as RootRoute.ComponentProps['loaderData']
     const docsJson = rootData?.docsJson as DocsJsonType
     const suffix = rootData?.name || ''

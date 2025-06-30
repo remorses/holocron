@@ -16,6 +16,7 @@ export async function loader({ request }) {
                 provider: 'google',
                 callbackURL: fullCallbackUrl,
             },
+
         })
         if (!res.url) {
             throw new Error('No URL returned from signInSocial')

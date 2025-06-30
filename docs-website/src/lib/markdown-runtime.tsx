@@ -84,7 +84,7 @@ export const StreamingMarkdownRuntimeComponent = memo(
         if (!markdown) return null
         return (
             <div
-                className={cn('contents prose dark:prose-invert', className)}
+                className={cn('contents prose select-text dark:prose-invert', className)}
                 ref={container}
             >
                 {resultAst?.children?.map((block, index) => {

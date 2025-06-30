@@ -1,4 +1,5 @@
 import { betterAuth } from 'better-auth'
+import { bearer } from 'better-auth/plugins'
 import { prisma } from 'db/'
 import { stripe } from '@better-auth/stripe'
 import { apiKey } from 'better-auth/plugins'
@@ -18,7 +19,19 @@ export const auth = betterAuth({
     account: {
         modelName: 'Account',
     },
-
+    advanced: {
+        crossSubDomainCookies: { enabled: false },
+        cookies: {
+            session_token: {
+                name: 'session_token',
+                attributes: {
+                    httpOnly: false,
+                    path: '/',
+                    sameSite: 'Lax',
+                },
+            },
+        },
+    },
     user: {
         modelName: 'User',
     },
@@ -60,7 +73,9 @@ export const auth = betterAuth({
         //     clientSecret: process.env.DISCORD_CLIENT_SECRET || '',
         // },
     },
+
     plugins: [
+        bearer(),
         stripe({
             stripeClient: stripeClient as any,
             stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET!,

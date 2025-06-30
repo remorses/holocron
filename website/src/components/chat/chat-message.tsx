@@ -116,7 +116,7 @@ export const ChatAssistantMessage = memo(function ChatMessage({
     return (
         <article
             className={cn(
-                'flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed',
+                'flex items-start select-text max-w-full w-full gap-4 min-w-0 leading-relaxed',
                 message.role === 'user' && 'justify-end',
                 className,
             )}
@@ -334,7 +334,7 @@ export function ChatErrorMessage() {
             <div className='space-y-4 w-full'>
                 <div className='bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800/50 rounded-lg p-4'>
                     <div className='flex items-start gap-3'>
-                        <div className='flex-1'>
+                        <div className='flex-1 select-text'>
                             <h4 className=' font-medium text-red-800 dark:text-red-200 mb-1'>
                                 Failed to generate response
                             </h4>
