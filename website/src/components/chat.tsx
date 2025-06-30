@@ -33,7 +33,11 @@ import { useStickToBottom } from 'use-stick-to-bottom'
 
 import { useTemporaryState } from '../lib/hooks'
 import { fullStreamToUIMessages } from '../lib/process-chat'
-import { apiClient } from '../lib/spiceflow-client'
+import {
+    apiClient,
+    apiClientWithDurableFetch,
+    durableFetchClient,
+} from '../lib/spiceflow-client'
 import { doFilesInDraftNeedPush, useWebsiteState } from '../lib/state'
 
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
@@ -415,6 +419,16 @@ function Footer() {
         return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
     }, [filesInDraft, lastPushedFiles])
 
+    const durableUrl = `/api/generateMessage?chatId=${chat.chatId}`
+
+    useEffect(() => {
+        durableFetchClient.isInProgress(durableUrl).then(({ inProgress }) => {
+            if (inProgress) {
+                handleSubmit()
+            }
+        })
+    }, [])
+
     const transcribeAudio = async (audioFile: File): Promise<string> => {
         try {
             const formData = new FormData()
@@ -445,14 +459,17 @@ function Footer() {
         const currentSlug = useWebsiteState.getState()?.currentSlug || ''
 
         const { data: generator, error } =
-            await apiClient.api.generateMessage.post({
-                messages: messages,
-                siteId,
-                branchId,
-                currentSlug,
-                filesInDraft,
-                chatId: chat.chatId,
-            })
+            await apiClientWithDurableFetch.api.generateMessage.post(
+                {
+                    messages: messages,
+                    siteId,
+                    branchId,
+                    currentSlug,
+                    filesInDraft,
+                    chatId: chat.chatId,
+                },
+                { query: { chatId: chat.chatId } },
+            )
         if (error) throw error
 
         async function getPageContent(x) {
@@ -620,7 +637,10 @@ function Footer() {
                             </div>
                             <ChatTextarea
                                 ref={textareaRef}
-                                onSubmit={() => handleSubmit()}
+                                onSubmit={async () => {
+                                    await durableFetchClient.delete(durableUrl)
+                                    await handleSubmit()
+                                }}
                                 disabled={false}
                                 placeholder='Ask me anything...'
                                 className=''
@@ -649,7 +669,10 @@ function Footer() {
                                 <div className='flex items-center gap-2'>
                                     <Button
                                         className='rounded-full h-8'
-                                        onClick={() => handleSubmit()}
+                                        onClick={async () => {
+                                            await durableFetchClient.delete(durableUrl)
+                                            await handleSubmit()
+                                        }}
                                         disabled={isPending || !text.trim()}
                                     >
                                         {isPending ? 'Loading...' : 'Generate'}

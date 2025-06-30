@@ -519,18 +519,35 @@ function DocsLayoutWrapper({
                 allFiles.push(draftFile)
             }
         })
+        try {
+            // Create source and get tree synchronously
+            const source = getFumadocsClientSource({
+                files: allFiles,
+                i18n,
+            })
 
-        // Create source and get tree synchronously
-        const source = getFumadocsClientSource({
-            files: allFiles,
-            i18n,
-        })
+            const tree = source.getPageTree(i18n?.defaultLanguage || 'en')
+            // force rerender
+            tree.$id = Math.random().toString(36).slice(2)
+            // console.log(tree)
+            return tree
+        } catch (e) {
+            console.error(
+                `cannot create tree with draft files`,
+                e,
+                filesInDraft,
+            )
+            const source = getFumadocsClientSource({
+                files,
+                i18n,
+            })
 
-        const tree = source.getPageTree(i18n?.defaultLanguage || 'en')
-        // force rerender
-        tree.$id = Math.random().toString(36).slice(2)
-        // console.log(tree)
-        return tree
+            const tree = source.getPageTree(i18n?.defaultLanguage || 'en')
+            // force rerender
+            tree.$id = Math.random().toString(36).slice(2)
+            // console.log(tree)
+            return tree
+        }
     }, [loaderData.files, loaderData.i18n, filesInDraft])
 
     // Configure layout based on docsJson
