@@ -720,7 +720,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             )
 
             const docsJsonFile = files.find(
-                (x) => x.filePath === 'fumabase.jsonc',
+              (x) => x.filePath.endsWith('fumabase.jsonc'),
             )
             if (docsJsonFile) {
                 // apply previous present comments to the json
@@ -1043,6 +1043,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             const assets = pagesFromFilesList({
                 files,
                 docsJson,
+                githubFolder: githubFolder || '',
                 docsJsonComments: {
                     ...defaultDocsJsonComments,
                     ...docsJsonComments,

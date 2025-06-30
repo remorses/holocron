@@ -169,12 +169,25 @@ export async function clientLoader({
         const slugs = params['*']?.split('/').filter((v) => v.length > 0) || []
         const slug = '/' + slugs.join('/')
 
+        function removeGithubFolder(p) {
+            let githubFolder = lastServerLoaderData?.githubFolder || ''
+            if (p.startsWith(githubFolder)) {
+                return p.slice(githubFolder.length + 1)
+            }
+            return p
+        }
         // Look for draft files that could serve this slug
         for (const [githubPath, draft] of Object.entries(filesInDraft)) {
             if (!draft) continue
 
-            const source = await getFumadocsClientSource({
-                files: [{ path: githubPath, data: {}, type: 'page' }],
+            const source = getFumadocsClientSource({
+                files: [
+                    {
+                        path: removeGithubFolder(githubPath),
+                        data: {},
+                        type: 'page',
+                    },
+                ],
             })
             const page = source.getPage(slugs)
             if (page) {
@@ -255,7 +268,10 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         throw new Response('Branch not found', { status: 404 })
     }
     const locales = site.locales.map((x) => x.locale)
-    const files = await getFilesForSource({ branchId: siteBranch.branchId, githubFolder: siteBranch.site?.githubFolder ||'' })
+    const files = await getFilesForSource({
+        branchId: siteBranch.branchId,
+        githubFolder: siteBranch.site?.githubFolder || '',
+    })
     const source = await getFumadocsSource({
         defaultLocale: site.defaultLocale,
         files,
@@ -374,6 +390,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     return {
         toc: data.toc,
         title: data.title,
+        githubFolder: site.githubFolder,
         description: frontmatter.description,
         markdown: data.markdown,
         ast: data.ast,

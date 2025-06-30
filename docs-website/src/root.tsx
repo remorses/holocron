@@ -162,6 +162,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         files,
         i18n,
         name: site.name,
+        githubFolder: site.githubFolder,
         bannerAst,
         trieveReadApiKey,
         trieveDatasetId,
@@ -457,8 +458,14 @@ function DocsLayoutWrapper({
     const filesInDraft = useDocsState((state) => state.filesInDraft)
 
     const tree = useMemo(() => {
-        const { files, i18n } = loaderData
+        const { files, i18n, githubFolder } = loaderData
 
+        function removeGithubFolder(p) {
+            if (p.startsWith(githubFolder)) {
+                return p.slice(githubFolder.length + 1)
+            }
+            return p
+        }
         // Create files with filesInDraft included
         const allFiles: VirtualFile[] = [...files]
 
@@ -486,7 +493,7 @@ function DocsLayoutWrapper({
 
                 draftFile = {
                     data: jsonData,
-                    path: githubPath,
+                    path: removeGithubFolder(githubPath),
                     type: 'meta',
                 }
             } else {
@@ -497,7 +504,7 @@ function DocsLayoutWrapper({
 
                 draftFile = {
                     data: frontmatter,
-                    path: githubPath,
+                    path: removeGithubFolder(githubPath),
                     type: 'page',
                 }
             }

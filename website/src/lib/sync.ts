@@ -178,6 +178,7 @@ export async function* pagesFromFilesList({
     files,
     docsJson,
     docsJsonComments,
+    githubFolder,
 }: {
     files: {
         relativePath: string
@@ -185,6 +186,7 @@ export async function* pagesFromFilesList({
         downloadUrl?: string
         metadata?: { width?: number; height?: number; bytes?: number }
     }[]
+    githubFolder: string
     docsJson?: DocsJsonType
     docsJsonComments?: JsonCComments
 }): AsyncGenerator<AssetForSync & { filePath: string; content: string }> {
@@ -218,15 +220,17 @@ export async function* pagesFromFilesList({
         yield {
             type: 'docsJson',
             content,
-            githubPath: 'fumabase.jsonc',
+            githubPath: path.posix.join(githubFolder, 'fumabase.jsonc'),
             githubSha: gitBlobSha(content),
-            filePath: 'fumabase.jsonc',
+            filePath: path.posix.join(githubFolder, 'fumabase.jsonc'),
         }
     }
 
     // Handle styles.css
     const stylesCssFile = files.find(
-        (file) => file.relativePath === 'styles.css',
+        (file) =>
+            file.relativePath === 'styles.css' ||
+            file.relativePath.endsWith('/styles.css'),
     )
     if (stylesCssFile) {
         yield {
@@ -795,12 +799,12 @@ export function isMetaFile(path: string) {
 
 export function isDocsJsonFile(path: string): boolean {
     if (!path) return false
-    return path === 'fumabase.jsonc' || path === 'fumabase.jsonc'
+    return path === 'fumabase.jsonc' || path.endsWith('/fumabase.jsonc')
 }
 
 export function isStylesCssFile(path: string): boolean {
     if (!path) return false
-    return path === 'styles.css'
+    return path === 'styles.css' || path.endsWith('/styles.css')
 }
 
 export async function* filesFromGithub({

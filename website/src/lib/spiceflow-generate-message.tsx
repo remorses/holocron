@@ -66,6 +66,9 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     },
                 },
             },
+            include: {
+                site: true,
+            },
         })
         if (!branch) {
             throw new Error('You do not have access to this branch')
@@ -144,7 +147,10 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                             return { path, title }
                         })
                         filePaths.push({
-                            path: 'fumabase.jsonc',
+                            path: path.posix.join(
+                                branch.site.githubFolder || '.',
+                                'fumabase.jsonc',
+                            ),
                             title: 'Use the render_form tool to update these values',
                         })
                         // filePaths.push({ path: 'styles.css', title: 'The CSS styles for the website. Only update this file for advanced CSS customisations' })
@@ -413,7 +419,7 @@ export async function getTabFilesWithoutContents({ branchId }) {
 
 export async function getPageContent({ githubPath, branchId }) {
     // Support for special files: fumabase.jsonc and styles.css
-    if (githubPath === 'fumabase.jsonc') {
+    if (githubPath.endsWith('fumabase.jsonc')) {
         const branch = await prisma.siteBranch.findFirst({
             where: { branchId },
             select: { docsJson: true },
@@ -426,7 +432,7 @@ export async function getPageContent({ githubPath, branchId }) {
             JSON.stringify(branch.docsJson, null, 2)
         )
     }
-    if (githubPath === 'styles.css') {
+    if (githubPath.endsWith('/styles.css') || githubPath === 'styles.css') {
         const branch = await prisma.siteBranch.findFirst({
             where: { branchId },
             select: { cssStyles: true },

@@ -1,5 +1,11 @@
 # fumabase
 
+## 0.1.2
+
+### Patch Changes
+
+- add support for githubPath
+
 ## 0.1.1
 
 ### Patch Changes

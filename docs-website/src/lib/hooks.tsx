@@ -1,5 +1,4 @@
 import {
-
     useEffect,
     useMemo,
     useRef,
@@ -46,9 +45,12 @@ export function useDocsJson(): DocsJsonType {
     ) as Route.ComponentProps['loaderData']
 
     // Check for state overrides for docsJson
-    const docsJsonString = useDocsState(
-        (state) => state.filesInDraft['fumabase.jsonc']?.content,
-    )
+    const docsJsonString = useDocsState((state) => {
+        const key = Object.keys(state.filesInDraft).find((k) =>
+            k.endsWith('fumabase.jsonc'),
+        )
+        return key ? state.filesInDraft[key]?.content : undefined
+    })
 
     // Parse docsJsonString if present using useMemo for efficiency
     return useMemo(() => {

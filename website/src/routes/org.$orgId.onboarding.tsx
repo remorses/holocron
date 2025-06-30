@@ -94,6 +94,7 @@ export async function action({ request, params }: Route.ActionArgs) {
                 : [internalHost]
         const files = pagesFromFilesList({
             files: exampleDocs,
+            githubFolder: '',
             docsJson: {
                 ...defaultStartingFumabaseJson,
                 siteId,

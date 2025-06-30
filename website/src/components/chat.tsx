@@ -142,8 +142,9 @@ export default function Chat({}) {
                 ? localStorage.getItem(keyForDocsJson({ chatId }))
                 : undefined
         const docsJsonString =
-            useWebsiteState.getState()?.filesInDraft['fumabase.jsonc']
-                ?.content || ''
+            Object.entries(useWebsiteState.getState()?.filesInDraft || {}).find(
+                ([key]) => key.endsWith('fumabase.jsonc'),
+            )?.[1]?.content || ''
         const data = safeJsoncParse(persistedValues || docsJsonString) || null
         if (persistedValues) {
             console.log(`localStorage fumabase.jsonc: `, data)

@@ -463,7 +463,7 @@ export const editToolParamsSchema = z.object({
     path: z
         .string()
         .describe(
-            'Absolute path to file or directory, e.g. `repo/file.py` or `repo`. This field should always come second, after command.',
+            'Absolute path to file or directory, e.g. `repo/file.py` or `repo`. MUST never start with "/". This field should always come second, after command.',
         ),
     /**
      * Required parameter of `create` command, with the content of the file to be created.
