@@ -4,7 +4,7 @@
 
 ### Minor Changes
 
-- use fumabase.json
+- use fumabase.jsonc
 
 ## 0.0.1
 

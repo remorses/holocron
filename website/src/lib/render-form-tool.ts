@@ -48,7 +48,7 @@ export const UIFieldSchema = z
         href: z.string().nullable(),
     })
     .describe(
-        `Each field requires a name property that describes the filed updated on that fumabase.json scalar field, it can be ${exampleNamePathsForDocsJson.join(', ')} where {index} is a number. NEVER use [index] syntax, for example instead of domains[0] use domains.0`,
+        `Each field requires a name property that describes the filed updated on that fumabase.jsonc scalar field, it can be ${exampleNamePathsForDocsJson.join(', ')} where {index} is a number. NEVER use [index] syntax, for example instead of domains[0] use domains.0`,
     )
 
 export type UIField = z.infer<typeof UIFieldSchema>
@@ -72,7 +72,7 @@ export function createRenderFormExecute({}) {
                 const schema = getTypeForNameInSchema(field.name)
                 if (!schema) {
                     errors.push(
-                        `name ${field.name} is not valid for the fumabase.json schema`,
+                        `name ${field.name} is not valid for the fumabase.jsonc schema`,
                     )
                 }
                 if (!isScalarSchema(schema)) {

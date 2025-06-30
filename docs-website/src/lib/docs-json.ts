@@ -360,7 +360,7 @@ const CSSVariablesSchema = z
         All keys should start with --. The same keys should be specified to both light and dark.
     `)
 
-// === Main fumabase.json schema ===
+// === Main fumabase.jsonc schema ===
 export const DocsConfigSchema = z
     .object({
         $schema: z
@@ -399,11 +399,11 @@ export const DocsConfigSchema = z
             .array(z.string())
             .optional()
             .describe(
-                'Custom domains to connect to this documentation site. Each domain should point to cname.fumabase.com via CNAME record. Domains will be connected when fumabase.json is pushed to the main branch.',
+                'Custom domains to connect to this documentation site. Each domain should point to cname.fumabase.com via CNAME record. Domains will be connected when fumabase.jsonc is pushed to the main branch.',
             ),
     })
     .strict()
-    .describe('Schema for fumabase.json configuration')
+    .describe('Schema for fumabase.jsonc configuration')
 
 export type DocsJsonType = z.infer<typeof DocsConfigSchema>
 

@@ -47,7 +47,7 @@ export function useDocsJson(): DocsJsonType {
 
     // Check for state overrides for docsJson
     const docsJsonString = useDocsState(
-        (state) => state.filesInDraft['fumabase.json']?.content,
+        (state) => state.filesInDraft['fumabase.jsonc']?.content,
     )
 
     // Parse docsJsonString if present using useMemo for efficiency

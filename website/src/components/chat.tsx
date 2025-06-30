@@ -84,12 +84,12 @@ import { ChatRecordButton } from 'website/src/components/chat/chat-record-button
 import { ChatUploadButton } from './chat/chat-upload-button'
 
 function keyForDocsJson({ chatId }) {
-    return `fumabase.json-${chatId}`
+    return `fumabase.jsonc-${chatId}`
 }
 
 const setDocsJsonState = ({ values, previousJsonString, chatId }) => {
     console.log(`form values changed, sending state to docs iframe`)
-    const githubPath = 'fumabase.json'
+    const githubPath = 'fumabase.jsonc'
 
     const newJson = JSON.stringify(
         {
@@ -100,7 +100,7 @@ const setDocsJsonState = ({ values, previousJsonString, chatId }) => {
         null,
         2,
     )
-    console.log(`updating fumabase.json`, newJson)
+    console.log(`updating fumabase.jsonc`, newJson)
 
     const newChanges: FilesInDraft = {
         [githubPath]: {
@@ -142,13 +142,13 @@ export default function Chat({}) {
                 ? localStorage.getItem(keyForDocsJson({ chatId }))
                 : undefined
         const docsJsonString =
-            useWebsiteState.getState()?.filesInDraft['fumabase.json']
+            useWebsiteState.getState()?.filesInDraft['fumabase.jsonc']
                 ?.content || ''
         const data = safeJsoncParse(persistedValues || docsJsonString) || null
         if (persistedValues) {
-            console.log(`localStorage fumabase.json: `, data)
+            console.log(`localStorage fumabase.jsonc: `, data)
         } else {
-            console.log('fumabase.json', data)
+            console.log('fumabase.jsonc', data)
         }
         if (!data) return
 

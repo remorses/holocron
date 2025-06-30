@@ -7,7 +7,7 @@ import path from 'path'
 import { execSync } from 'child_process'
 
 export async function readTopLevelDocsJson(dir) {
-    const docsJsonPath = path.resolve(dir, 'fumabase.json')
+    const docsJsonPath = path.resolve(dir, 'fumabase.jsonc')
     if (!fs.existsSync(docsJsonPath)) {
         return
     }
@@ -15,7 +15,7 @@ export async function readTopLevelDocsJson(dir) {
     try {
         return JSONC.parse(content) as DocsJsonType
     } catch (e) {
-        console.error('Error parsing fumabase.json:', e.message)
+        console.error('Error parsing fumabase.jsonc:', e.message)
         return
     }
 }

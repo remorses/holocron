@@ -199,7 +199,7 @@ export async function* pagesFromFilesList({
         }
     }
 
-    // Now yield fumabase.json if provided
+    // Now yield fumabase.jsonc if provided
     if (docsJson !== undefined) {
         let content: string
         if (typeof docsJson === 'string') {
@@ -215,9 +215,9 @@ export async function* pagesFromFilesList({
         yield {
             type: 'docsJson',
             content,
-            githubPath: 'fumabase.json',
+            githubPath: 'fumabase.jsonc',
             githubSha: gitBlobSha(content),
-            filePath: 'fumabase.json',
+            filePath: 'fumabase.jsonc',
         }
     }
 
@@ -783,7 +783,7 @@ export function isMetaFile(path: string) {
 
 export function isDocsJsonFile(path: string): boolean {
     if (!path) return false
-    return path === 'fumabase.json' || path === 'fumabase.jsonc'
+    return path === 'fumabase.jsonc' || path === 'fumabase.jsonc'
 }
 
 export function isStylesCssFile(path: string): boolean {
@@ -877,7 +877,7 @@ export async function* filesFromGithub({
                 !isStylesCssFile(pathWithFrontSlash)
             ) {
                 console.log(
-                    `Skipping file ${file.path} because it is not a markdown, meta, fumabase.json, or styles.css file`,
+                    `Skipping file ${file.path} because it is not a markdown, meta, fumabase.jsonc, or styles.css file`,
                 )
                 return false
             }
@@ -968,7 +968,7 @@ export async function* filesFromGithub({
         yield meta
     }
 
-    // Process fumabase.json file (root only)
+    // Process fumabase.jsonc file (root only)
     const docsJsonFile = files.find((x) => {
         if (
             x.content == null ||

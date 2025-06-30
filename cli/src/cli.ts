@@ -49,7 +49,7 @@ type UserConfig = {
 }
 
 const url = process.env.SERVER_URL || 'https://fumabase.com'
-const configPath = path.join(homedir(), '.fumabase.json')
+const configPath = path.join(homedir(), '.fumabase.jsonc')
 
 // Check if running in TTY environment
 const isTTY = process.stdout.isTTY && process.stdin.isTTY
@@ -343,7 +343,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                 process.chdir(targetDir)
             }
 
-            const docsJsonPath = path.resolve('fumabase.json')
+            const docsJsonPath = path.resolve('fumabase.jsonc')
             let existingDocsJson = undefined as DocsJsonType | undefined
             try {
                 const existingContent = await fs.promises.readFile(
@@ -610,7 +610,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                 console.log('Fix the issues above and run the command again.\n')
             }
 
-            // Save fumabase.json locally
+            // Save fumabase.jsonc locally
             await fs.promises.writeFile(docsJsonPath, data.docsJsonWithComments)
 
             // Create success table
@@ -776,7 +776,7 @@ cli.command('login', 'Login to fumabase')
     })
 
 cli.command('dev', 'Preview your fumabase website')
-    .option('--dir <dir>', 'Directory with the fumabase.json', {
+    .option('--dir <dir>', 'Directory with the fumabase.jsonc', {
         default: process.cwd(),
     })
     .action(async function main(options) {
@@ -803,7 +803,7 @@ cli.command('dev', 'Preview your fumabase website')
                         filePath.endsWith('.mdx') ||
                         filePath.endsWith('.md') ||
                         filePath.endsWith('meta.json') ||
-                        filePath.endsWith('fumabase.json') ||
+                        filePath.endsWith('fumabase.jsonc') ||
                         filePath.endsWith('styles.css')
 
                     const isMediaFile = MEDIA_EXTENSIONS.some((ext) =>
@@ -831,14 +831,14 @@ cli.command('dev', 'Preview your fumabase website')
             const docsJson = await readTopLevelDocsJson(dir)
             if (!docsJson) {
                 console.error(
-                    'fumabase.json file not found at the project root. Use fumabase init to create a new project',
+                    'fumabase.jsonc file not found at the project root. Use fumabase init to create a new project',
                 )
                 process.exit(1)
             }
 
             const siteId = docsJson?.siteId
             if (!siteId) {
-                console.error('siteId not found in fumabase.json')
+                console.error('siteId not found in fumabase.jsonc')
                 process.exit(1)
             }
             const preferredHost = 'fumabase.com'
@@ -851,7 +851,7 @@ cli.command('dev', 'Preview your fumabase website')
             })[0]
             if (!previewDomain) {
                 console.error(
-                    `This fumabase.json has no domains, cannot preview the website`,
+                    `This fumabase.jsonc has no domains, cannot preview the website`,
                 )
                 process.exit(1)
             }
@@ -1084,10 +1084,10 @@ cli.command('sync', 'Sync current branch with GitHub').action(async () => {
             process.exit(1)
         }
 
-        // Read fumabase.json to get siteId
+        // Read fumabase.jsonc to get siteId
         const docsJson = await readTopLevelDocsJson(process.cwd())
         if (!docsJson?.siteId) {
-            console.error('Error: fumabase.json not found or missing siteId')
+            console.error('Error: fumabase.jsonc not found or missing siteId')
             console.error('Run "fumabase init" to initialize this project')
             process.exit(1)
         }

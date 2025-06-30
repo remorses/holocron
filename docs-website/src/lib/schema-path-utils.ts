@@ -15,7 +15,10 @@ import type { JSONSchema7 } from 'json-schema'
      • arrays              →  dot-notation with numeric index (items.0.name)
      • unions (oneOf/anyOf/allOf) →  union of all alternatives
    ------------------------------------------------------------------ */
-export function extractNamePathsFromSchema(schema: JSONSchema7, root = ''): string[] {
+export function extractNamePathsFromSchema(
+    schema: JSONSchema7,
+    root = '',
+): string[] {
     const paths: string[] = []
 
     const walk = (node: JSONSchema7, prefix: string) => {

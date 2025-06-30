@@ -12,7 +12,7 @@ npm i -g fumabase
 
 ## 2. Start the Local Development Server
 
-At the root of your documentation project (where `fumabase.json` is located), start the development server with:
+At the root of your documentation project (where `fumabase.jsonc` is located), start the development server with:
 
 ```
 fumabase dev
