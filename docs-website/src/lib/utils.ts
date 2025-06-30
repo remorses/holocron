@@ -63,11 +63,24 @@ export function generateSlugFromPath(
     return res || '/'
 }
 
-
 export function pascalcase(str: string): string {
     return str
         .replace(/[_-]+/g, ' ')
         .split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join('');
+        .map(
+            (word) =>
+                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+        )
+        .join('')
+}
+
+export function deduplicateBy<T>(array: T[], keyFn: (item: T) => string): T[] {
+    const seen = new Map<string, T>()
+    for (const item of array) {
+        const key = keyFn(item)
+        if (!seen.has(key)) {
+            seen.set(key, item)
+        }
+    }
+    return Array.from(seen.values())
 }

@@ -3,6 +3,7 @@ import { loader, MetaData, PageData, VirtualFile } from 'fumadocs-core/source'
 import { getIconJsx } from './icons.server'
 import { I18nConfig } from 'fumadocs-core/i18n'
 import { StructuredData } from './mdx-heavy'
+import { deduplicateBy } from './utils'
 
 export async function getFilesForSource({ branchId, githubFolder }) {
     const [allPages, metaFiles] = await Promise.all([
@@ -54,7 +55,8 @@ export async function getFilesForSource({ branchId, githubFolder }) {
                 return res
             }),
         )
-    return files
+
+    return deduplicateBy(files, (file) => file.path)
 }
 
 export function getFumadocsSource({
