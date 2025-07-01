@@ -35,7 +35,7 @@
  */
 import { stdin_default } from "./chunks/chunk-BV4MQMG4.js";
 import "./chunks/chunk-SNH2M5FY.js";
-import { routes } from "./chunks/chunk-GECJBHKX.js";
+import { routes } from "./chunks/chunk-733MZEOY.js";
 
 // virtual:faq
 import { Fragment } from "react";
@@ -44,7 +44,7 @@ import { WithFramerBreakpoints } from "unframer";
 import { jsx } from "react/jsx-runtime";
 var locales = [];
 var defaultResponsiveVariants = {
-	base: "G8PiTZbU_",
+	base: "sTHF6uWTY",
 };
 /** @type {function(Props): any} */
 function ComponentWithRoot({ locale, ...rest }) {

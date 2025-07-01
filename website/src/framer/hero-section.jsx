@@ -41,7 +41,7 @@ import {
 	fonts as fonts2,
 } from "./chunks/chunk-YL4V4VZK.js";
 import { stdin_default as stdin_default3 } from "./chunks/chunk-EHCTMXQN.js";
-import { routes } from "./chunks/chunk-GECJBHKX.js";
+import { routes } from "./chunks/chunk-733MZEOY.js";
 
 // virtual:hero-section
 import { Fragment as Fragment2 } from "react";

@@ -36,7 +36,7 @@ import "../chunks/chunk-BTSBQWPZ.js";
 import "../chunks/chunk-EWWPQ2JC.js";
 import { className, css, fonts } from "../chunks/chunk-6G2SY433.js";
 import { stdin_default as stdin_default2 } from "../chunks/chunk-EHCTMXQN.js";
-import { routes } from "../chunks/chunk-GECJBHKX.js";
+import { routes } from "../chunks/chunk-733MZEOY.js";
 
 // virtual:component/cta
 import { Fragment as Fragment2 } from "react";

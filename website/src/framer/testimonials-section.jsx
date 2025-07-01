@@ -31,9 +31,8 @@
  * Partial record of UnframerBreakpoint to Props.variant, with a mandatory 'base' key.
  * { [key in UnframerBreakpoint]?: Props['variant'] } & { base: Props['variant'] }
  */
-import { stdin_default as stdin_default2 } from "./chunks/chunk-YFRDSQBD.js";
-import "./chunks/chunk-KRWE7EDW.js";
-import "./chunks/chunk-WLP5URBW.js";
+import { stdin_default as stdin_default2 } from "./chunks/chunk-2DA32EHW.js";
+import "./chunks/chunk-UJNP7OPO.js";
 import "./chunks/chunk-SNH2M5FY.js";
 import { className, css, fonts } from "./chunks/chunk-YL4V4VZK.js";
 import {
@@ -42,7 +41,7 @@ import {
 	fonts as fonts2,
 } from "./chunks/chunk-KYATNZPG.js";
 import { stdin_default } from "./chunks/chunk-EHCTMXQN.js";
-import { routes } from "./chunks/chunk-GECJBHKX.js";
+import { routes } from "./chunks/chunk-733MZEOY.js";
 
 // virtual:testimonials-section
 import { Fragment as Fragment2 } from "react";

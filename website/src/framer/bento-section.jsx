@@ -38,7 +38,7 @@ import {
 	fonts as fonts2,
 } from "./chunks/chunk-KYATNZPG.js";
 import { stdin_default } from "./chunks/chunk-EHCTMXQN.js";
-import { routes } from "./chunks/chunk-GECJBHKX.js";
+import { routes } from "./chunks/chunk-733MZEOY.js";
 
 // virtual:bento-section
 import { Fragment as Fragment2 } from "react";

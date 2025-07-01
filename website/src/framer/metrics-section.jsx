@@ -35,7 +35,7 @@ import { stdin_default } from "./chunks/chunk-UUA2UP3M.js";
 import "./chunks/chunk-SNH2M5FY.js";
 import { className, css, fonts } from "./chunks/chunk-KYATNZPG.js";
 import { stdin_default as stdin_default2 } from "./chunks/chunk-EHCTMXQN.js";
-import { routes } from "./chunks/chunk-GECJBHKX.js";
+import { routes } from "./chunks/chunk-733MZEOY.js";
 
 // virtual:metrics-section
 import { Fragment as Fragment2 } from "react";

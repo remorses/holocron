@@ -35,13 +35,13 @@ import { stdin_default } from "./chunks/chunk-BV4MQMG4.js";
 import "./chunks/chunk-SNH2M5FY.js";
 import { className, css, fonts } from "./chunks/chunk-KYATNZPG.js";
 import { stdin_default as stdin_default2 } from "./chunks/chunk-EHCTMXQN.js";
-import { routes } from "./chunks/chunk-GECJBHKX.js";
+import { routes } from "./chunks/chunk-733MZEOY.js";
 
 // virtual:faq-section
 import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/vsGrSyPjmSu6qtp6KhG2/dsqIlGZSIBcgoep1m4ny/qtvfO8YHV.js
+// /:https://framerusercontent.com/modules/vsGrSyPjmSu6qtp6KhG2/UnVrUzT8tgUswESjd1WE/qtvfO8YHV.js
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
@@ -67,7 +67,7 @@ var FAQFonts = getFonts(stdin_default);
 var SmartComponentScopedContainerWithFX = withFX(SmartComponentScopedContainer);
 var GridFonts = getFonts(stdin_default2);
 var cycleOrder = ["rmeeJSz78", "XrZxEUAaJ", "EW4AHUAxX"];
-var serializationHash = "framer-fL5G9";
+var serializationHash = "framer-5hUCE";
 var variantClassNames = {
 	EW4AHUAxX: "framer-v-x37i1",
 	rmeeJSz78: "framer-v-1rbr5xo",
@@ -293,17 +293,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 								<ComponentViewportProvider
 									height={116}
 									width={`min(${componentViewport?.width || "100vw"} - 200px, 1100px)`}
-									y={
-										(componentViewport?.y || 0) +
-										102 +
-										(((componentViewport?.height || 1006) - 182 - 742.2) / 2 +
-											0 +
-											0) +
-										0 +
-										106.2 +
-										0 +
-										0
-									}
+									y={(componentViewport?.y || 0) + 102 + 0 + 0 + 106.2 + 0 + 0}
 									{...addPropertyOverrides(
 										{
 											EW4AHUAxX: {
@@ -322,10 +312,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												y:
 													(componentViewport?.y || 0) +
 													150 +
-													(((componentViewport?.height || 1067) - 200 - 722.2) /
-														2 +
-														0 +
-														0) +
+													0 +
 													0 +
 													86.2 +
 													0 +
@@ -382,15 +369,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									height={116}
 									width={`min(${componentViewport?.width || "100vw"} - 200px, 1100px)`}
 									y={
-										(componentViewport?.y || 0) +
-										102 +
-										(((componentViewport?.height || 1006) - 182 - 742.2) / 2 +
-											0 +
-											0) +
-										0 +
-										106.2 +
-										0 +
-										130
+										(componentViewport?.y || 0) + 102 + 0 + 0 + 106.2 + 0 + 130
 									}
 									{...addPropertyOverrides(
 										{
@@ -410,10 +389,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												y:
 													(componentViewport?.y || 0) +
 													150 +
-													(((componentViewport?.height || 1067) - 200 - 722.2) /
-														2 +
-														0 +
-														0) +
+													0 +
 													0 +
 													86.2 +
 													0 +
@@ -461,15 +437,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									height={116}
 									width={`min(${componentViewport?.width || "100vw"} - 200px, 1100px)`}
 									y={
-										(componentViewport?.y || 0) +
-										102 +
-										(((componentViewport?.height || 1006) - 182 - 742.2) / 2 +
-											0 +
-											0) +
-										0 +
-										106.2 +
-										0 +
-										260
+										(componentViewport?.y || 0) + 102 + 0 + 0 + 106.2 + 0 + 260
 									}
 									{...addPropertyOverrides(
 										{
@@ -489,10 +457,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												y:
 													(componentViewport?.y || 0) +
 													150 +
-													(((componentViewport?.height || 1067) - 200 - 722.2) /
-														2 +
-														0 +
-														0) +
+													0 +
 													0 +
 													86.2 +
 													0 +
@@ -540,15 +505,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									height={116}
 									width={`min(${componentViewport?.width || "100vw"} - 200px, 1100px)`}
 									y={
-										(componentViewport?.y || 0) +
-										102 +
-										(((componentViewport?.height || 1006) - 182 - 742.2) / 2 +
-											0 +
-											0) +
-										0 +
-										106.2 +
-										0 +
-										390
+										(componentViewport?.y || 0) + 102 + 0 + 0 + 106.2 + 0 + 390
 									}
 									{...addPropertyOverrides(
 										{
@@ -568,10 +525,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												y:
 													(componentViewport?.y || 0) +
 													150 +
-													(((componentViewport?.height || 1067) - 200 - 722.2) /
-														2 +
-														0 +
-														0) +
+													0 +
 													0 +
 													86.2 +
 													0 +
@@ -620,15 +574,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									height={116}
 									width={`min(${componentViewport?.width || "100vw"} - 200px, 1100px)`}
 									y={
-										(componentViewport?.y || 0) +
-										102 +
-										(((componentViewport?.height || 1006) - 182 - 742.2) / 2 +
-											0 +
-											0) +
-										0 +
-										106.2 +
-										0 +
-										520
+										(componentViewport?.y || 0) + 102 + 0 + 0 + 106.2 + 0 + 520
 									}
 									{...addPropertyOverrides(
 										{
@@ -648,10 +594,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												y:
 													(componentViewport?.y || 0) +
 													150 +
-													(((componentViewport?.height || 1067) - 200 - 722.2) /
-														2 +
-														0 +
-														0) +
+													0 +
 													0 +
 													86.2 +
 													0 +
@@ -763,25 +706,25 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 });
 var css2 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-fL5G9.framer-17mvys5, .framer-fL5G9 .framer-17mvys5 { display: block; }",
-	".framer-fL5G9.framer-1rbr5xo { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 60px; height: min-content; justify-content: center; overflow: hidden; padding: 102px 100px 80px 100px; position: relative; width: 1200px; }",
-	".framer-fL5G9 .framer-3xiqmp { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 60px; height: min-content; justify-content: flex-start; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
-	".framer-fL5G9 .framer-11gl5ow { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 8px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-fL5G9 .framer-yufxp6 { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; }",
-	".framer-fL5G9 .framer-1c1yyb7 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 14px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
-	".framer-fL5G9 .framer-2kt7vz-container, .framer-fL5G9 .framer-sl7xtq-container, .framer-fL5G9 .framer-1hn1rsr-container, .framer-fL5G9 .framer-p22cp9-container, .framer-fL5G9 .framer-1jqtena-container { flex: none; height: auto; position: relative; width: 100%; }",
-	".framer-fL5G9 .framer-1a5qlxf { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 100%; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 0; }",
-	".framer-fL5G9 .framer-kl5dm0-container { flex: none; height: 100%; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
-	".framer-fL5G9.framer-v-fvebzn.framer-1rbr5xo { gap: 0px; padding: 150px 40px 50px 40px; width: 810px; }",
-	".framer-fL5G9.framer-v-fvebzn .framer-3xiqmp { gap: 40px; max-width: unset; }",
-	".framer-fL5G9.framer-v-fvebzn .framer-1c1yyb7 { max-width: 810px; }",
-	".framer-fL5G9.framer-v-x37i1.framer-1rbr5xo { gap: 40px; justify-content: flex-start; padding: 120px 20px 0px 20px; width: 390px; }",
-	".framer-fL5G9.framer-v-x37i1 .framer-3xiqmp { gap: 40px; max-width: 580px; }",
-	".framer-fL5G9.framer-v-x37i1 .framer-11gl5ow { gap: 5px; }",
-	".framer-fL5G9.framer-v-x37i1 .framer-1c1yyb7 { gap: 10px; }",
+	".framer-5hUCE.framer-17mvys5, .framer-5hUCE .framer-17mvys5 { display: block; }",
+	".framer-5hUCE.framer-1rbr5xo { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 60px; height: min-content; justify-content: flex-start; overflow: hidden; padding: 102px 100px 80px 100px; position: relative; width: 1200px; }",
+	".framer-5hUCE .framer-3xiqmp { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 60px; height: min-content; justify-content: flex-start; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
+	".framer-5hUCE .framer-11gl5ow { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 8px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-5hUCE .framer-yufxp6 { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; }",
+	".framer-5hUCE .framer-1c1yyb7 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 14px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
+	".framer-5hUCE .framer-2kt7vz-container, .framer-5hUCE .framer-sl7xtq-container, .framer-5hUCE .framer-1hn1rsr-container, .framer-5hUCE .framer-p22cp9-container, .framer-5hUCE .framer-1jqtena-container { flex: none; height: auto; position: relative; width: 100%; }",
+	".framer-5hUCE .framer-1a5qlxf { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 100%; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 0; }",
+	".framer-5hUCE .framer-kl5dm0-container { flex: none; height: 100%; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
+	".framer-5hUCE.framer-v-fvebzn.framer-1rbr5xo { gap: 0px; padding: 150px 40px 50px 40px; width: 810px; }",
+	".framer-5hUCE.framer-v-fvebzn .framer-3xiqmp { gap: 40px; max-width: unset; }",
+	".framer-5hUCE.framer-v-fvebzn .framer-1c1yyb7 { max-width: 810px; }",
+	".framer-5hUCE.framer-v-x37i1.framer-1rbr5xo { gap: 40px; padding: 120px 20px 0px 20px; width: 390px; }",
+	".framer-5hUCE.framer-v-x37i1 .framer-3xiqmp { gap: 40px; max-width: 580px; }",
+	".framer-5hUCE.framer-v-x37i1 .framer-11gl5ow { gap: 5px; }",
+	".framer-5hUCE.framer-v-x37i1 .framer-1c1yyb7 { gap: 10px; }",
 	...css,
 ];
-var FramerqtvfO8YHV = withCSS(Component, css2, "framer-fL5G9");
+var FramerqtvfO8YHV = withCSS(Component, css2, "framer-5hUCE");
 var stdin_default3 = FramerqtvfO8YHV;
 FramerqtvfO8YHV.displayName = "FAQ Section";
 FramerqtvfO8YHV.defaultProps = {

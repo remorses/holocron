@@ -30,7 +30,7 @@
  * Partial record of UnframerBreakpoint to Props.variant, with a mandatory 'base' key.
  * { [key in UnframerBreakpoint]?: Props['variant'] } & { base: Props['variant'] }
  */
-import { routes } from "./chunks/chunk-GECJBHKX.js";
+import { routes } from "./chunks/chunk-733MZEOY.js";
 
 // virtual:intro-section-animation
 import { Fragment as Fragment2 } from "react";

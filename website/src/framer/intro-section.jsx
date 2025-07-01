@@ -33,7 +33,7 @@
  */
 import { className, css, fonts } from "./chunks/chunk-YL4V4VZK.js";
 import { stdin_default } from "./chunks/chunk-EHCTMXQN.js";
-import { routes } from "./chunks/chunk-GECJBHKX.js";
+import { routes } from "./chunks/chunk-733MZEOY.js";
 
 // virtual:intro-section
 import { Fragment as Fragment3 } from "react";

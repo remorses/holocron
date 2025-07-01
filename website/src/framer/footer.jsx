@@ -32,18 +32,23 @@
  * { [key in UnframerBreakpoint]?: Props['variant'] } & { base: Props['variant'] }
  */
 import {
+	className as className3,
+	css as css3,
+	fonts as fonts3,
+} from "./chunks/chunk-M65DCHB6.js";
+import { className, css, fonts } from "./chunks/chunk-EWWPQ2JC.js";
+import {
 	className as className2,
 	css as css2,
 	fonts as fonts2,
-} from "./chunks/chunk-WLP5URBW.js";
-import { className, css, fonts } from "./chunks/chunk-SNH2M5FY.js";
-import { routes } from "./chunks/chunk-GECJBHKX.js";
+} from "./chunks/chunk-6G2SY433.js";
+import { routes } from "./chunks/chunk-733MZEOY.js";
 
 // virtual:footer
 import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/97LgMTBlvR4oX4kzhisY/KdHNjzJSo15LpMyOSBuZ/ZxU1ZqLuB.js
+// /:https://framerusercontent.com/modules/97LgMTBlvR4oX4kzhisY/fqsmQ0JHzpnmSmwFTIxv/ZxU1ZqLuB.js
 import { jsx as _jsx2, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
@@ -195,23 +200,9 @@ addPropertyControls(AutoYearCopyright, {
 	},
 });
 
-// /:https://framerusercontent.com/modules/m9ZtNJLCRcUFDpWHhEDD/VPfPQH8PLnpzeoHzWH57/eLOeWa0A8.js
+// /:https://framerusercontent.com/modules/u6NYd48KHJpfJKIZ3NWF/2hCHSuqhSZ3TAhJaXRc5/eLOeWa0A8.js
 import { fontStore } from "unframer";
 fontStore.loadFonts([]);
-var fonts3 = [
-	{
-		explicitInter: true,
-		fonts: [],
-	},
-];
-var css3 = [
-	".framer-kToac .framer-styles-preset-n0jtbe:not(.rich-text-wrapper), .framer-kToac .framer-styles-preset-n0jtbe.rich-text-wrapper a { --framer-link-current-text-decoration: none; --framer-link-hover-text-decoration: none; --framer-link-text-color: var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, #ffffff); --framer-link-text-decoration: none; }",
-];
-var className3 = "framer-kToac";
-
-// /:https://framerusercontent.com/modules/F0X79fE5dbVyj4LeUWSs/dApLyBqxi1ubASjdjC3o/uT5gCl_8P.js
-import { fontStore as fontStore2 } from "unframer";
-fontStore2.loadFonts([]);
 var fonts4 = [
 	{
 		explicitInter: true,
@@ -219,14 +210,14 @@ var fonts4 = [
 	},
 ];
 var css4 = [
-	".framer-94E7e .framer-styles-preset-1i37dfc:not(.rich-text-wrapper), .framer-94E7e .framer-styles-preset-1i37dfc.rich-text-wrapper a { --framer-link-current-text-decoration: none; --framer-link-hover-text-color: var(--token-83878271-40bd-4314-b766-4d665555aa78, #ff4d00); --framer-link-hover-text-decoration: none; --framer-link-text-color: var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, #ffffff); --framer-link-text-decoration: none; }",
+	".framer-kToac .framer-styles-preset-n0jtbe:not(.rich-text-wrapper), .framer-kToac .framer-styles-preset-n0jtbe.rich-text-wrapper a { --framer-link-current-text-decoration: none; --framer-link-hover-text-decoration: none; --framer-link-text-color: var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, #ffffff); --framer-link-text-decoration: none; }",
 ];
-var className4 = "framer-94E7e";
+var className4 = "framer-kToac";
 
-// /:https://framerusercontent.com/modules/97LgMTBlvR4oX4kzhisY/KdHNjzJSo15LpMyOSBuZ/ZxU1ZqLuB.js
+// /:https://framerusercontent.com/modules/97LgMTBlvR4oX4kzhisY/fqsmQ0JHzpnmSmwFTIxv/ZxU1ZqLuB.js
 var AutoYearCopyrightFonts = getFonts(AutoYearCopyright);
 var cycleOrder = ["ZFXaVsx1C", "x4xSNS1KU", "GlazZkpnx"];
-var serializationHash = "framer-QAPdK";
+var serializationHash = "framer-fmRhv";
 var variantClassNames = {
 	GlazZkpnx: "framer-v-w0wp92",
 	x4xSNS1KU: "framer-v-1o4g6o",
@@ -310,7 +301,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 		variantClassNames,
 	});
 	const layoutDependency = createLayoutDependency(props, variants);
-	const sharedStyleClassNames = [className, className4, className3, className2];
+	const sharedStyleClassNames = [className2, className3, className4, className];
 	const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames);
 	const isDisplayed = () => {
 		if (baseVariant === "GlazZkpnx") return false;
@@ -445,6 +436,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																		motionChild={true}
 																		nodeId={"HtMOl7caJ"}
 																		openInNewTab={false}
+																		relValues={[]}
 																		scopeId={"ZxU1ZqLuB"}
 																		smoothScroll={false}
 																	>
@@ -477,6 +469,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														motionChild={true}
 														nodeId={"HtMOl7caJ"}
 														openInNewTab={false}
+														relValues={[]}
 														scopeId={"ZxU1ZqLuB"}
 														smoothScroll={false}
 													>
@@ -515,6 +508,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																		motionChild={true}
 																		nodeId={"eFHrsZc3L"}
 																		openInNewTab={false}
+																		relValues={[]}
 																		scopeId={"ZxU1ZqLuB"}
 																		smoothScroll={false}
 																	>
@@ -547,6 +541,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														motionChild={true}
 														nodeId={"eFHrsZc3L"}
 														openInNewTab={false}
+														relValues={[]}
 														scopeId={"ZxU1ZqLuB"}
 														smoothScroll={false}
 													>
@@ -585,6 +580,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																		motionChild={true}
 																		nodeId={"t0XRdQbUu"}
 																		openInNewTab={false}
+																		relValues={[]}
 																		scopeId={"ZxU1ZqLuB"}
 																		smoothScroll={false}
 																	>
@@ -617,6 +613,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														motionChild={true}
 														nodeId={"t0XRdQbUu"}
 														openInNewTab={false}
+														relValues={[]}
 														scopeId={"ZxU1ZqLuB"}
 														smoothScroll={false}
 													>
@@ -655,6 +652,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																		motionChild={true}
 																		nodeId={"Zqqwelk7D"}
 																		openInNewTab={false}
+																		relValues={[]}
 																		scopeId={"ZxU1ZqLuB"}
 																		smoothScroll={false}
 																	>
@@ -687,6 +685,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														motionChild={true}
 														nodeId={"Zqqwelk7D"}
 														openInNewTab={false}
+														relValues={[]}
 														scopeId={"ZxU1ZqLuB"}
 														smoothScroll={false}
 													>
@@ -725,6 +724,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																		motionChild={true}
 																		nodeId={"zpIieT5uz"}
 																		openInNewTab={false}
+																		relValues={[]}
 																		scopeId={"ZxU1ZqLuB"}
 																		smoothScroll={false}
 																	>
@@ -757,6 +757,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														motionChild={true}
 														nodeId={"zpIieT5uz"}
 														openInNewTab={false}
+														relValues={[]}
 														scopeId={"ZxU1ZqLuB"}
 														smoothScroll={false}
 													>
@@ -795,6 +796,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																		motionChild={true}
 																		nodeId={"YvhkzCJU4"}
 																		openInNewTab={false}
+																		relValues={[]}
 																		scopeId={"ZxU1ZqLuB"}
 																		smoothScroll={false}
 																	>
@@ -827,6 +829,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														motionChild={true}
 														nodeId={"YvhkzCJU4"}
 														openInNewTab={false}
+														relValues={[]}
 														scopeId={"ZxU1ZqLuB"}
 														smoothScroll={false}
 													>
@@ -1016,49 +1019,49 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 });
 var css5 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-QAPdK.framer-1e73it6, .framer-QAPdK .framer-1e73it6 { display: block; }",
-	".framer-QAPdK.framer-49t8a3 { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 1200px; }",
-	".framer-QAPdK .framer-3qqrx0 { align-content: flex-start; align-items: flex-start; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; gap: 0px; height: min-content; justify-content: center; overflow: hidden; padding: 50px 40px 40px 40px; position: relative; width: 1px; }",
-	".framer-QAPdK .framer-37o8cr { align-content: flex-start; align-items: flex-start; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 1px; }",
-	".framer-QAPdK .framer-3ppevd { align-content: flex-start; align-items: flex-start; align-self: stretch; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 30px; height: auto; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: 1px; }",
-	".framer-QAPdK .framer-1873huc { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 9px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; text-decoration: none; width: min-content; }",
-	".framer-QAPdK .framer-18r1cmt { flex: none; height: 15px; position: relative; width: 27px; }",
-	".framer-QAPdK .framer-uim1xm { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-QAPdK .framer-11tvkrq { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
-	".framer-QAPdK .framer-1gah19s, .framer-QAPdK .framer-4mi0mv, .framer-QAPdK .framer-ndtddk, .framer-QAPdK .framer-q4oliy { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
-	".framer-QAPdK .framer-v0g0uv, .framer-QAPdK .framer-1ialxgi, .framer-QAPdK .framer-x6ks31 { --framer-custom-cursors: pointer; flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
-	".framer-QAPdK .framer-1hgm7v3 { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 6px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-QAPdK .framer-1erjvd9-container { flex: none; height: auto; position: relative; width: auto; }",
-	".framer-QAPdK .framer-9ihyxa { align-content: flex-end; align-items: flex-end; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 19px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 1px; }",
-	".framer-QAPdK .framer-1o317i { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 14px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
-	".framer-QAPdK .framer-d9qqkh { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 20px; height: min-content; justify-content: flex-start; overflow: visible; padding: 4px 0px 0px 0px; position: relative; width: min-content; }",
-	".framer-QAPdK .framer-ldtcww { flex: none; height: 15px; position: relative; text-decoration: none; width: 16px; }",
-	".framer-QAPdK .framer-1lhdk5f { aspect-ratio: 1.0208333333333333 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 16px); position: relative; text-decoration: none; width: 16px; }",
-	".framer-QAPdK .framer-1jcf308 { flex: none; height: 1px; left: 0px; overflow: visible; position: absolute; top: 0px; width: 100%; z-index: 1; }",
-	".framer-QAPdK .framer-h6zbgu { flex: none; height: 1px; left: 0px; overflow: visible; position: absolute; top: 13px; width: 100%; z-index: 1; }",
-	".framer-QAPdK.framer-v-1o4g6o.framer-49t8a3 { width: 810px; }",
-	".framer-QAPdK.framer-v-1o4g6o .framer-3qqrx0 { padding: 50px 40px 30px 40px; }",
-	".framer-QAPdK.framer-v-1o4g6o .framer-11tvkrq { gap: 14px; }",
-	".framer-QAPdK.framer-v-w0wp92.framer-49t8a3 { width: 390px; }",
-	".framer-QAPdK.framer-v-w0wp92 .framer-3qqrx0 { flex-direction: column; gap: 55px; justify-content: flex-start; padding: 70px 20px 60px 20px; }",
-	".framer-QAPdK.framer-v-w0wp92 .framer-37o8cr { flex: none; flex-direction: column; gap: 45px; order: 0; width: 100%; }",
-	".framer-QAPdK.framer-v-w0wp92 .framer-3ppevd { align-content: center; align-items: center; align-self: unset; flex: none; gap: 14px; height: min-content; justify-content: center; width: 100%; }",
-	".framer-QAPdK.framer-v-w0wp92 .framer-18r1cmt { height: 18px; width: 33px; }",
-	".framer-QAPdK.framer-v-w0wp92 .framer-uim1xm { gap: 48px; width: 100%; }",
-	".framer-QAPdK.framer-v-w0wp92 .framer-11tvkrq { flex-direction: column; gap: 12px; }",
-	".framer-QAPdK.framer-v-w0wp92 .framer-9ihyxa { align-content: center; align-items: center; flex: none; width: 100%; }",
-	".framer-QAPdK.framer-v-w0wp92 .framer-1jcf308 { order: 1; }",
-	".framer-QAPdK.framer-v-w0wp92 .framer-h6zbgu { order: 2; }",
-	...css,
-	...css4,
-	...css3,
+	".framer-fmRhv.framer-1e73it6, .framer-fmRhv .framer-1e73it6 { display: block; }",
+	".framer-fmRhv.framer-49t8a3 { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 1200px; }",
+	".framer-fmRhv .framer-3qqrx0 { align-content: flex-start; align-items: flex-start; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; gap: 0px; height: min-content; justify-content: center; overflow: hidden; padding: 50px 40px 40px 40px; position: relative; width: 1px; }",
+	".framer-fmRhv .framer-37o8cr { align-content: flex-start; align-items: flex-start; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 1px; }",
+	".framer-fmRhv .framer-3ppevd { align-content: flex-start; align-items: flex-start; align-self: stretch; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 30px; height: auto; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: 1px; }",
+	".framer-fmRhv .framer-1873huc { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 9px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; text-decoration: none; width: min-content; }",
+	".framer-fmRhv .framer-18r1cmt { flex: none; height: 15px; position: relative; width: 27px; }",
+	".framer-fmRhv .framer-uim1xm { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-fmRhv .framer-11tvkrq { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
+	".framer-fmRhv .framer-1gah19s, .framer-fmRhv .framer-4mi0mv, .framer-fmRhv .framer-ndtddk, .framer-fmRhv .framer-q4oliy { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
+	".framer-fmRhv .framer-v0g0uv, .framer-fmRhv .framer-1ialxgi, .framer-fmRhv .framer-x6ks31 { --framer-custom-cursors: pointer; flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
+	".framer-fmRhv .framer-1hgm7v3 { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 6px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-fmRhv .framer-1erjvd9-container { flex: none; height: auto; position: relative; width: auto; }",
+	".framer-fmRhv .framer-9ihyxa { align-content: flex-end; align-items: flex-end; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 19px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 1px; }",
+	".framer-fmRhv .framer-1o317i { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 14px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
+	".framer-fmRhv .framer-d9qqkh { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 20px; height: min-content; justify-content: flex-start; overflow: visible; padding: 4px 0px 0px 0px; position: relative; width: min-content; }",
+	".framer-fmRhv .framer-ldtcww { flex: none; height: 15px; position: relative; text-decoration: none; width: 16px; }",
+	".framer-fmRhv .framer-1lhdk5f { aspect-ratio: 1.0208333333333333 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 16px); position: relative; text-decoration: none; width: 16px; }",
+	".framer-fmRhv .framer-1jcf308 { flex: none; height: 1px; left: 0px; overflow: visible; position: absolute; top: 0px; width: 100%; z-index: 1; }",
+	".framer-fmRhv .framer-h6zbgu { flex: none; height: 1px; left: 0px; overflow: visible; position: absolute; top: 13px; width: 100%; z-index: 1; }",
+	".framer-fmRhv.framer-v-1o4g6o.framer-49t8a3 { width: 810px; }",
+	".framer-fmRhv.framer-v-1o4g6o .framer-3qqrx0 { padding: 50px 40px 30px 40px; }",
+	".framer-fmRhv.framer-v-1o4g6o .framer-11tvkrq { gap: 14px; }",
+	".framer-fmRhv.framer-v-w0wp92.framer-49t8a3 { width: 390px; }",
+	".framer-fmRhv.framer-v-w0wp92 .framer-3qqrx0 { flex-direction: column; gap: 55px; justify-content: flex-start; padding: 70px 20px 60px 20px; }",
+	".framer-fmRhv.framer-v-w0wp92 .framer-37o8cr { flex: none; flex-direction: column; gap: 45px; order: 0; width: 100%; }",
+	".framer-fmRhv.framer-v-w0wp92 .framer-3ppevd { align-content: center; align-items: center; align-self: unset; flex: none; gap: 14px; height: min-content; justify-content: center; width: 100%; }",
+	".framer-fmRhv.framer-v-w0wp92 .framer-18r1cmt { height: 18px; width: 33px; }",
+	".framer-fmRhv.framer-v-w0wp92 .framer-uim1xm { gap: 48px; width: 100%; }",
+	".framer-fmRhv.framer-v-w0wp92 .framer-11tvkrq { flex-direction: column; gap: 12px; }",
+	".framer-fmRhv.framer-v-w0wp92 .framer-9ihyxa { align-content: center; align-items: center; flex: none; width: 100%; }",
+	".framer-fmRhv.framer-v-w0wp92 .framer-1jcf308 { order: 1; }",
+	".framer-fmRhv.framer-v-w0wp92 .framer-h6zbgu { order: 2; }",
 	...css2,
+	...css3,
+	...css4,
+	...css,
 ];
-var FramerZxU1ZqLuB = withCSS(Component, css5, "framer-QAPdK");
+var FramerZxU1ZqLuB = withCSS(Component, css5, "framer-fmRhv");
 var stdin_default = FramerZxU1ZqLuB;
 FramerZxU1ZqLuB.displayName = "Footer";
 FramerZxU1ZqLuB.defaultProps = {
-	height: 137.5,
+	height: 138,
 	width: 1200,
 };
 addPropertyControls2(FramerZxU1ZqLuB, {
@@ -1138,10 +1141,10 @@ addFonts(
 			],
 		},
 		...AutoYearCopyrightFonts,
-		...getFontsFromSharedStyle(fonts),
-		...getFontsFromSharedStyle(fonts4),
-		...getFontsFromSharedStyle(fonts3),
 		...getFontsFromSharedStyle(fonts2),
+		...getFontsFromSharedStyle(fonts3),
+		...getFontsFromSharedStyle(fonts4),
+		...getFontsFromSharedStyle(fonts),
 	],
 	{
 		supportsExplicitInterCodegen: true,

@@ -9,6 +9,9 @@ var routes = {
   "augiA20Il": {
     "path": "/"
   },
+  "ePrr9Htzz": {
+    "path": "/docs"
+  },
   "i9xm_305L": {
     "path": "/page-2"
   },

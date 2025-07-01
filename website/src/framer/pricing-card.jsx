@@ -44,7 +44,7 @@ import "./chunks/chunk-SNH2M5FY.js";
 import "./chunks/chunk-EWWPQ2JC.js";
 import "./chunks/chunk-YL4V4VZK.js";
 import "./chunks/chunk-KYATNZPG.js";
-import { routes } from "./chunks/chunk-GECJBHKX.js";
+import { routes } from "./chunks/chunk-733MZEOY.js";
 
 // virtual:pricing-card
 import { Fragment } from "react";

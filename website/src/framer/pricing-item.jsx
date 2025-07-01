@@ -35,7 +35,7 @@
 import { stdin_default } from "./chunks/chunk-IEUFZ327.js";
 import "./chunks/chunk-BTSBQWPZ.js";
 import "./chunks/chunk-SNH2M5FY.js";
-import { routes } from "./chunks/chunk-GECJBHKX.js";
+import { routes } from "./chunks/chunk-733MZEOY.js";
 
 // virtual:pricing-item
 import { Fragment } from "react";

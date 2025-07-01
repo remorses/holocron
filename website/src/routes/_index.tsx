@@ -23,23 +23,22 @@ export async function loader({ request }: Route.LoaderArgs) {
         return {}
     }
     return {}
-
 }
 
 export default function App() {
     return (
-        <div className='flex flex-col items-center gap-3 '>
-            <NavBarFramerComponent.Responsive />
+        <div className='flex dark bg-black text-white flex-col items-center '>
+            <NavBarFramerComponent.Responsive className='!fixed z-10' />
             <HeroSectionFramerComponent.Responsive />
-            <IntroSectionFramerComponent.Responsive />
+            {/* <IntroSectionFramerComponent.Responsive />
             <BentoSectionFramerComponent.Responsive />
-            {/* <FeatureSectionFramerComponent.Responsive /> */}
+
             <BenefitSectionFramerComponent.Responsive />
             <MetricsSectionFramerComponent.Responsive />
             <PricingSectionFramerComponent.Responsive />
-            <TestimonialsSectionFramerComponent.Responsive />
-            <FaqSectionFramerComponent.Responsive />
-            <FooterFramerComponent.Responsive />
+            <TestimonialsSectionFramerComponent.Responsive /> */}
+            <FaqSectionFramerComponent.Responsive className='min-h-[900px] flex flex-col justify-start' />
+            <FooterFramerComponent.Responsive className='!w-full' />
         </div>
     )
 }

@@ -41,7 +41,7 @@ import {
 	fonts as fonts2,
 } from "./chunks/chunk-KYATNZPG.js";
 import { stdin_default as stdin_default2 } from "./chunks/chunk-EHCTMXQN.js";
-import { routes } from "./chunks/chunk-GECJBHKX.js";
+import { routes } from "./chunks/chunk-733MZEOY.js";
 
 // virtual:featuers-with-questions
 import { Fragment as Fragment2 } from "react";
@@ -979,11 +979,7 @@ addFonts(
 import { WithFramerBreakpoints } from "unframer";
 import { jsx } from "react/jsx-runtime";
 var locales = [];
-var defaultResponsiveVariants = {
-	base: "cd5FSHbb8",
-	md: "nlVa1BmpJ",
-	xl: "EMqlJYnox",
-};
+var defaultResponsiveVariants = {};
 /** @type {function(Props): any} */
 function ComponentWithRoot({ locale, ...rest }) {
 	return (

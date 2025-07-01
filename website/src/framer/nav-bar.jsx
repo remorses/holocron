@@ -31,16 +31,21 @@
  * Partial record of UnframerBreakpoint to Props.variant, with a mandatory 'base' key.
  * { [key in UnframerBreakpoint]?: Props['variant'] } & { base: Props['variant'] }
  */
+import {
+	className as className2,
+	css as css2,
+	fonts as fonts2,
+} from "./chunks/chunk-M65DCHB6.js";
 import { stdin_default } from "./chunks/chunk-IETFVNRG.js";
 import "./chunks/chunk-BTSBQWPZ.js";
 import { className, css, fonts } from "./chunks/chunk-EWWPQ2JC.js";
-import { routes } from "./chunks/chunk-GECJBHKX.js";
+import { routes } from "./chunks/chunk-733MZEOY.js";
 
 // virtual:nav-bar
 import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/req8YhBN5EJaNAgryWFM/XmsKfRWHg.js
+// /:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/euv4Gj58Kj0Z80wefMsL/XmsKfRWHg.js
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
@@ -74,7 +79,7 @@ fontStore.loadFonts([
 	"Inter-BoldItalic",
 	"Inter-SemiBoldItalic",
 ]);
-var fonts2 = [
+var fonts3 = [
 	{
 		explicitInter: true,
 		fonts: [
@@ -321,26 +326,12 @@ var fonts2 = [
 		],
 	},
 ];
-var css2 = [
+var css3 = [
 	'.framer-0Bsof .framer-styles-preset-b7mi5l:not(.rich-text-wrapper), .framer-0Bsof .framer-styles-preset-b7mi5l.rich-text-wrapper p { --framer-font-family: "Inter", "Inter Placeholder", sans-serif; --framer-font-family-bold: "Inter", "Inter Placeholder", sans-serif; --framer-font-family-bold-italic: "Inter", "Inter Placeholder", sans-serif; --framer-font-family-italic: "Inter", "Inter Placeholder", sans-serif; --framer-font-open-type-features: normal; --framer-font-size: 16px; --framer-font-style: normal; --framer-font-style-bold: normal; --framer-font-style-bold-italic: italic; --framer-font-style-italic: italic; --framer-font-variation-axes: normal; --framer-font-weight: 600; --framer-font-weight-bold: 700; --framer-font-weight-bold-italic: 700; --framer-font-weight-italic: 600; --framer-letter-spacing: 0em; --framer-line-height: 1.3em; --framer-paragraph-spacing: 20px; --framer-text-alignment: left; --framer-text-color: var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, #ffffff); --framer-text-decoration: none; --framer-text-stroke-color: initial; --framer-text-stroke-width: initial; --framer-text-transform: none; }',
 ];
-var className2 = "framer-0Bsof";
+var className3 = "framer-0Bsof";
 
-// /:https://framerusercontent.com/modules/68TZNUc3gexOti69ZVno/nhKEvMm82woK0vBw7NIi/uT5gCl_8P.js
-import { fontStore as fontStore2 } from "unframer";
-fontStore2.loadFonts([]);
-var fonts3 = [
-	{
-		explicitInter: true,
-		fonts: [],
-	},
-];
-var css3 = [
-	".framer-94E7e .framer-styles-preset-1i37dfc:not(.rich-text-wrapper), .framer-94E7e .framer-styles-preset-1i37dfc.rich-text-wrapper a { --framer-link-current-text-decoration: none; --framer-link-hover-text-color: var(--token-83878271-40bd-4314-b766-4d665555aa78, #ff4d00); --framer-link-hover-text-decoration: none; --framer-link-text-color: var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, #ffffff); --framer-link-text-decoration: none; }",
-];
-var className3 = "framer-94E7e";
-
-// /:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/req8YhBN5EJaNAgryWFM/XmsKfRWHg.js
+// /:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/euv4Gj58Kj0Z80wefMsL/XmsKfRWHg.js
 var ComponentButtonFonts = getFonts(stdin_default);
 var cycleOrder = [
 	"c6mQiEUZR",
@@ -349,7 +340,7 @@ var cycleOrder = [
 	"lTFPk57AC",
 	"FSWJCj0iy",
 ];
-var serializationHash = "framer-to1aw";
+var serializationHash = "framer-1feJf";
 var variantClassNames = {
 	c6mQiEUZR: "framer-v-1d9x1ba",
 	FSWJCj0iy: "framer-v-1e176yj",
@@ -468,7 +459,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 	const LPw9Av7yM19yqw1v = activeVariantCallback(async (...args) => {
 		setVariant("oVqk5DKpt");
 	});
-	const sharedStyleClassNames = [className2, className, className3];
+	const sharedStyleClassNames = [className3, className, className2];
 	const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames);
 	const isDisplayed = () => {
 		if (
@@ -616,18 +607,16 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											layoutId={"chDyeH5Qc"}
 										>
 											<SVG
-												className={"framer-13ta3b5"}
+												className={"framer-st116e"}
 												data-framer-name={"Logo"}
-												fill={
-													"var(--token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5, rgb(0, 0, 0))"
-												}
-												intrinsicHeight={98}
-												intrinsicWidth={178}
+												layout={"position"}
 												layoutDependency={layoutDependency}
-												layoutId={"CL6WWM_2k"}
+												layoutId={"CoVoTbHYh"}
+												opacity={1}
 												svg={
-													'<svg width="178" height="98" viewBox="0 0 178 98" fill="none" xmlns="http://www.w3.org/2000/svg">\n<rect x="0.897217" y="46.7939" width="50.6689" height="50.6689" fill="white"/>\n<path d="M51.5662 0.544922H106.066L177.772 65.5868V97.4511H123.05V75.9676L87.3618 46.8531H51.5662V0.544922Z" fill="white"/>\n</svg>\n'
+													'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 27 15"><path d="M 0.136 14.849 L 0.136 7.163 L 7.822 7.163 L 7.822 14.849 Z" fill="rgb(255,255,255)"></path><path d="M 7.822 0.148 L 16.089 0.148 L 26.965 10.014 L 26.965 14.847 L 18.665 14.847 L 18.665 11.588 L 13.252 7.172 L 7.822 7.172 Z" fill="rgb(255,255,255)"></path></svg>'
 												}
+												svgContentId={9216246301}
 												withExternalLayout={true}
 											/>
 											<RichText
@@ -1250,7 +1239,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														y:
 															(componentViewport?.y || 0) +
 															(18 +
-																((componentViewport?.height || 384) -
+																((componentViewport?.height || 320) -
 																	36 -
 																	281.2) /
 																	2) +
@@ -1328,43 +1317,43 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 });
 var css4 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-to1aw.framer-c615or, .framer-to1aw .framer-c615or { display: block; }",
-	".framer-to1aw.framer-1d9x1ba { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 20px; height: 70px; justify-content: center; overflow: visible; padding: 0px 40px 0px 40px; position: relative; width: 1200px; }",
-	".framer-to1aw .framer-nmzyuu { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; height: min-content; justify-content: space-between; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 1px; }",
-	".framer-to1aw .framer-ydgisg { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-to1aw .framer-1t7g6pl { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; text-decoration: none; width: min-content; }",
-	".framer-to1aw .framer-j724qj { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-to1aw .framer-13ta3b5 { flex: none; height: 15px; position: relative; width: 27px; }",
-	".framer-to1aw .framer-5fmjo5, .framer-to1aw .framer-uh0ias, .framer-to1aw .framer-18dt6r6, .framer-to1aw .framer-11f69aq, .framer-to1aw .framer-vcuy02 { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
-	".framer-to1aw .framer-1outej8 { align-content: center; align-items: center; aspect-ratio: 1 / 1; cursor: pointer; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 6px; height: var(--framer-aspect-ratio-supported, 34px); justify-content: flex-start; overflow: visible; padding: 8px 2px 2px 2px; position: relative; width: 34px; }",
-	".framer-to1aw .framer-10jqita, .framer-to1aw .framer-1xx0lo2, .framer-to1aw .framer-cuneb5 { flex: none; height: 2px; overflow: hidden; position: relative; width: 100%; will-change: var(--framer-will-change-override, transform); }",
-	".framer-to1aw .framer-l7mfmx, .framer-to1aw .framer-wz2tj0 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-to1aw .framer-ndiw3d-container { flex: none; height: auto; position: relative; width: auto; }",
-	".framer-to1aw.framer-v-1xrbkc6.framer-1d9x1ba { width: 810px; }",
-	".framer-to1aw.framer-v-1xrbkc6 .framer-nmzyuu, .framer-to1aw.framer-v-1a1l0re .framer-nmzyuu { max-width: unset; }",
-	".framer-to1aw.framer-v-1xrbkc6 .framer-ydgisg, .framer-to1aw.framer-v-1a1l0re .framer-ydgisg { flex: 1 0 0px; gap: unset; justify-content: space-between; width: 1px; }",
-	".framer-to1aw.framer-v-1n2x4j7.framer-1d9x1ba { height: min-content; padding: 18px 40px 18px 40px; width: 810px; }",
-	".framer-to1aw.framer-v-1n2x4j7 .framer-nmzyuu, .framer-to1aw.framer-v-1e176yj .framer-nmzyuu { align-content: flex-start; align-items: flex-start; flex-direction: column; gap: 50px; justify-content: flex-start; max-width: unset; }",
-	".framer-to1aw.framer-v-1n2x4j7 .framer-ydgisg, .framer-to1aw.framer-v-1e176yj .framer-ydgisg { gap: unset; justify-content: space-between; width: 100%; }",
-	".framer-to1aw.framer-v-1n2x4j7 .framer-1t7g6pl, .framer-to1aw.framer-v-1e176yj .framer-1t7g6pl { cursor: pointer; }",
-	".framer-to1aw.framer-v-1n2x4j7 .framer-1xx0lo2, .framer-to1aw.framer-v-1n2x4j7 .framer-cuneb5 { left: calc(50.00000000000002% - 30px / 2); position: absolute; top: calc(50.00000000000002% - 2px / 2); width: 30px; z-index: 1; }",
-	".framer-to1aw.framer-v-1n2x4j7 .framer-l7mfmx, .framer-to1aw.framer-v-1e176yj .framer-l7mfmx { align-content: flex-start; align-items: flex-start; flex-direction: column; }",
-	".framer-to1aw.framer-v-1n2x4j7 .framer-wz2tj0, .framer-to1aw.framer-v-1e176yj .framer-wz2tj0 { align-content: flex-start; align-items: flex-start; align-self: stretch; flex-direction: column; gap: 15px; width: auto; }",
-	".framer-to1aw.framer-v-1n2x4j7 .framer-uh0ias, .framer-to1aw.framer-v-1e176yj .framer-uh0ias { cursor: pointer; order: 0; }",
-	".framer-to1aw.framer-v-1n2x4j7 .framer-18dt6r6, .framer-to1aw.framer-v-1e176yj .framer-18dt6r6 { cursor: pointer; order: 1; }",
-	".framer-to1aw.framer-v-1n2x4j7 .framer-11f69aq, .framer-to1aw.framer-v-1e176yj .framer-11f69aq { cursor: pointer; order: 2; }",
-	".framer-to1aw.framer-v-1n2x4j7 .framer-vcuy02, .framer-to1aw.framer-v-1e176yj .framer-vcuy02 { cursor: pointer; order: 3; }",
-	".framer-to1aw.framer-v-1n2x4j7 .framer-ndiw3d-container { width: 100%; z-index: 0; }",
-	".framer-to1aw.framer-v-1a1l0re.framer-1d9x1ba, .framer-to1aw.framer-v-1e176yj.framer-1d9x1ba { height: min-content; padding: 18px 20px 18px 20px; width: 390px; }",
-	".framer-to1aw.framer-v-1a1l0re .framer-1outej8 { gap: 4px; height: var(--framer-aspect-ratio-supported, 28px); justify-content: center; padding: 0px 0px 2px 0px; width: 28px; }",
-	".framer-to1aw.framer-v-1e176yj .framer-1outej8 { height: var(--framer-aspect-ratio-supported, 28px); justify-content: center; padding: 0px 0px 2px 0px; width: 28px; }",
-	".framer-to1aw.framer-v-1e176yj .framer-1xx0lo2, .framer-to1aw.framer-v-1e176yj .framer-cuneb5 { left: calc(50.00000000000002% - 26px / 2); position: absolute; top: calc(50.00000000000002% - 2px / 2); width: 26px; z-index: 1; }",
-	".framer-to1aw.framer-v-1e176yj .framer-ndiw3d-container { width: 100%; z-index: 2; }",
-	...css2,
-	...css,
+	".framer-1feJf.framer-c615or, .framer-1feJf .framer-c615or { display: block; }",
+	".framer-1feJf.framer-1d9x1ba { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 20px; height: 70px; justify-content: center; overflow: visible; padding: 0px 40px 0px 40px; position: relative; width: 1200px; }",
+	".framer-1feJf .framer-nmzyuu { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; height: min-content; justify-content: space-between; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 1px; }",
+	".framer-1feJf .framer-ydgisg { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-1feJf .framer-1t7g6pl { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; text-decoration: none; width: min-content; }",
+	".framer-1feJf .framer-j724qj { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-1feJf .framer-st116e { flex: none; height: 15px; position: relative; width: 27px; }",
+	".framer-1feJf .framer-5fmjo5, .framer-1feJf .framer-uh0ias, .framer-1feJf .framer-18dt6r6, .framer-1feJf .framer-11f69aq, .framer-1feJf .framer-vcuy02 { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
+	".framer-1feJf .framer-1outej8 { align-content: center; align-items: center; aspect-ratio: 1 / 1; cursor: pointer; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 6px; height: var(--framer-aspect-ratio-supported, 34px); justify-content: flex-start; overflow: visible; padding: 8px 2px 2px 2px; position: relative; width: 34px; }",
+	".framer-1feJf .framer-10jqita, .framer-1feJf .framer-1xx0lo2, .framer-1feJf .framer-cuneb5 { flex: none; height: 2px; overflow: hidden; position: relative; width: 100%; will-change: var(--framer-will-change-override, transform); }",
+	".framer-1feJf .framer-l7mfmx, .framer-1feJf .framer-wz2tj0 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-1feJf .framer-ndiw3d-container { flex: none; height: auto; position: relative; width: auto; }",
+	".framer-1feJf.framer-v-1xrbkc6.framer-1d9x1ba { width: 810px; }",
+	".framer-1feJf.framer-v-1xrbkc6 .framer-nmzyuu, .framer-1feJf.framer-v-1a1l0re .framer-nmzyuu { max-width: unset; }",
+	".framer-1feJf.framer-v-1xrbkc6 .framer-ydgisg, .framer-1feJf.framer-v-1a1l0re .framer-ydgisg { flex: 1 0 0px; gap: unset; justify-content: space-between; width: 1px; }",
+	".framer-1feJf.framer-v-1n2x4j7.framer-1d9x1ba { height: min-content; padding: 18px 40px 18px 40px; width: 810px; }",
+	".framer-1feJf.framer-v-1n2x4j7 .framer-nmzyuu, .framer-1feJf.framer-v-1e176yj .framer-nmzyuu { align-content: flex-start; align-items: flex-start; flex-direction: column; gap: 50px; justify-content: flex-start; max-width: unset; }",
+	".framer-1feJf.framer-v-1n2x4j7 .framer-ydgisg, .framer-1feJf.framer-v-1e176yj .framer-ydgisg { gap: unset; justify-content: space-between; width: 100%; }",
+	".framer-1feJf.framer-v-1n2x4j7 .framer-1t7g6pl, .framer-1feJf.framer-v-1e176yj .framer-1t7g6pl { cursor: pointer; }",
+	".framer-1feJf.framer-v-1n2x4j7 .framer-1xx0lo2, .framer-1feJf.framer-v-1n2x4j7 .framer-cuneb5 { left: calc(50.00000000000002% - 30px / 2); position: absolute; top: calc(50.00000000000002% - 2px / 2); width: 30px; z-index: 1; }",
+	".framer-1feJf.framer-v-1n2x4j7 .framer-l7mfmx, .framer-1feJf.framer-v-1e176yj .framer-l7mfmx { align-content: flex-start; align-items: flex-start; flex-direction: column; }",
+	".framer-1feJf.framer-v-1n2x4j7 .framer-wz2tj0, .framer-1feJf.framer-v-1e176yj .framer-wz2tj0 { align-content: flex-start; align-items: flex-start; align-self: stretch; flex-direction: column; gap: 15px; width: auto; }",
+	".framer-1feJf.framer-v-1n2x4j7 .framer-uh0ias, .framer-1feJf.framer-v-1e176yj .framer-uh0ias { cursor: pointer; order: 0; }",
+	".framer-1feJf.framer-v-1n2x4j7 .framer-18dt6r6, .framer-1feJf.framer-v-1e176yj .framer-18dt6r6 { cursor: pointer; order: 1; }",
+	".framer-1feJf.framer-v-1n2x4j7 .framer-11f69aq, .framer-1feJf.framer-v-1e176yj .framer-11f69aq { cursor: pointer; order: 2; }",
+	".framer-1feJf.framer-v-1n2x4j7 .framer-vcuy02, .framer-1feJf.framer-v-1e176yj .framer-vcuy02 { cursor: pointer; order: 3; }",
+	".framer-1feJf.framer-v-1n2x4j7 .framer-ndiw3d-container { width: 100%; z-index: 0; }",
+	".framer-1feJf.framer-v-1a1l0re.framer-1d9x1ba, .framer-1feJf.framer-v-1e176yj.framer-1d9x1ba { height: min-content; padding: 18px 20px 18px 20px; width: 390px; }",
+	".framer-1feJf.framer-v-1a1l0re .framer-1outej8 { gap: 4px; height: var(--framer-aspect-ratio-supported, 28px); justify-content: center; padding: 0px 0px 2px 0px; width: 28px; }",
+	".framer-1feJf.framer-v-1e176yj .framer-1outej8 { height: var(--framer-aspect-ratio-supported, 28px); justify-content: center; padding: 0px 0px 2px 0px; width: 28px; }",
+	".framer-1feJf.framer-v-1e176yj .framer-1xx0lo2, .framer-1feJf.framer-v-1e176yj .framer-cuneb5 { left: calc(50.00000000000002% - 26px / 2); position: absolute; top: calc(50.00000000000002% - 2px / 2); width: 26px; z-index: 1; }",
+	".framer-1feJf.framer-v-1e176yj .framer-ndiw3d-container { width: 100%; z-index: 2; }",
 	...css3,
+	...css,
+	...css2,
 ];
-var FramerXmsKfRWHg = withCSS(Component, css4, "framer-to1aw");
+var FramerXmsKfRWHg = withCSS(Component, css4, "framer-1feJf");
 var stdin_default2 = FramerXmsKfRWHg;
 FramerXmsKfRWHg.displayName = "Nav Bar";
 FramerXmsKfRWHg.defaultProps = {
@@ -1454,9 +1443,9 @@ addFonts(
 			],
 		},
 		...ComponentButtonFonts,
-		...getFontsFromSharedStyle(fonts2),
-		...getFontsFromSharedStyle(fonts),
 		...getFontsFromSharedStyle(fonts3),
+		...getFontsFromSharedStyle(fonts),
+		...getFontsFromSharedStyle(fonts2),
 	],
 	{
 		supportsExplicitInterCodegen: true,

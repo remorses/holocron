@@ -33,7 +33,7 @@
  */
 import { stdin_default } from "./chunks/chunk-AGU7MRZZ.js";
 import "./chunks/chunk-EWWPQ2JC.js";
-import { routes } from "./chunks/chunk-GECJBHKX.js";
+import { routes } from "./chunks/chunk-733MZEOY.js";
 
 // virtual:badge
 import { Fragment } from "react";

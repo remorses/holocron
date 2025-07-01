@@ -32,7 +32,7 @@
  * { [key in UnframerBreakpoint]?: Props['variant'] } & { base: Props['variant'] }
  */
 import { stdin_default } from "./chunks/chunk-EHCTMXQN.js";
-import { routes } from "./chunks/chunk-GECJBHKX.js";
+import { routes } from "./chunks/chunk-733MZEOY.js";
 
 // virtual:grid
 import { Fragment } from "react";
