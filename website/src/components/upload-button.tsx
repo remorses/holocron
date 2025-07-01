@@ -45,7 +45,13 @@ export function UploadButton({
             const { error, data } =
                 await apiClient.api.createUploadSignedUrl.post({
                     siteId,
-                    files: [{ slug: filename, contentType, contentLength: file.size }],
+                    files: [
+                        {
+                            slug: filename,
+                            contentType,
+                            contentLength: file.size,
+                        },
+                    ],
                 })
             if (error) throw error
 
@@ -95,13 +101,15 @@ export function UploadButton({
                     inputRef.current.click()
                 }}
                 isLoading={isLoading}
-                className='my-4'
+                className=''
                 {...rest}
                 // isLoading={isLoading}
             >
                 {children || 'Upload File'}
             </Button>
-            <div className="mt-1 text-sm opacity-60">{filename}</div>
+            {filename && (
+                <div className='mt-1 text-sm opacity-60'>{filename}</div>
+            )}
         </>
     )
 }
