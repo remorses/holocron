@@ -465,8 +465,15 @@ function DocsLayoutWrapper({
         const { files, i18n, githubFolder } = loaderData
 
         function removeGithubFolder(p) {
+            if (p.startsWith('/')) {
+                p = p.slice(1)
+            }
             if (p.startsWith(githubFolder)) {
-                return p.slice(githubFolder.length + 1)
+                p = p.slice(githubFolder.length + 1)
+                if (p.startsWith('/')) {
+                    p = p.slice(1)
+                }
+                return p
             }
             return p
         }
