@@ -1,16 +1,13 @@
-import { UploadIcon } from 'lucide-react'
-import { ComponentPropsWithoutRef, useState, useRef } from 'react'
+import { ComponentPropsWithoutRef, useRef, useState } from 'react'
 import { useRouteLoaderData } from 'react-router'
 import { v4 } from 'uuid'
 
 import { useThrowingFn } from 'website/src/lib/hooks'
 import type { Route as ChatRoute } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId'
-import type { Route as SiteRoute } from 'website/src/routes/org.$orgId.site.$siteId'
 
-import { Button } from './ui/button'
 import { apiClient } from '../lib/spiceflow-client'
 import { slugKebabCase } from '../lib/utils'
-import { env } from '../lib/env'
+import { Button } from './ui/button'
 
 export function UploadButton({
     accept = '*',
