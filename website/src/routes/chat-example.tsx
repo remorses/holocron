@@ -341,7 +341,7 @@ function Footer() {
     useEffect(() => {
         durableFetchClient.isInProgress(durableUrl).then(({ inProgress }) => {
             if (inProgress) {
-                handleSubmit()
+                submitMessageWithoutDelete()
             }
         })
     }, [])
@@ -367,7 +367,7 @@ function Footer() {
         }
     }
 
-    const handleSubmit = async () => {
+    const submitMessageWithoutDelete = async () => {
         const messages = useChatState.getState()?.messages
         const generateId = createIdGenerator()
 
@@ -406,6 +406,11 @@ function Footer() {
         '@/docs/changelog.md',
         '@/docs/faq.md',
     ]
+
+    async function onSubmit() {
+        await durableFetchClient.delete(url)
+        await submitMessageWithoutDelete()
+    }
     return (
         <AnimatePresence mode='popLayout'>
             <div className=' sticky bottom-4 z-50 w-full mt-4'>
@@ -417,10 +422,7 @@ function Footer() {
                 >
                     <ContextButton contextOptions={contextOptions} />
                     <ChatTextarea
-                        onSubmit={async () => {
-                            await durableFetchClient.delete(url)
-                            await handleSubmit()
-                        }}
+                        onSubmit={onSubmit}
                         disabled={false}
                         placeholder='Ask me anything...'
                         className={cn('')}
@@ -440,7 +442,7 @@ function Footer() {
                         <div className='grow'></div>
                         <Button
                             className='rounded-md h-8'
-                            onClick={() => handleSubmit()}
+                            onClick={onSubmit}
                             disabled={isPending || !text.trim()}
                         >
                             {isPending ? 'Loading...' : 'Generate'}

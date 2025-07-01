@@ -424,7 +424,7 @@ function Footer() {
     useEffect(() => {
         durableFetchClient.isInProgress(durableUrl).then(({ inProgress }) => {
             if (inProgress) {
-                handleSubmit()
+                submitWithoutDeleteOnDurablefetch()
             }
         })
     }, [])
@@ -451,7 +451,7 @@ function Footer() {
         }
     }
 
-    const handleSubmit = async () => {
+    const submitWithoutDeleteOnDurablefetch = async () => {
         const messages = useChatState.getState()?.messages
         const generateId = createIdGenerator()
 
@@ -585,6 +585,10 @@ function Footer() {
     }, [filesInDraft])
     const showCreatePR = hasFilesInDraft || prUrl
     const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+    async function onSubmit() {
+        await durableFetchClient.delete(durableUrl)
+        await submitWithoutDeleteOnDurablefetch()
+    }
     return (
         <AnimatePresence mode='popLayout'>
             <motion.div
@@ -637,10 +641,7 @@ function Footer() {
                             </div>
                             <ChatTextarea
                                 ref={textareaRef}
-                                onSubmit={async () => {
-                                    await durableFetchClient.delete(durableUrl)
-                                    await handleSubmit()
-                                }}
+                                onSubmit={onSubmit}
                                 disabled={false}
                                 placeholder='Ask me anything...'
                                 className=''
@@ -669,10 +670,7 @@ function Footer() {
                                 <div className='flex items-center gap-2'>
                                     <Button
                                         className='rounded-full h-8'
-                                        onClick={async () => {
-                                            await durableFetchClient.delete(durableUrl)
-                                            await handleSubmit()
-                                        }}
+                                        onClick={onSubmit}
                                         disabled={isPending || !text.trim()}
                                     >
                                         {isPending ? 'Loading...' : 'Generate'}
