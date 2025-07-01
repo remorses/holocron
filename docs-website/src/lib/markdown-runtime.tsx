@@ -84,7 +84,10 @@ export const StreamingMarkdownRuntimeComponent = memo(
         if (!markdown) return null
         return (
             <div
-                className={cn('contents prose select-text dark:prose-invert', className)}
+                className={cn(
+                    'contents prose select-text dark:prose-invert',
+                    className,
+                )}
                 ref={container}
             >
                 {resultAst?.children?.map((block, index) => {
@@ -165,12 +168,16 @@ export function processMdxInClient({
         processors.set(extension, processor)
     }
 
-    console.time(`${extension} processSync`)
-    // console.trace('processSync')
+    const start = performance.now()
     try {
         const file = processor.processSync(markdown)
         return file.data as ProcessorData
     } finally {
-        console.timeEnd(`${extension} processSync`)
+        const duration = performance.now() - start
+        if (duration > 5) {
+            console.log(
+                `${extension} processMdxInClient took ${duration.toFixed(2)}ms`,
+            )
+        }
     }
 }

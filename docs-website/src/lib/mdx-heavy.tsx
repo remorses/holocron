@@ -184,7 +184,6 @@ export const getProcessor = function getProcessor({
     highlighter: Highlighter
     onMissingLanguage: OnMissingLanguage
 }) {
-    console.log({ extension })
     if (typeof extension === 'string' && extension.endsWith('md')) {
         return remark()
             .use(remarkFrontmatter, ['yaml'])
