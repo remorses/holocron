@@ -301,17 +301,6 @@ Wrap all images in frames.
 API
 </Tooltip>
 
-<Update label="Version 2.1.0" description="Released March 15, 2024">
-## New features
-- Added bulk user import functionality
-- Improved error messages with actionable suggestions
-
-## Bug fixes
-
-- Fixed pagination issue with large datasets
-- Resolved authentication timeout problems
-  </Update>
-
 ## Required page structure
 
 Every documentation page must begin with YAML frontmatter:
@@ -346,7 +335,7 @@ description: 'Concise description explaining page purpose and value'
 
 ### Accessibility requirements
 
-- Include descriptive alt text for all images and diagrams
+- Include descriptive alt text for all images and diagrams.
 - Use specific, actionable link text instead of "click here"
 - Ensure proper heading hierarchy starting with H2
 - Provide keyboard navigation considerations
@@ -384,7 +373,15 @@ description: 'Concise description explaining page purpose and value'
 - Add appropriate warnings for destructive or security-sensitive actions
 - Validate all technical information through testing before publication
 
-## Routing: structuring markdown pages and meta.json files
+# Images
+
+To add images you can use the img jsx tag with an src prop. Never add width and height, these will be automatically added by Fumabase.
+
+All images src should either be absolute urls or start with / and the subpath to the image relative to the Fumabase site root folder. The fumabase root folder is the folder that contains the `fumabase.jsonc` config file
+
+> NEVER reference an image relative path if it does not exist. First check it exists.
+
+# Routing: structuring markdown pages and meta.json files
 
 ## File
 
