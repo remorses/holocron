@@ -1,5 +1,4 @@
 import * as Slot from '@radix-ui/react-slot'
-import { CpuIcon, PanelsTopLeft } from 'lucide-react'
 
 import type { HTMLAttributes, ReactNode } from 'react'
 import { cn } from 'website/src/lib/cn'

@@ -1,6 +1,6 @@
 import { RiAttachment2, RiCloseLine, RiAddLine } from '@remixicon/react'
 import { useState, useRef, forwardRef } from 'react'
-import { v4 } from 'uuid'
+
 
 import { Button } from '../ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
@@ -8,6 +8,7 @@ import { apiClient } from '../../lib/spiceflow-client'
 import { slugKebabCase } from '../../lib/utils'
 import { cn } from '../../lib/cn'
 import { useThrowingFn } from '../../lib/hooks'
+import { createIdGenerator } from 'ai'
 
 interface UploadedFile {
     id: string
@@ -56,10 +57,11 @@ export function ChatUploadButton({
     const [isPopoverOpen, setIsPopoverOpen] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
 
+    const idGenerator = createIdGenerator()
     const { fn: uploadFile, isLoading } = useThrowingFn({
         async fn(file: File) {
             const filename = encodeURIComponent(
-                slugKebabCase(`${v4()}-${file.name || 'file'}`),
+                slugKebabCase(`${idGenerator()}-${file.name || 'file'}`),
             )
             const contentType = file.type || 'application/octet-stream'
 
@@ -92,7 +94,7 @@ export function ChatUploadButton({
             }
 
             const newFile: UploadedFile = {
-                id: v4(),
+                id: idGenerator(),
                 name: file.name,
                 url: finalUrl,
                 contentType,

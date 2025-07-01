@@ -17,7 +17,7 @@ import {
 } from 'website/src/components/ui/tooltip'
 import { cn } from 'website/src/lib/utils'
 
-import { Button } from '../ui/button'
+import { Button } from 'website/src/components/ui/button'
 import { useChatState } from './chat-provider'
 
 function ChatLoadingSpinner() {

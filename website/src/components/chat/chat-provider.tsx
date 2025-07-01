@@ -1,7 +1,6 @@
 import { UIMessage } from 'ai'
 import * as Ariakit from '@ariakit/react'
 import { create } from 'zustand'
-
 import { createContext, useContext, useMemo } from 'react'
 import type { StoreApi, UseBoundStore } from 'zustand'
 import { ComboboxStore } from '@ariakit/react'
@@ -49,7 +48,6 @@ export type ChatState = {
     text?: string
     isGenerating?: boolean
     mentionsCombobox: ComboboxStore
-    // autocompleteSuggesions?: string[]
     selectedAutocompleteText?: string
     assistantErrorMessage?: string
     editingMessageId?: string

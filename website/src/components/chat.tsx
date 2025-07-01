@@ -1,6 +1,5 @@
 'use client'
 
-import { RiAttachment2 } from '@remixicon/react'
 import { createIdGenerator, UIMessage } from 'ai'
 import { Markdown } from 'docs-website/src/lib/markdown'
 import { memo, startTransition, useEffect, useMemo, useState } from 'react'
@@ -40,19 +39,18 @@ import {
 } from '../lib/spiceflow-client'
 import { doFilesInDraftNeedPush, useWebsiteState } from '../lib/state'
 
-import { DocsJsonType } from 'docs-website/src/lib/docs-json'
+import { FilesInDraft } from 'docs-website/src/lib/docs-state'
 import { generateSlugFromPath } from 'docs-website/src/lib/utils'
 import {
     AlertCircle,
-    AlertTriangleIcon,
     FilePlus2Icon,
     GitBranch,
     ImageIcon,
-    Link2Icon,
     ListTreeIcon,
     PaletteIcon,
-    X,
+    X
 } from 'lucide-react'
+import React from 'react'
 import {
     href,
     useLoaderData,
@@ -60,6 +58,16 @@ import {
     useRevalidator,
     useRouteLoaderData,
 } from 'react-router'
+import { AnimatePresence, motion } from 'unframer'
+import { ChatRecordButton } from 'website/src/components/chat/chat-record-button'
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from 'website/src/components/ui/command'
 import { docsRpcClient } from '../lib/docs-setstate'
 import {
     calculateLineChanges,
@@ -68,23 +76,11 @@ import {
     FileUpdate,
     isParameterComplete,
 } from '../lib/edit-tool'
-import { debounce, safeJsoncParse, teeAsyncIterable } from '../lib/utils'
+import { safeJsoncParse, teeAsyncIterable } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import { useChatState } from './chat/chat-provider'
 import { ChatSuggestionButton } from './chat/chat-suggestion'
-import { AnimatePresence, motion } from 'unframer'
-import { FilesInDraft } from 'docs-website/src/lib/docs-state'
-import {
-    Command,
-    CommandInput,
-    CommandList,
-    CommandEmpty,
-    CommandGroup,
-    CommandItem,
-} from 'website/src/components/ui/command'
-import React from 'react'
-import { ChatRecordButton } from 'website/src/components/chat/chat-record-button'
 import { ChatUploadButton } from './chat/chat-upload-button'
 
 function keyForDocsJson({ chatId }) {

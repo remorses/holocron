@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { Loader2Icon, MicIcon } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { Visualizer } from 'react-sound-visualizer'
-import { Button } from 'website/src/components/ui/button'
-import { MicIcon, StopCircleIcon, XIcon, Loader2Icon } from 'lucide-react'
-import { motion, AnimatePresence } from 'unframer'
+import { AnimatePresence, motion } from 'unframer'
 import { useChatState } from 'website/src/components/chat/chat-provider'
-import { cn } from 'website/src/lib/cn'
+import { Button } from 'website/src/components/ui/button'
 
 interface RecordButtonProps {
     transcribeAudio: (audioFile: File) => Promise<string>
@@ -69,7 +68,7 @@ export function ChatRecordButton({ transcribeAudio }: RecordButtonProps) {
                         track.stop()
                     })
                 }
-                
+
                 // Create audio blob from chunks
                 const audioBlob = new Blob(chunksRef.current, {
                     type: 'audio/webm',
