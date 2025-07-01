@@ -268,7 +268,6 @@ export const app = new Spiceflow({ basePath: '/api' })
                 body.files.map(async (file) => {
                     const key = getKeyForMediaAsset({
                         siteId: body.siteId,
-                        // branchId: body.branchId,
                         slug: file.slug,
                     })
                     const signedUrl = await getPresignedUrl({
@@ -279,9 +278,9 @@ export const app = new Spiceflow({ basePath: '/api' })
                             'Content-Length': file.contentLength,
                         },
                     })
-                    console.log('signed', file.slug)
+                    // console.log('signed', file.slug)
                     const finalUrl = new URL(
-                        file.slug,
+                        key,
                         env.UPLOADS_BASE_URL,
                     ).toString()
                     return {

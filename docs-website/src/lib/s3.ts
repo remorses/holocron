@@ -16,14 +16,14 @@ export async function getPresignedUrl({
     method = 'PUT',
     expiresInSeconds = 900,
 }) {
-  if (key.startsWith('/')) {
-      key = key.slice(1)
-  }
+    if (key.startsWith('/')) {
+        key = key.slice(1)
+    }
     const url = `${env.R2_URL!}/${bucket}/${key}?X-Amz-Expires=${expiresInSeconds}`
     const { url: presigned } = await aws4fetch.sign(
         new Request(url, { headers, method }),
         {
-            aws: { signQuery: true,  allHeaders: true },
+            aws: { signQuery: true, allHeaders: true },
         },
     )
 
@@ -39,7 +39,8 @@ export const s3 = new S3Client({
 })
 
 export function getKeyForMediaAsset({ siteId, slug }) {
-    const key = `site/${siteId}/mediaAssets${slug.startsWith('/') ? slug : '/' + slug}`
+    if (!slug.startsWith('/')) slug = '/' + slug
+    const key = `site/${siteId}/mediaAssets${slug}`
     return key
 }
 

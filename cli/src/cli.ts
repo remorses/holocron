@@ -655,8 +655,14 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                 })
 
                 for (const error of errors) {
+                    let relativePath = error.githubPath
+                    if (relativePath.startsWith(githubFolder + '/')) {
+                        relativePath = relativePath.slice(
+                            githubFolder.length + 1,
+                        )
+                    }
                     errorTable.push([
-                        `${error.githubPath}:${error.line}`,
+                        `${relativePath}:${error.line}`,
                         error.errorMessage,
                     ])
                 }
