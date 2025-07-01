@@ -51,7 +51,8 @@ describe('schema-path-utils', () => {
                 "banner.content",
                 "banner.dismissible",
                 "contextual.options.{index}",
-                "cssVariables",
+                "cssVariables.light",
+                "cssVariables.dark",
                 "domains.{index}",
               ]
             `)

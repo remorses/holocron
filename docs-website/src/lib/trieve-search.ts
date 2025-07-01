@@ -72,7 +72,7 @@ export async function searchDocsWithTrieve({
         query,
         search_type: 'fulltext',
         score_threshold: 1,
-        group_size: 3,
+        group_size: 4,
         filters,
     }
 

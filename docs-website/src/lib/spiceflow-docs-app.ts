@@ -1,25 +1,16 @@
-import { anthropic } from '@ai-sdk/anthropic'
 import { OpenAIResponsesProviderOptions, openai } from '@ai-sdk/openai'
 import {
-    Message,
-    UIMessage,
-    appendResponseMessages,
-    generateObject,
-    streamText,
-    tool,
+  UIMessage,
+  streamText,
+  tool
 } from 'ai'
 import { prisma } from 'db'
-import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
-import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import Handlebars from 'handlebars'
-import path from 'path'
 import { Spiceflow } from 'spiceflow'
 import z from 'zod'
 import agentPrompt from '../prompts/docs-agent.md?raw'
 
 import { notifyError } from './errors'
-import { createTokenizer } from '@orama/tokenizers/mandarin'
-import { createI18nSearchAPI } from 'fumadocs-core/search/server'
 import { getFilesForSource, getFumadocsSource } from './source.server'
 import { searchDocsWithTrieve } from './trieve-search'
 

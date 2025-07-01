@@ -516,12 +516,12 @@ graph TD
 
         const result = await processor.process(input)
         expect(String(result)).toMatchInlineSnapshot(`
-          "<Mermaid>
-            graph TD
-                A[Start] --> B{Is it?}
-                B -->|Yes| C[OK]
-                B -->|No| D[End]
-          </Mermaid>
+          "<Mermaid
+            chart="graph TD
+              A[Start] --> B{Is it?}
+              B -->|Yes| C[OK]
+              B -->|No| D[End]"
+          />
           "
         `)
     })
@@ -576,18 +576,18 @@ sequenceDiagram
         expect(String(result)).toMatchInlineSnapshot(`
           "First diagram:
 
-          <Mermaid>
-            flowchart LR
-                A --> B
-          </Mermaid>
+          <Mermaid
+            chart="flowchart LR
+              A --> B"
+          />
 
           Second diagram:
 
-          <Mermaid>
-            sequenceDiagram
-                Alice->>Bob: Hello
-                Bob->>Alice: Hi!
-          </Mermaid>
+          <Mermaid
+            chart="sequenceDiagram
+              Alice->>Bob: Hello
+              Bob->>Alice: Hi!"
+          />
           "
         `)
     })
@@ -610,16 +610,16 @@ gitGraph
 
         const result = await processor.process(input)
         expect(String(result)).toMatchInlineSnapshot(`
-          "<Mermaid>
-            gitGraph
-                commit
-                branch develop
-                checkout develop
-                commit
-                checkout main
-                merge develop
-                commit
-          </Mermaid>
+          "<Mermaid
+            chart="gitGraph
+              commit
+              branch develop
+              checkout develop
+              commit
+              checkout main
+              merge develop
+              commit"
+          />
           "
         `)
     })
@@ -637,11 +637,11 @@ graph TD
 
         const result = await processor.process(input)
         expect(String(result)).toMatchInlineSnapshot(`
-          "<Mermaid>
-            graph TD
-                A["Node with 'quotes'"] --> B["Node with "double quotes""]
-                B --> C[Node with <brackets>]
-          </Mermaid>
+          "<Mermaid
+            chart="graph TD
+              A[&#x22;Node with 'quotes'&#x22;] --> B[&#x22;Node with &#x22;double quotes&#x22;&#x22;]
+              B --> C[Node with <brackets>]"
+          />
           "
         `)
     })
@@ -656,9 +656,7 @@ graph TD
 
         const result = await processor.process(input)
         expect(String(result)).toMatchInlineSnapshot(`
-          "<Mermaid>
-
-          </Mermaid>
+          "<Mermaid chart="" />
           "
         `)
     })
@@ -699,12 +697,12 @@ More text after.`
 
           And here's a mermaid diagram:
 
-          <Mermaid>
-            pie title Pets
-                "Dogs" : 386
-                "Cats" : 85
-                "Rats" : 15
-          </Mermaid>
+          <Mermaid
+            chart="pie title Pets
+              &#x22;Dogs&#x22; : 386
+              &#x22;Cats&#x22; : 85
+              &#x22;Rats&#x22; : 15"
+          />
 
           More text after.
           "
@@ -729,11 +727,11 @@ classDiagram
         const result = await processor.process(input)
         expect(String(result)).toMatchInlineSnapshot(`
           "<Card>
-            <Mermaid>
-              classDiagram
-                  Animal <|-- Duck
-                  Animal <|-- Fish
-            </Mermaid>
+            <Mermaid
+              chart="classDiagram
+              Animal <|-- Duck
+              Animal <|-- Fish"
+            />
           </Card>
           "
         `)

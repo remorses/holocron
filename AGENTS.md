@@ -86,6 +86,8 @@ Never test client React components. Only server code that runs on the server.
 
 Most tests should be simple calls to functions with some expect calls, no mocks. Test files should be called same as the file where the tested function is being exported from.
 
+NEVER use mocks. the database does not need to be mocked, just use it. simply do not test functions that mutate the database if not asked.
+
 Tests should strive to be as simple as possible, the best test is a simple `.toMatchInlineSnapshot()` call. These can be easily evaluated reading the test file after the run passing the -u option. You can clearly see from the inline snapshot if the function behaves as expected or not.
 
 Try to use only describe and test in your tests. Do not use beforeAll, before, etc if not strictly required.
