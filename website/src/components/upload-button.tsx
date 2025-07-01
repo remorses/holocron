@@ -6,7 +6,7 @@ import { useThrowingFn } from 'website/src/lib/hooks'
 import type { Route as ChatRoute } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId'
 
 import { apiClient } from '../lib/spiceflow-client'
-import { slugKebabCase } from '../lib/utils'
+import { slugKebabCaseKeepExtension } from '../lib/utils'
 import { Button } from './ui/button'
 
 export function UploadButton({
@@ -36,7 +36,7 @@ export function UploadButton({
             }
 
             const filename = encodeURIComponent(
-                slugKebabCase(`${v4()}-${file.name || 'image'}`),
+                slugKebabCaseKeepExtension(`${v4()}-${file.name || 'image'}`),
             )
             const contentType = file.type
             const { error, data } =

@@ -5,7 +5,7 @@ import { useState, useRef, forwardRef } from 'react'
 import { Button } from '../ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { apiClient } from '../../lib/spiceflow-client'
-import { slugKebabCase } from '../../lib/utils'
+import { slugKebabCaseKeepExtension } from '../../lib/utils'
 import { cn } from '../../lib/cn'
 import { useThrowingFn } from '../../lib/hooks'
 import { createIdGenerator } from 'ai'
@@ -61,7 +61,7 @@ export function ChatUploadButton({
     const { fn: uploadFile, isLoading } = useThrowingFn({
         async fn(file: File) {
             const filename = encodeURIComponent(
-                slugKebabCase(`${idGenerator()}-${file.name || 'file'}`),
+                slugKebabCaseKeepExtension(`${idGenerator()}-${file.name || 'file'}`),
             )
             const contentType = file.type || 'application/octet-stream'
 
