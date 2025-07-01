@@ -15,13 +15,9 @@ import {
     PopoverTrigger,
 } from 'website/src/components/ui/popover'
 import { ScrollArea } from 'website/src/components/ui/scroll-area'
-
 import { useStickToBottom } from 'use-stick-to-bottom'
-
 import { fullStreamToUIMessages } from '../lib/process-chat'
-
 import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
-
 import { createIdGenerator, UIMessage } from 'ai'
 import { Markdown } from 'docs-website/src/lib/markdown'
 import { startTransition } from 'react'
@@ -206,7 +202,6 @@ function Messages({ ref }) {
                 return <MessageRenderer key={message.id} message={message} />
             })}
             <ChatErrorMessage />
-            {/* {!messages.length && <ChatCards />} */}
         </div>
     )
 }
