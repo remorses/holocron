@@ -481,7 +481,23 @@ function Tabs(props: React.ComponentProps<typeof TabsComponents.Tabs>) {
 Tabs.displayName = 'Tabs'
 
 export const mdxComponents = {
-    ...fumadocsComponents,
+    CodeBlockTab: fumadocsComponents.CodeBlockTab,
+    CodeBlockTabs: fumadocsComponents.CodeBlockTabs,
+    // CodeBlockTabsList: fumadocsComponents.CodeBlockTabsList,
+    // CodeBlockTabsTrigger: fumadocsComponents.CodeBlockTabsTrigger,
+    pre: fumadocsComponents.pre,
+    // Card: fumadocsComponents.Card,
+    // Cards: fumadocsComponents.Cards,
+    a: fumadocsComponents.a,
+    img: fumadocsComponents.img,
+    h1: fumadocsComponents.h1,
+    h2: fumadocsComponents.h2,
+    h3: fumadocsComponents.h3,
+    h4: fumadocsComponents.h4,
+    h5: fumadocsComponents.h5,
+    h6: fumadocsComponents.h6,
+    table: fumadocsComponents.table,
+    Callout: fumadocsComponents.Callout,
     summary: 'summary',
     details: 'details',
     Latex: Latex,
@@ -490,8 +506,6 @@ export const mdxComponents = {
     Column,
     Tabs: Tabs,
     Tab: Tab,
-
-    ...FilesComponents,
     Accordion,
     Accordions,
     AccordionGroup: Accordions,

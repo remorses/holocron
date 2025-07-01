@@ -383,3 +383,139 @@ description: 'Concise description explaining page purpose and value'
 - Include verification and testing steps with expected outcomes
 - Add appropriate warnings for destructive or security-sensitive actions
 - Validate all technical information through testing before publication
+
+## Routing: structuring markdown pages and meta.json files
+
+## File
+
+A [MDX](https://mdxjs.com) or Markdown file, you can customise its frontmatter.
+
+```mdx
+---
+title: My Page
+description: Best document ever
+icon: home # lucide valid icon name
+full: true
+---
+
+## Learn More
+```
+
+| name          | description                                        |
+| ------------- | -------------------------------------------------- |
+| `title`       | The title of page                                  |
+| `description` | The description of page                            |
+| `icon`        | The name of icon                                   |
+| `full`        | Fill all available space on the page (Fumadocs UI) |
+
+## Folder
+
+Organize multiple pages, you can create a [Meta file](#meta) to customise folders.
+
+### Folder Group
+
+By default, putting a file into folder will change its slugs.
+You can wrap the folder name in parentheses to avoid impacting the slugs of child files.
+
+| path (relative to content folder) | slugs      |
+| --------------------------------- | ---------- |
+| `./(group-name)/page.mdx`         | `['page']` |
+
+## Meta
+
+Customise folders by creating a `meta.json` file in the folder.
+
+```json title="meta.json"
+{
+    "title": "Display Name",
+    "icon": "MyIcon",
+    "pages": ["index", "getting-started"],
+    "defaultOpen": true
+}
+```
+
+| name          | description                           |
+| ------------- | ------------------------------------- |
+| `title`       | Display name                          |
+| `icon`        | The name of icon, see [Icons](#icons) |
+| `pages`       | Folder items (see below)              |
+| `defaultOpen` | Open the folder by default            |
+
+### Pages
+
+By default, folder items are sorted alphabetically.
+
+You can add or control the order of items using `pages`, items are not included unless they are listed inside.
+
+```json title="meta.json"
+{
+    "title": "Name of Folder",
+    "pages": ["guide", "components", "---My Separator---", "./nested/page"]
+}
+```
+
+> Notice how the file extension is not referenced, just use the basename of the file.
+> `---My Separator---` will be used to show a text `My Separator` in the sidebar above the pages on its right, you can use many, use it as a way to add a separator title for a group of pages in the sidebar.
+
+#### Rest
+
+Add a `...` item to include remaining pages (sorted alphabetically), or `z...a` for descending order.
+
+```json title="meta.json"
+{
+    "pages": ["guide", "..."]
+}
+```
+
+You can add `!name` to prevent an item from being included.
+
+```json title="meta.json"
+{
+    "pages": ["guide", "...", "!components"]
+}
+```
+
+#### Extract
+
+You can extract the items from a folder with `...folder_name`. This should be rare.
+
+```json title="meta.json"
+{
+    "pages": ["guide", "...nested"]
+}
+```
+
+#### Link
+
+Use the syntax `[Text](url)` to insert links, or `[Icon][Text](url)` to add icon.
+
+```json title="meta.json"
+{
+    "pages": [
+        "[Vercel](https://vercel.com)",
+        "[triangle][Vercel](https://vercel.com)"
+    ]
+}
+```
+
+## Root Folder
+
+Marks the folder as a root folder, only items in the opened root folder will be considered.
+
+```json title="meta.json"
+{
+    "title": "Name of Folder",
+    "description": "The description of root folder (optional)",
+    "root": true
+}
+```
+
+For example, when you are opening a root folder `framework`, the other folders (e.g. `headless`) are not shown on the sidebar and other navigation elements.
+
+> Fumadocs UI renders root folders as Tabs, which allows user to switch between them. These root folders will not appear as normal sidebar links but tabs on the top navbar.
+
+## Internationalization
+
+You can add Markdown/meta files for different languages by attending `.{locale}` to your file name, like `page.cn.md` and `meta.cn.json`.
+
+But fumabase automatically translates documents for the user so this should never be needed.
