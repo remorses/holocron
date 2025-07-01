@@ -143,6 +143,7 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
         siteId: siteBranch.site.siteId,
         githubFolder: siteBranch.site.githubFolder,
         files: changedFiles,
+        name: siteBranch.site.name || '',
     })
 }
 

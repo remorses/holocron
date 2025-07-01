@@ -240,7 +240,7 @@ export async function syncSite({
     githubFolder: string
     siteId: string
     trieveDatasetId?: string
-    name?: string
+    name: string
     signal?: AbortSignal
 }) {
     const concurrencyLimit = 10
