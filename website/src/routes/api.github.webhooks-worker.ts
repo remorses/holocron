@@ -12,7 +12,7 @@ import {
     isMetaFile,
     isDocsJsonFile,
     isStylesCssFile,
-    syncFiles,
+    syncSite,
     AssetForSync,
 } from 'website/src/lib/sync'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
@@ -138,7 +138,7 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
         githubFolder: siteBranch.site.githubFolder,
     })
 
-    await syncFiles({
+    await syncSite({
         branchId: siteBranch.branchId,
         siteId: siteBranch.site.siteId,
         githubFolder: siteBranch.site.githubFolder,

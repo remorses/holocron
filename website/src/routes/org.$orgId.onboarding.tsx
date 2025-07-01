@@ -152,14 +152,11 @@ export async function action({ request, params }: Route.ActionArgs) {
 
         console.log(`created site ${siteId}`)
 
-        // Create the branch with domain
-
         await syncSite({
             files: files,
             trieveDatasetId: undefined,
             githubFolder: site.githubFolder,
             branchId,
-            orgId,
             siteId,
             name: `${githubAccountLogin} docs`,
         })
@@ -168,7 +165,6 @@ export async function action({ request, params }: Route.ActionArgs) {
         const chat = await prisma.chat.create({
             data: {
                 userId,
-
                 branchId,
             },
         })

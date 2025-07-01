@@ -189,7 +189,6 @@ export const app = new Spiceflow({ basePath: '/api' })
                 // forceFullSync: true,
             })
             await syncSite({
-                orgId,
                 siteId,
                 githubFolder: site.githubFolder,
                 branchId,
@@ -719,8 +718,8 @@ export const app = new Spiceflow({ basePath: '/api' })
                 }),
             )
 
-            const docsJsonFile = files.find(
-              (x) => x.filePath.endsWith('fumabase.jsonc'),
+            const docsJsonFile = files.find((x) =>
+                x.filePath.endsWith('fumabase.jsonc'),
             )
             if (docsJsonFile) {
                 // apply previous present comments to the json
@@ -1050,13 +1049,11 @@ export const app = new Spiceflow({ basePath: '/api' })
                 },
             })
 
-            // Sync site content
             await syncSite({
                 files: assets,
                 trieveDatasetId: undefined,
                 githubFolder: githubFolder || '',
                 branchId: finalBranchId,
-                orgId,
                 siteId: finalSiteId,
                 name,
             })

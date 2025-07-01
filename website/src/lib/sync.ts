@@ -125,55 +125,6 @@ export function isMediaFile(path: string): boolean {
     return mediaExtensions.some((ext) => path.toLowerCase().endsWith(ext))
 }
 
-export async function syncSite({
-    siteId,
-    trieveDatasetId,
-    branchId,
-    files: pages,
-    githubFolder,
-}: {
-    siteId: string
-    trieveDatasetId?: string
-    githubFolder: string
-    name?: string
-    branchId: string
-    orgId: string
-    files: AsyncIterable<AssetForSync>
-}) {
-    console.log('Starting import script...')
-
-    // Find existing domain or create a new one
-    console.log(`Looking for existing internal domain for site: ${siteId}...`)
-
-    console.log(`Using site: ${siteId}`)
-
-    // --- 1. Find or create the Branch ---
-    // Use upsert to find or create the branch in a single operation
-    console.log(`Upserting branch with ID: ${branchId} for site: ${siteId}...`)
-    const branch = await prisma.siteBranch.upsert({
-        where: {
-            branchId: branchId,
-        },
-        update: {
-            siteId,
-        }, // No updates needed if it exists
-        create: {
-            siteId: siteId,
-            title: 'Main',
-            branchId,
-        },
-    })
-    console.log(`Branch upsert complete: ${branch.branchId} (${branch.title})`)
-
-    await syncFiles({
-        branchId,
-        siteId,
-        trieveDatasetId,
-        files: pages,
-        githubFolder,
-    })
-}
-
 export async function* pagesFromFilesList({
     files,
     docsJson,
@@ -275,7 +226,7 @@ export async function* pagesFromFilesList({
     }
 }
 
-export async function syncFiles({
+export async function syncSite({
     branchId,
     siteId,
     trieveDatasetId,
