@@ -32,6 +32,11 @@ const defaultState: DocsState = {
 
 export const useDocsState = create<DocsState>(() => defaultState)
 
+
+if (typeof window !== 'undefined') {
+    window['useDocsState'] = useDocsState
+}
+
 export type IframeRpcMessage = {
     id: string
     state?: DocsState
