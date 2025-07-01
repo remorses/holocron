@@ -401,6 +401,10 @@ export const DocsConfigSchema = z
             .describe(
                 'Custom domains to connect to this documentation site. Each domain should point to cname.fumabase.com via CNAME record. Domains will be connected when fumabase.jsonc is pushed to the main branch.',
             ),
+        // theme: z
+        //     .enum(['black', 'dusk'])
+        //     .optional()
+        //     .describe('Color theme for the documentation site'),
     })
     .strict()
     .describe('Schema for fumabase.jsonc configuration')
