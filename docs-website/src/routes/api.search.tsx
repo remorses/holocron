@@ -1,10 +1,7 @@
 import type { Route } from './+types/api.search'
-import { createI18nSearchAPI } from 'fumadocs-core/search/server'
 
-import { structure } from 'fumadocs-core/mdx-plugins'
-import { createTokenizer } from '@orama/tokenizers/mandarin'
-import { getFilesForSource, getFumadocsSource } from '../lib/source.server'
 import { prisma } from 'db'
+import { searchDocsWithTrieve } from '../lib/trieve-search'
 
 export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url)
@@ -30,31 +27,25 @@ export async function loader({ request }: Route.LoaderArgs) {
     const site = siteBranch?.site
     const branchId = siteBranch?.branchId
 
-    if (!branchId) {
+    if (!branchId || !site) {
         throw new Response('Branch not found', { status: 404 })
     }
 
+    const params = url.searchParams
+    const query = params.get('query') || ''
+    const locale = params.get('locale') || ''
+    const tag = params.get('tag') || ''
     const defaultLocale = site?.defaultLocale
     const locales = site?.locales?.map((x) => x.locale)
-    const files = await getFilesForSource({ branchId: siteBranch.branchId, githubFolder: siteBranch.site?.githubFolder ||'' })
-    const source = await getFumadocsSource({ files, defaultLocale, locales })
-    const server = createI18nSearchAPI('advanced', {
-        i18n: source._i18n!,
-        localeMap: {
-            cn: {
-                tokenizer: createTokenizer(),
-            },
-        },
-        indexes: source.getLanguages().flatMap((entry) => {
-            return entry.pages.map((page) => ({
-                id: page.url,
-                url: page.url,
-                title: page.data.title ?? '',
-                description: page.data.description,
-                structuredData: page.data.structuredData || {},
-                locale: entry.language,
-            }))
-        }),
+
+    const results = await searchDocsWithTrieve({
+        trieveDatasetId: siteBranch.trieveDatasetId,
+        query,
+        tag,
     })
-    return server.GET(request)
+    return new Response(JSON.stringify(results, null, 2), {
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
 }
