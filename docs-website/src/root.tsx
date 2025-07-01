@@ -187,7 +187,7 @@ async function setDocsStateForMessage(partialState: Partial<DocsState>) {
         // TODO do client side navigation instead
         window.location.pathname = partialState.currentSlug
     }
-    console.log(`setting docs-state inside iframe`, partialState)
+    console.log(`setting docs-state from parent message state`, partialState)
     startTransition(() => {
         useDocsState.setState({
             ...partialState,
@@ -199,9 +199,13 @@ async function setDocsStateForMessage(partialState: Partial<DocsState>) {
     })
 }
 async function iframeMessagesHandling() {
-    if (!isInsidePreviewIframe()) return
+    if (!isInsidePreviewIframe()) {
+        console.log(`not inside preview iframe, not connecting to postMessage`)
+        return
+    }
     if (globalThis.postMessageHandlingDone) return
     globalThis.postMessageHandlingDone = true
+    console.log(`docs iframe starts listening on message events`)
     async function onParentPostMessage(e: MessageEvent) {
         onFirstStateMessage()
         try {

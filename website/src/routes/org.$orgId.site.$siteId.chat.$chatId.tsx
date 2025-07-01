@@ -256,9 +256,11 @@ function Content() {
                     )}
                 >
                     <iframe
-                        ref={iframeRef}
-                        onLoad={() => {
-                            console.log(`docs iframe is being replaced`)
+                        ref={(el) => {
+                            iframeRef.current = el
+                            if (!el) {
+                                return
+                            }
                             const docsRpcClient = createIframeRpcClient({
                                 iframeRef,
                             })
@@ -267,11 +269,15 @@ function Content() {
                                 currentSlug: chat.currentSlug || undefined,
                                 filesInDraft: (chat.filesInDraft as any) || {},
                             }
+                            let sentFirstMessage = false
                             // do it as soon as the page loads to not wait for the ready message
-                            docsRpcClient.setDocsState(state)
+                            docsRpcClient.setDocsState(state).then(() => {
+                                sentFirstMessage = true
+                            })
                             const waitForFirstMessage = (event) => {
                                 if (
                                     iframeRef.current &&
+                                    !sentFirstMessage &&
                                     event.source ===
                                         iframeRef.current.contentWindow
                                 ) {
@@ -285,7 +291,11 @@ function Content() {
                             window.addEventListener(
                                 'message',
                                 waitForFirstMessage,
+                                { once: true },
                             )
+                            return () => {
+                                docsRpcClient.cleanup()
+                            }
                         }}
                         key={chat.chatId}
                         style={scaleDownElement(0.9)}
