@@ -458,7 +458,7 @@ function PageContent(props: Route.ComponentProps) {
                     />
                     <ViewOptions
                         markdownUrl={`${slug}.mdx`}
-                        githubUrl={`https://github.com/${owner}/${repo}/blob/${githubBranch}/apps/docs/content/docs/${githubPath}`}
+                        githubUrl={`https://github.com/${owner}/${repo}/blob/${githubBranch}/${githubPath}`}
                         contextual={docsJson?.contextual}
                     />
                 </div>
