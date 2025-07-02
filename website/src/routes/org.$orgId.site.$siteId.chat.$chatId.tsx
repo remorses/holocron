@@ -263,6 +263,7 @@ function Content() {
                             }
                             const docsRpcClient = createIframeRpcClient({
                                 iframeRef,
+                                targetOrigin: new URL(iframeUrl).origin,
                             })
 
                             const state = {

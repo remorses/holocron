@@ -25,6 +25,7 @@ appropriate parameters as delineated in the following example.
 ```markdown ✅ Clear Language
 Next, create a configuration object with these settings:
 ```
+
 </CodeGroup>
 
 ### Meaningful Headings
@@ -53,7 +54,8 @@ Write headings that describe content accurately and help users navigate efficien
 </Tabs>
 
 <Tip>
-**Screen Reader Test:** Read only your headings aloud. Can someone understand your document structure and find what they need?
+    **Screen Reader Test:** Read only your headings aloud. Can someone
+    understand your document structure and find what they need?
 </Tip>
 
 ## Alternative Text and Media
@@ -73,6 +75,7 @@ Write alt text that conveys the same information the image provides:
     ✅ "Dashboard showing 3 active integrations, 1,247 API calls today,
         and 99.8% uptime status"
     ```
+
 </Step>
 
 <Step title="Include relevant text content">
@@ -83,9 +86,9 @@ Write alt text that conveys the same information the image provides:
     ✅ "Error dialog stating 'Invalid API key. Please check your
         configuration and try again.' with a retry button"
     ```
+
 </Step>
-
-
+</Steps>
 
 ### Video and Interactive Content
 
@@ -111,6 +114,7 @@ existing webhooks or an empty state if this is your first time."
 endpoint URL. This should be a publicly accessible HTTPS URL that can
 receive POST requests..."
 ```
+
 </Accordion>
 
 <Accordion title="Interactive demonstrations">
@@ -129,6 +133,7 @@ Try our live API explorer below, or follow these equivalent steps:
 
 [Interactive API Explorer Component]
 ```
+
 </Accordion>
 </AccordionGroup>
 
@@ -165,7 +170,9 @@ Use consistent patterns throughout your documentation:
 Help users navigate efficiently through content:
 
 <Info>
-**Navigation Strategy:** Users with screen readers often navigate by headings, landmarks, or links. Ensure your content structure supports these navigation methods.
+    **Navigation Strategy:** Users with screen readers often navigate by
+    headings, landmarks, or links. Ensure your content structure supports these
+    navigation methods.
 </Info>
 
 ## Color and Visual Accessibility
@@ -188,6 +195,7 @@ Use multiple visual cues to communicate status and importance:
 ⚠️ **Warning:** Rate limit approaching (80% used)
 ✅ **Success:** Configuration saved successfully
 ```
+
 </CodeGroup>
 
 ### High Contrast Content
@@ -195,7 +203,8 @@ Use multiple visual cues to communicate status and importance:
 Ensure sufficient contrast between text and backgrounds:
 
 <Warning>
-**Contrast Requirements:** Text should have at least a 4.5:1 contrast ratio against its background. Large text (18pt+) needs at least 3:1 contrast.
+    **Contrast Requirements:** Text should have at least a 4.5:1 contrast ratio
+    against its background. Large text (18pt+) needs at least 3:1 contrast.
 </Warning>
 
 ## Keyboard Navigation Support
@@ -218,6 +227,7 @@ Design content flow that makes sense when navigating with keyboard:
     3. [Button: Save Configuration]
     4. [Link: Advanced Settings]
     ```
+
 </Step>
 
 <Step title="Clear focus indicators">
@@ -226,6 +236,7 @@ Design content flow that makes sense when navigating with keyboard:
     <Note>
     **Focus Indicators:** Ensure buttons, links, and form fields have visible focus states that are clearly distinguishable.
     </Note>
+
 </Step>
 
 <Step title="Skip links for efficiency">
@@ -236,6 +247,7 @@ Design content flow that makes sense when navigating with keyboard:
         Skip to main content
     </a>
     ```
+
 </Step>
 </Steps>
 
@@ -251,9 +263,11 @@ npm install -g @axe-core/cli
 axe-cli https://your-docs-site.com
 
 # Check color contrast
+
 npm install -g colour-contrast-checker
 contrast-checker "#333333" "#ffffff"
-```
+
+````
 </Tab>
 
 <Tab title="Manual Testing">
@@ -293,17 +307,14 @@ Write error messages and help text that are clear and actionable:
 ✅ "Authentication failed: API key is missing or invalid.
     Check that you've included the Authorization header
     with format 'Bearer your-api-key'"
-```
+````
+
 </Accordion>
 
-<Accordion title="Recovery instructions">
-```javascript
-❌ "Network error occurred"
-✅ "Network error: Unable to connect to API server.
-    Check your internet connection and try again.
-    If the problem persists, check our status page
-    at status.example.com"
-```
+<Accordion title='Recovery instructions'>
+    ```javascript ❌ "Network error occurred" ✅ "Network error: Unable to
+    connect to API server. Check your internet connection and try again. If the
+    problem persists, check our status page at status.example.com" ```
 </Accordion>
 
 <Accordion title="Helpful context">
@@ -317,5 +328,7 @@ Write error messages and help text that are clear and actionable:
 </AccordionGroup>
 
 <Check>
-Accessible documentation creates better experiences for everyone—users with disabilities, non-native speakers, people in low-bandwidth environments, and anyone trying to quickly find information.
+    Accessible documentation creates better experiences for everyone—users with
+    disabilities, non-native speakers, people in low-bandwidth environments, and
+    anyone trying to quickly find information.
 </Check>

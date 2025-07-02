@@ -28,8 +28,8 @@ export function createIframeRpcClient({
         console.log(`sending state to docs iframe`, state)
         // contentWindow is accessible even for cross-origin iframes, but you cannot access *properties* of the window if it's cross-origin.
         // Here, we just need to postMessage, which is allowed on cross-origin frames.
-        const w = iframeRef.current?.contentWindow
-        if (!w) throw new Error('iframe not ready')
+        const iframeWindow = iframeRef.current?.contentWindow
+        if (!iframeWindow) throw new Error('iframe not ready')
 
         const id = crypto.randomUUID()
 
@@ -57,8 +57,8 @@ export function createIframeRpcClient({
 
             pendingRequests.set(id, { resolve, reject, timeout })
 
-            w.postMessage(message, {
-                targetOrigin: '*',
+            iframeWindow.postMessage(message, {
+                targetOrigin: targetOrigin,
             })
             if (idempotenceId) {
                 usedIdempotenceIds.add(idempotenceId)
@@ -66,7 +66,7 @@ export function createIframeRpcClient({
         })
     }
     function onMessage(e: MessageEvent) {
-        if (targetOrigin && e.origin !== targetOrigin) return
+
         const { id, state, error } = (e.data ?? {}) as IframeRpcMessage
 
         if (!id) return

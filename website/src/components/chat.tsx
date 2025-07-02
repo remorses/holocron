@@ -674,6 +674,7 @@ function PrButton({ updatedLines }) {
     const [isLoading, setIsLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
     const [buttonText, setButtonText] = useTemporaryState('', 2000)
+    const messages = useChatState((x) => x.messages)
 
     const { chatId, chat, branchId } =
         useLoaderData() as Route.ComponentProps['loaderData']
@@ -763,6 +764,7 @@ function PrButton({ updatedLines }) {
             setIsLoading(false)
         }
     }
+    if (!messages?.length) return null
 
     return (
         <div className='flex items-center gap-2'>
