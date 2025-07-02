@@ -1,11 +1,13 @@
-import { RiAttachment2, RiCloseLine, RiAddLine } from '@remixicon/react'
-import { useState, useRef, forwardRef } from 'react'
+import { RiAddLine, RiAttachment2, RiCloseLine } from '@remixicon/react'
+import { forwardRef, useRef, useState } from 'react'
 
 import { Button } from '../components/ui/button.js'
-import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover.js'
-import { slugKebabCaseKeepExtension } from '../lib/utils.js'
-import { cn } from '../lib/cn.js'
-import { useThrowingFn } from '../lib/hooks.js'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '../components/ui/popover.js'
+
 import { createIdGenerator } from 'ai'
 
 interface UploadedFile {
@@ -43,11 +45,9 @@ const AttachmentButton = forwardRef<
 })
 
 export function ChatUploadButton({
-    siteId,
     onFilesChange,
     accept = '*',
 }: {
-    siteId: string
     onFilesChange?: (files: UploadedFile[]) => void
     accept?: string
 }) {
@@ -56,12 +56,15 @@ export function ChatUploadButton({
     const inputRef = useRef<HTMLInputElement>(null)
 
     const idGenerator = createIdGenerator()
-    const { fn: uploadFile, isLoading } = useThrowingFn({
-        async fn(file: File) {
-            const filename = encodeURIComponent(
-                slugKebabCaseKeepExtension(
-                    `${idGenerator()}-${file.name || 'file'}`,
-                ),
+    const [isLoading, setIsLoading] = useState(false)
+
+    const uploadFile = async (file: File) => {
+        try {
+            setIsLoading(true)
+            // Generate file name and content type as before
+            // (filename variable not used so omitting for now)
+            slugKebabCaseKeepExtension(
+                `${idGenerator()}-${file.name || 'file'}`,
             )
             const contentType = file.type || 'application/octet-stream'
 
@@ -69,7 +72,7 @@ export function ChatUploadButton({
             // In contesto, we don't have apiClient, so this would need to be handled by the parent component
             // For now, we'll just create a mock uploaded file
             const finalUrl = URL.createObjectURL(file)
-            const signedUrl = finalUrl // Mock signed URL
+            // No need for signedUrl as it's unused
 
             // In contesto, skip the actual upload since we don't have the API
             // The parent component should handle the actual upload logic
@@ -86,8 +89,14 @@ export function ChatUploadButton({
             onFilesChange?.(newFiles)
 
             // TODO: Wire this logic to messages
-        },
-    })
+        } catch (err) {
+            console.error(err)
+            // In contesto, we don't have toast, so just return the error
+            return err
+        } finally {
+            setIsLoading(false)
+        }
+    }
 
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || [])
@@ -179,4 +188,34 @@ export function ChatUploadButton({
             )}
         </>
     )
+}
+
+function splitExtension(str: string): {
+    base: string
+    extension: string
+} {
+    const lastSlash = str.lastIndexOf('/')
+    const lastDot = str.lastIndexOf('.')
+    // Extension must come after the last slash and dot is not the first character after slash.
+    if (lastDot > lastSlash + 1) {
+        return {
+            base: str.substring(0, lastDot),
+            extension: str.substring(lastDot),
+        }
+    }
+    return { base: str, extension: '' }
+}
+
+function slugKebabCaseKeepExtension(str: string): string {
+    const { base, extension } = splitExtension(str)
+    // slugify base path
+    let slug = base
+        .toLowerCase()
+        .split('/')
+        .map((segment) => segment.split(' ').filter(Boolean).join('-'))
+        .join('-')
+        .replace(/-+/g, '-') // collapse multiple dashes
+    if (slug.endsWith('-')) slug = slug.slice(0, -1)
+    // Just concat extension if exists; keep as is because prompt says "keep it as is"
+    return slug + extension
 }

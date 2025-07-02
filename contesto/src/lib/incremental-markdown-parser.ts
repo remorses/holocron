@@ -1,4 +1,5 @@
-import { processMdxInClient } from './markdown-runtime.js'
+import { Root } from 'mdast'
+import { processorWithAst } from './simple-processor.js'
 
 /* ─────────── types ─────────── */
 interface Offset {
@@ -53,7 +54,7 @@ export type IncrementalParsingProps = {
     trailingNodes?: number
     processor?: any
 }
-export const parseMarkdownIncremental = ({
+export const parseMarkdownIncremental = async ({
     markdown: text,
     cache,
     trailingNodes = 2,
@@ -78,7 +79,8 @@ export const parseMarkdownIncremental = ({
         /* ② miss → parse ---------------------------------------------- */
         const rest = text.slice(offset)
 
-        const { mdast: ast } = processMdxInClient({ markdown: rest, processor })
+        const file = await processorWithAst(processor).process(rest)
+        const ast = file.data.ast as Root
 
         // Process nodes and recursively adjust all positions
         const adjustedNodes = ast.children.map((node) =>
