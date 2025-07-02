@@ -8,7 +8,7 @@ try to run commands inside the package folder that you are working on. for examp
 
 if you need to install packages always use pnpm
 
-instead of adding packages directly in package.json use `pnpm install package` inside the right workspace folder.
+instead of adding packages directly in package.json use `pnpm install package` inside the right workspace folder. NEVER manually add a package by updating package.json
 
 # typescript
 
@@ -68,6 +68,8 @@ const favicon: string = () => {
     // ...
 }
 ```
+
+- when a package has to import files from another packages in the workspace never add a new tsconfig path, instead add that package as a workspace dependency using `pnpm i "package@workspace:*"`
 
 # testing
 

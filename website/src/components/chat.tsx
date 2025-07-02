@@ -1,18 +1,15 @@
 'use client'
 
 import { createIdGenerator, UIMessage } from 'ai'
-import { Markdown } from 'docs-website/src/lib/markdown'
+import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
 import { memo, startTransition, useEffect, useMemo, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import {
     ChatAssistantMessage,
     ChatErrorMessage,
     ChatUserMessage,
-} from 'website/src/components/chat/chat-message'
-import {
-    ChatAutocomplete,
-    ChatTextarea,
-} from 'website/src/components/chat/chat-textarea'
+} from 'contesto/src/chat/chat-message'
+import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
 import { ToolInvocationRenderer } from 'website/src/components/tools-preview'
 
 import { Button } from 'website/src/components/ui/button'
@@ -59,7 +56,7 @@ import {
     useRouteLoaderData,
 } from 'react-router'
 import { AnimatePresence, motion } from 'unframer'
-import { ChatRecordButton } from 'website/src/components/chat/chat-record-button'
+import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
 import {
     Command,
     CommandEmpty,
@@ -76,12 +73,16 @@ import {
     FileUpdate,
     isParameterComplete,
 } from '../lib/edit-tool'
-import { safeJsoncParse, teeAsyncIterable } from '../lib/utils'
+import {
+    safeJsoncParse,
+    slugKebabCaseKeepExtension,
+    teeAsyncIterable,
+} from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
-import { useChatState } from './chat/chat-provider'
-import { ChatSuggestionButton } from './chat/chat-suggestion'
-import { ChatUploadButton } from './chat/chat-upload-button'
+import { useChatState } from 'contesto/src/chat/chat-provider'
+import { ChatSuggestionButton } from 'contesto/src/chat/chat-suggestion'
+import { ChatUploadButton } from 'contesto/src/chat/chat-upload-button'
 
 function keyForDocsJson({ chatId }) {
     return `fumabase.jsonc-${chatId}`
@@ -645,7 +646,59 @@ function Footer() {
                                 {/* Left buttons */}
                                 <div className='flex items-center gap-2'>
                                     <ChatUploadButton
-                                        siteId={siteId}
+                                        onUpload={async (file) => {
+                                            const idGenerator =
+                                                createIdGenerator()
+                                            const filename = encodeURIComponent(
+                                                slugKebabCaseKeepExtension(
+                                                    `${idGenerator()}-${file.name || 'file'}`,
+                                                ),
+                                            )
+                                            const contentType =
+                                                file.type ||
+                                                'application/octet-stream'
+                                            const { error, data } =
+                                                await apiClient.api.createUploadSignedUrl.post(
+                                                    {
+                                                        siteId,
+                                                        files: [
+                                                            {
+                                                                slug: filename,
+                                                                contentType,
+                                                                contentLength:
+                                                                    file.size,
+                                                            },
+                                                        ],
+                                                    },
+                                                )
+                                            if (error) throw error
+
+                                            const [result] = data.files
+
+                                            const uploadResp = await fetch(
+                                                result.signedUrl,
+                                                {
+                                                    method: 'PUT',
+                                                    headers: {
+                                                        'Content-Type':
+                                                            contentType,
+                                                    },
+                                                    body: file,
+                                                },
+                                            )
+
+                                            if (!uploadResp.ok) {
+                                                throw new Error(
+                                                    'Failed to upload file to storage.',
+                                                )
+                                            }
+
+                                            return {
+                                                name: result.path,
+                                                contentType,
+                                                url: result.finalUrl,
+                                            }
+                                        }}
                                         accept='image/*,text/*,.pdf,.docx,.doc'
                                         onFilesChange={(files) => {
                                             // TODO: Wire uploaded files to messages

@@ -36,7 +36,8 @@ import { DocsState, IframeRpcMessage, useDocsState } from './lib/docs-state'
 import { env } from './lib/env'
 import { useDocsJson } from './lib/hooks'
 import { LOCALE_LABELS } from './lib/locales'
-import { Markdown } from './lib/markdown'
+import { Markdown } from 'contesto/src/lib/markdown'
+import { mdxComponents } from './components/mdx-components'
 import { processMdxInServer } from './lib/mdx.server'
 import { getFumadocsSource, getFilesForSource } from './lib/source.server'
 import { getFumadocsClientSource } from './lib/source'
@@ -744,6 +745,7 @@ function UserBanner({ banner }: { banner?: any }) {
                     markdown={banner.content}
                     ast={bannerAst}
                     isStreaming={false}
+                    components={mdxComponents}
                 />
             </div>
             {banner.dismissible && (

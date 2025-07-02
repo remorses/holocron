@@ -11,10 +11,12 @@ type ProcessorData = { ast: any }
 
 export const processorWithAst = memoize(
     function processorWithAst(processor): Processor {
-        return processor.use((tree, file) => {
+        return processor().use(() => (tree, file) => {
             if (!file.data) file.data = {}
             const data: ProcessorData = file.data
-            data.ast = tree
+            if (tree) {
+                data.ast = tree
+            }
         })
     },
     { maxSize: 10 },

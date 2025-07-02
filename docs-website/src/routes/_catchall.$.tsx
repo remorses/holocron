@@ -1,6 +1,5 @@
 import { prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
-import { VirtualFile } from 'fumadocs-core/source'
 import {
     isRouteErrorResponse,
     useLoaderData,
@@ -9,10 +8,10 @@ import {
 import { useShallow } from 'zustand/react/shallow'
 import { useDocsState } from '../lib/docs-state'
 
-import { getCacheTagForMediaAsset, getKeyForMediaAsset, s3 } from '../lib/s3'
 import type { Route as RootRoute } from '../root'
 import type { Route } from './+types/_catchall.$'
 
+import { Markdown } from 'contesto/src/lib/markdown'
 import {
     PageArticle,
     PageTOCItems,
@@ -37,16 +36,23 @@ import {
     TwitterIcon,
 } from 'lucide-react'
 import { LLMCopyButton, ViewOptions } from '../components/llm'
+import { mdxComponents } from '../components/mdx-components'
 import { PoweredBy } from '../components/poweredby'
 import { Rate } from '../components/rate'
 import { DocsJsonType } from '../lib/docs-json'
 import { useDocsJson } from '../lib/hooks'
 import { LOCALES } from '../lib/locales'
-import { Markdown } from '../lib/markdown'
+import {
+    getProcessor,
+    ProcessorData,
+    ProcessorDataFrontmatter,
+} from '../lib/mdx-heavy'
 import { getFumadocsClientSource } from '../lib/source'
 import { getFilesForSource, getFumadocsSource } from '../lib/source.server'
-import { ProcessorDataFrontmatter } from '../lib/mdx-heavy'
-import { mdxComponents } from '../components/mdx-components'
+import { diffWordsWithSpace } from 'diff'
+import { markAddedNodes } from '../lib/diff'
+import { MarkdownRuntime } from '../lib/markdown-runtime'
+import { renderNode } from '../lib/mdx-code-block'
 
 export function meta({ data, matches }: Route.MetaArgs) {
     if (!data) return []
@@ -150,8 +156,6 @@ export async function clientLoader({
     const docsState = useDocsState.getState()
     const { filesInDraft } = docsState
 
-    // Use dynamic import for processMdxInClient
-    const { processMdxInClient } = await import('../lib/markdown-runtime')
     try {
         // Attempt to load server data
         const serverData = await serverLoader()
@@ -192,22 +196,8 @@ export async function clientLoader({
             const page = source.getPage(slugs)
             if (page) {
                 const extension = githubPath.endsWith('.mdx') ? 'mdx' : 'md'
-                const data = await (async function getData() {
-                    while (true) {
-                        try {
-                            return processMdxInClient({
-                                extension,
-                                markdown: draft.content,
-                            })
-                        } catch (e: any) {
-                            if (e instanceof Promise) {
-                                await e
-                            } else {
-                                throw e
-                            }
-                        }
-                    }
-                })()
+                const f = await getProcessor({ extension }).process(draft)
+                const data = f.data as ProcessorData
 
                 // Use cached server data as base structure, without fields available in root
                 const baseData = lastServerLoaderData || {
@@ -651,13 +641,27 @@ function DocsMarkdown() {
         }),
     )
 
+    const extension = loaderData.githubPath.split('.').pop()
+
+    if (!ast) {
+        const previousMarkdown = loaderData.markdown
+        return (
+            <MarkdownRuntime
+                {...{
+                    extension,
+                    isStreaming,
+                    showDiff: true,
+                    markdown,
+                    previousMarkdown,
+                }}
+            />
+        )
+    }
     return (
         <Markdown
-            previousMarkdown={loaderData.markdown}
-            previousAst={loaderData.ast}
-            isStreaming={isStreaming}
-            addDiffAttributes={true}
+            isStreaming={false}
             markdown={markdown}
+            renderNode={renderNode}
             components={components}
             ast={ast}
         />

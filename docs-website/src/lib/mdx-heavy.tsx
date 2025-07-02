@@ -1,4 +1,12 @@
 import remarkFrontmatter from 'remark-frontmatter'
+import { TOCItemType } from 'fumadocs-core/server'
+
+import { trySync } from './utils'
+import {
+    remarkCodeGroup,
+    remarkMermaidCode,
+    remarkSingleAccordionItems,
+} from './remark-plugins'
 import remarkStringify from 'remark-stringify'
 
 import { remarkInstall } from 'fumadocs-docgen'
@@ -41,13 +49,20 @@ const remarkCodeToHtml =
         highlighter,
         onMissingLanguage,
     }: {
-        highlighter: Highlighter
-        onMissingLanguage: OnMissingLanguage
+        highlighter?: Highlighter
+        onMissingLanguage?: OnMissingLanguage
     }) =>
     () => {
         return (tree: Root) => {
             visit(tree, 'code', (node) => {
                 const language = node.lang || 'text'
+
+                if (!highlighter) {
+                    return
+                }
+                if (!onMissingLanguage) {
+                    return
+                }
 
                 if (!trySync(() => highlighter.getLanguage(language))?.data) {
                     onMissingLanguage(highlighter, language)
@@ -144,15 +159,6 @@ const remarkExtractFirstHeading = () => {
     }
 }
 
-import { TOCItemType } from 'fumadocs-core/server'
-import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
-import { trySync } from './utils'
-import {
-    remarkCodeGroup,
-    remarkMermaidCode,
-    remarkSingleAccordionItems,
-} from './remark-plugins'
-
 const injectData = () => {
     return (tree, file) => {
         if (!file.data) file.data = {}
@@ -181,8 +187,8 @@ export const getProcessor = function getProcessor({
     highlighter,
 }: {
     extension: string | undefined
-    highlighter: Highlighter
-    onMissingLanguage: OnMissingLanguage
+    highlighter?: Highlighter
+    onMissingLanguage?: OnMissingLanguage
 }) {
     if (typeof extension === 'string' && extension.endsWith('md')) {
         return remark()

@@ -73,6 +73,7 @@
         "fast-json-stable-stringify": "^2.1.0",
         "flat-cache": "^6.1.10",
         "fumadocs-core": "workspace:*",
+        "contesto": "workspace:*",
         "fumadocs-ui": "workspace:*",
         "handlebars": "^4.7.8",
         "hono": "^4.7.11",

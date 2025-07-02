@@ -1,31 +1,32 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { memo, useRef, useState } from 'react'
 
-
 import { SafeMdxRenderer } from 'safe-mdx'
 import { cn } from './cn.js'
 
 import { parseMarkdownIncremental } from './incremental-markdown-parser.js'
 import { MarkdownRendererProps } from './markdown.js'
-import { renderNode } from './mdx-code-block.js'
+
+import { simplerProcessor } from './simple-processor.js'
 
 export const StreamingMarkdownRuntimeComponent = memo(
     function MarkdownRuntimeComponent({
         markdown: markdown,
-
         isStreaming: isStreaming,
-
+        onAst,
         className,
         components,
-        processor,
+        processor = simplerProcessor,
+        renderNode,
     }: MarkdownRendererProps & {}) {
         const container = useRef<HTMLDivElement>(null)
 
         let [markdownCache] = useState(() => new Map())
 
-        const { data: resultAst = [] } = useQuery({
+        const { data: resultAst } = useQuery({
             queryKey: ['markdown-ast', markdown, isStreaming],
-            queryFn: async () => {
+
+            queryFn: async ({}) => {
                 if (!markdown) return []
 
                 try {
@@ -35,11 +36,7 @@ export const StreamingMarkdownRuntimeComponent = memo(
                         trailingNodes: 2,
                         processor,
                     })
-
-                    // if (previousMarkdown) {
-                    //     const diffs = diffWordsWithSpace(previousMarkdown, markdown)
-                    //     markAddedNodes(diffs, ast)
-                    // }
+                    onAst?.(ast)
 
                     return ast
                 } catch (err) {
@@ -61,10 +58,14 @@ export const StreamingMarkdownRuntimeComponent = memo(
                     throw err
                 }
             },
+            retry(failureCount, error) {
+                if (isStreaming) return true
+                return false
+            },
             enabled: !!markdown,
             placeholderData: keepPreviousData,
         })
-        if (!markdown) return null
+
         return (
             <div
                 className={cn(

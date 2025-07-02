@@ -2,8 +2,9 @@
 @import 'tw-animate-css';
 @import 'fumadocs-ui/css/preset.css';
 @import 'fumadocs-ui/css/shadcn.css';
-@source "docs-website/src";
-@source "docs-website/src/components";
+@source "../../../docs-website/src";
+@source "../../../contesto/src";
+
 @source "fumadocs-ui";
 
 @custom-variant dark (&:is(.dark *));
@@ -180,8 +181,8 @@
 
 /* Custom scrollbar styles: shadcn-inspired */
 ::-webkit-scrollbar {
-    width: 10px;
-    height: 12px;
+    width: 6px;
+    height: 6px;
     background: transparent;
     border-radius: var(--radius-md);
 }
@@ -189,7 +190,7 @@
 ::-webkit-scrollbar-thumb {
     background: var(--color-muted);
     border-radius: var(--radius-md);
-    border: 2px solid var(--color-background);
+    border: none;
 }
 
 ::-webkit-scrollbar-thumb:hover {

@@ -11,7 +11,6 @@ import { CSSProperties } from 'react'
 import fumadocsComponents from 'fumadocs-ui/mdx'
 import { DynamicIcon } from '../lib/icon'
 import React from 'react'
-import { MdxParentsProvider } from './mdx-context'
 
 const Mermaid = React.lazy(() => import('./mermaid'))
 
@@ -394,11 +393,9 @@ function Tab({
     title?: string
 }) {
     return (
-        <MdxParentsProvider tag='Tab'>
-            <TabsComponents.Tab value={title} {...props}>
-                {children}
-            </TabsComponents.Tab>
-        </MdxParentsProvider>
+        <TabsComponents.Tab value={title} {...props}>
+            {children}
+        </TabsComponents.Tab>
     )
 }
 
@@ -471,9 +468,7 @@ function Tabs(props: React.ComponentProps<typeof TabsComponents.Tabs>) {
 
     return (
         <TabsComponents.Tabs {...props} items={items}>
-            <MdxParentsProvider tag='Tabs'>
-                {normalizedChildren}
-            </MdxParentsProvider>
+            {normalizedChildren}
         </TabsComponents.Tabs>
     )
 }

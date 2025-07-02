@@ -15,7 +15,7 @@ import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from './org.$orgId.site.$siteId'
 
 import { UIMessage } from 'ai'
-import { ChatProvider, ChatState } from '../components/chat/chat-provider'
+import { ChatProvider, ChatState } from 'contesto/src/chat/chat-provider'
 import { env } from 'docs-website/src/lib/env'
 import { formatDistanceToNow } from 'date-fns'
 import { Button } from '../components/ui/button'

@@ -233,7 +233,7 @@ export function ChatTextarea({
                     showOnKeyPress={false}
                     setValueOnChange={false}
                     className={cn(
-                        'flex grow min-h-[84px] overflow-auto max-h-full w-full bg-transparent px-4 py-3 text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none resize-none',
+                        'flex grow min-h-[84px] overflow-auto max-h-full w-full bg-transparent px-4 py-3 text-[15px] resize-none text-foreground placeholder:text-muted-foreground/70 outline-none resize-none',
                         className,
                     )}
                     render={
@@ -247,7 +247,7 @@ export function ChatTextarea({
                             onScroll={mentionsCombobox.render}
                             onPointerDown={mentionsCombobox.hide}
                             onChange={handleChange}
-                            className='box-border border-0 outline-none [field-sizing:content] whitespace-pre-wrap break-words resize-none'
+                            className='box-border border-0 outline-none [field-sizing:content] whitespace-pre-wrap break-words  '
                         />
                     }
                 />

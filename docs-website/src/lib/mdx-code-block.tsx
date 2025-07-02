@@ -1,36 +1,72 @@
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
+import { useState, useEffect } from 'react'
 import { RenderNode } from 'safe-mdx'
-import { mdxParentsContext } from '../components/mdx-context'
-import { use } from 'react'
+import { codeToHtml } from 'shiki'
 
 export const renderNode: RenderNode = (node, transform) => {
     if (node.type === 'code') {
         const language = node.lang || ''
         const meta = parseMetaString(node.meta)
-        const { parentTags } = use(mdxParentsContext)
 
-        // the mdast plugin replaces the code string with shiki html
-        const html = node.data?.['html'] || node.value || ''
+        const html = node.data?.['html']
         const props = {
             title: '',
             ...(node.data?.hProperties ?? {}),
             ...meta,
             lang: language,
         }
-        if (parentTags?.includes('Tabs') && props.title) {
-            props.title = ''
-        }
+
         return (
             <CodeBlock {...props}>
                 <Pre>
-                    <div
-                        className='content'
-                        dangerouslySetInnerHTML={{ __html: html }}
-                    ></div>
+                    {html ? (
+                        <div
+                            className='content'
+                            dangerouslySetInnerHTML={{ __html: html }}
+                        ></div>
+                    ) : (
+                        <RuntimeShkiContent
+                            code={node.value}
+                            language={language}
+                            themes={{
+                                light: 'github-light',
+                                dark: 'github-dark',
+                            }}
+                        />
+                    )}
                 </Pre>
             </CodeBlock>
         )
     }
+}
+
+function RuntimeShkiContent({ code, language, themes }) {
+    const [highlightedHtml, setHighlightedHtml] = useState<string | null>(code)
+
+    useEffect(() => {
+        async function highlight() {
+            if (!code) {
+                setHighlightedHtml('<pre><code></code></pre>')
+                return
+            }
+
+            const html = await codeToHtml(code, {
+                lang: language,
+                themes,
+                defaultColor: false,
+            })
+            setHighlightedHtml(html)
+        }
+        highlight().catch(console.error)
+    }, [code, language, themes])
+    return (
+        <div
+            className='content'
+            dangerouslySetInnerHTML={{
+                __html: highlightedHtml ?? '',
+            }}
+        ></div>
+    )
 }
 
 export function parseMetaString(

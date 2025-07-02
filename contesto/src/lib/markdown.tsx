@@ -1,8 +1,9 @@
 import { lazy } from 'react'
-import { SafeMdxRenderer } from 'safe-mdx'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+import { RenderNode, SafeMdxRenderer } from 'safe-mdx'
 
 import { cn } from './cn.js'
-import { renderNode } from './mdx-code-block.js'
 
 const MarkdownRuntimeComponent = lazy(() =>
     import('./markdown-runtime.js').then((mod) => ({
@@ -17,12 +18,20 @@ export type MarkdownRendererProps = {
     isStreaming?: boolean | undefined
     components?: any
     processor?: any
+    onAst?: (ast: any) => void
+    renderNode?: RenderNode
 }
+
+const reactQueryClient = new QueryClient()
 
 export const Markdown = function MarkdownRender(props: MarkdownRendererProps) {
     const { ast } = props
     if (!ast) {
-        return <MarkdownRuntimeComponent {...props} />
+        return (
+            <QueryClientProvider client={reactQueryClient}>
+                <MarkdownRuntimeComponent {...props} />
+            </QueryClientProvider>
+        )
     }
     return (
         <div
@@ -32,8 +41,9 @@ export const Markdown = function MarkdownRender(props: MarkdownRendererProps) {
             )}
         >
             <SafeMdxRenderer
-                renderNode={renderNode}
+                renderNode={props.renderNode}
                 components={props.components}
+                markdown={props.markdown}
                 mdast={ast}
             />
         </div>

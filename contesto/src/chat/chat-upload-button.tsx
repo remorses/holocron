@@ -11,9 +11,8 @@ import {
 import { createIdGenerator } from 'ai'
 
 interface UploadedFile {
-    id: string
-    name: string
     url: string
+    name: string
     contentType: string
 }
 
@@ -46,9 +45,11 @@ const AttachmentButton = forwardRef<
 
 export function ChatUploadButton({
     onFilesChange,
+    onUpload,
     accept = '*',
 }: {
     onFilesChange?: (files: UploadedFile[]) => void
+    onUpload?: (file: File) => Promise<UploadedFile>
     accept?: string
 }) {
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
@@ -61,37 +62,27 @@ export function ChatUploadButton({
     const uploadFile = async (file: File) => {
         try {
             setIsLoading(true)
-            // Generate file name and content type as before
-            // (filename variable not used so omitting for now)
-            slugKebabCaseKeepExtension(
-                `${idGenerator()}-${file.name || 'file'}`,
-            )
-            const contentType = file.type || 'application/octet-stream'
 
-            console.log(file.size)
-            // In contesto, we don't have apiClient, so this would need to be handled by the parent component
-            // For now, we'll just create a mock uploaded file
-            const finalUrl = URL.createObjectURL(file)
-            // No need for signedUrl as it's unused
+            let newFile: UploadedFile
 
-            // In contesto, skip the actual upload since we don't have the API
-            // The parent component should handle the actual upload logic
+            if (onUpload) {
+                newFile = await onUpload(file)
+            } else {
+                const contentType = file.type || 'application/octet-stream'
+                const finalUrl = URL.createObjectURL(file)
 
-            const newFile: UploadedFile = {
-                id: idGenerator(),
-                name: file.name,
-                url: finalUrl,
-                contentType,
+                newFile = {
+                    name: file.name,
+                    url: finalUrl,
+                    contentType,
+                }
             }
 
             const newFiles = [...uploadedFiles, newFile]
             setUploadedFiles(newFiles)
             onFilesChange?.(newFiles)
-
-            // TODO: Wire this logic to messages
         } catch (err) {
             console.error(err)
-            // In contesto, we don't have toast, so just return the error
             return err
         } finally {
             setIsLoading(false)
@@ -111,8 +102,8 @@ export function ChatUploadButton({
         }
     }
 
-    const removeFile = (fileId: string) => {
-        const newFiles = uploadedFiles.filter((f) => f.id !== fileId)
+    const removeFile = (name: string) => {
+        const newFiles = uploadedFiles.filter((f) => f.name !== name)
         setUploadedFiles(newFiles)
         onFilesChange?.(newFiles)
     }
@@ -159,9 +150,9 @@ export function ChatUploadButton({
                                 <RiAddLine className='size-5' />
                             </div>
 
-                            {uploadedFiles.map((file) => (
+                            {uploadedFiles.map((file, index) => (
                                 <div
-                                    key={file.id}
+                                    key={file.name + index}
                                     className='flex items-center justify-between px-3 py-2 text-sm hover:bg-muted rounded-md'
                                 >
                                     <span className='truncate flex-1 mr-2'>
@@ -169,7 +160,7 @@ export function ChatUploadButton({
                                     </span>
                                     <button
                                         className='p-0 cursor-pointer'
-                                        onClick={() => removeFile(file.id)}
+                                        onClick={() => removeFile(file.name)}
                                     >
                                         <RiCloseLine className='size-5' />
                                     </button>

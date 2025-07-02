@@ -1,10 +1,10 @@
 import { memo } from 'react'
-import { Markdown } from 'docs-website/src/lib/markdown'
+import { Markdown } from 'contesto/src/lib/markdown'
 import { cn } from 'website/src/lib/utils'
 import { useWebsiteState } from '../lib/state'
 import { EditToolParamSchema } from '../lib/edit-tool'
 import { RenderFormPreview } from './render-form-preview'
-import { useChatState } from './chat/chat-provider'
+import { useChatState } from 'contesto/src/chat/chat-provider'
 
 export function EditorToolPreview({
     args,

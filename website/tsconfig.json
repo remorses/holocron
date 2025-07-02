@@ -17,7 +17,6 @@
         "rootDir": ".",
         "isolatedModules": true,
         "esModuleInterop": true,
-
         "jsx": "react-jsx",
         "module": "ESNext",
         "moduleResolution": "Bundler",
@@ -35,7 +34,7 @@
         "rootDirs": [".", "./.react-router/types"],
         "baseUrl": ".",
         "paths": {
-            "website/*": ["./*"]
+            "website/*": ["./*"],
         },
         "noEmit": false
     },

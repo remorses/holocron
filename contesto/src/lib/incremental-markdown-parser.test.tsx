@@ -6,7 +6,7 @@ import {
     IncrementalParsingProps,
     parseMarkdownIncremental,
     SegmentEntry,
-} from './incremental-markdown-parser'
+} from './incremental-markdown-parser.js'
 
 // Wait for highlighter to initialize
 async function parseAndWaitForHighlighter(props: IncrementalParsingProps) {
@@ -74,7 +74,6 @@ this is another paragraph
             const ast = await parseAndWaitForHighlighter({
                 markdown: chunk,
                 cache,
-                extension,
             })
 
             const md = toMarkdown(ast)
@@ -88,7 +87,6 @@ this is another paragraph
         const ast = await parseAndWaitForHighlighter({
             markdown,
             cache,
-            extension,
         })
 
         expect(toMarkdown(ast)).toMatchInlineSnapshot(`

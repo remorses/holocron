@@ -19,26 +19,24 @@ import { useStickToBottom } from 'use-stick-to-bottom'
 import { fullStreamToUIMessages } from '../lib/process-chat'
 import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
 import { createIdGenerator, UIMessage } from 'ai'
-import { Markdown } from 'docs-website/src/lib/markdown'
+
+import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
 import { startTransition } from 'react'
 import { AnimatePresence, motion } from 'unframer'
 import {
     ChatAssistantMessage,
     ChatErrorMessage,
     ChatUserMessage,
-} from 'website/src/components/chat/chat-message'
-import {
-    ChatAutocomplete,
-    ChatTextarea,
-} from 'website/src/components/chat/chat-textarea'
+} from 'contesto/src/chat/chat-message'
+import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
 import { ToolInvocationRenderer } from 'website/src/components/tools-preview'
 import {
     ChatProvider,
     ChatState,
     useChatState,
-} from '../components/chat/chat-provider'
-import { ChatRecordButton } from '../components/chat/chat-record-button'
-import { ChatUploadButton } from '../components/chat/chat-upload-button'
+} from 'contesto/src/chat/chat-provider'
+import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
+import { ChatUploadButton } from 'contesto/src/chat/chat-upload-button'
 import {
     Drawer,
     DrawerContent,
@@ -55,7 +53,7 @@ import {
 
 export type { Route }
 
-const CHAT_ID = 'cmcci07p90033ieypfhp8lhna'
+const CHAT_ID = 'cmclxgpov0057htrcyf12y6j2'
 
 let exampleMessages: UIMessage[] = [
     {
@@ -370,8 +368,8 @@ function Footer() {
             await apiClientWithDurableFetch.api.generateMessage.post(
                 {
                     messages: messages,
-                    siteId: 'cmchyql7f0002apypi7b7o3kw',
-                    branchId: 'cmchyql7f0003apyp3wxw3rkc',
+                    siteId: 'cmclq67zf0002htommqegrrw4',
+                    branchId: 'cmclq68780003htome4ryjfg9',
                     currentSlug: '',
                     filesInDraft: {},
                     chatId: CHAT_ID,
@@ -426,7 +424,6 @@ function Footer() {
 
                     <div className='flex items-center justify-between gap-2 p-3 py-2'>
                         <ChatUploadButton
-                            siteId='cmchyql7f0002apypi7b7o3kw'
                             accept='image/*,text/*,.pdf,.docx,.doc'
                             onFilesChange={(files) => {
                                 // TODO: Wire uploaded files to messages

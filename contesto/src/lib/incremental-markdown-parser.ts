@@ -79,8 +79,11 @@ export const parseMarkdownIncremental = async ({
         /* ② miss → parse ---------------------------------------------- */
         const rest = text.slice(offset)
 
-        const file = await processorWithAst(processor).process(rest)
+        const file = await processorWithAst(processor).processSync(rest)
         const ast = file.data.ast as Root
+        if (!ast) {
+            console.warn(`file has no ast`, file)
+        }
 
         // Process nodes and recursively adjust all positions
         const adjustedNodes = ast.children.map((node) =>
