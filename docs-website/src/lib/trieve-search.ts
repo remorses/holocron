@@ -78,26 +78,7 @@ export async function searchDocsWithTrieve({
 
     const result = await trieve.searchOverGroups(request)
 
-    const resultsWithHighlight = result.results.map((group) => {
-        group.chunks = group.chunks.map((chunk) => {
-            const c = chunk.chunk as unknown as Chunk
-            return {
-                ...chunk,
-                chunk: {
-                    ...chunk.chunk,
-                    highlight: highlightText(query, c.chunk_html),
-                },
-            }
-        })
-        return group
-    })
-
-    const trieveResults = {
-        groups: resultsWithHighlight,
-        requestID: result.id,
-    } as unknown as GroupSearchResults
-
-    return groupResults(trieveResults.groups)
+    return groupResults(result.results as GroupChunk[])
 }
 
 function groupResults(groups: GroupChunk[]): SortedResult[] {
@@ -105,7 +86,7 @@ function groupResults(groups: GroupChunk[]): SortedResult[] {
 
     for (const group of groups) {
         grouped.push({
-            id: group.group.id,
+            id: 'page' + group.group.id,
             type: 'page',
             url: group.chunks[0]?.chunk.link || '',
             content: group.group.name,
@@ -124,25 +105,25 @@ function groupResults(groups: GroupChunk[]): SortedResult[] {
                 url: chunk.metadata['section_id']
                     ? `${chunk.link}#${chunk.metadata['section_id']}`
                     : chunk.link || '',
-                content: chunk.highlight || chunk.chunk_html || '',
+                content: chunk.chunk_html || '',
             })
         }
     }
     return grouped
 }
 
-function highlightText(
-    searchTerm: string,
-    textToHighlight: string | null | undefined,
-) {
-    const regex = new RegExp(`(${searchTerm})`, 'gi')
-    if (textToHighlight && textToHighlight.match(regex)) {
-        const parts = textToHighlight.split(regex)
-        const highlightedText = parts
-            .map((part) => (part.match(regex) ? `<mark>${part}</mark>` : part))
-            .join('')
-        return highlightedText
-    } else {
-        return textToHighlight
-    }
-}
+// function highlightText(
+//     searchTerm: string,
+//     textToHighlight: string | null | undefined,
+// ) {
+//     const regex = new RegExp(`(${searchTerm})`, 'gi')
+//     if (textToHighlight && textToHighlight.match(regex)) {
+//         const parts = textToHighlight.split(regex)
+//         const highlightedText = parts
+//             .map((part) => (part.match(regex) ? `<mark>${part}</mark>` : part))
+//             .join('')
+//         return highlightedText
+//     } else {
+//         return textToHighlight
+//     }
+// }
