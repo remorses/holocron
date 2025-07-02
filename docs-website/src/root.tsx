@@ -44,6 +44,7 @@ import { VirtualFile } from 'fumadocs-core/source'
 import frontMatter from 'front-matter'
 import { cn, isInsidePreviewIframe } from './lib/utils'
 import { DynamicIcon } from './lib/icon'
+import { PoweredBy } from './components/poweredby'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -656,6 +657,11 @@ function DocsLayoutWrapper({
                 sidebar={{
                     defaultOpenLevel: 2,
                     collapsible: true,
+                    footer: (
+                        <div className='flex w-full text-center grow justify-center items-start'>
+                            <PoweredBy className='text-[12x]' />
+                        </div>
+                    ),
                 }}
                 i18n={i18n}
                 tree={tree}

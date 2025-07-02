@@ -1,13 +1,14 @@
-export function PoweredBy() {
+import { cn } from '../lib/cn'
+
+export function PoweredBy({ className }: { className?: string }) {
     return (
-        <div className='ms-auto text-sm text-fd-muted-foreground'>
+        <div className={cn('text-sm text-fd-muted-foreground', className)}>
             Powered by{' '}
             <b>
                 <a
                     href='https://fumabase.com'
                     target='_blank'
-                    rel='noopener noreferrer'
-                    className='text-fd-muted-foreground'
+                    className={cn('text-fd-muted-foreground')}
                 >
                     Fumabase
                 </a>
