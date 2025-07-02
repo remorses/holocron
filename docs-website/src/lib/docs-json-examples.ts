@@ -17,8 +17,8 @@ export const defaultStartingFumabaseJson: DocsJsonType = {
         dark: '/favicon.svg',
     },
     logo: {
-        light: '/logo.svg',
-        dark: '/logo.svg',
+        light: '/logo/dark.svg',
+        dark: '/logo/light.svg',
     },
     navbar: {
         links: [

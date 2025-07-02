@@ -1,8 +1,8 @@
 {
     // the logo shown in the top left
     "logo": {
-        "dark": "/logo.svg",
-        "light": "/logo.svg"
+        "dark": "/logo/logo.svg",
+        "light": "/logo/logo.svg"
     },
     "name": "fumabase",
     "footer": {
@@ -42,7 +42,8 @@
     "$schema": "https://fumabase.com/fumabase.json",
     // to add new domains you can simply add them here, then add a CNAME record to cname.fumabase.com
     "domains": [
-        "fumabase-2v6e66mi.fumabase.com"
+        "fumabase-2v6e66mi.fumabase.com",
+        "docs.fumabase.com",
     ],
     "favicon": {
         "dark": "/favicon.svg",
