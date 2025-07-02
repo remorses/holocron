@@ -1,12 +1,13 @@
 {
-    "name": "new-package-template",
+    "name": "contesto",
     "private": true,
-    "description": "",
+    "description": "Chat components and utilities for fumabase",
     "type": "module",
     "repository": "https://github.com/remorses/",
     "scripts": {
-        "build": "tsc ",
-        "watch": "tsc -w"
+        "build": "tsc",
+        "watch": "tsc -w",
+        "typecheck": "tsc --noEmit"
     },
     "files": [
         "dist",
@@ -16,7 +17,45 @@
     "keywords": [],
     "author": "Tommaso De Rossi, morse <beats.by.morse@gmail.com>",
     "license": "",
-    "devDependencies": {},
-    "dependencies": {},
-    "peerDependencies": {}
+    "devDependencies": {
+        "@types/mdast": "^4.0.4",
+        "@types/react": "^19.1.8",
+        "@types/react-dom": "^19.1.6",
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "@ariakit/react": "^0.4.12",
+        "@radix-ui/react-popover": "^1.0.7",
+        "@radix-ui/react-scroll-area": "^1.0.5",
+        "@radix-ui/react-slot": "^1.0.2",
+        "@radix-ui/react-tooltip": "^1.0.7",
+        "@remixicon/react": "^4.5.0",
+        "ai": "^4.0.26",
+        "class-variance-authority": "^0.7.0",
+        "clsx": "^2.0.0",
+        "diff": "^7.0.0",
+        "fumadocs-ui": "^13.0.0",
+        "lucide-react": "^0.321.0",
+        "match-sorter": "^6.3.1",
+        "mdast": "^3.0.0",
+        "micro-memoize": "^4.1.2",
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0",
+        "react-sound-visualizer": "^1.0.0",
+        "remark": "^15.0.0",
+        "remark-gfm": "^4.0.0",
+        "remark-mdx": "^3.0.0",
+        "remark-parse": "^11.0.0",
+        "safe-mdx": "^1.0.0",
+        "shiki": "^1.0.0",
+        "tailwind-merge": "^2.0.0",
+        "textarea-caret": "^3.1.0",
+        "unframer": "^1.0.0",
+        "unist-util-visit": "^5.0.0",
+        "zustand": "^5.0.0"
+    },
+    "peerDependencies": {
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
+    }
 }
