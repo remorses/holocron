@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: dopplerhq/cli-action@master
+
       - uses: actions/setup-node@v3
         with:
           node-version: 22
@@ -24,6 +24,7 @@ jobs:
         with:
           version: 10
           run_install: false
+      - uses: dopplerhq/cli-action@v3
       - run: pnpm install --frozen-lockfile=false
       # scripts
       - run: pnpm build
