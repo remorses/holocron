@@ -1,0 +1,294 @@
+---
+title: 'User-Focused Documentation'
+description: 'Write documentation that solves real problems by understanding your users goals, context, and challenges.'
+---
+
+# User-Focused Documentation
+
+The best documentation doesn't just explain features—it helps users accomplish their goals. Focus on outcomes, not just functionality.
+
+## Understanding User Intent
+
+Before documenting any feature, understand the jobs users are trying to do. Documentation should bridge the gap between what users want to achieve and how your product helps them get there.
+
+<Tabs>
+<Tab title="Feature-Focused (❌)">
+```markdown
+# WebhookManager Class
+
+The WebhookManager class provides methods for webhook management:
+
+- `create(url, events)` - Creates a webhook
+- `update(id, options)` - Updates webhook settings
+- `delete(id)` - Removes a webhook
+- `list()` - Returns all webhooks
+```
+</Tab>
+
+<Tab title="User-Focused (✅)">
+```markdown
+# Getting Notified of Events
+
+Set up webhooks to automatically receive notifications when important
+events happen in your application, like new orders or payment completions.
+
+## Quick Setup
+
+Get real-time notifications in under 5 minutes:
+
+1. Choose which events to monitor
+2. Provide your endpoint URL
+3. Test the connection
+4. Go live
+
+By the end of this guide, you'll receive automatic notifications
+whenever customers place orders.
+```
+</Tab>
+</Tabs>
+
+## Write for Different Experience Levels
+
+Your users range from beginners exploring your platform to experts implementing complex integrations. Provide multiple pathways without overwhelming anyone.
+
+<Steps>
+<Step title="Lead with the simple path">
+    Start every guide with the most straightforward approach that works.
+
+    <Note>
+    Most users want the quickest solution that meets their needs. Advanced options can come later.
+    </Note>
+
+    ```markdown
+    # Quick Start: Send Your First Email
+
+    Send a test email in 3 lines of code:
+
+    ```javascript
+    import { EmailAPI } from '@company/sdk';
+    const client = new EmailAPI('your-api-key');
+    await client.send({
+        to: 'user@example.com',
+        subject: 'Hello World',
+        html: '<h1>It works!</h1>'
+    });
+    ```
+</Step>
+
+<Step title="Provide escape hatches for complexity">
+    Offer advanced options without cluttering the main flow.
+
+    <AccordionGroup>
+    <Accordion title="Advanced: Custom templates and variables">
+        ```javascript
+        await client.send({
+            to: 'user@example.com',
+            template: 'welcome-series',
+            variables: {
+                firstName: user.firstName,
+                activationUrl: generateActivationUrl(user.id)
+            },
+            scheduling: {
+                sendAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+            },
+            tracking: {
+                opens: true,
+                clicks: true,
+                unsubscribes: true
+            }
+        });
+        ```
+    </Accordion>
+    </AccordionGroup>
+</Step>
+</Steps>
+
+## Address User Context and Constraints
+
+Real users work within constraints. Acknowledge their environment and provide practical guidance.
+
+### Common User Situations
+
+<CardGroup cols={2}>
+<Card title="Time-Pressured Developers" icon="clock">
+**Need:** Working solutions fast
+**Provide:** Copy-paste examples, quick setup guides, common patterns
+</Card>
+
+<Card title="Security-Conscious Teams" icon="shield">
+**Need:** Understanding security implications
+**Provide:** Best practices, security considerations, compliance notes
+</Card>
+
+<Card title="Scaling Businesses" icon="trending-up">
+**Need:** Performance and reliability info
+**Provide:** Rate limits, error handling, monitoring guidance
+</Card>
+
+<Card title="Budget-Conscious Users" icon="dollar-sign">
+**Need:** Cost understanding and optimization
+**Provide:** Pricing impact, optimization tips, free tier guidance
+</Card>
+</CardGroup>
+
+## Anticipate and Answer Questions
+
+Great documentation answers questions before users ask them. Think about what could go wrong or what users might wonder about.
+
+<Warning>
+Don't just document the happy path. Users encounter edge cases, errors, and unexpected situations.
+</Warning>
+
+### Proactive Problem Solving
+
+Address common confusion points inline:
+
+```markdown
+# Setting Up Your Development Environment
+
+Install the CLI tool globally to use it from any project:
+
+```bash
+npm install -g @company/cli
+```
+
+<Info>
+**Why global?** Installing globally lets you run `company-cli` from any
+directory, which is essential for initializing new projects.
+</Info>
+
+**Already have an older version?** Update with the same command.
+The installer will replace your existing version.
+
+**Permission errors on macOS/Linux?** Try `sudo npm install -g @company/cli`
+or use a Node version manager like nvm to avoid permission issues.
+```
+
+### Include Realistic Troubleshooting
+
+<AccordionGroup>
+<Accordion title="API key not working">
+**Symptoms:** Getting 401 Unauthorized errors
+
+**Causes:**
+- Using test key in production (or vice versa)
+- Key has expired or been revoked
+- Missing `Bearer ` prefix in Authorization header
+
+**Solutions:**
+1. Verify you're using the correct environment key
+2. Check key status in your dashboard
+3. Ensure header format: `Authorization: Bearer your-key-here`
+</Accordion>
+
+<Accordion title="Webhook not receiving events">
+**Symptoms:** Events happening but webhook endpoint not called
+
+**Causes:**
+- Endpoint URL not publicly accessible
+- SSL certificate issues
+- Webhook disabled or pointing to wrong URL
+
+**Solutions:**
+1. Test endpoint with curl or Postman
+2. Check SSL certificate validity
+3. Verify webhook configuration in dashboard
+4. Review webhook logs for delivery attempts
+</Accordion>
+</AccordionGroup>
+
+## Use Action-Oriented Language
+
+Write instructions that clearly tell users what to do, using strong action verbs and specific directions.
+
+<CodeGroup>
+```markdown Weak Instructions
+You can configure the timeout setting if needed.
+The response will contain user information.
+It's possible to customize the error messages.
+```
+
+```markdown Strong Instructions
+Set the timeout to 30 seconds for slow networks:
+`config.timeout = 30000`
+
+Extract the user's email from the response:
+`const email = response.user.email`
+
+Customize error messages for better UX:
+`config.errorMessages.invalid = "Please check your input"`
+```
+
+</CodeGroup>
+
+## Validate User Success
+
+Help users confirm they're on the right track with clear success indicators.
+
+<Steps>
+<Step title="Install the package">
+    ```bash
+    npm install @company/sdk
+    ```
+
+    <Check>
+    **Success indicator:** You should see the package added to your `package.json`
+    dependencies and a confirmation message in your terminal.
+    </Check>
+</Step>
+
+<Step title="Test the connection">
+    ```javascript
+    import { Client } from '@company/sdk';
+
+    const client = new Client('your-api-key');
+    const health = await client.health.check();
+    console.log(health);
+    ```
+
+    <Check>
+    **Expected output:**
+    ```json
+    {
+        "status": "healthy",
+        "timestamp": "2024-01-15T10:30:00Z",
+        "region": "us-east-1"
+    }
+    ```
+    </Check>
+</Step>
+</Steps>
+
+## Show the Impact
+
+Connect features to business outcomes so users understand the value of implementation effort.
+
+<Info>
+**Why this matters:** When users understand the business impact, they're more likely to invest time in proper implementation and convince stakeholders to adopt your solution.
+</Info>
+
+```markdown
+# Rate Limiting Best Practices
+
+Implementing proper rate limiting protects your application from:
+
+- **Service outages** from traffic spikes (saves potential downtime costs)
+- **Unexpected API bills** from runaway scripts (prevents budget overruns)
+- **Poor user experience** during peak usage (maintains customer satisfaction)
+
+## Implementation Impact
+
+**Before rate limiting:**
+- 40% of API errors during traffic spikes
+- Average response time: 2.3 seconds
+- 15% higher infrastructure costs
+
+**After implementation:**
+- 2% API error rate under same load
+- Average response time: 480ms
+- 20% reduction in infrastructure costs
+```
+
+<Tip>
+The best user-focused documentation feels like having an expert teammate who understands your goals and constraints, not just someone reading features from a spec sheet.
+</Tip>
