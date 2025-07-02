@@ -29,6 +29,13 @@ export const UIFieldSchema = z
         description: z.string().nullable(),
         // Common fields
         required: z.boolean().nullable(),
+        // Group title for grouping consecutive fields
+        groupTitle: z
+            .string()
+            .nullable()
+            .describe(
+                `Optional group title. When consecutive fields share the same groupTitle, they will be wrapped in a container with this title. ONLY use this for array of objects to put each object in the array into its own group. `,
+            ),
         // Input/textarea/password fields
         placeholder: z.string().nullable(),
         initialValue: z.union([
