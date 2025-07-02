@@ -447,7 +447,7 @@ export async function syncSite({
                         }
                     }
 
-                    const contentType = lookup(asset.githubPath) ||''
+                    const contentType = lookup(asset.githubPath) || ''
 
                     const signedUrl = await getPresignedUrl({
                         method: 'PUT',
@@ -1325,7 +1325,6 @@ function isValidUrl(string: string): boolean {
 
 // TODO handle locales
 function getSlugFromPath({ githubPath = '', githubFolder }) {
-    githubPath = githubPath.replace(/\\+/g, '/')
     if (githubPath.startsWith('/')) {
         githubPath = githubPath.substring(1)
     }
