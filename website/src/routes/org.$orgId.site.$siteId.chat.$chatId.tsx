@@ -104,6 +104,7 @@ export async function loader({
                 siteId: true,
                 githubOwner: true,
                 githubRepo: true,
+                githubFolder: true,
             },
         }),
         // Fetch the siteBranch that this chat is part of
@@ -173,7 +174,7 @@ export async function loader({
     }
 
     const branchId = chat.branchId
-
+    const githubFolder = site.githubFolder
     return {
         chatId,
         chat,
@@ -184,6 +185,7 @@ export async function loader({
         branchId,
         siteBranch,
         siteId,
+        githubFolder,
     }
 }
 

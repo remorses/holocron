@@ -87,9 +87,17 @@ function keyForDocsJson({ chatId }) {
     return `fumabase.jsonc-${chatId}`
 }
 
-const setDocsJsonState = ({ values, previousJsonString, chatId }) => {
+const setDocsJsonState = ({
+    values,
+    githubFolder,
+    previousJsonString,
+    chatId,
+}) => {
     console.log(`form values changed, sending state to docs iframe`)
-    const githubPath = 'fumabase.jsonc'
+    let githubPath = 'fumabase.jsonc'
+    if (githubFolder) {
+        githubPath = `${githubFolder}/fumabase.jsonc`
+    }
 
     const newJson = JSON.stringify(
         {
@@ -131,7 +139,8 @@ export default function Chat({}) {
     })
     const { reset, subscribe } = methods
 
-    const { siteBranch } = useLoaderData() as Route.ComponentProps['loaderData']
+    const { siteBranch, githubFolder } =
+        useLoaderData() as Route.ComponentProps['loaderData']
     const previousJsonString = useMemo(() => {
         return JSON.stringify(siteBranch.docsJson, null, 2)
     }, [siteBranch?.docsJson])
@@ -154,7 +163,12 @@ export default function Chat({}) {
         if (!data) return
 
         reset(data, { keepDefaultValues: true })
-        setDocsJsonState({ values: data, previousJsonString, chatId })
+        setDocsJsonState({
+            values: data,
+            githubFolder,
+            previousJsonString,
+            chatId,
+        })
 
         // setValue('root', data, {
         //     shouldDirty: true,
@@ -170,6 +184,7 @@ export default function Chat({}) {
                 setDocsJsonState({
                     values: { ...defaultValues, ...values },
                     previousJsonString,
+                    githubFolder,
                     chatId,
                 }),
         })
