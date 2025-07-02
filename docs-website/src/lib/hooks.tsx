@@ -40,9 +40,8 @@ export function usePrevious<T>(value: T): T | undefined {
     return ref.current
 }
 export function useDocsJson(): DocsJsonType {
-    const { docsJson } = useRouteLoaderData(
-        'root',
-    ) as Route.ComponentProps['loaderData']
+    const { docsJson } =
+        (useRouteLoaderData('root') as Route.ComponentProps['loaderData']) || {}
 
     // Check for state overrides for docsJson
     const docsJsonString = useDocsState((state) => {

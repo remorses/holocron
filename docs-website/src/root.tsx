@@ -16,6 +16,7 @@ import {
     useSyncExternalStore,
 } from 'react'
 import {
+    data,
     isRouteErrorResponse,
     Links,
     Meta,
@@ -122,17 +123,16 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     if (!site) {
         console.log('Site not found for domain:', domain)
-        throw new Response('Site not found', { status: 404 })
+        return data({ files: [] } as never, { status: 404 })
     }
 
     const files = await getFilesForSource({
         branchId: siteBranch.branchId,
         githubFolder: site.githubFolder || '',
     })
-    console.log({ site })
 
     const locales = site.locales.map((x) => x.locale)
-    const source = await getFumadocsSource({
+    const source = getFumadocsSource({
         defaultLocale: site.defaultLocale,
         files,
         locales,
@@ -339,11 +339,12 @@ if (typeof window !== 'undefined') {
 
 export function Layout({ children }: { children: React.ReactNode }) {
     const loaderData = useLoaderData<typeof loader>()
-    const { previewWebsocketId } = loaderData
+    const { previewWebsocketId } = loaderData || {}
     const docsJson = useDocsJson()
     useNProgress()
     // Inline DocsProvider
-    const { i18n, trieveReadApiKey, trieveDatasetId, cssStyles } = loaderData
+    const { i18n, trieveReadApiKey, trieveDatasetId, cssStyles } =
+        loaderData || {}
     const locale = i18n?.defaultLanguage
 
     if (!trieveClient && trieveReadApiKey) {
