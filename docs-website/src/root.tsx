@@ -8,7 +8,13 @@ import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
 import { RootProvider } from 'fumadocs-ui/provider/base'
 import { GithubIcon, XIcon } from 'lucide-react'
 import { ThemeProvider, useTheme } from 'next-themes'
-import { startTransition, useEffect, useMemo, useState } from 'react'
+import {
+    startTransition,
+    useEffect,
+    useMemo,
+    useState,
+    useSyncExternalStore,
+} from 'react'
 import {
     isRouteErrorResponse,
     Links,
@@ -208,14 +214,14 @@ async function iframeMessagesHandling() {
     console.log(`docs iframe starts listening on message events`)
     async function onParentPostMessage(e: MessageEvent) {
         onFirstStateMessage()
+        if (!allowedOrigins.includes(e.origin)) {
+            console.warn(
+                `ignoring message from disallowed origin: ${e.origin}`,
+                e.data,
+            )
+            return
+        }
         try {
-            if (!allowedOrigins.includes(e.origin)) {
-                console.warn(
-                    `ignoring message from disallowed origin: ${e.origin}`,
-                    e.data,
-                )
-                return
-            }
             const data = e.data as IframeRpcMessage
             const { id, state: partialState } = data || {}
 
@@ -223,17 +229,20 @@ async function iframeMessagesHandling() {
                 await setDocsStateForMessage(partialState)
             }
         } finally {
-            e.source!.postMessage(
-                { id: e?.data?.id } satisfies IframeRpcMessage,
-                {
-                    targetOrigin: '*',
-                },
-            )
+            // Only reply if not the same window (i.e., not itself)
+            if (e.source && e.source !== window) {
+                e.source.postMessage(
+                    { id: e?.data?.id } satisfies IframeRpcMessage,
+                    {
+                        targetOrigin: '*',
+                    },
+                )
+            }
         }
     }
     window.addEventListener('message', onParentPostMessage)
     if (typeof window !== 'undefined') {
-        if (window.parent) {
+        if (window.parent !== window) {
             window.parent?.postMessage?.(
                 { type: 'ready' },
                 {
@@ -245,7 +254,7 @@ async function iframeMessagesHandling() {
     // Set up ping interval
     setInterval(() => {
         if (typeof window !== 'undefined') {
-            if (window.parent) {
+            if (window.parent !== window) {
                 window.parent?.postMessage?.(
                     { type: 'ping' },
                     {
@@ -270,6 +279,10 @@ declare global {
 
 // Function for handling websocket connection based on session cookie
 async function websocketIdHandling(websocketId: string) {
+    if (isInsidePreviewIframe()) {
+        console.log('inside preview iframe, skipping websocket connection')
+        return
+    }
     if (typeof window === 'undefined') return
     if (globalThis.websocketHandlingDone) return
     globalThis.websocketHandlingDone = true
@@ -634,6 +647,10 @@ function DocsLayoutWrapper({
     )
 }
 
+const noop = (callback) => {
+    return () => {}
+}
+
 function PreviewBanner({ websocketId }: { websocketId?: string }) {
     if (!websocketId) return null
     const handleDisconnect = () => {
@@ -646,6 +663,15 @@ function PreviewBanner({ websocketId }: { websocketId?: string }) {
     const websocketServerPreviewConnected = useDocsState(
         (state) => state.websocketServerPreviewConnected,
     )
+
+    const shouldShow = useSyncExternalStore(
+        noop,
+        () => !isInsidePreviewIframe(), // client snapshot
+        () => true, // server snapshot
+    )
+    if (!shouldShow) {
+        return null
+    }
 
     return (
         <Banner className='sticky top-0 z-50 bg-fd-muted text-fd-accent-foreground isolate px-4 py-1 flex items-center justify-between'>

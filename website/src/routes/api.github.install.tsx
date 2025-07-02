@@ -185,14 +185,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
         return redirect(url.toString(), { headers })
     }
 
-    if (!chosenOrg && installations.length) {
+    if (chosenOrg !== FormNames.chooseAnother && installations.length) {
         // render the org selection page
         return {
             installations,
         }
-    } else {
-        console.log('adding another github installation')
     }
+    console.log('adding new github installation via install url')
 
     const githubInstallationUrl = new URL(
         `https://github.com/apps/${env.GITHUB_APP_NAME}/installations/new`,

@@ -48,7 +48,7 @@ import {
     ImageIcon,
     ListTreeIcon,
     PaletteIcon,
-    X
+    X,
 } from 'lucide-react'
 import React from 'react'
 import {
@@ -203,16 +203,11 @@ function WelcomeMessage() {
                 role: 'assistant',
                 id: '',
                 content: '',
-                parts: [
-                    {
-                        type: 'text',
-                        text: 'Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:',
-                    },
-                ],
+                parts: [],
             }}
         >
             <Markdown
-                markdown='Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:'
+                markdown='Hi, I am fumabase, I can help you with customizing your docs website or add new content. Here are some example things you can do:'
                 className='prose-sm'
             />
             <div className='grid -mx-2 grid-cols-2 gap-3 mt-3'>
@@ -593,7 +588,7 @@ function Footer() {
             >
                 <div className='max-w-3xl -mx-3 space-y-3'>
                     <div className='flex flex-col gap-2 '>
-                        <div className='flex gap-1 empty:hidden justify-start items-center bg-background p-1 rounded-md'>
+                        <div className='flex gap-1 empty:hidden justify-start items-center bg-black p-1 rounded-md'>
                             {showCreatePR && (
                                 <DiffStats
                                     filesInDraft={filesInDraft}
@@ -610,22 +605,13 @@ function Footer() {
                                     view pr
                                 </a>
                             )}
-
-                            {showCreatePR && (
-                                <div className='justify-end flex grow'>
-                                    {!!siteData.site.githubInstallations
-                                        ?.length ? (
-                                        <PrButton
-                                            disabled={
-                                                !hasNonPushedChanges ||
-                                                !updatedLines
-                                            }
-                                        />
-                                    ) : (
-                                        <InstallGithubApp />
-                                    )}
-                                </div>
-                            )}
+                            <div className='justify-end flex grow'>
+                                {!!siteData.site.githubInstallations?.length ? (
+                                    <PrButton updatedLines={updatedLines} />
+                                ) : (
+                                    <InstallGithubApp />
+                                )}
+                            </div>
                         </div>
 
                         <div className='relative rounded-[20px] border bg-popover'>
@@ -684,7 +670,7 @@ function Footer() {
     )
 }
 
-function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
+function PrButton({ updatedLines }) {
     const [isLoading, setIsLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
     const [buttonText, setButtonText] = useTemporaryState('', 2000)
@@ -715,14 +701,18 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
         if (errorMessage) {
             return true
         }
-        if (disabled || !hasNonPushedChanges) {
+        if (!updatedLines) {
+            return true
+        }
+
+        if (!hasNonPushedChanges) {
             return true
         }
         return false
     })()
 
     const getTooltipMessage = (): string | null => {
-        if (disabled || !hasNonPushedChanges) {
+        if (!hasNonPushedChanges) {
             return 'No unsaved changes to create PR'
         }
         if (isChatGenerating) {
@@ -843,12 +833,21 @@ function PrButton({ disabled = false }: { disabled?: boolean } = {}) {
 
 function InstallGithubApp() {
     const { orgId } = useParams()
-
+    const siteData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId',
+    ) as SiteRoute.ComponentProps['loaderData']
+    const githubOwner = siteData.site.githubOwner
     const handleInstallGithub = () => {
-        const currentUrl = new URL(window.location.href)
-        currentUrl.searchParams.set('installGithubApp', 'true')
+        const nextUrl = new URL(window.location.href)
+        nextUrl.searchParams.set('installGithubApp', 'true')
         const setupUrl = href('/api/github/install')
-        const setupUrlWithNext = `${setupUrl}?next=${encodeURIComponent(currentUrl.toString())}`
+
+        const url = new URL(setupUrl, window.location.origin)
+        if (githubOwner) {
+            url.searchParams.set('chosenOrg', githubOwner)
+        }
+        url.searchParams.set('next', nextUrl.toString())
+        const setupUrlWithNext = url.toString()
         window.location.href = setupUrlWithNext
     }
 

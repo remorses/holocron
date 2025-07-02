@@ -123,7 +123,17 @@ function NewChatButton() {
         <Popover open={open} onOpenChange={setOpen}>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <PopoverTrigger asChild>
+                    <PopoverTrigger
+                        onClick={(e) => {
+                            if (siteBranches.length <= 1) {
+                                e.stopPropagation()
+                                e.preventDefault()
+                                handleNewChat(siteBranches[0]?.branchId!)
+                            }
+                        }}
+
+                        asChild
+                    >
                         <Button
                             variant='secondary'
                             className='flex items-center gap-1 px-3'

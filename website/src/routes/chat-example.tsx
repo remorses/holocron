@@ -185,7 +185,7 @@ function WelcomeMessage() {
     return (
         <Markdown
             markdown={
-                'Hi, I am fumadocs, I can help you with customizing your docs website or add new content. Here are some example things you can do:\n'
+                'Hi, I am fumabase, I can help you with customizing your docs website or add new content. Here are some example things you can do:\n'
             }
             isStreaming={false}
         />
