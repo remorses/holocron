@@ -19,6 +19,7 @@ import { ChatProvider, ChatState } from '../components/chat/chat-provider'
 import { env } from 'docs-website/src/lib/env'
 import { formatDistanceToNow } from 'date-fns'
 import { Button } from '../components/ui/button'
+import { GithubIcon } from 'lucide-react'
 
 export type { Route }
 
@@ -220,7 +221,7 @@ export default function Page({
                 >
                     <AppSidebar />
                     <SidebarInset>
-                        <div className='flex grow h-full flex-col gap-4 p-2 pt-1'>
+                        <div className='flex grow h-full flex-col gap-4 p-2'>
                             <Content />
                         </div>
                     </SidebarInset>
@@ -243,7 +244,9 @@ function Content() {
 
     return (
         <div className='flex flex-col h-full gap-3'>
-            <div className='flex'>
+            <div className='flex gap-2'>
+                <div className='grow'></div>
+                <GithubRepoButton />
                 <GitHubSyncStatus />
             </div>
 
@@ -337,6 +340,40 @@ const scaleDownElement = memoize(function (iframeScale) {
         height: `${Number(100 / iframeScale).toFixed(1)}%`,
     }
 })
+
+function GithubRepoButton() {
+    const siteData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId',
+    ) as SiteRoute.ComponentProps['loaderData']
+
+    const githubOwner = siteData?.site.githubOwner
+    const githubRepo = siteData?.site.githubRepo
+
+    const hasGithubRepo = githubOwner && githubRepo
+    const repoUrl = hasGithubRepo
+        ? `https://github.com/${githubOwner}/${githubRepo}`
+        : undefined
+
+    return (
+        <Button
+            variant='secondary'
+            disabled={!hasGithubRepo}
+            asChild={!!hasGithubRepo}
+        >
+            {hasGithubRepo ? (
+                <a href={repoUrl} target='_blank' rel='noopener noreferrer'>
+                    <GithubIcon className='size-4 mr-2' />
+                    {githubOwner}/{githubRepo}
+                </a>
+            ) : (
+                <>
+                    <GithubIcon className='size-4 mr-2' />
+                    No repository
+                </>
+            )}
+        </Button>
+    )
+}
 
 function GitHubSyncStatus() {
     const { siteBranch } = useLoaderData<typeof loader>()
