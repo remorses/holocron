@@ -847,7 +847,7 @@ export async function* filesFromGithub({
     let blobFetches = 0
 
     console.time(`${owner}/${repo} - fetch files ${timeId}`)
-    const files = await getRepoFiles({
+    let files = await getRepoFiles({
         fetchBlob(file) {
             let pathWithFrontSlash = addFrontSlashToPath(file.path || '')
             if (!file.sha) {
@@ -888,6 +888,11 @@ export async function* filesFromGithub({
         repo,
         signal,
     })
+    if (basePath) {
+        files = files.filter((x) => {
+            return x.pathWithFrontSlash?.startsWith(basePath + '/')
+        })
+    }
     console.timeEnd(`${owner}/${repo} - fetch files ${timeId}`)
     // console.log(files)
     const mediaAssetsDownloads = yieldTasksInParallel(
