@@ -604,15 +604,16 @@ export async function syncSite({
 
                 const structuredData = data.structuredData
 
-                chunksToSync.push(
-                    ...processForTrieve({
-                        _id: slug,
-                        title: pageInput.title || slug,
-                        url: slug,
-                        structured: structuredData,
-                        pageSlug: slug,
-                    }),
-                )
+                if (pageInput.title)
+                    chunksToSync.push(
+                        ...processForTrieve({
+                            _id: slug,
+                            title: pageInput.title,
+                            url: slug,
+                            structured: structuredData,
+                            pageSlug: slug,
+                        }),
+                    )
 
                 console.log(
                     `Upserting page with slug: ${slug}, title: ${pageInput.title}...`,
@@ -1165,7 +1166,7 @@ export async function deletePages({
 
 function processForTrieve(page: DocumentRecord & { pageSlug: string }) {
     const chunks: ChunkReqPayload[] = []
-    const group_tracking_ids = [page.title, page.pageSlug]
+    const group_tracking_ids = [page.pageSlug]
     const tag_set = page.tag ? [page.tag] : []
     if (page.description)
         chunks.push({
@@ -1298,6 +1299,7 @@ function isValidUrl(string: string): boolean {
     return string.startsWith('http://') || string.startsWith('https://')
 }
 
+// TODO handle locales
 function getSlugFromPath({ githubPath = '', githubFolder }) {
     githubPath = githubPath.replace(/\\+/g, '/')
     if (githubPath.startsWith('/')) {
