@@ -8,6 +8,8 @@ on:
 
 jobs:
   ci:
+    env:
+      DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
     timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
