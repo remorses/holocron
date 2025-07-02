@@ -2,6 +2,7 @@
     // the logo shown in the top left
     "logo": {
         "dark": "/logo/dark.svg",
+        "text": "fumabase",
         "light": "/logo/light.svg"
     },
     "name": "fumabase",

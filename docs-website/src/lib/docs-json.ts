@@ -27,6 +27,7 @@ const LogoSchema = z
         light: z.string().describe('Logo for light mode'),
         dark: z.string().describe('Logo for dark mode'),
         href: z.string().url().optional().describe('Logo click target URL'),
+        text: z.string().optional().describe('Text to show next to the logo image, for cases where the logo is just a icon image'),
     })
     .strict()
     .describe('Logo object for both modes')

@@ -771,14 +771,20 @@ function Logo({ docsJson = {} as DocsJsonType }) {
 
         return docsJson.logo?.light || ''
     })()
+    const logoText = docsJson.logo?.text || ''
 
     return (
-        <img
-            alt='logo'
-            src={logoImageUrl}
-            className='h-8 [.uwu_&]:block'
-            aria-label='logo'
-        />
+        <div className='flex gap-2 grow items-center'>
+            <img
+                alt='logo'
+                src={logoImageUrl}
+                className='h-8 [.uwu_&]:block'
+                aria-label='logo'
+            />
+            {logoText && (
+                <span className='font-medium max-md:hidden'>{logoText}</span>
+            )}
+        </div>
     )
 }
 
