@@ -53,6 +53,8 @@ import { diffWordsWithSpace } from 'diff'
 import { markAddedNodes } from '../lib/diff'
 import { MarkdownRuntime } from '../lib/markdown-runtime'
 import { renderNode } from '../lib/mdx-code-block'
+import { useAddedHighlighter } from '../lib/_diff'
+import { useScrollToFirstAddedIfAtTop } from '../lib/diff-highlight'
 
 export function meta({ data, matches }: Route.MetaArgs) {
     if (!data) return []
@@ -640,7 +642,9 @@ function DocsMarkdown() {
             }
         }),
     )
-
+    const showDiff = true
+    useScrollToFirstAddedIfAtTop({ enabled: showDiff })
+    useAddedHighlighter({ enabled: showDiff })
     const extension = loaderData.githubPath.split('.').pop()
 
     if (!ast) {
@@ -650,7 +654,7 @@ function DocsMarkdown() {
                 {...{
                     extension,
                     isStreaming,
-                    showDiff: true,
+                    showDiff,
                     markdown,
                     previousMarkdown,
                 }}

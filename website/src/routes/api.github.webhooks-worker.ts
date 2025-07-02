@@ -365,7 +365,7 @@ async function handleDeletions({
 
             if (isMarkdown(`/${filePath}`)) {
                 const pathWithFrontSlash = `/${filePath}`
-                const slug = generateSlugFromPath(pathWithFrontSlash, '')
+                const slug = generateSlugFromPath(pathWithFrontSlash, githubFolder)
 
                 await prisma.markdownPage.deleteMany({
                     where: {
@@ -380,7 +380,7 @@ async function handleDeletions({
             }
 
             if (isMediaFile(filePath)) {
-                const slug = generateSlugFromPath(`/${filePath}`, '')
+                const slug = generateSlugFromPath(`/${filePath}`, githubFolder)
 
                 await prisma.mediaAsset.deleteMany({
                     where: {

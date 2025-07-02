@@ -5,6 +5,10 @@ import { mdxComponents } from '../components/mdx-components'
 import { getProcessor } from './mdx-heavy'
 import { renderNode } from './mdx-code-block'
 import { useMemo } from 'react'
+import {
+    useAddedHighlighter,
+    useScrollToFirstAddedIfAtTop,
+} from './diff-highlight'
 
 export function MarkdownRuntime({
     extension = 'mdx',

@@ -47,6 +47,12 @@ export function generateSlugFromPath(
     if (isAbsoluteUrl(pathWithFrontSlash)) {
         return pathWithFrontSlash
     }
+    if (basePath && !basePath.startsWith('/')) {
+        basePath = `/${basePath}`
+    }
+    if (pathWithFrontSlash && !pathWithFrontSlash.startsWith('/')) {
+        pathWithFrontSlash = `/${pathWithFrontSlash}`
+    }
     if (pathWithFrontSlash.startsWith(basePath)) {
         pathWithFrontSlash = pathWithFrontSlash.slice(basePath.length)
     }

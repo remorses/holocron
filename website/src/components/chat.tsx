@@ -409,7 +409,7 @@ function Footer() {
     const isPending = useChatState((x) => x.isGenerating)
     const text = useChatState((x) => x.text || '')
     const revalidator = useRevalidator()
-    const { chat, prUrl, mentionOptions, branchId } =
+    const { chat, githubFolder, prUrl, mentionOptions, branchId } =
         useLoaderData() as Route.ComponentProps['loaderData']
     const siteData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId',
@@ -518,7 +518,7 @@ function Footer() {
                         }
                         const currentSlug = generateSlugFromPath(
                             args.path || '',
-                            '/',
+                            githubFolder,
                         )
                         if (toolInvocation.state === 'partial-call') {
                             if (isPostMessageBusy) continue

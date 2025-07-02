@@ -210,7 +210,7 @@ export const useAddedHighlighter = ({
     root,
     enabled = true,
 }: {
-    root: RefObject<HTMLElement | null>
+    root?: RefObject<HTMLElement | null>
     enabled?: boolean
 }): void => {
     const hlRef = useRef<Highlight | null>(null)
@@ -218,7 +218,7 @@ export const useAddedHighlighter = ({
     useLayoutEffect(() => {
         if (!enabled) return
 
-        const host = root.current
+        const host = root?.current || document
         if (!host || !CSS.highlights) return
 
         /* collect all added nodes except opt-outs */

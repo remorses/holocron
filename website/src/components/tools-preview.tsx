@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { Markdown } from 'contesto/src/lib/markdown'
+import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
 import { cn } from 'website/src/lib/utils'
 import { useWebsiteState } from '../lib/state'
 import { EditToolParamSchema } from '../lib/edit-tool'
