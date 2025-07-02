@@ -213,9 +213,9 @@ function WelcomeMessage() {
             <div className='grid -mx-2 grid-cols-2 gap-3 mt-3'>
                 <ChatSuggestionButton
                     icon={<PaletteIcon />}
-                    userMessage='Change theme color'
+                    userMessage='Change primary color'
                 >
-                    Change theme color
+                    Change primary color
                 </ChatSuggestionButton>
                 <ChatSuggestionButton
                     icon={<ImageIcon />}
@@ -231,9 +231,9 @@ function WelcomeMessage() {
                 </ChatSuggestionButton>
                 <ChatSuggestionButton
                     icon={<ListTreeIcon />}
-                    userMessage='Edit navigation menu'
+                    userMessage='Edit navbar links'
                 >
-                    Edit navigation menu
+                    Edit navbar link
                 </ChatSuggestionButton>
             </div>
         </ChatAssistantMessage>
@@ -318,16 +318,12 @@ function MessageRenderer({ message }: { message: UIMessage }) {
 
 // Static autocomplete suggestions for first message
 const AUTOCOMPLETE_SUGGESTIONS = [
-    'change theme color to blue',
+    'change theme accent color to red',
     'update site logo with new design',
     'add a new doc page about getting started',
-    'edit navigation menu structure',
-    'configure footer links and social media',
-    'set up custom 404 error page',
-    'add search functionality to docs',
-    'create a faq section',
-    'setup custom domain configuration',
-    'add analytics tracking code',
+    'configure footer links with 2 columns of 2 links each',
+    'create a faq section in the index page',
+    'add a custom domain',
 ]
 function ContextButton({
     contextOptions,
