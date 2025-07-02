@@ -1107,7 +1107,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 docsJsonWithComments,
                 siteId: finalSiteId,
                 branchId: finalBranchId,
-                docsJson: branch?.docsJson || {},
+                docsJson: (branch?.docsJson || {}) as DocsJsonType,
                 errors,
             }
         },

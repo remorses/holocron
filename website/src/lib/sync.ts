@@ -1,4 +1,5 @@
 import { createHash } from 'crypto'
+import { lookup } from 'mime-types'
 import { MarkdownExtension, Prisma, prisma } from 'db'
 import { Sema } from 'sema4'
 import { request } from 'undici'
@@ -17,6 +18,7 @@ import { mdxComponents } from 'docs-website/src/components/mdx-components'
 import {
     getCacheTagForMediaAsset,
     getKeyForMediaAsset,
+    getPresignedUrl,
     s3,
 } from 'docs-website/src/lib/s3'
 import { generateSlugFromPath } from 'docs-website/src/lib/utils'
@@ -445,7 +447,24 @@ export async function syncSite({
                         }
                     }
 
-                    await s3.file(key).write(buffer)
+                    const contentType = lookup(asset.githubPath) ||''
+
+                    const signedUrl = await getPresignedUrl({
+                        method: 'PUT',
+                        key,
+                        headers: {
+                            'content-type': contentType,
+                            'Content-Length': buffer.length.toString(),
+                        },
+                    })
+                    const response = await fetch(signedUrl, {
+                        method: 'PUT',
+                        body: buffer,
+                        headers: {
+                            'Content-Type': contentType,
+                            'Content-Length': buffer.length.toString(),
+                        },
+                    })
 
                     const cacheTag = getCacheTagForMediaAsset({
                         siteId,
