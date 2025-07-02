@@ -152,9 +152,17 @@ export async function loader({
     const host = siteBranch.domains
         .filter((x) => x.domainType === 'internalDomain')
         .sort((a, b) => {
-            // Those with 'localhost' in name first.
-            const aIsLocalhost = a.host.includes('localhost') ? -1 : 1
-            const bIsLocalhost = b.host.includes('localhost') ? -1 : 1
+            // Sort based on environment.
+            let orderLocalhost = 1
+            if (process.env.NODE_ENV === 'development') {
+                orderLocalhost = -1
+            }
+            const aIsLocalhost = a.host.includes('localhost')
+                ? orderLocalhost
+                : -orderLocalhost
+            const bIsLocalhost = b.host.includes('localhost')
+                ? orderLocalhost
+                : -orderLocalhost
             return aIsLocalhost - bIsLocalhost
         })[0]?.host
 
