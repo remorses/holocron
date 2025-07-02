@@ -409,7 +409,7 @@ function GitHubSyncStatus() {
 
     return (
         <div className='flex justify-center'>
-            <Button variant='outline' size='sm' asChild>
+            <Button variant='outline' asChild>
                 <Link to={commitUrl} target='_blank' rel='noopener noreferrer'>
                     <span>
                         <strong>Last sync</strong> {timeAgo}: {shortCommit}
