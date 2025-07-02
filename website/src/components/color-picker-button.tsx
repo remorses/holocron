@@ -30,7 +30,7 @@ export function ColorPickerButton({ value, onChange, disabled, buttonText: label
             </PopoverTrigger>
             <PopoverContent className="w-64 p-3">
                 <Sketch
-                    color={value}
+                    color={value || ''}
                     onChange={(color) => {
                         onChange(color.hex)
                     }}

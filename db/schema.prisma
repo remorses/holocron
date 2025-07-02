@@ -303,7 +303,7 @@ model Domain {
 
   // isVercelVerified Boolean?
   // lastCheck        DateTime?
-  branch   SiteBranch? @relation(fields: [branchId], references: [branchId])
+  branch   SiteBranch? @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
   branchId String?
 }
 

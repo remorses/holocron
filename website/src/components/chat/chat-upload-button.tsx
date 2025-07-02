@@ -1,7 +1,6 @@
 import { RiAttachment2, RiCloseLine, RiAddLine } from '@remixicon/react'
 import { useState, useRef, forwardRef } from 'react'
 
-
 import { Button } from '../ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { apiClient } from '../../lib/spiceflow-client'
@@ -61,7 +60,9 @@ export function ChatUploadButton({
     const { fn: uploadFile, isLoading } = useThrowingFn({
         async fn(file: File) {
             const filename = encodeURIComponent(
-                slugKebabCaseKeepExtension(`${idGenerator()}-${file.name || 'file'}`),
+                slugKebabCaseKeepExtension(
+                    `${idGenerator()}-${file.name || 'file'}`,
+                ),
             )
             const contentType = file.type || 'application/octet-stream'
 
@@ -79,7 +80,7 @@ export function ChatUploadButton({
                 })
             if (error) throw error
 
-            const { signedUrl, finalUrl } = data.files[0]
+            const { signedUrl, finalUrl } = data.files[0] || {}
 
             const uploadResp = await fetch(signedUrl, {
                 method: 'PUT',

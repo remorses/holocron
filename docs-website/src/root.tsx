@@ -421,27 +421,47 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </html>
     )
 }
-
-function CSSVariables({ docsJson }) {
+function CSSVariables({ docsJson }: { docsJson: DocsJsonType }) {
+    // Always expect { dark, light }
     const cssVariables = docsJson?.cssVariables
+    if (!cssVariables) return null
+    const { dark, light } = cssVariables
 
-    if (!cssVariables || Object.keys(cssVariables).length === 0) {
+    // Early return if both missing
+    if (!light && !dark) return null
+
+    // Helper to build var block
+    const toCssBlock = (obj: Record<string, string> | undefined) =>
+        obj
+            ? Object.entries(obj)
+                  .map(([key, value]) => {
+                      const cssVar = key.startsWith('--') ? key : `--${key}`
+                      return `${cssVar}: ${value} !important;`
+                  })
+                  .join('\n  ')
+            : ''
+
+    // Don't render if both empty
+    if (
+        (!light || Object.keys(light).length === 0) &&
+        (!dark || Object.keys(dark).length === 0)
+    ) {
         return null
     }
 
-    // Convert cssVariables object to CSS custom properties
-    const cssText = Object.entries(cssVariables)
-        .map(([key, value]) => {
-            // Ensure the key starts with --
-            const cssVar = key?.startsWith('--') ? key : `--${key}`
-            return `${cssVar}: ${value};`
-        })
-        .join('\n  ')
+    let styleStr = ''
+    if (light && Object.keys(light).length > 0) {
+        styleStr += `:root {\n  ${toCssBlock(light)}\n}`
+    }
+    if (dark && Object.keys(dark).length > 0) {
+        if (styleStr) styleStr += '\n'
+        styleStr += `.dark {\n  ${toCssBlock(dark)}\n}`
+    }
 
     return (
         <style
             dangerouslySetInnerHTML={{
-                __html: `:root {\n  ${cssText}\n}`,
+                __html: styleStr,
             }}
         />
     )
