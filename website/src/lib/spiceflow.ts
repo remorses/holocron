@@ -180,17 +180,20 @@ export const app = new Spiceflow({ basePath: '/api' })
             const installationId = installation?.installationId
             if (!installationId)
                 throw new AppError(`no installationId found for site`)
+            const githubFolder = site.githubFolder || ''
             const pages = filesFromGithub({
                 installationId,
                 owner: site.githubOwner,
                 repo: site.githubRepo,
                 signal: request.signal,
                 branchId,
+                basePath: githubFolder,
+
                 // forceFullSync: true,
             })
             await syncSite({
                 siteId,
-                githubFolder: site.githubFolder,
+                githubFolder,
                 branchId,
                 name: site.name || '',
                 trieveDatasetId: branch.trieveDatasetId || undefined,
@@ -1054,6 +1057,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 githubFolder: githubFolder || '',
                 branchId: finalBranchId,
                 siteId: finalSiteId,
+
                 name,
             })
 

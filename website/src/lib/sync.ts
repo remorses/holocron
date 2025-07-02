@@ -767,6 +767,11 @@ export async function* filesFromGithub({
     onlyGithubPaths = new Set<string>(),
     forceFullSync = false,
 }) {
+    if (basePath) {
+        if (!basePath.startsWith('/')) {
+            basePath = '/' + basePath
+        }
+    }
     if (!installationId) throw new Error('Installation ID is required')
     const octokit = await getOctokit({ installationId })
     const timeId = Date.now()
