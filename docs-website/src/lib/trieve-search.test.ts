@@ -11,8 +11,8 @@ describe('searchDocsWithTrieve', () => {
         expect(result).toMatchInlineSnapshot(`
           [
             {
-              "content": "/essentials/images",
-              "id": "97ff4c0b-b92f-4ad6-b83e-d34fcfa45bd6",
+              "content": "Images and Embeds",
+              "id": "b4115c51-fea0-4cb1-9910-e08ca70ab42d",
               "type": "page",
               "url": "/essentials/images",
             },
@@ -67,8 +67,8 @@ describe('searchDocsWithTrieve', () => {
               "weight": 0,
             },
             {
-              "content": "Images and Embeds",
-              "id": "b4115c51-fea0-4cb1-9910-e08ca70ab42d",
+              "content": "/essentials/images",
+              "id": "97ff4c0b-b92f-4ad6-b83e-d34fcfa45bd6",
               "type": "page",
               "url": "/essentials/images",
             },

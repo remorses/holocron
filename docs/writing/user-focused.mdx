@@ -22,8 +22,7 @@ The WebhookManager class provides methods for webhook management:
 - `update(id, options)` - Updates webhook settings
 - `delete(id)` - Removes a webhook
 - `list()` - Returns all webhooks
-
-````
+```
 </Tab>
 
 <Tab title="User-Focused (✅)">
@@ -44,8 +43,7 @@ Get real-time notifications in under 5 minutes:
 
 By the end of this guide, you'll receive automatic notifications
 whenever customers place orders.
-````
-
+```
 </Tab>
 </Tabs>
 
@@ -75,7 +73,6 @@ Your users range from beginners exploring your platform to experts implementing 
         html: '<h1>It works!</h1>'
     });
     ```
-
 </Step>
 
 <Step title="Provide escape hatches for complexity">
@@ -103,7 +100,6 @@ Your users range from beginners exploring your platform to experts implementing 
         ```
     </Accordion>
     </AccordionGroup>
-
 </Step>
 </Steps>
 
@@ -119,14 +115,14 @@ Real users work within constraints. Acknowledge their environment and provide pr
 **Provide:** Copy-paste examples, quick setup guides, common patterns
 </Card>
 
-<Card title='Security-Conscious Teams' icon='shield'>
-    **Need:** Understanding security implications **Provide:** Best practices,
-    security considerations, compliance notes
+<Card title="Security-Conscious Teams" icon="shield">
+**Need:** Understanding security implications
+**Provide:** Best practices, security considerations, compliance notes
 </Card>
 
-<Card title='Scaling Businesses' icon='trending-up'>
-    **Need:** Performance and reliability info **Provide:** Rate limits, error
-    handling, monitoring guidance
+<Card title="Scaling Businesses" icon="trending-up">
+**Need:** Performance and reliability info
+**Provide:** Rate limits, error handling, monitoring guidance
 </Card>
 
 <Card title="Budget-Conscious Users" icon="dollar-sign">
@@ -140,15 +136,14 @@ Real users work within constraints. Acknowledge their environment and provide pr
 Great documentation answers questions before users ask them. Think about what could go wrong or what users might wonder about.
 
 <Warning>
-    Don't just document the happy path. Users encounter edge cases, errors, and
-    unexpected situations.
+Don't just document the happy path. Users encounter edge cases, errors, and unexpected situations.
 </Warning>
 
 ### Proactive Problem Solving
 
 Address common confusion points inline:
 
-````markdown
+```markdown
 # Setting Up Your Development Environment
 
 Install the CLI tool globally to use it from any project:
@@ -167,7 +162,7 @@ The installer will replace your existing version.
 
 **Permission errors on macOS/Linux?** Try `sudo npm install -g @company/cli`
 or use a Node version manager like nvm to avoid permission issues.
-````
+```
 
 ### Include Realistic Troubleshooting
 
@@ -176,34 +171,30 @@ or use a Node version manager like nvm to avoid permission issues.
 **Symptoms:** Getting 401 Unauthorized errors
 
 **Causes:**
-
 - Using test key in production (or vice versa)
 - Key has expired or been revoked
 - Missing `Bearer ` prefix in Authorization header
 
 **Solutions:**
-
 1. Verify you're using the correct environment key
 2. Check key status in your dashboard
 3. Ensure header format: `Authorization: Bearer your-key-here`
-    </Accordion>
+</Accordion>
 
 <Accordion title="Webhook not receiving events">
 **Symptoms:** Events happening but webhook endpoint not called
 
 **Causes:**
-
 - Endpoint URL not publicly accessible
 - SSL certificate issues
 - Webhook disabled or pointing to wrong URL
 
 **Solutions:**
-
 1. Test endpoint with curl or Postman
 2. Check SSL certificate validity
 3. Verify webhook configuration in dashboard
 4. Review webhook logs for delivery attempts
-    </Accordion>
+</Accordion>
 </AccordionGroup>
 
 ## Use Action-Oriented Language
@@ -244,7 +235,6 @@ Help users confirm they're on the right track with clear success indicators.
     **Success indicator:** You should see the package added to your `package.json`
     dependencies and a confirmation message in your terminal.
     </Check>
-
 </Step>
 
 <Step title="Test the connection">
@@ -266,7 +256,6 @@ Help users confirm they're on the right track with clear success indicators.
     }
     ```
     </Check>
-
 </Step>
 </Steps>
 
@@ -275,9 +264,7 @@ Help users confirm they're on the right track with clear success indicators.
 Connect features to business outcomes so users understand the value of implementation effort.
 
 <Info>
-    **Why this matters:** When users understand the business impact, they're
-    more likely to invest time in proper implementation and convince
-    stakeholders to adopt your solution.
+**Why this matters:** When users understand the business impact, they're more likely to invest time in proper implementation and convince stakeholders to adopt your solution.
 </Info>
 
 ```markdown
@@ -292,20 +279,16 @@ Implementing proper rate limiting protects your application from:
 ## Implementation Impact
 
 **Before rate limiting:**
-
 - 40% of API errors during traffic spikes
 - Average response time: 2.3 seconds
 - 15% higher infrastructure costs
 
 **After implementation:**
-
 - 2% API error rate under same load
 - Average response time: 480ms
 - 20% reduction in infrastructure costs
 ```
 
 <Tip>
-    The best user-focused documentation feels like having an expert teammate who
-    understands your goals and constraints, not just someone reading features
-    from a spec sheet.
+The best user-focused documentation feels like having an expert teammate who understands your goals and constraints, not just someone reading features from a spec sheet.
 </Tip>
