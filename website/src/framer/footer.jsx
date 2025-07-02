@@ -48,7 +48,7 @@ import { routes } from "./chunks/chunk-733MZEOY.js";
 import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/97LgMTBlvR4oX4kzhisY/fqsmQ0JHzpnmSmwFTIxv/ZxU1ZqLuB.js
+// /:https://framerusercontent.com/modules/97LgMTBlvR4oX4kzhisY/YB9ZID48CwE4no1iDLtw/ZxU1ZqLuB.js
 import { jsx as _jsx2, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
@@ -214,10 +214,10 @@ var css4 = [
 ];
 var className4 = "framer-kToac";
 
-// /:https://framerusercontent.com/modules/97LgMTBlvR4oX4kzhisY/fqsmQ0JHzpnmSmwFTIxv/ZxU1ZqLuB.js
+// /:https://framerusercontent.com/modules/97LgMTBlvR4oX4kzhisY/YB9ZID48CwE4no1iDLtw/ZxU1ZqLuB.js
 var AutoYearCopyrightFonts = getFonts(AutoYearCopyright);
 var cycleOrder = ["ZFXaVsx1C", "x4xSNS1KU", "GlazZkpnx"];
-var serializationHash = "framer-fmRhv";
+var serializationHash = "framer-bgRSq";
 var variantClassNames = {
 	GlazZkpnx: "framer-v-w0wp92",
 	x4xSNS1KU: "framer-v-1o4g6o",
@@ -503,7 +503,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																	<Link
 																		href={{
 																			hash: ":YCffmP9Vu",
-																			webPageId: "augiA20Il",
+																			webPageId: "ePrr9Htzz",
 																		}}
 																		motionChild={true}
 																		nodeId={"eFHrsZc3L"}
@@ -516,7 +516,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																			className={"framer-styles-preset-n0jtbe"}
 																			data-styles-preset={"eLOeWa0A8"}
 																		>
-																			{"Feature"}
+																			{"Docs"}
 																		</motion.a>
 																	</Link>
 																</motion.p>
@@ -535,8 +535,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												>
 													<Link
 														href={{
-															hash: ":EMqlJYnox",
-															webPageId: "augiA20Il",
+															webPageId: "ePrr9Htzz",
 														}}
 														motionChild={true}
 														nodeId={"eFHrsZc3L"}
@@ -549,7 +548,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 															className={"framer-styles-preset-1i37dfc"}
 															data-styles-preset={"uT5gCl_8P"}
 														>
-															{"Feature"}
+															{"Docs"}
 														</motion.a>
 													</Link>
 												</motion.p>
@@ -557,217 +556,19 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 										</RichText>
 										<RichText
 											__fromCanvasComponent={true}
-											className={"framer-4mi0mv"}
+											className={"framer-iffmxd"}
 											fonts={["Inter"]}
 											layoutDependency={layoutDependency}
-											layoutId={"t0XRdQbUu"}
+											layoutId={"n8DBgJkyD"}
 											verticalAlignment={"top"}
 											withExternalLayout={true}
-											{...addPropertyOverrides(
-												{
-													GlazZkpnx: {
-														children: (
-															<React.Fragment>
-																<motion.p
-																	className={"framer-styles-preset-4mzurx"}
-																	data-styles-preset={"C5Bqm4Y89"}
-																>
-																	<Link
-																		href={{
-																			hash: ":zISvybPEk",
-																			webPageId: "augiA20Il",
-																		}}
-																		motionChild={true}
-																		nodeId={"t0XRdQbUu"}
-																		openInNewTab={false}
-																		relValues={[]}
-																		scopeId={"ZxU1ZqLuB"}
-																		smoothScroll={false}
-																	>
-																		<motion.a
-																			className={"framer-styles-preset-n0jtbe"}
-																			data-styles-preset={"eLOeWa0A8"}
-																		>
-																			{"Benefits"}
-																		</motion.a>
-																	</Link>
-																</motion.p>
-															</React.Fragment>
-														),
-													},
-												},
-												baseVariant,
-												gestureVariant,
-											)}
 										>
 											<React.Fragment>
 												<motion.p
 													className={"framer-styles-preset-4mzurx"}
 													data-styles-preset={"C5Bqm4Y89"}
 												>
-													<Link
-														href={{
-															hash: ":zISvybPEk",
-															webPageId: "augiA20Il",
-														}}
-														motionChild={true}
-														nodeId={"t0XRdQbUu"}
-														openInNewTab={false}
-														relValues={[]}
-														scopeId={"ZxU1ZqLuB"}
-														smoothScroll={false}
-													>
-														<motion.a
-															className={"framer-styles-preset-1i37dfc"}
-															data-styles-preset={"uT5gCl_8P"}
-														>
-															{"Benefits"}
-														</motion.a>
-													</Link>
-												</motion.p>
-											</React.Fragment>
-										</RichText>
-										<RichText
-											__fromCanvasComponent={true}
-											className={"framer-ndtddk"}
-											fonts={["Inter"]}
-											layoutDependency={layoutDependency}
-											layoutId={"Zqqwelk7D"}
-											verticalAlignment={"top"}
-											withExternalLayout={true}
-											{...addPropertyOverrides(
-												{
-													GlazZkpnx: {
-														children: (
-															<React.Fragment>
-																<motion.p
-																	className={"framer-styles-preset-4mzurx"}
-																	data-styles-preset={"C5Bqm4Y89"}
-																>
-																	<Link
-																		href={{
-																			hash: ":zo40Q3o2F",
-																			webPageId: "augiA20Il",
-																		}}
-																		motionChild={true}
-																		nodeId={"Zqqwelk7D"}
-																		openInNewTab={false}
-																		relValues={[]}
-																		scopeId={"ZxU1ZqLuB"}
-																		smoothScroll={false}
-																	>
-																		<motion.a
-																			className={"framer-styles-preset-n0jtbe"}
-																			data-styles-preset={"eLOeWa0A8"}
-																		>
-																			{"Pricing "}
-																		</motion.a>
-																	</Link>
-																</motion.p>
-															</React.Fragment>
-														),
-													},
-												},
-												baseVariant,
-												gestureVariant,
-											)}
-										>
-											<React.Fragment>
-												<motion.p
-													className={"framer-styles-preset-4mzurx"}
-													data-styles-preset={"C5Bqm4Y89"}
-												>
-													<Link
-														href={{
-															hash: ":zo40Q3o2F",
-															webPageId: "augiA20Il",
-														}}
-														motionChild={true}
-														nodeId={"Zqqwelk7D"}
-														openInNewTab={false}
-														relValues={[]}
-														scopeId={"ZxU1ZqLuB"}
-														smoothScroll={false}
-													>
-														<motion.a
-															className={"framer-styles-preset-1i37dfc"}
-															data-styles-preset={"uT5gCl_8P"}
-														>
-															{"Pricing "}
-														</motion.a>
-													</Link>
-												</motion.p>
-											</React.Fragment>
-										</RichText>
-										<RichText
-											__fromCanvasComponent={true}
-											className={"framer-1ialxgi"}
-											fonts={["Inter"]}
-											layoutDependency={layoutDependency}
-											layoutId={"zpIieT5uz"}
-											verticalAlignment={"top"}
-											withExternalLayout={true}
-											{...addPropertyOverrides(
-												{
-													GlazZkpnx: {
-														children: (
-															<React.Fragment>
-																<motion.p
-																	className={"framer-styles-preset-4mzurx"}
-																	data-styles-preset={"C5Bqm4Y89"}
-																>
-																	<Link
-																		href={{
-																			hash: ":kI5dB9Hnr",
-																			webPageId: "augiA20Il",
-																		}}
-																		motionChild={true}
-																		nodeId={"zpIieT5uz"}
-																		openInNewTab={false}
-																		relValues={[]}
-																		scopeId={"ZxU1ZqLuB"}
-																		smoothScroll={false}
-																	>
-																		<motion.a
-																			className={"framer-styles-preset-n0jtbe"}
-																			data-styles-preset={"eLOeWa0A8"}
-																		>
-																			{"Testimonials"}
-																		</motion.a>
-																	</Link>
-																</motion.p>
-															</React.Fragment>
-														),
-													},
-												},
-												baseVariant,
-												gestureVariant,
-											)}
-										>
-											<React.Fragment>
-												<motion.p
-													className={"framer-styles-preset-4mzurx"}
-													data-styles-preset={"C5Bqm4Y89"}
-												>
-													<Link
-														href={{
-															hash: ":kI5dB9Hnr",
-															webPageId: "augiA20Il",
-														}}
-														motionChild={true}
-														nodeId={"zpIieT5uz"}
-														openInNewTab={false}
-														relValues={[]}
-														scopeId={"ZxU1ZqLuB"}
-														smoothScroll={false}
-													>
-														<motion.a
-															className={"framer-styles-preset-1i37dfc"}
-															data-styles-preset={"uT5gCl_8P"}
-														>
-															{"Testimonials"}
-														</motion.a>
-													</Link>
+													{"x/twitter"}
 												</motion.p>
 											</React.Fragment>
 										</RichText>
@@ -790,7 +591,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																>
 																	<Link
 																		href={{
-																			hash: ":rmeeJSz78",
+																			hash: ":xUtGk5_gl",
 																			webPageId: "augiA20Il",
 																		}}
 																		motionChild={true}
@@ -823,7 +624,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												>
 													<Link
 														href={{
-															hash: ":rmeeJSz78",
+															hash: ":xUtGk5_gl",
 															webPageId: "augiA20Il",
 														}}
 														motionChild={true}
@@ -869,7 +670,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														color={
 															"var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255))"
 														}
-														companyName={"Copyright \xA9 Aset."}
+														companyName={"Copyright \xA9 Fumabase."}
 														font={{
 															fontFamily: '"Inter", sans-serif',
 															fontSize: "14px",
@@ -1019,45 +820,46 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 });
 var css5 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-fmRhv.framer-1e73it6, .framer-fmRhv .framer-1e73it6 { display: block; }",
-	".framer-fmRhv.framer-49t8a3 { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 1200px; }",
-	".framer-fmRhv .framer-3qqrx0 { align-content: flex-start; align-items: flex-start; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; gap: 0px; height: min-content; justify-content: center; overflow: hidden; padding: 50px 40px 40px 40px; position: relative; width: 1px; }",
-	".framer-fmRhv .framer-37o8cr { align-content: flex-start; align-items: flex-start; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 1px; }",
-	".framer-fmRhv .framer-3ppevd { align-content: flex-start; align-items: flex-start; align-self: stretch; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 30px; height: auto; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: 1px; }",
-	".framer-fmRhv .framer-1873huc { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 9px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; text-decoration: none; width: min-content; }",
-	".framer-fmRhv .framer-18r1cmt { flex: none; height: 15px; position: relative; width: 27px; }",
-	".framer-fmRhv .framer-uim1xm { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-fmRhv .framer-11tvkrq { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
-	".framer-fmRhv .framer-1gah19s, .framer-fmRhv .framer-4mi0mv, .framer-fmRhv .framer-ndtddk, .framer-fmRhv .framer-q4oliy { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
-	".framer-fmRhv .framer-v0g0uv, .framer-fmRhv .framer-1ialxgi, .framer-fmRhv .framer-x6ks31 { --framer-custom-cursors: pointer; flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
-	".framer-fmRhv .framer-1hgm7v3 { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 6px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-fmRhv .framer-1erjvd9-container { flex: none; height: auto; position: relative; width: auto; }",
-	".framer-fmRhv .framer-9ihyxa { align-content: flex-end; align-items: flex-end; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 19px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 1px; }",
-	".framer-fmRhv .framer-1o317i { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 14px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
-	".framer-fmRhv .framer-d9qqkh { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 20px; height: min-content; justify-content: flex-start; overflow: visible; padding: 4px 0px 0px 0px; position: relative; width: min-content; }",
-	".framer-fmRhv .framer-ldtcww { flex: none; height: 15px; position: relative; text-decoration: none; width: 16px; }",
-	".framer-fmRhv .framer-1lhdk5f { aspect-ratio: 1.0208333333333333 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 16px); position: relative; text-decoration: none; width: 16px; }",
-	".framer-fmRhv .framer-1jcf308 { flex: none; height: 1px; left: 0px; overflow: visible; position: absolute; top: 0px; width: 100%; z-index: 1; }",
-	".framer-fmRhv .framer-h6zbgu { flex: none; height: 1px; left: 0px; overflow: visible; position: absolute; top: 13px; width: 100%; z-index: 1; }",
-	".framer-fmRhv.framer-v-1o4g6o.framer-49t8a3 { width: 810px; }",
-	".framer-fmRhv.framer-v-1o4g6o .framer-3qqrx0 { padding: 50px 40px 30px 40px; }",
-	".framer-fmRhv.framer-v-1o4g6o .framer-11tvkrq { gap: 14px; }",
-	".framer-fmRhv.framer-v-w0wp92.framer-49t8a3 { width: 390px; }",
-	".framer-fmRhv.framer-v-w0wp92 .framer-3qqrx0 { flex-direction: column; gap: 55px; justify-content: flex-start; padding: 70px 20px 60px 20px; }",
-	".framer-fmRhv.framer-v-w0wp92 .framer-37o8cr { flex: none; flex-direction: column; gap: 45px; order: 0; width: 100%; }",
-	".framer-fmRhv.framer-v-w0wp92 .framer-3ppevd { align-content: center; align-items: center; align-self: unset; flex: none; gap: 14px; height: min-content; justify-content: center; width: 100%; }",
-	".framer-fmRhv.framer-v-w0wp92 .framer-18r1cmt { height: 18px; width: 33px; }",
-	".framer-fmRhv.framer-v-w0wp92 .framer-uim1xm { gap: 48px; width: 100%; }",
-	".framer-fmRhv.framer-v-w0wp92 .framer-11tvkrq { flex-direction: column; gap: 12px; }",
-	".framer-fmRhv.framer-v-w0wp92 .framer-9ihyxa { align-content: center; align-items: center; flex: none; width: 100%; }",
-	".framer-fmRhv.framer-v-w0wp92 .framer-1jcf308 { order: 1; }",
-	".framer-fmRhv.framer-v-w0wp92 .framer-h6zbgu { order: 2; }",
+	".framer-bgRSq.framer-1e73it6, .framer-bgRSq .framer-1e73it6 { display: block; }",
+	".framer-bgRSq.framer-49t8a3 { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 1200px; }",
+	".framer-bgRSq .framer-3qqrx0 { align-content: flex-start; align-items: flex-start; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; gap: 0px; height: min-content; justify-content: center; overflow: hidden; padding: 50px 40px 40px 40px; position: relative; width: 1px; }",
+	".framer-bgRSq .framer-37o8cr { align-content: flex-start; align-items: flex-start; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 1px; }",
+	".framer-bgRSq .framer-3ppevd { align-content: flex-start; align-items: flex-start; align-self: stretch; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 30px; height: auto; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: 1px; }",
+	".framer-bgRSq .framer-1873huc { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 9px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; text-decoration: none; width: min-content; }",
+	".framer-bgRSq .framer-18r1cmt { flex: none; height: 15px; position: relative; width: 27px; }",
+	".framer-bgRSq .framer-uim1xm { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-bgRSq .framer-11tvkrq { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
+	".framer-bgRSq .framer-1gah19s, .framer-bgRSq .framer-q4oliy { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
+	".framer-bgRSq .framer-v0g0uv, .framer-bgRSq .framer-x6ks31 { --framer-custom-cursors: pointer; flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
+	".framer-bgRSq .framer-iffmxd { cursor: pointer; flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
+	".framer-bgRSq .framer-1hgm7v3 { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 6px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-bgRSq .framer-1erjvd9-container { flex: none; height: auto; position: relative; width: auto; }",
+	".framer-bgRSq .framer-9ihyxa { align-content: flex-end; align-items: flex-end; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 19px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 1px; }",
+	".framer-bgRSq .framer-1o317i { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 14px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
+	".framer-bgRSq .framer-d9qqkh { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 20px; height: min-content; justify-content: flex-start; overflow: visible; padding: 4px 0px 0px 0px; position: relative; width: min-content; }",
+	".framer-bgRSq .framer-ldtcww { flex: none; height: 15px; position: relative; text-decoration: none; width: 16px; }",
+	".framer-bgRSq .framer-1lhdk5f { aspect-ratio: 1.0208333333333333 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 16px); position: relative; text-decoration: none; width: 16px; }",
+	".framer-bgRSq .framer-1jcf308 { flex: none; height: 1px; left: 0px; overflow: visible; position: absolute; top: 0px; width: 100%; z-index: 1; }",
+	".framer-bgRSq .framer-h6zbgu { flex: none; height: 1px; left: 0px; overflow: visible; position: absolute; top: 13px; width: 100%; z-index: 1; }",
+	".framer-bgRSq.framer-v-1o4g6o.framer-49t8a3 { width: 810px; }",
+	".framer-bgRSq.framer-v-1o4g6o .framer-3qqrx0 { padding: 50px 40px 30px 40px; }",
+	".framer-bgRSq.framer-v-1o4g6o .framer-11tvkrq { gap: 14px; }",
+	".framer-bgRSq.framer-v-w0wp92.framer-49t8a3 { width: 390px; }",
+	".framer-bgRSq.framer-v-w0wp92 .framer-3qqrx0 { flex-direction: column; gap: 55px; justify-content: flex-start; padding: 70px 20px 60px 20px; }",
+	".framer-bgRSq.framer-v-w0wp92 .framer-37o8cr { flex: none; flex-direction: column; gap: 45px; order: 0; width: 100%; }",
+	".framer-bgRSq.framer-v-w0wp92 .framer-3ppevd { align-content: center; align-items: center; align-self: unset; flex: none; gap: 14px; height: min-content; justify-content: center; width: 100%; }",
+	".framer-bgRSq.framer-v-w0wp92 .framer-18r1cmt { height: 18px; width: 33px; }",
+	".framer-bgRSq.framer-v-w0wp92 .framer-uim1xm { gap: 48px; width: 100%; }",
+	".framer-bgRSq.framer-v-w0wp92 .framer-11tvkrq { flex-direction: column; gap: 12px; }",
+	".framer-bgRSq.framer-v-w0wp92 .framer-9ihyxa { align-content: center; align-items: center; flex: none; width: 100%; }",
+	".framer-bgRSq.framer-v-w0wp92 .framer-1jcf308 { order: 1; }",
+	".framer-bgRSq.framer-v-w0wp92 .framer-h6zbgu { order: 2; }",
 	...css2,
 	...css3,
 	...css4,
 	...css,
 ];
-var FramerZxU1ZqLuB = withCSS(Component, css5, "framer-fmRhv");
+var FramerZxU1ZqLuB = withCSS(Component, css5, "framer-bgRSq");
 var stdin_default = FramerZxU1ZqLuB;
 FramerZxU1ZqLuB.displayName = "Footer";
 FramerZxU1ZqLuB.defaultProps = {

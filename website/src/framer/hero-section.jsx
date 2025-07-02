@@ -47,7 +47,7 @@ import { routes } from "./chunks/chunk-733MZEOY.js";
 import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/ASlpWmLZWKK3H6gBHAts/eo97FeJK7.js
+// /:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/7x0xuvL6GBVvLS1Am1U7/eo97FeJK7.js
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
@@ -336,7 +336,7 @@ var css3 = [
 ];
 var className3 = "framer-cfhJf";
 
-// /:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/ASlpWmLZWKK3H6gBHAts/eo97FeJK7.js
+// /:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/7x0xuvL6GBVvLS1Am1U7/eo97FeJK7.js
 var BadgeFonts = getFonts(stdin_default2);
 var SmartComponentScopedContainerWithFXWithOptimizedAppearEffect =
 	withOptimizedAppearEffect(withFX(SmartComponentScopedContainer));
@@ -354,7 +354,7 @@ var ImageWithFXWithOptimizedAppearEffect = withOptimizedAppearEffect(
 );
 var GridFonts = getFonts(stdin_default3);
 var cycleOrder = ["DLscFvTjv", "vT5GKuegs", "M1TBpoN2c"];
-var serializationHash = "framer-vLhwG";
+var serializationHash = "framer-v5037";
 var variantClassNames = {
 	DLscFvTjv: "framer-v-1ju9km5",
 	M1TBpoN2c: "framer-v-ct8w98",
@@ -1016,9 +1016,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 															"var(--extracted-gdpscs, var(--token-de954fd2-a975-4916-8b85-2e5f2acf6b9e, rgb(255, 255, 255)))",
 													}}
 												>
-													{"pretty docs, "}
+													{"pretty docs website,"}
 													<motion.br />
-													{"made easy"}
+													{"no code to maintain"}
 												</motion.h1>
 											</React.Fragment>
 										</RichTextWithFXWithOptimizedAppearEffect>
@@ -1066,7 +1066,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 													data-styles-preset={"YqcGXulro"}
 												>
 													{
-														"Build excellent documentation site with no effort, no code to maintain"
+														"Build excellent documentation site with no effort, built on top of Fumadocs"
 													}
 												</motion.p>
 											</React.Fragment>
@@ -2216,55 +2216,55 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 });
 var css4 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-vLhwG.framer-1tk4vcq, .framer-vLhwG .framer-1tk4vcq { display: block; }",
-	".framer-vLhwG.framer-1ju9km5 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 31px; height: 800px; justify-content: center; overflow: hidden; padding: 80px 0px 0px 0px; position: relative; width: 1200px; }",
-	".framer-vLhwG .framer-4unfev { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 44px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-vLhwG .framer-kcmu88 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 15px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-vLhwG .framer-vll604-container { flex: none; height: auto; position: relative; width: auto; z-index: 2; }",
-	".framer-vLhwG .framer-1af0tnz { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; max-width: 800px; overflow: visible; padding: 0px; position: relative; width: 800px; z-index: 2; }",
-	".framer-vLhwG .framer-14lj2mo { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-vLhwG .framer-bkpwdd { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; z-index: 1; }",
-	".framer-vLhwG .framer-1uk34jx { flex: none; height: auto; max-width: 85%; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; z-index: 1; }",
-	".framer-vLhwG .framer-1jc27pn { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 7px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
-	".framer-vLhwG .framer-cdcok3-container { flex: none; height: auto; position: relative; width: auto; }",
-	".framer-vLhwG .framer-1db3772-container { flex: none; height: auto; position: relative; width: auto; z-index: 3; }",
-	".framer-vLhwG .framer-1bhe5y { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 15px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
-	".framer-vLhwG .framer-elw1j5 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; min-height: 28px; min-width: 115px; overflow: hidden; padding: 0px; position: relative; width: min-content; }",
-	".framer-vLhwG .framer-1wo8obo { flex: none; height: 28px; left: calc(12.500000000000021% - 28px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 28px / 2); width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
-	".framer-vLhwG .framer-opum0o { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 31%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
-	".framer-vLhwG .framer-1kppgrc { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 51%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
-	".framer-vLhwG .framer-1rq7k0 { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 69%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
-	".framer-vLhwG .framer-q5wh5f { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 88%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
-	".framer-vLhwG .framer-18v5tzb { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
-	".framer-vLhwG .framer-9jo1y3 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; left: calc(50.00000000000002% - min(1200px, 100%) / 2); max-width: 1200px; overflow: hidden; padding: 0px 35px 0px 35px; position: absolute; top: calc(50.00000000000002% - 800px / 2); width: 100%; z-index: 1; }",
-	".framer-vLhwG .framer-hx1jle { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 1px; }",
-	".framer-vLhwG .framer-5s020z { bottom: 100px; flex: none; height: 100px; left: calc(0.08928571428573649% - 2px / 2); overflow: hidden; position: absolute; width: 2px; z-index: 1; }",
-	".framer-vLhwG .framer-f196iw { flex: none; height: 200px; left: calc(99.90291262135923% - 2px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 200px / 2); width: 2px; z-index: 1; }",
-	".framer-vLhwG .framer-ju2czo { flex: none; height: 50px; left: calc(9.017857142857165% - 2px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 50px / 2); width: 2px; z-index: 1; }",
-	".framer-vLhwG .framer-1ytjer { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; left: 50%; overflow: hidden; padding: 0px; position: absolute; top: 0px; width: 100%; z-index: 0; }",
-	".framer-vLhwG .framer-1vpwjt1 { flex: none; gap: 10px; height: 800px; overflow: visible; position: relative; width: 1050px; z-index: 0; }",
-	".framer-vLhwG .framer-u2413q { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 1; }",
-	".framer-vLhwG .framer-nwzasc-container { flex: none; height: 800px; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
-	".framer-vLhwG.framer-v-1k2jmim.framer-1ju9km5 { height: 1080px; padding: 0px; width: 810px; }",
-	".framer-vLhwG.framer-v-1k2jmim .framer-4unfev { gap: 75px; }",
-	".framer-vLhwG.framer-v-1k2jmim .framer-kcmu88 { gap: 17px; order: 0; }",
-	".framer-vLhwG.framer-v-1k2jmim .framer-1af0tnz { gap: 49px; max-width: 730px; width: 100%; }",
-	".framer-vLhwG.framer-v-1k2jmim .framer-1bhe5y { order: 1; }",
-	".framer-vLhwG.framer-v-1k2jmim .framer-9jo1y3 { padding: 0px 40px 0px 40px; }",
-	".framer-vLhwG.framer-v-1k2jmim .framer-1ytjer { height: calc(var(--framer-viewport-height, 100vh) * 1); left: calc(50.00000000000002% - 100% / 2); padding: 0px 0px 80px 0px; }",
-	".framer-vLhwG.framer-v-1k2jmim .framer-1vpwjt1 { height: calc(var(--framer-viewport-height, 100vh) * 1); left: 1px; order: 0; position: absolute; top: calc(50.00000000000002% - 100vh / 2); width: 100%; }",
-	".framer-vLhwG.framer-v-ct8w98.framer-1ju9km5 { height: 844px; padding: 0px; width: 390px; }",
-	".framer-vLhwG.framer-v-ct8w98 .framer-4unfev { flex: 1 0 0px; gap: 41px; height: 1px; padding: 0px 20px 10px 20px; }",
-	".framer-vLhwG.framer-v-ct8w98 .framer-kcmu88 { gap: 16px; }",
-	".framer-vLhwG.framer-v-ct8w98 .framer-1af0tnz { gap: 17px; width: 100%; }",
-	".framer-vLhwG.framer-v-ct8w98 .framer-14lj2mo { gap: 12px; }",
-	".framer-vLhwG.framer-v-ct8w98 .framer-bkpwdd { max-width: 580px; }",
-	".framer-vLhwG.framer-v-ct8w98 .framer-1uk34jx { max-width: 500px; }",
+	".framer-v5037.framer-1tk4vcq, .framer-v5037 .framer-1tk4vcq { display: block; }",
+	".framer-v5037.framer-1ju9km5 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 31px; height: 800px; justify-content: center; overflow: hidden; padding: 80px 0px 0px 0px; position: relative; width: 1200px; }",
+	".framer-v5037 .framer-4unfev { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 44px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-v5037 .framer-kcmu88 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 15px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-v5037 .framer-vll604-container { flex: none; height: auto; position: relative; width: auto; z-index: 2; }",
+	".framer-v5037 .framer-1af0tnz { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; max-width: 800px; overflow: visible; padding: 0px; position: relative; width: 800px; z-index: 2; }",
+	".framer-v5037 .framer-14lj2mo { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-v5037 .framer-bkpwdd { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; z-index: 1; }",
+	".framer-v5037 .framer-1uk34jx { flex: none; height: auto; max-width: 85%; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; z-index: 1; }",
+	".framer-v5037 .framer-1jc27pn { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 7px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
+	".framer-v5037 .framer-cdcok3-container { flex: none; height: auto; position: relative; width: auto; }",
+	".framer-v5037 .framer-1db3772-container { flex: none; height: auto; position: relative; width: auto; z-index: 3; }",
+	".framer-v5037 .framer-1bhe5y { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 15px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
+	".framer-v5037 .framer-elw1j5 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; min-height: 28px; min-width: 115px; overflow: hidden; padding: 0px; position: relative; width: min-content; }",
+	".framer-v5037 .framer-1wo8obo { flex: none; height: 28px; left: calc(12.500000000000021% - 28px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 28px / 2); width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
+	".framer-v5037 .framer-opum0o { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 31%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
+	".framer-v5037 .framer-1kppgrc { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 51%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
+	".framer-v5037 .framer-1rq7k0 { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 69%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
+	".framer-v5037 .framer-q5wh5f { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 88%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
+	".framer-v5037 .framer-18v5tzb { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
+	".framer-v5037 .framer-9jo1y3 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; left: calc(50.00000000000002% - min(1200px, 100%) / 2); max-width: 1200px; overflow: hidden; padding: 0px 35px 0px 35px; position: absolute; top: calc(50.00000000000002% - 800px / 2); width: 100%; z-index: 1; }",
+	".framer-v5037 .framer-hx1jle { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 1px; }",
+	".framer-v5037 .framer-5s020z { bottom: 100px; flex: none; height: 100px; left: calc(0.08928571428573649% - 2px / 2); overflow: hidden; position: absolute; width: 2px; z-index: 1; }",
+	".framer-v5037 .framer-f196iw { flex: none; height: 200px; left: calc(99.90291262135923% - 2px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 200px / 2); width: 2px; z-index: 1; }",
+	".framer-v5037 .framer-ju2czo { flex: none; height: 50px; left: calc(9.017857142857165% - 2px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 50px / 2); width: 2px; z-index: 1; }",
+	".framer-v5037 .framer-1ytjer { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; left: 50%; overflow: hidden; padding: 0px; position: absolute; top: 0px; width: 100%; z-index: 0; }",
+	".framer-v5037 .framer-1vpwjt1 { flex: none; gap: 10px; height: 800px; overflow: visible; position: relative; width: 1050px; z-index: 0; }",
+	".framer-v5037 .framer-u2413q { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 1; }",
+	".framer-v5037 .framer-nwzasc-container { flex: none; height: 800px; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
+	".framer-v5037.framer-v-1k2jmim.framer-1ju9km5 { height: 1080px; padding: 0px; width: 810px; }",
+	".framer-v5037.framer-v-1k2jmim .framer-4unfev { gap: 75px; }",
+	".framer-v5037.framer-v-1k2jmim .framer-kcmu88 { gap: 17px; order: 0; }",
+	".framer-v5037.framer-v-1k2jmim .framer-1af0tnz { gap: 49px; max-width: 730px; width: 100%; }",
+	".framer-v5037.framer-v-1k2jmim .framer-1bhe5y { order: 1; }",
+	".framer-v5037.framer-v-1k2jmim .framer-9jo1y3 { padding: 0px 40px 0px 40px; }",
+	".framer-v5037.framer-v-1k2jmim .framer-1ytjer { height: calc(var(--framer-viewport-height, 100vh) * 1); left: calc(50.00000000000002% - 100% / 2); padding: 0px 0px 80px 0px; }",
+	".framer-v5037.framer-v-1k2jmim .framer-1vpwjt1 { height: calc(var(--framer-viewport-height, 100vh) * 1); left: 1px; order: 0; position: absolute; top: calc(50.00000000000002% - 100vh / 2); width: 100%; }",
+	".framer-v5037.framer-v-ct8w98.framer-1ju9km5 { height: 844px; padding: 0px; width: 390px; }",
+	".framer-v5037.framer-v-ct8w98 .framer-4unfev { flex: 1 0 0px; gap: 41px; height: 1px; padding: 0px 20px 10px 20px; }",
+	".framer-v5037.framer-v-ct8w98 .framer-kcmu88 { gap: 16px; }",
+	".framer-v5037.framer-v-ct8w98 .framer-1af0tnz { gap: 17px; width: 100%; }",
+	".framer-v5037.framer-v-ct8w98 .framer-14lj2mo { gap: 12px; }",
+	".framer-v5037.framer-v-ct8w98 .framer-bkpwdd { max-width: 580px; }",
+	".framer-v5037.framer-v-ct8w98 .framer-1uk34jx { max-width: 500px; }",
 	...css3,
 	...css2,
 	...css,
 ];
-var Framereo97FeJK7 = withCSS(Component, css4, "framer-vLhwG");
+var Framereo97FeJK7 = withCSS(Component, css4, "framer-v5037");
 var stdin_default4 = Framereo97FeJK7;
 Framereo97FeJK7.displayName = "Hero Section";
 Framereo97FeJK7.defaultProps = {

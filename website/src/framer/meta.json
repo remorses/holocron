@@ -1309,8 +1309,8 @@
       ],
       "format": "esm"
     },
-    "/:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/euv4Gj58Kj0Z80wefMsL/XmsKfRWHg.js": {
-      "bytes": 29606,
+    "/:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/QH7d8sF6RFSy8J7OpGJA/XmsKfRWHg.js": {
+      "bytes": 27347,
       "imports": [
         {
           "path": "react/jsx-runtime",
@@ -1374,9 +1374,9 @@
           "external": true
         },
         {
-          "path": "/:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/euv4Gj58Kj0Z80wefMsL/XmsKfRWHg.js",
+          "path": "/:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/QH7d8sF6RFSy8J7OpGJA/XmsKfRWHg.js",
           "kind": "import-statement",
-          "original": "https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/euv4Gj58Kj0Z80wefMsL/XmsKfRWHg.js"
+          "original": "https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/QH7d8sF6RFSy8J7OpGJA/XmsKfRWHg.js"
         },
         {
           "path": "unframer",
@@ -1423,8 +1423,8 @@
       ],
       "format": "esm"
     },
-    "/:https://framerusercontent.com/modules/97LgMTBlvR4oX4kzhisY/fqsmQ0JHzpnmSmwFTIxv/ZxU1ZqLuB.js": {
-      "bytes": 28969,
+    "/:https://framerusercontent.com/modules/97LgMTBlvR4oX4kzhisY/YB9ZID48CwE4no1iDLtw/ZxU1ZqLuB.js": {
+      "bytes": 25335,
       "imports": [
         {
           "path": "react/jsx-runtime",
@@ -1493,9 +1493,9 @@
           "external": true
         },
         {
-          "path": "/:https://framerusercontent.com/modules/97LgMTBlvR4oX4kzhisY/fqsmQ0JHzpnmSmwFTIxv/ZxU1ZqLuB.js",
+          "path": "/:https://framerusercontent.com/modules/97LgMTBlvR4oX4kzhisY/YB9ZID48CwE4no1iDLtw/ZxU1ZqLuB.js",
           "kind": "import-statement",
-          "original": "https://framerusercontent.com/modules/97LgMTBlvR4oX4kzhisY/fqsmQ0JHzpnmSmwFTIxv/ZxU1ZqLuB.js"
+          "original": "https://framerusercontent.com/modules/97LgMTBlvR4oX4kzhisY/YB9ZID48CwE4no1iDLtw/ZxU1ZqLuB.js"
         },
         {
           "path": "unframer",
@@ -1649,8 +1649,8 @@
       ],
       "format": "esm"
     },
-    "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/ASlpWmLZWKK3H6gBHAts/eo97FeJK7.js": {
-      "bytes": 48286,
+    "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/7x0xuvL6GBVvLS1Am1U7/eo97FeJK7.js": {
+      "bytes": 48308,
       "imports": [
         {
           "path": "react/jsx-runtime",
@@ -1724,9 +1724,9 @@
           "external": true
         },
         {
-          "path": "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/ASlpWmLZWKK3H6gBHAts/eo97FeJK7.js",
+          "path": "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/7x0xuvL6GBVvLS1Am1U7/eo97FeJK7.js",
           "kind": "import-statement",
-          "original": "https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/ASlpWmLZWKK3H6gBHAts/eo97FeJK7.js"
+          "original": "https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/7x0xuvL6GBVvLS1Am1U7/eo97FeJK7.js"
         },
         {
           "path": "unframer",
@@ -1782,8 +1782,8 @@
       ],
       "format": "esm"
     },
-    "/:https://framerusercontent.com/modules/vsGrSyPjmSu6qtp6KhG2/UnVrUzT8tgUswESjd1WE/qtvfO8YHV.js": {
-      "bytes": 20191,
+    "/:https://framerusercontent.com/modules/vsGrSyPjmSu6qtp6KhG2/PWHDotviIDi0QiGjhxpM/qtvfO8YHV.js": {
+      "bytes": 21564,
       "imports": [
         {
           "path": "react/jsx-runtime",
@@ -1842,9 +1842,9 @@
           "external": true
         },
         {
-          "path": "/:https://framerusercontent.com/modules/vsGrSyPjmSu6qtp6KhG2/UnVrUzT8tgUswESjd1WE/qtvfO8YHV.js",
+          "path": "/:https://framerusercontent.com/modules/vsGrSyPjmSu6qtp6KhG2/PWHDotviIDi0QiGjhxpM/qtvfO8YHV.js",
           "kind": "import-statement",
-          "original": "https://framerusercontent.com/modules/vsGrSyPjmSu6qtp6KhG2/UnVrUzT8tgUswESjd1WE/qtvfO8YHV.js"
+          "original": "https://framerusercontent.com/modules/vsGrSyPjmSu6qtp6KhG2/PWHDotviIDi0QiGjhxpM/qtvfO8YHV.js"
         },
         {
           "path": "unframer",
@@ -2311,11 +2311,11 @@
         "virtual:faq-section": {
           "bytesInOutput": 1173
         },
-        "/:https://framerusercontent.com/modules/vsGrSyPjmSu6qtp6KhG2/UnVrUzT8tgUswESjd1WE/qtvfO8YHV.js": {
-          "bytesInOutput": 18979
+        "/:https://framerusercontent.com/modules/vsGrSyPjmSu6qtp6KhG2/PWHDotviIDi0QiGjhxpM/qtvfO8YHV.js": {
+          "bytesInOutput": 20363
         }
       },
-      "bytes": 20666
+      "bytes": 22050
     },
     "grid.js": {
       "imports": [
@@ -3038,14 +3038,14 @@
         "virtual:nav-bar": {
           "bytesInOutput": 1169
         },
-        "/:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/euv4Gj58Kj0Z80wefMsL/XmsKfRWHg.js": {
-          "bytesInOutput": 28017
+        "/:https://framerusercontent.com/modules/jsadfKe0LgDKxmnlYuqX/QH7d8sF6RFSy8J7OpGJA/XmsKfRWHg.js": {
+          "bytesInOutput": 25758
         },
         "/:https://framerusercontent.com/modules/4C3RYqIdmeufoEb6W2af/XWfIRGiDUquN5zSxeOHs/cq4N7Obrm.js": {
           "bytesInOutput": 8040
         }
       },
-      "bytes": 37952
+      "bytes": 35693
     },
     "footer.js": {
       "imports": [
@@ -3134,8 +3134,8 @@
         "virtual:footer": {
           "bytesInOutput": 1165
         },
-        "/:https://framerusercontent.com/modules/97LgMTBlvR4oX4kzhisY/fqsmQ0JHzpnmSmwFTIxv/ZxU1ZqLuB.js": {
-          "bytesInOutput": 27416
+        "/:https://framerusercontent.com/modules/97LgMTBlvR4oX4kzhisY/YB9ZID48CwE4no1iDLtw/ZxU1ZqLuB.js": {
+          "bytesInOutput": 23758
         },
         "/:https://framerusercontent.com/modules/Jz6H7HFQhTchUp6uXcdd/lLG55dzzmG6WaJFQOMN3/AutoYearCopyright.js": {
           "bytesInOutput": 3290
@@ -3144,7 +3144,7 @@
           "bytesInOutput": 509
         }
       },
-      "bytes": 33217
+      "bytes": 29559
     },
     "chunks/chunk-M65DCHB6.js": {
       "imports": [
@@ -3395,14 +3395,14 @@
         "virtual:hero-section": {
           "bytesInOutput": 1174
         },
-        "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/ASlpWmLZWKK3H6gBHAts/eo97FeJK7.js": {
-          "bytesInOutput": 46484
+        "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/7x0xuvL6GBVvLS1Am1U7/eo97FeJK7.js": {
+          "bytesInOutput": 46506
         },
         "/:https://framerusercontent.com/modules/rHv2weGC84WJaMaBqZST/M33wkThkp4Ray6OH5K74/KhK8sdpR3.js": {
           "bytesInOutput": 10306
         }
       },
-      "bytes": 58865
+      "bytes": 58887
     },
     "pricing-card.js": {
       "imports": [

@@ -41,7 +41,7 @@ import { routes } from "./chunks/chunk-733MZEOY.js";
 import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/vsGrSyPjmSu6qtp6KhG2/UnVrUzT8tgUswESjd1WE/qtvfO8YHV.js
+// /:https://framerusercontent.com/modules/vsGrSyPjmSu6qtp6KhG2/PWHDotviIDi0QiGjhxpM/qtvfO8YHV.js
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
@@ -67,7 +67,7 @@ var FAQFonts = getFonts(stdin_default);
 var SmartComponentScopedContainerWithFX = withFX(SmartComponentScopedContainer);
 var GridFonts = getFonts(stdin_default2);
 var cycleOrder = ["rmeeJSz78", "XrZxEUAaJ", "EW4AHUAxX"];
-var serializationHash = "framer-5hUCE";
+var serializationHash = "framer-BU3RA";
 var variantClassNames = {
 	EW4AHUAxX: "framer-v-x37i1",
 	rmeeJSz78: "framer-v-1rbr5xo",
@@ -359,7 +359,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											style: {
 												width: "100%",
 											},
-											variant: "sTHF6uWTY",
+											variant: "G8PiTZbU_",
 											width: "100%",
 											xyvbwpR7S: "How is Fumabase different than Fumadocs?",
 										})}
@@ -427,7 +427,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											style: {
 												width: "100%",
 											},
-											variant: "sTHF6uWTY",
+											variant: "G8PiTZbU_",
 											width: "100%",
 											xyvbwpR7S: "Where is Fumabase content hosted?",
 										})}
@@ -495,7 +495,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											style: {
 												width: "100%",
 											},
-											variant: "sTHF6uWTY",
+											variant: "G8PiTZbU_",
 											width: "100%",
 											xyvbwpR7S: "Which colors can I customize in Fumabase?",
 										})}
@@ -563,7 +563,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											style: {
 												width: "100%",
 											},
-											variant: "sTHF6uWTY",
+											variant: "G8PiTZbU_",
 											width: "100%",
 											xyvbwpR7S:
 												"Why should I use Fumabase instead of self-hosting Fumadocs?",
@@ -632,10 +632,78 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											style: {
 												width: "100%",
 											},
-											variant: "sTHF6uWTY",
+											variant: "G8PiTZbU_",
 											width: "100%",
 											xyvbwpR7S:
 												"What is the difference between Fumabase and Mintlify?",
+										})}
+									</SmartComponentScopedContainerWithFX>
+								</ComponentViewportProvider>
+								<ComponentViewportProvider
+									height={116}
+									width={`min(${componentViewport?.width || "100vw"} - 200px, 1100px)`}
+									y={
+										(componentViewport?.y || 0) + 102 + 0 + 0 + 106.2 + 0 + 650
+									}
+									{...addPropertyOverrides(
+										{
+											EW4AHUAxX: {
+												width: `min(${componentViewport?.width || "100vw"} - 40px, 580px)`,
+												y:
+													(componentViewport?.y || 0) +
+													120 +
+													0 +
+													0 +
+													86.2 +
+													0 +
+													630,
+											},
+											XrZxEUAaJ: {
+												width: `min(${componentViewport?.width || "100vw"} - 80px, 810px)`,
+												y:
+													(componentViewport?.y || 0) +
+													150 +
+													0 +
+													0 +
+													86.2 +
+													0 +
+													650,
+											},
+										},
+										baseVariant,
+										gestureVariant,
+									)}
+								>
+									<SmartComponentScopedContainerWithFX
+										__framer__animate={{
+											transition: transition3,
+										}}
+										__framer__animateOnce={true}
+										__framer__enter={animation}
+										__framer__styleAppearEffectEnabled={true}
+										__framer__threshold={0}
+										__perspectiveFX={false}
+										__smartComponentFX={true}
+										__targetOpacity={1}
+										className={"framer-6sqcfe-container"}
+										layoutDependency={layoutDependency}
+										layoutId={"W0OxweZ9I-container"}
+										nodeId={"W0OxweZ9I"}
+										rendersWithMotion={true}
+										scopeId={"qtvfO8YHV"}
+									>
+										{_jsx(stdin_default, {
+											height: "100%",
+											id: "W0OxweZ9I",
+											layoutId: "W0OxweZ9I",
+											lr9MckAMy:
+												"Right now Fumabase is free. Fumabase will add a subscription plan for companies that need more features like ",
+											style: {
+												width: "100%",
+											},
+											variant: "G8PiTZbU_",
+											width: "100%",
+											xyvbwpR7S: "What is the price?",
 										})}
 									</SmartComponentScopedContainerWithFX>
 								</ComponentViewportProvider>
@@ -648,16 +716,16 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 							layoutId={"OhYrU06tt"}
 						>
 							<ComponentViewportProvider
-								height={(componentViewport?.height || 1006) * 1 * 1}
+								height={(componentViewport?.height || 749) * 1 * 1}
 								width={componentViewport?.width || "100vw"}
 								y={(componentViewport?.y || 0) + 0 + 0}
 								{...addPropertyOverrides(
 									{
 										EW4AHUAxX: {
-											height: (componentViewport?.height || 1538) * 1 * 1,
+											height: (componentViewport?.height || 824) * 1 * 1,
 										},
 										XrZxEUAaJ: {
-											height: (componentViewport?.height || 1067) * 1 * 1,
+											height: (componentViewport?.height || 747) * 1 * 1,
 										},
 									},
 									baseVariant,
@@ -706,29 +774,29 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 });
 var css2 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-5hUCE.framer-17mvys5, .framer-5hUCE .framer-17mvys5 { display: block; }",
-	".framer-5hUCE.framer-1rbr5xo { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 60px; height: min-content; justify-content: flex-start; overflow: hidden; padding: 102px 100px 80px 100px; position: relative; width: 1200px; }",
-	".framer-5hUCE .framer-3xiqmp { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 60px; height: min-content; justify-content: flex-start; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
-	".framer-5hUCE .framer-11gl5ow { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 8px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-5hUCE .framer-yufxp6 { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; }",
-	".framer-5hUCE .framer-1c1yyb7 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 14px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
-	".framer-5hUCE .framer-2kt7vz-container, .framer-5hUCE .framer-sl7xtq-container, .framer-5hUCE .framer-1hn1rsr-container, .framer-5hUCE .framer-p22cp9-container, .framer-5hUCE .framer-1jqtena-container { flex: none; height: auto; position: relative; width: 100%; }",
-	".framer-5hUCE .framer-1a5qlxf { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 100%; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 0; }",
-	".framer-5hUCE .framer-kl5dm0-container { flex: none; height: 100%; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
-	".framer-5hUCE.framer-v-fvebzn.framer-1rbr5xo { gap: 0px; padding: 150px 40px 50px 40px; width: 810px; }",
-	".framer-5hUCE.framer-v-fvebzn .framer-3xiqmp { gap: 40px; max-width: unset; }",
-	".framer-5hUCE.framer-v-fvebzn .framer-1c1yyb7 { max-width: 810px; }",
-	".framer-5hUCE.framer-v-x37i1.framer-1rbr5xo { gap: 40px; padding: 120px 20px 0px 20px; width: 390px; }",
-	".framer-5hUCE.framer-v-x37i1 .framer-3xiqmp { gap: 40px; max-width: 580px; }",
-	".framer-5hUCE.framer-v-x37i1 .framer-11gl5ow { gap: 5px; }",
-	".framer-5hUCE.framer-v-x37i1 .framer-1c1yyb7 { gap: 10px; }",
+	".framer-BU3RA.framer-17mvys5, .framer-BU3RA .framer-17mvys5 { display: block; }",
+	".framer-BU3RA.framer-1rbr5xo { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 60px; height: min-content; justify-content: flex-start; overflow: hidden; padding: 102px 100px 80px 100px; position: relative; width: 1200px; }",
+	".framer-BU3RA .framer-3xiqmp { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 60px; height: min-content; justify-content: flex-start; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
+	".framer-BU3RA .framer-11gl5ow { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 8px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-BU3RA .framer-yufxp6 { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; }",
+	".framer-BU3RA .framer-1c1yyb7 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 14px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
+	".framer-BU3RA .framer-2kt7vz-container, .framer-BU3RA .framer-sl7xtq-container, .framer-BU3RA .framer-1hn1rsr-container, .framer-BU3RA .framer-p22cp9-container, .framer-BU3RA .framer-1jqtena-container, .framer-BU3RA .framer-6sqcfe-container { flex: none; height: auto; position: relative; width: 100%; }",
+	".framer-BU3RA .framer-1a5qlxf { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 100%; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 0; }",
+	".framer-BU3RA .framer-kl5dm0-container { flex: none; height: 100%; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
+	".framer-BU3RA.framer-v-fvebzn.framer-1rbr5xo { gap: 0px; padding: 150px 40px 50px 40px; width: 810px; }",
+	".framer-BU3RA.framer-v-fvebzn .framer-3xiqmp { gap: 40px; max-width: unset; }",
+	".framer-BU3RA.framer-v-fvebzn .framer-1c1yyb7 { max-width: 810px; }",
+	".framer-BU3RA.framer-v-x37i1.framer-1rbr5xo { gap: 40px; padding: 120px 20px 0px 20px; width: 390px; }",
+	".framer-BU3RA.framer-v-x37i1 .framer-3xiqmp { gap: 40px; max-width: 580px; }",
+	".framer-BU3RA.framer-v-x37i1 .framer-11gl5ow { gap: 5px; }",
+	".framer-BU3RA.framer-v-x37i1 .framer-1c1yyb7 { gap: 10px; }",
 	...css,
 ];
-var FramerqtvfO8YHV = withCSS(Component, css2, "framer-5hUCE");
+var FramerqtvfO8YHV = withCSS(Component, css2, "framer-BU3RA");
 var stdin_default3 = FramerqtvfO8YHV;
 FramerqtvfO8YHV.displayName = "FAQ Section";
 FramerqtvfO8YHV.defaultProps = {
-	height: 1006,
+	height: 749,
 	width: 1200,
 };
 addPropertyControls(FramerqtvfO8YHV, {
