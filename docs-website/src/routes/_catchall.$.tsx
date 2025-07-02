@@ -329,7 +329,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         let [indexPage, anotherPage] = await Promise.all([
             prisma.markdownPage.findFirst({
                 where: {
-                    slug: '/index',
+                    slug: { in: ['/index', '/readme'] },
                     branchId: siteBranch.branchId,
                 },
                 include: {
@@ -362,17 +362,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     if (!page) {
         console.log('Page not found for slug:', slug)
         throw new Response('Page not found', { status: 404 })
-    }
-
-    // Check if the current URL ends with .md or .mdx and serve raw markdown
-    const currentPath = params['*'] || ''
-    if (currentPath.endsWith('.md') || currentPath.endsWith('.mdx')) {
-        throw new Response(page.markdown, {
-            headers: {
-                'Content-Type': 'text/plain; charset=utf-8',
-                'Cache-Control': 'public, max-age=3600',
-            },
-        })
     }
 
     const tree = source.getPageTree(locale)

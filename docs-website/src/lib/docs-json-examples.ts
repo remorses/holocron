@@ -1,7 +1,7 @@
 import type { DocsJsonType } from './docs-json'
 
 export const defaultDocsJsonComments = {
-    domains: `// to add new domains you can simply add them here, then add a CNAME record to cname.fumabase.com`,
+    domains: `// to add new domains you can simply add them here, then add a CNAME record pointing to cname.fumabase.com`,
     logo: `// the logo shown in the top left`,
     'navbar.links': `// the links shown in the top right`,
     'navbar.links.0.icon': `// you can use any lucide valid icon names: https://lucide.dev/icons/`,

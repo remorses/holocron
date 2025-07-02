@@ -44,6 +44,7 @@
     // to add new domains you can simply add them here, then add a CNAME record to cname.fumabase.com
     "domains": [
         "fumabase-2v6e66mi.fumabase.com",
+        "fumabase-2v6e66mi.localhost",
         "docs.fumabase.com"
     ],
     "favicon": {
