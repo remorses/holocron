@@ -3,7 +3,7 @@
 import { Loader2Icon, MicIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Visualizer } from 'react-sound-visualizer'
-import { AnimatePresence, motion } from 'unframer'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useChatState } from './chat-provider.js'
 import { Button } from '../components/ui/button.js'
 
