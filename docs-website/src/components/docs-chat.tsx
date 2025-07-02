@@ -1,23 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import { Button } from 'website/src/components/ui/button'
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from 'website/src/components/ui/command'
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from 'website/src/components/ui/popover'
-import { ScrollArea } from 'website/src/components/ui/scroll-area'
+import { ScrollArea } from 'docs-website/src/components/ui/scroll-area'
 import { useStickToBottom } from 'use-stick-to-bottom'
-import {fullStreamToUIMessages } from 'contesto/src/lib/process-chat'
-import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
+import { fullStreamToUIMessages } from 'contesto/src/lib/process-chat'
 import { createIdGenerator, UIMessage } from 'ai'
 
 import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
@@ -29,7 +14,6 @@ import {
     ChatUserMessage,
 } from 'contesto/src/chat/chat-message'
 import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
-import { ToolInvocationRenderer } from 'website/src/components/tools-preview'
 import {
     ChatProvider,
     ChatState,
@@ -45,13 +29,28 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from '../components/ui/drawer'
+import { Button } from '../components/ui/button'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '../components/ui/popover'
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from '../components/ui/command'
+
 import { cn } from '../lib/cn'
 import {
     apiClientWithDurableFetch,
     durableFetchClient,
-} from '../lib/spiceflow-client'
-
-export type { Route }
+} from 'docs-website/src/generated/spiceflow-client'
+import { useDocsState } from '../lib/docs-state'
+import { docsApiClientWithDurableFetch } from '../lib/docs-spiceflow-client'
 
 const CHAT_ID = 'cmclxgpov0057htrcyf12y6j2'
 
@@ -118,7 +117,7 @@ Let me know what you'd like to do first!
 
 exampleMessages = []
 
-export default function Page({ loaderData }: Route.ComponentProps) {
+export function ChatDrawer({ loaderData }: { loaderData?: any }) {
     const initialChatState = useMemo<Partial<ChatState>>(
         () => ({
             messages: exampleMessages,
@@ -126,35 +125,30 @@ export default function Page({ loaderData }: Route.ComponentProps) {
         }),
         [loaderData],
     )
+    const isChatOpen = useDocsState((x) => x.isChatOpen)
+
     return (
         <ChatProvider initialValue={initialChatState}>
-            <div className=' h-full max-h-full  w-full  flex flex-col grow'>
-                <DrawerDemo />
-            </div>
+            <Drawer
+                onOpenChange={(open) => {
+                    useDocsState.setState({ isChatOpen: open })
+                }}
+                open={isChatOpen}
+                direction='right'
+            >
+                <DrawerContent className='bg-background min-w-[600px]'>
+                    <DrawerHeader>
+                        <DrawerTitle>Chat</DrawerTitle>
+                        <DrawerDescription>
+                            Set your daily activity goal.
+                        </DrawerDescription>
+                    </DrawerHeader>
+                    <div className='p-4 flex flex-col min-h-0 grow pb-0'>
+                        <Chat />
+                    </div>
+                </DrawerContent>
+            </Drawer>
         </ChatProvider>
-    )
-}
-
-export function DrawerDemo() {
-    return (
-        <Drawer defaultOpen direction='right'>
-            <div className='flex flex-col items-center justify-center h-full '>
-                <DrawerTrigger asChild>
-                    <Button variant='outline'>Open Drawer</Button>
-                </DrawerTrigger>
-            </div>
-            <DrawerContent className=' min-w-[600px]'>
-                <DrawerHeader>
-                    <DrawerTitle>Chat</DrawerTitle>
-                    <DrawerDescription>
-                        Set your daily activity goal.
-                    </DrawerDescription>
-                </DrawerHeader>
-                <div className='p-4 flex flex-col min-h-0 grow pb-0'>
-                    <Chat />
-                </div>
-            </DrawerContent>
-        </Drawer>
     )
 }
 
@@ -365,14 +359,12 @@ function Footer() {
         const generateId = createIdGenerator()
 
         const { data: generator, error } =
-            await apiClientWithDurableFetch.api.generateMessage.post(
+            await docsApiClientWithDurableFetch.api.generateMessage.post(
                 {
                     messages: messages,
-                    siteId: 'cmclq67zf0002htommqegrrw4',
-                    branchId: 'cmclq68780003htome4ryjfg9',
                     currentSlug: '',
-                    filesInDraft: {},
                     chatId: CHAT_ID,
+                    locale: 'en',
                 },
                 { query: { chatId: CHAT_ID } },
             )
@@ -419,6 +411,7 @@ function Footer() {
                         disabled={false}
                         placeholder='Ask me anything...'
                         className={cn('')}
+                        autoFocus
                         mentionOptions={contextOptions}
                     />
 
@@ -447,4 +440,26 @@ function Footer() {
             </div>
         </AnimatePresence>
     )
+}
+
+export function ToolInvocationRenderer({
+    part,
+    index,
+}: {
+    part: any
+    index: number
+}) {
+    const isChatGenerating = useChatState((x) => x.isGenerating)
+
+    if (process.env.NODE_ENV === 'development') {
+        return (
+            <div key={index} className='text-sm'>
+                <Markdown
+                    isStreaming={isChatGenerating}
+                    markdown={`🔧 Tool: ${part.toolInvocation?.toolName || 'unknown'}`}
+                />
+            </div>
+        )
+    }
+    return null
 }

@@ -28,7 +28,7 @@ import {
 import { useStickToBottom } from 'use-stick-to-bottom'
 
 import { useTemporaryState } from '../lib/hooks'
-import { fullStreamToUIMessages } from '../lib/process-chat'
+import {fullStreamToUIMessages } from 'contesto/src/lib/process-chat'
 import {
     apiClient,
     apiClientWithDurableFetch,
@@ -639,6 +639,7 @@ function Footer() {
                                 disabled={false}
                                 placeholder='Ask me anything...'
                                 className=''
+
                                 mentionOptions={mentionOptions || []}
                             />
                             {/* Textarea buttons */}

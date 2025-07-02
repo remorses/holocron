@@ -46,6 +46,8 @@ import frontMatter from 'front-matter'
 import { cn, isInsidePreviewIframe } from './lib/utils'
 import { DynamicIcon } from './lib/icon'
 import { PoweredBy } from './components/poweredby'
+import { CustomSearchDialog } from './components/search'
+import { ChatDrawer } from './components/docs-chat'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -386,7 +388,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <ReactRouterProvider>
                     <RootProvider
                         search={{
-                            options: {},
+                            options: {
+
+                            },
+                            SearchDialog: CustomSearchDialog
                             // enabled: !!trieveDatasetId,
                         }}
                         i18n={{
@@ -412,6 +417,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                                     }}
                                 />
                             )}
+                            <ChatDrawer />
                             <DocsLayoutWrapper docsJson={docsJson}>
                                 {children}
                             </DocsLayoutWrapper>

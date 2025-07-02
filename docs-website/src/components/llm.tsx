@@ -18,6 +18,7 @@ import {
 } from 'fumadocs-ui/components/ui/popover'
 import { cva } from 'class-variance-authority'
 import { DocsJsonType } from '../lib/docs-json'
+import { useDocsState } from '../lib/docs-state'
 
 const cache = new Map<string, string>()
 
@@ -76,6 +77,28 @@ export function LLMCopyButton({
         >
             {checked ? <Check /> : <Copy />}
             Copy Markdown
+        </button>
+    )
+}
+
+export function AskAIButton() {
+    return (
+        <button
+            onClick={() => {
+                useDocsState.setState((prev) => ({
+                    isChatOpen: !prev.isChatOpen,
+                }))
+            }}
+            className={cn(
+                buttonVariants({
+                    variant: 'secondary',
+                    size: 'xs',
+                    className:
+                        'gap-2 [&_svg]:size-3.5 [&_svg]:text-fd-muted-foreground',
+                }),
+            )}
+        >
+            Ask AI
         </button>
     )
 }

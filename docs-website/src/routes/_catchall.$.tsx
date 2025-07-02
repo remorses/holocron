@@ -35,7 +35,7 @@ import {
     MessageCircleIcon,
     TwitterIcon,
 } from 'lucide-react'
-import { LLMCopyButton, ViewOptions } from '../components/llm'
+import { AskAIButton, LLMCopyButton, ViewOptions } from '../components/llm'
 import { mdxComponents } from '../components/mdx-components'
 import { PoweredBy } from '../components/poweredby'
 import { Rate } from '../components/rate'
@@ -442,6 +442,7 @@ function PageContent(props: Route.ComponentProps) {
                         githubUrl={`https://github.com/${owner}/${repo}/blob/${githubBranch}/${githubPath}`}
                         contextual={docsJson?.contextual}
                     />
+                    <AskAIButton />
                 </div>
 
                 <div className='prose flex-1 text-fd-foreground/80'>

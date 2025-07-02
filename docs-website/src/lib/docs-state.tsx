@@ -15,6 +15,7 @@ export type FilesInDraft = Record<
 export type DocsState = {
     // tree?: PageTree.Root
     toc?: TOCItemType[]
+    isChatOpen?: boolean
     websocketServerPreviewConnected?: boolean
     currentSlug?: string
     // docsJson?: DocsJsonType

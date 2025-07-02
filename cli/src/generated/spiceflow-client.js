@@ -14,9 +14,17 @@ export function createApiClient(url, options) {
     });
 }
 export const durableFetchClient = new DurableFetchClient();
-export const apiClientWithDurableFetch = createSpiceflowClient('/', {
+export const apiClientWithDurableFetch = createSpiceflowClient(process.env.PUBLIC_URL, {
     onRequest() {
-        return { credentials: 'include' };
+        const authToken = document.cookie
+            .split('; ')
+            .find((row) => row.startsWith('session_token=') ||
+            row.startsWith('__Secure-session_token='))
+            ?.split('=')[1]
+            ?.trim();
+        if (authToken) {
+            return { headers: { Authorization: `Bearer ${authToken}` } };
+        }
     },
     fetch: durableFetchClient.fetch,
 });

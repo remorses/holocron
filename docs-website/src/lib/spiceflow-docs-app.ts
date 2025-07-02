@@ -1,9 +1,5 @@
 import { OpenAIResponsesProviderOptions, openai } from '@ai-sdk/openai'
-import {
-  UIMessage,
-  streamText,
-  tool
-} from 'ai'
+import { UIMessage, streamText, tool } from 'ai'
 import { prisma } from 'db'
 import Handlebars from 'handlebars'
 import { Spiceflow } from 'spiceflow'
@@ -143,3 +139,5 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
     .onError(({ error }) => {
         notifyError(error)
     })
+
+export type DocsSpiceflowApp = typeof docsApp

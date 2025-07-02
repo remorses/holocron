@@ -9,7 +9,8 @@ import { useChatState } from './chat-provider.js'
 import { cn } from '../lib/cn.js'
 import { ScrollArea } from '../components/ui/scroll-area.js'
 
-interface MentionsTextAreaProps {
+interface MentionsTextAreaProps
+    extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
     ref?: any
     onSubmit: () => Promise<void> | void
     disabled?: boolean
@@ -222,7 +223,6 @@ export function ChatTextarea({
 
             <ScrollArea className='[&>div>div]:grow flex flex-col box-border my-1 max-h-28 w-full 2xl:max-h-40'>
                 <Ariakit.Combobox
-                    {...props}
                     store={mentionsCombobox}
                     autoSelect
                     value={selectedAutocompleteText || value}
@@ -232,6 +232,7 @@ export function ChatTextarea({
                     showOnChange={false}
                     showOnKeyPress={false}
                     setValueOnChange={false}
+                    {...(props as any)}
                     className={cn(
                         'flex grow min-h-[84px] overflow-auto max-h-full w-full bg-transparent px-4 py-3 text-[15px] resize-none text-foreground placeholder:text-muted-foreground/70 outline-none resize-none',
                         className,

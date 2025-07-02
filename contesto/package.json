@@ -25,6 +25,7 @@
         "typescript": "^5.8.3"
     },
     "dependencies": {
+        "@ai-sdk/ui-utils": "^1.2.11",
         "@ariakit/react": "^0.4.17",
         "@radix-ui/react-popover": "^1.1.14",
         "@radix-ui/react-scroll-area": "^1.2.9",
@@ -36,6 +37,7 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "diff": "^8.0.2",
+        "framer-motion": "latest",
         "fumadocs-ui": "^15.6.1",
         "lucide-react": "^0.525.0",
         "match-sorter": "^8.0.3",
@@ -52,7 +54,6 @@
         "shiki": "^3.7.0",
         "tailwind-merge": "^3.3.1",
         "textarea-caret": "^3.1.0",
-        "framer-motion": "latest",
         "unified": "^11.0.5",
         "unist-util-visit": "^5.0.0",
         "zustand": "^5.0.6"

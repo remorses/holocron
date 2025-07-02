@@ -42,17 +42,17 @@ export declare const apiClient: {
         };
         generateMessage: {
             post: (request: {
-                branchId: string;
+                messages: import("ai").UIMessage[];
                 siteId: string;
                 chatId: string;
                 currentSlug: string;
                 filesInDraft: Record<string, {
-                    githubPath: string;
                     content: string;
+                    githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
-                messages: import("ai").UIMessage[];
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -172,6 +172,7 @@ export declare const apiClient: {
                             label: import("zod").ZodString;
                             description: import("zod").ZodNullable<import("zod").ZodString>;
                             required: import("zod").ZodNullable<import("zod").ZodBoolean>;
+                            groupTitle: import("zod").ZodNullable<import("zod").ZodString>;
                             placeholder: import("zod").ZodNullable<import("zod").ZodString>;
                             initialValue: import("zod").ZodUnion<[import("zod").ZodNullable<import("zod").ZodString>, import("zod").ZodNullable<import("zod").ZodNumber>, import("zod").ZodNullable<import("zod").ZodBoolean>]>;
                             min: import("zod").ZodNullable<import("zod").ZodNumber>;
@@ -189,11 +190,11 @@ export declare const apiClient: {
                             }>, "many">>;
                             href: import("zod").ZodNullable<import("zod").ZodString>;
                         }, "strip", import("zod").ZodTypeAny, {
-                            description: string | null;
-                            name: string;
-                            href: string | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
+                            name: string;
+                            description: string | null;
+                            href: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             max: number | null;
                             min: number | null;
                             placeholder: string | null;
@@ -204,12 +205,13 @@ export declare const apiClient: {
                                 value: string;
                             }[] | null;
                             initialValue: string | number | boolean | null;
+                            groupTitle: string | null;
                         }, {
-                            description: string | null;
-                            name: string;
-                            href: string | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
+                            name: string;
+                            description: string | null;
+                            href: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             max: number | null;
                             min: number | null;
                             placeholder: string | null;
@@ -220,14 +222,15 @@ export declare const apiClient: {
                                 value: string;
                             }[] | null;
                             initialValue: string | number | boolean | null;
+                            groupTitle: string | null;
                         }>, "many">;
                     }, "strip", import("zod").ZodTypeAny, {
                         fields: {
-                            description: string | null;
-                            name: string;
-                            href: string | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
+                            name: string;
+                            description: string | null;
+                            href: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             max: number | null;
                             min: number | null;
                             placeholder: string | null;
@@ -238,14 +241,15 @@ export declare const apiClient: {
                                 value: string;
                             }[] | null;
                             initialValue: string | number | boolean | null;
+                            groupTitle: string | null;
                         }[];
                     }, {
                         fields: {
-                            description: string | null;
-                            name: string;
-                            href: string | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
+                            name: string;
+                            description: string | null;
+                            href: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             max: number | null;
                             min: number | null;
                             placeholder: string | null;
@@ -256,17 +260,18 @@ export declare const apiClient: {
                                 value: string;
                             }[] | null;
                             initialValue: string | number | boolean | null;
+                            groupTitle: string | null;
                         }[];
                     }>, "rendered form to the user" | {
                         errors: string[];
                     }> & {
                         execute: (args: {
                             fields: {
-                                description: string | null;
-                                name: string;
-                                href: string | null;
-                                type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                                 label: string;
+                                name: string;
+                                description: string | null;
+                                href: string | null;
+                                type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                                 max: number | null;
                                 min: number | null;
                                 placeholder: string | null;
@@ -277,6 +282,7 @@ export declare const apiClient: {
                                     value: string;
                                 }[] | null;
                                 initialValue: string | number | boolean | null;
+                                groupTitle: string | null;
                             }[];
                         }, options: import("ai").ToolExecutionOptions) => PromiseLike<"rendered form to the user" | {
                             errors: string[];
@@ -305,12 +311,12 @@ export declare const apiClient: {
         };
         createUploadSignedUrl: {
             post: (request: {
+                siteId: string;
                 files: {
                     slug: string;
                     contentLength: number;
                     contentType?: string | undefined;
                 }[];
-                siteId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -328,8 +334,8 @@ export declare const apiClient: {
         };
         newChat: {
             post: (request: {
-                branchId: string;
                 orgId: string;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -343,9 +349,9 @@ export declare const apiClient: {
         };
         submitRateFeedback: {
             post: (request: {
-                branchId: string;
                 url: string;
                 message: string;
+                branchId: string;
                 opinion: "good" | "bad";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
@@ -360,13 +366,13 @@ export declare const apiClient: {
         };
         commitChangesToRepo: {
             post: (request: {
-                branchId: string;
                 filesInDraft: Record<string, {
-                    githubPath: string;
                     content: string;
+                    githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -381,14 +387,14 @@ export declare const apiClient: {
         };
         createPrSuggestionForChat: {
             post: (request: {
-                branchId: string;
                 chatId: string;
                 filesInDraft: Record<string, {
-                    githubPath: string;
                     content: string;
+                    githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -426,6 +432,7 @@ export declare const apiClient: {
         upsertSiteFromFiles: {
             post: (request: {
                 name: string;
+                orgId: string;
                 files: {
                     contents: string;
                     relativePath: string;
@@ -435,9 +442,8 @@ export declare const apiClient: {
                     } | undefined;
                     downloadUrl?: string | undefined;
                 }[];
-                orgId: string;
-                githubFolder?: string | undefined;
                 siteId?: string | undefined;
+                githubFolder?: string | undefined;
                 githubBranch?: string | undefined;
                 githubOwner?: string | undefined;
                 githubRepo?: string | undefined;
@@ -451,18 +457,18 @@ export declare const apiClient: {
                     docsJsonWithComments: string;
                     siteId: string;
                     branchId: string;
-                    docsJson: string | number | true | import("@prisma/client/runtime/client").JsonObject | import("@prisma/client/runtime/client").JsonArray;
+                    docsJson: import("docs-website/src/lib/docs-json").DocsJsonType;
                     errors: {
                         githubPath: string;
                         line: number;
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
-                    githubFolder?: string | undefined;
-                    createdAt?: Date | undefined;
                     name?: string | null | undefined;
-                    defaultLocale?: string | undefined;
+                    createdAt?: Date | undefined;
                     orgId?: string | undefined;
+                    githubFolder?: string | undefined;
+                    defaultLocale?: string | undefined;
                     githubOwner?: string | undefined;
                     githubRepo?: string | undefined;
                 };
@@ -544,17 +550,17 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         generateMessage: {
             post: (request: {
-                branchId: string;
+                messages: import("ai").UIMessage[];
                 siteId: string;
                 chatId: string;
                 currentSlug: string;
                 filesInDraft: Record<string, {
-                    githubPath: string;
                     content: string;
+                    githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
-                messages: import("ai").UIMessage[];
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -674,6 +680,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                             label: import("zod").ZodString;
                             description: import("zod").ZodNullable<import("zod").ZodString>;
                             required: import("zod").ZodNullable<import("zod").ZodBoolean>;
+                            groupTitle: import("zod").ZodNullable<import("zod").ZodString>;
                             placeholder: import("zod").ZodNullable<import("zod").ZodString>;
                             initialValue: import("zod").ZodUnion<[import("zod").ZodNullable<import("zod").ZodString>, import("zod").ZodNullable<import("zod").ZodNumber>, import("zod").ZodNullable<import("zod").ZodBoolean>]>;
                             min: import("zod").ZodNullable<import("zod").ZodNumber>;
@@ -691,11 +698,11 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                             }>, "many">>;
                             href: import("zod").ZodNullable<import("zod").ZodString>;
                         }, "strip", import("zod").ZodTypeAny, {
-                            description: string | null;
-                            name: string;
-                            href: string | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
+                            name: string;
+                            description: string | null;
+                            href: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             max: number | null;
                             min: number | null;
                             placeholder: string | null;
@@ -706,12 +713,13 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                                 value: string;
                             }[] | null;
                             initialValue: string | number | boolean | null;
+                            groupTitle: string | null;
                         }, {
-                            description: string | null;
-                            name: string;
-                            href: string | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
+                            name: string;
+                            description: string | null;
+                            href: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             max: number | null;
                             min: number | null;
                             placeholder: string | null;
@@ -722,14 +730,15 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                                 value: string;
                             }[] | null;
                             initialValue: string | number | boolean | null;
+                            groupTitle: string | null;
                         }>, "many">;
                     }, "strip", import("zod").ZodTypeAny, {
                         fields: {
-                            description: string | null;
-                            name: string;
-                            href: string | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
+                            name: string;
+                            description: string | null;
+                            href: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             max: number | null;
                             min: number | null;
                             placeholder: string | null;
@@ -740,14 +749,15 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                                 value: string;
                             }[] | null;
                             initialValue: string | number | boolean | null;
+                            groupTitle: string | null;
                         }[];
                     }, {
                         fields: {
-                            description: string | null;
-                            name: string;
-                            href: string | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
+                            name: string;
+                            description: string | null;
+                            href: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             max: number | null;
                             min: number | null;
                             placeholder: string | null;
@@ -758,17 +768,18 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                                 value: string;
                             }[] | null;
                             initialValue: string | number | boolean | null;
+                            groupTitle: string | null;
                         }[];
                     }>, "rendered form to the user" | {
                         errors: string[];
                     }> & {
                         execute: (args: {
                             fields: {
-                                description: string | null;
-                                name: string;
-                                href: string | null;
-                                type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                                 label: string;
+                                name: string;
+                                description: string | null;
+                                href: string | null;
+                                type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                                 max: number | null;
                                 min: number | null;
                                 placeholder: string | null;
@@ -779,6 +790,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                                     value: string;
                                 }[] | null;
                                 initialValue: string | number | boolean | null;
+                                groupTitle: string | null;
                             }[];
                         }, options: import("ai").ToolExecutionOptions) => PromiseLike<"rendered form to the user" | {
                             errors: string[];
@@ -807,12 +819,12 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         createUploadSignedUrl: {
             post: (request: {
+                siteId: string;
                 files: {
                     slug: string;
                     contentLength: number;
                     contentType?: string | undefined;
                 }[];
-                siteId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -830,8 +842,8 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         newChat: {
             post: (request: {
-                branchId: string;
                 orgId: string;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -845,9 +857,9 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         submitRateFeedback: {
             post: (request: {
-                branchId: string;
                 url: string;
                 message: string;
+                branchId: string;
                 opinion: "good" | "bad";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
@@ -862,13 +874,13 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         commitChangesToRepo: {
             post: (request: {
-                branchId: string;
                 filesInDraft: Record<string, {
-                    githubPath: string;
                     content: string;
+                    githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -883,14 +895,14 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         createPrSuggestionForChat: {
             post: (request: {
-                branchId: string;
                 chatId: string;
                 filesInDraft: Record<string, {
-                    githubPath: string;
                     content: string;
+                    githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -928,6 +940,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         upsertSiteFromFiles: {
             post: (request: {
                 name: string;
+                orgId: string;
                 files: {
                     contents: string;
                     relativePath: string;
@@ -937,9 +950,8 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     } | undefined;
                     downloadUrl?: string | undefined;
                 }[];
-                orgId: string;
-                githubFolder?: string | undefined;
                 siteId?: string | undefined;
+                githubFolder?: string | undefined;
                 githubBranch?: string | undefined;
                 githubOwner?: string | undefined;
                 githubRepo?: string | undefined;
@@ -953,18 +965,18 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     docsJsonWithComments: string;
                     siteId: string;
                     branchId: string;
-                    docsJson: string | number | true | import("@prisma/client/runtime/client").JsonObject | import("@prisma/client/runtime/client").JsonArray;
+                    docsJson: import("docs-website/src/lib/docs-json").DocsJsonType;
                     errors: {
                         githubPath: string;
                         line: number;
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
-                    githubFolder?: string | undefined;
-                    createdAt?: Date | undefined;
                     name?: string | null | undefined;
-                    defaultLocale?: string | undefined;
+                    createdAt?: Date | undefined;
                     orgId?: string | undefined;
+                    githubFolder?: string | undefined;
+                    defaultLocale?: string | undefined;
                     githubOwner?: string | undefined;
                     githubRepo?: string | undefined;
                 };
@@ -1047,17 +1059,17 @@ export declare const apiClientWithDurableFetch: {
         };
         generateMessage: {
             post: (request: {
-                branchId: string;
+                messages: import("ai").UIMessage[];
                 siteId: string;
                 chatId: string;
                 currentSlug: string;
                 filesInDraft: Record<string, {
-                    githubPath: string;
                     content: string;
+                    githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
-                messages: import("ai").UIMessage[];
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -1177,6 +1189,7 @@ export declare const apiClientWithDurableFetch: {
                             label: import("zod").ZodString;
                             description: import("zod").ZodNullable<import("zod").ZodString>;
                             required: import("zod").ZodNullable<import("zod").ZodBoolean>;
+                            groupTitle: import("zod").ZodNullable<import("zod").ZodString>;
                             placeholder: import("zod").ZodNullable<import("zod").ZodString>;
                             initialValue: import("zod").ZodUnion<[import("zod").ZodNullable<import("zod").ZodString>, import("zod").ZodNullable<import("zod").ZodNumber>, import("zod").ZodNullable<import("zod").ZodBoolean>]>;
                             min: import("zod").ZodNullable<import("zod").ZodNumber>;
@@ -1194,11 +1207,11 @@ export declare const apiClientWithDurableFetch: {
                             }>, "many">>;
                             href: import("zod").ZodNullable<import("zod").ZodString>;
                         }, "strip", import("zod").ZodTypeAny, {
-                            description: string | null;
-                            name: string;
-                            href: string | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
+                            name: string;
+                            description: string | null;
+                            href: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             max: number | null;
                             min: number | null;
                             placeholder: string | null;
@@ -1209,12 +1222,13 @@ export declare const apiClientWithDurableFetch: {
                                 value: string;
                             }[] | null;
                             initialValue: string | number | boolean | null;
+                            groupTitle: string | null;
                         }, {
-                            description: string | null;
-                            name: string;
-                            href: string | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
+                            name: string;
+                            description: string | null;
+                            href: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             max: number | null;
                             min: number | null;
                             placeholder: string | null;
@@ -1225,14 +1239,15 @@ export declare const apiClientWithDurableFetch: {
                                 value: string;
                             }[] | null;
                             initialValue: string | number | boolean | null;
+                            groupTitle: string | null;
                         }>, "many">;
                     }, "strip", import("zod").ZodTypeAny, {
                         fields: {
-                            description: string | null;
-                            name: string;
-                            href: string | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
+                            name: string;
+                            description: string | null;
+                            href: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             max: number | null;
                             min: number | null;
                             placeholder: string | null;
@@ -1243,14 +1258,15 @@ export declare const apiClientWithDurableFetch: {
                                 value: string;
                             }[] | null;
                             initialValue: string | number | boolean | null;
+                            groupTitle: string | null;
                         }[];
                     }, {
                         fields: {
-                            description: string | null;
-                            name: string;
-                            href: string | null;
-                            type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             label: string;
+                            name: string;
+                            description: string | null;
+                            href: string | null;
+                            type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                             max: number | null;
                             min: number | null;
                             placeholder: string | null;
@@ -1261,17 +1277,18 @@ export declare const apiClientWithDurableFetch: {
                                 value: string;
                             }[] | null;
                             initialValue: string | number | boolean | null;
+                            groupTitle: string | null;
                         }[];
                     }>, "rendered form to the user" | {
                         errors: string[];
                     }> & {
                         execute: (args: {
                             fields: {
-                                description: string | null;
-                                name: string;
-                                href: string | null;
-                                type: "number" | "select" | "input" | "button" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                                 label: string;
+                                name: string;
+                                description: string | null;
+                                href: string | null;
+                                type: "number" | "select" | "button" | "input" | "textarea" | "switch" | "slider" | "password" | "color_picker" | "date_picker" | "image_upload";
                                 max: number | null;
                                 min: number | null;
                                 placeholder: string | null;
@@ -1282,6 +1299,7 @@ export declare const apiClientWithDurableFetch: {
                                     value: string;
                                 }[] | null;
                                 initialValue: string | number | boolean | null;
+                                groupTitle: string | null;
                             }[];
                         }, options: import("ai").ToolExecutionOptions) => PromiseLike<"rendered form to the user" | {
                             errors: string[];
@@ -1310,12 +1328,12 @@ export declare const apiClientWithDurableFetch: {
         };
         createUploadSignedUrl: {
             post: (request: {
+                siteId: string;
                 files: {
                     slug: string;
                     contentLength: number;
                     contentType?: string | undefined;
                 }[];
-                siteId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -1333,8 +1351,8 @@ export declare const apiClientWithDurableFetch: {
         };
         newChat: {
             post: (request: {
-                branchId: string;
                 orgId: string;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -1348,9 +1366,9 @@ export declare const apiClientWithDurableFetch: {
         };
         submitRateFeedback: {
             post: (request: {
-                branchId: string;
                 url: string;
                 message: string;
+                branchId: string;
                 opinion: "good" | "bad";
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
@@ -1365,13 +1383,13 @@ export declare const apiClientWithDurableFetch: {
         };
         commitChangesToRepo: {
             post: (request: {
-                branchId: string;
                 filesInDraft: Record<string, {
-                    githubPath: string;
                     content: string;
+                    githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -1386,14 +1404,14 @@ export declare const apiClientWithDurableFetch: {
         };
         createPrSuggestionForChat: {
             post: (request: {
-                branchId: string;
                 chatId: string;
                 filesInDraft: Record<string, {
-                    githubPath: string;
                     content: string;
+                    githubPath: string;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 } | null>;
+                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -1431,6 +1449,7 @@ export declare const apiClientWithDurableFetch: {
         upsertSiteFromFiles: {
             post: (request: {
                 name: string;
+                orgId: string;
                 files: {
                     contents: string;
                     relativePath: string;
@@ -1440,9 +1459,8 @@ export declare const apiClientWithDurableFetch: {
                     } | undefined;
                     downloadUrl?: string | undefined;
                 }[];
-                orgId: string;
-                githubFolder?: string | undefined;
                 siteId?: string | undefined;
+                githubFolder?: string | undefined;
                 githubBranch?: string | undefined;
                 githubOwner?: string | undefined;
                 githubRepo?: string | undefined;
@@ -1456,18 +1474,18 @@ export declare const apiClientWithDurableFetch: {
                     docsJsonWithComments: string;
                     siteId: string;
                     branchId: string;
-                    docsJson: string | number | true | import("@prisma/client/runtime/client").JsonObject | import("@prisma/client/runtime/client").JsonArray;
+                    docsJson: import("docs-website/src/lib/docs-json").DocsJsonType;
                     errors: {
                         githubPath: string;
                         line: number;
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
-                    githubFolder?: string | undefined;
-                    createdAt?: Date | undefined;
                     name?: string | null | undefined;
-                    defaultLocale?: string | undefined;
+                    createdAt?: Date | undefined;
                     orgId?: string | undefined;
+                    githubFolder?: string | undefined;
+                    defaultLocale?: string | undefined;
                     githubOwner?: string | undefined;
                     githubRepo?: string | undefined;
                 };
