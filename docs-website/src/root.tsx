@@ -43,6 +43,7 @@ import { getFumadocsClientSource } from './lib/source'
 import { VirtualFile } from 'fumadocs-core/source'
 import frontMatter from 'front-matter'
 import { cn, isInsidePreviewIframe } from './lib/utils'
+import { DynamicIcon } from './lib/icon'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -610,8 +611,9 @@ function DocsLayoutWrapper({
 
         const mainLinks: LinkItemType[] = navbarLinks.map((link: any) => ({
             text: link.label || '',
+            type: 'main',
             url: link.href || '#',
-            icon: link.icon,
+            icon: <DynamicIcon name={link.icon} />,
             external: !link.href?.startsWith('/'),
         }))
 

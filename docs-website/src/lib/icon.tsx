@@ -5,13 +5,14 @@ import { useHydrated } from './hooks'
 // simple in-memory cache so every icon is fetched only once
 const cache: Record<string, React.ComponentType<any>> = {}
 
-type DynamicIconProps = { icon: string } & React.SVGProps<SVGSVGElement>
+type DynamicIconProps = { icon?: string } & React.SVGProps<SVGSVGElement>
 
 export function DynamicIconInner({ icon: name, ...rest }: DynamicIconProps) {
     prefetchDNS('https://esm.sh')
     preconnect('https://esm.sh')
     const hidrated = useHydrated()
     if (!hidrated) return null
+    if (!name) return null
     const Icon =
         cache[name] ||
         (cache[name] = lazy(() =>
