@@ -145,6 +145,16 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
         files: changedFiles,
         name: siteBranch.site.name || '',
     })
+
+    // Update last sync info
+    const latestCommit = commits[commits.length - 1]
+    await prisma.siteBranch.update({
+        where: { branchId: siteBranch.branchId },
+        data: {
+            lastGithubSyncAt: new Date(),
+            lastGithubSyncCommit: latestCommit.id,
+        },
+    })
 }
 
 async function* filesFromWebhookCommits({

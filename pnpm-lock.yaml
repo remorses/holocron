@@ -107,6 +107,8 @@ importers:
         specifier: ^4.16.1
         version: 4.22.0(@cloudflare/workers-types@4.20250614.0)
 
+  contesto: {}
+
   db:
     dependencies:
       '@prisma/adapter-pg':
@@ -1505,6 +1507,9 @@ importers:
       colord:
         specifier: ^2.9.3
         version: 2.9.3
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
       db:
         specifier: workspace:*
         version: link:../db
@@ -19943,6 +19948,7 @@ snapshots:
       fumadocs-ui: link:fumadocs/packages/ui
       getprototypeof: 2.0.0
       github-slugger: 2.0.0
+      handlebars: 4.7.8
       hono: 4.8.1
       htmlparser2: 10.0.0
       idb-keyval: 6.2.2
@@ -25924,6 +25930,7 @@ snapshots:
       clsx: 2.1.1
       cmdk: 1.1.1(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       colord: 2.9.3
+      date-fns: 4.1.0
       db: link:db
       diff: 8.0.2
       docs-website: link:docs-website

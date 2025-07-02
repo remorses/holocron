@@ -204,6 +204,8 @@ model SiteBranch {
   cssStyles        String   @default("")
   domains          Domain[]
 
+  lastGithubSyncAt DateTime?
+  lastGithubSyncCommit String?
   pages       MarkdownPage[]
   mediaAssets MediaAsset[]
   metaFiles   MetaFile[]

@@ -1,7 +1,7 @@
 import { prisma } from 'db'
 import memoize from 'micro-memoize'
 import { useEffect, useMemo, useRef } from 'react'
-import { useLoaderData, useRouteLoaderData } from 'react-router'
+import { useLoaderData, useRouteLoaderData, Link } from 'react-router'
 import { AppSidebar } from '../components/app-sidebar'
 import { BrowserWindow } from '../components/browser-window'
 import { SidebarInset, SidebarProvider } from '../components/ui/sidebar'
@@ -17,6 +17,8 @@ import type { Route as SiteRoute } from './org.$orgId.site.$siteId'
 import { UIMessage } from 'ai'
 import { ChatProvider, ChatState } from '../components/chat/chat-provider'
 import { env } from 'docs-website/src/lib/env'
+import { formatDistanceToNow } from 'date-fns'
+import { Button } from '../components/ui/button'
 
 export type { Route }
 
@@ -116,6 +118,8 @@ export async function loader({
                 domains: true,
                 docsJson: true,
                 githubBranch: true,
+                lastGithubSyncAt: true,
+                lastGithubSyncCommit: true,
             },
         }),
     ])
@@ -144,9 +148,14 @@ export async function loader({
         return allFiles.map((file) => `@${file.githubPath}`).sort()
     })()
 
-    const host = siteBranch.domains.find(
-        (x) => x.domainType === 'internalDomain',
-    )?.host
+    const host = siteBranch.domains
+        .filter((x) => x.domainType === 'internalDomain')
+        .sort((a, b) => {
+            // Those with 'localhost' in name first.
+            const aIsLocalhost = a.host.includes('localhost') ? -1 : 1
+            const bIsLocalhost = b.host.includes('localhost') ? -1 : 1
+            return aIsLocalhost - bIsLocalhost
+        })[0]?.host
 
     const iframeUrl = new URL(`https://${host}`)
     if (host?.endsWith('.localhost')) {
@@ -211,7 +220,7 @@ export default function Page({
                 >
                     <AppSidebar />
                     <SidebarInset>
-                        <div className='flex grow h-full flex-col gap-4 p-2'>
+                        <div className='flex grow h-full flex-col gap-4 p-2 pt-1'>
                             <Content />
                         </div>
                     </SidebarInset>
@@ -222,7 +231,7 @@ export default function Page({
 }
 
 function Content() {
-    const { chat, iframeUrl, host } = useLoaderData<typeof loader>()
+    const { chat, iframeUrl, host, siteBranch } = useLoaderData<typeof loader>()
     const siteData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
@@ -234,7 +243,9 @@ function Content() {
 
     return (
         <div className='flex flex-col h-full gap-3'>
-            {/* <NavBar /> */}
+            <div className='flex'>
+                <GitHubSyncStatus />
+            </div>
 
             <div className='flex grow flex-col'>
                 <BrowserWindow
@@ -326,3 +337,40 @@ const scaleDownElement = memoize(function (iframeScale) {
         height: `${Number(100 / iframeScale).toFixed(1)}%`,
     }
 })
+
+function GitHubSyncStatus() {
+    const { siteBranch } = useLoaderData<typeof loader>()
+    const siteData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId',
+    ) as SiteRoute.ComponentProps['loaderData']
+
+    const githubOwner = siteData?.site.githubOwner
+    const githubRepo = siteData?.site.githubRepo
+
+    if (
+        !siteBranch?.lastGithubSyncAt ||
+        !siteBranch?.lastGithubSyncCommit ||
+        !githubOwner ||
+        !githubRepo
+    ) {
+        return null
+    }
+
+    const timeAgo = formatDistanceToNow(new Date(siteBranch.lastGithubSyncAt), {
+        addSuffix: true,
+    })
+    const shortCommit = siteBranch.lastGithubSyncCommit.slice(0, 7)
+    const commitUrl = `https://github.com/${githubOwner}/${githubRepo}/commit/${siteBranch.lastGithubSyncCommit}`
+
+    return (
+        <div className='flex justify-center'>
+            <Button variant='outline' size='sm' asChild>
+                <Link to={commitUrl} target='_blank' rel='noopener noreferrer'>
+                    <span>
+                        <strong>Last sync</strong> {timeAgo}: {shortCommit}
+                    </span>
+                </Link>
+            </Button>
+        </div>
+    )
+}

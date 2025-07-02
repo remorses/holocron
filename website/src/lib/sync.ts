@@ -346,11 +346,11 @@ export async function syncSite({
                                 continue
                             }
                             await cloudflareClient.createDomain(host)
-                            const domainType: DomainType = host.endsWith(
-                                '.' + env.APPS_DOMAIN,
-                            )
-                                ? 'internalDomain'
-                                : 'customDomain'
+                            const domainType: DomainType =
+                                host.endsWith('.' + env.APPS_DOMAIN) ||
+                                host.endsWith('.localhost')
+                                    ? 'internalDomain'
+                                    : 'customDomain'
                             await prisma.domain.create({
                                 data: {
                                     host,
