@@ -647,7 +647,6 @@ function DocsLayoutWrapper({
                     enabled: searchEnabled,
                     components: {},
                 }}
-                // key={Math.random()}
                 nav={{
                     mode: navMode,
                     transparentMode: navTransparentMode,
