@@ -1,6 +1,6 @@
 This is a docs website with the following pages:
 
-```
+```md
 {{linksText}}
 ```
 

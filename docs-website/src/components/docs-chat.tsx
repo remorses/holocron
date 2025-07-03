@@ -1,40 +1,27 @@
 import { useEffect, useMemo, useState } from 'react'
 
+import { createIdGenerator, UIMessage } from 'ai'
+import { fullStreamToUIMessages } from 'contesto/src/lib/process-chat'
 import { ScrollArea } from 'docs-website/src/components/ui/scroll-area'
 import { useStickToBottom } from 'use-stick-to-bottom'
-import { fullStreamToUIMessages } from 'contesto/src/lib/process-chat'
-import { createIdGenerator, UIMessage } from 'ai'
 
-import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
-import { startTransition } from 'react'
-import { AnimatePresence, motion } from 'unframer'
 import {
     ChatAssistantMessage,
     ChatErrorMessage,
     ChatUserMessage,
 } from 'contesto/src/chat/chat-message'
-import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
 import {
     ChatProvider,
     ChatState,
     useChatState,
 } from 'contesto/src/chat/chat-provider'
 import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
+import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
 import { ChatUploadButton } from 'contesto/src/chat/chat-upload-button'
-import {
-    Drawer,
-    DrawerContent,
-    DrawerDescription,
-    DrawerHeader,
-    DrawerTitle,
-    DrawerTrigger,
-} from '../components/ui/drawer'
+import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
+import { startTransition } from 'react'
+import { AnimatePresence, motion } from 'unframer'
 import { Button } from '../components/ui/button'
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '../components/ui/popover'
 import {
     Command,
     CommandEmpty,
@@ -43,84 +30,26 @@ import {
     CommandItem,
     CommandList,
 } from '../components/ui/command'
-
-import { cn } from '../lib/cn'
+import { Drawer, DrawerContent } from '../components/ui/drawer'
 import {
-    apiClientWithDurableFetch,
-    durableFetchClient,
-} from 'docs-website/src/generated/spiceflow-client'
-import { useDocsState } from '../lib/docs-state'
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '../components/ui/popover'
+
+import { durableFetchClient } from 'docs-website/src/generated/spiceflow-client'
+import { cn } from '../lib/cn'
 import { docsApiClientWithDurableFetch } from '../lib/docs-spiceflow-client'
+import { useDocsState } from '../lib/docs-state'
+import { useRouteLoaderData } from 'react-router'
+import type { Route } from '../root'
 
 const CHAT_ID = 'cmclxgpov0057htrcyf12y6j2'
-
-let exampleMessages: UIMessage[] = [
-    {
-        id: '1',
-        role: 'user',
-        parts: [
-            {
-                type: 'text',
-                text: 'Hi, I want to get started with customizing my docs site. Any guidance?',
-            },
-        ],
-        content: '',
-        createdAt: new Date(),
-    },
-    {
-        id: '2',
-        role: 'assistant',
-        parts: [
-            {
-                type: 'text',
-                text: `
-# Welcome to the Docs Customizer! 🚀
-
-I'm here to help you set up and tailor your documentation site. Here’s a quick overview of what you can do:
-
-- **Change the theme color**: Easily switch your site's primary color to match your branding.
-- **Add new docs**: Create new pages and organize your content with simple commands.
-- **Edit navigation**: Rearrange, add or remove navigation items for better UX.
-- **Upload media**: Drag and drop images, icons, or attachments to enhance your documentation.
-- **Customize footer**: Manage contact info, social links, and legal pages in just a few clicks.
-- **Instant preview**: See live changes before publishing.
-- **Supports Markdown**: Write content with __Markdown__, including code snippets:
-
-\`\`\`tsx
-import { MyComponent } from 'components'
-export default function Page() {
-  return <MyComponent />
-}
-\`\`\`
-
-> *Tip*: You can ask me to "add analytics tracking," "add a FAQ page," or "edit the home page introduction."
-
-Here are some more things you can do:
-
-- **Install plugins**: Extend functionality with custom or community plugins.
-- **Configure authentication**: Set up user roles and permissions for your docs.
-- **Multi-language support**: Enable translations for global audiences.
-- **Embed videos or iframes**: Enhance docs with rich media.
-- **Automate deployments**: Connect with CI/CD pipelines for seamless publishing.
-- **Collect user feedback**: Add feedback widgets or forms.
-
-If you want details on any of these, just ask!
-
-Let me know what you'd like to do first!
-                `.trim(),
-            },
-        ],
-        content: '',
-        createdAt: new Date(),
-    },
-]
-
-exampleMessages = []
 
 export function ChatDrawer({ loaderData }: { loaderData?: any }) {
     const initialChatState = useMemo<Partial<ChatState>>(
         () => ({
-            messages: exampleMessages,
+            messages: [],
             isGenerating: false,
         }),
         [loaderData],
@@ -137,12 +66,12 @@ export function ChatDrawer({ loaderData }: { loaderData?: any }) {
                 direction='right'
             >
                 <DrawerContent className='bg-background min-w-[600px]'>
-                    <DrawerHeader>
-                        <DrawerTitle>Chat</DrawerTitle>
+                    {/* <DrawerHeader>
+                        <DrawerTitle>Fumabase Chat</DrawerTitle>
                         <DrawerDescription>
-                            Set your daily activity goal.
+                            Chat with the docs
                         </DrawerDescription>
-                    </DrawerHeader>
+                    </DrawerHeader> */}
                     <div className='p-4 flex flex-col min-h-0 grow pb-0'>
                         <Chat />
                     </div>
@@ -177,8 +106,9 @@ function WelcomeMessage() {
     return (
         <Markdown
             markdown={
-                'Hi, I am fumabase, I can help you with customizing your docs website or add new content. Here are some example things you can do:\n'
+                'Hi, I am fumabase, I can help you search and explain the docs\n'
             }
+            className='text-2xl text-center text-balance font-semibold'
             isStreaming={false}
         />
     )
@@ -256,16 +186,16 @@ function MessageRenderer({ message }: { message: UIMessage }) {
 
 // Static autocomplete suggestions for first message
 const AUTOCOMPLETE_SUGGESTIONS = [
-    'change theme color to blue',
-    'update site logo with new design',
-    'add a new doc page about getting started',
-    'edit navigation menu structure',
-    'configure footer links and social media',
-    'set up custom 404 error page',
-    'add search functionality to docs',
-    'create a faq section',
-    'setup custom domain configuration',
-    'add analytics tracking code',
+    'How do I get started with Fumabase?',
+    'Explain the configuration options',
+    'Show me deployment examples',
+    'What are the API endpoints?',
+    'How do I customize themes?',
+    'Troubleshoot common issues',
+    'Compare with other solutions',
+    'Best practices for setup',
+    'Integration examples',
+    'Performance optimization tips',
 ]
 
 function ContextButton({ contextOptions }) {
@@ -307,7 +237,7 @@ function ContextButton({ contextOptions }) {
                                         className='max-w-full'
                                     >
                                         <span className='truncate'>
-                                            {option}
+                                            {option.replace(/^@\//, '')}
                                         </span>
                                     </CommandItem>
                                 ))}
@@ -324,6 +254,12 @@ function Footer() {
     const isPending = useChatState((x) => x.isGenerating)
     const text = useChatState((x) => x.text || '')
     const durableUrl = `/api/generateMessage?chatId=${CHAT_ID}`
+
+    // Get files from root loader data
+    const rootLoaderData = useRouteLoaderData(
+        'root',
+    ) as Route.ComponentProps['loaderData']
+    const files = rootLoaderData?.files || []
 
     useEffect(() => {
         durableFetchClient.isInProgress(durableUrl).then(({ inProgress }) => {
@@ -385,12 +321,11 @@ function Footer() {
     }
     const url = `/api/generateMessage?chatId=${CHAT_ID}`
 
-    const contextOptions = [
-        '@/docs/README.md',
-        '@/docs/setup.md',
-        '@/docs/changelog.md',
-        '@/docs/faq.md',
-    ]
+    // Generate context options from actual files
+    const contextOptions = files
+        .filter((file) => file.type === 'page')
+        .map((file) => `@${file.path.replace(/\.mdx\?$/, '')}`)
+
 
     async function onSubmit() {
         await durableFetchClient.delete(url)
