@@ -11,7 +11,7 @@ export function DynamicIconInner({ icon: name, ...rest }: DynamicIconProps) {
     prefetchDNS('https://esm.sh')
     preconnect('https://esm.sh')
     const hidrated = useHydrated()
-    if (!hidrated) return null
+    if (!hidrated) return <EmptyIcon />
     if (!name) return null
     const Icon =
         cache[name] ||
@@ -33,6 +33,7 @@ function EmptyIcon() {
 }
 
 export function DynamicIcon({ icon: name, ...rest }: DynamicIconProps) {
+
     return (
         <Suspense
             fallback={

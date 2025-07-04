@@ -114,7 +114,7 @@ export function CustomSearchDialog(props: SharedProps) {
                         </PopoverContent>
                     </Popover>
                     <a
-                        href='https://orama.com'
+                        href='https://fumabase.com'
                         rel='noreferrer noopener'
                         className='text-xs text-nowrap text-fd-muted-foreground'
                     >
