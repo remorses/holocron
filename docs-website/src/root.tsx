@@ -494,6 +494,7 @@ function DocsLayoutWrapper({
     const { i18n, previewWebsocketId } = loaderData
 
     useEffect(() => {
+        console.log(`remounting docs layout`)
         if (previewWebsocketId) {
             window.dispatchEvent(
                 new CustomEvent('startPreviewWebsocket', {
@@ -599,8 +600,8 @@ function DocsLayoutWrapper({
             })
 
             const tree = source.getPageTree(i18n?.defaultLanguage || 'en')
-            // force rerender
             tree.$id = Math.random().toString(36).slice(2)
+            console.log(`creating new tree with id`, tree.$id)
             // console.log(tree)
             return tree
         }

@@ -6,7 +6,7 @@ const debugQueries = false
 
 export const pgAdapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL,
-    // max: 1,
+    max: process.env.NODE_ENV === 'development' ? 1 : 5,
 })
 
 export const prisma: PrismaClient =
