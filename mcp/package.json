@@ -1,0 +1,20 @@
+{
+  "name": "fumadocs-mcp",
+  "version": "1.0.0",
+  "description": "MCP (Model Context Protocol) components for Fumadocs",
+  "type": "module",
+  "main": "src/index.tsx",
+  "types": "src/index.tsx",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.2",
+    "ai": "^4.0.30",
+    "fumadocs-openapi": "workspace:*",
+    "react": "^18.2.0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.8"
+  }
+}
