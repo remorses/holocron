@@ -581,11 +581,11 @@ const realChatExamples: Record<string, CoreMessage[]> = {
 
 export default async function Page() {
     return (
-        <div className='min-h-screen prose bg-background'>
+        <div className='dark bg-black min-h-screen prose bg-background'>
             <div className='container mx-auto px-4 py-8'>
                 <MCPServerPage
                     server={mcpServer}
-                    tools={realMCPTools.slice(0, 1)}
+                    tools={realMCPTools.slice(0, 10)}
                     hasHead={true}
                     toolExamples={realChatExamples}
                 />

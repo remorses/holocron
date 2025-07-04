@@ -21,6 +21,9 @@ import { MethodLabel } from 'fumadocs-openapi/ui/components/method-label'
 import type { ResolvedSchema } from 'fumadocs-openapi/utils/schema'
 import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
+import { ChatExample } from './client'
+import { APIPlayground } from 'fumadocs-openapi/playground'
+import { CodeExampleProvider } from 'fumadocs-openapi/ui/lazy'
 
 export interface MCPPageProps {
     /**
@@ -124,21 +127,19 @@ export interface MCPToolProps {
     chatExample?: CoreMessage[]
 
     /**
+     * Whether to show the playground
+     */
+    showPlayground?: boolean
+
+    /**
+     * Callback for playground tool execution
+     */
+    onExecute?: (params: any) => Promise<any>
+
+    /**
      * Render context
      */
     ctx: RenderContext
-}
-
-export interface ChatExampleProps {
-    /**
-     * Chat messages to display
-     */
-    messages: CoreMessage[]
-
-    /**
-     * Tool name for context
-     */
-    toolName: string
 }
 
 /**
@@ -257,6 +258,7 @@ export function MCPTool({
     hasHead = true,
     headingLevel = 2,
     chatExample,
+
     ctx,
 }: MCPToolProps): ReactNode {
     let headNode: ReactNode = null
@@ -309,20 +311,7 @@ export function MCPTool({
     }
 
     const toolInfo = (
-        <ctx.renderer.APIInfo head={headNode} method='TOOL' route={tool.name}>
-            {/* Tool header with name and server URL */}
-            <div className='flex flex-row items-center gap-2.5 p-3 rounded-xl border bg-fd-card text-fd-card-foreground not-prose mb-4'>
-                <MethodLabel className='text-xs'>TOOL</MethodLabel>
-                <code className='flex-1 overflow-auto text-nowrap text-[13px] text-fd-muted-foreground'>
-                    {tool.name}
-                </code>
-                {serverUrl && (
-                    <code className='text-xs text-fd-muted-foreground'>
-                        {serverUrl}
-                    </code>
-                )}
-            </div>
-
+        <ctx.renderer.APIInfo head={headNode} method='POST' route={tool.name}>
             {/* Tool metadata */}
             <div className='space-y-3 mb-6'>
                 {tool.annotations?.readOnlyHint !== undefined && (
@@ -382,64 +371,31 @@ export function MCPTool({
     )
 
     return (
-        <div className='flex flex-col lg:flex-row gap-6'>
-            <div className='flex-1'>{toolInfo}</div>
+        <div className='flex  flex-col lg:flex-row gap-6'>
+            <div className='max-w-[600px] '>
+                <CodeExampleProvider examples={[{ key: '1', data: {} }]}>
+                    <APIPlayground
+                        path={`/tools/${tool.name}`}
+                        method={{
+                            method: 'POST',
+                            operationId: 'xx',
+                            requestBody: {
+                                content: {
+                                    'application/json': {
+                                        schema: tool.inputSchema as any,
+                                    },
+                                },
+                            },
+                        }}
+                        ctx={ctx}
+                    />
+                </CodeExampleProvider>
+                {toolInfo}
+            </div>
             {chatExample && (
                 <ChatExample messages={chatExample} toolName={tool.name} />
             )}
         </div>
-    )
-}
-
-/**
- * Component for displaying chat examples
- */
-export function ChatExample({ messages, toolName }: ChatExampleProps) {
-    return (
-        <Tabs className='lg:w-[700px]' items={['Chat', 'Responses']}>
-            <Tab value='Chat'>
-                <div className='gap-2 flex flex-col grow h-full overflow-y-auto'>
-                    {messages.map((message, index) => (
-                        <div
-                            key={index}
-                            className={`p-2 rounded text-sm ${
-                                message.role === 'user'
-                                    ? 'bg-fd-primary/10 ml-4'
-                                    : message.role === 'assistant'
-                                      ? 'bg-fd-secondary mr-4'
-                                      : 'bg-fd-muted/50'
-                            }`}
-                        >
-                            <div className='font-medium text-xs mb-1 opacity-70'>
-                                {message.role}
-                            </div>
-                            <div>
-                                {typeof message.content === 'string'
-                                    ? message.content
-                                    : Array.isArray(message.content)
-                                      ? message.content
-                                            .map((part) =>
-                                                part.type === 'text'
-                                                    ? part.text
-                                                    : `[${part.type}]`,
-                                            )
-                                            .join(' ')
-                                      : '[complex content]'}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </Tab>
-            <Tab value='Responses'>
-                <CodeBlock title=''>
-                    <Pre>
-                        <code className='p-3'>
-                            {JSON.stringify(messages, null, 2)}
-                        </code>
-                    </Pre>
-                </CodeBlock>
-            </Tab>
-        </Tabs>
     )
 }
 

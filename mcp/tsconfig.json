@@ -5,7 +5,8 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "lib": ["dom", "es2022"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
