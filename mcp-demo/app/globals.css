@@ -5,6 +5,8 @@
 @import 'fumadocs-openapi/css/preset.css';
 @source "fumadocs-ui";
 @source "../../mcp";
+@import './shadcn.css'
+@source "../../contesto";
 @source "fumadocs-openapi";
 body {
   font-family: system-ui, -apple-system, sans-serif;

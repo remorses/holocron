@@ -1,5 +1,6 @@
 import { MCPServerPage } from 'fumadocs-mcp/src'
 import type { Tool, CoreMessage } from 'fumadocs-mcp/src'
+import { Chat } from './chat'
 
 // Real MCP server information
 const mcpServer = {
@@ -581,14 +582,19 @@ const realChatExamples: Record<string, CoreMessage[]> = {
 
 export default async function Page() {
     return (
-        <div className='dark bg-black min-h-screen prose bg-background'>
-            <div className='container mx-auto px-4 py-8'>
-                <MCPServerPage
-                    server={mcpServer}
-                    tools={realMCPTools.slice(0, 10)}
-                    hasHead={true}
-                    toolExamples={realChatExamples}
-                />
+        <div className='dark bg-black min-h-screen bg-background'>
+            <div className='grid grid-cols-1 lg:grid-cols-2 h-screen'>
+                <div className='overflow-auto'>
+                    <div className='container mx-auto px-4 py-8 prose prose-invert'>
+                        <MCPServerPage
+                            server={mcpServer}
+                            tools={realMCPTools.slice(0, 10)}
+                            hasHead={true}
+                            toolExamples={realChatExamples}
+                        />
+                    </div>
+                </div>
+
             </div>
         </div>
     )

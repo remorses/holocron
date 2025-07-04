@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.11",
+    "contesto": "workspace:*",
     "fumadocs-core": "workspace:*",
     "fumadocs-mcp": "workspace:*",
     "fumadocs-openapi": "workspace:*",

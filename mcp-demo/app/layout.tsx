@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 
+
 export const metadata: Metadata = {
   title: 'MCP Tools Demo',
   description: 'Model Context Protocol tools rendered with Fumadocs OpenAPI components',

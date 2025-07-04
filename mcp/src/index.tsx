@@ -7,6 +7,7 @@ Tabs /**
  */
 export type { Tool } from '@modelcontextprotocol/sdk/types.js'
 export type { CoreMessage } from 'ai'
+export { Chat } from './chat'
 
 import { type ReactNode } from 'react'
 import { Schema } from 'fumadocs-openapi/render/schema'
@@ -24,6 +25,7 @@ import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
 import { ChatExample } from './client'
 import { APIPlayground } from 'fumadocs-openapi/playground'
 import { CodeExampleProvider } from 'fumadocs-openapi/ui/lazy'
+import { Chat } from './chat'
 
 export interface MCPPageProps {
     /**
