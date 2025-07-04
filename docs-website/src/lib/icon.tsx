@@ -29,7 +29,7 @@ export function DynamicIconInner({ icon: name, ...rest }: DynamicIconProps) {
 }
 
 function EmptyIcon() {
-    return null
+    return <div className='w-4 h-4' />
 }
 
 export function DynamicIcon({ icon: name, ...rest }: DynamicIconProps) {
