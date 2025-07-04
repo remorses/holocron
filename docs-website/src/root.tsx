@@ -509,7 +509,6 @@ function DocsLayoutWrapper({
     const tree = useMemo(() => {
         const { files, i18n, githubFolder } = loaderData
 
-        if (!files) return {}
         function removeGithubFolder(p) {
             if (p.startsWith('/')) {
                 p = p.slice(1)
