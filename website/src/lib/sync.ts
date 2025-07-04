@@ -741,6 +741,16 @@ export async function syncSite({
         console.log('No remaining chunks to sync to Trieve.')
     }
 
+    // Clean up orphaned Trieve chunks after sync is complete
+    if (trieve.datasetId) {
+        try {
+            await cleanupOrphanedTrieveChunks({ siteId, branchId })
+        } catch (error) {
+            notifyError(error, 'trieve cleanup')
+            // Don't throw the error to avoid failing the entire sync process
+        }
+    }
+
     console.log('Import script finished.')
 }
 
@@ -1191,6 +1201,101 @@ export async function deletePages({
     }
 
     console.log('Page deletion completed')
+}
+
+export async function cleanupOrphanedTrieveChunks({
+    siteId,
+    branchId,
+}: {
+    siteId: string
+    branchId: string
+}) {
+    console.log(
+        `Cleaning up orphaned Trieve chunks for site ${siteId}, branch ${branchId}`,
+    )
+
+    // 1. Get the branch to retrieve the Trieve dataset ID
+    const branch = await prisma.siteBranch.findUnique({
+        where: { branchId },
+        select: { trieveDatasetId: true },
+    })
+
+    if (!branch || !branch.trieveDatasetId) {
+        console.log(
+            `No Trieve dataset found for site ${siteId}, skipping cleanup`,
+        )
+        return
+    }
+
+    // 2. Initialize Trieve SDK
+    const trieve = new TrieveSDK({
+        apiKey: env.TRIEVE_API_KEY!,
+        organizationId: env.TRIEVE_ORGANIZATION_ID!,
+        datasetId: branch.trieveDatasetId,
+    })
+
+    try {
+        // 3. Get all existing page slugs from the database
+        const existingPages = await prisma.markdownPage.findMany({
+            where: { branchId },
+            select: { slug: true },
+        })
+        const existingSlugs = new Set(existingPages.map((page) => page.slug))
+
+        console.log(`Found ${existingSlugs.size} existing pages in database`)
+
+        // 4. Get all groups (pages) from Trieve
+        const trieveGroups = await trieve.getGroupsForDataset({
+            page: 1,
+        })
+
+        if (!trieveGroups || !trieveGroups.groups) {
+            console.log('No groups found in Trieve dataset')
+            return
+        }
+
+        console.log(
+            `Found ${trieveGroups.groups.length} groups in Trieve dataset`,
+        )
+
+        // 5. Find orphaned groups (groups that exist in Trieve but not in DB)
+        const orphanedGroups = trieveGroups.groups.filter((group) => {
+            // Groups use page slugs as tracking IDs, so we check if the slug exists in our DB
+            const groupSlug = group.tracking_id
+            return groupSlug && !existingSlugs.has(groupSlug)
+        })
+
+        console.log(`Found ${orphanedGroups.length} orphaned groups`)
+
+        // 6. Delete orphaned groups and their chunks
+        for (const orphanedGroup of orphanedGroups) {
+            try {
+                console.log(
+                    `Deleting orphaned group: ${orphanedGroup.tracking_id}`,
+                )
+
+                await trieve.deleteGroup({
+                    deleteChunks: true,
+                    groupId: orphanedGroup.id,
+                    trDataset: branch.trieveDatasetId,
+                })
+
+                console.log(
+                    `Successfully deleted orphaned group: ${orphanedGroup.tracking_id}`,
+                )
+            } catch (error) {
+                console.error(
+                    `Error deleting orphaned group ${orphanedGroup.tracking_id}:`,
+                    error,
+                )
+            }
+        }
+
+        console.log('Orphaned Trieve chunks cleanup completed')
+    } catch (error) {
+        console.error('Error during Trieve cleanup:', error)
+        throw error
+    }
 }
 
 function processForTrieve(page: DocumentRecord & { pageSlug: string }) {

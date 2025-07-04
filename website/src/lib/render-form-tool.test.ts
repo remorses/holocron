@@ -373,7 +373,7 @@ describe('DocsConfigSchema', () => {
 
     // cssVariables: arbitrary properties, each string
     test('cssVariables.light.someVar', () => {
-        expect(getTypeForNameInSchema('cssVariables.someVar'))
+        expect(getTypeForNameInSchema('cssVariables.light.someVar'))
             .toMatchInlineSnapshot(`undefined`)
     })
 })
