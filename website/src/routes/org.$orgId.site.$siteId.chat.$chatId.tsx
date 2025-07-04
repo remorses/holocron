@@ -18,6 +18,7 @@ import {
     useRouteLoaderData,
     Link,
     useParams,
+    useRevalidator,
 } from 'react-router'
 import { AppSidebar } from '../components/app-sidebar'
 import { BrowserWindow } from '../components/browser-window'
@@ -492,6 +493,7 @@ function GitHubSyncButton() {
 
     const [errorMessage, setErrorMessage] = useState('')
 
+    const reval = useRevalidator()
     const { fn: sync, isLoading } = useThrowingFn({
         async fn() {
             try {
@@ -501,6 +503,7 @@ function GitHubSyncButton() {
                     githubBranch,
                 })
                 if (error) throw error
+                reval.revalidate()
             } catch (err) {
                 setErrorMessage(err.message)
             }
