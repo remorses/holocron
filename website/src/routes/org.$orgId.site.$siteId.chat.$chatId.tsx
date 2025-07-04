@@ -505,6 +505,7 @@ function GitHubSyncButton() {
                 if (error) throw error
                 reval.revalidate()
             } catch (err) {
+                console.log(err)
                 setErrorMessage(err.message)
             }
         },

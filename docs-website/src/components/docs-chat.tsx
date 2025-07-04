@@ -332,7 +332,7 @@ function Footer() {
         await submitMessageWithoutDelete()
     }
     return (
-        <AnimatePresence mode='popLayout'>
+        <AnimatePresence custom={false} onExitComplete={() => {}}>
             <div className=' sticky bottom-4 z-50 w-full mt-4'>
                 <motion.div
                     layoutId='textarea'

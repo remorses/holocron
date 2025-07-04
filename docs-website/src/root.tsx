@@ -346,22 +346,6 @@ if (typeof window !== 'undefined') {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-    const loaderData = useLoaderData<typeof loader>()
-    const { previewWebsocketId } = loaderData || {}
-    const docsJson = useDocsJson()
-    useNProgress()
-    // Inline DocsProvider
-    const { i18n, trieveReadApiKey, trieveDatasetId, cssStyles } =
-        loaderData || {}
-    const locale = i18n?.defaultLanguage
-
-    if (!trieveClient && trieveReadApiKey) {
-        trieveClient = new TrieveSDK({
-            apiKey: trieveReadApiKey!,
-            datasetId: trieveDatasetId || undefined,
-        })
-    }
-
     return (
         <html lang='en' suppressHydrationWarning>
             <head>
@@ -379,54 +363,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     />
                 )}
                 <Links />
-                <CSSVariables docsJson={docsJson} />
             </head>
             <body>
-                {previewWebsocketId ? (
-                    <PreviewBanner websocketId={previewWebsocketId || ''} />
-                ) : (
-                    <UserBanner docsJson={docsJson} />
-                )}
-
-                <ReactRouterProvider>
-                    <RootProvider
-                        search={{
-                            options: {},
-                            SearchDialog: CustomSearchDialog,
-                            // enabled: !!trieveDatasetId,
-                        }}
-                        i18n={{
-                            locale: locale || '',
-                            locales: i18n?.languages.map((locale) => {
-                                return {
-                                    locale,
-                                    name: LOCALE_LABELS[locale] || '',
-                                }
-                            }),
-                        }}
-                    >
-                        <ThemeProvider
-                            attribute='class'
-                            defaultTheme='system'
-                            enableSystem
-                            disableTransitionOnChange
-                        >
-                            {cssStyles && (
-                                <style
-                                    dangerouslySetInnerHTML={{
-                                        __html: cssStyles,
-                                    }}
-                                />
-                            )}
-                            <ChatDrawer />
-                            <DocsLayoutWrapper docsJson={docsJson}>
-                                {children}
-                            </DocsLayoutWrapper>
-                        </ThemeProvider>
-                    </RootProvider>
-                </ReactRouterProvider>
                 <ScrollRestoration />
                 <Scripts />
+                {children}
             </body>
         </html>
     )
@@ -477,10 +418,64 @@ function CSSVariables({ docsJson }: { docsJson: DocsJsonType }) {
     )
 }
 
-let trieveClient: TrieveSDK
-
 export default function App() {
-    return <Outlet />
+    const loaderData = useLoaderData<typeof loader>()
+    const { previewWebsocketId } = loaderData || {}
+    const docsJson = useDocsJson()
+    useNProgress()
+    // Inline DocsProvider
+    const { i18n, trieveReadApiKey, trieveDatasetId, cssStyles } =
+        loaderData || {}
+    const locale = i18n?.defaultLanguage
+
+    return (
+        <>
+            <CSSVariables docsJson={docsJson} />
+            {previewWebsocketId ? (
+                <PreviewBanner websocketId={previewWebsocketId || ''} />
+            ) : (
+                <UserBanner docsJson={docsJson} />
+            )}
+
+            <ReactRouterProvider>
+                <RootProvider
+                    search={{
+                        options: {},
+                        SearchDialog: CustomSearchDialog,
+                        // enabled: !!trieveDatasetId,
+                    }}
+                    i18n={{
+                        locale: locale || '',
+                        locales: i18n?.languages.map((locale) => {
+                            return {
+                                locale,
+                                name: LOCALE_LABELS[locale] || '',
+                            }
+                        }),
+                    }}
+                >
+                    <ThemeProvider
+                        attribute='class'
+                        defaultTheme='system'
+                        enableSystem
+                        disableTransitionOnChange
+                    >
+                        {cssStyles && (
+                            <style
+                                dangerouslySetInnerHTML={{
+                                    __html: cssStyles,
+                                }}
+                            />
+                        )}
+                        <ChatDrawer />
+                        <DocsLayoutWrapper docsJson={docsJson}>
+                            <Outlet />
+                        </DocsLayoutWrapper>
+                    </ThemeProvider>
+                </RootProvider>
+            </ReactRouterProvider>
+        </>
+    )
 }
 
 function DocsLayoutWrapper({
