@@ -30,22 +30,31 @@ export default defineConfig({
         sourcemap: true,
         minify: false,
 
-        // rollupOptions: {
-        //     output: {
-        //         // 👉 put every async chunk that comes from shiki in its own folder
-        //         chunkFileNames: (c) =>
-        //             /[\\/]shiki[\\/]/.test(c.facadeModuleId ?? '')
-        //                 ? 'assets/shiki/[name]-[hash].js'
-        //                 : 'assets/[name]-[hash].js',
+        rollupOptions: {
+            output: {
+                // 👉 put every async chunk that comes from shiki or lucide-react in its own folder
+                chunkFileNames: (c) => {
+                    const facade = c.facadeModuleId ?? ''
+                    if (/[\\/]@shikijs[\\/]/.test(facade)) {
+                        return 'assets/shiki/[name]-[hash].js'
+                    } else if (/[\\/]lucide-react[\\/]/.test(facade)) {
+                        return 'assets/lucide-react/[name]-[hash].js'
+                    } else {
+                        return 'assets/[name]-[hash].js'
+                    }
+                },
 
-        //         // 👉 and do the same for the raw grammar JSON that shiki
-        //         //     turns into JS modules
-        //         assetFileNames: (a) =>
-        //             a.name?.endsWith('.tmLanguage.json')
-        //                 ? 'assets/shiki/[name]-[hash][extname]'
-        //                 : 'assets/[name]-[hash][extname]',
-        //     },
-        // },
+                assetFileNames: (a) => {
+                    if (a.name?.endsWith('.tmLanguage.json')) {
+                        return 'assets/shiki/[name]-[hash][extname]'
+                    } else if (a.name?.includes('lucide-react')) {
+                        return 'assets/lucide-react/[name]-[hash][extname]'
+                    } else {
+                        return 'assets/[name]-[hash][extname]'
+                    }
+                },
+            },
+        },
     },
 
     plugins: [
