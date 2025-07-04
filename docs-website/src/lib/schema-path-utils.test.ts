@@ -29,6 +29,7 @@ describe('schema-path-utils', () => {
                 "logo.light",
                 "logo.dark",
                 "logo.href",
+                "logo.text",
                 "favicon.light",
                 "favicon.dark",
                 "navbar.links.{index}.label",

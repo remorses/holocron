@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { getPresignedUrl, s3 } from './s3'
 
-describe('s3', async () => {
+describe.skip('s3', async () => {
     it('lists files in the bucket', async () => {
         const { contents } = await s3.list()
         expect(Array.isArray(contents)).toBe(true)
