@@ -816,6 +816,7 @@ function Logo({ docsJson = {} as DocsJsonType }) {
             <img
                 alt='logo'
                 src={logoImageUrl}
+                suppressHydrationWarning
                 className='h-8 [.uwu_&]:block'
                 aria-label='logo'
             />

@@ -657,6 +657,7 @@ function DocsMarkdown() {
 
     if (!ast) {
         const previousMarkdown = loaderData.markdown
+        // console.log(markdown)
         return (
             <MarkdownRuntime
                 {...{

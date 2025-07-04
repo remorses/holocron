@@ -94,6 +94,8 @@ There is also `--fd-layout-width` which changes the max width of the docs websit
 
 ## Core MDX and MD writing principles
 
+ALWAYS make sure that the frontmatter is at the top of the document when making edits to a page.
+
 ### Language and style requirements
 
 - Use clear, direct language appropriate for technical audiences
