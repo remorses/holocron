@@ -73,6 +73,9 @@ export async function serveRawMarkdown({
                 slug,
                 branchId: siteBranch.branchId,
             },
+            include: {
+                content: true,
+            },
         }),
     ])
 
@@ -84,14 +87,17 @@ export async function serveRawMarkdown({
                     slug: { in: ['/index', '/readme'] },
                     branchId: siteBranch.branchId,
                 },
+                include: {
+                    content: true,
+                },
             }),
         ])
-        return indexPage?.markdown || null
+        return indexPage?.content.markdown || null
     }
 
     if (!page) {
         return null
     }
 
-    return page.markdown
+    return page.content.markdown
 }

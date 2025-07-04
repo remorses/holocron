@@ -11,10 +11,12 @@ export async function getFilesForSource({ branchId, githubFolder }) {
             where: {
                 branchId,
             },
-            omit: {
-                // frontmatter: true,
-                markdown: true,
-                // description: true,
+            include: {
+                content: {
+                    select: {
+                        structuredData: true,
+                    },
+                },
             },
         }),
         prisma.metaFile.findMany({
@@ -27,7 +29,7 @@ export async function getFilesForSource({ branchId, githubFolder }) {
 
     const files = allPages
         .map((x) => {
-            const structuredData = x.structuredData
+            const structuredData = x.content.structuredData
             let githubPath = x.githubPath
             if (githubPath.startsWith(githubFolder)) {
                 githubPath = githubPath.slice(githubFolder.length)

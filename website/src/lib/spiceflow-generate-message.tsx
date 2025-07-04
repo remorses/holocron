@@ -412,10 +412,6 @@ export async function getTabFilesWithoutContents({ branchId }) {
             where: {
                 branchId,
             },
-            omit: {
-                markdown: true,
-                structuredData: true,
-            },
         }),
         prisma.metaFile.findMany({
             where: {
@@ -483,5 +479,18 @@ export async function getPageContent({ githubPath, branchId }) {
     if (!page && !metaFile) {
         throw new Error(`Cannot find page in ${githubPath}`)
     }
-    return page?.markdown || JSON.stringify(metaFile?.jsonData, null, 2) || ''
+    if (page) {
+        // Get the content from the MarkdownBlob relation
+        const pageWithContent = await prisma.markdownPage.findFirst({
+            where: {
+                branchId,
+                githubPath,
+            },
+            include: {
+                content: true,
+            },
+        })
+        return pageWithContent?.content.markdown || ''
+    }
+    return JSON.stringify(metaFile?.jsonData, null, 2) || ''
 }

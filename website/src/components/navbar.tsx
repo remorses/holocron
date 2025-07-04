@@ -47,25 +47,8 @@ function Logo() {
     )
 }
 
+
 export default function NavBar() {
-    const { siteId } = useParams()
-    const siteData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId',
-    ) as SiteRoute.ComponentProps['loaderData']
-    const chatData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId.chat.$chatId',
-    ) as ChatRoute.ComponentProps['loaderData'] | undefined
-    const githubBranch = chatData?.siteBranch?.githubBranch || siteData?.siteBranches?.[0]?.githubBranch || 'main'
-    const { fn: sync, isLoading } = useThrowingFn({
-        async fn() {
-            if (!siteId || !githubBranch) return
-            const { data, error } = await apiClient.api.githubSync.post({
-                siteId,
-                githubBranch,
-            })
-            if (error) throw error
-        },
-    })
     return (
         <header className='flex  items-center justify-between gap-4 max-lg:pt-3 pt-4'>
             {/* Left side */}
@@ -82,13 +65,7 @@ export default function NavBar() {
                     <NavigationMenu className='max-md:hidden'>
                         <NavigationMenuList className='gap-2'>
                             <NavigationMenuItem>
-                                <Button
-                                    isLoading={isLoading}
-                                    onClick={sync}
-                                    size={'sm'}
-                                >
-                                    Sync With GitHub
-                                </Button>
+
                             </NavigationMenuItem>
 
                             {navigationLinks.map((link, index) => (

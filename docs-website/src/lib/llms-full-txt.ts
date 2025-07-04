@@ -88,13 +88,17 @@ export async function generateLlmsFullTxt({
                 },
                 select: {
                     slug: true,
-                    markdown: true,
+                    content: {
+                        select: {
+                            markdown: true,
+                        },
+                    },
                 },
             })
 
             // Create a map for quick lookup
             const pageContentMap = new Map(
-                markdownPages.map((page) => [page.slug, page.markdown]),
+                markdownPages.map((page) => [page.slug, page.content.markdown]),
             )
 
             // Add each page in the batch

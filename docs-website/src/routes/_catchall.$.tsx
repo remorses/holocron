@@ -1,6 +1,7 @@
 import { prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import {
+    data,
     isRouteErrorResponse,
     useLoaderData,
     useRouteLoaderData,
@@ -307,6 +308,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                 branchId: siteBranch.branchId,
             },
             include: {
+                content: true,
                 mediaAssets: {
                     include: {
                         asset: true,
@@ -325,6 +327,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                     branchId: siteBranch.branchId,
                 },
                 include: {
+                    content: true,
                     mediaAssets: {
                         include: {
                             asset: true,
@@ -340,6 +343,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                     slug: 'asc',
                 },
                 include: {
+                    content: true,
                     mediaAssets: {
                         include: {
                             asset: true,
@@ -353,7 +357,10 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
     if (!page) {
         console.log('Page not found for slug:', slug)
-        throw new Response('Page not found', { status: 404 })
+        throw new Response(JSON.stringify({}), {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
+        })
     }
 
     const tree = source.getPageTree(locale)
@@ -361,20 +368,20 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     // fs.writeFileSync('scripts/rendered-mdx.mdx', page.markdown)
     // fs.writeFileSync('scripts/rendered-mdx.jsonc', JSON.stringify(ast, null, 2))
 
-    const { data } = await processMdxInServer({
+    const { data: markdownData } = await processMdxInServer({
         extension: page.extension,
         githubPath: page.githubPath,
-        markdown: page.markdown,
+        markdown: page.content.markdown,
     })
-    const frontmatter = data.frontmatter || {}
+    const frontmatter = markdownData.frontmatter || {}
 
     return {
-        toc: data.toc,
-        title: data.title,
+        toc: markdownData.toc,
+        title: markdownData.title,
         githubFolder: site.githubFolder,
         description: frontmatter.description,
-        markdown: data.markdown,
-        ast: data.ast,
+        markdown: markdownData.markdown,
+        ast: markdownData.ast,
         slugs,
         slug,
         locale,

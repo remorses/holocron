@@ -2,6 +2,7 @@ import { prisma } from 'db'
 import { Outlet } from 'react-router'
 import { getSession } from '../lib/better-auth'
 import type { Route } from './+types/org.$orgId.site.$siteId'
+import { env } from '../lib/env'
 
 export type { Route }
 
@@ -25,7 +26,11 @@ export async function loader({
             },
             include: {
                 org: true,
-                githubInstallations: true,
+                githubInstallations: {
+                    where: {
+                        appId: env.GITHUB_APP_ID!,
+                    },
+                },
             },
         }),
         prisma.chat.findMany({

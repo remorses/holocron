@@ -214,6 +214,16 @@ model SiteBranch {
   feedback PageFeedback[]
 }
 
+model MarkdownBlob {
+  githubSha            String   @id           // git blob SHA – immutable
+  markdown       String   @db.Text
+  structuredData Json     @default("{}")
+
+  createdAt      DateTime @default(now())
+
+  pages MarkdownPage[]    // back-reference
+}
+
 model MarkdownPage {
   pageId       String     @id @default(cuid())
   slug         String
@@ -221,7 +231,7 @@ model MarkdownPage {
   branchId     String
   branch       SiteBranch @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
   title        String     @db.Text
-  markdown     String     @db.Text
+  content      MarkdownBlob @relation(fields: [githubSha], references: [githubSha], onDelete: Cascade)
   createdAt    DateTime   @default(now())
   // updatedAt DateTime @updatedAt
   lastEditedAt DateTime?  @updatedAt
@@ -236,7 +246,6 @@ model MarkdownPage {
 
   githubSha      String
   githubPath     String
-  structuredData Json   @default("{}")
   syncErrors MarkdownPageSyncError[]
   mediaAssets PageMediaAsset[]
 

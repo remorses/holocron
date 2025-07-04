@@ -612,13 +612,11 @@ export async function syncSite({
                 const pageInput = {
                     slug: slug,
                     title: data.title || '',
-                    markdown, // Empty markdown for failed pages
                     frontmatter: data.frontmatter,
                     githubPath: asset.githubPath,
                     githubSha: asset.githubSha,
                     extension: extension as MarkdownExtension,
                     description: data?.frontmatter?.description || '',
-                    structuredData: data.structuredData as any,
                 }
 
                 const structuredData = data.structuredData
@@ -639,6 +637,20 @@ export async function syncSite({
                 )
                 await Promise.all([
                     prisma.$transaction(async (prisma) => {
+                        // Upsert the MarkdownBlob first
+                        await prisma.markdownBlob.upsert({
+                            where: { githubSha: asset.githubSha },
+                            update: {
+                                markdown,
+                                structuredData: data.structuredData as any,
+                            },
+                            create: {
+                                githubSha: asset.githubSha,
+                                markdown,
+                                structuredData: data.structuredData as any,
+                            },
+                        })
+
                         // Upsert the page
                         const page = await prisma.markdownPage.upsert({
                             where: {

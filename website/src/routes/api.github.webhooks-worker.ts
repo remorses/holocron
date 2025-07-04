@@ -91,6 +91,7 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
             site: {
                 githubInstallations: {
                     some: {
+                        appId: env.GITHUB_APP_ID,
                         installationId,
                     },
                 },
@@ -365,7 +366,10 @@ async function handleDeletions({
 
             if (isMarkdown(`/${filePath}`)) {
                 const pathWithFrontSlash = `/${filePath}`
-                const slug = generateSlugFromPath(pathWithFrontSlash, githubFolder)
+                const slug = generateSlugFromPath(
+                    pathWithFrontSlash,
+                    githubFolder,
+                )
 
                 await prisma.markdownPage.deleteMany({
                     where: {
@@ -498,6 +502,7 @@ async function tryCreateBranchFromDocsJson(args: WebhookWorkerRequest) {
                 githubInstallations: {
                     some: {
                         installationId,
+                        appId: env.GITHUB_APP_ID,
                     },
                 },
             },

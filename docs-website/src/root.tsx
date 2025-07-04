@@ -128,7 +128,10 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     if (!site) {
         console.log('Site not found for domain:', domain)
-        return data({ files: [] } as never, { status: 404 })
+        throw new Response(JSON.stringify({ files: [] }), {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
+        })
     }
 
     const files = await getFilesForSource({
@@ -155,7 +158,7 @@ export async function loader({ request }: Route.LoaderArgs) {
                 githubPath: '',
                 markdown: docsJson.banner.content,
             })
-            bannerAst = data.ast
+            bannerAst = data?.ast
         } catch (error) {
             console.error('Error processing banner markdown:', error)
         }
@@ -382,16 +385,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 {previewWebsocketId ? (
                     <PreviewBanner websocketId={previewWebsocketId || ''} />
                 ) : (
-                    <UserBanner banner={docsJson?.banner} />
+                    <UserBanner docsJson={docsJson} />
                 )}
 
                 <ReactRouterProvider>
                     <RootProvider
                         search={{
-                            options: {
-
-                            },
-                            SearchDialog: CustomSearchDialog
+                            options: {},
+                            SearchDialog: CustomSearchDialog,
                             // enabled: !!trieveDatasetId,
                         }}
                         i18n={{
@@ -489,7 +490,7 @@ function DocsLayoutWrapper({
     children: React.ReactNode
     docsJson: DocsJsonType
 }) {
-    const loaderData = useLoaderData<typeof loader>()
+    const loaderData = useLoaderData<typeof loader>() || {}
     const { i18n, previewWebsocketId } = loaderData
 
     useEffect(() => {
@@ -508,6 +509,7 @@ function DocsLayoutWrapper({
     const tree = useMemo(() => {
         const { files, i18n, githubFolder } = loaderData
 
+        if (!files) return {}
         function removeGithubFolder(p) {
             if (p.startsWith('/')) {
                 p = p.slice(1)
@@ -738,9 +740,10 @@ function PreviewBanner({ websocketId }: { websocketId?: string }) {
     )
 }
 
-function UserBanner({ banner }: { banner?: any }) {
+function UserBanner({ docsJson }: { docsJson?: any }) {
     const [dismissed, setDismissed] = useState(false)
-    const { bannerAst } = useLoaderData<typeof loader>()
+    const { bannerAst } = useLoaderData<typeof loader>() || {}
+    const banner = docsJson?.banner
 
     if (!banner || dismissed) return null
 

@@ -150,7 +150,11 @@ export const app = new Spiceflow({ basePath: '/api' })
                     },
                 },
                 include: {
-                    githubInstallations: true,
+                    githubInstallations: {
+                        where: {
+                            appId: env.GITHUB_APP_ID!,
+                        },
+                    },
                     branches: {
                         where: {
                             githubBranch,
@@ -397,6 +401,9 @@ export const app = new Spiceflow({ basePath: '/api' })
                 },
                 include: {
                     githubInstallations: {
+                        where: {
+                            appId: env.GITHUB_APP_ID,
+                        },
                         include: {
                             github: true,
                         },
@@ -579,6 +586,9 @@ export const app = new Spiceflow({ basePath: '/api' })
                     site: {
                         include: {
                             githubInstallations: {
+                                where: {
+                                    appId: env.GITHUB_APP_ID,
+                                },
                                 include: {
                                     github: true,
                                 },
@@ -673,6 +683,10 @@ export const app = new Spiceflow({ basePath: '/api' })
                         site: {
                             include: {
                                 githubInstallations: {
+                                    where: {
+                                        appId: env.GITHUB_APP_ID,
+                                    },
+
                                     include: {
                                         github: true,
                                     },

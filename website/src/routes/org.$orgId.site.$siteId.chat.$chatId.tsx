@@ -1,7 +1,24 @@
 import { prisma } from 'db'
+import { useState } from 'react'
+import {
+    Popover,
+    PopoverTrigger,
+    PopoverContent,
+} from '../components/ui/popover'
+import { AlertCircle, X } from 'lucide-react'
+import {
+    Tooltip,
+    TooltipTrigger,
+    TooltipContent,
+} from '../components/ui/tooltip'
 import memoize from 'micro-memoize'
 import { useEffect, useMemo, useRef } from 'react'
-import { useLoaderData, useRouteLoaderData, Link } from 'react-router'
+import {
+    useLoaderData,
+    useRouteLoaderData,
+    Link,
+    useParams,
+} from 'react-router'
 import { AppSidebar } from '../components/app-sidebar'
 import { BrowserWindow } from '../components/browser-window'
 import { SidebarInset, SidebarProvider } from '../components/ui/sidebar'
@@ -20,6 +37,8 @@ import { env } from 'docs-website/src/lib/env'
 import { formatDistanceToNow } from 'date-fns'
 import { Button } from '../components/ui/button'
 import { GithubIcon } from 'lucide-react'
+import { useThrowingFn } from '../lib/hooks'
+import { apiClient } from '../lib/spiceflow-client'
 
 export type { Route }
 
@@ -258,6 +277,7 @@ function Content() {
                 <div className='grow'></div>
                 <GithubRepoButton />
                 <GitHubSyncStatus />
+                <GitHubSyncButton />
             </div>
 
             <div className='flex grow flex-col'>
@@ -402,6 +422,7 @@ function GitHubSyncStatus() {
     ) {
         return null
     }
+    if (!siteData.site.githubInstallations?.length) return null
 
     const timeAgo = formatDistanceToNow(new Date(siteBranch.lastGithubSyncAt), {
         addSuffix: true,
@@ -419,5 +440,108 @@ function GitHubSyncStatus() {
                 </Link>
             </Button>
         </div>
+    )
+}
+
+function InlineErrorMessagePopoverContent({
+    errorMessage,
+    onClear,
+}: {
+    errorMessage: string
+    onClear: () => void
+}) {
+    if (!errorMessage) return null
+    return (
+        <>
+            <div
+                style={{
+                    pointerEvents: 'auto',
+                }}
+                className='fixed inset-0 z-50 bg-black/20 transition-all duration-100'
+            />
+            <PopoverContent className='w-full min-w-[200px] z-50 max-w-[400px]'>
+                <div className='flex items-start gap-3 '>
+                    <AlertCircle className='size-5 text-destructive mt-0.5 flex-shrink-0' />
+                    <div className='grow'>
+                        <h4 className='font-medium  mb-1'>Error</h4>
+                        <p className='text-sm '>{errorMessage}</p>
+                    </div>
+                    <Button
+                        variant='ghost'
+                        size='sm'
+                        className='p-1 h-auto hover:text-destructive hover:bg-destructive/10'
+                        onClick={onClear}
+                    >
+                        <X className='size-4' />
+                    </Button>
+                </div>
+            </PopoverContent>
+        </>
+    )
+}
+
+function GitHubSyncButton() {
+    const { siteId } = useParams()
+    const siteData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId',
+    ) as SiteRoute.ComponentProps['loaderData']
+    const chatData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId.chat.$chatId',
+    ) as Route.ComponentProps['loaderData'] | undefined
+    const githubBranch = chatData?.siteBranch?.githubBranch
+
+    const [errorMessage, setErrorMessage] = useState('')
+
+    const { fn: sync, isLoading } = useThrowingFn({
+        async fn() {
+            try {
+                if (!siteId || !githubBranch) return
+                const { error } = await apiClient.api.githubSync.post({
+                    siteId,
+                    githubBranch,
+                })
+                if (error) throw error
+            } catch (err) {
+                setErrorMessage(err.message)
+            }
+        },
+    })
+
+    if (!githubBranch) {
+        return null
+    }
+
+    if (!siteData.site.githubInstallations?.length) return null
+
+    return (
+        <Popover
+            open={!!errorMessage}
+            onOpenChange={(open) => {
+                if (!open) setErrorMessage('')
+            }}
+        >
+            <PopoverTrigger asChild>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                            isLoading={isLoading}
+                            onClick={sync}
+                            variant='secondary'
+                            disabled={isLoading}
+                        >
+                            Sync With GitHub
+                        </Button>
+                    </TooltipTrigger>
+                    {isLoading && (
+                        <TooltipContent>Syncing with GitHub...</TooltipContent>
+                    )}
+                </Tooltip>
+            </PopoverTrigger>
+
+            <InlineErrorMessagePopoverContent
+                errorMessage={errorMessage}
+                onClear={() => setErrorMessage('')}
+            />
+        </Popover>
     )
 }
