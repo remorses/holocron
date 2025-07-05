@@ -47,6 +47,10 @@
         "fumabase-2v6e66mi.localhost",
         "docs.fumabase.com"
     ],
+    "tabs": [{
+      "tab": "API",
+      "openapi": "https://raw.githubusercontent.com/fuma-nama/fumadocs/main/examples/openapi/openapi.json"
+    }],
     "favicon": {
         "dark": "/favicon.svg",
         "light": "/favicon.svg"
