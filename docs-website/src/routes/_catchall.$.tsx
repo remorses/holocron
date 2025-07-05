@@ -1,5 +1,6 @@
 import { MediaAsset, PageMediaAsset, prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
+import { OpenAPIPage } from 'docs-website/src/components/openapi-page'
 import {
     data,
     isRouteErrorResponse,
@@ -232,7 +233,10 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         }),
     ])
 
-    const { openapiDocument } = await getOpenapiDocument({ docsJson, url })
+    const { openapiDocument, operations } = await getOpenapiDocument({
+        docsJson,
+        url,
+    })
     if (openapiDocument) {
         return {
             type: 'openapi' as const,
@@ -247,6 +251,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             slug,
             lastEditedAt: new Date(),
             openapiDocument,
+            operations,
         }
     }
 
@@ -344,8 +349,16 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 }
 
 export default function Page(props: Route.ComponentProps) {
-    const { type } = props.loaderData || {}
+    const { type } = props.loaderData
     if (type === 'openapi') {
+        const { openapiDocument, operations } = props.loaderData || {}
+        return (
+            <OpenAPIPage
+                hasHead
+                operations={operations}
+                openapiDocument={openapiDocument}
+            />
+        )
     }
     return <PageContent {...props} />
 }

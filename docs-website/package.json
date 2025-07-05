@@ -32,6 +32,7 @@
     "@react-router/fs-routes": "^7.6.2",
     "@react-router/node": "^7.6.2",
     "@react-router/serve": "^7.6.2",
+    "@scalar/openapi-parser": "0.18.0",
     "@sentry/browser": "^9.28.1",
     "@sentry/node": "^9.28.1",
     "@shikijs/langs": "^3.6.0",
