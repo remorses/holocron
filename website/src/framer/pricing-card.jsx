@@ -5,25 +5,28 @@
 
 /**
  * @typedef Locale
- * A string that represents the locale.
+ * string
  */
 
 /**
- * @typedef Props
- * @property {React.ReactNode} [children] - The children components.
- * @property {Locale} [locale] - The active locale.
- * @property {React.CSSProperties} [style] - The component styles.
- * @property {string} [className] - Additional class names for the component.
- * @property {string} [id] - The component id.
- * @property {*} [width] - The component width.
- * @property {*} [height] - The component height.
- * @property {string} [layoutId] - The layout id.
- * @property {'Core Plan - monthly' | 'Vision Plan - monthly' | 'Core Plan - annually' | 'Vision Plan - annually'} [variant] - Variant
- * @property {string} [planName] - Plan Name
- * @property {string} [monthlyPricing] - Monthly Pricing
- * @property {string} [annuallyPricing] - Annually Pricing
- * @property {string} [billed] - Billed
- * @property {'Light Arrow' | 'Orange' | 'Border' | 'Light Arrow - L' | 'Orange - L' | 'Border - L' | 'Light Arrow - Phone' | 'Border - Phone' | 'Orange - Phone'} [variant] - Variant
+ * @typedef {{
+ * children?: React.ReactNode
+ * locale?: Locale
+ * style?: React.CSSProperties
+ * className?: string
+ * id?: string
+ * ref?: any
+ * width?: any
+ * height?: any
+ * layoutId?: string
+ * variant?: 'Core Plan - monthly' | 'Vision Plan - monthly' | 'Core Plan - annually' | 'Vision Plan - annually' // Variant
+ * planName?: string // Plan Name
+ * monthlyPricing?: string // Monthly Pricing
+ * annuallyPricing?: string // Annually Pricing
+ * billed?: string // Billed
+ * variant?: 'Light Arrow' | 'Orange' | 'Border' | 'Light Arrow - L' | 'Orange - L' | 'Border - L' | 'Light Arrow - Phone' | 'Border - Phone' | 'Orange - Phone' // Variant
+}} Props
+
  */
 
 /**
@@ -75,7 +78,6 @@ function ComponentWithRoot({ locale, ...rest }) {
 /**
  * Renders PricingCardFramerComponent for all breakpoints with a variants map. Variant prop is inferred per breakpoint.
  * @function
- * @memberof PricingCardFramerComponent
  * @param {Omit<Props, 'variant'> & {variants?: VariantsMap}} props
  * @returns {any}
  */

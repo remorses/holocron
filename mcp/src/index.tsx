@@ -155,13 +155,14 @@ export async function MCPPage({
     renderContext = {},
 }: MCPPageProps) {
     // Create a basic context for rendering schemas
-    const dummyDocument = {
+
+    const document = await processDocument({
         openapi: '3.1.0',
         info: { title: 'MCP Tool', version: '1.0.0' },
-        paths: {},
-    }
 
-    const document = await processDocument(dummyDocument)
+        servers: serverUrl ? [{ url: serverUrl }] : [],
+        paths: {},
+    })
     const ctx = await getContext(document, renderContext)
 
     return (
@@ -269,10 +270,10 @@ export function MCPTool({
         const title = tool.annotations?.title || tool.name
 
         headNode = (
-            <>
+            <div className='[&>*:first-child]:mt-0'>
                 {heading(headingLevel, title, ctx)}
                 {tool.description && <Markdown text={tool.description} />}
-            </>
+            </div>
         )
         headingLevel++
     }
@@ -315,7 +316,7 @@ export function MCPTool({
     return (
         <div className='flex  flex-col lg:flex-row gap-6'>
             <div className='max-w-[600px] '>
-                <CodeExampleProvider examples={[{ key: '1', data: {} }]}>
+                {/* <CodeExampleProvider examples={[{ key: '1', data: {} }]}>
                     <APIPlayground
                         path={`/tools/${tool.name}`}
                         method={{
@@ -331,14 +332,14 @@ export function MCPTool({
                         }}
                         ctx={ctx}
                     />
-                </CodeExampleProvider>
+                </CodeExampleProvider> */}
                 <ctx.renderer.APIInfo
                     head={headNode}
                     method='POST'
                     route={tool.name}
                 >
                     {/* Tool metadata */}
-                    <div className='space-y-3 mb-6'>
+                    <div className='space-y-3  mb-6'>
                         {tool.annotations?.readOnlyHint !== undefined && (
                             <div className='flex flex-wrap items-center gap-2'>
                                 <span className='text-sm font-medium'>
@@ -400,7 +401,10 @@ export function MCPTool({
             </div>
             <div className='flex flex-col'>
                 {chatExample && (
-                    <RightSideTabs messages={chatExample} toolName={tool.name} />
+                    <RightSideTabs
+                        messages={chatExample}
+                        toolName={tool.name}
+                    />
                 )}
             </div>
         </div>

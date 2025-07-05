@@ -193,7 +193,9 @@ body { --framer-will-change-override: none; --framer-will-change-effect-override
     letter-spacing: var(--letter-spacing);
     font-size: var(--font-size);
     text-transform: var(--text-transform);
-    text-decoration: var(--text-decoration);
+    --text-decoration: var(--framer-text-decoration-style, solid) var(--framer-text-decoration, none) var(--framer-text-decoration-color, currentcolor) var(--framer-text-decoration-thickness, auto);
+    --text-decoration-skip-ink: var(--framer-text-decoration-skip-ink);
+    --text-underline-offset: var(--framer-text-decoration-offset);
     line-height: var(--line-height);
 }
 
@@ -215,7 +217,9 @@ body { --framer-will-change-override: none; --framer-will-change-effect-override
     --letter-spacing: var(--framer-letter-spacing);
     --font-size: var(--framer-font-size);
     --text-transform: var(--framer-text-transform);
-    --text-decoration: var(--framer-text-decoration);
+    --text-decoration: var(--framer-text-decoration-style, solid) var(--framer-text-decoration, none) var(--framer-text-decoration-color, currentcolor) var(--framer-text-decoration-thickness, auto);
+    --text-decoration-skip-ink: var(--framer-text-decoration-skip-ink);
+    --text-underline-offset: var(--framer-text-decoration-offset);
     --line-height: var(--framer-line-height);
 }
 
@@ -235,7 +239,9 @@ body { --framer-will-change-override: none; --framer-will-change-effect-override
     --text-color: var(--framer-link-text-color, var(--framer-text-color));
     --font-size: var(--framer-link-font-size, var(--framer-font-size));
     --text-transform: var(--framer-link-text-transform, var(--framer-text-transform));
-    --text-decoration: var(--framer-link-text-decoration, var(--framer-text-decoration));
+    --text-decoration: var(--framer-link-text-decoration-style, var(--framer-text-decoration-style, solid)) var(--framer-link-text-decoration, var(--framer-text-decoration, none)) var(--framer-link-text-decoration-color, var(--framer-text-decoration-color, currentcolor)) var(--framer-link-text-decoration-thickness, var(--framer-text-decoration-thickness, auto));
+    --text-decoration-skip-ink: var(--framer-link-text-decoration-skip-ink, var(--framer-text-decoration-skip-ink));
+    --text-underline-offset: var(--framer-link-text-decoration-offset, var(--framer-text-decoration-offset));
 }
 
 [data-framer-component-type="Text"] a:hover,
@@ -254,7 +260,9 @@ body { --framer-will-change-override: none; --framer-will-change-effect-override
     --text-color: var(--framer-link-hover-text-color, var(--framer-link-text-color, var(--framer-text-color)));
     --font-size: var(--framer-link-hover-font-size, var(--framer-link-font-size, var(--framer-font-size)));
     --text-transform: var(--framer-link-hover-text-transform, var(--framer-link-text-transform, var(--framer-text-transform)));
-    --text-decoration: var(--framer-link-hover-text-decoration, var(--framer-link-text-decoration, var(--framer-text-decoration)));
+    --text-decoration: var(--framer-link-hover-text-decoration-style, var(--framer-link-text-decoration-style, var(--framer-text-decoration-style, solid))) var(--framer-link-hover-text-decoration, var(--framer-link-text-decoration, var(--framer-text-decoration, none))) var(--framer-link-hover-text-decoration-color, var(--framer-link-text-decoration-color, var(--framer-text-decoration-color, currentcolor))) var(--framer-link-hover-text-decoration-thickness, var(--framer-link-text-decoration-thickness, var(--framer-text-decoration-thickness, auto)));
+    --text-decoration-skip-ink: var(--framer-link-hover-text-decoration-skip-ink, var(--framer-link-text-decoration-skip-ink, var(--framer-text-decoration-skip-ink)));
+    --text-underline-offset: var(--framer-link-hover-text-decoration-offset, var(--framer-link-text-decoration-offset, var(--framer-text-decoration-offset)));
 }
 
 [data-framer-component-type="Text"].isCurrent a,
@@ -273,7 +281,9 @@ body { --framer-will-change-override: none; --framer-will-change-effect-override
     --text-color: var(--framer-link-current-text-color, var(--framer-link-text-color, var(--framer-text-color)));
     --font-size: var(--framer-link-current-font-size, var(--framer-link-font-size, var(--framer-font-size)));
     --text-transform: var(--framer-link-current-text-transform, var(--framer-link-text-transform, var(--framer-text-transform)));
-    --text-decoration: var(--framer-link-current-text-decoration, var(--framer-link-text-decoration, var(--framer-text-decoration)));
+    --text-decoration: var(--framer-link-current-text-decoration-style, var(--framer-link-text-decoration-style, var(--framer-text-decoration-style, solid))) var(--framer-link-current-text-decoration, var(--framer-link-text-decoration, var(--framer-text-decoration, none))) var(--framer-link-current-text-decoration-color, var(--framer-link-text-decoration-color, var(--framer-text-decoration-color, currentcolor))) var(--framer-link-current-text-decoration-thickness, var(--framer-link-text-decoration-thickness, var(--framer-text-decoration-thickness, auto)));
+    --text-decoration-skip-ink: var(--framer-link-current-text-decoration-skip-ink, var(--framer-link-text-decoration-skip-ink, var(--framer-text-decoration-skip-ink)));
+    --text-underline-offset: var(--framer-link-current-text-decoration-offset, var(--framer-link-text-decoration-offset, var(--framer-text-decoration-offset)));
 }
 
         p.framer-text,
@@ -311,7 +321,12 @@ body { --framer-will-change-override: none; --framer-will-change-effect-override
             font-size: calc(var(--framer-blockquote-font-size, var(--framer-font-size, 16px)) * var(--framer-font-size-scale, 1));
             letter-spacing: var(--framer-blockquote-letter-spacing, var(--framer-letter-spacing, 0));
             text-transform: var(--framer-blockquote-text-transform, var(--framer-text-transform, none));
-            text-decoration: var(--framer-blockquote-text-decoration, var(--framer-text-decoration, none));
+            text-decoration-line: var(--framer-blockquote-text-decoration, var(--framer-text-decoration, initial));
+            text-decoration-style: var(--framer-blockquote-text-decoration-style, var(--framer-text-decoration-style, initial));
+            text-decoration-color: var(--framer-blockquote-text-decoration-color, var(--framer-text-decoration-color, initial));
+            text-decoration-thickness: var(--framer-blockquote-text-decoration-thickness, var(--framer-text-decoration-thickness, initial));
+            text-decoration-skip-ink: var(--framer-blockquote-text-decoration-skip-ink, var(--framer-text-decoration-skip-ink, initial));
+            text-underline-offset: var(--framer-blockquote-text-decoration-offset, var(--framer-text-decoration-offset, initial));
             line-height: var(--framer-blockquote-line-height, var(--framer-line-height, 1.2em));
             text-align: var(--framer-blockquote-text-alignment, var(--framer-text-alignment, start));
             -webkit-text-stroke-width: var(--framer-text-stroke-width, initial);
@@ -447,9 +462,19 @@ body { --framer-will-change-override: none; --framer-will-change-effect-override
             color: var(--framer-blockquote-text-color, var(--framer-link-text-color, var(--framer-text-color, #000)));
             font-size: calc(var(--framer-blockquote-font-size, var(--framer-font-size, 16px)) * var(--framer-font-size-scale, 1));
             text-transform: var(--framer-blockquote-text-transform, var(--framer-link-text-transform, var(--framer-text-transform, none)));
-            text-decoration: var(--framer-blockquote-text-decoration, var(--framer-link-text-decoration, var(--framer-text-decoration, none)));
             /* Cursor inherit to overwrite the user agent stylesheet on rich text links. */
             cursor: var(--framer-custom-cursors, pointer);
+        }
+    
+
+        a.framer-text,
+        span.framer-text[data-nested-link] {
+            text-decoration-line: var(--framer-blockquote-text-decoration, var(--framer-link-text-decoration, var(--framer-text-decoration, initial)));
+            text-decoration-style: var(--framer-blockquote-text-decoration-style, var(--framer-link-text-decoration-style, var(--framer-text-decoration-style, initial)));
+            text-decoration-color: var(--framer-blockquote-text-decoration-color, var(--framer-link-text-decoration-color, var(--framer-text-decoration-color, initial)));
+            text-decoration-thickness: var(--framer-blockquote-text-decoration-thickness, var(--framer-link-text-decoration-thickness, var(--framer-text-decoration-thickness, initial)));
+            text-decoration-skip-ink: var(--framer-blockquote-text-decoration-skip-ink, var(--framer-link-text-decoration-skip-ink, var(--framer-text-decoration-skip-ink, initial)));
+            text-underline-offset: var(--framer-blockquote-text-decoration-offset, var(--framer-link-text-decoration-offset, var(--framer-text-decoration-offset, initial)));
         }
     
 
@@ -495,7 +520,17 @@ body { --framer-will-change-override: none; --framer-will-change-effect-override
             color: var(--framer-link-hover-text-color, var(--framer-blockquote-text-color, var(--framer-link-text-color, var(--framer-text-color, #000))));
             font-size: calc(var(--framer-link-hover-font-size, var(--framer-blockquote-font-size, var(--framer-font-size, 16px))) * var(--framer-font-size-scale, 1));
             text-transform: var(--framer-link-hover-text-transform, var(--framer-blockquote-text-transform, var(--framer-link-text-transform, var(--framer-text-transform, none))));
-            text-decoration: var(--framer-link-hover-text-decoration, var(--framer-blockquote-text-decoration, var(--framer-link-text-decoration, var(--framer-text-decoration, none))));
+        }
+    
+
+        a.framer-text:hover,
+        span.framer-text[data-nested-link]:hover {
+            text-decoration-line: var(--framer-link-hover-text-decoration, var(--framer-blockquote-text-decoration, var(--framer-link-text-decoration, var(--framer-text-decoration, initial))));
+            text-decoration-style: var(--framer-link-hover-text-decoration-style, var(--framer-blockquote-text-decoration-style, var(--framer-link-text-decoration-style, var(--framer-text-decoration-style, initial))));
+            text-decoration-color: var(--framer-link-hover-text-decoration-color, var(--framer-blockquote-text-decoration-color, var(--framer-link-text-decoration-color, var(--framer-text-decoration-color, initial))));
+            text-decoration-thickness: var(--framer-link-hover-text-decoration-thickness, var(--framer-blockquote-text-decoration-thickness, var(--framer-link-text-decoration-thickness, var(--framer-text-decoration-thickness, initial))));
+            text-decoration-skip-ink: var(--framer-link-hover-text-decoration-skip-ink, var(--framer-blockquote-text-decoration-skip-ink, var(--framer-link-text-decoration-skip-ink, var(--framer-text-decoration-skip-ink, initial))));
+            text-underline-offset: var(--framer-link-hover-text-decoration-offset, var(--framer-blockquote-text-decoration-offset, var(--framer-link-text-decoration-offset, var(--framer-text-decoration-offset, initial))));
         }
     
 
@@ -541,7 +576,17 @@ body { --framer-will-change-override: none; --framer-will-change-effect-override
             color: var(--framer-link-current-text-color, var(--framer-link-text-color, var(--framer-text-color, #000)));
             font-size: calc(var(--framer-link-current-font-size, var(--framer-link-font-size, var(--framer-font-size, 16px))) * var(--framer-font-size-scale, 1));
             text-transform: var(--framer-link-current-text-transform, var(--framer-link-text-transform, var(--framer-text-transform, none)));
-            text-decoration: var(--framer-link-current-text-decoration, var(--framer-link-text-decoration, var(--framer-text-decoration, none)));
+        }
+    
+
+        a.framer-text[data-framer-page-link-current],
+        span.framer-text[data-framer-page-link-current] {
+            text-decoration-line: var(--framer-link-current-text-decoration, var(--framer-link-text-decoration, var(--framer-text-decoration, initial)));
+            text-decoration-style: var(--framer-link-current-text-decoration-style, var(--framer-link-text-decoration-style, var(--framer-text-decoration-style, initial)));
+            text-decoration-color: var(--framer-link-current-text-decoration-color, var(--framer-link-text-decoration-color, var(--framer-text-decoration-color, initial)));
+            text-decoration-thickness: var(--framer-link-current-text-decoration-thickness, var(--framer-link-text-decoration-thickness, var(--framer-text-decoration-thickness, initial)));
+            text-decoration-skip-ink: var(--framer-link-current-text-decoration-skip-ink, var(--framer-link-text-decoration-skip-ink, var(--framer-text-decoration-skip-ink, initial)));
+            text-underline-offset: var(--framer-link-current-text-decoration-offset, var(--framer-link-text-decoration-offset, var(--framer-text-decoration-offset, initial)));
         }
     
 
@@ -587,7 +632,17 @@ body { --framer-will-change-override: none; --framer-will-change-effect-override
             color: var(--framer-link-hover-text-color, var(--framer-link-current-text-color, var(--framer-link-text-color, var(--framer-text-color, #000))));
             font-size: calc(var(--framer-link-hover-font-size, var(--framer-link-current-font-size, var(--framer-link-font-size, var(--framer-font-size, 16px)))) * var(--framer-font-size-scale, 1));
             text-transform: var(--framer-link-hover-text-transform, var(--framer-link-current-text-transform, var(--framer-link-text-transform, var(--framer-text-transform, none))));
-            text-decoration: var(--framer-link-hover-text-decoration, var(--framer-link-current-text-decoration, var(--framer-link-text-decoration, var(--framer-text-decoration, none))));
+        }
+    
+
+        a.framer-text[data-framer-page-link-current]:hover,
+        span.framer-text[data-framer-page-link-current]:hover {
+            text-decoration-line: var(--framer-link-hover-text-decoration, var(--framer-link-current-text-decoration, var(--framer-link-text-decoration, var(--framer-text-decoration, initial))));
+            text-decoration-style: var(--framer-link-hover-text-decoration-style, var(--framer-link-current-text-decoration-style, var(--framer-link-text-decoration-style, var(--framer-text-decoration-style, initial))));
+            text-decoration-color: var(--framer-link-hover-text-decoration-color, var(--framer-link-current-text-decoration-color, var(--framer-link-text-decoration-color, var(--framer-text-decoration-color, initial))));
+            text-decoration-thickness: var(--framer-link-hover-text-decoration-thickness, var(--framer-link-current-text-decoration-thickness, var(--framer-link-text-decoration-thickness, var(--framer-text-decoration-thickness, initial))));
+            text-decoration-skip-ink: var(--framer-link-hover-text-decoration-skip-ink, var(--framer-link-current-text-decoration-skip-ink, var(--framer-link-text-decoration-skip-ink, var(--framer-text-decoration-skip-ink, initial))));
+            text-underline-offset: var(--framer-link-hover-text-decoration-offset, var(--framer-link-current-text-decoration-offset, var(--framer-link-text-decoration-offset, var(--framer-text-decoration-offset, initial))));
         }
     
 
@@ -639,6 +694,11 @@ body { --framer-will-change-override: none; --framer-will-change-effect-override
             --framer-letter-spacing: 0;
             --framer-text-transform: none;
             --framer-text-decoration: none;
+            --framer-text-decoration-style: none;
+            --framer-text-decoration-color: none;
+            --framer-text-decoration-thickness: none;
+            --framer-text-decoration-skip-ink: none;
+            --framer-text-decoration-offset: none;
             --framer-line-height: 1.2em;
             --framer-text-alignment: start;
             --framer-font-open-type-features: normal;
@@ -1007,9 +1067,9 @@ NavigationContainer
 [data-framer-component-type="ScrollContentWrapper"] > * { position: relative; }
 [data-framer-component-type="NativeScroll"] { -webkit-overflow-scrolling: touch; }
 [data-framer-component-type="NativeScroll"] > * { position: relative; }
-[data-framer-component-type="NativeScroll"].direction-both { overflow-x: scroll; overflow-y: scroll; }
-[data-framer-component-type="NativeScroll"].direction-vertical { overflow-x: hidden; overflow-y: scroll; }
-[data-framer-component-type="NativeScroll"].direction-horizontal { overflow-x: scroll; overflow-y: hidden; }
+[data-framer-component-type="NativeScroll"].direction-both { overflow-x: auto; overflow-y: auto; }
+[data-framer-component-type="NativeScroll"].direction-vertical { overflow-x: hidden; overflow-y: auto; }
+[data-framer-component-type="NativeScroll"].direction-horizontal { overflow-x: auto; overflow-y: hidden; }
 [data-framer-component-type="NativeScroll"].direction-vertical > * { width: 100% !important; }
 [data-framer-component-type="NativeScroll"].direction-horizontal > * { height: 100% !important; }
 [data-framer-component-type="NativeScroll"].scrollbar-hidden::-webkit-scrollbar { display: none; }

@@ -5,22 +5,25 @@
 
 /**
  * @typedef Locale
- * A string that represents the locale.
+ * string
  */
 
 /**
- * @typedef Props
- * @property {React.ReactNode} [children] - The children components.
- * @property {Locale} [locale] - The active locale.
- * @property {React.CSSProperties} [style] - The component styles.
- * @property {string} [className] - Additional class names for the component.
- * @property {string} [id] - The component id.
- * @property {*} [width] - The component width.
- * @property {*} [height] - The component height.
- * @property {string} [layoutId] - The layout id.
- * @property {'Open' | 'Closed'} [variant] - Variant
- * @property {string} [title] - Title
- * @property {string} [content] - Content
+ * @typedef {{
+ * children?: React.ReactNode
+ * locale?: Locale
+ * style?: React.CSSProperties
+ * className?: string
+ * id?: string
+ * ref?: any
+ * width?: any
+ * height?: any
+ * layoutId?: string
+ * variant?: 'Open' | 'Closed' // Variant
+ * title?: string // Title
+ * content?: string // Content
+}} Props
+
  */
 
 /**
@@ -44,7 +47,7 @@ import { WithFramerBreakpoints } from "unframer";
 import { jsx } from "react/jsx-runtime";
 var locales = [];
 var defaultResponsiveVariants = {
-	base: "sTHF6uWTY",
+	base: "G8PiTZbU_",
 };
 /** @type {function(Props): any} */
 function ComponentWithRoot({ locale, ...rest }) {
@@ -66,7 +69,6 @@ function ComponentWithRoot({ locale, ...rest }) {
 /**
  * Renders FaqFramerComponent for all breakpoints with a variants map. Variant prop is inferred per breakpoint.
  * @function
- * @memberof FaqFramerComponent
  * @param {Omit<Props, 'variant'> & {variants?: VariantsMap}} props
  * @returns {any}
  */
