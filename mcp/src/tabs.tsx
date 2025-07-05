@@ -20,13 +20,13 @@ export interface ChatExampleProps {
 /**
  * Component for displaying chat examples - needs client side for interactive tabs
  */
-export function ChatExample({ messages, toolName }: ChatExampleProps) {
+export function RightSideTabs({ messages, toolName }: ChatExampleProps) {
     return (
-        <Tabs className='m-0 lg:w-[700px]' items={['Chat', 'Responses']}>
-            <Tab value='Chat'>
-              <Chat />
+        <Tabs className='m-0 lg:w-[700px] ' items={['Chat', 'Responses']}>
+            <Tab className='p-0' value='Chat'>
+                <Chat />
             </Tab>
-            <Tab value='Responses'>
+            <Tab className='' value='Responses'>
                 <CodeBlock title=''>
                     <Pre>
                         <code className='p-3'>

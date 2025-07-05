@@ -13,9 +13,12 @@ import {
     useChatState,
 } from 'contesto/src/chat/chat-provider'
 import { ChatTextarea } from 'contesto/src/chat/chat-textarea'
+import { useStickToBottom } from 'contesto/src/lib/stick-to-bottom'
 import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
 import { ChatUploadButton } from 'contesto/src/chat/chat-upload-button'
+import { Markdown } from 'contesto/src/lib/markdown'
 import '../shadcn.css'
+import { ScrollArea } from 'contesto/src/components/ui/scroll-area'
 
 let exampleMessages: UIMessage[] = [
     {
@@ -99,15 +102,23 @@ export function Chat() {
         }),
         [],
     )
+    const { scrollRef, contentRef } = useStickToBottom({
+        initial: 'instant',
+    })
 
     return (
         <ChatProvider initialValue={initialChatState}>
-            <div className='h-full flex flex-col'>
-                <div className='flex-1 overflow-auto p-4'>
-                    <Messages />
-                    <WelcomeMessage />
+            <div className='flex flex-col max-h-[700px] '>
+                <div
+                    ref={scrollRef}
+                    className='px-3 py-4 w-full min-h-0 max-w-full max-h-full relative overflow-y-auto '
+                >
+                    <div className='flex flex-col gap-4 relative h-full justify-center'>
+                        <Messages ref={contentRef} />
+                        <WelcomeMessage />
+                        <Footer />
+                    </div>
                 </div>
-                <Footer />
             </div>
         </ChatProvider>
     )
@@ -129,13 +140,13 @@ function WelcomeMessage() {
     )
 }
 
-function Messages() {
+function Messages({ ref }) {
     const messages = useChatState((x) => x?.messages)
 
     if (!messages?.length) return null
 
     return (
-        <div className='flex flex-col gap-6 pb-4'>
+        <div ref={ref} className='flex flex-col gap-6 pb-4'>
             {messages.map((message) => (
                 <MessageRenderer key={message.id} message={message} />
             ))}
@@ -153,12 +164,12 @@ function MessageRenderer({ message }: { message: UIMessage }) {
                 {message.parts.map((part, index) => {
                     if (part.type === 'text') {
                         return (
-                            <div
+                            <Markdown
                                 key={index}
+                                markdown={part.text}
+                                isStreaming={isChatGenerating}
                                 className='prose prose-sm max-w-none'
-                            >
-                                {part.text}
-                            </div>
+                            />
                         )
                     }
                     return null
@@ -172,9 +183,12 @@ function MessageRenderer({ message }: { message: UIMessage }) {
             {message.parts.map((part, index) => {
                 if (part.type === 'text') {
                     return (
-                        <div key={index} className='prose prose-sm max-w-none'>
-                            {part.text}
-                        </div>
+                        <Markdown
+                            key={index}
+                            markdown={part.text}
+                            isStreaming={isChatGenerating}
+                            className='prose prose-sm max-w-none'
+                        />
                     )
                 }
                 return null
@@ -197,38 +211,35 @@ function Footer() {
     }
 
     return (
-        <div className='p-2'>
-            <div className='max-w-4xl mx-auto'>
-                <div className='flex flex-col gap-3 p-4 border rounded-lg bg-card'>
-                    <ChatTextarea
-                        onSubmit={onSubmit}
-                        disabled={isPending}
-                        placeholder='Type your message...'
-                        className='min-h-[60px] resize-none'
-                        autoFocus
-                    />
+        <div className=' sticky bottom-0 z-50 w-full mt-2'>
+            <div className='flex flex-col text-sm gap-3 p-2 border rounded-lg bg-card'>
+                <ChatTextarea
+                    onSubmit={onSubmit}
+                    disabled={isPending}
+                    placeholder='Type your message...'
+                    className='min-h-[30px] p-2 text-sm resize-none'
+                    rows={1}
+                    autoFocus
+                />
 
-                    <div className='flex items-center justify-between'>
-                        <div className='flex items-center gap-2'>
-                            <ChatUploadButton
-                                accept='image/*,text/*,.pdf,.docx,.doc'
-                                onFilesChange={(files) => {
-                                    console.log('Files uploaded:', files)
-                                }}
-                            />
-                            <ChatRecordButton
-                                transcribeAudio={transcribeAudio}
-                            />
-                        </div>
-
-                        <button
-                            onClick={onSubmit}
-                            disabled={isPending || !text.trim()}
-                            className='px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'
-                        >
-                            {isPending ? 'Sending...' : 'Send'}
-                        </button>
+                <div className='flex items-center justify-between'>
+                    <div className='flex items-center gap-2'>
+                        <ChatUploadButton
+                            accept='image/*,text/*,.pdf,.docx,.doc'
+                            onFilesChange={(files) => {
+                                console.log('Files uploaded:', files)
+                            }}
+                        />
+                        <ChatRecordButton transcribeAudio={transcribeAudio} />
                     </div>
+
+                    <button
+                        onClick={onSubmit}
+                        disabled={isPending || !text.trim()}
+                        className='px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'
+                    >
+                        {isPending ? 'Sending...' : 'Send'}
+                    </button>
                 </div>
             </div>
         </div>

@@ -22,7 +22,7 @@ import { MethodLabel } from 'fumadocs-openapi/ui/components/method-label'
 import type { ResolvedSchema } from 'fumadocs-openapi/utils/schema'
 import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
-import { ChatExample } from './client'
+import { RightSideTabs } from './tabs'
 import { APIPlayground } from 'fumadocs-openapi/playground'
 import { CodeExampleProvider } from 'fumadocs-openapi/ui/lazy'
 import { Chat } from './chat'
@@ -207,7 +207,7 @@ export async function MCPServerPage({
     if (hasHead) {
         const title = server.title || server.name
         headNode = (
-            <>
+            <div className='flex flex-col lg:max-w-[700px]'>
                 {heading(1, title, ctx)}
                 {server.description && <Markdown text={server.description} />}
                 {server.url && (
@@ -226,7 +226,7 @@ export async function MCPServerPage({
                         </span>
                     </div>
                 )}
-            </>
+            </div>
         )
     }
 
@@ -312,66 +312,6 @@ export function MCPTool({
         )
     }
 
-    const toolInfo = (
-        <ctx.renderer.APIInfo head={headNode} method='POST' route={tool.name}>
-            {/* Tool metadata */}
-            <div className='space-y-3 mb-6'>
-                {tool.annotations?.readOnlyHint !== undefined && (
-                    <div className='flex flex-wrap items-center gap-2'>
-                        <span className='text-sm font-medium'>Read-only:</span>
-                        <span className='text-sm text-fd-muted-foreground'>
-                            {tool.annotations.readOnlyHint
-                                ? 'This tool does not modify its environment'
-                                : 'This tool may modify its environment'}
-                        </span>
-                    </div>
-                )}
-
-                {tool.annotations?.destructiveHint !== undefined &&
-                    !tool.annotations?.readOnlyHint && (
-                        <div className='flex flex-wrap items-center gap-2'>
-                            <span className='text-sm font-medium'>
-                                Destructive:
-                            </span>
-                            <span className='text-sm text-fd-muted-foreground'>
-                                {tool.annotations.destructiveHint
-                                    ? 'This tool may perform destructive updates'
-                                    : 'This tool performs only additive updates'}
-                            </span>
-                        </div>
-                    )}
-
-                {tool.annotations?.idempotentHint !== undefined &&
-                    !tool.annotations?.readOnlyHint && (
-                        <div className='flex flex-wrap items-center gap-2'>
-                            <span className='text-sm font-medium'>
-                                Idempotent:
-                            </span>
-                            <span className='text-sm text-fd-muted-foreground'>
-                                {tool.annotations.idempotentHint
-                                    ? 'Repeated calls with same arguments have no additional effect'
-                                    : 'Repeated calls may have additional effects'}
-                            </span>
-                        </div>
-                    )}
-
-                {tool.annotations?.openWorldHint !== undefined && (
-                    <div className='flex flex-wrap items-center gap-2'>
-                        <span className='text-sm font-medium'>Open-world:</span>
-                        <span className='text-sm text-fd-muted-foreground'>
-                            {tool.annotations.openWorldHint
-                                ? 'This tool interacts with external entities'
-                                : 'This tool operates in a closed domain'}
-                        </span>
-                    </div>
-                )}
-            </div>
-
-            {inputSchemaNode}
-            {outputSchemaNode}
-        </ctx.renderer.APIInfo>
-    )
-
     return (
         <div className='flex  flex-col lg:flex-row gap-6'>
             <div className='max-w-[600px] '>
@@ -392,11 +332,77 @@ export function MCPTool({
                         ctx={ctx}
                     />
                 </CodeExampleProvider>
-                {toolInfo}
+                <ctx.renderer.APIInfo
+                    head={headNode}
+                    method='POST'
+                    route={tool.name}
+                >
+                    {/* Tool metadata */}
+                    <div className='space-y-3 mb-6'>
+                        {tool.annotations?.readOnlyHint !== undefined && (
+                            <div className='flex flex-wrap items-center gap-2'>
+                                <span className='text-sm font-medium'>
+                                    Read-only:
+                                </span>
+                                <span className='text-sm text-fd-muted-foreground'>
+                                    {tool.annotations.readOnlyHint
+                                        ? 'This tool does not modify its environment'
+                                        : 'This tool may modify its environment'}
+                                </span>
+                            </div>
+                        )}
+
+                        {tool.annotations?.destructiveHint !== undefined &&
+                            !tool.annotations?.readOnlyHint && (
+                                <div className='flex flex-wrap items-center gap-2'>
+                                    <span className='text-sm font-medium'>
+                                        Destructive:
+                                    </span>
+                                    <span className='text-sm text-fd-muted-foreground'>
+                                        {tool.annotations.destructiveHint
+                                            ? 'This tool may perform destructive updates'
+                                            : 'This tool performs only additive updates'}
+                                    </span>
+                                </div>
+                            )}
+
+                        {tool.annotations?.idempotentHint !== undefined &&
+                            !tool.annotations?.readOnlyHint && (
+                                <div className='flex flex-wrap items-center gap-2'>
+                                    <span className='text-sm font-medium'>
+                                        Idempotent:
+                                    </span>
+                                    <span className='text-sm text-fd-muted-foreground'>
+                                        {tool.annotations.idempotentHint
+                                            ? 'Repeated calls with same arguments have no additional effect'
+                                            : 'Repeated calls may have additional effects'}
+                                    </span>
+                                </div>
+                            )}
+
+                        {tool.annotations?.openWorldHint !== undefined && (
+                            <div className='flex flex-wrap items-center gap-2'>
+                                <span className='text-sm font-medium'>
+                                    Open-world:
+                                </span>
+                                <span className='text-sm text-fd-muted-foreground'>
+                                    {tool.annotations.openWorldHint
+                                        ? 'This tool interacts with external entities'
+                                        : 'This tool operates in a closed domain'}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                    {inputSchemaNode}
+                    {outputSchemaNode}
+                </ctx.renderer.APIInfo>
             </div>
-            {chatExample && (
-                <ChatExample messages={chatExample} toolName={tool.name} />
-            )}
+            <div className='flex flex-col'>
+                {chatExample && (
+                    <RightSideTabs messages={chatExample} toolName={tool.name} />
+                )}
+            </div>
         </div>
     )
 }

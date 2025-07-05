@@ -582,20 +582,13 @@ const realChatExamples: Record<string, CoreMessage[]> = {
 
 export default async function Page() {
     return (
-        <div className='dark bg-black min-h-screen bg-background'>
-            <div className='grid grid-cols-1 lg:grid-cols-2 h-screen'>
-                <div className='overflow-auto'>
-                    <div className='container mx-auto px-4 py-8 prose prose-invert'>
-                        <MCPServerPage
-                            server={mcpServer}
-                            tools={realMCPTools.slice(0, 10)}
-                            hasHead={true}
-                            toolExamples={realChatExamples}
-                        />
-                    </div>
-                </div>
-
-            </div>
+        <div className='dark p-6 bg-black min-h-screen flex prose prose-invert flex-col items-center bg-background'>
+            <MCPServerPage
+                server={mcpServer}
+                tools={realMCPTools.slice(0, 10)}
+                hasHead={true}
+                toolExamples={realChatExamples}
+            />
         </div>
     )
 }

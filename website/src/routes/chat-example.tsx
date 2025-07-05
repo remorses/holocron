@@ -16,7 +16,7 @@ import {
 } from 'website/src/components/ui/popover'
 import { ScrollArea } from 'website/src/components/ui/scroll-area'
 import { useStickToBottom } from 'use-stick-to-bottom'
-import {fullStreamToUIMessages } from 'contesto/src/lib/process-chat'
+import { fullStreamToUIMessages } from 'contesto/src/lib/process-chat'
 import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
 import { createIdGenerator, UIMessage } from 'ai'
 

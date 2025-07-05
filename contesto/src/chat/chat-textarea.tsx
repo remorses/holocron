@@ -239,7 +239,7 @@ export function ChatTextarea({
                     )}
                     render={
                         <textarea
-                            rows={5}
+                            // rows={5}
                             ref={ref}
                             value={value}
                             placeholder={placeholder}
