@@ -60,37 +60,3 @@ export async function getFilesForSource({ branchId, githubFolder }) {
 
     return deduplicateBy(files, (file) => file.path)
 }
-
-export function getFumadocsSource({
-    files,
-    locales = [] as string[],
-    defaultLocale = 'en',
-}) {
-    const languages = locales
-    if (!languages.includes(defaultLocale)) {
-        languages.push(defaultLocale)
-    }
-
-    const source = loader<SourceData, I18nConfig>({
-        source: { files },
-        baseUrl: '/', // TODO pass here the customer base path
-        i18n: {
-            defaultLanguage: defaultLocale,
-            languages,
-            hideLocale: 'default-locale',
-        },
-        // icons are currently not used in server
-        // icon(icon) {
-        //     return getIconJsx({ key: icon })!
-        // },
-    })
-
-    return source
-}
-
-export type SourceData = {
-    pageData: PageData & {
-        structuredData: StructuredData
-    }
-    metaData: MetaData
-}

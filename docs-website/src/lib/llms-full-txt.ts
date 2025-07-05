@@ -1,6 +1,7 @@
 import { prisma } from 'db'
-import { getFilesForSource, getFumadocsSource } from './source.server'
+import { getFilesForSource,  } from './source.server'
 import { searchDocsWithTrieve } from './trieve-search'
+import { getFumadocsSource } from './source'
 
 export async function generateLlmsFullTxt({
     domain,
@@ -53,22 +54,22 @@ export async function generateLlmsFullTxt({
                 // Convert HTML mark tags to markdown bold
                 const markdownContent = result.content.replace(/<mark>/g, '**').replace(/<\/mark>/g, '**')
                 const sourceUrl = `${baseUrl}${result.url}`
-                
+
                 const section = `**Source:** ${sourceUrl}\n\n${markdownContent}\n\n━━━\n\n`
                 output += section
             }
         }
     } else {
         // No search query - return all pages
-        const locales = site.locales.map((x) => x.locale)
+        const languages = site.locales.map((x) => x.locale)
         const files = await getFilesForSource({
             branchId: siteBranch.branchId,
             githubFolder: site.githubFolder || '',
         })
         const source = getFumadocsSource({
-            defaultLocale: site.defaultLocale,
+            defaultLanguage: site.defaultLocale,
             files,
-            locales,
+            languages,
         })
         const pages = source.getPages()
         const batchSize = 5

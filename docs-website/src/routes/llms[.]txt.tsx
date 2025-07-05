@@ -1,6 +1,7 @@
 import { prisma } from 'db'
 import type { Route } from './+types/llms[.]txt'
-import { getFilesForSource, getFumadocsSource } from '../lib/source.server'
+import { getFilesForSource,  } from '../lib/source.server'
+import { getFumadocsSource } from '../lib/source'
 
 export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url)
@@ -34,15 +35,15 @@ export async function loader({ request }: Route.LoaderArgs) {
         throw new Response('Branch not found', { status: 404 })
     }
 
-    const locales = site.locales.map((x) => x.locale)
+    const languages = site.locales.map((x) => x.locale)
     const files = await getFilesForSource({
         branchId: siteBranch.branchId,
         githubFolder: siteBranch.site?.githubFolder || '',
     })
     const source = getFumadocsSource({
-        defaultLocale: site.defaultLocale,
+        defaultLanguage: site.defaultLocale,
         files,
-        locales,
+        languages,
     })
 
     const siteName = site.name || 'Documentation'

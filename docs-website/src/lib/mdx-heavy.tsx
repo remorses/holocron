@@ -231,6 +231,10 @@ export interface ProcessorDataFrontmatter {
     title?: string
     description?: string
     icon?: string
+    badge?: {
+        content?: string
+        color?: string
+    }
     [key: string]: any
 }
 

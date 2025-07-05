@@ -1,19 +1,31 @@
-import { loader, MetaData, PageData, VirtualFile } from 'fumadocs-core/source'
+import {
+    loader,
+    MetaData,
+    PageData,
+    PageFile,
+    VirtualFile,
+} from 'fumadocs-core/source'
 
 import { I18nConfig } from 'fumadocs-core/i18n'
-import React, { Fragment, lazy, Suspense } from 'react'
-import { useHydrated } from './hooks'
-import { StructuredData } from './mdx-heavy'
-import { prefetchDNS, preconnect } from 'react-dom'
+import { PageTree } from 'fumadocs-core/server'
+import { Badge } from 'lucide-react'
 import { DynamicIcon } from './icon'
+import { ProcessorDataFrontmatter, StructuredData } from './mdx-heavy'
 
-export function getFumadocsClientSource({
+export function getFumadocsSource({
     files,
-    i18n,
+    languages: locales = [] as string[],
+    defaultLanguage: defaultLanguage = 'en',
 }: {
-    i18n?: I18nConfig
+    languages: string[]
+    defaultLanguage: string
     files: VirtualFile[]
 }) {
+    const languages = locales
+    if (!languages.includes(defaultLanguage)) {
+        languages.push(defaultLanguage)
+    }
+
     const source = loader<
         {
             pageData: PageData & {
@@ -25,28 +37,48 @@ export function getFumadocsClientSource({
     >({
         source: { files },
         baseUrl: '/', // TODO pass here the customer base path
-        i18n,
-
+        i18n: {
+            defaultLanguage: defaultLanguage,
+            languages,
+            hideLocale: 'default-locale',
+        },
+        pageTree: {
+            attachFile,
+        },
         icon(icon) {
             if (!icon) return
             return <DynamicIcon icon={icon as any} />
         },
-        // TODO loading using an img would be better, but no support for currentColor and good size
-        // icon(icon) {
-        //     // console.log('icon', icon)
-        //     if (!icon) return
-        //     return (
-        //         <img
-        //             src={`/api/icons/lucide/icon/${icon}.svg`}
-        //             alt={''}
-        //             style={{ display: 'inline-block', verticalAlign: 'middle' }}
-        //             height={16}
-        //             width={16}
-        //             // loading='lazy'
-        //         />
-        //     )
-        // },
     })
 
     return source
+}
+
+const attachFile = (
+    node: PageTree.Item,
+    file: PageFile | undefined,
+): PageTree.Item => {
+    if (!file) return node
+    let data = file.data as ProcessorDataFrontmatter
+
+    const badge = data.badge || {}
+
+    const content = badge.content || ''
+    const color = badge.color || 'gray'
+
+    if (content) {
+        node.name = (
+            <>
+                {node.name}{' '}
+                <Badge
+                    color={color as any}
+                    className='ms-auto text-xs text-nowrap'
+                >
+                    {content}
+                </Badge>
+            </>
+        )
+    }
+
+    return node
 }

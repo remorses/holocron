@@ -1,19 +1,21 @@
 import frontMatter from 'front-matter'
 import { VirtualFile } from 'fumadocs-core/source'
-import { getFumadocsClientSource } from './source'
 import { FilesInDraft } from './docs-state'
+import { getFumadocsSource } from './source'
 
 export interface GetTreeFromFilesParams {
     files: VirtualFile[]
     filesInDraft: FilesInDraft
-    i18n?: any
+    defaultLanguage: string
+    languages: string[]
     githubFolder: string
 }
 
 export const getTreeFromFiles = ({
     files,
     filesInDraft,
-    i18n,
+    defaultLanguage,
+    languages,
     githubFolder,
 }: GetTreeFromFilesParams) => {
     function removeGithubFolder(p) {
@@ -80,24 +82,26 @@ export const getTreeFromFiles = ({
     })
     try {
         // Create source and get tree synchronously
-        const source = getFumadocsClientSource({
+        const source = getFumadocsSource({
             files: allFiles,
-            i18n,
+            defaultLanguage,
+            languages,
         })
 
-        const tree = source.getPageTree(i18n?.defaultLanguage || 'en')
+        const tree = source.getPageTree(defaultLanguage || 'en')
         // force rerender
         tree.$id = Math.random().toString(36).slice(2)
         // console.log(tree)
         return tree
     } catch (e) {
         console.error(`cannot create tree with draft files`, e, filesInDraft)
-        const source = getFumadocsClientSource({
+        const source = getFumadocsSource({
             files,
-            i18n,
+            defaultLanguage,
+            languages,
         })
 
-        const tree = source.getPageTree(i18n?.defaultLanguage || 'en')
+        const tree = source.getPageTree(defaultLanguage || 'en')
         tree.$id = Math.random().toString(36).slice(2)
         console.log(`creating new tree with id`, tree.$id)
         // console.log(tree)

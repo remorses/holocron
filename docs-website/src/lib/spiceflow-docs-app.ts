@@ -7,8 +7,9 @@ import z from 'zod'
 import agentPrompt from '../prompts/docs-agent.md?raw'
 
 import { notifyError } from './errors'
-import { getFilesForSource, getFumadocsSource } from './source.server'
+import { getFilesForSource } from './source.server'
 import { searchDocsWithTrieve } from './trieve-search'
+import { getFumadocsSource } from './source'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
@@ -52,13 +53,17 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                 throw new Response('Branch not found', { status: 404 })
             }
 
-            const defaultLocale = site?.defaultLocale
-            const locales = site?.locales?.map((x) => x.locale)
+            const defaultLanguage = site?.defaultLocale || 'en'
+            const languages = site?.locales?.map((x) => x.locale) || []
             const files = await getFilesForSource({
                 branchId: siteBranch.branchId,
                 githubFolder: siteBranch.site?.githubFolder || '',
             })
-            const source = getFumadocsSource({ files, defaultLocale, locales })
+            const source = getFumadocsSource({
+                files,
+                defaultLanguage,
+                languages,
+            })
             const pages = source.getPages(locale)
 
             let model = openai.responses('gpt-4.1')

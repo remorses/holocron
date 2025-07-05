@@ -35,8 +35,8 @@ export async function loader({ request }: Route.LoaderArgs) {
     const query = params.get('query') || ''
     const locale = params.get('locale') || ''
     const tag = params.get('tag') || ''
-    const defaultLocale = site?.defaultLocale
-    const locales = site?.locales?.map((x) => x.locale)
+    const defaultLanguage = site?.defaultLocale
+    const languages = site?.locales?.map((x) => x.locale)
 
     const results = await searchDocsWithTrieve({
         trieveDatasetId: siteBranch.trieveDatasetId,

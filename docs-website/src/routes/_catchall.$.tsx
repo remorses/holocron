@@ -48,14 +48,15 @@ import {
     ProcessorData,
     ProcessorDataFrontmatter,
 } from '../lib/mdx-heavy'
-import { getFumadocsClientSource } from '../lib/source'
-import { getFilesForSource, getFumadocsSource } from '../lib/source.server'
+import { getFumadocsSource } from '../lib/source'
+
 import { diffWordsWithSpace } from 'diff'
 import { markAddedNodes } from '../lib/diff'
 import { MarkdownRuntime } from '../lib/markdown-runtime'
 import { renderNode } from '../lib/mdx-code-block'
 import { useAddedHighlighter } from '../lib/_diff'
 import { useScrollToFirstAddedIfAtTop } from '../lib/diff-highlight'
+import { getFilesForSource } from '../lib/source.server'
 
 export function meta({ data, matches }: Route.MetaArgs) {
     if (!data) return []
@@ -150,7 +151,7 @@ export function meta({ data, matches }: Route.MetaArgs) {
 }
 
 // Global variable to store last successful server loader data
-let lastServerLoaderData: any = null
+let lastServerLoaderData = null as any
 
 export async function clientLoader({
     params,
@@ -187,7 +188,8 @@ export async function clientLoader({
         for (const [githubPath, draft] of Object.entries(filesInDraft)) {
             if (!draft) continue
 
-            const source = getFumadocsClientSource({
+            const source = getFumadocsSource({
+                ...lastServerLoaderData?.i18n,
                 files: [
                     {
                         path: removeGithubFolder(githubPath),
@@ -260,15 +262,16 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         console.log('Branch not found for site:', site?.siteId)
         throw new Response('Branch not found', { status: 404 })
     }
-    const locales = site.locales.map((x) => x.locale)
+    const languages = site.locales.map((x) => x.locale)
     const files = await getFilesForSource({
         branchId: siteBranch.branchId,
+
         githubFolder: siteBranch.site?.githubFolder || '',
     })
-    const source = await getFumadocsSource({
-        defaultLocale: site.defaultLocale,
+    const source = getFumadocsSource({
+        defaultLanguage: site.defaultLocale,
+        languages: languages,
         files,
-        locales,
     })
 
     let slugs = params['*']?.split('/').filter((v) => v.length > 0) || []

@@ -1,6 +1,7 @@
 import { prisma } from 'db'
-import { getFilesForSource, getFumadocsSource } from './source.server'
+import { getFilesForSource } from './source.server'
 import { LOCALES } from './locales'
+import { getFumadocsSource } from './source'
 
 export async function serveRawMarkdown({
     domain,
@@ -37,15 +38,15 @@ export async function serveRawMarkdown({
         return null
     }
 
-    const locales = site.locales.map((x) => x.locale)
+    const languages = site.locales.map((x) => x.locale)
     const files = await getFilesForSource({
         branchId: siteBranch.branchId,
         githubFolder: siteBranch.site?.githubFolder || '',
     })
-    const source = await getFumadocsSource({
-        defaultLocale: site.defaultLocale,
+    const source = getFumadocsSource({
+        defaultLanguage: site.defaultLocale,
         files,
-        locales,
+        languages,
     })
 
     let slugs = path.split('/').filter((v) => v.length > 0) || []

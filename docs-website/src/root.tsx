@@ -39,8 +39,8 @@ import { LOCALE_LABELS } from './lib/locales'
 import { Markdown } from 'contesto/src/lib/markdown'
 import { mdxComponents } from './components/mdx-components'
 import { processMdxInServer } from './lib/mdx.server'
-import { getFumadocsSource, getFilesForSource } from './lib/source.server'
-import { getFumadocsClientSource } from './lib/source'
+import { getFilesForSource } from './lib/source.server'
+import { getFumadocsSource } from './lib/source'
 import { VirtualFile } from 'fumadocs-core/source'
 import frontMatter from 'front-matter'
 import { cn, isInsidePreviewIframe } from './lib/utils'
@@ -140,14 +140,15 @@ export async function loader({ request }: Route.LoaderArgs) {
         githubFolder: site.githubFolder || '',
     })
 
-    const locales = site.locales.map((x) => x.locale)
+    const languages = site.locales.map((x) => x.locale)
     const source = getFumadocsSource({
-        defaultLocale: site.defaultLocale,
+        defaultLanguage: site.defaultLocale,
         files,
-        locales,
+        languages: languages,
     })
 
     const i18n = source._i18n
+
 
     // Process banner markdown if it exists
     let bannerAst: any = null
@@ -173,7 +174,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     return {
         docsJson: siteBranch.docsJson as DocsJsonType,
-        locales,
+        languages,
         files,
         i18n,
         name: site.name,
@@ -505,7 +506,7 @@ function DocsLayoutWrapper({
 
     const tree = useMemo(() => {
         const { files, i18n, githubFolder } = loaderData
-        return getTreeFromFiles({ files, i18n, githubFolder, filesInDraft })
+        return getTreeFromFiles({ files, defaultLanguage: i18n?.defaultLanguage || 'en', languages: i18n?.languages || [], githubFolder, filesInDraft })
     }, [loaderData.files, loaderData.i18n, filesInDraft])
 
     // Configure layout based on docsJson
