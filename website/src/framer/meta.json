@@ -1649,8 +1649,8 @@
       ],
       "format": "esm"
     },
-    "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/7x0xuvL6GBVvLS1Am1U7/eo97FeJK7.js": {
-      "bytes": 48308,
+    "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/oVM1aNqylB6MwPyeUpqc/eo97FeJK7.js": {
+      "bytes": 48307,
       "imports": [
         {
           "path": "react/jsx-runtime",
@@ -1724,9 +1724,9 @@
           "external": true
         },
         {
-          "path": "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/7x0xuvL6GBVvLS1Am1U7/eo97FeJK7.js",
+          "path": "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/oVM1aNqylB6MwPyeUpqc/eo97FeJK7.js",
           "kind": "import-statement",
-          "original": "https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/7x0xuvL6GBVvLS1Am1U7/eo97FeJK7.js"
+          "original": "https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/oVM1aNqylB6MwPyeUpqc/eo97FeJK7.js"
         },
         {
           "path": "unframer",
@@ -3395,14 +3395,14 @@
         "virtual:hero-section": {
           "bytesInOutput": 1174
         },
-        "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/7x0xuvL6GBVvLS1Am1U7/eo97FeJK7.js": {
-          "bytesInOutput": 46506
+        "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/oVM1aNqylB6MwPyeUpqc/eo97FeJK7.js": {
+          "bytesInOutput": 46505
         },
         "/:https://framerusercontent.com/modules/rHv2weGC84WJaMaBqZST/M33wkThkp4Ray6OH5K74/KhK8sdpR3.js": {
           "bytesInOutput": 10306
         }
       },
-      "bytes": 58887
+      "bytes": 58886
     },
     "pricing-card.js": {
       "imports": [
