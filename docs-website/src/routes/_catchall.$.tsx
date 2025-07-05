@@ -1,4 +1,4 @@
-import { prisma } from 'db'
+import { MediaAsset, PageMediaAsset, prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import {
     data,
@@ -57,6 +57,10 @@ import { renderNode } from '../lib/mdx-code-block'
 import { useAddedHighlighter } from '../lib/_diff'
 import { useScrollToFirstAddedIfAtTop } from '../lib/diff-highlight'
 import { getFilesForSource } from '../lib/source.server'
+import { getOpenapiDocument } from '../lib/openapi'
+const openapiPath = `/api-reference`
+
+type MediaAssetProp = PageMediaAsset & { asset?: MediaAsset }
 
 export function meta({ data, matches }: Route.MetaArgs) {
     if (!data) return []
@@ -150,85 +154,6 @@ export function meta({ data, matches }: Route.MetaArgs) {
     ].filter(Boolean)
 }
 
-// Global variable to store last successful server loader data
-let lastServerLoaderData = null as any
-
-export async function clientLoader({
-    params,
-    serverLoader,
-}: Route.ClientLoaderArgs) {
-    const docsState = useDocsState.getState()
-    const { filesInDraft } = docsState
-
-    try {
-        // Attempt to load server data
-        const serverData = await serverLoader()
-
-        // Server loader succeeded, store it and check for overrides
-        lastServerLoaderData = serverData
-
-        return serverData
-    } catch (err) {
-        // Check if this is a 404 error
-        if (!isRouteErrorResponse(err) || err.status !== 404) {
-            throw err
-        }
-        // Server loader failed with 404, check if we have draft content to serve
-        const slugs = params['*']?.split('/').filter((v) => v.length > 0) || []
-        const slug = '/' + slugs.join('/')
-
-        function removeGithubFolder(p) {
-            let githubFolder = lastServerLoaderData?.githubFolder || ''
-            if (p.startsWith(githubFolder)) {
-                return p.slice(githubFolder.length + 1)
-            }
-            return p
-        }
-        // Look for draft files that could serve this slug
-        for (const [githubPath, draft] of Object.entries(filesInDraft)) {
-            if (!draft) continue
-
-            const source = getFumadocsSource({
-                ...lastServerLoaderData?.i18n,
-                files: [
-                    {
-                        path: removeGithubFolder(githubPath),
-                        data: {},
-                        type: 'page',
-                    },
-                ],
-            })
-            const page = source.getPage(slugs)
-            if (page) {
-                const extension = githubPath.endsWith('.mdx') ? 'mdx' : 'md'
-                const f = await getProcessor({ extension }).process(draft)
-                const data = f.data as ProcessorData
-
-                // Use cached server data as base structure, without fields available in root
-                const baseData = lastServerLoaderData || {
-                    locale: 'en',
-                    i18n: null,
-                }
-
-                const frontmatter: ProcessorDataFrontmatter =
-                    (data.frontmatter as any) || {}
-                return {
-                    ...baseData,
-                    toc: data.toc,
-                    title: frontmatter.title,
-                    description: frontmatter.description,
-                    markdown: draft.content,
-                    ast: data.ast,
-                    githubPath,
-                    slugs,
-                    slug,
-                    lastEditedAt: new Date(),
-                }
-            }
-        }
-    }
-}
-
 export async function loader({ params, request }: Route.LoaderArgs) {
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
@@ -284,21 +209,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
     // Check for redirects from docsJson configuration
     const docsJson: DocsJsonType = siteBranch.docsJson as any
-    if (docsJson?.redirects) {
-        const currentPath = '/' + (params['*'] || '')
-        const redirect = docsJson.redirects.find(
-            (r) => r.source === currentPath,
-        )
-        if (redirect) {
-            const status = redirect.permanent ? 301 : 302
-            throw new Response(null, {
-                status,
-                headers: {
-                    Location: redirect.destination,
-                },
-            })
-        }
-    }
+
     // const slug = '/' + slugs.join('/')
     const fumadocsPage = source.getPage(slugs, locale)
 
@@ -320,6 +231,40 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             },
         }),
     ])
+
+    const { openapiDocument } = await getOpenapiDocument({ docsJson, url })
+    if (openapiDocument) {
+        return {
+            type: 'openapi' as const,
+            mediaAssets: [] as MediaAssetProp[],
+            toc: [],
+            title: '',
+            description: '',
+            markdown: '',
+            ast: null,
+            githubPath: '',
+            slugs,
+            slug,
+            lastEditedAt: new Date(),
+            openapiDocument,
+        }
+    }
+
+    if (!page && docsJson?.redirects) {
+        const currentPath = '/' + (params['*'] || '')
+        const redirect = docsJson.redirects.find(
+            (r) => r.source === currentPath,
+        )
+        if (redirect) {
+            const status = redirect.permanent ? 301 : 302
+            throw new Response(null, {
+                status,
+                headers: {
+                    Location: redirect.destination,
+                },
+            })
+        }
+    }
 
     if (!page && slug === '/') {
         // try to find index page if no page found
@@ -379,6 +324,8 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     const frontmatter = markdownData.frontmatter || {}
 
     return {
+        type: 'page' as const,
+        openapiDocument: undefined,
         toc: markdownData.toc,
         title: markdownData.title,
         githubFolder: site.githubFolder,
@@ -392,11 +339,14 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         githubPath: page.githubPath,
         tree,
         lastEditedAt: page.lastEditedAt || new Date(),
-        mediaAssets: page.mediaAssets || [],
+        mediaAssets: page.mediaAssets,
     }
 }
 
 export default function Page(props: Route.ComponentProps) {
+    const { type } = props.loaderData || {}
+    if (type === 'openapi') {
+    }
     return <PageContent {...props} />
 }
 
@@ -405,15 +355,15 @@ function PageContent(props: Route.ComponentProps) {
     const rootData = useRouteLoaderData(
         'root',
     ) as RootRoute.ComponentProps['loaderData']
-    const { slug, slugs, githubPath, lastEditedAt } = loaderData
+    const { slug, slugs, githubPath, lastEditedAt } = loaderData || {}
     const owner = rootData.githubOwner
     const repo = rootData.githubRepo
     const githubBranch = rootData.githubBranch
     const branchId = rootData.branchId
     let { title, description, toc } = useDocsState(
         useShallow((state) => {
-            const { title, description } = loaderData
-            const toc = state.toc || loaderData.toc
+            const { title, description } = loaderData || {}
+            const toc = state.toc || loaderData?.toc
             return { title, description, toc }
         }),
     )
@@ -428,7 +378,7 @@ function PageContent(props: Route.ComponentProps) {
                 toc: toc as any,
             }}
         >
-            {toc.length > 0 && (
+            {toc?.length > 0 && (
                 <PageTOCPopover>
                     <PageTOCPopoverTrigger />
                     <PageTOCPopoverContent>
@@ -611,13 +561,13 @@ const components = {
         const { mediaAssets } =
             useLoaderData() as Route.ComponentProps['loaderData']
 
-        const media = mediaAssets.find((asset) => asset.slug === src)
+        const media = mediaAssets.find((asset) => asset.assetSlug === src)
 
         if (media) {
             return (
                 <mdxComponents.img
-                    width={media.width}
-                    height={media.height}
+                    width={media.asset?.width}
+                    height={media.asset?.height}
                     {...props}
                 />
             )
@@ -682,4 +632,86 @@ function DocsMarkdown() {
             ast={ast}
         />
     )
+}
+
+// Global variable to store last successful server loader data
+let lastServerLoaderData = null as any
+
+export async function clientLoader({
+    params,
+    serverLoader,
+}: Route.ClientLoaderArgs) {
+    const docsState = useDocsState.getState()
+    const { filesInDraft } = docsState
+
+    try {
+        // Attempt to load server data
+        const serverData = await serverLoader()
+
+        // Server loader succeeded, store it and check for overrides
+        lastServerLoaderData = serverData
+
+        return serverData
+    } catch (err) {
+        // Check if this is a 404 error
+        if (!isRouteErrorResponse(err) || err.status !== 404) {
+            throw err
+        }
+        // Server loader failed with 404, check if we have draft content to serve
+        const slugs = params['*']?.split('/').filter((v) => v.length > 0) || []
+        const slug = '/' + slugs.join('/')
+
+        function removeGithubFolder(p) {
+            let githubFolder = lastServerLoaderData?.githubFolder || ''
+            if (p.startsWith(githubFolder)) {
+                return p.slice(githubFolder.length + 1)
+            }
+            return p
+        }
+        // Look for draft files that could serve this slug
+        for (const [githubPath, draft] of Object.entries(filesInDraft)) {
+            if (!draft) continue
+
+            const source = getFumadocsSource({
+                ...lastServerLoaderData?.i18n,
+                files: [
+                    {
+                        path: removeGithubFolder(githubPath),
+                        data: {},
+                        type: 'page',
+                    },
+                ],
+            })
+            const page = source.getPage(slugs)
+            if (page) {
+                const extension = githubPath.endsWith('.mdx') ? 'mdx' : 'md'
+                const f = await getProcessor({ extension }).process(draft)
+                const data = f.data as ProcessorData
+
+                // Use cached server data as base structure, without fields available in root
+                const baseData: {} = lastServerLoaderData || {
+                    locale: 'en',
+                    i18n: null,
+                }
+
+                const frontmatter: ProcessorDataFrontmatter =
+                    (data.frontmatter as any) || {}
+                return {
+                    ...baseData,
+                    mediaAssets: [] as MediaAssetProp[],
+                    type: 'page' as const,
+                    toc: data.toc,
+                    title: frontmatter.title,
+                    description: frontmatter.description,
+                    markdown: draft.content,
+                    ast: data.ast,
+                    githubPath,
+                    slugs,
+                    slug,
+                    lastEditedAt: new Date(),
+                }
+            }
+        }
+        throw err
+    }
 }

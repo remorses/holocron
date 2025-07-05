@@ -1,6 +1,7 @@
 packages:
   - ./*
   - fumadocs/packages/*
+  - fumadocs/examples/react-router
   - fumadocs/apps/react-router-18n
   - fumadocs/
 

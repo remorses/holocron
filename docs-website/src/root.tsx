@@ -1,10 +1,14 @@
 import { useNProgress } from 'docs-website/src/lib/nprogress'
+import { loader as fumadocsLoader } from 'fumadocs-core/source'
+
 import { Banner } from 'fumadocs-ui/components/banner'
 
 import { prisma } from 'db'
 import { ReactRouterProvider } from 'fumadocs-core/framework/react-router'
 import { LinkItemType } from 'fumadocs-ui/layouts/links'
-import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
+import { DocsLayout, DocsLayoutProps } from 'fumadocs-ui/layouts/notebook'
+import type { Option } from 'fumadocs-ui/components/layout/root-toggle'
+
 import { RootProvider } from 'fumadocs-ui/provider/base'
 import { GithubIcon, XIcon } from 'lucide-react'
 import { ThemeProvider, useTheme } from 'next-themes'
@@ -24,6 +28,7 @@ import {
     redirect,
     Scripts,
     ScrollRestoration,
+    ShouldRevalidateFunction,
     useLoaderData,
 } from 'react-router'
 import { TrieveSDK } from 'trieve-ts-sdk'
@@ -40,8 +45,8 @@ import { Markdown } from 'contesto/src/lib/markdown'
 import { mdxComponents } from './components/mdx-components'
 import { processMdxInServer } from './lib/mdx.server'
 import { getFilesForSource } from './lib/source.server'
-import { getFumadocsSource } from './lib/source'
-import { VirtualFile } from 'fumadocs-core/source'
+import { attachFile, getFumadocsSource } from './lib/source'
+import { PageData, VirtualFile } from 'fumadocs-core/source'
 import frontMatter from 'front-matter'
 import { cn, isInsidePreviewIframe } from './lib/utils'
 import { DynamicIcon } from './lib/icon'
@@ -49,6 +54,9 @@ import { PoweredBy } from './components/poweredby'
 import { CustomSearchDialog } from './components/search'
 import { ChatDrawer } from './components/docs-chat'
 import { getTreeFromFiles } from './lib/tree'
+import { getOpenapiDocument, getSourceForOpenAPI } from './lib/openapi'
+import { I18nConfig } from 'fumadocs-core/i18n'
+import { StructuredData } from 'fumadocs-core/mdx-plugins/remark-structure'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -62,6 +70,8 @@ export const links: Route.LinksFunction = () => [
         href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
     },
 ]
+
+const openapiPath = `/api-reference`
 
 const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, '')]
 
@@ -149,22 +159,24 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     const i18n = source._i18n
 
-
     // Process banner markdown if it exists
-    let bannerAst: any = null
-    const docsJson = siteBranch.docsJson as any
-    if (docsJson?.banner?.content) {
-        try {
-            const { data } = await processMdxInServer({
-                extension: '.md',
-                githubPath: '',
-                markdown: docsJson.banner.content,
-            })
-            bannerAst = data?.ast
-        } catch (error) {
-            console.error('Error processing banner markdown:', error)
+    const docsJson: DocsJsonType = siteBranch.docsJson as any
+
+    let bannerAst = await (async () => {
+        if (docsJson?.banner?.content) {
+            try {
+                const { data } = await processMdxInServer({
+                    extension: '.md',
+                    githubPath: '',
+                    markdown: docsJson.banner.content,
+                })
+                return data?.ast
+            } catch (error) {
+                console.error('Error processing banner markdown:', error)
+            }
         }
-    }
+        return null
+    })()
 
     // Check for preview websocket ID in cookies
     const cookies = parseCookies(request.headers.get('Cookie'))
@@ -172,7 +184,10 @@ export async function loader({ request }: Route.LoaderArgs) {
     const trieveReadApiKey = siteBranch.trieveReadApiKey
     const trieveDatasetId = siteBranch.trieveDatasetId
 
+    const { openapiDocument } = await getOpenapiDocument({ docsJson, url })
+
     return {
+        openapiDocument,
         docsJson: siteBranch.docsJson as DocsJsonType,
         languages,
         files,
@@ -480,6 +495,32 @@ export default function App() {
     )
 }
 
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+    currentUrl,
+    nextUrl,
+    defaultShouldRevalidate,
+}) => {
+    // List of base paths to watch for enter/exit revalidation
+    const watchedBasePaths = ['/api-reference']
+
+    // Helper to check whether a pathname matches any watched base path
+    const isInWatchedBasePath = (pathname: string) => {
+        return watchedBasePaths.some((basePath) =>
+            pathname.startsWith(basePath),
+        )
+    }
+
+    const wasInWatched = isInWatchedBasePath(currentUrl.pathname)
+    const willBeInWatched = isInWatchedBasePath(nextUrl.pathname)
+
+    // Revalidate when entering or exiting any watched path
+    if (wasInWatched !== willBeInWatched) {
+        return true
+    }
+
+    return defaultShouldRevalidate
+}
+
 function DocsLayoutWrapper({
     children,
     docsJson,
@@ -505,12 +546,28 @@ function DocsLayoutWrapper({
     const filesInDraft = useDocsState((state) => state.filesInDraft)
 
     const tree = useMemo(() => {
-        const { files, i18n, githubFolder } = loaderData
-        return getTreeFromFiles({ files, defaultLanguage: i18n?.defaultLanguage || 'en', languages: i18n?.languages || [], githubFolder, filesInDraft })
+        const { files, i18n, openapiDocument, githubFolder } = loaderData
+        if (openapiDocument?.paths) {
+            const source = getSourceForOpenAPI({
+                docsJson,
+                openapiDocument: openapiDocument! as any,
+                filesInDraft,
+            })
+            const pageTree = source.pageTree
+            pageTree.$id = Math.random().toString(36).slice(2)
+            return pageTree
+        }
+        return getTreeFromFiles({
+            files,
+            defaultLanguage: i18n?.defaultLanguage || 'en',
+            languages: i18n?.languages || [],
+            githubFolder,
+            filesInDraft,
+        })
     }, [loaderData.files, loaderData.i18n, filesInDraft])
 
     // Configure layout based on docsJson
-    const navMode = 'auto'
+    const navMode = 'top'
     const disableThemeSwitch = false
     const navTransparentMode = 'top'
     const searchEnabled = true
@@ -552,6 +609,25 @@ function DocsLayoutWrapper({
         return mainLinks
     })()
 
+    // Build tabs from docsJson if present
+    const tabs: Option[] = (() => {
+        if (!docsJson?.tabs) return []
+
+        return docsJson.tabs
+            .map((tab) => {
+                if ('openapi' in tab) {
+                    // OpenAPI tab
+                    return {
+                        title: tab.tab,
+                        url: openapiPath,
+                        description: `API Reference`,
+                    }
+                }
+                return null
+            })
+            .filter(Boolean) as Option[]
+    })()
+
     return (
         <div className='h-full flex flex-col w-full'>
             <DocsLayout
@@ -568,6 +644,8 @@ function DocsLayoutWrapper({
                 sidebar={{
                     defaultOpenLevel: 2,
                     collapsible: true,
+
+                    tabs,
                     footer: (
                         <div className='flex w-full text-center grow justify-center items-start'>
                             <PoweredBy className='text-[12x]' />

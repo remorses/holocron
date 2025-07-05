@@ -27,7 +27,12 @@ const LogoSchema = z
         light: z.string().describe('Logo for light mode'),
         dark: z.string().describe('Logo for dark mode'),
         href: z.string().url().optional().describe('Logo click target URL'),
-        text: z.string().optional().describe('Text to show next to the logo image, for cases where the logo is just a icon image'),
+        text: z
+            .string()
+            .optional()
+            .describe(
+                'Text to show next to the logo image, for cases where the logo is just a icon image',
+            ),
     })
     .strict()
     .describe('Logo object for both modes')
@@ -189,6 +194,26 @@ const SeoSchema = z
     })
     .strict()
     .describe('SEO configuration')
+
+// === Navigation ===
+const NavigationTabSchema = z
+    .union([
+        z
+            .object({
+                tab: z.string().describe('Tab label'),
+                openapi: z.string().describe('OpenAPI spec file path'),
+            })
+            .strict()
+            .describe('OpenAPI tab configuration'),
+        z
+            .object({
+                tab: z.string().describe('Tab label'),
+                mcp: z.string().describe('MCP tool url'),
+            })
+            .strict()
+            .describe('Folder tab configuration'),
+    ])
+    .describe('Navigation tab configuration')
 
 // === API ===
 const OpenApiRef = z
@@ -382,6 +407,10 @@ export const DocsConfigSchema = z
         favicon: FaviconSchema.optional().describe('Favicon config'),
         // api: ApiSchema.optional().describe('API reference settings'),
         navbar: NavbarSchema.optional().describe('Top navbar settings'),
+        tabs: z
+            .array(NavigationTabSchema)
+            .optional()
+            .describe('Navigation tabs'),
 
         footer: FooterSchema.optional().describe('Footer content'),
         // search: SearchSchema.optional().describe('Search behavior'),

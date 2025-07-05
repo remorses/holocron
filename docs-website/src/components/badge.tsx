@@ -19,22 +19,6 @@ export const badgeVariants = cva('font-mono font-medium', {
     },
 })
 
-function getMethodColor(
-    method: string,
-): VariantProps<typeof badgeVariants>['color'] {
-    switch (method.toUpperCase()) {
-        case 'PUT':
-            return 'yellow'
-        case 'PATCH':
-            return 'orange'
-        case 'POST':
-            return 'blue'
-        case 'DELETE':
-            return 'red'
-        default:
-            return 'green'
-    }
-}
 
 export function Badge({
     className,

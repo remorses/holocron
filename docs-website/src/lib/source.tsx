@@ -54,7 +54,7 @@ export function getFumadocsSource({
     return source
 }
 
-const attachFile = (
+export const attachFile = (
     node: PageTree.Item,
     file: PageFile | undefined,
 ): PageTree.Item => {

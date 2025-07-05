@@ -870,7 +870,7 @@ cli.command('dev', 'Preview your fumabase website')
 
             // Wait for initial scan to complete
             await new Promise<void>((resolve) => {
-                watcher.on('add', (filePath) => {
+                const cb = (filePath) => {
                     const isTextFile =
                         filePath.endsWith('.mdx') ||
                         filePath.endsWith('.md') ||
@@ -886,8 +886,10 @@ cli.command('dev', 'Preview your fumabase website')
                         // console.log(filePath)
                         filePaths.push(filePath)
                     }
-                })
+                }
+                watcher.on('add', cb)
                 watcher.on('ready', () => {
+                    watcher.off('add', cb)
                     resolve()
                 })
             })
@@ -1056,7 +1058,7 @@ cli.command('dev', 'Preview your fumabase website')
                 // Send only the updated file through the tunnel to all browsers
                 const updatedFile = { [githubPath]: filesInDraft[githubPath] }
                 console.log(`sending websocket update for ${githubPath}`)
-                client.setDocsState({ filesInDraft: updatedFile })
+                return client.setDocsState({ filesInDraft: updatedFile })
             }
 
             watcher.on('add', handleFileUpdate)
