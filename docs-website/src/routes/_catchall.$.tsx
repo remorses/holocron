@@ -1,6 +1,6 @@
 import { MediaAsset, PageMediaAsset, prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
-import { OpenAPIPage } from 'docs-website/src/components/openapi-page'
+import { APIPage } from 'fumadocs-openapi/ui'
 import {
     data,
     isRouteErrorResponse,
@@ -58,7 +58,8 @@ import { renderNode } from '../lib/mdx-code-block'
 import { useAddedHighlighter } from '../lib/_diff'
 import { useScrollToFirstAddedIfAtTop } from '../lib/diff-highlight'
 import { getFilesForSource } from '../lib/source.server'
-import { getOpenapiDocument } from '../lib/openapi'
+import { getOpenapiDocument, getOpenapiUrl } from '../lib/openapi.server'
+import { ScalarOpenApi } from '../components/scalar'
 const openapiPath = `/api-reference`
 
 type MediaAssetProp = PageMediaAsset & { asset?: MediaAsset }
@@ -233,13 +234,14 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         }),
     ])
 
-    const { openapiDocument, operations } = await getOpenapiDocument({
+    const { openapiUrl } = await getOpenapiUrl({
         docsJson,
         url,
     })
-    if (openapiDocument) {
+    if (openapiUrl) {
         return {
             type: 'openapi' as const,
+            openapiUrl,
             mediaAssets: [] as MediaAssetProp[],
             toc: [],
             title: '',
@@ -250,8 +252,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             slugs,
             slug,
             lastEditedAt: new Date(),
-            openapiDocument,
-            operations,
         }
     }
 
@@ -330,7 +330,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
     return {
         type: 'page' as const,
-        openapiDocument: undefined,
+        openapiUrl: '',
         toc: markdownData.toc,
         title: markdownData.title,
         githubFolder: site.githubFolder,
@@ -351,14 +351,8 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 export default function Page(props: Route.ComponentProps) {
     const { type } = props.loaderData
     if (type === 'openapi') {
-        const { openapiDocument, operations } = props.loaderData || {}
-        return (
-            <OpenAPIPage
-                hasHead
-                operations={operations}
-                openapiDocument={openapiDocument}
-            />
-        )
+        const { openapiUrl } = props.loaderData
+        return <ScalarOpenApi url={openapiUrl} />
     }
     return <PageContent {...props} />
 }

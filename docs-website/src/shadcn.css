@@ -114,3 +114,19 @@
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);
 }
+
+/* https://github.com/basehub-ai/docs-template/blob/ad15c0b3eaa1788ab60899729276ee4448b86e81/app/_components/openapi/openapi.module.scss#L1 */
+:root {
+    --scalar-background-1: var(--color-background);
+    --scalar-background-2: var(--color-card);
+    --scalar-background-3: var(--color-muted);
+    --scalar-color-1: var(--color-foreground);
+    --scalar-color-2: var(--color-muted-foreground);
+    --scalar-color-3: var(--color-secondary-foreground);
+    --scalar-color-accent: var(--color-primary);
+    --scalar-background-accent: var(--color-primary-foreground);
+    --scalar-border-color: var(--color-border);
+
+    /* --scalar-font: var(--default-font-family);
+    --scalar-font-code: var(--code-font-family); */
+}

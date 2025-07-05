@@ -1,14 +1,10 @@
-import { loader as fumadocsLoader, VirtualFile } from 'fumadocs-core/source'
 import { LRUCache } from 'lru-cache'
-import type { OpenAPIV3, OpenAPIV3_1 } from 'openapi-types'
+import type { OpenAPIV3_1 } from 'openapi-types'
 import { DocsJsonType } from './docs-json'
-import { FilesInDraft } from './docs-state'
-import { DynamicIcon } from './icon'
-import { ProcessorDataFrontmatter } from './mdx-heavy'
-import { attachFile } from './source'
 
 import { dereference, load, upgrade } from '@scalar/openapi-parser'
 import { fetchUrls } from '@scalar/openapi-parser/plugins/fetch-urls'
+import { getOperations } from './openapi-client'
 
 export async function getOpenapiDocument({
     url,
@@ -24,89 +20,51 @@ export async function getOpenapiDocument({
         url.pathname.startsWith(openapiPath + '/')
     if (isApiReferencePath && openapiTab && 'openapi' in openapiTab) {
         const openapiUrl = openapiTab.openapi
-        const openapiDocumentJson = await processDocument(openapiUrl)
-        const pathWithoutBase = url.pathname.slice(openapiPath.length)
+        const openapiDocument = await processDocument(openapiUrl)
+        let pathWithoutBase = url.pathname.slice(openapiPath.length)
         const method = pathWithoutBase
             .split('/')
             .pop() as OpenAPIV3_1.HttpMethods
         const path = pathWithoutBase.split('/').slice(1).join('/')
+        const operations = getOperations(openapiDocument)
+        const found = operations.find(
+            (op) => op.method === method && op.path === path,
+        )
+        if (!found) {
+            return {
+                type: 'openapi' as const,
+                openapiDocument: openapiDocument,
+                operations: operations.slice(0, 1),
+            }
+        }
         return {
             type: 'openapi' as const,
-            openapiDocument: openapiDocumentJson,
-            operations: [{ method, path }],
+            openapiDocument: openapiDocument,
+            operations: [found],
         }
     }
     return {}
 }
 
-export function getSourceForOpenAPI({
-    filesInDraft,
+export async function getOpenapiUrl({
+    url,
     docsJson,
-    openapiDocument,
 }: {
+    url: URL
     docsJson: DocsJsonType
-    filesInDraft: FilesInDraft
-    openapiDocument: OpenAPIV3.Document
 }) {
-    const openapiPath = `/api-reference`
-    // TODO if docsJson tab for openapi is a relative path, get the json from the filesInDraft, then parse it and use it as openapiDocument, this way user can preview changes to an openapi schema with the cli and the agent
-    const paths: { path: string; method: string }[] = Object.entries(
-        openapiDocument.paths ?? {},
-    ).flatMap(([path, pathItem]) =>
-        Object.entries(pathItem ?? {})
-
-            .map(([method]) => ({
-                path,
-                method,
-            })),
-    )
-    const openapiPathsFiles: VirtualFile[] = paths?.map(function ({
-        path,
-        method,
-    }) {
+    const openapiPath = '/api-reference'
+    const openapiTab = docsJson.tabs?.find((x) => 'openapi' in x && x.openapi)
+    const isApiReferencePath =
+        url.pathname === openapiPath ||
+        url.pathname.startsWith(openapiPath + '/')
+    if (isApiReferencePath && openapiTab && 'openapi' in openapiTab) {
+        const openapiUrl = openapiTab.openapi
         return {
-            id: path,
-            name: path,
-            type: 'page',
-            data: {
-                badge: {
-                    color: getMethodColor(method),
-                    content: method,
-                },
-                title: path,
-            } satisfies ProcessorDataFrontmatter,
-            path: path,
+            openapiUrl,
         }
-    })
-
-    const source = fumadocsLoader<any>({
-        source: { files: openapiPathsFiles },
-        baseUrl: openapiPath,
-        pageTree: {
-            attachFile,
-        },
-        icon(icon) {
-            if (!icon) return
-            return <DynamicIcon icon={icon as any} />
-        },
-    })
-    const tree = source.pageTree
-    return source
-}
-
-function getMethodColor(method: string) {
-    switch (method.toUpperCase()) {
-        case 'PUT':
-            return 'yellow'
-        case 'PATCH':
-            return 'orange'
-        case 'POST':
-            return 'blue'
-        case 'DELETE':
-            return 'red'
-        default:
-            return 'green'
     }
+    return {}
 }
 
 export type DocumentInput = string | any

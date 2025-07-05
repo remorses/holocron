@@ -6,7 +6,8 @@ import { Banner } from 'fumadocs-ui/components/banner'
 import { prisma } from 'db'
 import { ReactRouterProvider } from 'fumadocs-core/framework/react-router'
 import { LinkItemType } from 'fumadocs-ui/layouts/links'
-import { DocsLayout, DocsLayoutProps } from 'fumadocs-ui/layouts/notebook'
+import { DocsLayout as DocsLayoutNotebook } from 'fumadocs-ui/layouts/notebook'
+import { DocsLayout } from 'fumadocs-ui/layouts/docs'
 import type { Option } from 'fumadocs-ui/components/layout/root-toggle'
 
 import { RootProvider } from 'fumadocs-ui/provider/base'
@@ -54,9 +55,10 @@ import { PoweredBy } from './components/poweredby'
 import { CustomSearchDialog } from './components/search'
 import { ChatDrawer } from './components/docs-chat'
 import { getTreeFromFiles } from './lib/tree'
-import { getOpenapiDocument, getSourceForOpenAPI } from './lib/openapi'
+import { getOpenapiDocument, getOpenapiUrl } from './lib/openapi.server'
 import { I18nConfig } from 'fumadocs-core/i18n'
 import { StructuredData } from 'fumadocs-core/mdx-plugins/remark-structure'
+import { getSourceForOpenAPI } from './lib/openapi-client'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -184,10 +186,10 @@ export async function loader({ request }: Route.LoaderArgs) {
     const trieveReadApiKey = siteBranch.trieveReadApiKey
     const trieveDatasetId = siteBranch.trieveDatasetId
 
-    const { openapiDocument } = await getOpenapiDocument({ docsJson, url })
+    const { openapiUrl } = await getOpenapiUrl({ docsJson, url })
 
     return {
-        openapiDocument,
+        openapiUrl,
         docsJson: siteBranch.docsJson as DocsJsonType,
         languages,
         files,
@@ -529,7 +531,7 @@ function DocsLayoutWrapper({
     docsJson: DocsJsonType
 }) {
     const loaderData = useLoaderData<typeof loader>() || {}
-    const { i18n, previewWebsocketId } = loaderData
+    const { i18n, previewWebsocketId, openapiUrl } = loaderData
 
     useEffect(() => {
         console.log(`remounting docs layout`)
@@ -546,17 +548,17 @@ function DocsLayoutWrapper({
     const filesInDraft = useDocsState((state) => state.filesInDraft)
 
     const tree = useMemo(() => {
-        const { files, i18n, openapiDocument, githubFolder } = loaderData
-        if (openapiDocument?.paths) {
-            const source = getSourceForOpenAPI({
-                docsJson,
-                openapiDocument: openapiDocument! as any,
-                filesInDraft,
-            })
-            const pageTree = source.pageTree
-            pageTree.$id = Math.random().toString(36).slice(2)
-            return pageTree
-        }
+        const { files, i18n, openapiUrl, githubFolder } = loaderData
+        // if (openapiDocument?.document) {
+        //     const source = getSourceForOpenAPI({
+        //         docsJson,
+        //         openapiDocument: openapiDocument?.document! as any,
+        //         filesInDraft,
+        //     })
+        //     const pageTree = source.pageTree
+        //     pageTree.$id = Math.random().toString(36).slice(2)
+        //     return pageTree
+        // }
         return getTreeFromFiles({
             files,
             defaultLanguage: i18n?.defaultLanguage || 'en',
@@ -613,7 +615,7 @@ function DocsLayoutWrapper({
     const tabs: Option[] = (() => {
         if (!docsJson?.tabs) return []
 
-        return docsJson.tabs
+        const tabs = docsJson.tabs
             .map((tab) => {
                 if ('openapi' in tab) {
                     // OpenAPI tab
@@ -626,11 +628,19 @@ function DocsLayoutWrapper({
                 return null
             })
             .filter(Boolean) as Option[]
+        if (tabs.length) {
+            tabs.unshift({
+                title: 'Docs',
+                url: '/',
+                description: '',
+            })
+        }
+        return tabs
     })()
 
     return (
         <div className='h-full flex flex-col w-full'>
-            <DocsLayout
+            <DocsLayoutNotebook
                 searchToggle={{
                     enabled: searchEnabled,
                     components: {},
@@ -644,6 +654,7 @@ function DocsLayoutWrapper({
                 sidebar={{
                     defaultOpenLevel: 2,
                     collapsible: true,
+                    // enabled: !openapiUrl,
 
                     tabs,
                     footer: (
@@ -660,7 +671,7 @@ function DocsLayoutWrapper({
                 }}
             >
                 {children}
-            </DocsLayout>
+            </DocsLayoutNotebook>
         </div>
     )
 }
