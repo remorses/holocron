@@ -62,6 +62,49 @@ const openapiPath = `/api-reference`
 
 type MediaAssetProp = PageMediaAsset & { asset?: MediaAsset }
 
+type BaseLoaderData = {
+    mediaAssets: MediaAssetProp[]
+    toc: any[]
+    title: string
+    description: string
+    markdown: string
+    ast: any
+    githubPath: string
+    slugs: string[]
+    slug: string
+    lastEditedAt: Date
+    githubFolder: string
+}
+
+type OpenAPIScalarData = BaseLoaderData & {
+    type: 'openapi_scalar'
+    openapiUrl: string
+}
+
+type OpenAPIFumadocsData = BaseLoaderData & {
+    type: 'openapi_fumadocs'
+    processedOpenAPI?: any
+    operations?: any
+    openapiUrl: string
+    [key: string]: any
+}
+
+type PageData = BaseLoaderData & {
+    type: 'page'
+    openapiUrl: string
+    githubFolder: string
+    locale: string
+    i18n: any
+    tree: any
+}
+
+export type LoaderData = OpenAPIScalarData | OpenAPIFumadocsData | PageData
+
+// Extend globalThis to include our type-safe variable
+declare global {
+    var lastServerLoaderData: LoaderData | null
+}
+
 export function meta({ data, matches }: Route.MetaArgs): any {
     if (!data) return []
     const rootMatch = matches?.find((match) => match?.id === 'root')
@@ -154,7 +197,10 @@ export function meta({ data, matches }: Route.MetaArgs): any {
     ].filter(Boolean)
 }
 
-export async function loader({ params, request }: Route.LoaderArgs) {
+export async function loader({
+    params,
+    request,
+}: Route.LoaderArgs): Promise<LoaderData> {
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
 
@@ -241,6 +287,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             return {
                 type: 'openapi_scalar' as const,
                 openapiUrl,
+                githubFolder: site.githubFolder || '',
                 mediaAssets: [] as MediaAssetProp[],
                 toc: [],
                 title: '',
@@ -254,9 +301,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             }
         }
         if (renderer === 'fumadocs') {
+            const { type: _, ...restWithoutType } = rest
             return {
                 type: 'openapi_fumadocs' as const,
-                ...rest,
+                ...restWithoutType,
+                githubFolder: site.githubFolder || '',
                 processedOpenAPI: rest.processedOpenAPI,
                 openapiUrl,
                 mediaAssets: [] as MediaAssetProp[],
@@ -350,9 +399,9 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         type: 'page' as const,
         openapiUrl: '',
         toc: markdownData.toc,
-        title: markdownData.title,
-        githubFolder: site.githubFolder,
-        description: frontmatter.description,
+        title: markdownData.title || '',
+        githubFolder: site.githubFolder || '',
+        description: frontmatter.description || '',
         markdown: markdownData.markdown,
         ast: markdownData.ast,
         slugs,
@@ -368,6 +417,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
 export default function Page(props: Route.ComponentProps): any {
     const { type } = props.loaderData
+
+    // Set global variable only when window is defined (client-side)
+    if (typeof window !== 'undefined') {
+        globalThis.lastServerLoaderData = props.loaderData
+    }
     const rootData = useRouteLoaderData(
         'root',
     ) as RootRoute.ComponentProps['loaderData']
@@ -693,9 +747,10 @@ function DocsMarkdown(): any {
     )
 }
 
-// Global variable to store last successful server loader data
-let lastServerLoaderData = null as any
-export const clientLoader = async ({ params, serverLoader }) => {
+export const clientLoader = async ({
+    params,
+    serverLoader,
+}): Promise<LoaderData> => {
     const docsState = useDocsState.getState()
     const { filesInDraft } = docsState
 
@@ -703,8 +758,9 @@ export const clientLoader = async ({ params, serverLoader }) => {
         // Attempt to load server data
         const serverData = await serverLoader()
 
-        // Server loader succeeded, store it and check for overrides
-        lastServerLoaderData = serverData
+        if (serverData && typeof window !== 'undefined') {
+            globalThis.lastServerLoaderData = serverData
+        }
 
         return serverData
     } catch (err) {
@@ -713,23 +769,27 @@ export const clientLoader = async ({ params, serverLoader }) => {
             console.log(`forwarding non 404 error`, err)
             throw err
         }
-        // Server loader failed with 404, check if we have draft content to serve
         const slugs = params['*']?.split('/').filter((v) => v.length > 0) || []
         const slug = '/' + slugs.join('/')
+        console.log(
+            `running clientLoader to try fetch 404 page for ${slug}, githubFolder is ${globalThis.lastServerLoaderData?.githubFolder}`,
+        )
+        // Server loader failed with 404, check if we have draft content to serve
 
         function removeGithubFolder(p: string) {
-            let githubFolder = lastServerLoaderData?.githubFolder || ''
-            if (p.startsWith(githubFolder)) {
+            let githubFolder =
+                globalThis.lastServerLoaderData?.githubFolder || ''
+            if (githubFolder && p.startsWith(githubFolder)) {
                 return p.slice(githubFolder.length + 1)
             }
             return p
         }
         // Look for draft files that could serve this slug
         for (const [githubPath, draft] of Object.entries(filesInDraft)) {
+            // console.log({ path: removeGithubFolder(githubPath) })
             if (!draft) continue
 
             const source = getFumadocsSource({
-                ...lastServerLoaderData?.i18n,
                 files: [
                     {
                         path: removeGithubFolder(githubPath),
@@ -747,7 +807,7 @@ export const clientLoader = async ({ params, serverLoader }) => {
                 const data = f.data as ProcessorData
 
                 // Use cached server data as base structure, without fields available in root
-                const baseData: {} = lastServerLoaderData || {
+                const baseData: {} = globalThis.lastServerLoaderData || {
                     locale: 'en',
                     i18n: null,
                 }
@@ -758,9 +818,14 @@ export const clientLoader = async ({ params, serverLoader }) => {
                     ...baseData,
                     mediaAssets: [] as MediaAssetProp[],
                     type: 'page' as const,
+                    openapiUrl: '',
+                    githubFolder: '',
+                    locale: (baseData as any)?.locale || 'en',
+                    i18n: (baseData as any)?.i18n || null,
+                    tree: (baseData as any)?.tree || null,
                     toc: data.toc,
-                    title: frontmatter.title,
-                    description: frontmatter.description,
+                    title: frontmatter.title || '',
+                    description: frontmatter.description || '',
                     markdown: draft.content,
                     ast: data.ast,
                     githubPath,

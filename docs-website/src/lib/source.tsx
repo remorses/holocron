@@ -18,8 +18,8 @@ export function getFumadocsSource({
     languages: locales = [] as string[],
     defaultLanguage: defaultLanguage = 'en',
 }: {
-    languages: string[]
-    defaultLanguage: string
+    languages?: string[]
+    defaultLanguage?: string
     files: VirtualFile[]
 }) {
     const languages = locales
