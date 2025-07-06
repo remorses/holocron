@@ -1223,7 +1223,7 @@ function processForTrieve(page: DocumentRecord & { pageSlug: string }) {
     if (page.description)
         chunks.push({
             tracking_id: `${page._id}-${page.description}`,
-            chunk_html: page.description,
+            chunk_html: page.description || page.title,
             link: page.url,
             tag_set,
             metadata: {

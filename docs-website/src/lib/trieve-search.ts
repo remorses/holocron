@@ -90,11 +90,15 @@ function groupResults(groups: GroupChunk[]): SortedResult[] {
     const grouped: SortedResult[] = []
 
     for (const group of groups) {
+        const firstChunk = group.chunks[0]?.chunk
         grouped.push({
             id: 'page' + group.group.id,
             type: 'page',
             url: group.chunks[0]?.chunk.link || '',
-            content: group.group.name,
+            content:
+                (group.group.metadata as any)?.page_title ||
+                (firstChunk?.metadata as any)?.page_title ||
+                group.group.name,
         })
 
         for (const c of group.chunks) {

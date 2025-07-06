@@ -53,6 +53,7 @@ export async function generateLlmsFullTxt({
             if (result.content) {
                 // Convert HTML mark tags to markdown bold
                 const markdownContent = result.content.replace(/<mark>/g, '**').replace(/<\/mark>/g, '**')
+                // const markdownContent = result.content.replace(/<mark>/g, '**').replace(/<\/mark>/g, '**')
                 const sourceUrl = `${baseUrl}${result.url}`
 
                 const section = `**Source:** ${sourceUrl}\n\n${markdownContent}\n\n━━━\n\n`

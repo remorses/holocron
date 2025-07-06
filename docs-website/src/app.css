@@ -31,6 +31,13 @@ summary {
         background: rgba(36, 78, 41, 0.6);
     }
 }
+mark {
+    background-color: theme(colors.yellow.100/0.4);
+}
+.dark mark {
+    background-color: theme(colors.yellow.100/0.6);
+
+}
 
 .navIcon {
     width: 19px;

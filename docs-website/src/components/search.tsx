@@ -14,7 +14,7 @@ import {
     type SharedProps,
 } from 'fumadocs-ui/components/dialog/search'
 import { useDocsSearch } from 'fumadocs-core/search/client'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
     Popover,
     PopoverContent,
@@ -40,6 +40,18 @@ export function CustomSearchDialog(props: SharedProps) {
         tag,
     })
 
+    const items = useMemo(() => {
+        if (query.data == 'empty') return null
+
+        return query?.data?.map((x) => {
+            x.content = (
+                // add support for <mark> attributes returned by trieve
+                <span dangerouslySetInnerHTML={{ __html: x.content }} />
+            ) as any
+            return x
+        })
+    }, [query.data])
+
     return (
         <SearchDialog
             search={search}
@@ -54,9 +66,7 @@ export function CustomSearchDialog(props: SharedProps) {
                     <SearchDialogInput />
                     <SearchDialogClose />
                 </SearchDialogHeader>
-                <SearchDialogList
-                    items={query.data !== 'empty' ? query.data : null}
-                />
+                <SearchDialogList items={items} />
                 {/* <SearchDialogListItem
                     item={{
                         content: 'assistant',
