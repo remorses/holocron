@@ -822,7 +822,7 @@ function Logo({ docsJson = {} as DocsJsonType }) {
                 />
             )}
             {logoText && (
-                <span className='font-medium max-md:hidden'>{logoText}</span>
+                <span className='font-medium text-lg max-md:hidden'>{logoText}</span>
             )}
         </div>
     )

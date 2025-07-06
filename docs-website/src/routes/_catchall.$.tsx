@@ -1,4 +1,6 @@
 import { MediaAsset, PageMediaAsset, prisma } from 'db'
+import frontMatter from 'front-matter'
+
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { APIPage } from 'fumadocs-openapi/ui'
 import {
@@ -411,7 +413,20 @@ function PageContent(props: Route.ComponentProps) {
     let { title, description, toc } = useDocsState(
         useShallow((state) => {
             const { title, description } = loaderData || {}
+            const { filesInDraft } = state
+
+            const override = filesInDraft[loaderData.githubPath]
             const toc = state.toc || loaderData?.toc
+            if (override) {
+              const { attributes: data } = frontMatter<ProcessorDataFrontmatter>(override.content)
+
+                return {
+                    toc,
+                    title: data.title || title,
+                    description: data.description || description,
+                }
+            }
+
             return { title, description, toc }
         }),
     )

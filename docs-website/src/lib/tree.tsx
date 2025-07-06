@@ -23,7 +23,7 @@ export const getTreeFromFiles = ({
             p = p.slice(1)
         }
         if (p.startsWith(githubFolder)) {
-            p = p.slice(githubFolder.length + 1)
+            p = p.slice(githubFolder.length)
             if (p.startsWith('/')) {
                 p = p.slice(1)
             }
@@ -73,7 +73,8 @@ export const getTreeFromFiles = ({
         }
 
         // Replace existing file or add new one
-        const existingIndex = allFiles.findIndex((f) => f.path === githubPath)
+        const existingIndex = allFiles.findIndex((f) => f.path === removeGithubFolder(githubPath))
+        // console.log(draftFile, allFiles)
         if (existingIndex >= 0) {
             allFiles[existingIndex] = draftFile
         } else {
