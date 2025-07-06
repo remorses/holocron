@@ -204,11 +204,11 @@ export const getProcessor = function getProcessor({
     } else {
         return (
             remark()
+                .use(remarkAdmonition)
                 .use(remarkMdx)
                 .use(remarkFrontmatter, ['yaml'])
                 .use(remarkGfm)
                 .use(remarkGitHubBlockquotes)
-                .use(remarkAdmonition)
                 .use(remarkCodeTab)
                 .use(remarkHeading)
                 // .use(mdxPluginsFumadocs.remarkImage)

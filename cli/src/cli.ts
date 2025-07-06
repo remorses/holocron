@@ -1132,7 +1132,7 @@ cli.command('sync', 'Sync current branch with GitHub').action(async () => {
                 console.error(
                     'Please push your commits first before running sync',
                 )
-                console.error('\nUnpushed commits:')
+                console.error('\\nUnpushed commits:')
                 console.error(unpushedCommits)
                 process.exit(1)
             }
@@ -1198,3 +1198,80 @@ cli.command('sync', 'Sync current branch with GitHub').action(async () => {
         process.exit(1)
     }
 })
+
+cli.command('delete', 'Delete the current fumabase website')
+    .option('--confirm', 'Skip confirmation prompt')
+    .action(async (options) => {
+        try {
+            const config = getUserConfig()
+
+            // Read fumabase.jsonc to get siteId
+            const docsJson = await readTopLevelDocsJson(process.cwd())
+            if (!docsJson?.siteId) {
+                console.error(
+                    'Error: fumabase.jsonc not found or missing siteId',
+                )
+                console.error('Run "fumabase init" to initialize this project')
+                process.exit(1)
+            }
+
+            const siteId = docsJson.siteId
+            const siteName = docsJson.name || 'Unknown Site'
+
+            // Confirmation prompt unless --confirm flag is used
+            if (!options.confirm) {
+                if (!isTTY) {
+                    console.error(
+                        'Error: --confirm is required in non-interactive environments',
+                    )
+                    console.error('Usage: fumabase delete --confirm')
+                    process.exit(1)
+                }
+
+                const response = await prompts({
+                    type: 'confirm',
+                    name: 'confirmDelete',
+                    message: `Are you sure you want to delete the website "${siteName}" (${siteId})? This action cannot be undone.`,
+                    initial: false,
+                })
+
+                if (!response.confirmDelete) {
+                    console.log('Delete operation cancelled.')
+                    process.exit(0)
+                }
+            }
+
+            console.log(`Deleting website "${siteName}" (${siteId})...`)
+
+            // Call the delete API
+            const { data, error } = await apiClient.api.deleteWebsite.post({
+                siteId,
+            })
+
+            if (error) {
+                console.error(
+                    'Delete failed:',
+                    error.message || 'Unknown error',
+                )
+                process.exit(1)
+            }
+
+            if (data?.success) {
+                console.log('✅ Website deleted successfully!')
+                console.log(`Site "${siteName}" has been permanently removed.`)
+
+                // Optionally remove the fumabase.jsonc file
+                const fumabaseJsonPath = path.resolve('fumabase.jsonc')
+                if (fs.existsSync(fumabaseJsonPath)) {
+                    fs.unlinkSync(fumabaseJsonPath)
+                    console.log('Local fumabase.jsonc file removed.')
+                }
+            } else {
+                console.error('Delete failed: Invalid response from server')
+                process.exit(1)
+            }
+        } catch (error) {
+            console.error('Error during delete:', error.message || error)
+            process.exit(1)
+        }
+    })

@@ -1181,6 +1181,50 @@ export const app = new Spiceflow({ basePath: '/api' })
             }
         },
     })
+    .route({
+        method: 'POST',
+        path: '/deleteWebsite',
+        request: z.object({
+            siteId: z.string().min(1, 'siteId is required'),
+        }),
+        async handler({ request, state: { userId } }) {
+            const { siteId } = await request.json()
+
+            if (!userId) {
+                throw new AppError('User not authenticated')
+            }
+
+            // Find site and check user access
+            const site = await prisma.site.findFirst({
+                where: {
+                    siteId,
+                    org: {
+                        users: {
+                            some: { userId },
+                        },
+                    },
+                },
+                include: {
+                    branches: true,
+                },
+            })
+
+            if (!site) {
+                throw new AppError('Site not found or user has no access')
+            }
+
+            // Delete the site and all related data (cascading deletes will handle branches, pages, etc.)
+            await prisma.site.delete({
+                where: { siteId },
+            })
+
+            return {
+                success: true,
+                message: `Site "${site.name}" has been deleted successfully`,
+                siteId,
+            }
+        },
+    })
     .onError(({ error }) => {
         notifyError(error)
     })
