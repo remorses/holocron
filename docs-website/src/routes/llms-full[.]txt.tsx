@@ -2,7 +2,6 @@ import { prisma } from 'db'
 import type { Route } from './+types/llms-full[.]txt'
 import { generateLlmsFullTxt } from '../lib/llms-full-txt'
 
-
 export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
@@ -18,11 +17,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         searchQuery: searchQuery || undefined,
     })
 
-    if (!content) {
-        throw new Response('Site not found', { status: 404 })
-    }
-
-    return new Response(content, {
+    return new Response(content || `Nothing matching the terms "${searchParams}" found`, {
         headers: {
             'Content-Type': 'text/plain; charset=utf-8',
             'Cache-Control': 'public, max-age=3600',
