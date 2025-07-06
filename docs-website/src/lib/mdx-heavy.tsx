@@ -27,6 +27,7 @@ import { remarkSteps } from 'fumadocs-core/mdx-plugins/remark-steps'
 import {
     remarkStructure,
     StructuredData,
+    StructureOptions,
 } from 'fumadocs-core/mdx-plugins/remark-structure'
 import {} from 'js-yaml'
 import { Heading, Root } from 'mdast'
@@ -190,6 +191,23 @@ export const getProcessor = function getProcessor({
     highlighter?: Highlighter
     onMissingLanguage?: OnMissingLanguage
 }) {
+    const structureOptions: StructureOptions = {
+        types(node) {
+            if (node.type === 'yaml') return false
+            // Ignore additional MDX nodes that shouldn't be treated as structure content
+            if (
+                node.type === 'mdxFlowExpression' ||
+                node.type === 'mdxTextExpression' ||
+                node.type === 'mdxjsEsm'
+            )
+                return false
+            return true
+        },
+        allowedMdxAttributes(node, attribute) {
+            let attrValue = attribute.value?.toString() || ''
+            return attrValue.length > 10
+        },
+    }
     if (typeof extension === 'string' && extension.endsWith('md')) {
         return remark()
             .use(remarkFrontmatter, ['yaml'])
@@ -200,7 +218,7 @@ export const getProcessor = function getProcessor({
             .use(remarkExtractFirstHeading)
             .use(injectData)
             .use(remarkStringify)
-            .use(remarkStructure)
+            .use(remarkStructure, structureOptions)
     } else {
         return (
             remark()
@@ -222,7 +240,7 @@ export const getProcessor = function getProcessor({
                 .use(remarkMermaidCode)
                 .use(remarkSingleAccordionItems)
                 .use(remarkStringify)
-                .use(remarkStructure)
+                .use(remarkStructure, structureOptions)
         )
     }
 }

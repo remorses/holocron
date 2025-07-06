@@ -11,31 +11,31 @@ describe('generateLlmsFullTxt', () => {
         expect(result).toMatchInlineSnapshot(`
           "**Source:** https://docs.fumabase.com/essentials/images
 
-          /essentials/images
+          Images and Embeds
 
           ━━━
 
           **Source:** https://docs.fumabase.com/essentials/images#embeds-and-html-elements
 
-          Fumabase supports HTML tags in **<b>Markdown</b>**. This is helpful if you prefer HTML tags to **<b>Markdown</b>** syntax, and lets you create documentation with infinite flexibility.
+          Fumabase supports HTML tags in Markdown. This is helpful if you prefer HTML tags to Markdown syntax, and lets you create documentation with infinite flexibility.
 
           ━━━
 
           **Source:** https://docs.fumabase.com/essentials/images#using-markdown
 
-          Using **<b>Markdown</b>**
+          Using Markdown
 
           ━━━
 
           **Source:** https://docs.fumabase.com/essentials/frontmatter
 
-          /essentials/frontmatter
+          Frontmatter
 
           ━━━
 
           **Source:** https://docs.fumabase.com/essentials/frontmatter#overview
 
-          Frontmatter is YAML metadata placed at the beginning of your **<b>markdown</b>** files. It controls how your page is displayed and indexed.
+          Frontmatter is YAML metadata placed at the beginning of your markdown files. It controls how your page is displayed and indexed.
 
           ━━━
 

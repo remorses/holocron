@@ -14,14 +14,14 @@ describe('searchDocsWithTrieve', () => {
         expect(result).toMatchInlineSnapshot(`
           [
             {
-              "content": "/essentials/images",
+              "content": "Images and Embeds",
               "id": "page0fc4904a-dcbb-4d56-9ff2-f10023641c07",
               "type": "page",
               "url": "/essentials/images",
             },
             {
-              "chunk_html": "Fumabase supports HTML tags in <mark><b>Markdown</b></mark>. This is helpful if you prefer HTML tags to <mark><b>Markdown</b></mark> syntax, and lets you create documentation with infinite flexibility.",
-              "content": "Fumabase supports HTML tags in <mark><b>Markdown</b></mark>. This is helpful if you prefer HTML tags to <mark><b>Markdown</b></mark> syntax, and lets you create documentation with infinite flexibility.",
+              "chunk_html": "Fumabase supports HTML tags in Markdown. This is helpful if you prefer HTML tags to Markdown syntax, and lets you create documentation with infinite flexibility.",
+              "content": "Fumabase supports HTML tags in Markdown. This is helpful if you prefer HTML tags to Markdown syntax, and lets you create documentation with infinite flexibility.",
               "created_at": "2025-07-04T07:58:01.149377",
               "dataset_id": "706c5b23-ec23-46da-bccf-33b6b90a65b3",
               "id": "/essentials/images-embeds-and-html-elements-content",
@@ -44,8 +44,8 @@ describe('searchDocsWithTrieve', () => {
               "weight": 0,
             },
             {
-              "chunk_html": "Using <mark><b>Markdown</b></mark>",
-              "content": "Using <mark><b>Markdown</b></mark>",
+              "chunk_html": "Using Markdown",
+              "content": "Using Markdown",
               "created_at": "2025-07-04T07:58:01.149380",
               "dataset_id": "706c5b23-ec23-46da-bccf-33b6b90a65b3",
               "id": "/essentials/images-using-markdown-heading",
@@ -62,20 +62,20 @@ describe('searchDocsWithTrieve', () => {
               "tag_set": [],
               "time_stamp": null,
               "tracking_id": "/essentials/images-using-markdown-heading",
-              "type": "text",
+              "type": "heading",
               "updated_at": "2025-07-04T07:58:01.149380",
               "url": "/essentials/images#using-markdown",
               "weight": 0,
             },
             {
-              "content": "/essentials/frontmatter",
+              "content": "Frontmatter",
               "id": "page4f85ee7f-5fb0-4bc5-b9e4-cab84c2cc8b3",
               "type": "page",
               "url": "/essentials/frontmatter",
             },
             {
-              "chunk_html": "Frontmatter is YAML metadata placed at the beginning of your <mark><b>markdown</b></mark> files. It controls how your page is displayed and indexed.",
-              "content": "Frontmatter is YAML metadata placed at the beginning of your <mark><b>markdown</b></mark> files. It controls how your page is displayed and indexed.",
+              "chunk_html": "Frontmatter is YAML metadata placed at the beginning of your markdown files. It controls how your page is displayed and indexed.",
+              "content": "Frontmatter is YAML metadata placed at the beginning of your markdown files. It controls how your page is displayed and indexed.",
               "created_at": "2025-07-04T07:58:01.149348",
               "dataset_id": "706c5b23-ec23-46da-bccf-33b6b90a65b3",
               "id": "/essentials/frontmatter-overview-content",

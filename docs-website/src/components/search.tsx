@@ -43,13 +43,15 @@ export function CustomSearchDialog(props: SharedProps) {
     const items = useMemo(() => {
         if (query.data == 'empty') return null
 
-        return query?.data?.map((x) => {
-            x.content = (
-                // add support for <mark> attributes returned by trieve
-                <span dangerouslySetInnerHTML={{ __html: x.content }} />
-            ) as any
-            return x
-        })
+        return query.data
+        // TODO using dangerouslySetInnerHTML can cause problems
+        // return query?.data?.map((x) => {
+        //     x.content = (
+        //         // add support for <mark> attributes returned by trieve
+        //         <span dangerouslySetInnerHTML={{ __html: x.content }} />
+        //     ) as any
+        //     return x
+        // })
     }, [query.data])
 
     return (

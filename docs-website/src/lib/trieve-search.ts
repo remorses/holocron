@@ -76,6 +76,7 @@ export async function searchDocsWithTrieve({
         group_size: 4,
 
         highlight_options: {
+            highlight_results: false,
             // highlight_window: 100,
         },
         filters,

@@ -91,9 +91,23 @@ export function deduplicateBy<T>(array: T[], keyFn: (item: T) => string): T[] {
     return Array.from(seen.values())
 }
 
-
-
-
 export const isTruthy = <T>(value: T): value is NonNullable<T> => {
     return Boolean(value)
+}
+
+export function groupBy<T, K extends string | number>(
+    array: T[],
+    keyFn: (item: T) => K,
+): Record<K, T[]> {
+    return array.reduce(
+        (acc, item) => {
+            const key = keyFn(item)
+            if (!(key in acc)) {
+                acc[key] = []
+            }
+            acc[key].push(item)
+            return acc
+        },
+        {} as Record<K, T[]>,
+    )
 }
