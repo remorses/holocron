@@ -2,9 +2,7 @@ import { MediaAsset, PageMediaAsset, prisma } from 'db'
 import frontMatter from 'front-matter'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
-import { APIPage } from 'fumadocs-openapi/ui'
 import {
-    data,
     isRouteErrorResponse,
     useLoaderData,
     useRouteLoaderData,
@@ -53,21 +51,18 @@ import {
 } from '../lib/mdx-heavy'
 import { getFumadocsSource } from '../lib/source'
 
-import { diffWordsWithSpace } from 'diff'
-import { markAddedNodes } from '../lib/diff'
-import { MarkdownRuntime } from '../lib/markdown-runtime'
-import { renderNode } from '../lib/mdx-code-block'
+import { ScalarOpenApi } from '../components/scalar'
 import { useAddedHighlighter } from '../lib/_diff'
 import { useScrollToFirstAddedIfAtTop } from '../lib/diff-highlight'
+import { MarkdownRuntime } from '../lib/markdown-runtime'
+import { renderNode } from '../lib/mdx-code-block'
+import { getOpenapiDocument } from '../lib/openapi.server'
 import { getFilesForSource } from '../lib/source.server'
-import { getOpenapiDocument, getOpenapiUrl } from '../lib/openapi.server'
-import { ScalarOpenApi } from '../components/scalar'
-import { APIPageInner } from 'fumadocs-openapi/render/api-page-inner'
 const openapiPath = `/api-reference`
 
 type MediaAssetProp = PageMediaAsset & { asset?: MediaAsset }
 
-export function meta({ data, matches }: Route.MetaArgs) {
+export function meta({ data, matches }: Route.MetaArgs): any {
     if (!data) return []
     const rootMatch = matches?.find((match) => match?.id === 'root')
     if (!rootMatch?.data) return []
@@ -371,7 +366,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     }
 }
 
-export default function Page(props: Route.ComponentProps) {
+export default function Page(props: Route.ComponentProps): any {
     const { type } = props.loaderData
     const rootData = useRouteLoaderData(
         'root',
@@ -400,7 +395,7 @@ export default function Page(props: Route.ComponentProps) {
     return <PageContent {...props} />
 }
 
-function PageContent(props: Route.ComponentProps) {
+function PageContent(props: Route.ComponentProps): any {
     const loaderData = props.loaderData
     const rootData = useRouteLoaderData(
         'root',
@@ -418,7 +413,8 @@ function PageContent(props: Route.ComponentProps) {
             const override = filesInDraft[loaderData.githubPath]
             const toc = state.toc || loaderData?.toc
             if (override) {
-              const { attributes: data } = frontMatter<ProcessorDataFrontmatter>(override.content)
+                const { attributes: data } =
+                    frontMatter<ProcessorDataFrontmatter>(override.content)
 
                 return {
                     toc,
@@ -517,7 +513,7 @@ function PageContent(props: Route.ComponentProps) {
     )
 }
 
-function Footer({ footer }: { footer?: any }) {
+function Footer({ footer }: { footer?: any }): any {
     if (!footer) return null
 
     // Calculate responsive grid columns based on number of link columns
@@ -639,7 +635,7 @@ const components = {
     },
 }
 
-function DocsMarkdown() {
+function DocsMarkdown(): any {
     const loaderData = useLoaderData<typeof loader>()
     let { ast, markdown, isStreaming } = useDocsState(
         useShallow((x) => {
@@ -699,11 +695,7 @@ function DocsMarkdown() {
 
 // Global variable to store last successful server loader data
 let lastServerLoaderData = null as any
-
-export async function clientLoader({
-    params,
-    serverLoader,
-}: Route.ClientLoaderArgs) {
+export const clientLoader = async ({ params, serverLoader }) => {
     const docsState = useDocsState.getState()
     const { filesInDraft } = docsState
 
@@ -718,13 +710,14 @@ export async function clientLoader({
     } catch (err) {
         // Check if this is a 404 error
         if (!isRouteErrorResponse(err) || err.status !== 404) {
+            console.log(`forwarding non 404 error`, err)
             throw err
         }
         // Server loader failed with 404, check if we have draft content to serve
         const slugs = params['*']?.split('/').filter((v) => v.length > 0) || []
         const slug = '/' + slugs.join('/')
 
-        function removeGithubFolder(p) {
+        function removeGithubFolder(p: string) {
             let githubFolder = lastServerLoaderData?.githubFolder || ''
             if (p.startsWith(githubFolder)) {
                 return p.slice(githubFolder.length + 1)
@@ -748,7 +741,9 @@ export async function clientLoader({
             const page = source.getPage(slugs)
             if (page) {
                 const extension = githubPath.endsWith('.mdx') ? 'mdx' : 'md'
-                const f = await getProcessor({ extension }).process(draft)
+                const f = await getProcessor({ extension }).process(
+                    draft.content,
+                )
                 const data = f.data as ProcessorData
 
                 // Use cached server data as base structure, without fields available in root
