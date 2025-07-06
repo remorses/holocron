@@ -1,12 +1,14 @@
-import { toMarkdown } from 'mdast-util-to-markdown'
 import { describe, expect, test } from 'vitest'
+import { SafeMdxRenderer } from 'safe-mdx'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { simplerProcessor } from './simple-processor.js'
 
-import { diffWords } from 'diff'
 import {
     IncrementalParsingProps,
     parseMarkdownIncremental,
     SegmentEntry,
 } from './incremental-markdown-parser.js'
+import React from 'react'
 
 // Wait for highlighter to initialize
 async function parseAndWaitForHighlighter(props: IncrementalParsingProps) {
@@ -28,6 +30,11 @@ async function parseAndWaitForHighlighter(props: IncrementalParsingProps) {
     throw new Error('Highlighter initialization timed out')
 }
 
+function toMarkdown(ast: any): string {
+    const file = simplerProcessor.stringify(ast)
+    return String(file)
+}
+
 function simulateStreaming(text: string): string[] {
     const words = text.split(' ')
     const result: string[] = []
@@ -37,7 +44,7 @@ function simulateStreaming(text: string): string[] {
     return result
 }
 
-describe('getOptimizedMarkdownAst', () => {
+describe('incremental parse', () => {
     const cache = new Map<number, SegmentEntry>()
     const extension = 'mdx'
     const markdown = `
@@ -64,6 +71,12 @@ console.log('Hello, world!');
 
 this is another paragraph
 
+<Cards>
+  <Card>
+  some text
+  </Card>
+</Cards>
+
 
 `.trim()
 
@@ -71,15 +84,52 @@ this is another paragraph
     const streamingChunks = simulateStreaming(markdown)
     streamingChunks.forEach((chunk, idx) => {
         test(`incremental parsing at chunk ${idx + 1}`, async () => {
-            const ast = await parseAndWaitForHighlighter({
-                markdown: chunk,
-                cache,
-            })
-
-            const md = toMarkdown(ast)
-            // const changes = diffWords(chunk, md)
-            // const additions = changes.filter((change) => change.added)
-            expect(md).toMatchSnapshot()
+            try {
+                const ast = await parseAndWaitForHighlighter({
+                    markdown: chunk,
+                    cache,
+                })
+                const md = toMarkdown(ast)
+                // const changes = diffWords(chunk, md)
+                // const additions = changes.filter((change) => change.added)
+                expect(md).toMatchSnapshot()
+            } catch (error) {
+                expect(error.message).toMatchSnapshot()
+            }
+        })
+        test(`incremental parsing and jsx at chunk ${idx + 1}`, async () => {
+            try {
+                const ast = await parseAndWaitForHighlighter({
+                    markdown: chunk,
+                    cache,
+                })
+                const jsx = renderToStaticMarkup(
+                    <SafeMdxRenderer
+                        mdast={ast}
+                        components={{
+                            Cards({ children }) {
+                                return React.createElement(
+                                    'cards',
+                                    null,
+                                    children,
+                                )
+                            },
+                            Card({ children }) {
+                                return React.createElement(
+                                    'card',
+                                    null,
+                                    children,
+                                )
+                            },
+                        }}
+                    />,
+                )
+                // const changes = diffWords(chunk, md)
+                // const additions = changes.filter((change) => change.added)
+                expect(jsx).toMatchSnapshot()
+            } catch (error) {
+                expect(error.message).toMatchSnapshot()
+            }
         })
     })
 
@@ -90,7 +140,9 @@ this is another paragraph
         })
 
         expect(toMarkdown(ast)).toMatchInlineSnapshot(`
-          "This is a sample markdown file to showcase various features.
+          "# Welcome to the Example Document
+
+          This is a sample markdown file to showcase various features.
 
           ## Features
 
@@ -110,6 +162,12 @@ this is another paragraph
           3. three
 
           this is another paragraph
+
+          <Cards>
+            <Card>
+              some text
+            </Card>
+          </Cards>
           "
         `)
     })

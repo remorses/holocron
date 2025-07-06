@@ -6,6 +6,7 @@
     "repository": "https://github.com/remorses/",
     "scripts": {
         "build": "tsc",
+        "test": "pnpm vitest",
         "watch": "tsc -w",
         "typecheck": "tsc --noEmit"
     },
@@ -50,6 +51,7 @@
         "remark-gfm": "^4.0.1",
         "remark-mdx": "^3.1.0",
         "remark-parse": "^11.0.0",
+        "remark-stringify": "^11.0.0",
         "safe-mdx": "^1.1.0",
         "shiki": "^3.7.0",
         "tailwind-merge": "^3.3.1",
