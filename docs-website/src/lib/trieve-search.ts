@@ -206,7 +206,6 @@ export async function cleanupOrphanedTrieveChunks({
 
         console.log(`Found ${existingSlugs.size} existing pages in database`)
 
-
         const trieveGroups = await getAllTrieveGroups({
             trieveDatasetId: datasetId,
         })
@@ -216,9 +215,7 @@ export async function cleanupOrphanedTrieveChunks({
             return
         }
 
-        console.log(
-            `Found ${trieveGroups.length} groups in Trieve dataset`,
-        )
+        console.log(`Found ${trieveGroups.length} groups in Trieve dataset`)
 
         // 5. Find orphaned groups (groups that exist in Trieve but not in DB)
         const orphanedGroups = trieveGroups.filter((group) => {

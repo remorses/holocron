@@ -66,7 +66,6 @@ export function createIframeRpcClient({
         })
     }
     function onMessage(e: MessageEvent) {
-
         const { id, state, error } = (e.data ?? {}) as IframeRpcMessage
 
         if (!id) return

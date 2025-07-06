@@ -1038,9 +1038,9 @@ export async function* filesFromGithub({
             return false
         }
         if (!x?.pathWithFrontSlash?.startsWith(basePath)) {
-            console.log(
-                `Skipping file ${x.githubPath} because path does not start with basePath (${basePath})`,
-            )
+            // console.log(
+            //     `Skipping file ${x.githubPath} because path does not start with basePath (${basePath})`,
+            // )
             return false
         }
         if (!isMarkdown(x.pathWithFrontSlash)) {

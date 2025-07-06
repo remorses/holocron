@@ -186,7 +186,11 @@ export async function loader({ request }: Route.LoaderArgs) {
     const trieveReadApiKey = siteBranch.trieveReadApiKey
     const trieveDatasetId = siteBranch.trieveDatasetId
 
-    const { openapiUrl, renderer: openapiRenderer, ...rest } = await getOpenapiDocument({
+    const {
+        openapiUrl,
+        renderer: openapiRenderer,
+        ...rest
+    } = await getOpenapiDocument({
         docsJson,
         url,
     })
@@ -553,7 +557,8 @@ function DocsLayoutWrapper({
     const filesInDraft = useDocsState((state) => state.filesInDraft)
 
     const tree = useMemo(() => {
-        const { files, i18n, openapiUrl, githubFolder, processedOpenAPI } = loaderData
+        const { files, i18n, openapiUrl, githubFolder, processedOpenAPI } =
+            loaderData
         if (processedOpenAPI?.document) {
             const pageTree = getPageTreeForOpenAPI({
                 docsJson,
