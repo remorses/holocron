@@ -518,3 +518,22 @@ For example, when you are opening a root folder `framework`, the other folders (
 You can add Markdown/meta files for different languages by attending `.{locale}` to your file name, like `page.cn.md` and `meta.cn.json`.
 
 But fumabase automatically translates documents for the user so this should never be needed.
+
+## Admonitions
+
+admonitions nodes in mdx are also supported but need to have a new line between each :::, for example:
+
+```mdx
+:::tip
+
+Always add the spaces between the 2 :::
+
+:::
+
+
+:::warning
+NEVER do this
+:::
+```
+
+> admonitions types are the same as callout types
