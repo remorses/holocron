@@ -812,13 +812,15 @@ function Logo({ docsJson = {} as DocsJsonType }) {
 
     return (
         <div className='flex gap-2 grow items-center'>
-            <img
-                alt='logo'
-                src={logoImageUrl}
-                suppressHydrationWarning
-                className='h-8 [.uwu_&]:block'
-                aria-label='logo'
-            />
+            {logoImageUrl && (
+                <img
+                    alt='logo'
+                    src={logoImageUrl}
+                    suppressHydrationWarning
+                    className='h-8 [.uwu_&]:block'
+                    aria-label='logo'
+                />
+            )}
             {logoText && (
                 <span className='font-medium max-md:hidden'>{logoText}</span>
             )}
