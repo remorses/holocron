@@ -569,7 +569,7 @@ function DocsLayoutWrapper({
     }, [loaderData.files, loaderData.i18n, filesInDraft])
 
     // Configure layout based on docsJson
-    const navMode = 'top'
+    const navMode = 'auto'
     const disableThemeSwitch = false
     const navTransparentMode = 'top'
     const searchEnabled = true
