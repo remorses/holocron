@@ -196,11 +196,11 @@ export const getProcessor = function getProcessor({
             .use(remarkGfm)
             .use(remarkCodeTab)
             .use(remarkHeading)
-            .use(remarkStructure)
             .use(remarkCodeToHtml({ highlighter, onMissingLanguage }))
             .use(remarkExtractFirstHeading)
             .use(injectData)
             .use(remarkStringify)
+            .use(remarkStructure)
     } else {
         return (
             remark()
@@ -213,7 +213,6 @@ export const getProcessor = function getProcessor({
                 .use(remarkHeading)
                 // .use(mdxPluginsFumadocs.remarkImage)
                 .use(remarkSteps)
-                .use(remarkStructure)
                 .use(remarkInstall)
                 .use(remarkMarkAndUnravel)
                 .use(remarkCodeToHtml({ highlighter, onMissingLanguage }))
@@ -223,6 +222,7 @@ export const getProcessor = function getProcessor({
                 .use(remarkMermaidCode)
                 .use(remarkSingleAccordionItems)
                 .use(remarkStringify)
+                .use(remarkStructure)
         )
     }
 }
