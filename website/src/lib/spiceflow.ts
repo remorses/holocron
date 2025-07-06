@@ -35,6 +35,7 @@ import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { openai } from '@ai-sdk/openai'
 import { experimental_transcribe as transcribe } from 'ai'
 import { applyJsonCComments } from './json-c-comments'
+import { TrieveSDK } from 'trieve-ts-sdk'
 
 // Utility to get client IP from request, handling Cloudflare proxy headers
 function getClientIp(request: Request): string {
@@ -1211,6 +1212,33 @@ export const app = new Spiceflow({ basePath: '/api' })
 
             if (!site) {
                 throw new AppError('Site not found or user has no access')
+            }
+
+            // Delete Trieven datasets for all branches that have them
+
+            const trieve = new TrieveSDK({
+                apiKey: env.TRIEVE_API_KEY!,
+                organizationId: env.TRIEVE_ORGANIZATION_ID!,
+            })
+
+            for (const branch of site.branches) {
+                if (branch.trieveDatasetId) {
+                    try {
+                        console.log(
+                            `Deleting Trieven dataset ${branch.trieveDatasetId} for branch ${branch.branchId}`,
+                        )
+                        await trieve.deleteDataset(branch.trieveDatasetId)
+                        console.log(
+                            `Successfully deleted Trieven dataset ${branch.trieveDatasetId}`,
+                        )
+                    } catch (error) {
+                        console.error(
+                            `Failed to delete Trieven dataset ${branch.trieveDatasetId}:`,
+                            error,
+                        )
+                        // Don't throw error here - we still want to delete the site even if Trieven deletion fails
+                    }
+                }
             }
 
             // Delete the site and all related data (cascading deletes will handle branches, pages, etc.)

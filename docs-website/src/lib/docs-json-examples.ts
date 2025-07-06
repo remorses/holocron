@@ -9,9 +9,9 @@ export const defaultDocsJsonComments = {
 }
 
 export const defaultStartingFumabaseJson: DocsJsonType = {
+    $schema: `https://fumabase.com/fumabase.json`,
     siteId: '',
     name: 'Docs',
-    $schema: `https://fumabase.com/fumabase.json`,
     favicon: {
         light: '/favicon.svg',
         dark: '/favicon.svg',
