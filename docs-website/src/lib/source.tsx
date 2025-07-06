@@ -8,9 +8,10 @@ import {
 
 import { I18nConfig } from 'fumadocs-core/i18n'
 import { PageTree } from 'fumadocs-core/server'
-import { Badge } from 'lucide-react'
+
 import { DynamicIcon } from './icon'
 import { ProcessorDataFrontmatter, StructuredData } from './mdx-heavy'
+import { Badge } from '../components/badge'
 
 export function getFumadocsSource({
     files,

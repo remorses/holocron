@@ -29,7 +29,3 @@ export const ScalarOpenApi = ({ url }: { url: string }) => {
         </div>
     )
 }
-
-const Layout = ({ children }: { children?: React.ReactNode }) => {
-    return <div className={'scalar-container'}>{children}</div>
-}

@@ -60,6 +60,7 @@ import { useScrollToFirstAddedIfAtTop } from '../lib/diff-highlight'
 import { getFilesForSource } from '../lib/source.server'
 import { getOpenapiDocument, getOpenapiUrl } from '../lib/openapi.server'
 import { ScalarOpenApi } from '../components/scalar'
+import { APIPageInner } from 'fumadocs-openapi/render/api-page-inner'
 const openapiPath = `/api-reference`
 
 type MediaAssetProp = PageMediaAsset & { asset?: MediaAsset }
@@ -234,24 +235,44 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         }),
     ])
 
-    const { openapiUrl } = await getOpenapiUrl({
+    const { openapiUrl, renderer, ...rest } = await getOpenapiDocument({
         docsJson,
         url,
     })
     if (openapiUrl) {
-        return {
-            type: 'openapi' as const,
-            openapiUrl,
-            mediaAssets: [] as MediaAssetProp[],
-            toc: [],
-            title: '',
-            description: '',
-            markdown: '',
-            ast: null,
-            githubPath: '',
-            slugs,
-            slug,
-            lastEditedAt: new Date(),
+        if (renderer === 'scalar') {
+            return {
+                type: 'openapi_scalar' as const,
+                openapiUrl,
+                mediaAssets: [] as MediaAssetProp[],
+                toc: [],
+                title: '',
+                description: '',
+                markdown: '',
+                ast: null,
+                githubPath: '',
+                slugs,
+                slug,
+                lastEditedAt: new Date(),
+            }
+        }
+        if (renderer === 'fumadocs') {
+            return {
+                type: 'openapi_fumadocs' as const,
+                ...rest,
+                processedOpenAPI: rest.processedOpenAPI,
+                openapiUrl,
+                mediaAssets: [] as MediaAssetProp[],
+                toc: [],
+                title: '',
+                description: '',
+                markdown: '',
+                ast: null,
+                githubPath: '',
+                slugs,
+                slug,
+                lastEditedAt: new Date(),
+            }
         }
     }
 
@@ -310,7 +331,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
     if (!page) {
         console.log('Page not found for slug:', slug)
-        throw new Response(JSON.stringify({}), {
+        throw new Response(null, {
             status: 404,
             headers: { 'Content-Type': 'application/json' },
         })
@@ -350,9 +371,29 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
 export default function Page(props: Route.ComponentProps) {
     const { type } = props.loaderData
-    if (type === 'openapi') {
+    const rootData = useRouteLoaderData(
+        'root',
+    ) as RootRoute.ComponentProps['loaderData']
+    const docsJson = rootData?.docsJson as DocsJsonType
+
+    if (type === 'openapi_scalar') {
         const { openapiUrl } = props.loaderData
+
         return <ScalarOpenApi url={openapiUrl} />
+    }
+    if (props.loaderData.type === 'openapi_fumadocs') {
+        const { openapiUrl, processedOpenAPI, operations } = props.loaderData
+        return <div>api</div>
+        // return (
+        //     <APIPageInner
+        //         {...{
+        //             processed: processedOpenAPI,
+        //             hasHead: true,
+        //             operations,
+        //             // disablePlayground: true,
+        //         }}
+        //     />
+        // )
     }
     return <PageContent {...props} />
 }

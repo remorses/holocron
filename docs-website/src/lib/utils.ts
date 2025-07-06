@@ -90,3 +90,10 @@ export function deduplicateBy<T>(array: T[], keyFn: (item: T) => string): T[] {
     }
     return Array.from(seen.values())
 }
+
+
+
+
+export const isTruthy = <T>(value: T): value is NonNullable<T> => {
+    return Boolean(value)
+}

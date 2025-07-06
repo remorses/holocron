@@ -58,7 +58,7 @@ import { getTreeFromFiles } from './lib/tree'
 import { getOpenapiDocument, getOpenapiUrl } from './lib/openapi.server'
 import { I18nConfig } from 'fumadocs-core/i18n'
 import { StructuredData } from 'fumadocs-core/mdx-plugins/remark-structure'
-import { getSourceForOpenAPI } from './lib/openapi-client'
+import { getPageTreeForOpenAPI } from './lib/openapi-client'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -141,7 +141,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     if (!site) {
         console.log('Site not found for domain:', domain)
-        throw new Response(JSON.stringify({ files: [] }), {
+        throw new Response('', {
             status: 404,
             headers: { 'Content-Type': 'application/json' },
         })
@@ -186,10 +186,15 @@ export async function loader({ request }: Route.LoaderArgs) {
     const trieveReadApiKey = siteBranch.trieveReadApiKey
     const trieveDatasetId = siteBranch.trieveDatasetId
 
-    const { openapiUrl } = await getOpenapiUrl({ docsJson, url })
+    const { openapiUrl, renderer: openapiRenderer, ...rest } = await getOpenapiDocument({
+        docsJson,
+        url,
+    })
 
     return {
         openapiUrl,
+        openapiRenderer,
+        ...rest,
         docsJson: siteBranch.docsJson as DocsJsonType,
         languages,
         files,
@@ -497,31 +502,31 @@ export default function App() {
     )
 }
 
-export const shouldRevalidate: ShouldRevalidateFunction = ({
-    currentUrl,
-    nextUrl,
-    defaultShouldRevalidate,
-}) => {
-    // List of base paths to watch for enter/exit revalidation
-    const watchedBasePaths = ['/api-reference']
+// export const shouldRevalidate: ShouldRevalidateFunction = ({
+//     currentUrl,
+//     nextUrl,
+//     defaultShouldRevalidate,
+// }) => {
+//     // List of base paths to watch for enter/exit revalidation
+//     const watchedBasePaths = ['/api-reference']
 
-    // Helper to check whether a pathname matches any watched base path
-    const isInWatchedBasePath = (pathname: string) => {
-        return watchedBasePaths.some((basePath) =>
-            pathname.startsWith(basePath),
-        )
-    }
+//     // Helper to check whether a pathname matches any watched base path
+//     const isInWatchedBasePath = (pathname: string) => {
+//         return watchedBasePaths.some((basePath) =>
+//             pathname.startsWith(basePath),
+//         )
+//     }
 
-    const wasInWatched = isInWatchedBasePath(currentUrl.pathname)
-    const willBeInWatched = isInWatchedBasePath(nextUrl.pathname)
+//     const wasInWatched = isInWatchedBasePath(currentUrl.pathname)
+//     const willBeInWatched = isInWatchedBasePath(nextUrl.pathname)
 
-    // Revalidate when entering or exiting any watched path
-    if (wasInWatched !== willBeInWatched) {
-        return true
-    }
+//     // Revalidate when entering or exiting any watched path
+//     if (wasInWatched !== willBeInWatched) {
+//         return true
+//     }
 
-    return defaultShouldRevalidate
-}
+//     return defaultShouldRevalidate
+// }
 
 function DocsLayoutWrapper({
     children,
@@ -548,17 +553,15 @@ function DocsLayoutWrapper({
     const filesInDraft = useDocsState((state) => state.filesInDraft)
 
     const tree = useMemo(() => {
-        const { files, i18n, openapiUrl, githubFolder } = loaderData
-        // if (openapiDocument?.document) {
-        //     const source = getSourceForOpenAPI({
-        //         docsJson,
-        //         openapiDocument: openapiDocument?.document! as any,
-        //         filesInDraft,
-        //     })
-        //     const pageTree = source.pageTree
-        //     pageTree.$id = Math.random().toString(36).slice(2)
-        //     return pageTree
-        // }
+        const { files, i18n, openapiUrl, githubFolder, processedOpenAPI } = loaderData
+        if (processedOpenAPI?.document) {
+            const pageTree = getPageTreeForOpenAPI({
+                docsJson,
+                openapiDocument: processedOpenAPI?.document! as any,
+                filesInDraft,
+            })
+            return pageTree
+        }
         return getTreeFromFiles({
             files,
             defaultLanguage: i18n?.defaultLanguage || 'en',

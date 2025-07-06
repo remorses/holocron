@@ -202,6 +202,11 @@ const NavigationTabSchema = z
             .object({
                 tab: z.string().describe('Tab label'),
                 openapi: z.string().describe('OpenAPI spec file path'),
+                renderer: z
+                    .enum(['fumadocs', 'scalar'])
+                    .default('fumadocs')
+                    .optional()
+                    .describe('API documentation renderer'),
             })
             .strict()
             .describe('OpenAPI tab configuration'),
@@ -230,6 +235,7 @@ const ApiSchema = z
             .union([z.string(), z.array(z.string())])
             .optional()
             .describe('AsyncAPI references'),
+
         params: z
             .object({
                 expanded: z
