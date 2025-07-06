@@ -1065,12 +1065,16 @@ cli.command('dev', 'Preview your fumabase website')
             watcher.on('change', handleFileUpdate)
 
             watcher.on('unlink', (filePath) => {
+                const githubPath = path.posix.join(
+                    githubFolder,
+                    path.posix.relative(dir, filePath.replace(/\\\\/g, '/')),
+                )
                 // Handle file deletion
-                if (filesInDraft[filePath]) {
-                    delete filesInDraft[filePath]
+                if (filesInDraft[githubPath]) {
+                    delete filesInDraft[githubPath]
 
                     // Send null value to signal file deletion
-                    const deletedFile = { [filePath]: null }
+                    const deletedFile = { [githubPath]: null }
                     console.log(`sending websocket message for deleted file`)
                     client.setDocsState({ filesInDraft: deletedFile })
                 }
