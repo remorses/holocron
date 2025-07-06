@@ -208,7 +208,7 @@ function MintlifyCard({
     return (
         <CardsComponents.Card
             title={title}
-            description={children}
+            children={children}
             href={href}
             icon={typeof icon === 'string' ? <DynamicIcon icon={icon} /> : icon}
             {...(img && { image: img })}
