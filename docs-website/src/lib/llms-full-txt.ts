@@ -11,6 +11,7 @@ export async function generateLlmsFullTxt({
     searchQuery?: string
 }): Promise<string> {
     const baseUrl = `https://${domain}`
+
     let output = ''
 
     const siteBranch = await prisma.siteBranch.findFirst({
@@ -34,6 +35,7 @@ export async function generateLlmsFullTxt({
             },
         },
     })
+
 
     const site = siteBranch?.site
 
