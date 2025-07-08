@@ -64,7 +64,7 @@ export async function IndividualMCPToolExample() {
           type: 'tool-call',
           toolCallId: 'call_1',
           toolName: 'read_file',
-          args: {
+          input: {
             path: './config.json',
             encoding: 'utf8',
           },
@@ -77,10 +77,10 @@ export async function IndividualMCPToolExample() {
         type: 'tool-result',
         toolCallId: 'call_1',
         toolName: 'read_file',
-        result: {
+        output: {
           content: '{\n  "app_name": "MyApp",\n  "version": "1.0.0",\n  "debug": true\n}',
           size: 75,
-        },
+        } as any,
       }],
     },
     {
@@ -217,7 +217,7 @@ export async function CustomMCPToolExample() {
           type: 'tool-call',
           toolCallId: 'call_1',
           toolName: 'send_email',
-          args: {
+          input: {
             to: ['john@example.com'],
             subject: 'Project Update',
             body: 'Hi John,\n\nI wanted to update you on the current project status...',
@@ -232,11 +232,11 @@ export async function CustomMCPToolExample() {
         type: 'tool-result',
         toolCallId: 'call_1',
         toolName: 'send_email',
-        result: {
+        output: {
           message_id: 'msg_abc123',
           status: 'sent',
           timestamp: '2024-01-15T10:30:00Z',
-        },
+        } as any,
       }],
     },
     {
@@ -328,7 +328,7 @@ export async function MCPServerResponseExample() {
           type: 'tool-call',
           toolCallId: 'call_1',
           toolName: 'create_file',
-          args: {
+          input: {
             path: './README.md',
             content: '# My Project\n\nThis is a sample project.\n\n## Getting Started\n\nTo get started...',
             overwrite: false,
@@ -342,11 +342,11 @@ export async function MCPServerResponseExample() {
         type: 'tool-result',
         toolCallId: 'call_1',
         toolName: 'create_file',
-        result: {
+        output: {
           path: '/Users/example/project/README.md',
           size: 75,
           created_at: '2024-01-15T10:30:00Z',
-        },
+        } as any,
       }],
     },
     {
