@@ -474,7 +474,7 @@ function Footer() {
     }
 
     const submitWithoutDeleteOnDurablefetch = async () => {
-        const messages = useChatState.getState()?.messages
+        const messages = useChatState.getState()?.messages as WebsiteUIMessage[]
         const generateId = createIdGenerator()
 
         const filesInDraft = useWebsiteState.getState()?.filesInDraft || {}
@@ -508,7 +508,7 @@ function Footer() {
         })
         // Split the async iterator into two: one for docs edit, one for state updates
         const [editIter, stateIter] = teeAsyncIterable(
-            uiStreamToUIMessages({
+            uiStreamToUIMessages<WebsiteUIMessage>({
                 uiStream: generator,
                 messages: messages,
                 generateId,
@@ -527,7 +527,7 @@ function Footer() {
                 ) {
                     if ('input' in lastPart) {
                         const args: Partial<EditToolParamSchema> =
-                            lastPart.input
+                            lastPart.input as any
                         if (args?.command === 'view') {
                             continue
                         }

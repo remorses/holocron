@@ -137,12 +137,9 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
 
             const lastUserMessage = messages.findLast((x) => x.role === 'user')
 
-            for await (const part of readableStreamToAsyncIterable(
+            yield* readableStreamToAsyncIterable(
                 result.toUIMessageStream({ originalMessages: messages }),
-            )) {
-                console.log(part)
-                yield part
-            }
+            )
         },
     })
     .onError(({ error }) => {

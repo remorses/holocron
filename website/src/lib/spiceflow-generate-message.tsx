@@ -399,15 +399,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 )
             },
         })
-        for await (const part of readableStreamToAsyncIterable(stream)) {
-            if ('request' in part) {
-                part.request = null as any
-            }
-            if ('response' in part) {
-                part.response = null as any
-            }
-            yield part
-        }
+        yield* readableStreamToAsyncIterable(stream)
     },
 })
 
