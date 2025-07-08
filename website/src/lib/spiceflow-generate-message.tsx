@@ -313,15 +313,23 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 },
             })
         }
-        for await (const part of result.fullStream) {
-            if ('request' in part) {
-                part.request = null as any
+        const stream = result.toUIMessageStream({})
+        const reader = stream.getReader()
+        try {
+            while (true) {
+                const { value: part, done } = await reader.read()
+                if (done) break
+                if ('request' in part) {
+                    part.request = null as any
+                }
+                if ('response' in part) {
+                    part.response = null as any
+                }
+                console.log(part)
+                yield part
             }
-            if ('response' in part) {
-                part.response = null as any
-            }
-            console.log(part)
-            yield part
+        } finally {
+            reader.releaseLock()
         }
     },
 })

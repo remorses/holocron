@@ -6,7 +6,7 @@
     "repository": "https://github.com/remorses/",
     "scripts": {
         "build": "tsc",
-        "test": "pnpm vitest",
+        "test": "doppler run -- pnpm vitest",
         "watch": "tsc -w",
         "typecheck": "tsc --noEmit"
     },
@@ -26,6 +26,9 @@
         "typescript": "^5.8.3"
     },
     "dependencies": {
+        "@ai-sdk/openai": "2.0.0-beta.5",
+        "@ai-sdk/provider": "2.0.0-beta.1",
+        "@ai-sdk/react": "2.0.0-beta.9",
         "@ai-sdk/ui-utils": "^1.2.11",
         "@ariakit/react": "^0.4.17",
         "@radix-ui/react-popover": "^1.1.14",
@@ -34,10 +37,12 @@
         "@radix-ui/react-tooltip": "^1.2.7",
         "@remixicon/react": "^4.6.0",
         "@tanstack/react-query": "^5.81.5",
-        "ai": "^4.3.16",
+        "ai": "5.0.0-beta.9",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "diff": "^8.0.2",
+        "fast-json-stable-stringify": "^2.1.0",
+        "flat-cache": "^6.1.10",
         "framer-motion": "latest",
         "fumadocs-ui": "^15.6.1",
         "lucide-react": "^0.525.0",
@@ -59,6 +64,8 @@
         "unified": "^11.0.5",
         "unist-util-visit": "^5.0.0",
         "use-stick-to-bottom": "^1.1.1",
+        "vitest": "^3.2.4",
+        "zod": "3.25.76",
         "zustand": "^5.0.6"
     },
     "peerDependencies": {

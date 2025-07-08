@@ -223,6 +223,22 @@ Always try to use non relative imports, each package has a absolute import with 
 
 This is preferable other aliases like @/ because i can easily move the code from one package to another without changing the import paths. This way you can even move a file and import paths do not change much.
 
+Always specify the type when creating arrays, especially for empty arrays. If you don't, TypeScript will infer the type as `never[]`, which can cause type errors when adding elements later.
+
+**Example:**
+
+```ts
+// BAD: Type will be never[]
+const items = []
+
+// GOOD: Specify the expected type
+const items: string[] = []
+const numbers: number[] = []
+const users: User[] = []
+```
+
+Remember to always add the explicit type to avoid unexpected type inference.
+
 ## styling
 
 - always use tailwind for styling, prefer using simple styles using flex and gap. Margins should be avoided, instead use flexbox gaps, grid gaps, or separate spacing divs.

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { DocsConfigSchema } from './docs-json'
 import { streamObject, streamText, wrapLanguageModel } from 'ai'
 import { openai } from '@ai-sdk/openai'
-import { createAiCacheMiddleware } from './ai-cache'
+import { createAiCacheMiddleware } from 'contesto/src/lib/ai-cache.js'
 
 describe.skip(
     'AI-generated example for DocsConfigSchema',
@@ -19,7 +19,7 @@ describe.skip(
             const middleware = createAiCacheMiddleware({})
 
             const model = wrapLanguageModel({
-                model: openai('gpt-4o-mini', { structuredOutputs: false }),
+                model: openai('gpt-4o-mini'),
                 middleware: [middleware],
             })
             // Use streamText v4 API, do not use a string for the model field

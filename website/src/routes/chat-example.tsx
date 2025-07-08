@@ -379,7 +379,7 @@ function Footer() {
         if (error) throw error
 
         const stateIter = fullStreamToUIMessages({
-            fullStream: generator,
+            uiStream: generator,
             messages: messages,
             generateId,
         })

@@ -55,9 +55,7 @@ export function ChatTextarea({
                     {
                         parts: [],
                         role: 'assistant',
-                        content: '',
                         id: assistantMessageId,
-                        createdAt: now,
                     },
                 ],
             })
@@ -65,9 +63,7 @@ export function ChatTextarea({
             // Create user message for new requests
             const userMessage: UIMessage = {
                 id: userMessageId,
-                content: '',
                 role: 'user',
-                createdAt: new Date(now.getTime() - 1),
                 parts: [{ type: 'text', text: value }],
             }
 
@@ -78,9 +74,7 @@ export function ChatTextarea({
                     {
                         parts: [],
                         role: 'assistant',
-                        content: '',
                         id: assistantMessageId,
-                        createdAt: now,
                     },
                 ],
             })

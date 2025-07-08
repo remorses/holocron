@@ -490,7 +490,7 @@ function Footer() {
         // Split the async iterator into two: one for docs edit, one for state updates
         const [editIter, stateIter] = teeAsyncIterable(
             fullStreamToUIMessages({
-                fullStream: generator,
+                uiStream: generator,
                 messages: messages,
                 generateId,
             }),

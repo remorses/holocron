@@ -173,7 +173,7 @@ function MessageRenderer({ message }: { message: UIMessage }) {
                         <Markdown
                             key={index}
                             isStreaming={isChatGenerating}
-                            markdown={'thinking:' + part.reasoning}
+                            markdown={'thinking:' + part.text}
                         />
                     )
                 }
@@ -307,7 +307,7 @@ function Footer() {
         if (error) throw error
 
         const stateIter = fullStreamToUIMessages({
-            fullStream: generator,
+            uiStream: generator,
             messages: messages,
             generateId,
         })
