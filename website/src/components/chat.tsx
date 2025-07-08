@@ -31,7 +31,7 @@ import {
 import { useStickToBottom } from 'use-stick-to-bottom'
 
 import { useTemporaryState } from '../lib/hooks'
-import { fullStreamToUIMessages } from 'contesto/src/lib/process-chat'
+import { uiStreamToUIMessages } from 'contesto/src/lib/process-chat'
 import {
     apiClient,
     apiClientWithDurableFetch,
@@ -508,7 +508,7 @@ function Footer() {
         })
         // Split the async iterator into two: one for docs edit, one for state updates
         const [editIter, stateIter] = teeAsyncIterable(
-            fullStreamToUIMessages({
+            uiStreamToUIMessages({
                 uiStream: generator,
                 messages: messages,
                 generateId,

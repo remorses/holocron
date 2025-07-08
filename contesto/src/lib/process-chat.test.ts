@@ -9,9 +9,12 @@ import {
 } from 'ai'
 import { z } from 'zod/v4'
 import { openai, OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
-import { fullStreamToUIMessages } from './process-chat.js'
+import { uiStreamToUIMessages } from './process-chat.js'
 import { createAiCacheMiddleware } from './ai-cache.js'
-import { readableStreamToAsyncIterable } from './utils.js'
+import {
+    asyncIterableToReadableStream,
+    readableStreamToAsyncIterable,
+} from './utils.js'
 
 describe('process-chat', () => {
     test('should convert simple streamText to messages', async () => {
@@ -27,14 +30,12 @@ describe('process-chat', () => {
             prompt: 'Say hello in one word',
         })
 
-        const uiStream = readableStreamToAsyncIterable(
-            result.toUIMessageStream(),
-        )
+        const uiStream = result.toUIMessageStream()
         let counter = 0
         const generateId = () => `id-${++counter}`
 
         let finalMessages: UIMessage[] = []
-        for await (const messages of fullStreamToUIMessages({
+        for await (const messages of uiStreamToUIMessages({
             uiStream,
             messages: [],
             generateId,
@@ -51,6 +52,7 @@ describe('process-chat', () => {
                   "type": "step-start",
                 },
                 {
+                  "state": "done",
                   "text": "Hello!",
                   "type": "text",
                 },
@@ -74,14 +76,12 @@ describe('process-chat', () => {
             prompt: 'Count to 3',
         })
 
-        const uiStream = readableStreamToAsyncIterable(
-            result.toUIMessageStream(),
-        )
+        const uiStream = result.toUIMessageStream()
         let counter = 0
         const generateId = () => `id-${++counter}`
 
         let finalMessages: UIMessage[] = []
-        for await (const messages of fullStreamToUIMessages({
+        for await (const messages of uiStreamToUIMessages({
             uiStream,
             messages: [],
             generateId,
@@ -113,6 +113,7 @@ describe('process-chat', () => {
                   "type": "step-start",
                 },
                 {
+                  "state": "done",
                   "text": "1, 2, 3.",
                   "type": "text",
                 },
@@ -136,14 +137,12 @@ describe('process-chat', () => {
             prompt: 'Write a brief greeting message',
         })
 
-        const uiStream = readableStreamToAsyncIterable(
-            result.toUIMessageStream(),
-        )
+        const uiStream = result.toUIMessageStream()
         let counter = 0
         const generateId = () => `id-${++counter}`
 
         let finalMessages: UIMessage[] = []
-        for await (const messages of fullStreamToUIMessages({
+        for await (const messages of uiStreamToUIMessages({
             uiStream,
             messages: [],
             generateId,
@@ -173,11 +172,9 @@ describe('process-chat', () => {
             prompt: 'Write a brief greeting message',
         })
 
-        const uiStream2 = readableStreamToAsyncIterable(
-            result2.toUIMessageStream(),
-        )
+        const uiStream2 = result2.toUIMessageStream()
         let finalMessages2: UIMessage[] = []
-        for await (const messages of fullStreamToUIMessages({
+        for await (const messages of uiStreamToUIMessages({
             uiStream: uiStream2,
             messages: [],
             generateId,
@@ -204,14 +201,12 @@ describe('process-chat', () => {
             prompt: 'Generate a simple JSON response with a greeting message. Just respond with {"message": "hello"}',
         })
 
-        const uiStream = readableStreamToAsyncIterable(
-            result.toUIMessageStream(),
-        )
+        const uiStream = result.toUIMessageStream()
         let counter = 0
         const generateId = () => `id-${++counter}`
 
         let finalMessages: UIMessage[] = []
-        for await (const messages of fullStreamToUIMessages({
+        for await (const messages of uiStreamToUIMessages({
             uiStream,
             messages: [],
             generateId,
@@ -244,6 +239,7 @@ describe('process-chat', () => {
                   "type": "step-start",
                 },
                 {
+                  "state": "done",
                   "text": "{"message": "hello"}",
                   "type": "text",
                 },
@@ -267,14 +263,12 @@ describe('process-chat', () => {
             prompt: 'Respond with just the word "test"',
         })
 
-        const uiStream = readableStreamToAsyncIterable(
-            result.toUIMessageStream(),
-        )
+        const uiStream = result.toUIMessageStream()
         let counter = 0
         const generateId = () => `id-${++counter}`
 
         let finalMessages: UIMessage[] = []
-        for await (const messages of fullStreamToUIMessages({
+        for await (const messages of uiStreamToUIMessages({
             uiStream,
             messages: [],
             generateId,
@@ -317,6 +311,7 @@ describe('process-chat', () => {
                   "type": "step-start",
                 },
                 {
+                  "state": "done",
                   "text": "test",
                   "type": "text",
                 },
@@ -366,8 +361,8 @@ describe('process-chat', () => {
         }
 
         let finalMessages: UIMessage[] = []
-        for await (const messages of fullStreamToUIMessages({
-            uiStream: mockToolStream(),
+        for await (const messages of uiStreamToUIMessages({
+            uiStream: asyncIterableToReadableStream(mockToolStream()),
             messages: [],
             generateId,
         })) {
@@ -400,18 +395,15 @@ describe('process-chat', () => {
                   "type": "step-start",
                 },
                 {
+                  "errorText": undefined,
                   "input": {
                     "timezone": "UTC",
                   },
-                  "state": "input-available",
-                  "toolCallId": "call-1",
-                  "type": "tool-getCurrentTime",
-                },
-                {
                   "output": "Current time is 2024-01-01T12:00:00.000Z in UTC",
+                  "providerExecuted": true,
                   "state": "output-available",
                   "toolCallId": "call-1",
-                  "type": "tool-",
+                  "type": "tool-getCurrentTime",
                 },
               ],
               "role": "assistant",
@@ -447,14 +439,12 @@ describe('process-chat', () => {
             temperature: 0,
         })
 
-        const uiStream = readableStreamToAsyncIterable(
-            result.toUIMessageStream(),
-        )
+        const uiStream = result.toUIMessageStream()
         let counter = 0
         const generateId = () => `id-${++counter}`
 
         let finalMessages: UIMessage[] = []
-        for await (const messages of fullStreamToUIMessages({
+        for await (const messages of uiStreamToUIMessages({
             uiStream,
             messages: [],
             generateId,
@@ -488,18 +478,15 @@ describe('process-chat', () => {
                   "type": "step-start",
                 },
                 {
+                  "errorText": undefined,
                   "input": {
                     "timezone": "UTC",
                   },
-                  "state": "input-available",
-                  "toolCallId": "call_IbLOVx1uVpfsRM0FXipQQn5z",
-                  "type": "tool-getCurrentTime",
-                },
-                {
                   "output": "Current time is 2024-01-01T12:00:00.000Z in UTC",
+                  "providerExecuted": undefined,
                   "state": "output-available",
                   "toolCallId": "call_IbLOVx1uVpfsRM0FXipQQn5z",
-                  "type": "tool-",
+                  "type": "tool-getCurrentTime",
                 },
               ],
               "role": "assistant",
@@ -534,12 +521,12 @@ describe('process-chat', () => {
             readableStreamToAsyncIterable(uiStream2),
         )
 
-        const uiStream = readableStreamToAsyncIterable(uiStream1)
+        const uiStream = uiStream1
         let counter = 0
         const generateId = () => `id-${++counter}`
 
         let finalMessages: UIMessage[] = []
-        for await (const messages of fullStreamToUIMessages({
+        for await (const messages of uiStreamToUIMessages({
             uiStream,
             messages: [],
 
@@ -564,12 +551,22 @@ describe('process-chat', () => {
               "type": "step-start",
             },
             {
+              "providerMetadata": {
+                "openai": {
+                  "reasoning": {
+                    "encryptedContent": null,
+                    "id": "rs_686d0eedc4f08199b0e652706070f7400a753022ce41928f",
+                  },
+                },
+              },
+              "state": "done",
               "text": "**Calculating the sum**
 
           The user wants me to calculate 122 + 67 but only show the result at the end. So, I’ll work it out first: adding 122 and 67 gives 189. During my analysis, I can break it down: I can think of 122 + 60 to get 182, then add 7 more to reach 189. In the end, I’ll just respond with "189" to meet their request without extra explanation.",
               "type": "reasoning",
             },
             {
+              "state": "done",
               "text": "189",
               "type": "text",
             },
@@ -585,12 +582,22 @@ describe('process-chat', () => {
                   "type": "step-start",
                 },
                 {
+                  "providerMetadata": {
+                    "openai": {
+                      "reasoning": {
+                        "encryptedContent": null,
+                        "id": "rs_686d0eedc4f08199b0e652706070f7400a753022ce41928f",
+                      },
+                    },
+                  },
+                  "state": "done",
                   "text": "**Calculating the sum**
 
           The user wants me to calculate 122 + 67 but only show the result at the end. So, I’ll work it out first: adding 122 and 67 gives 189. During my analysis, I can break it down: I can think of 122 + 60 to get 182, then add 7 more to reach 189. In the end, I’ll just respond with "189" to meet their request without extra explanation.",
                   "type": "reasoning",
                 },
                 {
+                  "state": "done",
                   "text": "189",
                   "type": "text",
                 },
@@ -644,14 +651,12 @@ describe('process-chat', () => {
             temperature: 0.1,
         })
 
-        const uiStream = readableStreamToAsyncIterable(
-            result.toUIMessageStream(),
-        )
+        const uiStream = result.toUIMessageStream()
         let counter = 0
         const generateId = () => `id-${++counter}`
 
         let finalMessages: UIMessage[] = []
-        for await (const messages of fullStreamToUIMessages({
+        for await (const messages of uiStreamToUIMessages({
             uiStream,
             messages: [],
             generateId,
@@ -662,9 +667,6 @@ describe('process-chat', () => {
         // Verify message structure includes both reasoning and tool parts
         expect(finalMessages.length).toBeGreaterThan(0)
 
-
-
-
         expect(finalMessages).toMatchInlineSnapshot(`
           [
             {
@@ -674,6 +676,15 @@ describe('process-chat', () => {
                   "type": "step-start",
                 },
                 {
+                  "providerMetadata": {
+                    "openai": {
+                      "reasoning": {
+                        "encryptedContent": null,
+                        "id": "rs_686d0ef2b97c81989aa295b28a19acd604048d4ae4cb7e91",
+                      },
+                    },
+                  },
+                  "state": "done",
                   "text": "**Planning a calculation**
 
           The user wants a clear plan: first, I'll get the current time in UTC. After that, I need to find the difference between 150 and 75. To do this, I'll explain each step as I go. First, I'll call getCurrentTime, and when the result is available, I'll calculate the difference using calculateDifference, passing in 150 and 75 as parameters. Since sequential tasks are requested, I'll ensure the response is structured accordingly in the commentary channel.**Organizing function calls**
@@ -684,18 +695,15 @@ describe('process-chat', () => {
                   "type": "reasoning",
                 },
                 {
+                  "errorText": undefined,
                   "input": {
                     "timezone": "UTC",
                   },
-                  "state": "input-available",
-                  "toolCallId": "call_sEN1QaKpAks2pL2lXcCaJyBe",
-                  "type": "tool-getCurrentTime",
-                },
-                {
                   "output": "Current time is 2024-01-01T12:00:00.000Z in UTC",
+                  "providerExecuted": undefined,
                   "state": "output-available",
                   "toolCallId": "call_sEN1QaKpAks2pL2lXcCaJyBe",
-                  "type": "tool-",
+                  "type": "tool-getCurrentTime",
                 },
               ],
               "role": "assistant",

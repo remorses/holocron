@@ -28,7 +28,7 @@
     "dependencies": {
         "@ai-sdk/openai": "2.0.0-beta.5",
         "@ai-sdk/provider": "2.0.0-beta.1",
-        "@ai-sdk/react": "2.0.0-beta.9",
+        "@ai-sdk/react": "2.0.0-beta.10",
         "@ai-sdk/ui-utils": "^1.2.11",
         "@ariakit/react": "^0.4.17",
         "@radix-ui/react-popover": "^1.1.14",
@@ -37,7 +37,7 @@
         "@radix-ui/react-tooltip": "^1.2.7",
         "@remixicon/react": "^4.6.0",
         "@tanstack/react-query": "^5.81.5",
-        "ai": "5.0.0-beta.9",
+        "ai": "5.0.0-beta.10",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "diff": "^8.0.2",

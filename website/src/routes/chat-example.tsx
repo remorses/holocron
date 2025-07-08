@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import { createIdGenerator, UIMessage } from 'ai'
-import { fullStreamToUIMessages } from 'contesto/src/lib/process-chat'
+import { uiStreamToUIMessages } from 'contesto/src/lib/process-chat'
 import { useStickToBottom } from 'use-stick-to-bottom'
 import { Button } from 'website/src/components/ui/button'
 import {
@@ -370,7 +370,7 @@ function Footer() {
             )
         if (error) throw error
 
-        const stateIter = fullStreamToUIMessages({
+        const stateIter = uiStreamToUIMessages({
             uiStream: generator,
             messages: messages,
             generateId,
