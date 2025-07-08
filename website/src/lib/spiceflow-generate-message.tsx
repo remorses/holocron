@@ -18,6 +18,7 @@ import z from 'zod'
 import { printDirectoryTree } from '../components/directory-tree'
 import {
     createEditExecute,
+    EditToolParamSchema,
     editToolParamsSchema,
     fileUpdateSchema,
 } from './edit-tool'
@@ -34,10 +35,19 @@ import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
-export type Tools = {
-    str_replace_editor: any
-    get_project_files: any
-    render_form: any
+export type WebsiteTools = {
+    str_replace_editor: {
+        input: EditToolParamSchema
+        output: any
+    }
+    get_project_files: {
+        input: {}
+        output: string
+    }
+    render_form: {
+        input: RenderFormParameters //
+        output: any
+    }
 }
 
 export const generateMessageApp = new Spiceflow().state('userId', '').route({
@@ -220,7 +230,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             })
         }
         const stream = result.toUIMessageStream({
-            originalMessages: messages,
+            // originalMessages: messages,
             messageMetadata: () => {
                 return {
                     createdAt: new Date(),
@@ -322,6 +332,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                                             output: part.output as any,
                                             toolCallId,
                                             messageId: chatMessage.id,
+                                            state: part.state,
                                             type: part.type,
                                         },
                                     })
@@ -333,6 +344,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                                             errorText: part.errorText,
                                             toolCallId,
                                             messageId: chatMessage.id,
+                                            state: part.state,
                                             type: part.type,
                                         },
                                     })
@@ -394,7 +406,6 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             if ('response' in part) {
                 part.response = null as any
             }
-            console.log(part)
             yield part
         }
     },

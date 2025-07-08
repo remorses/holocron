@@ -50,7 +50,7 @@ export async function loader({
     }
 
     // Find the first chat for this user in this branch, ordered by creation date (newest first)
-    const chat = await prisma.chat.findFirst({
+    let chat = await prisma.chat.findFirst({
         where: {
             branchId,
             userId,
@@ -61,9 +61,14 @@ export async function loader({
     })
 
     if (!chat) {
-        // If no chat exists, we could create one or redirect to a different route
-        // For now, redirect to dashboard as we don't have a route to create a chat
-        throw redirect(href('/org/:orgId/onboarding', { orgId }))
+        // If no chat exists, create a new chat for this user in this branch
+        chat = await prisma.chat.create({
+            data: {
+                userId,
+                branchId,
+                title: '',
+            },
+        })
     }
 
     // Redirect to the specific chat

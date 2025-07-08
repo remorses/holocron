@@ -446,6 +446,7 @@ model ChatPartTool {
   toolCallId  String
   input       Json?
   output      Json?
+  state       String @default("output-available")
   errorText   String? @db.Text
 
   chatMessage ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)

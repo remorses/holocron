@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 
+import { createIdGenerator, UIMessage } from 'ai'
+import { fullStreamToUIMessages } from 'contesto/src/lib/process-chat'
+import { useStickToBottom } from 'use-stick-to-bottom'
 import { Button } from 'website/src/components/ui/button'
 import {
     Command,
@@ -15,28 +18,24 @@ import {
     PopoverTrigger,
 } from 'website/src/components/ui/popover'
 import { ScrollArea } from 'website/src/components/ui/scroll-area'
-import { useStickToBottom } from 'use-stick-to-bottom'
-import { fullStreamToUIMessages } from 'contesto/src/lib/process-chat'
 import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
-import { createIdGenerator, UIMessage } from 'ai'
 
-import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
-import { startTransition } from 'react'
-import { AnimatePresence, motion } from 'unframer'
 import {
     ChatAssistantMessage,
     ChatErrorMessage,
     ChatUserMessage,
 } from 'contesto/src/chat/chat-message'
-import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
-import { ToolInvocationRenderer } from 'website/src/components/tools-preview'
 import {
     ChatProvider,
     ChatState,
     useChatState,
 } from 'contesto/src/chat/chat-provider'
 import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
+import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
 import { ChatUploadButton } from 'contesto/src/chat/chat-upload-button'
+import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
+import { startTransition } from 'react'
+import { AnimatePresence, motion } from 'unframer'
 import {
     Drawer,
     DrawerContent,
@@ -226,9 +225,6 @@ function MessageRenderer({ message }: { message: UIMessage }) {
     return (
         <ChatAssistantMessage message={message}>
             {message.parts.map((part, index) => {
-                if (part.type === 'tool-invocation') {
-                    return <ToolInvocationRenderer part={part} index={index} />
-                }
 
                 if (part.type === 'text') {
                     return (
