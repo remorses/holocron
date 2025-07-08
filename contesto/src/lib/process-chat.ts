@@ -127,9 +127,13 @@ export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
                 message.parts = message.parts.concat([reasoningPart])
                 yield currentMessages.slice(0, -1).concat({ ...message })
             } else if (type === 'reasoning-delta') {
-                activeReasoningParts[value.id].text += value.delta
+                const reasoningPart = activeReasoningParts[value.id]
+                if (reasoningPart) {
+                    reasoningPart.text += value.delta
+                }
                 yield currentMessages.slice(0, -1).concat({ ...message })
             } else if (type === 'reasoning-end') {
+
                 delete activeReasoningParts[value.id]
                 yield currentMessages.slice(0, -1).concat({ ...message })
             } else if (type === 'file') {

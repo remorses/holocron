@@ -8,7 +8,7 @@ import {
     tool,
 } from 'ai'
 import { z } from 'zod/v4'
-import { openai } from '@ai-sdk/openai'
+import { openai, OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
 import { fullStreamToUIMessages } from './process-chat.js'
 import { createAiCacheMiddleware } from './ai-cache.js'
 import { readableStreamToAsyncIterable } from './utils.js'
@@ -244,9 +244,7 @@ describe('process-chat', () => {
                   "type": "step-start",
                 },
                 {
-                  "text": "\`\`\`json
-          {"message": "hello"}
-          \`\`\`",
+                  "text": "{"message": "hello"}",
                   "type": "text",
                 },
               ],
@@ -494,13 +492,13 @@ describe('process-chat', () => {
                     "timezone": "UTC",
                   },
                   "state": "input-available",
-                  "toolCallId": "call_rmfw5wFRkzNUhn4LsONeTM8A",
+                  "toolCallId": "call_IbLOVx1uVpfsRM0FXipQQn5z",
                   "type": "tool-getCurrentTime",
                 },
                 {
                   "output": "Current time is 2024-01-01T12:00:00.000Z in UTC",
                   "state": "output-available",
-                  "toolCallId": "call_rmfw5wFRkzNUhn4LsONeTM8A",
+                  "toolCallId": "call_IbLOVx1uVpfsRM0FXipQQn5z",
                   "type": "tool-",
                 },
               ],
@@ -514,18 +512,29 @@ describe('process-chat', () => {
         const middleware = createAiCacheMiddleware({})
 
         const model = wrapLanguageModel({
-            model: openai('o4-mini'),
+            model: openai.responses('o4-mini'),
+
             middleware: [middleware],
         })
 
         const result = streamText({
             model,
+            providerOptions: {
+                openai: {
+                    reasoningSummary: 'detailed',
+                } satisfies OpenAIResponsesProviderOptions,
+            },
             prompt: 'What is 122+67? do your calculations in the reasoning, only show me the result',
         })
 
-        const uiStream = readableStreamToAsyncIterable(
-            result.toUIMessageStream(),
+        // Use a tee to duplicate the stream, convert one to async generator and to array if desired
+        const [uiStream1, uiStream2] = result.toUIMessageStream().tee() // tee returns a [ReadableStream, ReadableStream]
+
+        const parts = await Array.fromAsync(
+            readableStreamToAsyncIterable(uiStream2),
         )
+
+        const uiStream = readableStreamToAsyncIterable(uiStream1)
         let counter = 0
         const generateId = () => `id-${++counter}`
 
@@ -533,6 +542,7 @@ describe('process-chat', () => {
         for await (const messages of fullStreamToUIMessages({
             uiStream,
             messages: [],
+
             generateId,
         })) {
             finalMessages = messages
@@ -547,12 +557,24 @@ describe('process-chat', () => {
         expect(message).toHaveProperty('parts')
         expect(Array.isArray(message.parts)).toBe(true)
 
-        // Check that there's at least one reasoning part
-        const reasoningParts = message.parts.filter(
-            (part) => part.type === 'reasoning',
-        )
-        expect(reasoningParts.length).toBeGreaterThan(0)
-        expect(reasoningParts[0]).toHaveProperty('text')
+        // Check that reasoning parts are properly included when they have content
+        expect(message.parts).toMatchInlineSnapshot(`
+          [
+            {
+              "type": "step-start",
+            },
+            {
+              "text": "**Clarifying calculation presentation**
+
+          The user asks what 122 + 67 equals and specifically wants the calculation reasoning shown only to me, with just the result shared. So, I’ll calculate: 122 + 67 equals 189. I need to document this reasoning internally but only display the final answer, which is 189. By organizing my thought process this way, I’m ensuring that I’m consistent and following the user's request while maintaining clarity.",
+              "type": "reasoning",
+            },
+            {
+              "text": "189",
+              "type": "text",
+            },
+          ]
+        `)
 
         expect(finalMessages).toMatchInlineSnapshot(`
           [
@@ -563,7 +585,9 @@ describe('process-chat', () => {
                   "type": "step-start",
                 },
                 {
-                  "text": "",
+                  "text": "**Clarifying calculation presentation**
+
+          The user asks what 122 + 67 equals and specifically wants the calculation reasoning shown only to me, with just the result shared. So, I’ll calculate: 122 + 67 equals 189. I need to document this reasoning internally but only display the final answer, which is 189. By organizing my thought process this way, I’m ensuring that I’m consistent and following the user's request while maintaining clarity.",
                   "type": "reasoning",
                 },
                 {

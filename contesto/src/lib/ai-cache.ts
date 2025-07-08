@@ -53,7 +53,7 @@ export function createAiCacheMiddleware({
         return cache
     }
     const cacheMiddleware: LanguageModelV2Middleware = {
-        wrapGenerate: async ({ doGenerate, params, model }) => {
+        wrapGenerate: async ({ doGenerate, params,  model }) => {
             const cache = getModelCache(model.modelId)
 
             onParams?.(params)
