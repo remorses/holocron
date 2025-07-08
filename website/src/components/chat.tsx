@@ -28,7 +28,7 @@ import {
 import { useStickToBottom } from 'use-stick-to-bottom'
 
 import { useTemporaryState } from '../lib/hooks'
-import {fullStreamToUIMessages } from 'contesto/src/lib/process-chat'
+import { fullStreamToUIMessages } from 'contesto/src/lib/process-chat'
 import {
     apiClient,
     apiClientWithDurableFetch,
@@ -218,7 +218,6 @@ function WelcomeMessage() {
             message={{
                 role: 'assistant',
                 id: '',
-                content: '',
                 parts: [],
             }}
         >
@@ -321,7 +320,7 @@ function MessageRenderer({ message }: { message: UIMessage }) {
                             key={index}
                             className='prose-sm'
                             isStreaming={isChatGenerating}
-                            markdown={'thinking:' + part.reasoning}
+                            markdown={'thinking:' + part.text}
                         />
                     )
                 }
@@ -504,12 +503,11 @@ function Footer() {
                 const lastPart = lastMessage.parts[lastMessage.parts.length - 1]
                 if (
                     lastMessage.role === 'assistant' &&
-                    lastPart?.type === 'tool-invocation'
+                    lastPart?.type === 'tool-str_replace_editor'
                 ) {
-                    const toolInvocation = lastPart.toolInvocation
-                    if (toolInvocation.toolName === 'str_replace_editor') {
+                    if ('input' in lastPart) {
                         const args: Partial<EditToolParamSchema> =
-                            toolInvocation.args
+                            lastPart.input
                         if (args?.command === 'view') {
                             continue
                         }
@@ -520,14 +518,17 @@ function Footer() {
                             args.path || '',
                             githubFolder,
                         )
-                        if (toolInvocation.state === 'partial-call') {
+                        if (
+                            lastPart.state === 'input-streaming' ||
+                            lastPart.state === 'input-available'
+                        ) {
                             if (isPostMessageBusy) continue
                             let updatedPagesCopy = { ...filesInDraft }
                             const execute = createEditExecute({
                                 filesInDraft: updatedPagesCopy,
                                 getPageContent,
                             })
-                            await execute(toolInvocation.args)
+                            await execute(args as any)
                             isPostMessageBusy = true
                             docsRpcClient
                                 .setDocsState({
@@ -538,11 +539,11 @@ function Footer() {
                                 .then(() => {
                                     isPostMessageBusy = false
                                 })
-                        } else if (toolInvocation.state === 'result') {
-                            await execute(toolInvocation.args)
+                        } else if (lastPart.state === 'output-available') {
+                            await execute(args as any)
                             console.log(
                                 `applying the setState update to the docs site`,
-                                toolInvocation,
+                                lastPart,
                             )
 
                             await docsRpcClient.setDocsState(
@@ -551,7 +552,7 @@ function Footer() {
                                     isMarkdownStreaming: false,
                                     currentSlug,
                                 },
-                                toolInvocation.toolCallId,
+                                lastPart.toolCallId,
                             )
                             useWebsiteState.setState({
                                 filesInDraft,
@@ -639,7 +640,6 @@ function Footer() {
                                 disabled={false}
                                 placeholder='Ask me anything...'
                                 className=''
-
                                 mentionOptions={mentionOptions || []}
                             />
                             {/* Textarea buttons */}

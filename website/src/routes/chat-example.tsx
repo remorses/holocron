@@ -65,8 +65,6 @@ let exampleMessages: UIMessage[] = [
                 text: 'Hi, I want to get started with customizing my docs site. Any guidance?',
             },
         ],
-        content: '',
-        createdAt: new Date(),
     },
     {
         id: '2',
@@ -111,8 +109,6 @@ Let me know what you'd like to do first!
                 `.trim(),
             },
         ],
-        content: '',
-        createdAt: new Date(),
     },
 ]
 
@@ -249,7 +245,7 @@ function MessageRenderer({ message }: { message: UIMessage }) {
                         <Markdown
                             key={index}
                             isStreaming={isChatGenerating}
-                            markdown={'thinking:' + part.reasoning}
+                            markdown={'thinking:' + part.text}
                         />
                     )
                 }

@@ -228,7 +228,6 @@ export default function Page({
             messages: chat.messages.map((x) => {
                 const message: UIMessage = {
                     ...x,
-                    content: '',
                     parts: x.parts as any,
                 }
                 return message

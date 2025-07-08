@@ -1,4 +1,10 @@
-import { InferUITool, TextStreamPart, ToolSet, UIMessage, UIMessageStreamPart } from 'ai'
+import {
+    InferUITool,
+    TextStreamPart,
+    ToolSet,
+    UIMessage,
+    UIMessageStreamPart,
+} from 'ai'
 
 import { parsePartialJson } from 'ai'
 import { UseChatOptions } from '@ai-sdk/react'
@@ -7,16 +13,6 @@ type UiMessagePart = UIMessage['parts'][number]
 
 type TextUIPart = Extract<UiMessagePart, { type: 'text' }>
 type ReasoningUIPart = Extract<UiMessagePart, { type: 'reasoning' }>
-
-// Tool part with dynamic type name
-type ToolUIPart = {
-    type: string // tool-${toolName}
-    toolCallId: string
-    state?: string
-    input?: any
-    output?: any
-    errorText?: string
-}
 
 // Tool parts now use typed naming: tool-${toolName} instead of generic types
 
@@ -28,11 +24,17 @@ export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
     getCurrentDate = () => new Date(),
 }: {
     uiStream: AsyncIterable<UIMessageStreamPart>
-    messages: UIMessage<any, any, { [K in keyof TOOLS]: InferUITool<TOOLS[K]> }>[]
+    messages: UIMessage<
+        any,
+        any,
+        { [K in keyof TOOLS]: InferUITool<TOOLS[K]> }
+    >[]
     onToolCall?: (params: { toolCall: any }) => Promise<any> | any
     generateId: () => string
     getCurrentDate?: () => Date
-}) {
+}): AsyncIterable<
+    UIMessage<any, any, { [K in keyof TOOLS]: InferUITool<TOOLS[K]> }>[]
+> {
     const lastMessage = messages[messages.length - 1]
     const replaceLastMessage = lastMessage?.role === 'assistant'
 
@@ -50,7 +52,11 @@ export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
         }
     }
 
-    const message: UIMessage<any, any, { [K in keyof TOOLS]: InferUITool<TOOLS[K]> }> = replaceLastMessage
+    const message: UIMessage<
+        any,
+        any,
+        { [K in keyof TOOLS]: InferUITool<TOOLS[K]> }
+    > = replaceLastMessage
         ? structuredClone(lastMessage)
         : {
               id: generateId(),
@@ -76,7 +82,8 @@ export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
         const partIdx = message.parts.findIndex(
             (part) =>
                 part.type === `tool-${toolName}` &&
-                'toolCallId' in part && (part as ToolUIPart).toolCallId === toolCallId,
+                'toolCallId' in part &&
+                part.toolCallId === toolCallId,
         )
 
         if (partIdx !== -1) {
@@ -91,7 +98,7 @@ export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
                     type: `tool-${toolName}` as `tool-${string}`,
                     toolCallId,
                     ...updates,
-                } as ToolUIPart,
+                },
             ] as any)
         }
     }
@@ -128,13 +135,14 @@ export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
                 yield currentMessages.slice(0, -1).concat({ ...message })
             } else if (type === 'reasoning-delta') {
                 const reasoningPart = activeReasoningParts[value.id]
+
                 if (reasoningPart) {
                     reasoningPart.text += value.delta
                 }
                 yield currentMessages.slice(0, -1).concat({ ...message })
             } else if (type === 'reasoning-end') {
 
-                delete activeReasoningParts[value.id]
+                // delete activeReasoningParts[value.id]
                 yield currentMessages.slice(0, -1).concat({ ...message })
             } else if (type === 'file') {
                 message.parts = message.parts.concat([
@@ -190,7 +198,9 @@ export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
             } else if (type === 'tool-input-delta') {
                 const partialToolCall = partialToolCalls[value.toolCallId]
                 if (!partialToolCall) {
-                    throw new Error(`missing partialToolCall for ${value.toolCallId}`)
+                    throw new Error(
+                        `missing partialToolCall for ${value.toolCallId}`,
+                    )
                 }
 
                 partialToolCall.text += value.inputTextDelta
@@ -200,10 +210,14 @@ export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
                 )
                 const partialInput = partialInputResult.value
 
-                updateOrAddToolPart(value.toolCallId, partialToolCall.toolName, {
-                    state: 'input-streaming',
-                    input: partialInput,
-                })
+                updateOrAddToolPart(
+                    value.toolCallId,
+                    partialToolCall.toolName,
+                    {
+                        state: 'input-streaming',
+                        input: partialInput,
+                    },
+                )
 
                 yield currentMessages.slice(0, -1).concat({ ...message })
             } else if (type === 'tool-input-available') {
@@ -258,8 +272,12 @@ export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
                 yield currentMessages.slice(0, -1).concat({ ...message })
             } else if (type === 'finish-step') {
                 // reset the current text and reasoning parts
-                Object.keys(activeTextParts).forEach(key => delete activeTextParts[key])
-                Object.keys(activeReasoningParts).forEach(key => delete activeReasoningParts[key])
+                Object.keys(activeTextParts).forEach(
+                    (key) => delete activeTextParts[key],
+                )
+                Object.keys(activeReasoningParts).forEach(
+                    (key) => delete activeReasoningParts[key],
+                )
                 yield currentMessages.slice(0, -1).concat({ ...message })
             } else {
                 // Handle other stream types that we don't need to process

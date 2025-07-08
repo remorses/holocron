@@ -564,9 +564,9 @@ describe('process-chat', () => {
               "type": "step-start",
             },
             {
-              "text": "**Clarifying calculation presentation**
+              "text": "**Calculating the sum**
 
-          The user asks what 122 + 67 equals and specifically wants the calculation reasoning shown only to me, with just the result shared. So, I’ll calculate: 122 + 67 equals 189. I need to document this reasoning internally but only display the final answer, which is 189. By organizing my thought process this way, I’m ensuring that I’m consistent and following the user's request while maintaining clarity.",
+          The user wants me to calculate 122 + 67 but only show the result at the end. So, I’ll work it out first: adding 122 and 67 gives 189. During my analysis, I can break it down: I can think of 122 + 60 to get 182, then add 7 more to reach 189. In the end, I’ll just respond with "189" to meet their request without extra explanation.",
               "type": "reasoning",
             },
             {
@@ -585,14 +585,117 @@ describe('process-chat', () => {
                   "type": "step-start",
                 },
                 {
-                  "text": "**Clarifying calculation presentation**
+                  "text": "**Calculating the sum**
 
-          The user asks what 122 + 67 equals and specifically wants the calculation reasoning shown only to me, with just the result shared. So, I’ll calculate: 122 + 67 equals 189. I need to document this reasoning internally but only display the final answer, which is 189. By organizing my thought process this way, I’m ensuring that I’m consistent and following the user's request while maintaining clarity.",
+          The user wants me to calculate 122 + 67 but only show the result at the end. So, I’ll work it out first: adding 122 and 67 gives 189. During my analysis, I can break it down: I can think of 122 + 60 to get 182, then add 7 more to reach 189. In the end, I’ll just respond with "189" to meet their request without extra explanation.",
                   "type": "reasoning",
                 },
                 {
                   "text": "189",
                   "type": "text",
+                },
+              ],
+              "role": "assistant",
+            },
+          ]
+        `)
+    }, 30000)
+
+    test('should handle reasoning with multiple sequential tool calls', async () => {
+        const middleware = createAiCacheMiddleware({})
+
+        const model = wrapLanguageModel({
+            model: openai.responses('o4-mini'),
+            middleware: [middleware],
+        })
+
+        const getCurrentTime = tool({
+            description: 'Get the current time in a specific timezone',
+            inputSchema: z.object({
+                timezone: z
+                    .string()
+                    .describe('The timezone to get the time for, e.g., "UTC"'),
+            }),
+            execute: async ({ timezone }) => {
+                return `Current time is 2024-01-01T12:00:00.000Z in ${timezone}`
+            },
+        })
+
+        const calculateDifference = tool({
+            description: 'Calculate the difference between two numbers',
+            inputSchema: z.object({
+                a: z.number().describe('First number'),
+                b: z.number().describe('Second number'),
+            }),
+            execute: async ({ a, b }) => {
+                return `The difference between ${a} and ${b} is ${Math.abs(a - b)}`
+            },
+        })
+
+        const result = streamText({
+            model,
+            providerOptions: {
+                openai: {
+                    reasoningSummary: 'detailed',
+                } satisfies OpenAIResponsesProviderOptions,
+            },
+            prompt: 'I need you to perform two sequential tasks. First, get the current time in UTC timezone. Then, after you get that result, calculate the difference between the numbers 150 and 75. Show your reasoning for planning each step.',
+            tools: { getCurrentTime, calculateDifference },
+            temperature: 0.1,
+        })
+
+        const uiStream = readableStreamToAsyncIterable(
+            result.toUIMessageStream(),
+        )
+        let counter = 0
+        const generateId = () => `id-${++counter}`
+
+        let finalMessages: UIMessage[] = []
+        for await (const messages of fullStreamToUIMessages({
+            uiStream,
+            messages: [],
+            generateId,
+        })) {
+            finalMessages = messages
+        }
+
+        // Verify message structure includes both reasoning and tool parts
+        expect(finalMessages.length).toBeGreaterThan(0)
+
+
+
+
+        expect(finalMessages).toMatchInlineSnapshot(`
+          [
+            {
+              "id": "id-1",
+              "parts": [
+                {
+                  "type": "step-start",
+                },
+                {
+                  "text": "**Planning a calculation**
+
+          The user wants a clear plan: first, I'll get the current time in UTC. After that, I need to find the difference between 150 and 75. To do this, I'll explain each step as I go. First, I'll call getCurrentTime, and when the result is available, I'll calculate the difference using calculateDifference, passing in 150 and 75 as parameters. Since sequential tasks are requested, I'll ensure the response is structured accordingly in the commentary channel.**Organizing function calls**
+
+          It looks like I need to structure my response to fit the user's request effectively. First, I'll explain the steps I planned: retrieving the current UTC time, and then calculating the difference between 150 and 75. Since the second part relies on the first, I need to make the first function call in my final response, along with the reasoning. 
+
+          So, I’ll prepare to request the UTC time first, ensuring that the explanation is clear and follows the required structure.",
+                  "type": "reasoning",
+                },
+                {
+                  "input": {
+                    "timezone": "UTC",
+                  },
+                  "state": "input-available",
+                  "toolCallId": "call_sEN1QaKpAks2pL2lXcCaJyBe",
+                  "type": "tool-getCurrentTime",
+                },
+                {
+                  "output": "Current time is 2024-01-01T12:00:00.000Z in UTC",
+                  "state": "output-available",
+                  "toolCallId": "call_sEN1QaKpAks2pL2lXcCaJyBe",
+                  "type": "tool-",
                 },
               ],
               "role": "assistant",

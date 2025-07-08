@@ -10,7 +10,7 @@ import { memoize } from './utils.js'
 export const simplerProcessor = remark()
     .use(remarkGfm)
     .use(remarkMdx)
-    .use(stringify)
+    .use(stringify) as any as Processor
 
 type ProcessorData = { ast: any }
 
@@ -18,7 +18,7 @@ export const processorWithAst = memoize(
     function processorWithAst(processor = simplerProcessor): Processor {
         return processor().use(() => (tree, file) => {
             if (!file.data) file.data = {}
-            const data: ProcessorData = file.data
+            const data: ProcessorData = file.data as any
             if (tree) {
                 data.ast = tree
             }

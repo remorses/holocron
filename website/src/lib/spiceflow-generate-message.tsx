@@ -2,12 +2,12 @@ import { anthropic } from '@ai-sdk/anthropic'
 import dedent from 'string-dedent'
 import { OpenAIResponsesProviderOptions, openai } from '@ai-sdk/openai'
 import {
-    Message,
     UIMessage,
-    appendResponseMessages,
     generateObject,
     streamText,
     tool,
+    convertToModelMessages,
+    stepCountIs,
 } from 'ai'
 import { prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
@@ -29,6 +29,7 @@ import { mdxRegex } from './utils'
 import Handlebars from 'handlebars'
 import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
 import agentPrompt from '../prompts/agent.md?raw'
+import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
@@ -104,7 +105,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                   execute: editFilesExecute as any,
               })
             : tool({
-                  parameters: editToolParamsSchema,
+                  inputSchema: editToolParamsSchema,
                   execute: editFilesExecute,
               })
 
@@ -117,23 +118,24 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                         docsJsonSchema: JSON.stringify(docsJsonSchema, null, 2),
                     }),
                 },
-                ...messages.filter((x) => x.role !== 'system'),
+                ...convertToModelMessages(
+                    messages.filter((x) => x.role !== 'system'),
+                ),
             ],
-            maxSteps: 100,
+            stopWhen: stepCountIs(100),
 
-            experimental_providerMetadata: {
+            providerOptions: {
                 openai: {
                     reasoningSummary: 'detailed',
                 } satisfies OpenAIResponsesProviderOptions,
             },
-            toolCallStreaming: true,
             tools: {
                 str_replace_editor,
 
                 get_project_files: tool({
                     description:
                         'Returns a directory tree diagram of the current project files as plain text. Useful for giving an overview or locating files.',
-                    parameters: z.object({}),
+                    inputSchema: z.object({}),
                     execute: async () => {
                         const allFiles = await getTabFilesWithoutContents({
                             branchId,
@@ -163,17 +165,57 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 render_form: tool({
                     description:
                         'Render a series of input elements so the user can provide structured data. Array-style names such as items[0].color are supported.',
-                    parameters: RenderFormParameters,
+                    inputSchema: RenderFormParameters,
 
                     execute: createRenderFormExecute({}),
                 }),
             },
-            async onFinish({ response }) {
+
+            // tools: {
+            //   some: tool({
+            //     description: "A sample tool",
+            //     parameters: z.object({ hello: z.string() }),
+
+            //     execute: async (args, {}) => {
+            //       args.hello;
+            //       return "Tool executed";
+            //     },
+            //   }),
+            // },
+        })
+
+        const lastUserMessage = messages.findLast((x) => x.role === 'user')
+        if (lastUserMessage) {
+            console.log(`creating message for`, lastUserMessage)
+            // Extract text content from parts
+            const content = lastUserMessage.parts
+                .filter((part) => part.type === 'text')
+                .map((part) => part.text)
+                .join('')
+
+            // create the user message so it shows up when resuming chat
+            await prisma.chatMessage.upsert({
+                where: {
+                    id: lastUserMessage.id,
+                },
+                update: {
+                    createdAt: new Date(),
+                    content: content,
+                    role: 'user',
+                },
+                create: {
+                    chatId,
+                    createdAt: new Date(),
+                    id: lastUserMessage.id,
+                    content: content,
+                    role: 'user',
+                },
+            })
+        }
+        const stream = result.toUIMessageStream({
+            async onFinish({ messages: uiMessages }) {
                 console.log(`chat finished, saving the chat in database`)
-                const resultMessages = appendResponseMessages({
-                    messages,
-                    responseMessages: response.messages,
-                })
+                const resultMessages = [...messages, ...uiMessages]
                 console.log(resultMessages)
 
                 await prisma.$transaction(async (prisma) => {
@@ -199,7 +241,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     })
 
                     for (const [msgIdx, msg] of resultMessages.entries()) {
-                        const parts = msg.parts || []
+                        const parts = 'parts' in msg ? msg.parts || [] : []
 
                         if (msg.role !== 'assistant' && msg.role !== 'user') {
                             console.log(
@@ -209,7 +251,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                             continue
                         }
                         const content =
-                            msg.content ||
+                            ('content' in msg ? msg.content : null) ||
                             parts
                                 .filter((x: any) => x.type === 'text')
                                 .reduce(
@@ -219,9 +261,15 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                         const chatMessage = await prisma.chatMessage.create({
                             data: {
                                 chatId: chatRow.chatId,
-                                createdAt: msg.createdAt,
-                                id: msg.id,
-                                content,
+                                createdAt:
+                                    'createdAt' in msg
+                                        ? (msg.createdAt as Date)
+                                        : new Date(),
+                                id: 'id' in msg ? msg.id : `gen-${msgIdx}`,
+                                content:
+                                    typeof content === 'string'
+                                        ? content
+                                        : JSON.stringify(content),
                                 role: msg.role ?? 'user',
                             },
                         })
@@ -256,8 +304,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                                         index,
                                         messageId: chatMessage.id,
                                         type: part.type,
-                                        toolInvocation:
-                                            part.toolInvocation as any,
+                                        toolInvocation: part as any,
                                     },
                                 })
                             } else {
@@ -278,64 +325,22 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     }).catch(notifyError),
                 )
             },
-            // tools: {
-            //   some: tool({
-            //     description: "A sample tool",
-            //     parameters: z.object({ hello: z.string() }),
-
-            //     execute: async (args, {}) => {
-            //       args.hello;
-            //       return "Tool executed";
-            //     },
-            //   }),
-            // },
         })
-
-        const lastUserMessage = messages.findLast((x) => x.role === 'user')
-        if (lastUserMessage) {
-            console.log(`creating message for`, lastUserMessage)
-            // create the user message so it shows up when resuming chat
-            await prisma.chatMessage.upsert({
-                where: {
-                    id: lastUserMessage.id,
-                },
-                update: {
-                    createdAt: lastUserMessage.createdAt,
-                    content: lastUserMessage.content,
-                    role: 'user',
-                },
-                create: {
-                    chatId,
-                    createdAt: lastUserMessage.createdAt,
-                    id: lastUserMessage.id,
-                    content: lastUserMessage.content,
-                    role: 'user',
-                },
-            })
-        }
-        const stream = result.toUIMessageStream({})
-        const reader = stream.getReader()
-        try {
-            while (true) {
-                const { value: part, done } = await reader.read()
-                if (done) break
-                if ('request' in part) {
-                    part.request = null as any
-                }
-                if ('response' in part) {
-                    part.response = null as any
-                }
-                console.log(part)
-                yield part
+        for await (const part of readableStreamToAsyncIterable(stream)) {
+            if ('request' in part) {
+                part.request = null as any
             }
-        } finally {
-            reader.releaseLock()
+            if ('response' in part) {
+                part.response = null as any
+            }
+            console.log(part)
+            yield part
         }
     },
 })
 
 async function generateAndSaveChatTitle(params: {
-    resultMessages: Message[]
+    resultMessages: UIMessage[]
     chatId: string
     userId: string
 }): Promise<{ title: string | null; description: string | null }> {
@@ -344,18 +349,21 @@ async function generateAndSaveChatTitle(params: {
         .filter((msg) => msg.role === 'user' || msg.role === 'assistant')
         .map((msg) => {
             const content =
-                msg.content ||
+                ('content' in msg ? msg.content : null) ||
                 (msg.parts || [])
                     .filter(
                         (part) =>
                             part.type === 'text' ||
-                            part.type === 'tool-invocation',
+                            part.type.startsWith('tool-'),
                     )
                     .map((part) => {
-                        if (part.type === 'tool-invocation') {
-                            return `[Tool: ${part.toolInvocation?.toolName}] ${JSON.stringify(part.toolInvocation?.args)}`
+                        if ('input' in part) {
+                            if (part.state === 'input-available') {
+                                return `[Tool: ${part.type}] ${JSON.stringify(part.input)}`
+                            }
                         }
-                        return part.text
+                        if (part.type === 'text') return part.text
+                        return ''
                     })
                     .join('\n')
             return `${msg.role}: ${content}`
