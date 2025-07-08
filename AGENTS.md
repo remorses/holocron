@@ -398,3 +398,24 @@ use lucide-react to import icons. always add the Icon import name, for example `
 the cli uses cac npm package.
 
 notice that if you add a route in the spiceflow server you will need to run `pnpm --filter website gen-client` to update the apiClient inside cli.
+
+## files
+
+always use kebab case for new filenames. never use uppercase letters in filenames
+
+## changesets
+
+after you make a change that is noteworthy, add a changeset. these will be used later on to create a changelog for the package. use `pnpm changeset add --empty` to create a changeset file in `.changeset` folder, then write there the changes you made in a single concise paragraph. never run other changeset commands, like `pnpm changeset version` or `pnpm changeset publish`. Notice that sometimes the cwd is missing `.changeset` folder, in that case check the parents directories.
+
+Only add changesets for packages that are not marked as `private` in their `package.json` and have a `version` in the package.json.
+
+Changeset files are structured like this:
+
+```md
+---
+'package-name': patch # can also be `minor` or `major`, never use major
+---
+
+markdown describing the changes you made, in present tense, like "add support for X" or "fix bug with Y". Be detailed but concise, and never use bullet points or lists. Always show example code snippets if applicable, and use proper markdown formatting.
+
+```
