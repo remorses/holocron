@@ -375,14 +375,6 @@ enum ChatMessageRole {
   assistant
 }
 
-enum ChatMessagePartType {
-  text
-  reasoning
-  // TODO use enum instead of string when prisma fixes https://github.com/prisma/prisma/issues/8446
-  tool_invocation @map("tool-invocation")
-  source
-  file
-}
 
 // ─── MODELS ────────────────────────────────────────────────────────────
 
@@ -409,26 +401,91 @@ model Chat {
 
 model ChatMessage {
   id        String            @id @default(cuid())
+
   chat      Chat              @relation(fields: [chatId], references: [chatId], onDelete: Cascade)
   chatId    String
   role      ChatMessageRole
-  parts     ChatMessagePart[]
-  // preview for simple text message parts
-  content   String            @default("") @db.Text
+
+  textParts       ChatPartText[]
+  reasoningParts  ChatPartReasoning[]
+  toolParts       ChatPartTool[]
+  sourceUrlParts  ChatPartSourceUrl[]
+  fileParts       ChatPartFile[]
+  // dataParts       DataPart[]
+
   createdAt DateTime          @default(now())
 }
 
-model ChatMessagePart {
-  id        String      @id @default(cuid())
-  message   ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  messageId String
+model ChatPartText {
+  type       String   @default("text")
+  messageId  String
+  index      Int
+  text       String   @db.Text
+  state      String?
 
-  index Int
-
-  type           String
-  text           String? @db.Text
-  toolInvocation Json?
+  chatMessage ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  @@id([messageId, index])
 }
+
+model ChatPartReasoning {
+  type             String @default("reasoning")
+  messageId        String
+  index            Int
+  text             String   @db.Text
+  state            String?
+  providerMetadata Json?
+
+  chatMessage      ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  @@id([messageId, index])
+}
+
+model ChatPartTool {
+  messageId   String
+  type        String
+  index       Int
+  toolCallId  String
+  input       Json?
+  output      Json?
+  errorText   String? @db.Text
+
+  chatMessage ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  @@id([messageId, index])
+}
+
+model ChatPartSourceUrl {
+  type             String @default("source-url")
+  messageId        String
+  index            Int
+  sourceId         String
+  url              String
+  title            String?
+  providerMetadata Json?
+
+  chatMessage      ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  @@id([messageId, index])
+}
+
+model ChatPartFile {
+  type       String @default("file")
+  messageId  String
+  index      Int
+  mediaType  String
+  filename   String?
+  url        String
+
+  chatMessage ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  @@id([messageId, index])
+}
+
+// model DataPart {
+//   messageId   String
+//   index       Int
+//   data        Json
+
+//   chatMessage ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+//   @@id([messageId, index])
+// }
+
 
 enum PageOpinion {
   good
@@ -444,7 +501,7 @@ model PageFeedback {
   message       String?     @db.Text
   discussionUrl String
   branchId      String
-  branch        SiteBranch  @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
+  branch    SiteBranch  @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
 
   ipHash    String   @default("")
   createdAt DateTime @default(now())

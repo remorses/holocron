@@ -1,27 +1,16 @@
-import {
-    InferUITool,
-    TextStreamPart,
-    ToolSet,
-    UIMessage,
-    UIMessageStreamPart,
-} from 'ai'
-
+import { InferUITool, ToolSet, UIMessage, UIMessageStreamPart } from 'ai'
 import { parsePartialJson } from 'ai'
-import { UseChatOptions } from '@ai-sdk/react'
 
 type UiMessagePart = UIMessage['parts'][number]
 
 type TextUIPart = Extract<UiMessagePart, { type: 'text' }>
 type ReasoningUIPart = Extract<UiMessagePart, { type: 'reasoning' }>
 
-// Tool parts now use typed naming: tool-${toolName} instead of generic types
-
 export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
     uiStream,
     messages,
     onToolCall,
     generateId,
-    getCurrentDate = () => new Date(),
 }: {
     uiStream: AsyncIterable<UIMessageStreamPart>
     messages: UIMessage<
@@ -31,14 +20,12 @@ export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
     >[]
     onToolCall?: (params: { toolCall: any }) => Promise<any> | any
     generateId: () => string
-    getCurrentDate?: () => Date
 }): AsyncIterable<
     UIMessage<any, any, { [K in keyof TOOLS]: InferUITool<TOOLS[K]> }>[]
 > {
     const lastMessage = messages[messages.length - 1]
     const replaceLastMessage = lastMessage?.role === 'assistant'
 
-    // Calculate step from existing tool parts in the message
     let step = 0
     if (replaceLastMessage) {
         const toolParts =
@@ -47,8 +34,7 @@ export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
             ) || []
 
         if (toolParts.length > 0) {
-            // For step calculation, we can count unique tool calls
-            step = Math.floor(toolParts.length / 2) // Rough estimation, adjust as needed
+            step = Math.floor(toolParts.length / 2)
         }
     }
 
@@ -141,8 +127,6 @@ export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
                 }
                 yield currentMessages.slice(0, -1).concat({ ...message })
             } else if (type === 'reasoning-end') {
-
-                // delete activeReasoningParts[value.id]
                 yield currentMessages.slice(0, -1).concat({ ...message })
             } else if (type === 'file') {
                 message.parts = message.parts.concat([
@@ -180,7 +164,6 @@ export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
             } else if (type === 'error') {
                 throw new Error(value.errorText)
             } else if (type === 'tool-input-start') {
-                // add the partial tool call to the map
                 partialToolCalls[value.toolCallId] = {
                     text: '',
                     toolName: value.toolName,
@@ -228,9 +211,6 @@ export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
 
                 yield currentMessages.slice(0, -1).concat({ ...message })
 
-                // invoke the onToolCall callback if it exists. This is blocking.
-                // In the future we should make this non-blocking, which
-                // requires additional state management for error handling etc.
                 if (onToolCall && !value.providerExecuted) {
                     const result = await onToolCall({ toolCall: value })
                     if (result != null) {
@@ -267,11 +247,9 @@ export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
             } else if (type === 'finish') {
                 yield currentMessages.slice(0, -1).concat({ ...message })
             } else if (type === 'start-step') {
-                // add a step boundary part to the message
                 message.parts = message.parts.concat([{ type: 'step-start' }])
                 yield currentMessages.slice(0, -1).concat({ ...message })
             } else if (type === 'finish-step') {
-                // reset the current text and reasoning parts
                 Object.keys(activeTextParts).forEach(
                     (key) => delete activeTextParts[key],
                 )
@@ -279,8 +257,9 @@ export async function* fullStreamToUIMessages<TOOLS extends ToolSet>({
                     (key) => delete activeReasoningParts[key],
                 )
                 yield currentMessages.slice(0, -1).concat({ ...message })
+            } else if (type === 'message-metadata') {
+
             } else {
-                // Handle other stream types that we don't need to process
                 console.warn(`Unhandled stream part type: ${type}`)
             }
         }
@@ -305,7 +284,6 @@ async function* throttleGenerator<T>(
         }
     }
 
-    // Flush any remaining items
     if (buffer.length > 0) {
         yield buffer
     }

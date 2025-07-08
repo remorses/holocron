@@ -8,6 +8,7 @@ import {
     tool,
     convertToModelMessages,
     stepCountIs,
+    isToolUIPart,
 } from 'ai'
 import { prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
@@ -32,6 +33,12 @@ import agentPrompt from '../prompts/agent.md?raw'
 import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
+
+export type Tools = {
+    str_replace_editor: any
+    get_project_files: any
+    render_form: any
+}
 
 export const generateMessageApp = new Spiceflow().state('userId', '').route({
     method: 'POST',
@@ -200,25 +207,37 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 },
                 update: {
                     createdAt: new Date(),
-                    content: content,
+
                     role: 'user',
                 },
                 create: {
                     chatId,
                     createdAt: new Date(),
                     id: lastUserMessage.id,
-                    content: content,
+
                     role: 'user',
                 },
             })
         }
         const stream = result.toUIMessageStream({
+            originalMessages: messages,
+            messageMetadata: () => {
+                return {
+                    createdAt: new Date(),
+                }
+            },
             async onFinish({ messages: uiMessages }) {
                 console.log(`chat finished, saving the chat in database`)
                 const resultMessages = [...messages, ...uiMessages]
                 console.log(resultMessages)
 
+                const previousMessages = await prisma.chatMessage.findMany({
+                    where: { chatId },
+
+                    orderBy: { createdAt: 'asc' },
+                })
                 await prisma.$transaction(async (prisma) => {
+                    // Get previous message parts
                     const prevChat = await prisma.chat
                         .delete({
                             where: { chatId },
@@ -258,18 +277,15 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                                     (acc: string, cur: any) => acc + cur.text,
                                     '\n',
                                 )
+                        const prevMessage = previousMessages.find(
+                            (x) => x.id === msg.id,
+                        )
                         const chatMessage = await prisma.chatMessage.create({
                             data: {
                                 chatId: chatRow.chatId,
-                                createdAt:
-                                    'createdAt' in msg
-                                        ? (msg.createdAt as Date)
-                                        : new Date(),
-                                id: 'id' in msg ? msg.id : `gen-${msgIdx}`,
-                                content:
-                                    typeof content === 'string'
-                                        ? content
-                                        : JSON.stringify(content),
+
+                                id: msg.id,
+                                createdAt: prevMessage?.createdAt || new Date(),
                                 role: msg.role ?? 'user',
                             },
                         })
@@ -277,7 +293,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                             // Handle only 'text', 'reasoning', and 'tool-invocation' types for now
                             if (part.type === 'text') {
                                 // ChatMessagePart: { type: 'text', text: string }
-                                await prisma.chatMessagePart.create({
+                                await prisma.chatPartText.create({
                                     data: {
                                         messageId: chatMessage.id,
                                         type: 'text',
@@ -288,26 +304,71 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                                 })
                             } else if (part.type === 'reasoning') {
                                 // ChatMessagePart: { type: 'reasoning', text: string }
-                                await prisma.chatMessagePart.create({
+                                await prisma.chatPartReasoning.create({
                                     data: {
                                         messageId: chatMessage.id,
                                         type: 'reasoning',
-
-                                        text: (part as any).reasoning,
+                                        text: part.text,
                                         index,
                                     },
                                 })
-                            } else if (part.type === 'tool-invocation') {
-                                // ChatMessagePart: { type: 'tool-invocation', json: any }
-                                await prisma.chatMessagePart.create({
+                            } else if (isToolUIPart(part)) {
+                                const { input, toolCallId } = part
+                                if (part.state === 'output-available') {
+                                    await prisma.chatPartTool.create({
+                                        data: {
+                                            index,
+                                            input: input as any,
+                                            output: part.output as any,
+                                            toolCallId,
+                                            messageId: chatMessage.id,
+                                            type: part.type,
+                                        },
+                                    })
+                                } else if (part.state === 'output-error') {
+                                    await prisma.chatPartTool.create({
+                                        data: {
+                                            index,
+                                            input: input as any,
+                                            errorText: part.errorText,
+                                            toolCallId,
+                                            messageId: chatMessage.id,
+                                            type: part.type,
+                                        },
+                                    })
+                                } else {
+                                    console.log(
+                                        `unhandled part tool type with state ${part.state}`,
+                                    )
+                                }
+                            } else if (part.type === 'file') {
+                                // Handle ChatPartFile
+                                await prisma.chatPartFile.create({
                                     data: {
-                                        index,
                                         messageId: chatMessage.id,
-                                        type: part.type,
-                                        toolInvocation: part as any,
+                                        type: 'file',
+                                        index,
+                                        mediaType: part.mediaType,
+                                        filename: part.filename,
+                                        url: part.url,
+                                    },
+                                })
+                            } else if (part.type === 'source-url') {
+                                // Handle ChatPartSourceUrl
+                                await prisma.chatPartSourceUrl.create({
+                                    data: {
+                                        messageId: chatMessage.id,
+                                        type: 'source-url',
+                                        index,
+                                        sourceId: part.sourceId,
+                                        url: part.url,
+                                        title: part.title,
+                                        providerMetadata:
+                                            part.providerMetadata as any,
                                     },
                                 })
                             } else {
+                                part.type
                                 console.log(
                                     `skipping message of type ${part.type} in the database`,
                                 )

@@ -1,5 +1,11 @@
 import { OpenAIResponsesProviderOptions, openai } from '@ai-sdk/openai'
-import { UIMessage, streamText, tool, stepCountIs, convertToModelMessages } from 'ai'
+import {
+    UIMessage,
+    streamText,
+    tool,
+    stepCountIs,
+    convertToModelMessages,
+} from 'ai'
 import { prisma } from 'db'
 import Handlebars from 'handlebars'
 import { Spiceflow } from 'spiceflow'
@@ -13,7 +19,6 @@ import { searchDocsWithTrieve } from './trieve-search'
 import { getFumadocsSource } from './source'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
-
 
 export const docsApp = new Spiceflow({ basePath: '/api' })
     .route({
@@ -84,7 +89,9 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                         role: 'system',
                         content: agentPromptTemplate({ linksText }),
                     },
-                    ...convertToModelMessages(messages.filter((x) => x.role !== 'system')),
+                    ...convertToModelMessages(
+                        messages.filter((x) => x.role !== 'system'),
+                    ),
                 ],
                 stopWhen: stepCountIs(100),
 
@@ -130,7 +137,9 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
 
             const lastUserMessage = messages.findLast((x) => x.role === 'user')
 
-            for await (const part of readableStreamToAsyncIterable(result.toUIMessageStream())) {
+            for await (const part of readableStreamToAsyncIterable(
+                result.toUIMessageStream({ originalMessages: messages }),
+            )) {
                 console.log(part)
                 yield part
             }
