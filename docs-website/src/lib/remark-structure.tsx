@@ -1,6 +1,6 @@
 import { StructureOptions } from 'fumadocs-core/mdx-plugins/remark-structure'
 import Slugger from 'github-slugger'
-import type { Nodes, Root } from 'mdast'
+import type { Nodes, Root, RootContent, Content } from 'mdast'
 import type {
     MdxJsxAttribute,
     MdxJsxExpressionAttribute,
@@ -23,6 +23,36 @@ declare module 'mdast' {
 }
 
 const slugger = new Slugger()
+
+export function flattenNode(node: any): string {
+    if ('children' in node) {
+        return node.children.map((child: any) => flattenNode(child)).join('')
+    }
+
+    if ('value' in node) {
+        return node.value
+    }
+
+    // Handle links - include href for context
+    if (node.type === 'link' && node.url) {
+        return `${node.url}`
+    }
+
+    // Handle images - include alt text and title
+    if (node.type === 'image') {
+        const parts: string[] = []
+        if (node.alt) parts.push(node.alt)
+        if (node.title) parts.push(node.title)
+        return parts.join(' ')
+    }
+
+    // Handle inline code
+    if (node.type === 'inlineCode') {
+        return node.value
+    }
+
+    return ''
+}
 
 /**
  * Attach structured data to VFile, you can access via `vfile.data.structuredData`.
@@ -88,7 +118,7 @@ export function remarkStructure(
                 element.data ||= {}
                 element.data.hProperties ||= {}
                 const properties = element.data.hProperties
-                const content = processor.stringify(element).toString().trim()
+                const content = flattenNode(element)
                 const id = properties.id ?? slugger.slug(content)
 
                 data.headings.push({
@@ -138,7 +168,7 @@ export function remarkStructure(
                 return
             }
 
-            const content = processor.stringify(element).toString().trim()
+            const content = flattenNode(element).trim()
             if (content.length === 0) return
 
             data.contents.push({

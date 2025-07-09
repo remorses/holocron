@@ -78,12 +78,25 @@ export async function action({ request, params }: Route.ActionArgs) {
             )
         }
 
-        const repo = `fumabase-starter`
+        let repo = `fumabase-starter`
         console.log('Creating repository...')
         const octokit = await getOctokit(githubInstallation)
-        const name = `${repo}`
         const siteId = cuid()
         const randomHash = Math.random().toString(36).substring(2, 10)
+        const owner = githubAccountLogin
+
+        // Check if repo exists and append hash if it does
+        const exists = await doesRepoExist({
+            octokit: octokit.rest,
+            owner,
+            repo,
+        })
+
+        if (exists) {
+            repo = `${repo}-${randomHash}`
+        }
+
+        const name = `${repo}`
         const internalHost = `${githubAccountLogin}-${randomHash}.${env.APPS_DOMAIN}`
         const domains =
             process.env.NODE_ENV === 'development'
@@ -105,26 +118,18 @@ export async function action({ request, params }: Route.ActionArgs) {
                 ...defaultDocsJsonComments,
             },
         })
-        const owner = githubAccountLogin
-        const exists = await doesRepoExist({
-            octokit: octokit.rest,
-            owner,
-            repo,
-        })
         const branchId = cuid()
 
         const [result, site] = await Promise.all([
-            !exists &&
-                createNewRepo({
-                    files: await Array.fromAsync(files),
-                    isGithubOrg:
-                        githubInstallation.accountType === 'ORGANIZATION',
-                    octokit: octokit.rest,
-                    owner,
-                    oauthToken: githubInstallation.oauthToken!,
-                    privateRepo: false,
-                    repo,
-                }),
+            createNewRepo({
+                files: await Array.fromAsync(files),
+                isGithubOrg: githubInstallation.accountType === 'ORGANIZATION',
+                octokit: octokit.rest,
+                owner,
+                oauthToken: githubInstallation.oauthToken!,
+                privateRepo: false,
+                repo,
+            }),
             // Create a site for the newly created repository
             prisma.site.create({
                 data: {
@@ -342,15 +347,13 @@ function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
 export default function Index({ loaderData }: Route.ComponentProps) {
     return (
         <div className='flex flex-col h-full grow justify-center gap-12 max-w-2xl mx-auto p-8'>
-            <div className='space-y-4'>
-                <div>
-                    <h1 className='text-2xl capitalize font-bold text-white'>
-                        Hello, {loaderData.name}
-                    </h1>
-                    <p className='text-gray-400'>
-                        Let's set up your first documentation deployment
-                    </p>
-                </div>
+            <div className='space-y-2'>
+                <h1 className='text-2xl capitalize font-bold text-white'>
+                    Hello, {loaderData.name}
+                </h1>
+                <p className='text-gray-400'>
+                    Let's set up your first documentation deployment
+                </p>
             </div>
 
             <div className='space-y-8'>
