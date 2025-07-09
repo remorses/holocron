@@ -3,6 +3,10 @@ import { loader as fumadocsLoader } from 'fumadocs-core/source'
 
 import { Banner } from 'fumadocs-ui/components/banner'
 
+// Import theme CSS as raw strings
+import neutralThemeCSS from 'fumadocs-ui/css/neutral.css?raw'
+import shadcnThemeCSS from 'fumadocs-ui/css/shadcn.css?raw'
+
 import { prisma } from 'db'
 import { ReactRouterProvider } from 'fumadocs-core/framework/react-router'
 import { LinkItemType } from 'fumadocs-ui/layouts/links'
@@ -459,6 +463,27 @@ function CSSVariables({ docsJson }: { docsJson: DocsJsonType }) {
     )
 }
 
+function ThemeCSS({ docsJson }: { docsJson: DocsJsonType }) {
+    const theme = docsJson?.theme || 'neutral' // Default to neutral theme
+    
+    // Map theme names to their CSS content
+    const themeMap = {
+        neutral: neutralThemeCSS,
+        shadcn: shadcnThemeCSS,
+    } as const
+
+    const themeCSS = themeMap[theme]
+    if (!themeCSS) return null
+
+    return (
+        <style
+            dangerouslySetInnerHTML={{
+                __html: themeCSS,
+            }}
+        />
+    )
+}
+
 export default function App() {
     const loaderData = useLoaderData<typeof loader>()
     const { previewWebsocketId } = loaderData || {}
@@ -472,6 +497,7 @@ export default function App() {
     return (
         <>
             <CSSVariables docsJson={docsJson} />
+            <ThemeCSS docsJson={docsJson} />
             {previewWebsocketId ? (
                 <PreviewBanner websocketId={previewWebsocketId || ''} />
             ) : (

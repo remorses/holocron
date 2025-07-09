@@ -441,10 +441,10 @@ export const DocsConfigSchema = z
             .boolean()
             .optional()
             .describe('Hide the sidebar completely from the documentation site'),
-        // theme: z
-        //     .enum(['black', 'dusk'])
-        //     .optional()
-        //     .describe('Color theme for the documentation site'),
+        theme: z
+            .enum(['neutral', 'shadcn'])
+            .optional()
+            .describe('Color theme for the documentation site'),
     })
     .strict()
     .describe('Schema for fumabase.jsonc configuration')
