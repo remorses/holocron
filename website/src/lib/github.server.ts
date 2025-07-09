@@ -574,6 +574,17 @@ const createTreeWithUpdates = async ({
     if (!parentTreeSha) {
         throw new AppError(`No parent tree sha`)
     }
+    
+    // Get current tree to check which files exist before attempting deletion
+    const existingFiles = remove.length > 0 ? 
+        await octokit.git.getTree({
+            owner,
+            repo,
+            tree_sha: parentTreeSha,
+            recursive: 'true',
+        }).then(({ data }) => new Set(data.tree.map(item => item.path).filter(Boolean))) :
+        new Set<string>()
+    
     const tree: {
         path: string
         mode: string
@@ -605,12 +616,15 @@ const createTreeWithUpdates = async ({
         )
     }
     for (let toRemove of remove) {
-        tree.push({
-            path: toRemove.filePath,
-            type: 'blob',
-            mode: `100644`,
-            sha: null as any,
-        })
+        // Only add removal entry if file actually exists in current tree
+        if (existingFiles.has(toRemove.filePath)) {
+            tree.push({
+                path: toRemove.filePath,
+                type: 'blob',
+                mode: `100644`,
+                sha: null as any,
+            })
+        }
     }
 
     console.log('creating new tree')
