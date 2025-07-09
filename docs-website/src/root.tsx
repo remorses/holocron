@@ -14,6 +14,7 @@ import { RootProvider } from 'fumadocs-ui/provider/base'
 import { GithubIcon, XIcon } from 'lucide-react'
 import { ThemeProvider, useTheme } from 'next-themes'
 import {
+    lazy,
     startTransition,
     useEffect,
     useMemo,
@@ -53,7 +54,7 @@ import { cn, isInsidePreviewIframe } from './lib/utils'
 import { DynamicIcon } from './lib/icon'
 import { PoweredBy } from './components/poweredby'
 import { CustomSearchDialog } from './components/search'
-import { ChatDrawer } from './components/docs-chat'
+
 import { getTreeFromFiles } from './lib/tree'
 import { getOpenapiDocument, getOpenapiUrl } from './lib/openapi.server'
 import { I18nConfig } from 'fumadocs-core/i18n'
@@ -72,6 +73,18 @@ export const links: Route.LinksFunction = () => [
         href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
     },
 ]
+
+const ChatDrawer = lazy(() =>
+    import('./components/docs-chat').then((mod) => ({
+        default: mod.ChatDrawer,
+    })),
+)
+
+function ChatDrawerWrapper() {
+    const isChatOpen = useDocsState((x) => x.isChatOpen)
+    if (!isChatOpen) return null
+    return <ChatDrawer />
+}
 
 const openapiPath = `/api-reference`
 
@@ -495,7 +508,7 @@ export default function App() {
                                 }}
                             />
                         )}
-                        <ChatDrawer />
+                        <ChatDrawerWrapper />
                         <DocsLayoutWrapper docsJson={docsJson}>
                             <Outlet />
                         </DocsLayoutWrapper>
