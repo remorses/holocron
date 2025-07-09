@@ -99,6 +99,10 @@ export type AssetForSync =
           githubPath: string
           githubSha: string
       }
+    | {
+          type: 'deletedAsset'
+          githubPath: string
+      }
 
 export const mediaExtensions = [
     // Image extensions
@@ -278,6 +282,7 @@ export async function syncSite({
     }
     const cacheTagsToInvalidate = [] as string[]
     const processedSlugs = new Set<string>()
+    const deletedAssetPaths = [] as string[]
 
     // Get all media assets for this branch upfront
     const allMediaAssets = await prisma.mediaAsset.findMany({
@@ -775,6 +780,76 @@ export async function syncSite({
                     ` -> Upserted page: ${pageInput.title} (ID: ${slug}, path: ${asset.githubPath})`,
                 )
             }
+            if (asset.type === 'deletedAsset') {
+                console.log(`Processing deleted asset: ${asset.githubPath}`)
+                deletedAssetPaths.push(asset.githubPath)
+
+                // Find and delete pages with this githubPath
+                const pagesToDelete = await prisma.markdownPage.findMany({
+                    where: {
+                        branchId,
+                        githubPath: asset.githubPath,
+                    },
+                    select: {
+                        pageId: true,
+                        slug: true,
+                    },
+                })
+
+                if (pagesToDelete.length > 0) {
+                    console.log(`Found ${pagesToDelete.length} pages to delete for path ${asset.githubPath}`)
+
+                    // Delete from Trieve if available
+                    if (trieve.datasetId) {
+                        for (const page of pagesToDelete) {
+                            try {
+                                await trieve.deleteGroup({
+                                    deleteChunks: true,
+                                    groupId: page.slug,
+                                    trDataset: trieve.datasetId,
+                                })
+                                console.log(`Deleted Trieve chunks for page ${page.slug}`)
+                            } catch (error) {
+                                console.error(`Error deleting Trieve chunks for page ${page.slug}:`, error)
+                            }
+                        }
+                    }
+
+                    // Delete from database
+                    const deleteResult = await prisma.markdownPage.deleteMany({
+                        where: {
+                            branchId,
+                            githubPath: asset.githubPath,
+                        },
+                    })
+
+                    console.log(`Deleted ${deleteResult.count} pages from database for path ${asset.githubPath}`)
+                }
+
+                // Delete media assets with this githubPath
+                const mediaDeleteResult = await prisma.mediaAsset.deleteMany({
+                    where: {
+                        branchId,
+                        githubPath: asset.githubPath,
+                    },
+                })
+
+                if (mediaDeleteResult.count > 0) {
+                    console.log(`Deleted ${mediaDeleteResult.count} media assets for path ${asset.githubPath}`)
+                }
+
+                // Delete meta files with this githubPath
+                const metaDeleteResult = await prisma.metaFile.deleteMany({
+                    where: {
+                        branchId,
+                        githubPath: asset.githubPath,
+                    },
+                })
+
+                if (metaDeleteResult.count > 0) {
+                    console.log(`Deleted ${metaDeleteResult.count} meta files for path ${asset.githubPath}`)
+                }
+            }
         } catch (e: any) {
             if (
                 e.message.includes(
@@ -974,6 +1049,29 @@ export async function* filesFromGithub({
         })
     }
     console.timeEnd(`${owner}/${repo} - fetch files ${timeId}`)
+
+    // Find files that exist in database but not in GitHub (deleted files)
+    const currentGithubPaths = new Set(files.map((f) => f.githubPath))
+
+    // Check for deleted pages
+    const deletedPages = existingPages.filter((page) => {
+        const pathMatches = page.githubPath.startsWith(basePath + '/')
+        return pathMatches && !currentGithubPaths.has(page.githubPath)
+    })
+
+    // Check for deleted media assets
+    const deletedMediaAssets = existingMediaAssets.filter((asset) => {
+        const pathMatches = asset.githubPath.startsWith(basePath + '/')
+        return pathMatches && !currentGithubPaths.has(asset.githubPath)
+    })
+
+    // Check for deleted meta files
+    const deletedMetaFiles = existingMetaFiles.filter((meta) => {
+        const pathMatches = meta.githubPath.startsWith(basePath + '/')
+        return pathMatches && !currentGithubPaths.has(meta.githubPath)
+    })
+
+    console.log(`Found ${deletedPages.length} deleted pages, ${deletedMediaAssets.length} deleted media assets, ${deletedMetaFiles.length} deleted meta files`)
     // console.log(files)
     const mediaAssetsDownloads = yieldTasksInParallel(
         6,
@@ -1154,6 +1252,28 @@ export async function* filesFromGithub({
             markdown: content,
             githubPath: x.githubPath,
             githubSha: x.sha,
+        } satisfies AssetForSync
+    }
+
+    // Yield deleted assets for cleanup
+    for (const deletedPage of deletedPages) {
+        yield {
+            type: 'deletedAsset',
+            githubPath: deletedPage.githubPath,
+        } satisfies AssetForSync
+    }
+
+    for (const deletedMediaAsset of deletedMediaAssets) {
+        yield {
+            type: 'deletedAsset',
+            githubPath: deletedMediaAsset.githubPath,
+        } satisfies AssetForSync
+    }
+
+    for (const deletedMetaFile of deletedMetaFiles) {
+        yield {
+            type: 'deletedAsset',
+            githubPath: deletedMetaFile.githubPath,
         } satisfies AssetForSync
     }
 }

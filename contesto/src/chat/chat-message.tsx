@@ -78,7 +78,7 @@ function isMessageAlmostEmpty(message: UIMessage) {
         return false
     }
     const content = message.parts.reduce(
-        (acc, part) => acc + (part['text'] || ''),
+        (acc, part) => acc + ((part as any)['text'] || ''),
         '',
     )
     if (content.length < 10) {
