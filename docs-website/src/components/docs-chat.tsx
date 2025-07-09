@@ -49,7 +49,7 @@ import {
     saveChatMessages,
     loadChatMessages,
 } from '../lib/docs-state'
-import { useRouteLoaderData } from 'react-router'
+import { useRouteLoaderData, useLocation } from 'react-router'
 import type { Route } from '../root'
 import { env } from '../lib/env'
 import { Trash2Icon, XIcon } from 'lucide-react'
@@ -294,6 +294,8 @@ function Footer() {
     const isPending = useChatState((x) => x.isGenerating)
     const text = useChatState((x) => x.text || '')
     const chatId = usePersistentDocsState((x) => x.chatId)
+    const location = useLocation()
+    const currentSlug = location.pathname
     const durableUrl = `/api/generateMessage?chatId=${chatId}`
 
     // Get files from root loader data
@@ -343,7 +345,7 @@ function Footer() {
             await docsApiClientWithDurableFetch.api.generateMessage.post(
                 {
                     messages: messages,
-                    currentSlug: '',
+                    currentSlug: currentSlug,
                     chatId: chatId,
                     locale: 'en',
                 },

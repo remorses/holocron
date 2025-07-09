@@ -101,7 +101,7 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                     } satisfies OpenAIResponsesProviderOptions,
                 },
                 tools: {
-                    search_docs: tool({
+                    searchDocs: tool({
                         inputSchema: z.object({
                             query: z
                                 .string()
@@ -118,7 +118,7 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                             return results
                         },
                     }),
-                    go_to_page: tool({
+                    goToPage: tool({
                         inputSchema: z.object({
                             slug: z.string().describe('The page slug'),
                         }),
@@ -129,6 +129,12 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                                 return `page ${slug} not found`
                             }
                             return `went to page ${slug}`
+                        },
+                    }),
+                    getCurrentPage: tool({
+                        inputSchema: z.object({}),
+                        execute: async () => {
+                            return `Current page slug: ${currentSlug}`
                         },
                     }),
                 },
