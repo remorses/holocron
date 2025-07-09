@@ -2,7 +2,7 @@
 import type { PageTree, TOCItemType } from 'fumadocs-core/server'
 
 import { create } from 'zustand'
-import { createIdGenerator } from 'ai'
+import { createIdGenerator, UIMessage } from 'ai'
 
 const generateId = createIdGenerator()
 export function generateChatId(): string {
@@ -19,9 +19,15 @@ export type FilesInDraft = Record<
     } | null
 >
 
+export type ChatHistory = {
+    messages: UIMessage[]
+    createdAt: string
+}
+
 export type PersistentDocsState = {
     chatId: string
     isChatOpen: boolean
+    chatHistory: Record<string, ChatHistory>
 }
 
 export type DocsState = {
@@ -45,6 +51,7 @@ const defaultState: DocsState = {
 const defaultPersistentState: PersistentDocsState = {
     chatId: generateChatId(),
     isChatOpen: false,
+    chatHistory: {},
 }
 
 export const useDocsState = create<DocsState>(() => defaultState)
@@ -52,6 +59,40 @@ export const useDocsState = create<DocsState>(() => defaultState)
 export const usePersistentDocsState = create<PersistentDocsState>(
     () => defaultPersistentState,
 )
+
+// Save chat messages with limit of 10 messages per chat
+export function saveChatMessages(chatId: string, messages: UIMessage[]) {
+    const state = usePersistentDocsState.getState()
+    const existingHistory = state.chatHistory[chatId]
+    
+    // Keep only last 10 messages
+    const limitedMessages = messages.slice(-10)
+    
+    const updatedHistory = {
+        ...state.chatHistory,
+        [chatId]: {
+            messages: limitedMessages,
+            createdAt: existingHistory?.createdAt || new Date().toISOString(),
+        },
+    }
+    
+    // Keep only the most recent 10 chats to prevent localStorage from growing too large
+    const sortedChats = Object.entries(updatedHistory)
+        .sort(([, a], [, b]) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 10)
+    
+    const limitedHistory = Object.fromEntries(sortedChats)
+    
+    usePersistentDocsState.setState({
+        chatHistory: limitedHistory,
+    })
+}
+
+// Load chat messages for a specific chatId
+export function loadChatMessages(chatId: string): UIMessage[] {
+    const state = usePersistentDocsState.getState()
+    return state.chatHistory[chatId]?.messages || []
+}
 
 // Persist and rehydrate persistent docs state
 if (typeof window !== 'undefined') {

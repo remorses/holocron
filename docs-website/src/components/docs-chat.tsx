@@ -46,6 +46,8 @@ import {
     useDocsState,
     usePersistentDocsState,
     generateChatId,
+    saveChatMessages,
+    loadChatMessages,
 } from '../lib/docs-state'
 import { useRouteLoaderData } from 'react-router'
 import type { Route } from '../root'
@@ -53,12 +55,13 @@ import { env } from '../lib/env'
 import { Trash2Icon, XIcon } from 'lucide-react'
 
 export function ChatDrawer({ loaderData }: { loaderData?: any }) {
+    const chatId = usePersistentDocsState((x) => x.chatId)
     const initialChatState = useMemo<Partial<ChatState>>(
         () => ({
-            messages: [],
+            messages: loadChatMessages(chatId),
             isGenerating: false,
         }),
-        [loaderData],
+        [loaderData, chatId],
     )
     const isChatOpen = usePersistentDocsState((x) => x.isChatOpen)
 
@@ -223,16 +226,16 @@ function MessageRenderer({ message }: { message: UIMessage }) {
 
 // Static autocomplete suggestions for first message
 const AUTOCOMPLETE_SUGGESTIONS = [
-    'How do I get started with Fumabase?',
-    'Explain the configuration options',
-    'Show me deployment examples',
-    'What are the API endpoints?',
-    'How do I customize themes?',
-    'Troubleshoot common issues',
-    'Compare with other solutions',
+    'Explain this page',
+    'Summarize the current section',
+    'What are the key concepts here?',
+    'Show me usage examples',
+    'How do I configure this?',
+    'Troubleshoot related issues',
+    'Compare with similar features',
     'Best practices for setup',
-    'Integration examples',
-    'Performance optimization tips',
+    'Show integration tips',
+    'How can I optimize performance?',
 ]
 
 function ContextButton({ contextOptions }) {
@@ -359,6 +362,12 @@ function Footer() {
             startTransition(() => {
                 useChatState.setState({ messages: newMessages })
             })
+        }
+
+        // Save final messages to persistent storage
+        const finalMessages = useChatState.getState().messages
+        if (finalMessages && finalMessages.length > 0) {
+            saveChatMessages(chatId, finalMessages)
         }
     }
     const url = `/api/generateMessage?chatId=${chatId}`
