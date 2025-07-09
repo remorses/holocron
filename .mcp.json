@@ -1,0 +1,15 @@
+{
+    "mcpServers": {
+        "lsp": {
+            "command": "mcp-language-server",
+            "args": [
+                "--workspace",
+                "/Users/morse/Documents/GitHub/fumabase/",
+                "--lsp",
+                "typescript-language-server",
+                "--",
+                "--stdio"
+            ]
+        }
+    }
+}

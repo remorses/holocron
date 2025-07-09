@@ -2,11 +2,13 @@ import stableString from 'fast-json-stable-stringify'
 import { FlatCache } from 'flat-cache'
 
 import {
-    type LanguageModelV1,
-    type LanguageModelV1Middleware,
-    type LanguageModelV1StreamPart,
     simulateReadableStream,
 } from 'ai'
+import {
+    type LanguageModelV2,
+    type LanguageModelV2Middleware,
+    type LanguageModelV2StreamPart,
+} from '@ai-sdk/provider'
 import { createHash } from 'crypto'
 import { existsSync } from 'fs'
 import path, { dirname, join, resolve } from 'path'
@@ -50,15 +52,15 @@ export function createAiCacheMiddleware({
         }
         return cache
     }
-    const cacheMiddleware: LanguageModelV1Middleware = {
-        wrapGenerate: async ({ doGenerate, params, model }) => {
+    const cacheMiddleware: LanguageModelV2Middleware = {
+        wrapGenerate: async ({ doGenerate, params,  model }) => {
             const cache = getModelCache(model.modelId)
 
             onParams?.(params)
             const cacheKey = hashKey(params)
 
             const cached = (await cache.get(cacheKey)) as Awaited<
-                ReturnType<LanguageModelV1['doGenerate']>
+                ReturnType<LanguageModelV2['doGenerate']>
             > | null
 
             if (cached) {
@@ -83,12 +85,13 @@ export function createAiCacheMiddleware({
 
         wrapStream: async ({ doStream, model, params }) => {
             const cacheKey = hashKey(params)
+            // console.log(params)
             const cache = getModelCache(model.modelId)
             onParams?.(params)
             // Check if the result is in the cache
             const cached = (await cache.get(
                 cacheKey,
-            )) as LanguageModelV1StreamPart[]
+            )) as LanguageModelV2StreamPart[]
 
             // If cached, return a simulated ReadableStream that yields the cached result
             if (cached) {
@@ -112,11 +115,11 @@ export function createAiCacheMiddleware({
             // If not cached, proceed with streaming
             const { stream, ...rest } = await doStream()
 
-            const fullResponse: LanguageModelV1StreamPart[] = []
+            const fullResponse: LanguageModelV2StreamPart[] = []
 
             const transformStream = new TransformStream<
-                LanguageModelV1StreamPart,
-                LanguageModelV1StreamPart
+                LanguageModelV2StreamPart,
+                LanguageModelV2StreamPart
             >({
                 transform(chunk, controller) {
                     fullResponse.push(chunk)

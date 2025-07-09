@@ -64,7 +64,7 @@ export const RenderFormParameters = z.object({
     fields: z.array(UIFieldSchema),
 })
 
-type RenderFormParameters = z.infer<typeof RenderFormParameters>
+export type RenderFormParameters = z.infer<typeof RenderFormParameters>
 
 export function createRenderFormExecute({}) {
     return async (params: RenderFormParameters) => {

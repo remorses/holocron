@@ -17,13 +17,7 @@ import { Slider } from './ui/slider'
 import { Switch } from './ui/switch'
 import { Textarea } from './ui/textarea'
 import { UploadButton } from './upload-button'
-
-type RenderFormPreviewProps = {
-    args: { fields: UIField[] }
-    state: 'partial-call' | 'call' | 'result'
-    result?: any
-    toolCallId: any
-}
+import { WebsiteToolPart } from '../lib/types'
 
 type RenderFieldProps = {
     field: UIField
@@ -226,11 +220,11 @@ function RenderField({ field }: RenderFieldProps) {
 }
 
 export function RenderFormPreview({
-    args,
+    input: args,
     state,
-    result,
+    output: result,
     toolCallId,
-}: RenderFormPreviewProps) {
+}: Extract<WebsiteToolPart, { type: 'tool-render_form' }>) {
     const { handleSubmit } = useFormContext()
 
     if (!args?.fields || args.fields.length === 0) {
@@ -255,22 +249,22 @@ export function RenderFormPreview({
 
     // Group fields by consecutive groupTitle
     const fieldGroups: { title: string | null; fields: UIField[] }[] = []
-    
+
     args.fields.forEach((field, index) => {
         const lastGroup = fieldGroups[fieldGroups.length - 1]
-        
+
         if (
-            lastGroup && 
-            lastGroup.title === field.groupTitle && 
-            field.groupTitle !== null
+            lastGroup &&
+            lastGroup.title === field?.groupTitle &&
+            field?.groupTitle !== null
         ) {
             // Add to existing group if same title
-            lastGroup.fields.push(field)
+            lastGroup.fields.push(field as any)
         } else {
             // Create new group
             fieldGroups.push({
-                title: field.groupTitle || null,
-                fields: [field]
+                title: field?.groupTitle || null,
+                fields: [field as any],
             })
         }
     })
@@ -280,27 +274,37 @@ export function RenderFormPreview({
             {fieldGroups.map((group, groupIndex) => {
                 if (group.title) {
                     return (
-                        <div key={`group-${groupIndex}`} className='flex flex-col gap-3'>
+                        <div
+                            key={`group-${groupIndex}`}
+                            className='flex flex-col gap-3'
+                        >
                             <h3 className='font-medium text-sm text-muted-foreground'>
                                 {group.title}
                             </h3>
                             <div className='flex flex-col gap-3 pl-3 border-l-2 border-border'>
                                 {group.fields.map((f) => (
-                                    <div key={f.name} className='flex flex-col gap-3'>
-                                        {f.type !== 'button' && f.type !== 'color_picker' && (
-                                            <label className='font-medium text-sm'>
-                                                {f.label}
-                                                {f.required && (
-                                                    <span className='text-red-500 ml-1'>*</span>
-                                                )}
-                                            </label>
-                                        )}
+                                    <div
+                                        key={f.name}
+                                        className='flex flex-col gap-3'
+                                    >
+                                        {f.type !== 'button' &&
+                                            f.type !== 'color_picker' && (
+                                                <label className='font-medium text-sm'>
+                                                    {f.label}
+                                                    {f.required && (
+                                                        <span className='text-red-500 ml-1'>
+                                                            *
+                                                        </span>
+                                                    )}
+                                                </label>
+                                            )}
                                         <RenderField field={f} />
-                                        {f.description && f.type !== 'button' && (
-                                            <p className='text-xs text-muted-foreground'>
-                                                {f.description}
-                                            </p>
-                                        )}
+                                        {f.description &&
+                                            f.type !== 'button' && (
+                                                <p className='text-xs text-muted-foreground'>
+                                                    {f.description}
+                                                </p>
+                                            )}
                                     </div>
                                 ))}
                             </div>
@@ -309,14 +313,17 @@ export function RenderFormPreview({
                 } else {
                     return group.fields.map((f) => (
                         <div key={f.name} className='flex flex-col gap-3'>
-                            {f.type !== 'button' && f.type !== 'color_picker' && (
-                                <label className='font-medium text-sm'>
-                                    {f.label}
-                                    {f.required && (
-                                        <span className='text-red-500 ml-1'>*</span>
-                                    )}
-                                </label>
-                            )}
+                            {f.type !== 'button' &&
+                                f.type !== 'color_picker' && (
+                                    <label className='font-medium text-sm'>
+                                        {f.label}
+                                        {f.required && (
+                                            <span className='text-red-500 ml-1'>
+                                                *
+                                            </span>
+                                        )}
+                                    </label>
+                                )}
                             <RenderField field={f} />
                             {f.description && f.type !== 'button' && (
                                 <p className='text-xs text-muted-foreground'>

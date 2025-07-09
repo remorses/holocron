@@ -1,10 +1,17 @@
 import { OpenAIResponsesProviderOptions, openai } from '@ai-sdk/openai'
-import { UIMessage, streamText, tool } from 'ai'
+import {
+    UIMessage,
+    streamText,
+    tool,
+    stepCountIs,
+    convertToModelMessages,
+} from 'ai'
 import { prisma } from 'db'
 import Handlebars from 'handlebars'
 import { Spiceflow } from 'spiceflow'
 import z from 'zod'
 import agentPrompt from '../prompts/docs-agent.md?raw'
+import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 
 import { notifyError } from './errors'
 import { getFilesForSource } from './source.server'
@@ -82,25 +89,26 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                         role: 'system',
                         content: agentPromptTemplate({ linksText }),
                     },
-                    ...messages.filter((x) => x.role !== 'system'),
+                    ...convertToModelMessages(
+                        messages.filter((x) => x.role !== 'system'),
+                    ),
                 ],
-                maxSteps: 100,
+                stopWhen: stepCountIs(100),
 
-                experimental_providerMetadata: {
+                providerOptions: {
                     openai: {
                         reasoningSummary: 'detailed',
                     } satisfies OpenAIResponsesProviderOptions,
                 },
-                toolCallStreaming: true,
                 tools: {
                     search_docs: tool({
-                        parameters: z.object({
+                        inputSchema: z.object({
                             query: z
                                 .string()
                                 .min(1)
                                 .describe('The search query'),
                         }),
-                        async execute({ query }) {
+                        execute: async ({ query }) => {
                             let tag = ''
                             const results = await searchDocsWithTrieve({
                                 trieveDatasetId: siteBranch.trieveDatasetId,
@@ -111,10 +119,10 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                         },
                     }),
                     go_to_page: tool({
-                        parameters: z.object({
+                        inputSchema: z.object({
                             slug: z.string().describe('The page slug'),
                         }),
-                        async execute({ slug }) {
+                        execute: async ({ slug }) => {
                             const slugParts = slug.split('/').filter(Boolean)
                             const page = source.getPage(slugParts)
                             if (!page) {
@@ -129,16 +137,9 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
 
             const lastUserMessage = messages.findLast((x) => x.role === 'user')
 
-            for await (const part of result.fullStream) {
-                if ('request' in part) {
-                    part.request = null as any
-                }
-                if ('response' in part) {
-                    part.response = null as any
-                }
-                console.log(part)
-                yield part
-            }
+            yield* readableStreamToAsyncIterable(
+                result.toUIMessageStream({ originalMessages: messages }),
+            )
         },
     })
     .onError(({ error }) => {

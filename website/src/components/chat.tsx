@@ -1,6 +1,6 @@
 'use client'
 
-import { createIdGenerator, UIMessage } from 'ai'
+import { createIdGenerator, isToolUIPart, UIMessage } from 'ai'
 import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
 import { memo, startTransition, useEffect, useMemo, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
@@ -10,7 +10,10 @@ import {
     ChatUserMessage,
 } from 'contesto/src/chat/chat-message'
 import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
-import { ToolInvocationRenderer } from 'website/src/components/tools-preview'
+import {
+    EditorToolPreview,
+    FilesTreePreview,
+} from 'website/src/components/tools-preview'
 
 import { Button } from 'website/src/components/ui/button'
 import {
@@ -28,7 +31,7 @@ import {
 import { useStickToBottom } from 'use-stick-to-bottom'
 
 import { useTemporaryState } from '../lib/hooks'
-import {fullStreamToUIMessages } from 'contesto/src/lib/process-chat'
+import { uiStreamToUIMessages } from 'contesto/src/lib/process-chat'
 import {
     apiClient,
     apiClientWithDurableFetch,
@@ -83,6 +86,8 @@ import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import { useChatState } from 'contesto/src/chat/chat-provider'
 import { ChatSuggestionButton } from 'contesto/src/chat/chat-suggestion'
 import { ChatUploadButton } from 'contesto/src/chat/chat-upload-button'
+import { WebsiteUIMessage } from '../lib/types'
+import { RenderFormPreview } from './render-form-preview'
 
 function keyForDocsJson({ chatId }) {
     return `fumabase.jsonc-${chatId}`
@@ -218,7 +223,6 @@ function WelcomeMessage() {
             message={{
                 role: 'assistant',
                 id: '',
-                content: '',
                 parts: [],
             }}
         >
@@ -263,10 +267,15 @@ function Messages({ ref }) {
     return (
         <div
             ref={ref}
-            className='relative text-sm h-full flex flex-col grow  mt-6 gap-6'
+            className='relative text-sm h-full flex flex-col grow mt-6 gap-6'
         >
             {messages.map((message) => {
-                return <MessageRenderer key={message.id} message={message} />
+                return (
+                    <MessageRenderer
+                        key={message.id}
+                        message={message as any}
+                    />
+                )
             })}
             <ChatErrorMessage />
             {/* {!messages.length && <ChatCards />} */}
@@ -274,7 +283,7 @@ function Messages({ ref }) {
     )
 }
 
-function MessageRenderer({ message }: { message: UIMessage }) {
+function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
     const isChatGenerating = useChatState((x) => x.isGenerating)
 
     if (message.role === 'user') {
@@ -300,10 +309,6 @@ function MessageRenderer({ message }: { message: UIMessage }) {
     return (
         <ChatAssistantMessage className='' message={message}>
             {message.parts.map((part, index) => {
-                if (part.type === 'tool-invocation') {
-                    return <ToolInvocationRenderer part={part} index={index} />
-                }
-
                 if (part.type === 'text') {
                     return (
                         <Markdown
@@ -321,8 +326,22 @@ function MessageRenderer({ message }: { message: UIMessage }) {
                             key={index}
                             className='prose-sm'
                             isStreaming={isChatGenerating}
-                            markdown={'thinking:' + part.reasoning}
+                            markdown={'thinking:' + part.text}
                         />
+                    )
+                }
+                if (part.type === 'tool-str_replace_editor') {
+                    return <EditorToolPreview key={index} {...part} />
+                }
+                if (part.type === 'tool-get_project_files') {
+                    return <FilesTreePreview key={index} {...part} />
+                }
+                if (part.type === 'tool-render_form') {
+                    return <RenderFormPreview key={index} {...part} />
+                }
+                if (process.env.NODE_ENV === 'development') {
+                    return (
+                        <pre key={index}>{JSON.stringify(part, null, 2)}</pre>
                     )
                 }
 
@@ -455,7 +474,7 @@ function Footer() {
     }
 
     const submitWithoutDeleteOnDurablefetch = async () => {
-        const messages = useChatState.getState()?.messages
+        const messages = useChatState.getState()?.messages as WebsiteUIMessage[]
         const generateId = createIdGenerator()
 
         const filesInDraft = useWebsiteState.getState()?.filesInDraft || {}
@@ -489,8 +508,8 @@ function Footer() {
         })
         // Split the async iterator into two: one for docs edit, one for state updates
         const [editIter, stateIter] = teeAsyncIterable(
-            fullStreamToUIMessages({
-                fullStream: generator,
+            uiStreamToUIMessages<WebsiteUIMessage>({
+                uiStream: generator,
                 messages: messages,
                 generateId,
             }),
@@ -504,12 +523,11 @@ function Footer() {
                 const lastPart = lastMessage.parts[lastMessage.parts.length - 1]
                 if (
                     lastMessage.role === 'assistant' &&
-                    lastPart?.type === 'tool-invocation'
+                    lastPart?.type === 'tool-str_replace_editor'
                 ) {
-                    const toolInvocation = lastPart.toolInvocation
-                    if (toolInvocation.toolName === 'str_replace_editor') {
+                    if ('input' in lastPart) {
                         const args: Partial<EditToolParamSchema> =
-                            toolInvocation.args
+                            lastPart.input as any
                         if (args?.command === 'view') {
                             continue
                         }
@@ -520,14 +538,17 @@ function Footer() {
                             args.path || '',
                             githubFolder,
                         )
-                        if (toolInvocation.state === 'partial-call') {
+                        if (
+                            lastPart.state === 'input-streaming' ||
+                            lastPart.state === 'input-available'
+                        ) {
                             if (isPostMessageBusy) continue
                             let updatedPagesCopy = { ...filesInDraft }
                             const execute = createEditExecute({
                                 filesInDraft: updatedPagesCopy,
                                 getPageContent,
                             })
-                            await execute(toolInvocation.args)
+                            await execute(args as any)
                             isPostMessageBusy = true
                             docsRpcClient
                                 .setDocsState({
@@ -538,11 +559,11 @@ function Footer() {
                                 .then(() => {
                                     isPostMessageBusy = false
                                 })
-                        } else if (toolInvocation.state === 'result') {
-                            await execute(toolInvocation.args)
+                        } else if (lastPart.state === 'output-available') {
+                            await execute(args as any)
                             console.log(
                                 `applying the setState update to the docs site`,
-                                toolInvocation,
+                                lastPart,
                             )
 
                             await docsRpcClient.setDocsState(
@@ -551,7 +572,7 @@ function Footer() {
                                     isMarkdownStreaming: false,
                                     currentSlug,
                                 },
-                                toolInvocation.toolCallId,
+                                lastPart.toolCallId,
                             )
                             useWebsiteState.setState({
                                 filesInDraft,
@@ -639,7 +660,6 @@ function Footer() {
                                 disabled={false}
                                 placeholder='Ask me anything...'
                                 className=''
-
                                 mentionOptions={mentionOptions || []}
                             />
                             {/* Textarea buttons */}

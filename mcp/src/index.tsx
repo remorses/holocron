@@ -628,7 +628,7 @@ export function createSampleChatExample(): CoreMessage[] {
                     type: 'tool-call',
                     toolCallId: 'call_1',
                     toolName: 'search_web',
-                    args: {
+                    input: {
                         query: 'latest AI developments 2024',
                         limit: 5,
                         include_snippets: true,
@@ -643,7 +643,7 @@ export function createSampleChatExample(): CoreMessage[] {
                     type: 'tool-result',
                     toolCallId: 'call_1',
                     toolName: 'search_web',
-                    result: {
+                    output: {
                         results: [
                             {
                                 title: 'Breakthrough in Multimodal AI Understanding',
@@ -659,7 +659,7 @@ export function createSampleChatExample(): CoreMessage[] {
                             },
                         ],
                         total_count: 150,
-                    },
+                    } as any,
                 },
             ],
         },

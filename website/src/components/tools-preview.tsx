@@ -1,23 +1,20 @@
 import { memo } from 'react'
+
 import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
 import { cn } from 'website/src/lib/utils'
+import { WebsiteToolPart } from 'website/src/lib/types'
 import { useWebsiteState } from '../lib/state'
 import { EditToolParamSchema } from '../lib/edit-tool'
 import { RenderFormPreview } from './render-form-preview'
 import { useChatState } from 'contesto/src/chat/chat-provider'
+import { ChatPartTool } from 'db'
 
 export function EditorToolPreview({
-    args,
+    input: args,
     state,
     toolCallId,
-    result,
-}: {
-    state: 'partial-call' | 'call' | 'result'
-    result?: string | { error?: string; success?: false }
-    step?: number
-    toolCallId: any
-    args?: Partial<EditToolParamSchema>
-}) {
+    output: result,
+}: Extract<WebsiteToolPart, { type: 'tool-str_replace_editor' }>) {
     const isChatGenerating = useChatState((x) => x.isGenerating)
     let code = args?.new_str || args?.file_text || ''
     if (code && typeof code === 'object') {
@@ -93,7 +90,7 @@ export function EditorToolPreview({
     }
     let markdown = ''
     markdown += `Replacing content into \`${args?.path}\`\n`
-    if (state === 'result') {
+    if (state === 'output-available') {
         let diff = result || ''
 
         if (result && typeof result === 'object') {
@@ -116,19 +113,10 @@ export function EditorToolPreview({
 }
 
 export function FilesTreePreview({
-    args,
-    state,
-    toolCallId,
-    result,
-}: {
-    state: 'partial-call' | 'call' | 'result'
-    result?: string | { error?: string; success?: false }
-    step?: number
-    toolCallId: any
-    args?: any
-}) {
+    output,
+}: Extract<WebsiteToolPart, { type: 'tool-get_project_files' }>) {
     const isChatGenerating = useChatState((x) => x.isGenerating)
-    const code = result || '\n'
+    const code = output || '\n'
     if (!code) return null
     let markdown = ''
     markdown += 'Reading project structure\n'
@@ -143,40 +131,10 @@ export function FilesTreePreview({
 export function ToolPreviewContainer({ className = '', children, ...props }) {
     return (
         <div
-            className={cn(
-                'text-sm w-full [&_pre]:text-[12px]',
-                className,
-            )}
+            className={cn('text-sm w-full [&_pre]:text-[12px]', className)}
             {...props}
         >
             {children}
         </div>
     )
-}
-
-export function ToolInvocationRenderer({
-    part,
-    index,
-}: {
-    part: any
-    index: number
-}) {
-    const toolName = part.toolInvocation.toolName
-    if (toolName === 'str_replace_editor') {
-        return <EditorToolPreview key={index} {...part.toolInvocation} />
-    }
-    if (toolName === 'get_project_files') {
-        return <FilesTreePreview key={index} {...part.toolInvocation} />
-    }
-    if (toolName === 'render_form') {
-        return <RenderFormPreview key={index} {...part.toolInvocation} />
-    }
-    if (process.env.NODE_ENV === 'development') {
-        return (
-            <pre key={index}>
-                {JSON.stringify(part.toolInvocation, null, 2)}
-            </pre>
-        )
-    }
-    return null
 }

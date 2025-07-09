@@ -79,7 +79,7 @@ export const auth = betterAuth({
         stripe({
             stripeClient: stripeClient as any,
             stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET!,
-            createCustomerOnSignUp: true,
+            createCustomerOnSignUp: false,
         }),
         apiKey({
             // Store first 6 characters of API key for UI display

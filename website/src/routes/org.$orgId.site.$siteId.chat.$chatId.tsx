@@ -106,9 +106,11 @@ export async function loader({
                 messages: {
                     orderBy: { createdAt: 'asc' },
                     include: {
-                        parts: {
-                            orderBy: { index: 'asc' },
-                        },
+                        textParts: { orderBy: { index: 'asc' } },
+                        reasoningParts: { orderBy: { index: 'asc' } },
+                        toolParts: { orderBy: { index: 'asc' } },
+                        sourceUrlParts: { orderBy: { index: 'asc' } },
+                        fileParts: { orderBy: { index: 'asc' } },
                     },
                 },
             },
@@ -225,11 +227,18 @@ export default function Page({
     )
     const initialChatState = useMemo<Partial<ChatState>>(
         () => ({
-            messages: chat.messages.map((x) => {
+            messages: chat.messages.map((msg) => {
                 const message: UIMessage = {
-                    ...x,
-                    content: '',
-                    parts: x.parts as any,
+                    ...msg,
+                    parts: [
+                        ...(msg.textParts || []),
+                        ...(msg.reasoningParts || []),
+                        ...(msg.toolParts || []),
+                        ...(msg.sourceUrlParts || []),
+                        ...(msg.fileParts || []),
+                    ]
+                        .flat()
+                        .sort((a, b) => a.index - b.index) as any,
                 }
                 return message
             }),
