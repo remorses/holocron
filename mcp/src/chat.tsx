@@ -187,6 +187,7 @@ function MessageRenderer({ message }: { message: UIMessage }) {
                         />
                     )
                 }
+
                 return null
             })}
         </ChatAssistantMessage>

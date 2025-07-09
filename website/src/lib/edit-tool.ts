@@ -25,7 +25,7 @@ export type EditToolParamSchema = z.infer<typeof editToolParamsSchema>
 export const fileUpdateSchema = z
     .object({
         githubPath: z.string(),
-        content: z.string().default(''),
+        content: z.string().nullable().default(''),
         addedLines: z.number().optional(),
         deletedLines: z.number().optional(),
     })

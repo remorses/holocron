@@ -36,7 +36,16 @@ export const getTreeFromFiles = ({
 
     // Add files from draft state
     Object.entries(filesInDraft).forEach(([githubPath, fileData]) => {
-        if (!fileData) return
+        const normalizedPath = removeGithubFolder(githubPath)
+        const existingIndex = allFiles.findIndex((f) => f.path === normalizedPath)
+
+        if (fileData === null) {
+            // Remove file if it exists and fileData is null (deleted)
+            if (existingIndex >= 0) {
+                allFiles.splice(existingIndex, 1)
+            }
+            return
+        }
 
         // Determine file type based on extension
         const isMetaFile = githubPath.endsWith('meta.json')
@@ -58,7 +67,7 @@ export const getTreeFromFiles = ({
 
             draftFile = {
                 data: jsonData,
-                path: removeGithubFolder(githubPath),
+                path: normalizedPath,
                 type: 'meta',
             }
         } else {
@@ -67,13 +76,12 @@ export const getTreeFromFiles = ({
 
             draftFile = {
                 data: frontmatter,
-                path: removeGithubFolder(githubPath),
+                path: normalizedPath,
                 type: 'page',
             }
         }
 
         // Replace existing file or add new one
-        const existingIndex = allFiles.findIndex((f) => f.path === removeGithubFolder(githubPath))
         // console.log(draftFile, allFiles)
         if (existingIndex >= 0) {
             allFiles[existingIndex] = draftFile

@@ -13,6 +13,7 @@ import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
 import {
     EditorToolPreview,
     FilesTreePreview,
+    ToolPreviewContainer,
 } from 'website/src/components/tools-preview'
 
 import { Button } from 'website/src/components/ui/button'
@@ -76,11 +77,7 @@ import {
     FileUpdate,
     isParameterComplete,
 } from '../lib/edit-tool'
-import {
-    safeJsoncParse,
-    slugKebabCaseKeepExtension,
-
-} from '../lib/utils'
+import { safeJsoncParse, slugKebabCaseKeepExtension } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import { useChatState } from 'contesto/src/chat/chat-provider'
@@ -331,6 +328,16 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                         />
                     )
                 }
+                if (part && 'errorText' in part && part.errorText) {
+                    return (
+                        <Markdown
+                            key={index}
+                            className='prose-sm text-red-600'
+                            isStreaming={isChatGenerating}
+                            markdown={`[${part.type}] ${part.errorText}`}
+                        />
+                    )
+                }
                 if (part.type === 'tool-str_replace_editor') {
                     return <EditorToolPreview key={index} {...part} />
                 }
@@ -339,6 +346,18 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                 }
                 if (part.type === 'tool-render_form') {
                     return <RenderFormPreview key={index} {...part} />
+                }
+                if (part.type === 'tool-delete_pages') {
+                    const filePaths = part.input?.filePaths || []
+                    return (
+                        <ToolPreviewContainer key={index} {...part}>
+                            <Markdown
+                                markdown={`**🗑️ Deleting Pages:**\n\n${filePaths.map((path) => `- \`${path || ''}\``).join('\n')}`}
+                                isStreaming={isChatGenerating}
+                                className='prose-sm'
+                            />
+                        </ToolPreviewContainer>
+                    )
                 }
                 if (process.env.NODE_ENV === 'development') {
                     return (
@@ -597,6 +616,7 @@ function Footer() {
                 detail: { chatId: chat.chatId },
             }),
         )
+        await revalidator.revalidate()
     }
     // Listen for regenerate events
 

@@ -35,6 +35,12 @@ import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
+const deletePagesSchema = z.object({
+    filePaths: z
+        .array(z.string())
+        .describe('Array of file paths to delete from the website'),
+})
+
 export type WebsiteTools = {
     str_replace_editor: {
         input: EditToolParamSchema
@@ -47,6 +53,12 @@ export type WebsiteTools = {
     render_form: {
         input: RenderFormParameters //
         output: any
+    }
+    delete_pages: {
+        input: z.infer<typeof deletePagesSchema>
+        output: {
+            deletedFiles: string[]
+        }
     }
 }
 
@@ -185,6 +197,22 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     inputSchema: RenderFormParameters,
 
                     execute: createRenderFormExecute({}),
+                }),
+
+                delete_pages: tool({
+                    description:
+                        'Delete pages from the website. paths should never start with /. Paths should include the extension.',
+                    inputSchema: deletePagesSchema,
+                    execute: async ({ filePaths }) => {
+                        const deletedFiles: string[] = []
+
+                        for (const filePath of filePaths) {
+                            filesInDraft[filePath] = null
+                            deletedFiles.push(filePath)
+                        }
+
+                        return { deletedFiles }
+                    },
                 }),
             },
 

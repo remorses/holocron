@@ -1088,7 +1088,7 @@ export async function pushToPrOrBranch({
         Promise.all(
             files.map(async (x) => {
                 const encoding = 'utf-8'
-                if (x.content === null) return
+                if (x.content === null) return null
                 const blobData = await octokit.rest.git.createBlob({
                     owner: baseOwner,
                     repo: baseRepo,
@@ -1104,16 +1104,30 @@ export async function pushToPrOrBranch({
         ),
     ])
 
+    // Separate files to create/update from files to delete
+    const filesToCreate = withBlobs.filter(isTruthy)
+    const filesToDelete = files.filter(x => x.content === null)
+
     console.log('creating new tree')
     const { data: newTree } = await octokit.rest.git.createTree({
         owner: baseOwner,
         repo: baseRepo,
-        tree: withBlobs.filter(isTruthy).map(({ blobSha, filePath }) => ({
-            path: filePath,
-            mode: `100644`,
-            type: `blob`,
-            sha: blobSha,
-        })),
+        tree: [
+            // Files to create/update
+            ...filesToCreate.map(({ blobSha, filePath }) => ({
+                path: filePath,
+                mode: `100644` as const,
+                type: `blob` as const,
+                sha: blobSha,
+            })),
+            // Files to delete (sha: null indicates deletion)
+            ...filesToDelete.map(({ filePath }) => ({
+                path: filePath,
+                mode: `100644` as const,
+                type: `blob` as const,
+                sha: null,
+            })),
+        ],
         base_tree: currentCommit.treeSha,
     })
 
