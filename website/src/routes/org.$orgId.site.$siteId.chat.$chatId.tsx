@@ -388,10 +388,11 @@ function GithubRepoButton() {
 
     const githubOwner = siteData?.site.githubOwner
     const githubRepo = siteData?.site.githubRepo
+    const githubFolder = siteData?.site.githubFolder
 
     const hasGithubRepo = githubOwner && githubRepo
     const repoUrl = hasGithubRepo
-        ? `https://github.com/${githubOwner}/${githubRepo}`
+        ? `https://github.com/${githubOwner}/${githubRepo}${githubFolder ? '/' + githubFolder.replace(/^\/+/, '') : ''}`
         : undefined
 
     return (
