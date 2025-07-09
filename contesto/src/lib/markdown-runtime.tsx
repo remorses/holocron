@@ -78,6 +78,7 @@ export const StreamingMarkdownRuntimeComponent = memo(
                     return (
                         <SafeMdxRenderer
                             key={index}
+                            addMarkdownLineNumbers
                             renderNode={renderNode}
                             components={components}
                             mdast={block}

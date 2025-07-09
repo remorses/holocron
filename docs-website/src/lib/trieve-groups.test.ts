@@ -2,6 +2,7 @@ import { describe, test, expect } from 'vitest'
 import { TrieveSDK } from 'trieve-ts-sdk'
 import { env } from './env'
 import { getAllTrieveGroups } from './trieve-search'
+import { prisma } from 'db'
 
 describe('Trieve Groups API', () => {
     test('fetches ALL groups using getAllTrieveGroups function', async () => {
@@ -11,7 +12,26 @@ describe('Trieve Groups API', () => {
             return
         }
 
-        const testDatasetId = '8edeb160-d7ee-4fda-bc6e-f55eb0ec3554'
+        // Find the dataset for docs.fumabase.com
+        const siteBranch = await prisma.siteBranch.findFirst({
+            where: {
+                domains: {
+                    some: {
+                        host: 'docs.fumabase.com',
+                    },
+                },
+            },
+            select: {
+                trieveDatasetId: true,
+            },
+        })
+
+        if (!siteBranch?.trieveDatasetId) {
+            console.log('Skipping test: No dataset found for docs.fumabase.com')
+            return
+        }
+
+        const testDatasetId = siteBranch.trieveDatasetId
 
         const allGroups = await getAllTrieveGroups({
             trieveDatasetId: testDatasetId,
@@ -26,26 +46,13 @@ describe('Trieve Groups API', () => {
               [
                 "/README",
                 "/essentials/code",
+                "/essentials/frontmatter",
                 "/essentials/images",
                 "/essentials/markdown",
-                "/essentials/navigation",
                 "/writing/accessibility",
                 "/writing/code-examples",
                 "/writing/content-structure",
-                "/writing/user-focused",
                 "/writing/visual-design",
-                "Code Blocks",
-                "Content Structure That Works",
-                "Fumabase Starter Kit",
-                "Images and Embeds",
-                "Markdown Syntax",
-                "Navigation",
-                "User-Focused Documentation",
-                "Visual Design for Documentation",
-                "Writing Accessible Documentation",
-                "Writing Effective Code Examples",
-                "test-group-1751787074037",
-                "test-group-1751787361266",
               ]
             `)
     })

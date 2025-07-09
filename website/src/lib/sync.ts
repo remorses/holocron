@@ -7,11 +7,12 @@ import { Readable } from 'node:stream'
 
 import { DomainType } from 'db/src/generated/enums'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
+import { DocumentRecord, ProcessorData } from 'docs-website/src/lib/mdx-heavy'
 import {
-    DocumentRecord,
-    ProcessorData,
-} from 'docs-website/src/lib/mdx-heavy'
-import { StructuredData, Heading, StructuredContent } from 'docs-website/src/lib/remark-structure'
+    StructuredData,
+    Heading,
+    StructuredContent,
+} from 'docs-website/src/lib/remark-structure'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { MdastToJsx } from 'safe-mdx'
 import { mdxComponents } from 'docs-website/src/components/mdx-components'
@@ -21,7 +22,7 @@ import {
     getPresignedUrl,
     s3,
 } from 'docs-website/src/lib/s3'
-import { generateSlugFromPath } from 'docs-website/src/lib/utils'
+import { deduplicateBy, generateSlugFromPath } from 'docs-website/src/lib/utils'
 import path from 'path'
 import { ChunkReqPayload, TrieveSDK } from 'trieve-ts-sdk'
 import { cloudflareClient } from './cloudflare'
@@ -41,7 +42,10 @@ import {
     extractJsonCComments,
     JsonCComments,
 } from './json-c-comments'
-import { cleanupOrphanedTrieveChunks, TrieveChunkMetadata } from 'docs-website/src/lib/trieve-search'
+import {
+    cleanupOrphanedTrieveChunks,
+    TrieveChunkMetadata,
+} from 'docs-website/src/lib/trieve-search'
 
 export function gitBlobSha(
     content: string | Buffer,
@@ -351,19 +355,52 @@ export async function syncSite({
                                 // TODO add a way to show errors to the user in cases like this (domain already taken), if domain is already taken, send them an email?
                                 continue
                             }
-                            await cloudflareClient.createDomain(host)
                             const domainType: DomainType =
                                 host.endsWith('.' + env.APPS_DOMAIN) ||
                                 host.endsWith('.localhost')
                                     ? 'internalDomain'
                                     : 'customDomain'
-                            await prisma.domain.create({
-                                data: {
-                                    host,
-                                    branchId,
-                                    domainType,
-                                },
-                            })
+                            if (domainType === 'customDomain') {
+                                const takenInCloudflare = await cloudflareClient
+                                    .get(host)
+                                    .catch((e) => {
+                                        notifyError(
+                                            e,
+                                            `Cloudflare domain check for ${host}`,
+                                        )
+                                        return null
+                                    })
+                                if (takenInCloudflare)
+                                    console.log(takenInCloudflare)
+                                if (takenInCloudflare?.id) {
+                                    console.log(
+                                        `Domain ${host} is already taken in Cloudflare, skipping.`,
+                                    )
+                                    continue
+                                }
+                            }
+                            try {
+                                await cloudflareClient.createDomain(host)
+
+                                await prisma.domain.create({
+                                    data: {
+                                        host,
+                                        branchId,
+                                        domainType,
+                                    },
+                                })
+                            } catch (e) {
+                                if (
+                                    typeof e?.message === 'string' &&
+                                    e.message.includes('409 Conflict')
+                                ) {
+                                    console.log(
+                                        `stopping addition of domain, 409 Conflict when creating domain ${host}: ${e.message}`,
+                                    )
+                                } else {
+                                    throw e
+                                }
+                            }
                         }
                     }
                 }
@@ -669,6 +706,9 @@ export async function syncSite({
                             where: { pageId: page.pageId },
                         })
 
+                        errors = deduplicateBy(errors, (x) =>
+                            String(x.line || 0),
+                        )
                         // Create new sync errors if there were processing errors
                         if (errors.length > 0) {
                             for (const error of errors) {
@@ -880,7 +920,12 @@ export async function* filesFromGithub({
                 console.log(`Skipping file ${file.path} because sha is missing`)
                 return false
             }
-            if (!pathWithFrontSlash?.startsWith(basePath)) {
+            if (
+                !(
+                    pathWithFrontSlash?.startsWith(basePath + '/') ||
+                    pathWithFrontSlash === basePath
+                )
+            ) {
                 console.log(
                     `Skipping file ${file.path} because path does not start with basePath (${basePath})`,
                 )
@@ -1276,6 +1321,7 @@ function processForTrieve(page: DocumentRecord & { pageSlug: string }) {
         })
     })
 
+    // console.log(JSON.stringify({ chunks }, null, 2))
     return chunks
 }
 

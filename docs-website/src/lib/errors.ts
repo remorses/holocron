@@ -1,7 +1,7 @@
 import { captureException, flush, init } from "sentries";
 
 init({
-  dsn: "",
+  dsn: "https://e702f9c3dff49fd1aa16500c6056d0f7@o4509638447005696.ingest.de.sentry.io/4509638454476880",
   integrations: [],
   tracesSampleRate: 0.01,
   profilesSampleRate: 0.01,

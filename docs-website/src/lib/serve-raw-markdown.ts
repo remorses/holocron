@@ -121,8 +121,8 @@ function formatMarkdown(
     // Filter lines by range if specified
     const filteredLines = (() => {
         if (startLine !== undefined || endLine !== undefined) {
-            const start = startLine ? startLine - 1 : 0 // Convert to 0-based index
-            const end = endLine ? endLine : lines.length
+            const start = startLine ? Math.max(0, startLine - 1) : 0 // Convert to 0-based index, ensure non-negative
+            const end = endLine ? Math.min(endLine, lines.length) : lines.length // Don't exceed file length
             return lines.slice(start, end)
         }
         return lines

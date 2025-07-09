@@ -85,7 +85,9 @@ export async function searchDocsWithTrieve({
         search_type: 'fulltext',
         score_threshold: 1,
         group_size: 4,
-
+        metadata: {
+          line: true
+        },
         highlight_options: {
             highlight_results: false,
             // highlight_window: 100,

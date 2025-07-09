@@ -2,6 +2,7 @@ import { createSpiceflowClient } from 'spiceflow/client'
 import { DocsSpiceflowApp } from './spiceflow-docs-app'
 import { DurableFetchClient } from 'durablefetch'
 
+
 export const docsApiClient = createSpiceflowClient<DocsSpiceflowApp>('/', {
     onRequest() {
         return { credentials: 'include' }

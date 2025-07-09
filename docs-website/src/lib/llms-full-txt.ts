@@ -56,7 +56,12 @@ export async function generateLlmsFullTxt({
                 // Convert HTML mark tags to markdown bold
                 const markdownContent = result.content.replace(/<mark>/g, '**').replace(/<\/mark>/g, '**')
                 // const markdownContent = result.content.replace(/<mark>/g, '**').replace(/<\/mark>/g, '**')
-                const sourceUrl = `${baseUrl}${result.url}`
+                
+                // Add startLine parameter if line number is available
+                const urlPath = result.url.replace(/#.*$/, '') // Remove any existing fragment
+                const fragment = result.url.match(/#(.*)$/)?.[1] || ''
+                const lineParam = result.line ? `?startLine=${result.line}` : ''
+                const sourceUrl = `${baseUrl}${urlPath}.md${lineParam}${fragment ? '#' + fragment : ''}`
 
                 const section = `**Source:** ${sourceUrl}\n\n${markdownContent}\n\n━━━\n\n`
                 output += section
@@ -107,7 +112,7 @@ export async function generateLlmsFullTxt({
 
             // Add each page in the batch
             for (const page of batch) {
-                const sourceUrl = `${baseUrl}${page.url}`
+                const sourceUrl = `${baseUrl}${page.url}.md`
                 const markdown = pageContentMap.get(page.url)
 
                 if (markdown) {

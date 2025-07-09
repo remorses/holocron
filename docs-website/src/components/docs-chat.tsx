@@ -49,11 +49,13 @@ import {
     saveChatMessages,
     loadChatMessages,
 } from '../lib/docs-state'
-import { useRouteLoaderData, useLocation } from 'react-router'
+import { useRouteLoaderData, useLocation, useNavigate } from 'react-router'
 import type { Route } from '../root'
 import { env } from '../lib/env'
 import { Trash2Icon, XIcon } from 'lucide-react'
 import { DocsUIMessage } from '../lib/types'
+import { teeAsyncIterable } from 'contesto/src/lib/utils'
+import { highlightText } from '../lib/highlight-text'
 
 export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
     const chatId = usePersistentDocsState((x) => x.chatId)
@@ -275,16 +277,27 @@ function MessageRenderer({ message }: { message: DocsUIMessage }) {
                         </div>
                     )
                 }
+                if (part.type === 'tool-selectText') {
+                    if (!part.input) return null
+                    return (
+                        <div
+                            key={index}
+                            className='text-sm text-muted-foreground'
+                        >
+                            <Markdown
+                                isStreaming={isChatGenerating}
+                                markdown={`🔎 Selecting lines  ${part.input?.slug}:${part.input?.startLine || 0}:${part.input?.endLine || ''}`}
+                            />
+                        </div>
+                    )
+                }
 
                 if (
                     part.type.startsWith('tool-') &&
                     process.env.NODE_ENV === 'development'
                 ) {
                     return (
-                        <pre
-                            key={index}
-                            className='text-xs bg-gray-100 p-2 rounded'
-                        >
+                        <pre key={index} className='text-xs p-2 rounded'>
                             {JSON.stringify(part, null, 2)}
                         </pre>
                     )
@@ -409,8 +422,10 @@ function Footer() {
         }
     }
 
+    const navigate = useNavigate()
+
     const submitMessageWithoutDelete = async () => {
-        const messages = useChatState.getState()?.messages
+        const messages = useChatState.getState()?.messages as DocsUIMessage[]
         const generateId = createIdGenerator()
         const currentOrigin =
             typeof window !== 'undefined' ? window.location.origin : ''
@@ -428,11 +443,48 @@ function Footer() {
             )
         if (error) throw error
 
-        const stateIter = uiStreamToUIMessages({
-            uiStream: generator,
-            messages: messages,
-            generateId,
-        })
+        const [effectsIter, stateIter] = teeAsyncIterable(
+            uiStreamToUIMessages<DocsUIMessage>({
+                uiStream: generator,
+                messages: messages,
+                generateId,
+            }),
+        )
+        async function updateDocsSite() {
+            for await (const newMessages of effectsIter) {
+                const lastMessage = newMessages[newMessages.length - 1]
+                const lastPart = lastMessage.parts[lastMessage.parts.length - 1]
+                if (
+                    lastMessage.role === 'assistant' &&
+                    lastPart?.type === 'tool-selectText' &&
+                    lastPart.state === 'input-available'
+                ) {
+                    const targetSlug = lastPart.input?.slug
+                    if (
+                        targetSlug &&
+                        typeof targetSlug === 'string' &&
+                        targetSlug !== location.pathname
+                    ) {
+                        await navigate(targetSlug)
+                    }
+                    await highlightText(lastPart.input)
+                }
+                if (
+                    lastMessage.role === 'assistant' &&
+                    lastPart?.type === 'tool-goToPage' &&
+                    lastPart.state === 'input-available'
+                ) {
+                    const targetSlug = lastPart.input?.slug
+                    if (
+                        typeof targetSlug === 'string' &&
+                        targetSlug !== location.pathname
+                    ) {
+                        await navigate(targetSlug)
+                    }
+                }
+            }
+        }
+        updateDocsSite()
 
         // Second iteration: update chat state
         for await (const newMessages of stateIter) {

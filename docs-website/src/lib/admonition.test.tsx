@@ -31,14 +31,22 @@ describe('admonitions', () => {
             <SafeMdxRenderer
                 mdast={data?.ast}
                 components={{
-                    Callout({children, type}) {
-                        return <div className={`callout callout-${type ?? 'note'}`}>{children}</div>
-                    }
+                    Callout({ children, type }) {
+                        return (
+                            <div
+                                className={`callout callout-${type ?? 'note'}`}
+                            >
+                                {children}
+                            </div>
+                        )
+                    },
                 }}
-            />
+            />,
         )
 
         // Check the full output
-        expect(jsx).toMatchInlineSnapshot(`"<div class="callout callout-info"><p>You should commit your project&#x27;s file to Git.</p></div>"`)
+        expect(jsx).toMatchInlineSnapshot(
+            `"<div class="callout callout-info"><p>You should commit your project&#x27;s file to Git.</p></div>"`,
+        )
     })
 })

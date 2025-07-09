@@ -11,7 +11,11 @@ import { describe, expect, test } from 'vitest'
 import { markAddedNodes } from './diff'
 
 async function parseWithPositions(markdown: string) {
-    const res = await processMdxInServer({ markdown, githubPath: '', extension: 'mdx' })
+    const res = await processMdxInServer({
+        markdown,
+        githubPath: '',
+        extension: 'mdx',
+    })
     return res.data?.ast
 }
 
@@ -26,6 +30,7 @@ async function extractTestData(ast: Root) {
     try {
         const html = renderToStaticMarkup(
             <SafeMdxRenderer
+
                 components={{
                     Card: ({ children, ...props }: any) => (
                         <div role='card' {...props}>

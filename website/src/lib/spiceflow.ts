@@ -194,6 +194,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 branchId,
                 basePath: githubFolder,
 
+                forceFullSync: true,
                 // forceFullSync: true,
             })
             await syncSite({

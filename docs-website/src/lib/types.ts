@@ -4,6 +4,7 @@ import {
     GoToPageInput,
     GetCurrentPageInput,
     FetchUrlInput,
+    SelectTextInput,
 } from './spiceflow-docs-app'
 
 export type DocsTools = {
@@ -23,8 +24,12 @@ export type DocsTools = {
         input: FetchUrlInput
         output: any
     }
+    selectText: {
+        input: SelectTextInput
+        output: any
+    }
 }
 
 export type DocsUIMessage = UIMessage<never, never, DocsTools>
 
-export type DocsToolPart = {output?: any} & ToolUIPart<DocsTools>
+export type DocsToolPart = { output?: any } & ToolUIPart<DocsTools>

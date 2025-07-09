@@ -79,7 +79,7 @@ import {
 import {
     safeJsoncParse,
     slugKebabCaseKeepExtension,
-    teeAsyncIterable,
+
 } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
@@ -88,6 +88,7 @@ import { ChatSuggestionButton } from 'contesto/src/chat/chat-suggestion'
 import { ChatUploadButton } from 'contesto/src/chat/chat-upload-button'
 import { WebsiteUIMessage } from '../lib/types'
 import { RenderFormPreview } from './render-form-preview'
+import { teeAsyncIterable } from 'contesto/src/lib/utils'
 
 function keyForDocsJson({ chatId }) {
     return `fumabase.jsonc-${chatId}`

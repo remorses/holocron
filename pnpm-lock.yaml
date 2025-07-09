@@ -209,8 +209,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.0
       safe-mdx:
-        specifier: ^1.1.0
-        version: 1.1.0(react@19.1.0)
+        specifier: ^1.3.0
+        version: 1.3.0(react@19.1.0)
       shiki:
         specifier: ^3.7.0
         version: 3.7.0
@@ -562,8 +562,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.0
       safe-mdx:
-        specifier: ^1.1.0
-        version: 1.1.0(react@19.1.0)
+        specifier: ^1.3.0
+        version: 1.3.0(react@19.1.0)
       sentries:
         specifier: ^0.2.2
         version: 0.2.2(@cloudflare/workers-types@4.20250614.0)
@@ -841,7 +841,7 @@ importers:
         specifier: ^11.0.5
         version: 11.0.5
       zod:
-        specifier: ^3.25.76
+        specifier: ^3.25.67
         version: 3.25.76
 
   fumadocs/packages/core:
@@ -880,7 +880,7 @@ importers:
         specifier: ^2.7.1
         version: 2.7.1(@types/react@19.1.8)(react@19.1.0)
       remark:
-        specifier: ^15.0.1
+        specifier: ^15.0.0
         version: 15.0.1
       remark-gfm:
         specifier: ^4.0.1
@@ -917,7 +917,7 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@types/mdast':
-        specifier: ^4.0.4
+        specifier: ^4.0.3
         version: 4.0.4
       '@types/negotiator':
         specifier: ^0.6.4
@@ -1104,7 +1104,7 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       zod:
-        specifier: ^3.25.76
+        specifier: ^3.25.67
         version: 3.25.76
     devDependencies:
       '@mdx-js/mdx':
@@ -1117,7 +1117,7 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@types/mdast':
-        specifier: ^4.0.4
+        specifier: ^4.0.3
         version: 4.0.4
       '@types/node':
         specifier: 24.0.7
@@ -1129,7 +1129,7 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0
       remark:
-        specifier: ^15.0.1
+        specifier: ^15.0.0
         version: 15.0.1
       tsconfig:
         specifier: workspace:*
@@ -1182,7 +1182,7 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       zod:
-        specifier: ^3.25.76
+        specifier: ^3.25.67
         version: 3.25.76
     devDependencies:
       '@fumadocs/mdx-remote':
@@ -1192,7 +1192,7 @@ importers:
         specifier: ^4.0.9
         version: 4.0.9
       '@types/mdast':
-        specifier: ^4.0.4
+        specifier: ^4.0.3
         version: 4.0.4
       '@types/mdx':
         specifier: ^2.0.13
@@ -1237,7 +1237,7 @@ importers:
         specifier: ^4.0.3
         version: 4.0.3
       zod:
-        specifier: ^3.25.76
+        specifier: ^3.25.67
         version: 3.25.76
     devDependencies:
       '@types/mdx':
@@ -1447,7 +1447,7 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@types/mdast':
-        specifier: ^4.0.4
+        specifier: ^4.0.3
         version: 4.0.4
       '@types/node':
         specifier: 24.0.7
@@ -1505,7 +1505,7 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@types/mdast':
-        specifier: ^4.0.4
+        specifier: ^4.0.3
         version: 4.0.4
       '@types/node':
         specifier: 24.0.7
@@ -1948,8 +1948,8 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0(react@19.1.0)
       safe-mdx:
-        specifier: ^1.1.0
-        version: 1.1.0(react@19.1.0)
+        specifier: ^1.3.0
+        version: 1.3.0(react@19.1.0)
       sema4:
         specifier: ^0.1.3
         version: 0.1.3
@@ -8640,6 +8640,9 @@ packages:
     resolution: {integrity: sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==}
     engines: {node: '>= 0.6'}
 
+  eval-estree-expression@3.0.0:
+    resolution: {integrity: sha512-siT1mQEeCtw4eHQ3jozxaXMpQeEkb5imAdoLB5Uj3wcpgicGCV41cbVdv/G0HT/SBe7o5+ex1lg1odCuSgnUJA==}
+
   event-target-shim@5.0.1:
     resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
     engines: {node: '>=6'}
@@ -11714,8 +11717,8 @@ packages:
   safe-buffer@5.2.1:
     resolution: {integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==}
 
-  safe-mdx@1.1.0:
-    resolution: {integrity: sha512-VZ5HFED4LAV+wEOQEUTsqfs5aEwrPTgv7JypY2aM+rFZPoXnU/yhj93WyFpLN4uSXZcrLnco2cXy8GnPcDBU7Q==}
+  safe-mdx@1.3.0:
+    resolution: {integrity: sha512-xmfWnO4bUbWtbA9PIAqcGc9GsJuj9FmZMPOxcC/W9EFJN0P0vXJh/e4fN8/5iabAcZmSqGkHFcyzjoAewcxGbw==}
     peerDependencies:
       react: '*'
 
@@ -21546,7 +21549,7 @@ snapshots:
       remark-html: 16.0.1
       remark-mdx: 3.1.0
       remark-stringify: 11.0.0
-      safe-mdx: 1.1.0(react@19.1.0)
+      safe-mdx: 1.3.0(react@19.1.0)
       sentries: 0.2.2(@cloudflare/workers-types@4.20250614.0)
       shiki: 3.7.0
       spiceflow: 1.13.3(@modelcontextprotocol/sdk@1.15.0)
@@ -22074,6 +22077,8 @@ snapshots:
   esutils@2.0.3: {}
 
   etag@1.8.1: {}
+
+  eval-estree-expression@3.0.0: {}
 
   event-target-shim@5.0.1: {}
 
@@ -26182,10 +26187,11 @@ snapshots:
 
   safe-buffer@5.2.1: {}
 
-  safe-mdx@1.1.0(react@19.1.0):
+  safe-mdx@1.3.0(react@19.1.0):
     dependencies:
       '@standard-schema/spec': 1.0.0
       collapse-white-space: 2.1.0
+      eval-estree-expression: 3.0.0
       html-to-jsx-transform: 1.2.1
       react: 19.1.0
       remark: 15.0.1
@@ -27972,7 +27978,7 @@ snapshots:
       react-router: 7.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-router-hono-server: 2.13.0(@cloudflare/workers-types@4.20250614.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@7.0.0(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.22.0(@cloudflare/workers-types@4.20250614.0))(yaml@2.8.0))(@types/react@19.1.8)(react-router@7.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(vite@7.0.0(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.22.0(@cloudflare/workers-types@4.20250614.0))
       react-sound-visualizer: 1.4.0(react@19.1.0)
-      safe-mdx: 1.1.0(react@19.1.0)
+      safe-mdx: 1.3.0(react@19.1.0)
       sema4: 0.1.3
       sentries: 0.2.2(@cloudflare/workers-types@4.20250614.0)
       shiki: 3.7.0

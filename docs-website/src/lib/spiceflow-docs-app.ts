@@ -48,11 +48,18 @@ export const fetchUrlInputSchema = z.object({
         ),
 })
 
+export const selectTextInputSchema = z.object({
+    slug: z.string().describe('The page slug to navigate to and select text on'),
+    startLine: z.number().describe('Starting line number to select (1-based)'),
+    endLine: z.number().describe('Ending line number to select (1-based)'),
+})
+
 // Export types with capitalized names
 export type SearchDocsInput = z.infer<typeof searchDocsInputSchema>
 export type GoToPageInput = z.infer<typeof goToPageInputSchema>
 export type GetCurrentPageInput = z.infer<typeof getCurrentPageInputSchema>
 export type FetchUrlInput = z.infer<typeof fetchUrlInputSchema>
+export type SelectTextInput = z.infer<typeof selectTextInputSchema>
 
 export const docsApp = new Spiceflow({ basePath: '/api' })
     .route({
@@ -215,6 +222,22 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                                 )
                                 return `Error fetching ${url}: ${error.message}`
                             }
+                        },
+                    }),
+                    selectText: tool({
+                        inputSchema: selectTextInputSchema,
+                        execute: async ({ slug, startLine, endLine }) => {
+                            if (endLine - startLine + 1 > 10) {
+                                return `Cannot select more than 10 lines of text. You requested ${endLine - startLine + 1} lines.`
+                            }
+                            
+                            const slugParts = slug.split('/').filter(Boolean)
+                            const page = source.getPage(slugParts)
+                            if (!page) {
+                                return `Page ${slug} not found`
+                            }
+                            
+                            return `Text selection will be highlighted on page ${slug} from line ${startLine} to ${endLine}`
                         },
                     }),
                 },

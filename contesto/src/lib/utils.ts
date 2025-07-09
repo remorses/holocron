@@ -3,7 +3,7 @@ const memoize = memoizePkg['default'] || memoizePkg
 
 export async function* readableStreamToAsyncIterable<T>(
     stream: ReadableStream<T>,
-): AsyncIterable<T> {
+): AsyncIterableIterator<T> {
     const reader = stream.getReader()
     try {
         while (true) {
@@ -48,3 +48,40 @@ export function asyncIterableToReadableStream<T>(
 }
 
 export { memoize }
+
+/**
+ * teeAsync(iterable) → [cloneA, cloneB]
+ * -------------------------------------
+ * Clones any AsyncIterable<T> using ReadableStream.tee().
+ */
+
+export function teeAsyncIterable<T>(
+    iterable: AsyncIterable<T>,
+): [AsyncIterableIterator<T>, AsyncIterableIterator<T>] {
+    const srcIter = iterable[Symbol.asyncIterator]()
+
+    // Wrap the source iterator in a stream.
+    const srcStream = new ReadableStream<T>({
+        async pull(ctrl) {
+            try {
+                const { value, done } = await srcIter.next()
+                done ? ctrl.close() : ctrl.enqueue(value as T)
+            } catch (err) {
+                ctrl.error(err)
+            }
+        },
+        async cancel() {
+            if (typeof srcIter.return === 'function') {
+                try {
+                    await srcIter.return()
+                } catch {
+                    /* ignore */
+                }
+            }
+        },
+    })
+
+    // Duplicate the stream and convert each branch back into an iterator.
+    const [s1, s2] = srcStream.tee()
+    return [readableStreamToAsyncIterable(s1), readableStreamToAsyncIterable(s2)]
+}

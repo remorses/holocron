@@ -9,7 +9,7 @@ import { notifyError } from './errors'
 import { isAbsoluteUrl } from './utils'
 
 export async function extractAssetsUrls({ ast, extension }) {
-    const jsx = <SafeMdxRenderer components={mdxComponents} mdast={ast} />
+    const jsx = <SafeMdxRenderer  components={mdxComponents} mdast={ast} />
     const html = dom.renderToStaticMarkup(jsx)
 }
 

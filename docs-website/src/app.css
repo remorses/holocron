@@ -31,6 +31,18 @@ summary {
         background: rgba(36, 78, 41, 0.6);
     }
 }
+
+/* llm text selection highlight using accent color */
+::highlight(llm-text-selection) {
+    background: color-mix(in srgb, var(--color-fd-primary) 20%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-fd-primary) 40%, transparent);
+}
+.dark {
+    ::highlight(llm-text-selection) {
+        background: color-mix(in srgb, var(--color-fd-primary) 30%, transparent);
+        border: 1px solid color-mix(in srgb, var(--color-fd-primary) 50%, transparent);
+    }
+}
 mark {
     background-color: theme(colors.yellow.100/0.4);
 }

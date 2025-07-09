@@ -9,37 +9,37 @@ describe('generateLlmsFullTxt', () => {
         })
 
         expect(result).toMatchInlineSnapshot(`
-          "**Source:** https://docs.fumabase.com/essentials/images
+          "**Source:** https://docs.fumabase.com/essentials/images.md
 
           Images and Embeds
 
           ━━━
 
-          **Source:** https://docs.fumabase.com/essentials/images#embeds-and-html-elements
+          **Source:** https://docs.fumabase.com/essentials/images.md?startLine=34#embeds-and-html-elements
 
-          Fumabase supports HTML tags in Markdown. This is helpful if you prefer HTML tags to Markdown syntax, and lets you create documentation with infinite flexibility.
+          src: https://www.youtube.com/embed/4KzFe50RQkQ
 
           ━━━
 
-          **Source:** https://docs.fumabase.com/essentials/images#using-markdown
+          **Source:** https://docs.fumabase.com/essentials/images.md?startLine=14#using-markdown
 
           Using Markdown
 
           ━━━
 
-          **Source:** https://docs.fumabase.com/essentials/frontmatter
+          **Source:** https://docs.fumabase.com/writing/accessibility.md
 
-          Frontmatter
+          Writing Accessible Documentation
 
           ━━━
 
-          **Source:** https://docs.fumabase.com/essentials/frontmatter#overview
+          **Source:** https://docs.fumabase.com/writing/accessibility.md?startLine=95#video-and-interactive-content
 
-          Frontmatter is YAML metadata placed at the beginning of your markdown files. It controls how your page is displayed and indexed.
+          Provide text alternatives for multimedia content:
 
           ━━━
 
           "
         `)
     })
-})
+}, 1000 * 10)

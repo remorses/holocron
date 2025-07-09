@@ -1,14 +1,24 @@
 import { describe, test, expect } from 'vitest'
 import { searchDocsWithTrieve } from './trieve-search'
-
-
-
+import { prisma } from 'db'
 
 describe('searchDocsWithTrieve', () => {
     test('returns empty array when no trieveDatasetId provided', async () => {
+        const siteBranch = await prisma.siteBranch.findFirst({
+            where: {
+                domains: {
+                    some: {
+                        host: 'docs.fumabase.com',
+                    },
+                },
+            },
+            select: {
+                trieveDatasetId: true,
+            },
+        })
         const result = await searchDocsWithTrieve({
             query: 'markdown',
-            trieveDatasetId: '706c5b23-ec23-46da-bccf-33b6b90a65b3',
+            trieveDatasetId: siteBranch?.trieveDatasetId,
         })
 
         expect(result).toMatchInlineSnapshot(`
@@ -20,18 +30,18 @@ describe('searchDocsWithTrieve', () => {
               "url": "/essentials/images",
             },
             {
-              "content": "### Using Markdown",
-              "id": "/essentials/images-using-markdown-heading",
-              "line": undefined,
-              "type": "heading",
-              "url": "/essentials/images#using-markdown",
-            },
-            {
               "content": "src: https://www.youtube.com/embed/4KzFe50RQkQ",
               "id": "/essentials/images-embeds-and-html-elements-content",
-              "line": undefined,
+              "line": 34,
               "type": "text",
               "url": "/essentials/images#embeds-and-html-elements",
+            },
+            {
+              "content": "Using Markdown",
+              "id": "/essentials/images-using-markdown-heading",
+              "line": 14,
+              "type": "heading",
+              "url": "/essentials/images#using-markdown",
             },
             {
               "content": "Writing Accessible Documentation",
@@ -40,45 +50,11 @@ describe('searchDocsWithTrieve', () => {
               "url": "/writing/accessibility",
             },
             {
-              "content": "Write alt text that conveys the same information the image provides:",
-              "id": "/writing/accessibility-effective-alt-text-content",
-              "line": undefined,
-              "type": "text",
-              "url": "/writing/accessibility#effective-alt-text",
-            },
-            {
-              "content": "Use simple, direct language that communicates efficiently:",
-              "id": "/writing/accessibility-write-for-clarity-content",
-              "line": undefined,
-              "type": "text",
-              "url": "/writing/accessibility#write-for-clarity",
-            },
-            {
               "content": "Provide text alternatives for multimedia content:",
               "id": "/writing/accessibility-video-and-interactive-content-content",
-              "line": undefined,
+              "line": 95,
               "type": "text",
               "url": "/writing/accessibility#video-and-interactive-content",
-            },
-            {
-              "content": "Use multiple visual cues to communicate status and importance:",
-              "id": "/writing/accessibility-color-independent-information-design-content",
-              "line": undefined,
-              "type": "text",
-              "url": "/writing/accessibility#color-independent-information-design",
-            },
-            {
-              "content": "Content Structure That Works",
-              "id": "page1c45d46c-a5f0-49a9-b615-780536eb5391",
-              "type": "page",
-              "url": "/writing/content-structure",
-            },
-            {
-              "content": "Never assume users have the same context you do. Explicitly state what they need to know or have ready.",
-              "id": "/writing/content-structure-context-and-prerequisites-content",
-              "line": undefined,
-              "type": "text",
-              "url": "/writing/content-structure#context-and-prerequisites",
             },
           ]
         `)
