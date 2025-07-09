@@ -25,7 +25,7 @@ import { remarkCodeTab } from 'fumadocs-core/mdx-plugins/remark-code-tab'
 import { remarkHeading } from 'fumadocs-core/mdx-plugins/remark-heading'
 import { remarkSteps } from 'fumadocs-core/mdx-plugins/remark-steps'
 import {
-    remarkStructure,
+
     StructuredData,
     StructureOptions,
 } from 'fumadocs-core/mdx-plugins/remark-structure'
@@ -40,6 +40,7 @@ import { visit } from 'unist-util-visit'
 import { remarkGitHubBlockquotes } from './github-blockquotes'
 
 import { DocumentRecord } from 'fumadocs-core/search/algolia'
+import { remarkStructure } from './remark-structure'
 
 export type { DocumentRecord, StructuredData }
 
