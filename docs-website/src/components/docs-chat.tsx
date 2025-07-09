@@ -66,20 +66,60 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
         }),
         [loaderData, chatId],
     )
-    const isChatOpen = usePersistentDocsState((x) => x.isChatOpen)
+    const drawerState = usePersistentDocsState((x) => x.drawerState)
+
+    const drawerContentStyle = (() => {
+        if (drawerState === 'minimized') {
+            return { transform: 'translateX(400px)' }
+        }
+        return {}
+    })()
+
+    const handleDrawerClick = (e) => {
+        e.stopPropagation()
+        e.preventDefault()
+        if (drawerState === 'minimized') {
+            usePersistentDocsState.setState({ drawerState: 'open' })
+        }
+    }
 
     return (
         <ChatProvider initialValue={initialChatState}>
+            {drawerState !== 'minimized' && (
+                <div
+                    className='fixed inset-0 bg-black/20 z-40'
+                    onClick={() =>
+                        usePersistentDocsState.setState({
+                            drawerState: 'closed',
+                        })
+                    }
+                    aria-hidden='true'
+                />
+            )}
             <Drawer
                 onOpenChange={(open) => {
-                    usePersistentDocsState.setState({ isChatOpen: open })
+                    console.log('Drawer open state changed:', open)
+                    if (drawerState === 'minimized') {
+                        return
+                    }
+                    usePersistentDocsState.setState({
+                        drawerState: open ? 'open' : 'closed',
+                    })
                 }}
-                open={isChatOpen}
+                open={drawerState !== 'closed'}
                 direction='right'
+                modal={false}
+                disablePreventScroll={drawerState === 'minimized'}
             >
-                <DrawerContent className='bg-background lg:min-w-[600px] min-w-full'>
+                <DrawerContent
+                    className='bg-background lg:min-w-[600px] min-w-full'
+                    style={drawerContentStyle}
+                >
                     <ChatTopBar />
-                    <div className='p-4 flex flex-col min-h-0 grow pb-0'>
+                    <div
+                        onClick={handleDrawerClick}
+                        className='p-4 flex flex-col min-h-0 grow pb-0'
+                    >
                         <Chat />
                     </div>
                 </DrawerContent>
@@ -96,7 +136,7 @@ function ChatTopBar() {
     }
 
     const closeDrawer = () => {
-        usePersistentDocsState.setState({ isChatOpen: false })
+        usePersistentDocsState.setState({ drawerState: 'closed' })
     }
 
     return (
@@ -450,6 +490,16 @@ function Footer() {
                 generateId,
             }),
         )
+        // Add a cleanupPath function that removes trailing .mdx?
+        function cleanupPath(targetSlug: string) {
+            if (!targetSlug) return ''
+            // Remove query string if present
+            let cleanSlug = targetSlug.split('?')[0]
+            // Remove trailing .md or .mdx
+            cleanSlug = cleanSlug.replace(/\.mdx?$/, '')
+            return cleanSlug
+        }
+
         async function updateDocsSite() {
             for await (const newMessages of effectsIter) {
                 const lastMessage = newMessages[newMessages.length - 1]
@@ -463,11 +513,15 @@ function Footer() {
                     if (
                         targetSlug &&
                         typeof targetSlug === 'string' &&
-                        targetSlug !== location.pathname
+                        cleanupPath(targetSlug) !== location.pathname
                     ) {
-                        await navigate(targetSlug)
+                        await navigate(cleanupPath(targetSlug))
                     }
-                    await highlightText(lastPart.input)
+                    highlightText(lastPart.input)
+                    // Minimize drawer when text is selected
+                    usePersistentDocsState.setState({
+                        drawerState: 'minimized',
+                    })
                 }
                 if (
                     lastMessage.role === 'assistant' &&
@@ -477,9 +531,9 @@ function Footer() {
                     const targetSlug = lastPart.input?.slug
                     if (
                         typeof targetSlug === 'string' &&
-                        targetSlug !== location.pathname
+                        cleanupPath(targetSlug) !== location.pathname
                     ) {
-                        await navigate(targetSlug)
+                        await navigate(cleanupPath(targetSlug))
                     }
                 }
             }
@@ -516,7 +570,7 @@ function Footer() {
                 <motion.div
                     layoutId='textarea'
                     className={cn(
-                        ' w-full rounded-[10px] border bg-background flex flex-col max-w-3xl mx-auto space-y-3',
+                        ' w-full mt-4 rounded-[10px] border bg-background flex flex-col max-w-3xl mx-auto space-y-3',
                     )}
                 >
                     <ContextButton contextOptions={contextOptions} />

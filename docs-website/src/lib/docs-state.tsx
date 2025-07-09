@@ -24,9 +24,11 @@ export type ChatHistory = {
     createdAt: string
 }
 
+export type DrawerState = 'closed' | 'minimized' | 'open'
+
 export type PersistentDocsState = {
     chatId: string
-    isChatOpen: boolean
+    drawerState: DrawerState
     chatHistory: Record<string, ChatHistory>
 }
 
@@ -50,7 +52,7 @@ const defaultState: DocsState = {
 
 const defaultPersistentState: PersistentDocsState = {
     chatId: generateChatId(),
-    isChatOpen: false,
+    drawerState: 'closed',
     chatHistory: {},
 }
 

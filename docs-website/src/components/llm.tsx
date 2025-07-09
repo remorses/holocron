@@ -86,7 +86,7 @@ export function AskAIButton() {
         <button
             onClick={() => {
                 usePersistentDocsState.setState((prev) => ({
-                    isChatOpen: !prev.isChatOpen,
+                    drawerState: prev.drawerState === 'closed' ? 'open' : 'closed',
                 }))
             }}
             className={cn(

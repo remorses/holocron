@@ -81,8 +81,8 @@ const ChatDrawer = lazy(() =>
 )
 
 function ChatDrawerWrapper() {
-    const isChatOpen = usePersistentDocsState((x) => x.isChatOpen)
-    if (!isChatOpen) return null
+    const drawerState = usePersistentDocsState((x) => x.drawerState)
+    if (drawerState === 'closed') return null
     return <ChatDrawer />
 }
 
