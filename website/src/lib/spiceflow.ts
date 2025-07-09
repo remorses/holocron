@@ -1255,6 +1255,60 @@ export const app = new Spiceflow({ basePath: '/api' })
             }
         },
     })
+    .route({
+        method: 'POST',
+        path: '/databaseNightlyCleanup',
+        request: z.object({
+            SECRET: z.string().min(1, 'SECRET is required'),
+        }),
+        async handler({ request }) {
+            const { SECRET } = await request.json()
+
+            // Validate the secret key
+            if (!env.SECRET || SECRET !== env.SECRET) {
+                throw new AppError('Invalid secret key')
+            }
+
+            // Find all MarkdownBlob records that have no connected pages
+            const orphanedBlobs = await prisma.markdownBlob.findMany({
+                where: {
+                    pages: {
+                        none: {},
+                    },
+                },
+                select: {
+                    githubSha: true,
+                },
+            })
+
+            if (orphanedBlobs.length === 0) {
+                return {
+                    success: true,
+                    message: 'No orphaned blobs found',
+                    deletedCount: 0,
+                }
+            }
+
+            // Delete the orphaned blobs
+            const deleteResult = await prisma.markdownBlob.deleteMany({
+                where: {
+                    githubSha: {
+                        in: orphanedBlobs.map((blob) => blob.githubSha),
+                    },
+                },
+            })
+
+            console.log(
+                `Database cleanup: deleted ${deleteResult.count} orphaned MarkdownBlob records`,
+            )
+
+            return {
+                success: true,
+                message: `Successfully deleted ${deleteResult.count} orphaned MarkdownBlob records`,
+                deletedCount: deleteResult.count,
+            }
+        },
+    })
     .onError(({ error, request, path }) => {
         notifyError(error, request.url)
     })

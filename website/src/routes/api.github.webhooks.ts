@@ -7,12 +7,11 @@ import { prisma } from 'db'
 import { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router'
 import { notifyError } from 'website/src/lib/errors'
 import { webhookWorkerRequestSchema } from './api.github.webhooks-worker'
+import { qstash } from '../lib/qstash'
 
 const logger = console
 
-const qstashClient = new Client({
-    token: env.QSTASH_TOKEN!,
-})
+
 
 function getWebhooks() {
     // https://tunnel.unframer.co/api/github/webhooks
@@ -125,7 +124,7 @@ function getWebhooks() {
                 commits,
             })
 
-            await qstashClient.publishJSON({
+            await qstash.publishJSON({
                 url: workerUrl,
                 body,
                 flowControl: {

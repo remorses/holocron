@@ -1,4 +1,6 @@
 import { deployFly, getDopplerEnv, shell } from '@xmorse/deployment-utils'
+import { qstash } from 'website/src/lib/qstash'
+import { app } from 'website/src/lib/spiceflow'
 // import './openapi'
 
 async function main() {
@@ -14,6 +16,17 @@ async function main() {
             env,
         }),
     ])
+
+    await qstash.schedules.create({
+        destination: new URL(
+            app.safePath('/api/databaseNightlyCleanup'),
+            env.PUBLIC_URL,
+        ).toString(),
+        cron: '*/10 * * * *',
+        scheduleId: 'nightly-page-blobs-cleanup',
+        method: 'POST',
+        body: JSON.stringify({ secret: env.SECRET }),
+    })
 
     const port = 7664
     await deployFly({
