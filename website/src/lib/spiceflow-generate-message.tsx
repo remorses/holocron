@@ -207,7 +207,19 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                         const deletedFiles: string[] = []
 
                         for (const filePath of filePaths) {
-                            filesInDraft[filePath] = null
+                            const content = await getPageContent({
+                                githubPath: filePath,
+                                branchId,
+                            }).catch(() => null)
+                            const lineCount =
+                                typeof content === 'string'
+                                    ? content.split('\n').length
+                                    : 1
+                            filesInDraft[filePath] = {
+                                content: null,
+                                githubPath: filePath,
+                                deletedLines: lineCount,
+                            }
                             deletedFiles.push(filePath)
                         }
 

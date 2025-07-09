@@ -39,8 +39,8 @@ export const getTreeFromFiles = ({
         const normalizedPath = removeGithubFolder(githubPath)
         const existingIndex = allFiles.findIndex((f) => f.path === normalizedPath)
 
-        if (fileData === null) {
-            // Remove file if it exists and fileData is null (deleted)
+        if (!fileData || fileData.content === null) {
+            // Remove file if it exists and fileData is null or content is null (deleted)
             if (existingIndex >= 0) {
                 allFiles.splice(existingIndex, 1)
             }

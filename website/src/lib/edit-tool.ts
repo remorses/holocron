@@ -22,14 +22,12 @@ export function calculateLineChanges(
 
 export type EditToolParamSchema = z.infer<typeof editToolParamsSchema>
 
-export const fileUpdateSchema = z
-    .object({
-        githubPath: z.string(),
-        content: z.string().nullable().default(''),
-        addedLines: z.number().optional(),
-        deletedLines: z.number().optional(),
-    })
-    .nullable()
+export const fileUpdateSchema = z.object({
+    githubPath: z.string(),
+    content: z.string().nullable().default(''),
+    addedLines: z.number().optional(),
+    deletedLines: z.number().optional(),
+})
 export type FileUpdate = z.infer<typeof fileUpdateSchema>
 
 
@@ -109,7 +107,7 @@ export function createEditExecute({
                 const override = filesInDraft[path]
                 let content: string | null = null
 
-                if (override) {
+                if (override && override.content !== null) {
                     content = override.content
                 } else {
                     try {
@@ -200,7 +198,7 @@ export function createEditExecute({
             }
             case 'str_replace': {
                 let override = filesInDraft[path]
-                if (!override) {
+                if (!override || override.content === null) {
                     const content = await getOriginalContent(path)
                     if (typeof content !== 'string') {
                         return {
@@ -238,7 +236,7 @@ export function createEditExecute({
                         error: '`new_str` is required for str_replace command.',
                     }
                 }
-                const occurrences = override.content.split(old_str).length - 1
+                const occurrences = override.content!.split(old_str).length - 1
                 if (occurrences === 0) {
                     return {
                         success: false,
@@ -251,7 +249,7 @@ export function createEditExecute({
                 //         error: `Old string "${old_str}" found more than once in the document.`,
                 //     }
                 // }
-                const replacedContent = override.content.replace(
+                const replacedContent = override.content!.replace(
                     old_str,
                     new_str,
                 )
@@ -287,7 +285,7 @@ export function createEditExecute({
 
                 const patch = createPatch(
                     path,
-                    override.content,
+                    override.content!,
                     replacedContent,
                     '',
                     '',
@@ -305,7 +303,7 @@ export function createEditExecute({
             }
             case 'insert': {
                 let override = filesInDraft[path]
-                if (!override) {
+                if (!override || override.content === null) {
                     const content = await getOriginalContent(path)
                     if (typeof content !== 'string') {
                         return {
@@ -343,7 +341,7 @@ export function createEditExecute({
                         error: '`new_str` is required for insert command.',
                     }
                 }
-                const lines = override.content.split('\n')
+                const lines = override.content!.split('\n')
                 // insert_line is 1-based, insert after the specified line
                 const insertAt = Math.min(insert_line, lines.length)
                 lines.splice(insertAt, 0, new_str)
@@ -380,7 +378,7 @@ export function createEditExecute({
 
                 const patch = createPatch(
                     path,
-                    override.content,
+                    override.content!,
                     newContent,
                     '',
                     '',
@@ -405,7 +403,7 @@ export function createEditExecute({
                     try {
                         const result = await validateNewContent({
                             githubPath: path,
-                            content: previous.content,
+                            content: previous.content!,
                         })
                         if (result && result.error) {
                             return {
@@ -424,7 +422,7 @@ export function createEditExecute({
                 const original = await getOriginalContent(path)
                 const { addedLines, deletedLines } = calculateLineChanges(
                     original,
-                    previous.content,
+                    previous.content!,
                 )
 
                 filesInDraft[path] = {

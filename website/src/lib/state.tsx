@@ -20,6 +20,8 @@ if (typeof window !== 'undefined') {
     window['useWebsiteState'] = useWebsiteState
 }
 
+
+// TODO this does not handle files deletions
 export function doFilesInDraftNeedPush(
     currentFilesInDraft: Record<string, FileUpdate>,
     lastPushedFiles: Record<string, FileUpdate>,

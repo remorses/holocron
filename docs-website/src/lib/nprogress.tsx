@@ -1,4 +1,4 @@
-import { useFetchers, useNavigation } from 'react-router'
+import { useFetchers, useNavigation, useRevalidator } from 'react-router';
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import { useMemo, useEffect } from 'react'
@@ -6,6 +6,7 @@ import { useMemo, useEffect } from 'react'
 export function useNProgress() {
     const transition = useNavigation()
     const fetchers = useFetchers()
+    const revalidator = useRevalidator()
 
     /**
      * This gets the state of every fetcher active on the app and combine it with
@@ -17,12 +18,13 @@ export function useNProgress() {
         function getGlobalState() {
             const states = [
                 transition.state,
+                revalidator.state,
                 ...fetchers.map((fetcher) => fetcher.state),
             ]
             if (states.every((state) => state === 'idle')) return 'idle'
             return 'loading'
         },
-        [transition.state, fetchers],
+        [transition.state, revalidator.state, fetchers],
     )
 
     useEffect(() => {

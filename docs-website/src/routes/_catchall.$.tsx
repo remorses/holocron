@@ -468,7 +468,7 @@ function PageContent(props: Route.ComponentProps): any {
             const toc = state.toc || loaderData?.toc
             if (override) {
                 const { attributes: data } =
-                    frontMatter<ProcessorDataFrontmatter>(override.content)
+                    frontMatter<ProcessorDataFrontmatter>(override.content || '')
 
                 return {
                     toc,
@@ -699,7 +699,7 @@ function DocsMarkdown(): any {
 
             if (override) {
                 return {
-                    markdown: override.content,
+                    markdown: override.content || '',
                     isStreaming,
                     ast: undefined,
                 }
@@ -802,7 +802,7 @@ export const clientLoader = async ({
             if (page) {
                 const extension = githubPath.endsWith('.mdx') ? 'mdx' : 'md'
                 const f = await getProcessor({ extension }).process(
-                    draft.content,
+                    draft.content || '',
                 )
                 const data = f.data as ProcessorData
 
@@ -826,7 +826,7 @@ export const clientLoader = async ({
                     toc: data.toc,
                     title: frontmatter.title || '',
                     description: frontmatter.description || '',
-                    markdown: draft.content,
+                    markdown: draft.content || '',
                     ast: data.ast,
                     githubPath,
                     slugs,

@@ -624,7 +624,7 @@ function Footer() {
     const updatedLines = useMemo(() => {
         return Object.values(filesInDraft).reduce(
             (sum, file: FileUpdate) =>
-                sum + (file?.addedLines || 0) + (file?.deletedLines || 0),
+                sum + (file.addedLines || 0) + (file.deletedLines || 0),
             0,
         )
     }, [filesInDraft])
@@ -812,9 +812,9 @@ function PrButton({ updatedLines }) {
             return true
         }
 
-        if (!hasNonPushedChanges) {
-            return true
-        }
+        // if (!hasNonPushedChanges) {
+        //     return true
+        // }
         return false
     })()
 
@@ -1022,22 +1022,19 @@ export const DiffStats = memo(function DiffStats({
                 {fileCount !== 1 ? 's' : ''}
             </div>
             <div>
-                {totalAdded > 0 && (
-                    <>
-                        {' '}
-                        <span className='text-green-600 font-medium'>
-                            +{totalAdded}
-                        </span>
-                    </>
-                )}
-                {totalDeleted > 0 && (
-                    <>
-                        ,{' '}
-                        <span className='text-red-600 font-medium'>
-                            -{totalDeleted}
-                        </span>
-                    </>
-                )}
+                <>
+                    {' '}
+                    <span className='text-green-600 font-medium'>
+                        +{totalAdded || 0}
+                    </span>
+                </>
+
+                <>
+                    ,{' '}
+                    <span className='text-red-600 font-medium'>
+                        -{totalDeleted}
+                    </span>
+                </>
             </div>
         </div>
     )

@@ -741,25 +741,30 @@ async function pushChangesToBranch({
     })
     parentTreeSha = parentCommit.tree.sha
 
-    // 2. Create blobs → new tree (same as your helper)
-    const newTree = await createNewTree({
+    // 2. Create blobs → new tree (handling deletions)
+    const filesToCreate = files.filter(f => f.content !== null)
+    const filesToRemove = files.filter(f => f.content === null).map(f => ({ filePath: f.filePath }))
+    
+    const newTree = await createTreeWithUpdates({
         octokit,
         owner,
         repo,
         parentTreeSha,
         create: await Promise.all(
-            files.map(async (f) => ({
+            filesToCreate.map(async (f) => ({
                 ...f,
                 blobSha: (
                     await octokit.git.createBlob({
                         owner,
                         repo,
-                        content: f.content,
+                        content: f.content!,
                         encoding: 'utf-8',
                     })
                 ).data.sha,
             })),
         ),
+        move: [],
+        remove: filesToRemove,
     })
 
     // 3. Create commit that points to the new tree
@@ -1072,13 +1077,18 @@ export async function pushToPrOrBranch({
             `pushing files directly to ${owner}/${repo}/${branch}`,
             !pr ? 'because no pr found' : 'because owner === baseOwner',
         )
+
+        // Separate files to create/update from files to delete
+        const filesToCreate = files.filter(x => x.content != null)
+        const filesToRemove = files.filter(x => x.content == null).map(x => ({ filePath: x.filePath }))
+
         const { commitUrl } = await changeGithubTree({
             owner,
             branch,
-            create: files,
+            create: filesToCreate,
             octokit: octokit.rest,
             move: [],
-            remove: [],
+            remove: filesToRemove,
             repo,
         })
         return { commitUrl, prUrl }
@@ -1088,7 +1098,7 @@ export async function pushToPrOrBranch({
         Promise.all(
             files.map(async (x) => {
                 const encoding = 'utf-8'
-                if (x.content === null) return null
+                if (x.content == null) return null
                 const blobData = await octokit.rest.git.createBlob({
                     owner: baseOwner,
                     repo: baseRepo,

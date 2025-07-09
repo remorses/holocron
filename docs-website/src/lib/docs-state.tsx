@@ -12,11 +12,11 @@ export function generateChatId(): string {
 export type FilesInDraft = Record<
     string,
     {
-        content: string
+        content: string | null
         githubPath: string
         addedLines?: number
         deletedLines?: number
-    } | null
+    }
 >
 
 export type ChatHistory = {
