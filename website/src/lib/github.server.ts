@@ -498,7 +498,7 @@ export async function createNewRepo({
     const { data: newCommit } = await octokit.git.createCommit({
         owner: owner,
         repo,
-        message: `Holocron Initial Commit`,
+        message: `Fumabase Initial Commit`,
         tree: newTree.sha,
 
         committer: committer,
@@ -574,9 +574,9 @@ const createTreeWithUpdates = async ({
     if (!parentTreeSha) {
         throw new AppError(`No parent tree sha`)
     }
-    
+
     // Get current tree to check which files exist before attempting deletion
-    const existingFiles = remove.length > 0 ? 
+    const existingFiles = remove.length > 0 ?
         await octokit.git.getTree({
             owner,
             repo,
@@ -584,7 +584,7 @@ const createTreeWithUpdates = async ({
             recursive: 'true',
         }).then(({ data }) => new Set(data.tree.map(item => item.path).filter(Boolean))) :
         new Set<string>()
-    
+
     const tree: {
         path: string
         mode: string
@@ -758,7 +758,7 @@ async function pushChangesToBranch({
     // 2. Create blobs → new tree (handling deletions)
     const filesToCreate = files.filter(f => f.content !== null)
     const filesToRemove = files.filter(f => f.content === null).map(f => ({ filePath: f.filePath }))
-    
+
     const newTree = await createTreeWithUpdates({
         octokit,
         owner,
