@@ -63,7 +63,7 @@ export default defineConfig({
         EnvironmentPlugin('all', { prefix: 'NEXT_PUBLIC' }),
         !process.env.VITEST && reactRouterHonoServer(),
         !process.env.VITEST ? reactRouter() : react(),
-        tsconfigPaths(),
+        // tsconfigPaths(),
         viteExternalsPlugin({
             externals: ['pg', 'shiki', 'json-schema-library'],
         }),

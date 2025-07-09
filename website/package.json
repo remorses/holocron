@@ -11,7 +11,7 @@
         "test": "doppler run -- pnpm vitest",
         "framer": "pnpm unframer 6ea1ba37e05fac32 --outDir src/framer --external --jsx",
         "framer-orin": "pnpm unframer dfa04aa1c5bdec07 --outDir src/framer-orin --external --jsx",
-        "deployment": "pnpm tsx scripts/deployment.ts",
+        "deployment": "doppler run -c production -- pnpm vite-node scripts/deployment.ts",
         "_dev_cloudflare": "doppler secrets download --format=env --no-file > .dev.vars && react-router dev --port 7664",
         "gen-client": "DIRS=(../cli/src/generated ../docs-website/src/generated) && tsc --incremental; for DIR in \"${DIRS[@]}\"; do rm -rf $DIR && mkdir -p $DIR && cp dist/src/lib/spiceflow-client.* $DIR; done",
         "start": "doppler run -- node ./build/server/index.js --port 7664",
