@@ -379,7 +379,7 @@ function Footer() {
     useEffect(() => {
         docsDurableFetchClient.isInProgress(durableUrl).then((res) => {
             console.log('isInProgress response:', res)
-            if (res.inProgress || res.completed) {
+            if (res.inProgress) {
                 submitMessageWithoutDelete()
             }
         })
