@@ -85,86 +85,118 @@ type WebhookWorkerRequest = z.infer<typeof webhookWorkerRequestSchema>
 
 async function updatePagesFromCommits(args: WebhookWorkerRequest) {
     const { installationId, owner, repoName, githubBranch, commits } = args
-    let siteBranch = await prisma.siteBranch.findFirst({
-        where: {
-            githubBranch,
-            site: {
-                githubInstallations: {
-                    some: {
-                        appId: env.GITHUB_APP_ID,
-                        installationId,
-                    },
-                },
-                githubOwner: owner,
-                githubRepo: repoName,
-            },
-        },
-        include: {
-            site: true,
-        },
-    })
-
-    if (!siteBranch) {
-        logger.log(
-            `No branch found for ${githubBranch} in ${owner}/${repoName}`,
-        )
-
-        // Check if there's a fumabase.jsonc in the commits with a new domain
-        const newBranch = await tryCreateBranchFromDocsJson(args)
-
-        if (!newBranch) {
-            logger.log(
-                `No fumabase.jsonc with available domain found for ${githubBranch}`,
-            )
-            return
-        }
-
-        siteBranch = newBranch
-    }
-
-    // Handle deletions first
-    await handleDeletions({
-        site: siteBranch.site,
-        commits,
-        branchId: siteBranch.branchId,
-        githubFolder: siteBranch.site.githubFolder,
-    })
-
-    // Process non-deleted files using syncFiles
-    const changedFiles = filesFromWebhookCommits({
-        commits,
-        installationId,
-        owner,
-        repo: repoName,
-        githubFolder: siteBranch.site.githubFolder,
-    })
-
-    await syncSite({
-        branchId: siteBranch.branchId,
-        siteId: siteBranch.site.siteId,
-        githubFolder: siteBranch.site.githubFolder,
-        files: changedFiles,
-        name: siteBranch.site.name || '',
-    })
-
-    // Update last sync info
     const latestCommit = commits[commits.length - 1]
-    await prisma.siteBranch.update({
-        where: { branchId: siteBranch.branchId },
-        data: {
-            lastGithubSyncAt: new Date(),
-            lastGithubSyncCommit: latestCommit.id,
-        },
-    })
 
-    // Report errors to GitHub Checks API
-    await reportErrorsToGithub({
+    // Set check to pending state at the start
+    await createPendingCheckRun({
         installationId,
         owner,
         repoName,
         commitSha: latestCommit.id,
-        branchId: siteBranch.branchId,
     })
+
+    try {
+        let siteBranch = await prisma.siteBranch.findFirst({
+            where: {
+                githubBranch,
+                site: {
+                    githubInstallations: {
+                        some: {
+                            appId: env.GITHUB_APP_ID,
+                            installationId,
+                        },
+                    },
+                    githubOwner: owner,
+                    githubRepo: repoName,
+                },
+            },
+            include: {
+                site: true,
+            },
+        })
+
+        if (!siteBranch) {
+            logger.log(
+                `No branch found for ${githubBranch} in ${owner}/${repoName}`,
+            )
+
+            // Check if there's a fumabase.jsonc in the commits with a new domain
+            const newBranch = await tryCreateBranchFromDocsJson(args)
+
+            if (!newBranch) {
+                logger.log(
+                    `No fumabase.jsonc with available domain found for ${githubBranch}`,
+                )
+                // Report failure for unknown branch
+                await reportFailureToGithub({
+                    installationId,
+                    owner,
+                    repoName,
+                    commitSha: latestCommit.id,
+                    errorMessage: 'No configured branch found for this repository',
+                })
+                return
+            }
+
+            siteBranch = newBranch
+        }
+
+        // Handle deletions first
+        await handleDeletions({
+            site: siteBranch.site,
+            commits,
+            branchId: siteBranch.branchId,
+            githubFolder: siteBranch.site.githubFolder,
+        })
+
+        // Process non-deleted files using syncFiles
+        const changedFiles = filesFromWebhookCommits({
+            commits,
+            installationId,
+            owner,
+            repo: repoName,
+            githubFolder: siteBranch.site.githubFolder,
+        })
+
+        await syncSite({
+            branchId: siteBranch.branchId,
+            siteId: siteBranch.site.siteId,
+            githubFolder: siteBranch.site.githubFolder,
+            files: changedFiles,
+            name: siteBranch.site.name || '',
+        })
+
+        // Update last sync info
+        await prisma.siteBranch.update({
+            where: { branchId: siteBranch.branchId },
+            data: {
+                lastGithubSyncAt: new Date(),
+                lastGithubSyncCommit: latestCommit.id,
+            },
+        })
+
+        // Report errors to GitHub Checks API
+        await reportErrorsToGithub({
+            installationId,
+            owner,
+            repoName,
+            commitSha: latestCommit.id,
+            branchId: siteBranch.branchId,
+        })
+    } catch (error) {
+        logger.error('Error during sync process:', error)
+        
+        // Report failure to GitHub
+        await reportFailureToGithub({
+            installationId,
+            owner,
+            repoName,
+            commitSha: latestCommit.id,
+            errorMessage: `Sync failed: ${error.message}`,
+        })
+        
+        throw error
+    }
 }
 
 async function* filesFromWebhookCommits({
@@ -557,6 +589,75 @@ function safeJsoncParse(str: string, defaultValue = {}) {
         return JSONC.parse(str)
     } catch {
         return defaultValue
+    }
+}
+
+async function createPendingCheckRun({
+    installationId,
+    owner,
+    repoName,
+    commitSha,
+}: {
+    installationId: number
+    owner: string
+    repoName: string
+    commitSha: string
+}) {
+    try {
+        const octokit = await getOctokit({ installationId })
+        
+        await octokit.rest.checks.create({
+            owner,
+            repo: repoName,
+            name: 'Fumabase Sync',
+            head_sha: commitSha,
+            status: 'in_progress',
+            output: {
+                title: 'Syncing documentation...',
+                summary: 'Processing markdown files and checking for errors.',
+            },
+        })
+
+        logger.log(`Created pending check run for commit ${commitSha}`)
+    } catch (error) {
+        logger.error('Failed to create pending check run:', error)
+        notifyError(error, 'GitHub Checks API pending state')
+    }
+}
+
+async function reportFailureToGithub({
+    installationId,
+    owner,
+    repoName,
+    commitSha,
+    errorMessage,
+}: {
+    installationId: number
+    owner: string
+    repoName: string
+    commitSha: string
+    errorMessage: string
+}) {
+    try {
+        const octokit = await getOctokit({ installationId })
+        
+        await octokit.rest.checks.create({
+            owner,
+            repo: repoName,
+            name: 'Fumabase Sync',
+            head_sha: commitSha,
+            status: 'completed',
+            conclusion: 'failure',
+            output: {
+                title: 'Documentation sync failed',
+                summary: errorMessage,
+            },
+        })
+
+        logger.log(`Reported sync failure to GitHub for commit ${commitSha}`)
+    } catch (error) {
+        logger.error('Failed to report sync failure to GitHub:', error)
+        notifyError(error, 'GitHub Checks API failure reporting')
     }
 }
 
