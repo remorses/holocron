@@ -20,6 +20,40 @@ import { getFumadocsSource } from './source'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
+// Tool input schemas
+export const searchDocsInputSchema = z.object({
+    query: z
+        .string()
+        .min(1)
+        .describe('The search query to find relevant documentation content'),
+})
+
+export const goToPageInputSchema = z.object({
+    slug: z
+        .string()
+        .describe(
+            'The page slug/path to navigate to (e.g., "getting-started" or "api/authentication")',
+        ),
+})
+
+export const getCurrentPageInputSchema = z
+    .object({})
+    .describe('Get the current page slug that the user is viewing')
+
+export const fetchUrlInputSchema = z.object({
+    url: z
+        .string()
+        .describe(
+            'The URL to fetch. Can be a full URL (https://example.com) or a relative path (/docs/guide). For documentation pages, use .md extension (e.g., "/docs/getting-started.md") to fetch the markdown content.',
+        ),
+})
+
+// Export types with capitalized names
+export type SearchDocsInput = z.infer<typeof searchDocsInputSchema>
+export type GoToPageInput = z.infer<typeof goToPageInputSchema>
+export type GetCurrentPageInput = z.infer<typeof getCurrentPageInputSchema>
+export type FetchUrlInput = z.infer<typeof fetchUrlInputSchema>
+
 export const docsApp = new Spiceflow({ basePath: '/api' })
     .route({
         method: 'POST',
@@ -29,9 +63,10 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
             chatId: z.string(),
             locale: z.string(),
             currentSlug: z.string(),
+            currentOrigin: z.string(),
         }),
         async *handler({ request, waitUntil, state: {} }) {
-            const { messages, currentSlug, locale, chatId } =
+            const { messages, currentSlug, locale, chatId, currentOrigin } =
                 await request.json()
             const url = new URL(request.url)
             const domain = url.hostname.split(':')[0]
@@ -102,12 +137,7 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                 },
                 tools: {
                     searchDocs: tool({
-                        inputSchema: z.object({
-                            query: z
-                                .string()
-                                .min(1)
-                                .describe('The search query'),
-                        }),
+                        inputSchema: searchDocsInputSchema,
                         execute: async ({ query }) => {
                             let tag = ''
                             const results = await searchDocsWithTrieve({
@@ -119,9 +149,7 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                         },
                     }),
                     goToPage: tool({
-                        inputSchema: z.object({
-                            slug: z.string().describe('The page slug'),
-                        }),
+                        inputSchema: goToPageInputSchema,
                         execute: async ({ slug }) => {
                             const slugParts = slug.split('/').filter(Boolean)
                             const page = source.getPage(slugParts)
@@ -132,9 +160,61 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                         },
                     }),
                     getCurrentPage: tool({
-                        inputSchema: z.object({}),
+                        inputSchema: getCurrentPageInputSchema,
                         execute: async () => {
                             return `Current page slug: ${currentSlug}`
+                        },
+                    }),
+                    fetchUrl: tool({
+                        inputSchema: fetchUrlInputSchema,
+                        execute: async ({ url }) => {
+                            let fullUrl: string
+                            if (
+                                url.startsWith('http://') ||
+                                url.startsWith('https://')
+                            ) {
+                                fullUrl = url
+                            } else {
+                                // If only path is provided, use current origin as base
+                                fullUrl = new URL(url, currentOrigin).toString()
+                            }
+
+                            try {
+                                console.log(`Fetching URL: ${fullUrl}`)
+
+                                const response = await fetch(fullUrl)
+                                if (!response.ok) {
+                                    console.log(
+                                        `Failed to fetch ${fullUrl}: ${response.status} ${response.statusText}`,
+                                    )
+                                    return `Failed to fetch ${fullUrl}: ${response.status} ${response.statusText}`
+                                }
+
+                                const contentType =
+                                    response.headers.get('content-type') || ''
+                                console.log(`Content type: ${contentType}`)
+
+                                if (contentType.includes('application/json')) {
+                                    const data = await response.json()
+                                    return JSON.stringify(data, null, 2)
+                                } else if (contentType.includes('text/html')) {
+                                    const html = await response.text()
+                                    // Return first 2000 characters to avoid overwhelming context
+                                    return html.length > 2000
+                                        ? html.substring(0, 2000) + '...'
+                                        : html
+                                } else {
+                                    const text = await response.text()
+                                    return text.length > 2000
+                                        ? text.substring(0, 2000) + '...'
+                                        : text
+                                }
+                            } catch (error) {
+                                console.log(
+                                    `Error fetching ${fullUrl} ${error.message}`,
+                                )
+                                return `Error fetching ${url}: ${error.message}`
+                            }
                         },
                     }),
                 },

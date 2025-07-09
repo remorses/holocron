@@ -106,7 +106,7 @@ function groupResults(groups: GroupChunk[]): SortedResult[] {
             const chunk = c.chunk
 
             grouped.push({
-                ...c.chunk,
+                // ...c.chunk,
                 id: chunk.tracking_id || '',
                 type:
                     chunk.chunk_html === chunk.metadata['section']

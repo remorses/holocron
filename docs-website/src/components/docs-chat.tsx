@@ -53,8 +53,9 @@ import { useRouteLoaderData, useLocation } from 'react-router'
 import type { Route } from '../root'
 import { env } from '../lib/env'
 import { Trash2Icon, XIcon } from 'lucide-react'
+import { DocsUIMessage } from '../lib/types'
 
-export function ChatDrawer({ loaderData }: { loaderData?: any }) {
+export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
     const chatId = usePersistentDocsState((x) => x.chatId)
     const initialChatState = useMemo<Partial<ChatState>>(
         () => ({
@@ -74,7 +75,7 @@ export function ChatDrawer({ loaderData }: { loaderData?: any }) {
                 open={isChatOpen}
                 direction='right'
             >
-                <DrawerContent className='bg-background min-w-[600px]'>
+                <DrawerContent className='bg-background lg:min-w-[600px] min-w-full'>
                     <ChatTopBar />
                     <div className='p-4 flex flex-col min-h-0 grow pb-0'>
                         <Chat />
@@ -161,14 +162,19 @@ function Messages({ ref }) {
     return (
         <div ref={ref} className={cn('w-full flex flex-col grow gap-6')}>
             {messages.map((message) => {
-                return <MessageRenderer key={message.id} message={message} />
+                return (
+                    <MessageRenderer
+                        key={message.id}
+                        message={message as DocsUIMessage}
+                    />
+                )
             })}
             <ChatErrorMessage />
         </div>
     )
 }
 
-function MessageRenderer({ message }: { message: UIMessage }) {
+function MessageRenderer({ message }: { message: DocsUIMessage }) {
     const isChatGenerating = useChatState((x) => x.isGenerating)
 
     if (message.role === 'user') {
@@ -194,10 +200,6 @@ function MessageRenderer({ message }: { message: UIMessage }) {
     return (
         <ChatAssistantMessage message={message}>
             {message.parts.map((part, index) => {
-                if (part.type === 'tool-invocation') {
-                    return <ToolInvocationRenderer part={part} index={index} />
-                }
-
                 if (part.type === 'text') {
                     return (
                         <Markdown
@@ -213,8 +215,78 @@ function MessageRenderer({ message }: { message: UIMessage }) {
                         <Markdown
                             key={index}
                             isStreaming={isChatGenerating}
-                            markdown={'thinking:' + part.text}
+                            markdown={'thinking: ' + part.text}
                         />
+                    )
+                }
+
+                if (part.type === 'tool-searchDocs') {
+                    return (
+                        <div
+                            key={index}
+                            className='text-sm text-muted-foreground'
+                        >
+                            <Markdown
+                                isStreaming={isChatGenerating}
+                                markdown={`🔍 Searching docs: ${part.input?.query || 'unknown'}`}
+                            />
+                        </div>
+                    )
+                }
+
+                if (part.type === 'tool-goToPage') {
+                    return (
+                        <div
+                            key={index}
+                            className='text-sm text-muted-foreground'
+                        >
+                            <Markdown
+                                isStreaming={isChatGenerating}
+                                markdown={`📄 Navigating to: ${part.input?.slug || 'unknown'}`}
+                            />
+                        </div>
+                    )
+                }
+
+                if (part.type === 'tool-getCurrentPage') {
+                    return (
+                        <div
+                            key={index}
+                            className='text-sm text-muted-foreground'
+                        >
+                            <Markdown
+                                isStreaming={isChatGenerating}
+                                markdown={`📍 Getting current page`}
+                            />
+                        </div>
+                    )
+                }
+
+                if (part.type === 'tool-fetchUrl') {
+                    return (
+                        <div
+                            key={index}
+                            className='text-sm text-muted-foreground'
+                        >
+                            <Markdown
+                                isStreaming={isChatGenerating}
+                                markdown={`🌐 Fetching: ${part.input?.url || 'unknown'}`}
+                            />
+                        </div>
+                    )
+                }
+
+                if (
+                    part.type.startsWith('tool-') &&
+                    process.env.NODE_ENV === 'development'
+                ) {
+                    return (
+                        <pre
+                            key={index}
+                            className='text-xs bg-gray-100 p-2 rounded'
+                        >
+                            {JSON.stringify(part, null, 2)}
+                        </pre>
                     )
                 }
 
@@ -340,12 +412,15 @@ function Footer() {
     const submitMessageWithoutDelete = async () => {
         const messages = useChatState.getState()?.messages
         const generateId = createIdGenerator()
+        const currentOrigin =
+            typeof window !== 'undefined' ? window.location.origin : ''
 
         const { data: generator, error } =
             await docsApiClientWithDurableFetch.api.generateMessage.post(
                 {
                     messages: messages,
                     currentSlug: currentSlug,
+                    currentOrigin: currentOrigin,
                     chatId: chatId,
                     locale: 'en',
                 },
@@ -427,26 +502,4 @@ function Footer() {
             </div>
         </AnimatePresence>
     )
-}
-
-export function ToolInvocationRenderer({
-    part,
-    index,
-}: {
-    part: any
-    index: number
-}) {
-    const isChatGenerating = useChatState((x) => x.isGenerating)
-
-    if (process.env.NODE_ENV === 'development') {
-        return (
-            <div key={index} className='text-sm'>
-                <Markdown
-                    isStreaming={isChatGenerating}
-                    markdown={`🔧 Tool: ${part.toolInvocation?.toolName || 'unknown'}`}
-                />
-            </div>
-        )
-    }
-    return null
 }
