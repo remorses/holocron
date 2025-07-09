@@ -8,7 +8,23 @@ import type {
 } from 'mdast-util-mdx-jsx'
 import type { Processor, Transformer } from 'unified'
 import { visit } from 'unist-util-visit'
-import { StructuredData } from './mdx-heavy'
+
+export interface Heading {
+    id: string
+    content: string
+    line?: number
+}
+
+export interface StructuredContent {
+    heading: string | undefined
+    content: string
+    line?: number
+}
+
+export interface StructuredData {
+    headings: Heading[]
+    contents: StructuredContent[]
+}
 
 
 declare module 'mdast' {
@@ -29,13 +45,16 @@ export function flattenNode(node: any): string {
         return node.children.map((child: any) => flattenNode(child)).join('')
     }
 
-    if ('value' in node) {
-        return node.value
+    // Handle links - include href for context along with child text
+    if (node.type === 'link' && node.url) {
+        const childText = node.children ? node.children.map((child: any) => flattenNode(child)).join('') : ''
+        return `${childText} ${node.url}`.trim()
     }
 
-    // Handle links - include href for context
-    if (node.type === 'link' && node.url) {
-        return `${node.url}`
+    // Handle link references - include identifier for context
+    if (node.type === 'linkReference' && node.identifier) {
+        const childText = node.children ? node.children.map((child: any) => flattenNode(child)).join('') : ''
+        return `${childText} ${node.identifier}`.trim()
     }
 
     // Handle images - include alt text and title
@@ -43,11 +62,45 @@ export function flattenNode(node: any): string {
         const parts: string[] = []
         if (node.alt) parts.push(node.alt)
         if (node.title) parts.push(node.title)
+        if (node.url) parts.push(node.url)
         return parts.join(' ')
     }
 
-    // Handle inline code
-    if (node.type === 'inlineCode') {
+    // Handle image references - include alt text and identifier
+    if (node.type === 'imageReference') {
+        const parts: string[] = []
+        if (node.alt) parts.push(node.alt)
+        if (node.identifier) parts.push(node.identifier)
+        return parts.join(' ')
+    }
+
+    // Handle definitions - include identifier, url, and title for search context
+    if (node.type === 'definition') {
+        const parts: string[] = []
+        if (node.identifier) parts.push(node.identifier)
+        if (node.url) parts.push(node.url)
+        if (node.title) parts.push(node.title)
+        return parts.join(' ')
+    }
+
+    // Handle footnote references
+    if (node.type === 'footnoteReference' && node.identifier) {
+        return node.identifier
+    }
+
+    // Handle YAML frontmatter
+    if (node.type === 'yaml' && node.value) {
+        return node.value
+    }
+
+    // Handle HTML nodes - extract text content but not tags
+    if (node.type === 'html' && node.value) {
+        // Simple text extraction from HTML, removing tags
+        return node.value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+    }
+
+    // Handle all other nodes with value (text, code, inlineCode, etc.)
+    if ('value' in node) {
         return node.value
     }
 
@@ -124,6 +177,7 @@ export function remarkStructure(
                 data.headings.push({
                     id,
                     content,
+                    line: element.position?.start?.line,
                 })
 
                 lastHeading = id
@@ -135,6 +189,7 @@ export function remarkStructure(
                     data.contents.push({
                         heading: lastHeading,
                         content,
+                        line: element.position?.start?.line,
                     })
                 }
 
@@ -161,6 +216,7 @@ export function remarkStructure(
                                 attribute.type === 'mdxJsxAttribute'
                                     ? `${attribute.name}: ${value}`
                                     : value,
+                            line: element.position?.start?.line,
                         }
                     }),
                 )
@@ -174,6 +230,7 @@ export function remarkStructure(
             data.contents.push({
                 heading: lastHeading,
                 content,
+                line: element.position?.start?.line,
             })
 
             return 'skip'

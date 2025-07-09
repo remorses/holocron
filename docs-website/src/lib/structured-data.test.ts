@@ -87,9 +87,9 @@ this is another paragraph in the same subsection 2
         expect(grouped).toMatchInlineSnapshot(`
           "## main-title
 
-          This is a paragraph with **bold** and *italic* text.
+          This is a paragraph with bold and italic text.
           ---
-          > quote
+          quote
 
           ----------
 
@@ -101,32 +101,24 @@ this is another paragraph in the same subsection 2
 
           ## subsection
 
-          * List item 1
-          * List item 2
-          * List item 3
+          List item 1List item 2List item 3
           ---
-          1. Numbered item 1
-          2. Numbered item 2
+          Numbered item 1Numbered item 2
           ---
-          \`\`\`javascript
           const hello = "world";
           console.log(hello);
-          \`\`\`
 
           ----------
 
           ## subsection-2
 
-          > This is a blockquote
+          This is a blockquote
           ---
-          inside subsection 2, this is a paragraph with a [Link text](https://example.com)
+          inside subsection 2, this is a paragraph with a Link text
           ---
           this is another paragraph in the same subsection 2
           ---
-          | Column 1 | Column 2 |
-          | -------- | -------- |
-          | Cell 1   | Cell 2   |
-          | Cell 3   | Cell 4   |
+          Column 1Column 2Cell 1Cell 2Cell 3Cell 4
           ---
           href: https://example.com/1
           ---
@@ -134,9 +126,9 @@ this is another paragraph in the same subsection 2
           ---
           href: https://example.com/2
           ---
-          This is the second card, with a [link](https://example.com/2) inside.
+          This is the second card, with a link inside.
           ---
-          This card does not have an href, but does have some **bold** text.
+          This card does not have an href, but does have some bold text.
           ---
           something"
         `)
@@ -697,44 +689,46 @@ npm install package
           This is a note admonition.
           :::",
                   "heading": "",
+                  "line": 7,
                 },
                 {
                   "content": ":::warning
           This is a warning admonition.
           :::",
                   "heading": "",
+                  "line": 11,
                 },
                 {
                   "content": ":::tip
-          This is a tip admonition with **formatted** text.
+          This is a tip admonition with formatted text.
           :::",
                   "heading": "",
+                  "line": 15,
                 },
                 {
-                  "content": "\`\`\`javascript
-          const example = "JavaScript code";
-          \`\`\`",
+                  "content": "const example = "JavaScript code";",
                   "heading": "",
+                  "line": 21,
                 },
                 {
-                  "content": "\`\`\`typescript
-          const example: string = "TypeScript code";
-          \`\`\`",
+                  "content": "const example: string = "TypeScript code";",
                   "heading": "",
+                  "line": 26,
                 },
                 {
                   "content": "First step in the process",
                   "heading": "",
+                  "line": 34,
                 },
                 {
                   "content": "Second step with code:",
                   "heading": "",
+                  "line": 37,
                 },
                 {
-                  "content": "\`\`\`bash
-          npm install package
-          \`\`\`",
+                  "content": "npm install package",
                   "heading": "",
+                  "line": 38,
                 },
               ],
               "headings": [],
@@ -1164,32 +1158,35 @@ def hello():
                 {
                   "content": "This is regular markdown content.",
                   "heading": "",
+                  "line": 7,
                 },
                 {
-                  "content": "\`\`\`python
-          def hello():
-              print("Hello, World!")
-          \`\`\`",
+                  "content": "def hello():
+              print("Hello, World!")",
                   "heading": "code-block",
+                  "line": 11,
                 },
                 {
-                  "content": "* Item one
-          * Item two with [link](https://example.com)",
+                  "content": "Item oneItem two with link",
                   "heading": "lists-and-links",
+                  "line": 18,
                 },
                 {
-                  "content": "> Blockquote in markdown",
+                  "content": "Blockquote in markdown",
                   "heading": "lists-and-links",
+                  "line": 21,
                 },
               ],
               "headings": [
                 {
-                  "content": "## Code Block",
+                  "content": "Code Block",
                   "id": "code-block",
+                  "line": 9,
                 },
                 {
-                  "content": "### Lists and Links",
+                  "content": "Lists and Links",
                   "id": "lists-and-links",
+                  "line": 16,
                 },
               ],
             },
@@ -1927,24 +1924,22 @@ This is an accordion item with content.
                 {
                   "content": "items: ["npm", "yarn", "pnpm"]",
                   "heading": "",
+                  "line": 10,
                 },
                 {
-                  "content": "\`\`\`bash
-          npm install fumadocs-core
-          \`\`\`",
+                  "content": "npm install fumadocs-core",
                   "heading": "",
+                  "line": 12,
                 },
                 {
-                  "content": "\`\`\`bash
-          yarn add fumadocs-core
-          \`\`\`",
+                  "content": "yarn add fumadocs-core",
                   "heading": "",
+                  "line": 17,
                 },
                 {
-                  "content": "\`\`\`bash
-          pnpm add fumadocs-core
-          \`\`\`",
+                  "content": "pnpm add fumadocs-core",
                   "heading": "",
+                  "line": 22,
                 },
                 {
                   "content": "chart: graph TD
@@ -1952,40 +1947,45 @@ This is an accordion item with content.
               B -->|Yes| C[Action 1]
               B -->|No| D[Action 2]",
                   "heading": "mermaid-diagram",
+                  "line": undefined,
                 },
                 {
-                  "content": "\`\`\`typescript {1,3-5}
-          const config = {
+                  "content": "const config = {
             theme: 'dark',
             features: [
               'syntax-highlighting',
               'line-numbers'
             ]
-          }
-          \`\`\`",
+          }",
                   "heading": "code-with-highlighting",
+                  "line": 39,
                 },
                 {
                   "content": "title: What is this?",
                   "heading": "accordion",
+                  "line": 52,
                 },
                 {
                   "content": "This is an accordion item with content.",
                   "heading": "accordion",
+                  "line": 53,
                 },
               ],
               "headings": [
                 {
-                  "content": "## Mermaid Diagram",
+                  "content": "Mermaid Diagram",
                   "id": "mermaid-diagram",
+                  "line": 28,
                 },
                 {
-                  "content": "## Code with Highlighting",
+                  "content": "Code with Highlighting",
                   "id": "code-with-highlighting",
+                  "line": 37,
                 },
                 {
-                  "content": "### Accordion",
+                  "content": "Accordion",
                   "id": "accordion",
+                  "line": 49,
                 },
               ],
             },
@@ -2427,25 +2427,25 @@ const test = true;
                 {
                   "content": "This document has no frontmatter but should still be processed correctly.",
                   "heading": "",
+                  "line": 3,
                 },
                 {
-                  "content": "* Still has headings
-          * Still has lists
-          * Still has **formatting**",
+                  "content": "Still has headingsStill has listsStill has formatting",
                   "heading": "features",
+                  "line": 7,
                 },
                 {
-                  "content": "\`\`\`javascript
-          // And code blocks
-          const test = true;
-          \`\`\`",
+                  "content": "// And code blocks
+          const test = true;",
                   "heading": "features",
+                  "line": 11,
                 },
               ],
               "headings": [
                 {
-                  "content": "## Features",
+                  "content": "Features",
                   "id": "features",
+                  "line": 5,
                 },
               ],
             },

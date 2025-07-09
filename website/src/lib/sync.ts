@@ -9,9 +9,9 @@ import { DomainType } from 'db/src/generated/enums'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import {
     DocumentRecord,
-    StructuredData,
     ProcessorData,
 } from 'docs-website/src/lib/mdx-heavy'
+import { StructuredData, Heading, StructuredContent } from 'docs-website/src/lib/remark-structure'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { MdastToJsx } from 'safe-mdx'
 import { mdxComponents } from 'docs-website/src/components/mdx-components'
@@ -41,7 +41,7 @@ import {
     extractJsonCComments,
     JsonCComments,
 } from './json-c-comments'
-import { cleanupOrphanedTrieveChunks } from 'docs-website/src/lib/trieve-search'
+import { cleanupOrphanedTrieveChunks, TrieveChunkMetadata } from 'docs-website/src/lib/trieve-search'
 
 export function gitBlobSha(
     content: string | Buffer,
@@ -1231,15 +1231,13 @@ function processForTrieve(page: DocumentRecord & { pageSlug: string }) {
             tag_set,
             metadata: {
                 page_title: page.title,
-                // section: section || '',
-                // section_id: sectionId || '',
                 page_id: page._id,
-            },
+            } satisfies TrieveChunkMetadata,
             upsert_by_tracking_id: true,
             group_tracking_ids,
         })
 
-    page.structured.contents.forEach((p) => {
+    page.structured.contents.forEach((p: StructuredContent) => {
         const heading = p.heading
             ? page.structured.headings.find((h) => p.heading === h.id)
             : null
@@ -1254,12 +1252,13 @@ function processForTrieve(page: DocumentRecord & { pageSlug: string }) {
                 section: heading?.content || '',
                 section_id: heading?.id || '',
                 page_id: page._id,
-            },
+                line: p.line?.toString(),
+            } satisfies TrieveChunkMetadata,
             upsert_by_tracking_id: true,
             group_tracking_ids,
         })
     })
-    page.structured.headings.forEach((heading) => {
+    page.structured.headings.forEach((heading: Heading) => {
         chunks.push({
             tracking_id: `${page._id}-${heading?.id}-heading`,
             chunk_html: heading.content,
@@ -1270,7 +1269,8 @@ function processForTrieve(page: DocumentRecord & { pageSlug: string }) {
                 section: heading?.content || '',
                 section_id: heading?.id || '',
                 page_id: page._id,
-            },
+                line: heading.line?.toString(),
+            } satisfies TrieveChunkMetadata,
             upsert_by_tracking_id: true,
             group_tracking_ids,
         })

@@ -13,9 +13,17 @@ export default await createHonoServer({
 
             // Check if URL ends with .md or .mdx
             if (url.endsWith('.md') || url.endsWith('.mdx')) {
+                const query = c.req.query()
+                const showLineNumbers = query.showLineNumbers === 'true'
+                const startLine = query.startLine ? parseInt(query.startLine, 10) : undefined
+                const endLine = query.endLine ? parseInt(query.endLine, 10) : undefined
+
                 const markdown = await serveRawMarkdown({
                     domain: host,
                     path: url,
+                    showLineNumbers,
+                    startLine,
+                    endLine,
                 })
 
                 if (markdown != null) {

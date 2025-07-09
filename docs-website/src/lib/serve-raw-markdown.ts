@@ -6,9 +6,15 @@ import { getFumadocsSource } from './source'
 export async function serveRawMarkdown({
     domain,
     path,
+    showLineNumbers = false,
+    startLine,
+    endLine,
 }: {
     domain: string
     path: string
+    showLineNumbers?: boolean
+    startLine?: number
+    endLine?: number
 }) {
     const siteBranch = await prisma.siteBranch.findFirst({
         where: {
@@ -93,12 +99,49 @@ export async function serveRawMarkdown({
                 },
             }),
         ])
-        return indexPage?.content.markdown || null
+        const markdown = indexPage?.content.markdown || null
+        return markdown ? formatMarkdown(markdown, showLineNumbers, startLine, endLine) : null
     }
 
     if (!page) {
         return null
     }
 
-    return page.content.markdown
+    return formatMarkdown(page.content.markdown, showLineNumbers, startLine, endLine)
+}
+
+function formatMarkdown(
+    markdown: string,
+    showLineNumbers: boolean,
+    startLine?: number,
+    endLine?: number,
+): string {
+    const lines = markdown.split('\n')
+    
+    // Filter lines by range if specified
+    const filteredLines = (() => {
+        if (startLine !== undefined || endLine !== undefined) {
+            const start = startLine ? startLine - 1 : 0 // Convert to 0-based index
+            const end = endLine ? endLine : lines.length
+            return lines.slice(start, end)
+        }
+        return lines
+    })()
+    
+    // Add line numbers if requested
+    if (showLineNumbers) {
+        const startLineNumber = startLine || 1
+        const maxLineNumber = startLineNumber + filteredLines.length - 1
+        const padding = maxLineNumber.toString().length
+        
+        return filteredLines
+            .map((line, index) => {
+                const lineNumber = startLineNumber + index
+                const paddedNumber = lineNumber.toString().padStart(padding, ' ')
+                return `${paddedNumber}  ${line}`
+            })
+            .join('\n')
+    }
+    
+    return filteredLines.join('\n')
 }

@@ -60,6 +60,7 @@ describe('schema-path-utils', () => {
                 "cssVariables.light",
                 "cssVariables.dark",
                 "domains.{index}",
+                "hideSidebar",
               ]
             `)
         })

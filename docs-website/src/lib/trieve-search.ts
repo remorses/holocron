@@ -1,4 +1,4 @@
-import { SortedResult } from 'fumadocs-core/server'
+import { SortedResult as BaseSortedResult } from 'fumadocs-core/server'
 import { env } from './env'
 
 import {
@@ -10,13 +10,24 @@ import {
 } from 'trieve-ts-sdk'
 import { prisma } from 'db'
 
+export interface TrieveChunkMetadata {
+    page_title?: string
+    section?: string
+    section_id?: string
+    page_id?: string
+    line?: string
+    [key: string]: string | undefined
+}
+
+export interface SortedResult extends BaseSortedResult {
+    line?: number
+}
+
 export type Chunk = Omit<ChunkMetadata, 'metadata'> & {
     highlight?: string | undefined | null
     highlightTitle?: string | undefined | null
     highlightDescription?: string | undefined | null
-    metadata: {
-        [key: string]: string
-    }
+    metadata: TrieveChunkMetadata
 }
 
 type ChunkWithHighlights = {
@@ -109,13 +120,14 @@ function groupResults(groups: GroupChunk[]): SortedResult[] {
                 // ...c.chunk,
                 id: chunk.tracking_id || '',
                 type:
-                    chunk.chunk_html === chunk.metadata['section']
+                    chunk.chunk_html === chunk.metadata.section
                         ? 'heading'
                         : 'text',
-                url: chunk.metadata['section_id']
-                    ? `${chunk.link}#${chunk.metadata['section_id']}`
+                url: chunk.metadata.section_id
+                    ? `${chunk.link}#${chunk.metadata.section_id}`
                     : chunk.link || '',
                 content: chunk.chunk_html || '',
+                line: chunk.metadata.line ? parseInt(chunk.metadata.line) : undefined,
             })
         }
     }
