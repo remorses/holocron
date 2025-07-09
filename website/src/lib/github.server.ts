@@ -380,6 +380,7 @@ export async function createNewRepo({
     octokit,
     privateRepo = true,
     oauthToken,
+    homepage,
 }: {
     owner
     isGithubOrg
@@ -388,6 +389,7 @@ export async function createNewRepo({
     octokit: Octokit['rest']
     privateRepo: boolean
     oauthToken?: string
+    homepage?: string
 }) {
     files = files.filter((x) => {
         return true
@@ -428,6 +430,7 @@ export async function createNewRepo({
         name: repo,
         private: privateRepo,
         description: `Repository created using Fumabase`,
+        homepage: homepage,
         has_wiki: false,
         has_discussions: true,
         auto_init: true,

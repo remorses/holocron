@@ -129,6 +129,7 @@ export async function action({ request, params }: Route.ActionArgs) {
                 oauthToken: githubInstallation.oauthToken!,
                 privateRepo: false,
                 repo,
+                homepage: `https://${internalHost}`,
             }),
             // Create a site for the newly created repository
             prisma.site.create({
