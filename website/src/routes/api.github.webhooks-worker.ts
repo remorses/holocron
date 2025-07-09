@@ -156,6 +156,15 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
             lastGithubSyncCommit: latestCommit.id,
         },
     })
+
+    // Report errors to GitHub Checks API
+    await reportErrorsToGithub({
+        installationId,
+        owner,
+        repoName,
+        commitSha: latestCommit.id,
+        branchId: siteBranch.branchId,
+    })
 }
 
 async function* filesFromWebhookCommits({
@@ -548,6 +557,96 @@ function safeJsoncParse(str: string, defaultValue = {}) {
         return JSONC.parse(str)
     } catch {
         return defaultValue
+    }
+}
+
+async function reportErrorsToGithub({
+    installationId,
+    owner,
+    repoName,
+    commitSha,
+    branchId,
+}: {
+    installationId: number
+    owner: string
+    repoName: string
+    commitSha: string
+    branchId: string
+}) {
+    try {
+        const octokit = await getOctokit({ installationId })
+        
+        // Get all sync errors for this branch
+        const syncErrors = await prisma.markdownPageSyncError.findMany({
+            where: {
+                page: {
+                    branchId,
+                },
+            },
+            include: {
+                page: {
+                    select: {
+                        githubPath: true,
+                        slug: true,
+                    },
+                },
+            },
+        })
+
+        if (syncErrors.length === 0) {
+            // Create a successful check run if no errors
+            await octokit.rest.checks.create({
+                owner,
+                repo: repoName,
+                name: 'Fumabase Sync',
+                head_sha: commitSha,
+                status: 'completed',
+                conclusion: 'success',
+                output: {
+                    title: 'Documentation sync successful',
+                    summary: 'All markdown files processed successfully.',
+                },
+            })
+            return
+        }
+
+        // Convert sync errors to GitHub annotations (max 50 per request)
+        const annotations = syncErrors.slice(0, 50).map((error) => ({
+            path: error.page.githubPath,
+            start_line: error.line,
+            end_line: error.line,
+            annotation_level: 'failure' as const,
+            message: `${error.errorType}: ${error.errorMessage}`,
+        }))
+
+        const errorsByType = syncErrors.reduce((acc, error) => {
+            acc[error.errorType] = (acc[error.errorType] || 0) + 1
+            return acc
+        }, {} as Record<string, number>)
+
+        const summary = Object.entries(errorsByType)
+            .map(([type, count]) => `${count} ${type} error(s)`)
+            .join(', ')
+
+        // Create a failing check run with error annotations
+        await octokit.rest.checks.create({
+            owner,
+            repo: repoName,
+            name: 'Fumabase Sync',
+            head_sha: commitSha,
+            status: 'completed',
+            conclusion: 'failure',
+            output: {
+                title: `Documentation sync failed with ${syncErrors.length} error(s)`,
+                summary: `Found ${summary} in markdown files.`,
+                annotations,
+            },
+        })
+
+        logger.log(`Reported ${syncErrors.length} errors to GitHub Checks API for commit ${commitSha}`)
+    } catch (error) {
+        logger.error('Failed to report errors to GitHub Checks API:', error)
+        notifyError(error, 'GitHub Checks API error reporting')
     }
 }
 

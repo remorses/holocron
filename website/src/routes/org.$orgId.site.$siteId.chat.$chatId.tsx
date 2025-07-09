@@ -19,6 +19,7 @@ import {
     Link,
     useParams,
     useRevalidator,
+    useSearchParams,
 } from 'react-router'
 import { AppSidebar } from '../components/app-sidebar'
 import { BrowserWindow } from '../components/browser-window'
@@ -40,6 +41,7 @@ import { Button } from '../components/ui/button'
 import { GithubIcon } from 'lucide-react'
 import { useThrowingFn } from '../lib/hooks'
 import { apiClient } from '../lib/spiceflow-client'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
 
 export type { Route }
 
@@ -275,99 +277,119 @@ function Content() {
     const siteData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
+    const [searchParams, setSearchParams] = useSearchParams()
 
     const iframeRef = useRef<HTMLIFrameElement>(null)
     useEffect(() => {
         console.log('iframe sidebar remounted')
     }, [])
 
+    const activeTab = searchParams.get('tab') || 'preview'
+
+    const handleTabChange = (value: string) => {
+        const newSearchParams = new URLSearchParams(searchParams)
+        if (value === 'preview') {
+            newSearchParams.delete('tab')
+        } else {
+            newSearchParams.set('tab', value)
+        }
+        setSearchParams(newSearchParams)
+    }
+
     return (
         <div className='flex flex-col h-full gap-3'>
-            <div className='flex gap-2'>
-                <div className='grow'></div>
-                <GithubRepoButton />
-                <GitHubSyncStatus />
-                <GitHubSyncButton />
-            </div>
+            <Tabs value={activeTab} onValueChange={handleTabChange} className='flex flex-col h-full'>
+                <div className='flex gap-2'>
+                    <TabsList>
+                        <TabsTrigger value='preview'>Browser Preview</TabsTrigger>
+                        {/* <TabsTrigger value='errors'>Errors</TabsTrigger> */}
+                    </TabsList>
+                    <div className='grow'></div>
+                    <GithubRepoButton />
+                    <GitHubSyncStatus />
+                    <GitHubSyncButton />
+                </div>
 
-            <div className='flex grow flex-col'>
-                <BrowserWindow
-                    url={iframeUrl}
-                    onSearchBarClick={() => {
-                        const iframe = iframeRef.current
-                        window.open(iframe?.src, '_blank')
-                    }}
-                    onRefresh={() => {
-                        const iframe = iframeRef.current
-                        if (iframe) {
-                            iframe.src += ''
-                        }
-                    }}
-                    className={cn(
-                        'text-sm shrink-0 shadow rounded-xl justify-stretch',
-                        'items-stretch h-full flex-col flex-1 border',
-                        ' lg:flex bg-background',
-                    )}
-                >
-                    <iframe
-                        ref={(el) => {
-                            iframeRef.current = el
-                            if (!el) {
-                                return
-                            }
-                            const docsRpcClient = createIframeRpcClient({
-                                iframeRef,
-                                targetOrigin: new URL(iframeUrl).origin,
-                            })
-
-                            const state = {
-                                currentSlug: chat.currentSlug || undefined,
-                                filesInDraft: (chat.filesInDraft as any) || {},
-                            }
-                            let sentFirstMessage = false
-                            // do it as soon as the page loads to not wait for the ready message
-                            docsRpcClient.setDocsState(state).then(() => {
-                                sentFirstMessage = true
-                            })
-                            const waitForFirstMessage = (event) => {
-                                if (
-                                    iframeRef.current &&
-                                    !sentFirstMessage &&
-                                    event.source ===
-                                        iframeRef.current.contentWindow
-                                ) {
-                                    docsRpcClient.setDocsState(state)
-                                    window.removeEventListener(
-                                        'message',
-                                        waitForFirstMessage,
-                                    )
-                                }
-                            }
-                            window.addEventListener(
-                                'message',
-                                waitForFirstMessage,
-                                { once: true },
-                            )
-                            return () => {
-                                docsRpcClient.cleanup()
+                <TabsContent value='preview' className='flex grow flex-col'>
+                    <BrowserWindow
+                        url={iframeUrl}
+                        onSearchBarClick={() => {
+                            const iframe = iframeRef.current
+                            window.open(iframe?.src, '_blank')
+                        }}
+                        onRefresh={() => {
+                            const iframe = iframeRef.current
+                            if (iframe) {
+                                iframe.src += ''
                             }
                         }}
-                        key={chat.chatId}
-                        style={scaleDownElement(0.9)}
-                        className={cn(' inset-0 bg-transparent', 'absolute')}
-                        frameBorder={0}
-                        allowTransparency={true}
-                        name='preview' // tell iframe preview props is enabled
-                        title='preview'
-                        src={iframeUrl.toString()}
-                    ></iframe>
-                    {/* {!loaded && (
-                      <div className='flex justify-center items-center inset-0 absolute'>
-                          <Spinner className='text-gray-600 text-5xl'></Spinner>
-                      </div>
-                  )} */}
-                </BrowserWindow>
-            </div>
+                        className={cn(
+                            'text-sm shrink-0 shadow rounded-xl justify-stretch',
+                            'items-stretch h-full flex-col flex-1 border',
+                            ' lg:flex bg-background',
+                        )}
+                    >
+                        <iframe
+                            ref={(el) => {
+                                iframeRef.current = el
+                                if (!el) {
+                                    return
+                                }
+                                const docsRpcClient = createIframeRpcClient({
+                                    iframeRef,
+                                    targetOrigin: new URL(iframeUrl).origin,
+                                })
+
+                                const state = {
+                                    currentSlug: chat.currentSlug || undefined,
+                                    filesInDraft: (chat.filesInDraft as any) || {},
+                                }
+                                let sentFirstMessage = false
+                                // do it as soon as the page loads to not wait for the ready message
+                                docsRpcClient.setDocsState(state).then(() => {
+                                    sentFirstMessage = true
+                                })
+                                const waitForFirstMessage = (event) => {
+                                    if (
+                                        iframeRef.current &&
+                                        !sentFirstMessage &&
+                                        event.source ===
+                                            iframeRef.current.contentWindow
+                                    ) {
+                                        docsRpcClient.setDocsState(state)
+                                        window.removeEventListener(
+                                            'message',
+                                            waitForFirstMessage,
+                                        )
+                                    }
+                                }
+                                window.addEventListener(
+                                    'message',
+                                    waitForFirstMessage,
+                                    { once: true },
+                                )
+                                return () => {
+                                    docsRpcClient.cleanup()
+                                }
+                            }}
+                            key={chat.chatId}
+                            style={scaleDownElement(0.9)}
+                            className={cn(' inset-0 bg-transparent', 'absolute')}
+                            frameBorder={0}
+                            allowTransparency={true}
+                            name='preview' // tell iframe preview props is enabled
+                            title='preview'
+                            src={iframeUrl.toString()}
+                        ></iframe>
+                    </BrowserWindow>
+                </TabsContent>
+
+                <TabsContent value='errors' className='flex grow flex-col'>
+                    <div className='flex items-center justify-center h-full border rounded-xl bg-muted/30'>
+                        <p className='text-muted-foreground'>Errors tab - Not implemented yet</p>
+                    </div>
+                </TabsContent>
+            </Tabs>
         </div>
     )
 }
