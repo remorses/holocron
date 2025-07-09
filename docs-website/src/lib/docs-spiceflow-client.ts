@@ -8,7 +8,7 @@ export const docsApiClient = createSpiceflowClient<DocsSpiceflowApp>('/', {
     },
 })
 
-export const durableFetchClient = new DurableFetchClient()
+export const docsDurableFetchClient = new DurableFetchClient()
 
 export const docsApiClientWithDurableFetch =
     createSpiceflowClient<DocsSpiceflowApp>('/', {
@@ -29,6 +29,6 @@ export const docsApiClientWithDurableFetch =
 
         fetch:
             process.env.NODE_ENV !== 'development'
-                ? durableFetchClient.fetch
+                ? docsDurableFetchClient.fetch
                 : undefined,
     })

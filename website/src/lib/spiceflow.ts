@@ -1046,7 +1046,6 @@ export const app = new Spiceflow({ basePath: '/api' })
                     name,
                     domains,
                 }
-
             } else {
                 // For updates, fetch the branch's latest docsJson
                 const branch = await prisma.siteBranch.findFirst({
@@ -1142,9 +1141,10 @@ export const app = new Spiceflow({ basePath: '/api' })
         method: 'POST',
         path: '/transcribeAudio',
         async handler({ request, state: { userId } }) {
-            if (!userId) {
-                throw new AppError('User not authenticated')
-            }
+            // no auth so this can be used from docs websites
+            // if (!userId) {
+            //     throw new AppError('User not authenticated')
+            // }
 
             const formData = await request.formData()
             const audioFile = formData.get('audio') as File | null

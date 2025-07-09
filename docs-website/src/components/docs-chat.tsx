@@ -37,12 +37,15 @@ import {
     PopoverTrigger,
 } from '../components/ui/popover'
 
-import { durableFetchClient } from 'docs-website/src/generated/spiceflow-client'
 import { cn } from '../lib/cn'
-import { docsApiClientWithDurableFetch } from '../lib/docs-spiceflow-client'
+import {
+    docsApiClientWithDurableFetch,
+    docsDurableFetchClient,
+} from '../lib/docs-spiceflow-client'
 import { useDocsState, usePersistentDocsState } from '../lib/docs-state'
 import { useRouteLoaderData } from 'react-router'
 import type { Route } from '../root'
+import { env } from '../lib/env'
 
 export function ChatDrawer({ loaderData }: { loaderData?: any }) {
     const initialChatState = useMemo<Partial<ChatState>>(
@@ -261,21 +264,26 @@ function Footer() {
     const files = rootLoaderData?.files || []
 
     useEffect(() => {
-        durableFetchClient.isInProgress(durableUrl).then(({ inProgress }) => {
-            if (inProgress) {
-                submitMessageWithoutDelete()
-            }
-        })
+        docsDurableFetchClient
+            .isInProgress(durableUrl)
+            .then(({ inProgress }) => {
+                if (inProgress) {
+                    submitMessageWithoutDelete()
+                }
+            })
     }, [])
     const transcribeAudio = async (audioFile: File): Promise<string> => {
         try {
             const formData = new FormData()
             formData.append('audio', audioFile)
 
-            const response = await fetch('/api/transcribeAudio', {
-                method: 'POST',
-                body: formData,
-            })
+            const response = await fetch(
+                new URL('/api/transcribeAudio', env.PUBLIC_URL).toString(),
+                {
+                    method: 'POST',
+                    body: formData,
+                },
+            )
 
             if (!response.ok) {
                 throw new Error('Transcription failed')
@@ -326,7 +334,7 @@ function Footer() {
         .map((file) => `@${file.path.replace(/\.mdx\?$/, '')}`)
 
     async function onSubmit() {
-        await durableFetchClient.delete(url)
+        await docsDurableFetchClient.delete(url)
         await submitMessageWithoutDelete()
     }
     return (
@@ -349,13 +357,13 @@ function Footer() {
                     />
 
                     <div className='flex items-center justify-between gap-2 p-3 py-2'>
-                        <ChatUploadButton
+                        {/* <ChatUploadButton
                             accept='image/*,text/*,.pdf,.docx,.doc'
                             onFilesChange={(files) => {
                                 // TODO: Wire uploaded files to messages
                                 console.log('Files uploaded:', files)
                             }}
-                        />
+                        /> */}
                         <ChatRecordButton transcribeAudio={transcribeAudio} />
                         <div className='grow'></div>
                         <Button
