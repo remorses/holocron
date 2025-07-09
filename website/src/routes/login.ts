@@ -7,7 +7,7 @@ export async function loader({ request }) {
     const url = new URL(request.url)
     const callbackUrl = url.searchParams.get('callbackUrl') || ''
     const fullCallbackUrl = new URL(
-        callbackUrl,
+        callbackUrl || '/login',
         process.env.PUBLIC_URL,
     ).toString()
     if (!userId) {
