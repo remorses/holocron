@@ -1,6 +1,6 @@
 {
   "name": "mcp-demo",
-  "version": "1.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "next dev -p 3001",

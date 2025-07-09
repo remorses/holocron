@@ -308,10 +308,10 @@ async function determineTemplateDownload({
         return true
     }
 
-    if (markdownFileCount <= 1) {
+    if (markdownFileCount < 1) {
         if (!isInteractive) {
             console.error(
-                `Error: Found ${markdownFileCount} markdown file(s), but at least 2 are required`,
+                `Error: Found ${markdownFileCount} markdown file(s), but at least 1 is required`,
             )
             console.error(
                 'Use --from-template to download starter template files, or add more markdown files',
@@ -1080,7 +1080,7 @@ cli.command('dev', 'Preview your fumabase website')
 cli.command('sync', 'Sync current branch with GitHub').action(async () => {
     try {
         const config = getUserConfig()
-        
+
         if (!config || !config.apiKey) {
             console.error('You need to be logged in to sync a project.')
             console.error('Please run: fumabase login')
@@ -1205,7 +1205,7 @@ cli.command('delete', 'Delete the current fumabase website')
     .action(async (options) => {
         try {
             const config = getUserConfig()
-            
+
             if (!config || !config.apiKey) {
                 console.error('You need to be logged in to delete a project.')
                 console.error('Please run: fumabase login')

@@ -577,11 +577,14 @@ function DocsLayoutWrapper({
     }, [loaderData.files, loaderData.i18n, filesInDraft])
 
     // Configure layout based on docsJson
-    const navMode = 'auto'
+    let navMode = 'auto' as 'top' | 'auto'
+    if (docsJson.hideSidebar) {
+        navMode = 'top' as const
+    }
     const disableThemeSwitch = false
     const navTransparentMode = 'top'
     const searchEnabled = true
-    const navTabMode = 'navbar'
+    let navTabMode = 'navbar' as 'sidebar' | 'navbar'
 
     // Build links from docsJson navbar configuration
     const links: LinkItemType[] = (() => {
@@ -648,6 +651,25 @@ function DocsLayoutWrapper({
 
     return (
         <div className='h-full flex flex-col w-full'>
+            {docsJson?.hideSidebar && (
+                <style>{`
+                    #nd-sidebar { display: none !important; }
+                    article.docs-page-article { padding-left: 1rem;  }
+                    * { --fd-layout-width: 10160px !important; --fd-page-width: 1100px !important; }
+                    button[aria-label="Collapse Sidebar"] { display: none !important; }
+                    * { --fd-sidebar-width: 0px !important; }
+                `}</style>
+            )}
+            {/* {docsJson?.hideSidebar && (
+                <style>{`
+                    #nd-sidebar { display: none !important; }
+                    article.docs-page-article { padding-left: 1rem; max-width: 900px !important; margin-left: 0 !important; }
+                    * { --fd-layout-width: 10160px !important; --fd-page-width: 1660px !important; }
+                    #nd-page { display: flex !important; align-items: space-between !important;  }
+                    button[aria-label="Collapse Sidebar"] { display: none !important; }
+                    * { --fd-sidebar-width: 0px !important; }
+                `}</style>
+            )} */}
             <DocsLayoutNotebook
                 searchToggle={{
                     enabled: searchEnabled,
@@ -662,7 +684,6 @@ function DocsLayoutWrapper({
                 sidebar={{
                     defaultOpenLevel: 2,
                     collapsible: true,
-                    // enabled: !openapiUrl,
 
                     tabs,
                     footer: (
@@ -822,7 +843,9 @@ function Logo({ docsJson = {} as DocsJsonType }) {
                 />
             )}
             {logoText && (
-                <span className='font-medium text-lg max-md:hidden'>{logoText}</span>
+                <span className='font-medium text-lg max-md:hidden'>
+                    {logoText}
+                </span>
             )}
         </div>
     )

@@ -1,9 +1,8 @@
 {
     // the logo shown in the top left
     "logo": {
-        "dark": "/logo/dark.svg",
-        "text": "fumabase",
-        "light": "/logo/light.svg"
+        "dark": "/logo/light.svg",
+        "light": "/logo/dark.svg"
     },
     "name": "fumabase",
     "footer": {
@@ -39,18 +38,14 @@
             "label": "Get Started"
         }
     },
-    "siteId": "cmclpd3km0000htompzockfgx",
+    "siteId": "cmcvowwm40000inypr8b1z9ld",
     "$schema": "https://fumabase.com/fumabase.json",
-    // to add new domains you can simply add them here, then add a CNAME record to cname.fumabase.com
+    "hideSidebar": true,
+    // to add new domains you can simply add them here, then add a CNAME record pointing to cname.fumabase.com
     "domains": [
-        "fumabase-2v6e66mi.fumabase.com",
-        "fumabase-2v6e66mi.localhost",
-        "docs.fumabase.com"
+        "fumabase-o4f79efs.localhost",
+        "fumabase-o4f79efs.fumabase.com"
     ],
-    "tabs": [{
-      "tab": "API",
-      "openapi": "https://raw.githubusercontent.com/fuma-nama/fumadocs/main/examples/openapi/openapi.json"
-    }],
     "favicon": {
         "dark": "/favicon.svg",
         "light": "/favicon.svg"

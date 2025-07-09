@@ -76,8 +76,8 @@ importers:
         specifier: ^0.1.3
         version: 0.1.3
       spiceflow:
-        specifier: ^1.13.2
-        version: 1.13.2(@modelcontextprotocol/sdk@1.15.0)
+        specifier: ^1.13.3
+        version: 1.13.3(@modelcontextprotocol/sdk@1.15.0)
       tiny-jsonc:
         specifier: ^1.0.2
         version: 1.0.2
@@ -568,8 +568,8 @@ importers:
         specifier: ^3.6.0
         version: 3.6.0
       spiceflow:
-        specifier: ^1.13.2
-        version: 1.13.2(@modelcontextprotocol/sdk@1.15.0)
+        specifier: ^1.13.3
+        version: 1.13.3(@modelcontextprotocol/sdk@1.15.0)
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.3.1
@@ -838,7 +838,7 @@ importers:
         specifier: ^11.0.5
         version: 11.0.5
       zod:
-        specifier: ^3.25.67
+        specifier: ^3.25.76
         version: 3.25.76
 
   fumadocs/packages/core:
@@ -877,7 +877,7 @@ importers:
         specifier: ^2.7.1
         version: 2.7.1(@types/react@19.1.8)(react@19.1.0)
       remark:
-        specifier: ^15.0.0
+        specifier: ^15.0.1
         version: 15.0.1
       remark-gfm:
         specifier: ^4.0.1
@@ -914,7 +914,7 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@types/mdast':
-        specifier: ^4.0.3
+        specifier: ^4.0.4
         version: 4.0.4
       '@types/negotiator':
         specifier: ^0.6.4
@@ -1101,7 +1101,7 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       zod:
-        specifier: ^3.25.67
+        specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
       '@mdx-js/mdx':
@@ -1114,7 +1114,7 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@types/mdast':
-        specifier: ^4.0.3
+        specifier: ^4.0.4
         version: 4.0.4
       '@types/node':
         specifier: 24.0.7
@@ -1126,7 +1126,7 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0
       remark:
-        specifier: ^15.0.0
+        specifier: ^15.0.1
         version: 15.0.1
       tsconfig:
         specifier: workspace:*
@@ -1179,7 +1179,7 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       zod:
-        specifier: ^3.25.67
+        specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
       '@fumadocs/mdx-remote':
@@ -1189,7 +1189,7 @@ importers:
         specifier: ^4.0.9
         version: 4.0.9
       '@types/mdast':
-        specifier: ^4.0.3
+        specifier: ^4.0.4
         version: 4.0.4
       '@types/mdx':
         specifier: ^2.0.13
@@ -1234,7 +1234,7 @@ importers:
         specifier: ^4.0.3
         version: 4.0.3
       zod:
-        specifier: ^3.25.67
+        specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
       '@types/mdx':
@@ -1444,7 +1444,7 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@types/mdast':
-        specifier: ^4.0.3
+        specifier: ^4.0.4
         version: 4.0.4
       '@types/node':
         specifier: 24.0.7
@@ -1502,7 +1502,7 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@types/mdast':
-        specifier: ^4.0.3
+        specifier: ^4.0.4
         version: 4.0.4
       '@types/node':
         specifier: 24.0.7
@@ -1960,8 +1960,8 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       spiceflow:
-        specifier: ^1.13.2
-        version: 1.13.2(@modelcontextprotocol/sdk@1.15.0)
+        specifier: ^1.13.3
+        version: 1.13.3(@modelcontextprotocol/sdk@1.15.0)
       string-dedent:
         specifier: ^3.0.1
         version: 3.0.1
@@ -11942,8 +11942,8 @@ packages:
   spdx-license-ids@3.0.21:
     resolution: {integrity: sha512-Bvg/8F5XephndSK3JffaRqdT+gyhfqIPwDHpX80tJrF8QQRYMo8sNMeaZ2Dp5+jhwKnUmIOyFFQfHRkjJm5nXg==}
 
-  spiceflow@1.13.2:
-    resolution: {integrity: sha512-dDRtK2bONlX5XesftbtjjCZu7ThjmhK+em+hzMertf7yYu8YjUF8lWuvH5ZBvZ3SUfQTzwnBcIdV2i91leiQkw==}
+  spiceflow@1.13.3:
+    resolution: {integrity: sha512-lIKfaNDwgcouK3gcfHRgLMr0QuMb6mdAkRgjsX4QM9ePRtr/P+MU60RImJ0h4mbl4nKxdexVqGFxx7Kz5sO2bQ==}
     peerDependencies:
       '@modelcontextprotocol/sdk': '*'
     peerDependenciesMeta:
@@ -21546,7 +21546,7 @@ snapshots:
       safe-mdx: 1.1.0(react@19.1.0)
       sentries: 0.2.2(@cloudflare/workers-types@4.20250614.0)
       shiki: 3.7.0
-      spiceflow: 1.13.2(@modelcontextprotocol/sdk@1.15.0)
+      spiceflow: 1.13.3(@modelcontextprotocol/sdk@1.15.0)
       tailwind-merge: 3.3.1
       tailwindcss-animate: 1.0.7(tailwindcss@4.1.10)
       tiny-jsonc: 1.0.2
@@ -26528,16 +26528,16 @@ snapshots:
 
   spdx-license-ids@3.0.21: {}
 
-  spiceflow@1.13.2(@modelcontextprotocol/sdk@1.15.0):
+  spiceflow@1.13.3(@modelcontextprotocol/sdk@1.15.0):
     dependencies:
       '@medley/router': 0.2.1
       '@standard-schema/spec': 1.0.0
       copy-anything: 3.0.5
-      eventsource-parser: 3.0.2
+      eventsource-parser: 3.0.3
       openapi-types: 12.1.3
       superjson: 2.2.2
       zod: 3.25.76
-      zod-to-json-schema: 3.24.5(zod@3.25.76)
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
     optionalDependencies:
       '@modelcontextprotocol/sdk': 1.15.0
 
@@ -27974,7 +27974,7 @@ snapshots:
       sentries: 0.2.2(@cloudflare/workers-types@4.20250614.0)
       shiki: 3.7.0
       sonner: 2.0.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      spiceflow: 1.13.2(@modelcontextprotocol/sdk@1.15.0)
+      spiceflow: 1.13.3(@modelcontextprotocol/sdk@1.15.0)
       string-dedent: 3.0.1
       stripe: 18.2.1(@types/node@24.0.7)
       tailwind-merge: 3.3.1

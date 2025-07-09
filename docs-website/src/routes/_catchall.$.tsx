@@ -499,7 +499,7 @@ function PageContent(props: Route.ComponentProps): any {
                     </PageTOCPopoverContent>
                 </PageTOCPopover>
             )}
-            <PageArticle className=''>
+            <PageArticle className='docs-page-article'>
                 <PageBreadcrumb />
                 <h1 className='text-3xl font-semibold'>{title}</h1>
                 <p className='text-lg text-fd-muted-foreground'>

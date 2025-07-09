@@ -437,6 +437,10 @@ export const DocsConfigSchema = z
             .describe(
                 'Custom domains to connect to this documentation site. Each domain should point to cname.fumabase.com via CNAME record. Domains will be connected when fumabase.jsonc is pushed to the main branch.',
             ),
+        hideSidebar: z
+            .boolean()
+            .optional()
+            .describe('Hide the sidebar completely from the documentation site'),
         // theme: z
         //     .enum(['black', 'dusk'])
         //     .optional()

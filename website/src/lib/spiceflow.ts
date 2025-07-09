@@ -1046,6 +1046,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                     name,
                     domains,
                 }
+
             } else {
                 // For updates, fetch the branch's latest docsJson
                 const branch = await prisma.siteBranch.findFirst({
@@ -1253,8 +1254,8 @@ export const app = new Spiceflow({ basePath: '/api' })
             }
         },
     })
-    .onError(({ error }) => {
-        notifyError(error)
+    .onError(({ error, request, path }) => {
+        notifyError(error, request.url)
     })
 
 export type SpiceflowApp = typeof app

@@ -1,6 +1,6 @@
 {
   "name": "fumadocs-mcp",
-  "version": "1.0.0",
+  "private": true,
   "description": "MCP (Model Context Protocol) components for Fumadocs",
   "type": "module",
   "main": "src/index.tsx",
