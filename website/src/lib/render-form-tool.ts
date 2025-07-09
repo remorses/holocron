@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import schemaLib from 'json-schema-library'
-const compileSchema = schemaLib.compileSchema
+import * as schemaLib from 'json-schema-library'
+const compileSchema = schemaLib.compileSchema || schemaLib?.['default']?.compileSchema
 import {
     docsJsonSchema,
     exampleNamePathsForDocsJson,

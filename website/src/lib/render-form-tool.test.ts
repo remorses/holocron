@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
-import schemaLib from 'json-schema-library'
-const compileSchema = schemaLib.compileSchema
+import * as schemaLib from 'json-schema-library'
+const compileSchema = schemaLib.compileSchema || schemaLib?.['default']?.compileSchema
 import { describe, expect, test } from 'vitest'
 import {
     getTypeForNameInSchema,
