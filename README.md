@@ -2,7 +2,7 @@
     <br/>
     <br/>
     <h3>Fumabase</h3>
-    <p>The open source Mintlify. Built on Fumadocs</p>
+    <p>The open source Mintlify. Built on Fumadocs. Now in beta</p>
     <br/>
     <br/>
 </div>

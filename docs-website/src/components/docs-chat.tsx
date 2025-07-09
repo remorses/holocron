@@ -40,11 +40,9 @@ import {
 import { durableFetchClient } from 'docs-website/src/generated/spiceflow-client'
 import { cn } from '../lib/cn'
 import { docsApiClientWithDurableFetch } from '../lib/docs-spiceflow-client'
-import { useDocsState } from '../lib/docs-state'
+import { useDocsState, usePersistentDocsState } from '../lib/docs-state'
 import { useRouteLoaderData } from 'react-router'
 import type { Route } from '../root'
-
-const CHAT_ID = 'cmclxgpov0057htrcyf12y6j2'
 
 export function ChatDrawer({ loaderData }: { loaderData?: any }) {
     const initialChatState = useMemo<Partial<ChatState>>(
@@ -253,7 +251,8 @@ function ContextButton({ contextOptions }) {
 function Footer() {
     const isPending = useChatState((x) => x.isGenerating)
     const text = useChatState((x) => x.text || '')
-    const durableUrl = `/api/generateMessage?chatId=${CHAT_ID}`
+    const chatId = usePersistentDocsState((x) => x.chatId)
+    const durableUrl = `/api/generateMessage?chatId=${chatId}`
 
     // Get files from root loader data
     const rootLoaderData = useRouteLoaderData(
@@ -299,10 +298,10 @@ function Footer() {
                 {
                     messages: messages,
                     currentSlug: '',
-                    chatId: CHAT_ID,
+                    chatId: chatId,
                     locale: 'en',
                 },
-                { query: { chatId: CHAT_ID } },
+                { query: { chatId: chatId } },
             )
         if (error) throw error
 
@@ -319,13 +318,12 @@ function Footer() {
             })
         }
     }
-    const url = `/api/generateMessage?chatId=${CHAT_ID}`
+    const url = `/api/generateMessage?chatId=${chatId}`
 
     // Generate context options from actual files
     const contextOptions = files
         .filter((file) => file.type === 'page')
         .map((file) => `@${file.path.replace(/\.mdx\?$/, '')}`)
-
 
     async function onSubmit() {
         await durableFetchClient.delete(url)
