@@ -119,6 +119,7 @@ function getWebhooks() {
                 installationId: Number(installationId),
                 owner: repo.owner.login,
                 repoName: repo.name,
+                repoId: repo.id,
                 githubBranch:
                     event.payload.ref?.replace('refs/heads/', '') || 'main',
                 commits,
@@ -165,7 +166,7 @@ function getWebhooks() {
                 await prisma.site.updateMany({
                     where: {
                         githubOwner: repo.owner.login,
-                        githubRepo: previousRepo,
+                        githubRepoId: repo.id,
                         githubInstallations: {
                             some: {
                                 installationId: event.payload.installation.id,

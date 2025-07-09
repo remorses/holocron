@@ -205,6 +205,16 @@ export const app = new Spiceflow({ basePath: '/api' })
                 trieveDatasetId: branch.trieveDatasetId || undefined,
                 files: pages,
             })
+
+
+            await prisma.siteBranch.update({
+                where: { branchId },
+                data: {
+                    lastGithubSyncAt: new Date(),
+                    // lastGithubSyncCommit: latestCommit.commit.sha,
+                },
+            })
+
             return {
                 success: true,
                 siteId,
@@ -903,6 +913,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             orgId: z.string().min(1, 'Organization ID is required'),
             githubOwner: z.string().optional(),
             githubRepo: z.string().optional(),
+            githubRepoId: z.number().optional(),
             githubBranch: z.string().optional(),
             githubFolder: z.string().optional(),
             siteId: z.string().optional(),
@@ -914,6 +925,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 orgId,
                 githubOwner,
                 githubRepo,
+                githubRepoId,
                 githubBranch,
                 githubFolder,
                 siteId,
@@ -965,6 +977,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 if (githubFolder === '.') {
                     githubFolder = ''
                 }
+
                 // Update site info
                 const site = await prisma.site.update({
                     where: { siteId },
@@ -972,6 +985,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                         name,
                         githubOwner: githubOwner || existingSite.githubOwner,
                         githubRepo: githubRepo || existingSite.githubRepo,
+                        githubRepoId: githubRepoId || existingSite.githubRepoId || 0,
                         githubFolder: githubFolder || existingSite.githubFolder,
                     },
                 })
@@ -1005,6 +1019,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                         orgId,
                         githubOwner: githubOwner || '',
                         githubRepo: githubRepo || '',
+                        githubRepoId: githubRepoId,
                         githubFolder: githubFolder || '',
                         branches: {
                             create: {

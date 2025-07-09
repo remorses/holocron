@@ -120,41 +120,46 @@ export async function action({ request, params }: Route.ActionArgs) {
         })
         const branchId = cuid()
 
-        const [result, site] = await Promise.all([
-            createNewRepo({
-                files: await Array.fromAsync(files),
-                isGithubOrg: githubInstallation.accountType === 'ORGANIZATION',
-                octokit: octokit.rest,
-                owner,
-                oauthToken: githubInstallation.oauthToken!,
-                privateRepo: false,
-                repo,
-                homepage: `https://${internalHost}`,
-            }),
-            // Create a site for the newly created repository
-            prisma.site.create({
-                data: {
-                    name,
-                    siteId,
-                    orgId: orgId,
-                    githubOwner: owner,
-                    githubRepo: repo,
-                    githubInstallations: {
-                        create: {
-                            installationId: githubInstallation.installationId,
-                            appId: env.GITHUB_APP_ID!,
-                        },
-                    },
-                    branches: {
-                        create: {
-                            branchId,
-                            title: 'Main',
-                            // domain will be created based on fumabase.jsonc by syncSite
-                        },
+        // First create the GitHub repository to get the repository ID
+        const result = await createNewRepo({
+            files: await Array.fromAsync(files),
+            isGithubOrg: githubInstallation.accountType === 'ORGANIZATION',
+            octokit: octokit.rest,
+            owner,
+            oauthToken: githubInstallation.oauthToken!,
+            privateRepo: false,
+            repo,
+            homepage: `https://${internalHost}`,
+        })
+
+        if (!result) {
+            throw new Error('Failed to create GitHub repository')
+        }
+
+        // Then create the site with the repository ID
+        const site = await prisma.site.create({
+            data: {
+                name,
+                siteId,
+                orgId: orgId,
+                githubOwner: owner,
+                githubRepo: repo,
+                githubRepoId: result.githubRepoId,
+                githubInstallations: {
+                    create: {
+                        installationId: githubInstallation.installationId,
+                        appId: env.GITHUB_APP_ID!,
                     },
                 },
-            }),
-        ])
+                branches: {
+                    create: {
+                        branchId,
+                        title: 'Main',
+                        // domain will be created based on fumabase.jsonc by syncSite
+                    },
+                },
+            },
+        })
 
         console.log(`created site ${siteId}`)
 

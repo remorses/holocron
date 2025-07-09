@@ -27,8 +27,8 @@ export declare const apiClient: {
         };
         getPageContent: {
             post: (request: {
-                githubPath: string;
                 branchId: string;
+                githubPath: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -42,17 +42,17 @@ export declare const apiClient: {
         };
         generateMessage: {
             post: (request: {
+                branchId: string;
+                siteId: string;
+                messages: import("ai").UIMessage<unknown, import("ai").UIDataTypes, import("ai").UITools>[];
                 chatId: string;
+                currentSlug: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
                     content: string | null;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 }>;
-                messages: import("ai").UIMessage<unknown, import("ai").UIDataTypes, import("ai").UITools>[];
-                siteId: string;
-                branchId: string;
-                currentSlug: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -168,12 +168,12 @@ export declare const apiClient: {
         };
         createUploadSignedUrl: {
             post: (request: {
+                siteId: string;
                 files: {
                     slug: string;
                     contentLength: number;
                     contentType?: string | undefined;
                 }[];
-                siteId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -223,13 +223,13 @@ export declare const apiClient: {
         };
         commitChangesToRepo: {
             post: (request: {
+                branchId: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
                     content: string | null;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 }>;
-                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -244,6 +244,7 @@ export declare const apiClient: {
         };
         createPrSuggestionForChat: {
             post: (request: {
+                branchId: string;
                 chatId: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
@@ -251,7 +252,6 @@ export declare const apiClient: {
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 }>;
-                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -288,6 +288,8 @@ export declare const apiClient: {
         };
         upsertSiteFromFiles: {
             post: (request: {
+                name: string;
+                orgId: string;
                 files: {
                     relativePath: string;
                     contents: string;
@@ -297,13 +299,12 @@ export declare const apiClient: {
                     } | undefined;
                     downloadUrl?: string | undefined;
                 }[];
-                name: string;
-                orgId: string;
-                githubFolder?: string | undefined;
                 siteId?: string | undefined;
                 githubBranch?: string | undefined;
+                githubFolder?: string | undefined;
                 githubOwner?: string | undefined;
                 githubRepo?: string | undefined;
+                githubRepoId?: number | undefined;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -321,13 +322,14 @@ export declare const apiClient: {
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
-                    githubFolder?: string | undefined;
-                    name?: string | null | undefined;
                     createdAt?: Date | undefined;
+                    name?: string | null | undefined;
                     orgId?: string | undefined;
                     defaultLocale?: string | undefined;
+                    githubFolder?: string | undefined;
                     githubOwner?: string | undefined;
                     githubRepo?: string | undefined;
+                    githubRepoId?: number | undefined;
                 };
             }>>;
         };
@@ -375,6 +377,21 @@ export declare const apiClient: {
                     success: boolean;
                     message: string;
                     siteId: string;
+                };
+            }>>;
+        };
+        databaseNightlyCleanup: {
+            post: (request: {
+                SECRET: string;
+            }, options?: {
+                headers?: Record<string, unknown> | undefined;
+                query?: Record<string, unknown> | undefined;
+                fetch?: RequestInit | undefined;
+            } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                200: {
+                    success: boolean;
+                    message: string;
+                    deletedCount: number;
                 };
             }>>;
         };
@@ -407,8 +424,8 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         getPageContent: {
             post: (request: {
-                githubPath: string;
                 branchId: string;
+                githubPath: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -422,17 +439,17 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         generateMessage: {
             post: (request: {
+                branchId: string;
+                siteId: string;
+                messages: import("ai").UIMessage<unknown, import("ai").UIDataTypes, import("ai").UITools>[];
                 chatId: string;
+                currentSlug: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
                     content: string | null;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 }>;
-                messages: import("ai").UIMessage<unknown, import("ai").UIDataTypes, import("ai").UITools>[];
-                siteId: string;
-                branchId: string;
-                currentSlug: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -548,12 +565,12 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         createUploadSignedUrl: {
             post: (request: {
+                siteId: string;
                 files: {
                     slug: string;
                     contentLength: number;
                     contentType?: string | undefined;
                 }[];
-                siteId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -603,13 +620,13 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         commitChangesToRepo: {
             post: (request: {
+                branchId: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
                     content: string | null;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 }>;
-                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -624,6 +641,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         createPrSuggestionForChat: {
             post: (request: {
+                branchId: string;
                 chatId: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
@@ -631,7 +649,6 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 }>;
-                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -668,6 +685,8 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         upsertSiteFromFiles: {
             post: (request: {
+                name: string;
+                orgId: string;
                 files: {
                     relativePath: string;
                     contents: string;
@@ -677,13 +696,12 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     } | undefined;
                     downloadUrl?: string | undefined;
                 }[];
-                name: string;
-                orgId: string;
-                githubFolder?: string | undefined;
                 siteId?: string | undefined;
                 githubBranch?: string | undefined;
+                githubFolder?: string | undefined;
                 githubOwner?: string | undefined;
                 githubRepo?: string | undefined;
+                githubRepoId?: number | undefined;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -701,13 +719,14 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
-                    githubFolder?: string | undefined;
-                    name?: string | null | undefined;
                     createdAt?: Date | undefined;
+                    name?: string | null | undefined;
                     orgId?: string | undefined;
                     defaultLocale?: string | undefined;
+                    githubFolder?: string | undefined;
                     githubOwner?: string | undefined;
                     githubRepo?: string | undefined;
+                    githubRepoId?: number | undefined;
                 };
             }>>;
         };
@@ -755,6 +774,21 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                     success: boolean;
                     message: string;
                     siteId: string;
+                };
+            }>>;
+        };
+        databaseNightlyCleanup: {
+            post: (request: {
+                SECRET: string;
+            }, options?: {
+                headers?: Record<string, unknown> | undefined;
+                query?: Record<string, unknown> | undefined;
+                fetch?: RequestInit | undefined;
+            } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                200: {
+                    success: boolean;
+                    message: string;
+                    deletedCount: number;
                 };
             }>>;
         };
@@ -788,8 +822,8 @@ export declare const apiClientWithDurableFetch: {
         };
         getPageContent: {
             post: (request: {
-                githubPath: string;
                 branchId: string;
+                githubPath: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -803,17 +837,17 @@ export declare const apiClientWithDurableFetch: {
         };
         generateMessage: {
             post: (request: {
+                branchId: string;
+                siteId: string;
+                messages: import("ai").UIMessage<unknown, import("ai").UIDataTypes, import("ai").UITools>[];
                 chatId: string;
+                currentSlug: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
                     content: string | null;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 }>;
-                messages: import("ai").UIMessage<unknown, import("ai").UIDataTypes, import("ai").UITools>[];
-                siteId: string;
-                branchId: string;
-                currentSlug: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -929,12 +963,12 @@ export declare const apiClientWithDurableFetch: {
         };
         createUploadSignedUrl: {
             post: (request: {
+                siteId: string;
                 files: {
                     slug: string;
                     contentLength: number;
                     contentType?: string | undefined;
                 }[];
-                siteId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -984,13 +1018,13 @@ export declare const apiClientWithDurableFetch: {
         };
         commitChangesToRepo: {
             post: (request: {
+                branchId: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
                     content: string | null;
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 }>;
-                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -1005,6 +1039,7 @@ export declare const apiClientWithDurableFetch: {
         };
         createPrSuggestionForChat: {
             post: (request: {
+                branchId: string;
                 chatId: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
@@ -1012,7 +1047,6 @@ export declare const apiClientWithDurableFetch: {
                     addedLines?: number | undefined;
                     deletedLines?: number | undefined;
                 }>;
-                branchId: string;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -1049,6 +1083,8 @@ export declare const apiClientWithDurableFetch: {
         };
         upsertSiteFromFiles: {
             post: (request: {
+                name: string;
+                orgId: string;
                 files: {
                     relativePath: string;
                     contents: string;
@@ -1058,13 +1094,12 @@ export declare const apiClientWithDurableFetch: {
                     } | undefined;
                     downloadUrl?: string | undefined;
                 }[];
-                name: string;
-                orgId: string;
-                githubFolder?: string | undefined;
                 siteId?: string | undefined;
                 githubBranch?: string | undefined;
+                githubFolder?: string | undefined;
                 githubOwner?: string | undefined;
                 githubRepo?: string | undefined;
+                githubRepoId?: number | undefined;
             }, options?: {
                 headers?: Record<string, unknown> | undefined;
                 query?: Record<string, unknown> | undefined;
@@ -1082,13 +1117,14 @@ export declare const apiClientWithDurableFetch: {
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
-                    githubFolder?: string | undefined;
-                    name?: string | null | undefined;
                     createdAt?: Date | undefined;
+                    name?: string | null | undefined;
                     orgId?: string | undefined;
                     defaultLocale?: string | undefined;
+                    githubFolder?: string | undefined;
                     githubOwner?: string | undefined;
                     githubRepo?: string | undefined;
+                    githubRepoId?: number | undefined;
                 };
             }>>;
         };
@@ -1136,6 +1172,21 @@ export declare const apiClientWithDurableFetch: {
                     success: boolean;
                     message: string;
                     siteId: string;
+                };
+            }>>;
+        };
+        databaseNightlyCleanup: {
+            post: (request: {
+                SECRET: string;
+            }, options?: {
+                headers?: Record<string, unknown> | undefined;
+                query?: Record<string, unknown> | undefined;
+                fetch?: RequestInit | undefined;
+            } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                200: {
+                    success: boolean;
+                    message: string;
+                    deletedCount: number;
                 };
             }>>;
         };

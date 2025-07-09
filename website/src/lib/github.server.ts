@@ -520,7 +520,7 @@ export async function createNewRepo({
     } catch (err) {
         throw err
     }
-    return { branch, githubRepoId: String(repoResult.id) }
+    return { branch, githubRepoId: repoResult.id }
 }
 
 export const createNewTree = async ({
@@ -579,14 +579,24 @@ const createTreeWithUpdates = async ({
     }
 
     // Get current tree to check which files exist before attempting deletion
-    const existingFiles = remove.length > 0 ?
-        await octokit.git.getTree({
-            owner,
-            repo,
-            tree_sha: parentTreeSha,
-            recursive: 'true',
-        }).then(({ data }) => new Set(data.tree.map(item => item.path).filter(Boolean))) :
-        new Set<string>()
+    const existingFiles =
+        remove.length > 0
+            ? await octokit.git
+                  .getTree({
+                      owner,
+                      repo,
+                      tree_sha: parentTreeSha,
+                      recursive: 'true',
+                  })
+                  .then(
+                      ({ data }) =>
+                          new Set(
+                              data.tree
+                                  .map((item) => item.path)
+                                  .filter(Boolean),
+                          ),
+                  )
+            : new Set<string>()
 
     const tree: {
         path: string
@@ -759,8 +769,10 @@ async function pushChangesToBranch({
     parentTreeSha = parentCommit.tree.sha
 
     // 2. Create blobs → new tree (handling deletions)
-    const filesToCreate = files.filter(f => f.content !== null)
-    const filesToRemove = files.filter(f => f.content === null).map(f => ({ filePath: f.filePath }))
+    const filesToCreate = files.filter((f) => f.content !== null)
+    const filesToRemove = files
+        .filter((f) => f.content === null)
+        .map((f) => ({ filePath: f.filePath }))
 
     const newTree = await createTreeWithUpdates({
         octokit,
@@ -1096,8 +1108,10 @@ export async function pushToPrOrBranch({
         )
 
         // Separate files to create/update from files to delete
-        const filesToCreate = files.filter(x => x.content != null)
-        const filesToRemove = files.filter(x => x.content == null).map(x => ({ filePath: x.filePath }))
+        const filesToCreate = files.filter((x) => x.content != null)
+        const filesToRemove = files
+            .filter((x) => x.content == null)
+            .map((x) => ({ filePath: x.filePath }))
 
         const { commitUrl } = await changeGithubTree({
             owner,
@@ -1133,7 +1147,7 @@ export async function pushToPrOrBranch({
 
     // Separate files to create/update from files to delete
     const filesToCreate = withBlobs.filter(isTruthy)
-    const filesToDelete = files.filter(x => x.content === null)
+    const filesToDelete = files.filter((x) => x.content === null)
 
     console.log('creating new tree')
     const { data: newTree } = await octokit.rest.git.createTree({

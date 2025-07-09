@@ -24,6 +24,7 @@ export const webhookWorkerRequestSchema = z.object({
     installationId: z.number(),
     owner: z.string(),
     repoName: z.string(),
+    repoId: z.number(),
     githubBranch: z.string(),
     commits: z.array(
         z.object({
@@ -46,6 +47,7 @@ const app = new Spiceflow({ basePath: '/api/github' })
                 installationId,
                 owner,
                 repoName,
+                repoId,
                 githubBranch,
                 commits,
             } = await request.json()
@@ -59,6 +61,7 @@ const app = new Spiceflow({ basePath: '/api/github' })
                     installationId,
                     owner,
                     repoName,
+                    repoId,
                     githubBranch,
                     commits,
                     secret,
@@ -84,7 +87,7 @@ const app = new Spiceflow({ basePath: '/api/github' })
 type WebhookWorkerRequest = z.infer<typeof webhookWorkerRequestSchema>
 
 async function updatePagesFromCommits(args: WebhookWorkerRequest) {
-    const { installationId, owner, repoName, githubBranch, commits } = args
+    const { installationId, owner, repoName, repoId, githubBranch, commits } = args
     const latestCommit = commits[commits.length - 1]
 
     // Set check to pending state at the start
@@ -107,7 +110,7 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
                         },
                     },
                     githubOwner: owner,
-                    githubRepo: repoName,
+                    githubRepoId: repoId,
                 },
             },
             include: {
@@ -458,7 +461,7 @@ async function handleDeletions({
 }
 
 async function tryCreateBranchFromDocsJson(args: WebhookWorkerRequest) {
-    const { installationId, owner, repoName, githubBranch, commits } = args
+    const { installationId, owner, repoName, repoId, githubBranch, commits } = args
     const octokit = await getOctokit({ installationId })
 
     // Look for fumabase.jsonc in the commits
@@ -539,7 +542,7 @@ async function tryCreateBranchFromDocsJson(args: WebhookWorkerRequest) {
         const site = await prisma.site.findFirst({
             where: {
                 githubOwner: owner,
-                githubRepo: repoName,
+                githubRepoId: repoId,
                 githubInstallations: {
                     some: {
                         installationId,

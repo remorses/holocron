@@ -178,6 +178,7 @@ model Site {
   githubFolder String @default("")
   githubOwner String
   githubRepo  String
+  githubRepoId  Int @default(0)
 
 
   locales     SiteEnabledLocale[]
