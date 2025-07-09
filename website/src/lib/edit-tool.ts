@@ -34,7 +34,7 @@ export type FileUpdate = z.infer<typeof fileUpdateSchema>
 
 
 
-export function isParameterComplete(args: DeepPartial<EditToolParamSchema>) {
+export function isParameterComplete(args: Partial<EditToolParamSchema>) {
     if (!args) return false
     const { command, path, file_text, insert_line, new_str, old_str } = args
 
