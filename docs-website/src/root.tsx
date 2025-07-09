@@ -39,7 +39,7 @@ import { useShallow } from 'zustand/react/shallow'
 import type { Route } from './+types/root'
 import './app.css'
 import { DocsJsonType } from './lib/docs-json'
-import { DocsState, IframeRpcMessage, useDocsState } from './lib/docs-state'
+import { DocsState, IframeRpcMessage, useDocsState, usePersistentDocsState } from './lib/docs-state'
 import { env } from './lib/env'
 import { useDocsJson } from './lib/hooks'
 import { LOCALE_LABELS } from './lib/locales'
@@ -81,7 +81,7 @@ const ChatDrawer = lazy(() =>
 )
 
 function ChatDrawerWrapper() {
-    const isChatOpen = useDocsState((x) => x.isChatOpen)
+    const isChatOpen = usePersistentDocsState((x) => x.isChatOpen)
     if (!isChatOpen) return null
     return <ChatDrawer />
 }

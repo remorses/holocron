@@ -40,7 +40,6 @@
     },
     "siteId": "cmcvowwm40000inypr8b1z9ld",
     "$schema": "https://fumabase.com/fumabase.json",
-    "hideSidebar": true,
     // to add new domains you can simply add them here, then add a CNAME record pointing to cname.fumabase.com
     "domains": [
         "fumabase-o4f79efs.localhost",

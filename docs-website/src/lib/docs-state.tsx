@@ -5,7 +5,7 @@ import { create } from 'zustand'
 import { createIdGenerator } from 'ai'
 
 const generateId = createIdGenerator()
-function generateChatId(): string {
+export function generateChatId(): string {
     return generateId()
 }
 
@@ -21,12 +21,12 @@ export type FilesInDraft = Record<
 
 export type PersistentDocsState = {
     chatId: string
+    isChatOpen: boolean
 }
 
 export type DocsState = {
     // tree?: PageTree.Root
     toc?: TOCItemType[]
-    isChatOpen?: boolean
     websocketServerPreviewConnected?: boolean
     currentSlug?: string
     // docsJson?: DocsJsonType
@@ -44,6 +44,7 @@ const defaultState: DocsState = {
 
 const defaultPersistentState: PersistentDocsState = {
     chatId: generateChatId(),
+    isChatOpen: false,
 }
 
 export const useDocsState = create<DocsState>(() => defaultState)

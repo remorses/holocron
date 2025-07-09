@@ -42,10 +42,15 @@ import {
     docsApiClientWithDurableFetch,
     docsDurableFetchClient,
 } from '../lib/docs-spiceflow-client'
-import { useDocsState, usePersistentDocsState } from '../lib/docs-state'
+import {
+    useDocsState,
+    usePersistentDocsState,
+    generateChatId,
+} from '../lib/docs-state'
 import { useRouteLoaderData } from 'react-router'
 import type { Route } from '../root'
 import { env } from '../lib/env'
+import { Trash2Icon, XIcon } from 'lucide-react'
 
 export function ChatDrawer({ loaderData }: { loaderData?: any }) {
     const initialChatState = useMemo<Partial<ChatState>>(
@@ -55,30 +60,61 @@ export function ChatDrawer({ loaderData }: { loaderData?: any }) {
         }),
         [loaderData],
     )
-    const isChatOpen = useDocsState((x) => x.isChatOpen)
+    const isChatOpen = usePersistentDocsState((x) => x.isChatOpen)
 
     return (
         <ChatProvider initialValue={initialChatState}>
             <Drawer
                 onOpenChange={(open) => {
-                    useDocsState.setState({ isChatOpen: open })
+                    usePersistentDocsState.setState({ isChatOpen: open })
                 }}
                 open={isChatOpen}
                 direction='right'
             >
                 <DrawerContent className='bg-background min-w-[600px]'>
-                    {/* <DrawerHeader>
-                        <DrawerTitle>Fumabase Chat</DrawerTitle>
-                        <DrawerDescription>
-                            Chat with the docs
-                        </DrawerDescription>
-                    </DrawerHeader> */}
+                    <ChatTopBar />
                     <div className='p-4 flex flex-col min-h-0 grow pb-0'>
                         <Chat />
                     </div>
                 </DrawerContent>
             </Drawer>
         </ChatProvider>
+    )
+}
+
+function ChatTopBar() {
+    const clearChat = () => {
+        const newChatId = generateChatId()
+        usePersistentDocsState.setState({ chatId: newChatId })
+        useChatState.setState({ messages: [] })
+    }
+
+    const closeDrawer = () => {
+        usePersistentDocsState.setState({ isChatOpen: false })
+    }
+
+    return (
+        <div className='flex items-center justify-between p-4 border-b'>
+            <div className='font-semibold'>Chat</div>
+            <div className='flex items-center gap-2'>
+                <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={clearChat}
+                    className='h-8 w-8 p-0'
+                >
+                    <Trash2Icon className='h-4 w-4' />
+                </Button>
+                <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={closeDrawer}
+                    className='h-8 w-8 p-0'
+                >
+                    <XIcon className='h-4 w-4' />
+                </Button>
+            </div>
+        </div>
     )
 }
 
@@ -264,13 +300,12 @@ function Footer() {
     const files = rootLoaderData?.files || []
 
     useEffect(() => {
-        docsDurableFetchClient
-            .isInProgress(durableUrl)
-            .then(({ inProgress }) => {
-                if (inProgress) {
-                    submitMessageWithoutDelete()
-                }
-            })
+        docsDurableFetchClient.isInProgress(durableUrl).then((res) => {
+            console.log('isInProgress response:', res)
+            if (res.inProgress || res.completed) {
+                submitMessageWithoutDelete()
+            }
+        })
     }, [])
     const transcribeAudio = async (audioFile: File): Promise<string> => {
         try {

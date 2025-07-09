@@ -18,7 +18,7 @@ import {
 } from 'fumadocs-ui/components/ui/popover'
 import { cva } from 'class-variance-authority'
 import { DocsJsonType } from '../lib/docs-json'
-import { useDocsState } from '../lib/docs-state'
+import { useDocsState, usePersistentDocsState } from '../lib/docs-state'
 
 const cache = new Map<string, string>()
 
@@ -85,7 +85,7 @@ export function AskAIButton() {
     return (
         <button
             onClick={() => {
-                useDocsState.setState((prev) => ({
+                usePersistentDocsState.setState((prev) => ({
                     isChatOpen: !prev.isChatOpen,
                 }))
             }}

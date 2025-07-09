@@ -1,5 +1,6 @@
 import { cac } from 'cac'
 import JSONC from 'tiny-jsonc'
+import pc from 'picocolors'
 
 import fs from 'fs'
 import path from 'path'
@@ -162,7 +163,7 @@ async function uploadMediaFiles({
         return []
     }
 
-    console.log(`Uploading ${mediaFilePaths.length} media files...`)
+    console.log(pc.blue(`Uploading ${mediaFilePaths.length} media files...`))
 
     // Prepare files for upload
     const filesToUpload = mediaFilePaths.map((x) => ({
@@ -178,10 +179,9 @@ async function uploadMediaFiles({
     })
 
     if (error || !data?.success) {
-        console.error(
-            'Failed to get upload URLs:',
-            error?.message || 'Unknown error',
-        )
+        console.error(pc.red(
+            'Failed to get upload URLs: ' + (error?.message || 'Unknown error'),
+        ))
         return []
     }
 
@@ -206,13 +206,13 @@ async function uploadMediaFiles({
             })
 
             if (!response.ok) {
-                console.error(
-                    `Failed to upload ${filePath}: ${response.statusText}`,
-                )
+                console.error(pc.red(
+                    `Failed to upload ${path.basename(filePath)}: ${response.statusText}`,
+                ))
                 return null
             }
 
-            console.log(`✓ Uploaded ${filePath}`)
+            console.log(pc.green(`  Uploaded ${path.basename(filePath)}`))
             return {
                 relativePath: filePath,
                 contents: '', // Empty contents for media files
@@ -226,7 +226,7 @@ async function uploadMediaFiles({
     const uploadResults = await Promise.all(uploadPromises)
     const successfulUploads = uploadResults.filter(Boolean)
 
-    console.log(`Successfully uploaded ${successfulUploads.length} media files`)
+    console.log(pc.green(`Successfully uploaded ${successfulUploads.length} media files`))
     return successfulUploads
 }
 
@@ -399,8 +399,8 @@ cli.command('init', 'Initialize or deploy a fumabase project')
             const config = getUserConfig()
 
             if (!config || !config.apiKey || !config.orgs?.length) {
-                console.log('You need to be logged in to initialize a project.')
-                console.log('Please run: fumabase login')
+                console.log(pc.red('\nYou need to be logged in to initialize a project.'))
+                console.log(pc.cyan('Please run: fumabase login'))
                 process.exit(1)
             }
 
@@ -487,7 +487,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
             })
 
             if (shouldDownloadTemplate) {
-                console.log('Downloading starter template...')
+                console.log(pc.blue('\nDownloading starter template...'))
 
                 // Download starter template
                 const { data, error } =
@@ -501,9 +501,9 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                 }
 
                 // Write starter template files to filesystem
-                console.log(
+                console.log(pc.blue(
                     `Writing ${data.files.length} starter template files...`,
-                )
+                ))
                 for (const file of data.files) {
                     const filePath = file.relativePath
                     const dirPath = path.dirname(filePath)
@@ -516,9 +516,9 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                     // Handle files with downloadUrl (media files)
                     if (file.downloadUrl && !file.contents) {
                         try {
-                            console.log(
-                                `Downloading ${filePath} from ${file.downloadUrl}`,
-                            )
+                            console.log(pc.gray(
+                                `  → Downloading ${filePath}`,
+                            ))
                             const response = await fetch(file.downloadUrl)
                             if (!response.ok) {
                                 console.error(
@@ -548,7 +548,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                     }
                 }
 
-                console.log('Starter template files written successfully!')
+                console.log(pc.green('Starter template files written successfully!'))
 
                 // Re-run file discovery
                 const result = await findProjectFiles()
@@ -557,15 +557,15 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                 mediaFilePaths = result.mediaFilePaths
             }
 
-            console.log(`Found ${filePaths.length} files`)
+            console.log(pc.gray(`Found ${filePaths.length} files`))
             if (mediaFilePaths.length > 0) {
-                console.log(`Found ${mediaFilePaths.length} media files`)
+                console.log(pc.gray(`Found ${mediaFilePaths.length} media files`))
             }
 
             if (existingDocsJson?.siteId) {
-                console.log('Updating site...')
+                console.log(pc.blue('\nUpdating site...'))
             } else {
-                console.log('Creating site...')
+                console.log(pc.blue('\nCreating site...'))
             }
 
             // Process media files to get metadata
@@ -624,22 +624,22 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                 })
 
             if (error || !data?.success) {
-                console.error(
-                    'Failed to create site:',
-                    error?.message || 'Unknown error',
-                )
+                console.error(pc.red(
+                    'Failed to create site: ' + (error?.message || 'Unknown error'),
+                ))
                 process.exit(1)
             }
 
             // Upload media files if any exist
             if (mediaFilePaths.length > 0) {
+                console.log(pc.blue(`\nUploading ${mediaFilePaths.length} media files...`))
                 await uploadMediaFiles({ mediaFilePaths, siteId: data.siteId })
             }
 
             // Display any page processing errors
             const errors = data.errors
             if (errors && errors.length > 0) {
-                console.log('\nPage Processing Errors:')
+                console.log(pc.red('\nPage Processing Errors:'))
 
                 const errorTable = new Table({
                     head: ['File', 'Error Message'],
@@ -664,10 +664,10 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                 }
 
                 console.log(errorTable.toString())
-                console.log(
+                console.log(pc.red(
                     `\nFound ${errors.length} error(s) in your documentation files.`,
-                )
-                console.log('Fix the issues above and run the command again.\n')
+                ))
+                console.log(pc.yellow('Fix the issues above and run the command again.\n'))
             }
 
             // Save fumabase.jsonc locally
@@ -675,9 +675,9 @@ cli.command('init', 'Initialize or deploy a fumabase project')
 
             // Create success table
             const isUpdate = existingDocsJson?.siteId
-            console.log(
-                `\n✅ Site ${isUpdate ? 'updated' : 'created'} successfully!\n`,
-            )
+            console.log(pc.green(
+                `\nSite ${isUpdate ? 'updated' : 'created'} successfully!\n`,
+            ))
 
             const table = new Table({
                 head: ['Property', 'Value'],
@@ -711,13 +711,13 @@ cli.command('init', 'Initialize or deploy a fumabase project')
 
             console.log(table.toString())
 
-            console.log('\n🚀 Next steps:')
-            console.log('   1. Run: fumabase dev')
-            console.log('   2. Open your browser to preview changes')
-            console.log('   3. Push to GitHub to deploy automatically\n')
+            console.log(pc.cyan('\nNext steps:'))
+            console.log(pc.gray('   1. ') + pc.cyan('Run: fumabase dev'))
+            console.log(pc.gray('   2. ') + pc.cyan('Open your browser to preview changes'))
+            console.log(pc.gray('   3. ') + pc.cyan('Push to GitHub to deploy automatically\n'))
         } catch (error) {
-            console.error('Error initializing project:')
-            console.error(error)
+            console.error(pc.red('\nError initializing project:'))
+            console.error(pc.red(error))
             process.exit(1)
         }
     })
@@ -729,10 +729,20 @@ cli.command('login', 'Login to fumabase')
             randomInt(0, 10),
         ).join('')
 
-        console.log('\nFumabase CLI Login')
-        console.log('═'.repeat(50))
+        // Display ASCII art for fumabase
+        console.log('\n')
+        console.log(pc.cyan('  ███████╗██╗   ██╗███╗   ███╗ █████╗ ██████╗  █████╗ ███████╗███████╗'))
+        console.log(pc.cyan('  ██╔════╝██║   ██║████╗ ████║██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔════╝'))
+        console.log(pc.cyan('  █████╗  ██║   ██║██╔████╔██║███████║██████╔╝███████║███████╗█████╗  '))
+        console.log(pc.cyan('  ██╔══╝  ██║   ██║██║╚██╔╝██║██╔══██║██╔══██╗██╔══██║╚════██║██╔══╝  '))
+        console.log(pc.cyan('  ██║     ╚██████╔╝██║ ╚═╝ ██║██║  ██║██████╔╝██║  ██║███████║███████╗'))
+        console.log(pc.cyan('  ╚═╝      ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝'))
+        console.log(pc.gray('\n                      Documentation that just works'))
+        console.log('\n' + pc.gray('═'.repeat(70)))
+        console.log(pc.bold('                             CLI LOGIN'))
+        console.log(pc.gray('═'.repeat(70)))
 
-        console.log('\nVerification Code:')
+        console.log(pc.bold('\nVerification Code:'))
 
         const formattedCode = cliSessionSecret.split('').join(' ')
         const padding = 3
@@ -743,10 +753,10 @@ cli.command('login', 'Login to fumabase')
             `    ║${' '.repeat(padding)}${formattedCode}${' '.repeat(padding)}║`,
         )
         console.log(`    ╚${'═'.repeat(contentWidth)}╝`)
-        console.log(
+        console.log(pc.yellow(
             '\nMake sure this code matches the one shown in your browser.',
-        )
-        console.log('═'.repeat(50))
+        ))
+        console.log(pc.gray('═'.repeat(50)))
 
         const loginUrl = new URL(`${url}/login`)
         loginUrl.searchParams.set(
@@ -755,7 +765,7 @@ cli.command('login', 'Login to fumabase')
         )
         const fullUrl = loginUrl.toString()
 
-        console.log(`\nReady to open: ${fullUrl}`)
+        console.log(pc.gray(`\nReady to open: ${fullUrl}`))
 
         let shouldOpenBrowser = !options.noBrowser
 
@@ -810,10 +820,10 @@ cli.command('login', 'Login to fumabase')
                         configPath,
                         JSON.stringify(config, null, 2),
                     )
-                    console.log('\nLogin successful!')
-                    console.log(`API key saved to: ${configPath}`)
-                    console.log(`Logged in as: ${data.userEmail}`)
-                    console.log('\nRun `fumabase init` to start a new project')
+                    console.log(pc.green('\nLogin successful!'))
+                    console.log(pc.gray(`API key saved to: ${configPath}`))
+                    console.log(pc.blue(`Logged in as: ${data.userEmail}`))
+                    console.log(pc.cyan('\nRun `fumabase init` to start a new project'))
                     return
                 }
             } catch (error) {
@@ -826,7 +836,7 @@ cli.command('login', 'Login to fumabase')
             attempts++
         }
 
-        console.error('\n\nLogin timeout. Please try again.')
+        console.error(pc.red('\nLogin timeout. Please try again.'))
         process.exit(1)
     })
 
