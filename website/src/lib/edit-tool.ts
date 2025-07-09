@@ -33,16 +33,7 @@ export const fileUpdateSchema = z
 export type FileUpdate = z.infer<typeof fileUpdateSchema>
 
 
-/**
- * DeepPartial<T> makes all properties (and nested properties) of type T optional.
- */
-export type DeepPartial<T> = {
-    [P in keyof T]?: T[P] extends object
-        ? T[P] extends Function
-            ? T[P]
-            : DeepPartial<T[P]>
-        : T[P]
-}
+
 export function isParameterComplete(args: DeepPartial<EditToolParamSchema>) {
     if (!args) return false
     const { command, path, file_text, insert_line, new_str, old_str } = args
