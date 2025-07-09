@@ -120,7 +120,8 @@ function getWebhooks() {
                 installationId: Number(installationId),
                 owner: repo.owner.login,
                 repoName: repo.name,
-                githubBranch: event.payload.ref?.replace('refs/heads/', '') || 'main',
+                githubBranch:
+                    event.payload.ref?.replace('refs/heads/', '') || 'main',
                 commits,
             })
 
@@ -150,19 +151,32 @@ function getWebhooks() {
         switch (event.payload.action) {
             case 'renamed': {
                 const repo = event.payload.repository
+                const previousRepo = (event.payload as any).changes?.repository
+                    ?.name?.from
+
                 logger.log(
-                    `renaming repository ${repo?.owner?.login}/${repo?.name}`,
+                    `renaming repository ${repo?.owner?.login}/${previousRepo} to ${repo?.name}`,
                 )
-                // await prisma.githubIntegration.updateMany({
-                //     where: {
-                //         installationId: event.payload.installation?.id,
-                //         owner: repo.owner.login,
-                //         repo: repo.name,
-                //     },
-                //     data: {
-                //         repo: repo.name,
-                //     },
-                // })
+
+                if (!previousRepo || !repo?.name || !repo?.owner?.login) {
+                    logger.log('missing repository information for rename')
+                    return
+                }
+
+                await prisma.site.updateMany({
+                    where: {
+                        githubOwner: repo.owner.login,
+                        githubRepo: previousRepo,
+                        githubInstallations: {
+                            some: {
+                                installationId: event.payload.installation.id,
+                            },
+                        },
+                    },
+                    data: {
+                        githubRepo: repo.name,
+                    },
+                })
 
                 return
             }

@@ -326,6 +326,15 @@ export async function syncSite({
                     data: { docsJson: jsonData, docsJsonComments: comments },
                 })
 
+                // Update site name if it's defined in docsJson
+                if (jsonData.name) {
+                    await prisma.site.update({
+                        where: { siteId },
+                        data: { name: jsonData.name },
+                    })
+                    console.log(`Updated site name to: ${jsonData.name}`)
+                }
+
                 // Handle domain connections
                 if (jsonData.domains && Array.isArray(jsonData.domains)) {
                     const existingDomains = await prisma.domain.findMany({
