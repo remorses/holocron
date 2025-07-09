@@ -249,6 +249,7 @@ export interface ProcessorDataFrontmatter {
     title?: string
     description?: string
     icon?: string
+    // full?: boolean // hides the table of contents
     badge?: {
         content?: string
         color?: string
