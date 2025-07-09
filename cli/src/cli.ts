@@ -54,12 +54,12 @@ const configPath = path.join(homedir(), '.fumabase.jsonc')
 // Check if running in TTY environment
 const isTTY = process.stdout.isTTY && process.stdin.isTTY
 
-function getUserConfig(): UserConfig {
+function getUserConfig(): UserConfig | null {
     try {
         const configData = fs.readFileSync(configPath, 'utf-8')
         return JSON.parse(configData)
     } catch (error) {
-        throw new Error('Not logged in. Please run: fumabase login')
+        return null
     }
 }
 
@@ -351,17 +351,13 @@ async function determineTemplateDownload({
 
 const apiClient = createApiClient(url, {
     onRequest() {
-        try {
-            const config = getUserConfig()
-            if (config.apiKey) {
-                return {
-                    headers: {
-                        'x-api-key': config.apiKey,
-                    },
-                }
+        const config = getUserConfig()
+        if (config?.apiKey) {
+            return {
+                headers: {
+                    'x-api-key': config.apiKey,
+                },
             }
-        } catch (error) {
-            // Continue without API key
         }
 
         return {}
@@ -402,7 +398,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
 
             const config = getUserConfig()
 
-            if (!config.apiKey || !config.orgs?.length) {
+            if (!config || !config.apiKey || !config.orgs?.length) {
                 console.log('You need to be logged in to initialize a project.')
                 console.log('Please run: fumabase login')
                 process.exit(1)
@@ -826,7 +822,7 @@ cli.command('login', 'Login to fumabase')
 
             dots++
 
-            await new Promise((resolve) => setTimeout(resolve, 2000))
+            await new Promise((resolve) => setTimeout(resolve, 1000))
             attempts++
         }
 
@@ -932,12 +928,7 @@ cli.command('dev', 'Preview your fumabase website')
             // const githubBranch = getCurrentGitBranch()
 
             // Get config to check for lastWebsocketId
-            let config: UserConfig | null = null
-            try {
-                config = getUserConfig()
-            } catch (error) {
-                // Ignore error if not logged in, dev command can work without login
-            }
+            const config = getUserConfig()
 
             const [websocketRes] = await Promise.all([
                 // apiClient.api.getPreviewUrlForSiteId.post({
@@ -1089,6 +1080,12 @@ cli.command('dev', 'Preview your fumabase website')
 cli.command('sync', 'Sync current branch with GitHub').action(async () => {
     try {
         const config = getUserConfig()
+        
+        if (!config || !config.apiKey) {
+            console.error('You need to be logged in to sync a project.')
+            console.error('Please run: fumabase login')
+            process.exit(1)
+        }
 
         // Get current git branch
         const gitBranch = await getCurrentGitBranch()
@@ -1208,6 +1205,12 @@ cli.command('delete', 'Delete the current fumabase website')
     .action(async (options) => {
         try {
             const config = getUserConfig()
+            
+            if (!config || !config.apiKey) {
+                console.error('You need to be logged in to delete a project.')
+                console.error('Please run: fumabase login')
+                process.exit(1)
+            }
 
             // Read fumabase.jsonc to get siteId
             const docsJson = await readTopLevelDocsJson(process.cwd())
