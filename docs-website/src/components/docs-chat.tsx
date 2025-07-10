@@ -85,17 +85,23 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
 
     return (
         <ChatProvider initialValue={initialChatState}>
-            {drawerState !== 'minimized' && (
-                <div
-                    className='fixed inset-0 bg-black/20 z-40'
-                    onClick={() =>
-                        usePersistentDocsState.setState({
-                            drawerState: 'closed',
-                        })
-                    }
-                    aria-hidden='true'
-                />
-            )}
+            <AnimatePresence>
+                {drawerState !== 'minimized' && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className='fixed inset-0 bg-black/20 z-40'
+                        onClick={() => {
+                            usePersistentDocsState.setState({
+                                drawerState: 'closed',
+                            })
+                        }}
+                        aria-hidden='true'
+                    />
+                )}
+            </AnimatePresence>
             <Drawer
                 onOpenChange={(open) => {
                     console.log('Drawer open state changed:', open)
