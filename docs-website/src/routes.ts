@@ -3,6 +3,6 @@ import { flatRoutes } from '@react-router/fs-routes'
 
 export default [
     ...(await flatRoutes({
-        ignoredRouteFiles: ['*-client.tsx'],
+        ignoredRouteFiles: ['**/*-client.tsx'],
     })),
 ] satisfies RouteConfig
