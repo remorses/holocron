@@ -955,7 +955,7 @@ export async function* filesFromGithub({
     if (!installationId) throw new Error('Installation ID is required')
     const octokit = await getOctokit({ installationId })
     const timeId = Date.now()
-    
+
     const [
         repoResult,
         ok,
@@ -990,22 +990,22 @@ export async function* filesFromGithub({
             },
         }),
     ])
-    
+
     if (!branch && repoResult) {
         branch = repoResult.data.default_branch
     }
-    
+
     console.timeEnd(`${owner}/${repo} - repo checks ${timeId}`)
 
     if (!ok) {
         throw new Error('Github app no longer installed')
     }
-    
+
     // Ensure branch is defined at this point
     if (!branch) {
         throw new Error('Branch name is required')
     }
-    
+
     const existingPathsPlusSha = new Set<string>(
         existingPages
             .map((f) => f.githubPath + f.githubSha)
@@ -1077,20 +1077,17 @@ export async function* filesFromGithub({
 
     // Check for deleted pages
     const deletedPages = existingPages.filter((page) => {
-        const pathMatches = page.githubPath.startsWith(basePath + '/')
-        return pathMatches && !currentGithubPaths.has(page.githubPath)
+        return !currentGithubPaths.has(page.githubPath)
     })
 
     // Check for deleted media assets
     const deletedMediaAssets = existingMediaAssets.filter((asset) => {
-        const pathMatches = asset.githubPath.startsWith(basePath + '/')
-        return pathMatches && !currentGithubPaths.has(asset.githubPath)
+        return !currentGithubPaths.has(asset.githubPath)
     })
 
     // Check for deleted meta files
     const deletedMetaFiles = existingMetaFiles.filter((meta) => {
-        const pathMatches = meta.githubPath.startsWith(basePath + '/')
-        return pathMatches && !currentGithubPaths.has(meta.githubPath)
+        return !currentGithubPaths.has(meta.githubPath)
     })
 
     console.log(`Found ${deletedPages.length} deleted pages, ${deletedMediaAssets.length} deleted media assets, ${deletedMetaFiles.length} deleted meta files`)
