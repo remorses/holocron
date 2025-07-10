@@ -1,17 +1,13 @@
-"use client"
+'use client'
 
 import React from 'react'
 import { MediaAsset, PageMediaAsset } from 'db'
 import frontMatter from 'front-matter'
-import {
-    useLoaderData,
-    useRevalidator,
-    useRouteLoaderData,
-} from 'react-router'
+import { useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
 import { useShallow } from 'zustand/react/shallow'
 import { useDocsState } from '../lib/docs-state'
 import { cn } from 'docs-website/src/lib/cn'
-import type { Route as RootRoute } from '../root'
+import type { Route as RootRoute } from '../routes/_catchall'
 import type { Route } from './+types/_catchall.$'
 import { Markdown } from 'contesto/src/lib/markdown'
 import {
@@ -51,6 +47,7 @@ import { ScalarOpenApi } from '../components/scalar'
 import { useEffect } from 'react'
 import { ProcessorDataFrontmatter } from '../lib/mdx-heavy'
 import { LoaderData } from './_catchall.$'
+import { APIPageInner } from 'fumadocs-openapi/render/api-page-inner'
 
 type MediaAssetProp = PageMediaAsset & { asset?: MediaAsset }
 
@@ -62,7 +59,7 @@ export function ClientPage(props: Route.ComponentProps) {
         globalThis.lastServerLoaderData = props.loaderData
     }
     const rootData = useRouteLoaderData(
-        'root',
+        'routes/_catchall',
     ) as RootRoute.ComponentProps['loaderData']
     const docsJson = rootData?.docsJson as DocsJsonType
 
@@ -73,26 +70,27 @@ export function ClientPage(props: Route.ComponentProps) {
     }
     if (props.loaderData.type === 'openapi_fumadocs') {
         const { openapiUrl, processedOpenAPI, operations } = props.loaderData
-        return <div>api</div>
-        // return (
-        //     <APIPageInner
-        //         {...{
-        //             processed: processedOpenAPI,
-        //             hasHead: true,
-        //             operations,
-        //             // disablePlayground: true,
-        //         }}
-        //     />
-        // )
+
+        return (
+            <APIPageInner
+                {...{
+                    processed: processedOpenAPI,
+                    hasHead: false,
+                    operations,
+                    // disablePlayground: true,
+                }}
+            />
+        )
     }
     return <PageContent {...props} />
 }
 
 function PageContent(props: Route.ComponentProps): any {
     const loaderData = props.loaderData
-    const rootData = useRouteLoaderData(
-        'root',
-    ) as RootRoute.ComponentProps['loaderData']
+    const rootData =
+        (useRouteLoaderData(
+            'routes/_catchall',
+        ) as RootRoute.ComponentProps['loaderData']) || {}
     const { slug, slugs, githubPath, lastEditedAt } = loaderData || {}
     const owner = rootData.githubOwner
     const repo = rootData.githubRepo
@@ -514,9 +512,9 @@ function DocsMarkdown(): any {
 export function ClientErrorBoundary({ error }: { error: Error }) {
     const revalidator = useRevalidator()
     const filesInDraft = useDocsState((state) => state.filesInDraft)
-    
+
     const isRetryableErrorWithClientLoader =
-        ('markdown' in (error as any) && (error as any).markdown)
+        'markdown' in (error as any) && (error as any).markdown
 
     useEffect(() => {
         if (

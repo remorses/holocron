@@ -6,7 +6,7 @@ import {
     isRouteErrorResponse,
 } from 'react-router'
 
-import type { Route as RootRoute } from '../root'
+import type { Route as RootRoute } from './_catchall'
 import type { Route } from './+types/_catchall.$'
 
 import { DocsJsonType } from '../lib/docs-json'

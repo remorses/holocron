@@ -50,7 +50,7 @@ import {
     loadChatMessages,
 } from '../lib/docs-state'
 import { useRouteLoaderData, useLocation, useNavigate } from 'react-router'
-import type { Route } from '../root'
+import type { Route } from '../routes/_catchall'
 import { env } from '../lib/env'
 import { Trash2Icon, XIcon } from 'lucide-react'
 import { DocsUIMessage } from '../lib/types'
@@ -431,7 +431,7 @@ function Footer() {
 
     // Get files from root loader data
     const rootLoaderData = useRouteLoaderData(
-        'root',
+        'routes/_catchall',
     ) as Route.ComponentProps['loaderData']
     const files = rootLoaderData?.files || []
 

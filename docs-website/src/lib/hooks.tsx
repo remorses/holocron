@@ -8,7 +8,7 @@ import {
     useSyncExternalStore,
 } from 'react'
 import JSONC from 'tiny-jsonc'
-import { Route } from '../root'
+import { Route } from '../routes/_catchall'
 import { useLoaderData, useNavigate, useRouteLoaderData } from 'react-router'
 import { useDocsState } from './docs-state'
 import { DocsJsonType } from './docs-json'
@@ -43,7 +43,7 @@ export function usePrevious<T>(value: T): T | undefined {
 }
 export function useDocsJson(): DocsJsonType {
     const { docsJson } =
-        (useRouteLoaderData('root') as Route.ComponentProps['loaderData']) || {}
+        (useRouteLoaderData('routes/_catchall') as Route.ComponentProps['loaderData']) || {}
 
     // Check for state overrides for docsJson
     const docsJsonString = useDocsState((state) => {
