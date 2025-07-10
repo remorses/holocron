@@ -489,6 +489,7 @@ function DocsMarkdown(): any {
         // console.log(markdown)
         return (
             <MarkdownRuntime
+                className='page-content-markdown'
                 {...{
                     extension,
                     isStreaming,
@@ -501,6 +502,7 @@ function DocsMarkdown(): any {
     }
     return (
         <Markdown
+            className='page-content-markdown'
             isStreaming={false}
             markdown={markdown}
             renderNode={renderNode}

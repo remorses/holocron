@@ -100,7 +100,7 @@ mark {
 }
 
 /* TODO Optimize rendering for long content pages */
-.docs-page-article > * {
+.page-content-markdown > *:nth-child(n+7) {
     content-visibility: auto;
-    contain-intrinsic-size: auto 500px;
+    /* contain-intrinsic-size: auto 500px; */
 }
