@@ -714,12 +714,16 @@ async function reportErrorsToGithub({
             return
         }
 
+        // Check if all errors are recoverable render errors
+        const nonRenderErrors = syncErrors.filter(error => error.errorType !== 'render')
+        const hasOnlyRenderErrors = nonRenderErrors.length === 0
+
         // Convert sync errors to GitHub annotations (max 50 per request)
         const annotations = syncErrors.slice(0, 50).map((error) => ({
             path: error.page.githubPath,
             start_line: error.line,
             end_line: error.line,
-            annotation_level: 'failure' as const,
+            annotation_level: hasOnlyRenderErrors ? 'warning' as const : 'failure' as const,
             message: `${error.errorType}: ${error.errorMessage}`,
         }))
 
@@ -732,20 +736,37 @@ async function reportErrorsToGithub({
             .map(([type, count]) => `${count} ${type} error(s)`)
             .join(', ')
 
-        // Create a failing check run with error annotations
-        await octokit.rest.checks.create({
-            owner,
-            repo: repoName,
-            name: 'Fumabase Sync',
-            head_sha: commitSha,
-            status: 'completed',
-            conclusion: 'failure',
-            output: {
-                title: `Documentation sync failed with ${syncErrors.length} error(s)`,
-                summary: `Found ${summary} in markdown files.`,
-                annotations,
-            },
-        })
+        if (hasOnlyRenderErrors) {
+            // Create a neutral check run for render-only errors (recoverable)
+            await octokit.rest.checks.create({
+                owner,
+                repo: repoName,
+                name: 'Fumabase Sync',
+                head_sha: commitSha,
+                status: 'completed',
+                conclusion: 'neutral',
+                output: {
+                    title: `Documentation sync completed with ${syncErrors.length} recoverable error(s)`,
+                    summary: `Found ${summary} in markdown files. These are recoverable rendering errors that don't prevent the sync from completing.`,
+                    annotations,
+                },
+            })
+        } else {
+            // Create a failing check run with error annotations
+            await octokit.rest.checks.create({
+                owner,
+                repo: repoName,
+                name: 'Fumabase Sync',
+                head_sha: commitSha,
+                status: 'completed',
+                conclusion: 'failure',
+                output: {
+                    title: `Documentation sync failed with ${syncErrors.length} error(s)`,
+                    summary: `Found ${summary} in markdown files.`,
+                    annotations,
+                },
+            })
+        }
 
         logger.log(`Reported ${syncErrors.length} errors to GitHub Checks API for commit ${commitSha}`)
     } catch (error) {
