@@ -14,6 +14,7 @@ import {
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 
 const logger = console
+const DEFAULT_DOCS_URL = 'https://docs.fumabase.com'
 
 export const webhookWorkerRequestSchema = z.object({
     secret: z.string(),
@@ -413,22 +414,47 @@ async function reportErrorsToGithub({
     try {
         const octokit = await getOctokit({ installationId })
 
-        // Get all sync errors for this branch
-        const syncErrors = await prisma.markdownPageSyncError.findMany({
-            where: {
-                page: {
-                    branchId,
-                },
-            },
-            include: {
-                page: {
-                    select: {
-                        githubPath: true,
-                        slug: true,
+        // Get all sync errors for this branch and the site branch with domains
+        const [syncErrors, siteBranch] = await Promise.all([
+            prisma.markdownPageSyncError.findMany({
+                where: {
+                    page: {
+                        branchId,
                     },
                 },
-            },
-        })
+                include: {
+                    page: {
+                        select: {
+                            githubPath: true,
+                            slug: true,
+                        },
+                    },
+                },
+            }),
+            prisma.siteBranch.findFirst({
+                where: {
+                    branchId,
+                },
+                include: {
+                    domains: {
+                        where: {
+                            domainType: 'internalDomain',
+                        },
+                        select: {
+                            host: true,
+                        },
+                    },
+                },
+            }),
+        ])
+
+        // Get the first internal domain for the website URL
+        const websiteUrl = (() => {
+            if (siteBranch && siteBranch.domains && siteBranch.domains.length > 0 && siteBranch.domains[0].host) {
+                return `https://${siteBranch.domains[0].host}`
+            }
+            return DEFAULT_DOCS_URL
+        })()
 
         if (syncErrors.length === 0) {
             // Create a successful check run if no errors
@@ -441,7 +467,7 @@ async function reportErrorsToGithub({
                 conclusion: 'success',
                 output: {
                     title: 'Documentation sync successful',
-                    summary: 'All markdown files processed successfully.',
+                    summary: `All markdown files processed successfully.\n\n📖 [View documentation](${websiteUrl})`,
                 },
             })
             return
@@ -456,7 +482,7 @@ async function reportErrorsToGithub({
             path: error.page.githubPath,
             start_line: error.line,
             end_line: error.line,
-            annotation_level: hasOnlyRenderErrors ? 'warning' as const : 'failure' as const,
+            annotation_level: error.errorType === 'render' ? 'warning' as const : 'failure' as const,
             message: `${error.errorType}: ${error.errorMessage}`,
         }))
 
@@ -480,7 +506,7 @@ async function reportErrorsToGithub({
                 conclusion: 'neutral',
                 output: {
                     title: `Documentation sync completed with ${syncErrors.length} recoverable error(s)`,
-                    summary: `Found ${summary} in markdown files. These are recoverable rendering errors that don't prevent the sync from completing.`,
+                    summary: `Found ${summary} in markdown files. These are recoverable rendering errors that don't prevent the sync from completing.\n\n📖 [View documentation](${websiteUrl})`,
                     annotations,
                 },
             })
@@ -495,7 +521,7 @@ async function reportErrorsToGithub({
                 conclusion: 'failure',
                 output: {
                     title: `Documentation sync failed with ${syncErrors.length} error(s)`,
-                    summary: `Found ${summary} in markdown files.`,
+                    summary: `Found ${summary} in markdown files.\n\n📖 [View documentation](${websiteUrl})`,
                     annotations,
                 },
             })
