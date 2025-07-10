@@ -1,3 +1,5 @@
+'use client'
+
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
 import { useState, useEffect } from 'react'
 import { RenderNode } from 'safe-mdx'

@@ -1,3 +1,5 @@
+'use client'
+
 import {
     useEffect,
     useMemo,
@@ -65,7 +67,7 @@ export function useDocsJson(): DocsJsonType {
     }, [docsJsonString, docsJson])
 }
 
-const fn = (callback) => {
+const fn = (callback: any) => {
     return () => {}
 }
 export function useHydrated() {

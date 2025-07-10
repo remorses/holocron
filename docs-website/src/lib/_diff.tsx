@@ -1,3 +1,5 @@
+'use client'
+
 /* diffHighlight.ts ---------------------------------------------------- */
 import { visit } from 'unist-util-visit'
 import { diff_match_patch, DIFF_INSERT } from 'diff-match-patch'

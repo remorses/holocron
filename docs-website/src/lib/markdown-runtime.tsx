@@ -1,3 +1,5 @@
+'use client'
+
 import { Markdown } from 'contesto/src/lib/markdown'
 import { diffWordsWithSpace } from 'diff'
 import { markAddedNodes } from './diff'

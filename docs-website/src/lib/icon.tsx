@@ -1,4 +1,6 @@
-import { lazy, Suspense } from 'react'
+'use client'
+
+import React, { lazy, Suspense } from 'react'
 import { prefetchDNS, preconnect } from 'react-dom'
 import { useHydrated } from './hooks'
 

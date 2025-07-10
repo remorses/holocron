@@ -1,3 +1,5 @@
+'use client'
+
 import { useLayoutEffect, useRef, RefObject } from 'react'
 
 export const useScrollToFirstAddedIfAtTop = ({

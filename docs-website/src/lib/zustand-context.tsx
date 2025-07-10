@@ -1,4 +1,6 @@
-import { createContext, useContext, useMemo } from 'react'
+'use client'
+
+import React, { createContext, useContext, useMemo } from 'react'
 import type { StoreApi, UseBoundStore } from 'zustand'
 
 export const createZustandContext = <TInitial,>(
