@@ -1,4 +1,8 @@
 import remarkFrontmatter from 'remark-frontmatter'
+import { Parser } from 'acorn'
+import { LooseParser } from 'acorn-loose'
+import acornJsx from 'acorn-jsx'
+
 import { TOCItemType } from 'fumadocs-core/server'
 
 import { trySync } from './utils'
@@ -24,9 +28,7 @@ import { remarkAdmonition } from 'fumadocs-core/mdx-plugins/remark-admonition'
 import { remarkCodeTab } from 'fumadocs-core/mdx-plugins/remark-code-tab'
 import { remarkHeading } from 'fumadocs-core/mdx-plugins/remark-heading'
 import { remarkSteps } from 'fumadocs-core/mdx-plugins/remark-steps'
-import {
-    StructureOptions,
-} from 'fumadocs-core/mdx-plugins/remark-structure'
+import { StructureOptions } from 'fumadocs-core/mdx-plugins/remark-structure'
 import {} from 'js-yaml'
 import { Heading, Root } from 'mdast'
 import { remark } from 'remark'
@@ -181,6 +183,32 @@ const injectData = () => {
     }
 }
 
+function looseAcorn() {
+    const real = Parser.extend(acornJsx())
+
+    // dummy nodes you’re OK with:
+    const DUMMY_PROGRAM = { type: 'Program', body: [], sourceType: 'module' }
+    const DUMMY_EXPR = { type: 'Identifier', name: '__invalid__' }
+
+    const tolerantAcorn = {
+        parse(source, opts) {
+            try {
+                return real.parse(source, opts)
+            } catch (_) {
+                return DUMMY_PROGRAM // ← swallow ESM errors
+            }
+        },
+        parseExpressionAt(source, pos, opts) {
+            try {
+                return real.parseExpressionAt(source, pos, opts)
+            } catch (_) {
+                return DUMMY_EXPR // ← swallow inline/attr errors
+            }
+        },
+    }
+    return tolerantAcorn
+}
+
 export const getProcessor = function getProcessor({
     extension,
     onMissingLanguage,
@@ -207,6 +235,7 @@ export const getProcessor = function getProcessor({
             return attrValue.length > 10
         },
     }
+
     if (typeof extension === 'string' && extension.endsWith('md')) {
         return remark()
             .use(remarkFrontmatter, ['yaml'])

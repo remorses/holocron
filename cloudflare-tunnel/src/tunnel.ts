@@ -56,8 +56,11 @@ export class Tunnel {
         const [client, server] = Object.values(pair)
 
         if (role === 'up') {
-            if (this.up)
-                return addCors(new Response('Upstream exists', { status: 409 }))
+            if (this.up) {
+                // Close existing upstream connection and replace it
+                this.up.close(1012, 'replaced by new upstream')
+                this.up = null
+            }
             this.up = server
             server.accept()
             this.bindUp()

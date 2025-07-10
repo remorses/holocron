@@ -32,6 +32,7 @@ import {
     ScrollRestoration,
     ShouldRevalidateFunction,
     useLoaderData,
+    useRevalidator,
 } from 'react-router'
 import { TrieveSDK } from 'trieve-ts-sdk'
 import { useShallow } from 'zustand/react/shallow'
@@ -39,7 +40,12 @@ import { useShallow } from 'zustand/react/shallow'
 import type { Route } from './+types/root'
 import './app.css'
 import { DocsJsonType } from './lib/docs-json'
-import { DocsState, IframeRpcMessage, useDocsState, usePersistentDocsState } from './lib/docs-state'
+import {
+    DocsState,
+    IframeRpcMessage,
+    useDocsState,
+    usePersistentDocsState,
+} from './lib/docs-state'
 import { env } from './lib/env'
 import { useDocsJson } from './lib/hooks'
 import { LOCALE_LABELS } from './lib/locales'
@@ -387,6 +393,21 @@ if (typeof window !== 'undefined') {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
+    const loaderData = useLoaderData<typeof loader>()
+    if (loaderData && typeof window !== 'undefined') {
+        globalThis.rootServerLoaderData = loaderData
+    }
+    const { previewWebsocketId } = loaderData || {}
+    useEffect(() => {
+        console.log(`remounting docs layout`, { previewWebsocketId })
+        if (previewWebsocketId) {
+            window.dispatchEvent(
+                new CustomEvent('startPreviewWebsocket', {
+                    detail: { websocketId: previewWebsocketId },
+                }),
+            )
+        }
+    }, [])
     return (
         <html lang='en' suppressHydrationWarning>
             <head>
@@ -554,17 +575,6 @@ function DocsLayoutWrapper({
 }) {
     const loaderData = useLoaderData<typeof loader>() || {}
     const { i18n, previewWebsocketId, openapiUrl } = loaderData
-
-    useEffect(() => {
-        console.log(`remounting docs layout`)
-        if (previewWebsocketId) {
-            window.dispatchEvent(
-                new CustomEvent('startPreviewWebsocket', {
-                    detail: { websocketId: previewWebsocketId },
-                }),
-            )
-        }
-    }, [])
 
     // Create tree client-side using files and filesInDraft
     const filesInDraft = useDocsState((state) => state.filesInDraft)
@@ -864,6 +874,11 @@ function Logo({ docsJson = {} as DocsJsonType }) {
     )
 }
 
+// Extend globalThis to include our type-safe variable
+declare global {
+    var rootServerLoaderData: Route.ComponentProps['loaderData'] | null
+}
+
 // Export Route type for other components to use
 export type { Route }
 
@@ -874,7 +889,11 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     const messageClass = 'text-base mb-2 text-muted-foreground'
     const preClass =
         'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2'
+
+
     if (isRouteErrorResponse(error)) {
+        const { status, statusText } = error
+
         return (
             <div className={containerClass}>
                 <h1 className={titleClass}>

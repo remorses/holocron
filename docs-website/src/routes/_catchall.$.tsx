@@ -5,6 +5,7 @@ import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import {
     isRouteErrorResponse,
     useLoaderData,
+    useRevalidator,
     useRouteLoaderData,
 } from 'react-router'
 import { useShallow } from 'zustand/react/shallow'
@@ -58,6 +59,7 @@ import { MarkdownRuntime } from '../lib/markdown-runtime'
 import { renderNode } from '../lib/mdx-code-block'
 import { getOpenapiDocument } from '../lib/openapi.server'
 import { getFilesForSource } from '../lib/source.server'
+import { useEffect } from 'react'
 const openapiPath = `/api-reference`
 
 type MediaAssetProp = PageMediaAsset & { asset?: MediaAsset }
@@ -468,7 +470,9 @@ function PageContent(props: Route.ComponentProps): any {
             const toc = state.toc || loaderData?.toc
             if (override) {
                 const { attributes: data } =
-                    frontMatter<ProcessorDataFrontmatter>(override.content || '')
+                    frontMatter<ProcessorDataFrontmatter>(
+                        override.content || '',
+                    )
 
                 return {
                     toc,
@@ -747,13 +751,14 @@ function DocsMarkdown(): any {
     )
 }
 
+// export function HydrateFallback() {
+//     return null
+// }
+
 export const clientLoader = async ({
     params,
     serverLoader,
 }): Promise<LoaderData> => {
-    const docsState = useDocsState.getState()
-    const { filesInDraft } = docsState
-
     try {
         // Attempt to load server data
         const serverData = await serverLoader()
@@ -764,21 +769,26 @@ export const clientLoader = async ({
 
         return serverData
     } catch (err) {
+        const docsState = useDocsState.getState()
+        const { filesInDraft } = docsState
         // Check if this is a 404 error
         if (!isRouteErrorResponse(err) || err.status !== 404) {
-            console.log(`forwarding non 404 error`, err)
+            // console.log(`forwarding non 404 error`, err)
             throw err
         }
         const slugs = params['*']?.split('/').filter((v) => v.length > 0) || []
         const slug = '/' + slugs.join('/')
-        console.log(
-            `running clientLoader to try fetch 404 page for ${slug}, githubFolder is ${globalThis.lastServerLoaderData?.githubFolder}`,
-        )
+
         // Server loader failed with 404, check if we have draft content to serve
 
+        const prevLoaderData =
+            globalThis.lastServerLoaderData || globalThis.rootServerLoaderData
+        console.log(
+            `running clientLoader to try fetch 404 page for ${slug}, githubFolder is ${prevLoaderData?.githubFolder}`,
+            Object.keys(filesInDraft),
+        )
         function removeGithubFolder(p: string) {
-            let githubFolder =
-                globalThis.lastServerLoaderData?.githubFolder || ''
+            let githubFolder = prevLoaderData?.githubFolder || ''
             if (githubFolder && p.startsWith(githubFolder)) {
                 return p.slice(githubFolder.length + 1)
             }
@@ -807,7 +817,7 @@ export const clientLoader = async ({
                 const data = f.data as ProcessorData
 
                 // Use cached server data as base structure, without fields available in root
-                const baseData: {} = globalThis.lastServerLoaderData || {
+                const baseData: {} = prevLoaderData || {
                     locale: 'en',
                     i18n: null,
                 }
@@ -815,11 +825,11 @@ export const clientLoader = async ({
                 const frontmatter: ProcessorDataFrontmatter =
                     (data.frontmatter as any) || {}
                 return {
-                    ...baseData,
-                    mediaAssets: [] as MediaAssetProp[],
-                    type: 'page' as const,
                     openapiUrl: '',
                     githubFolder: '',
+                    mediaAssets: [] as MediaAssetProp[],
+                    ...baseData,
+                    type: 'page' as const,
                     locale: (baseData as any)?.locale || 'en',
                     i18n: (baseData as any)?.i18n || null,
                     tree: (baseData as any)?.tree || null,
@@ -836,5 +846,63 @@ export const clientLoader = async ({
             }
         }
         throw err
+    }
+}
+
+clientLoader.hydrate = true
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+    const containerClass =
+        'flex flex-col items-center justify-center min-h-screen px-6 py-12 text-center bg-background text-foreground'
+    const titleClass = 'text-3xl font-semibold mb-3 text-primary'
+    const messageClass = 'text-base mb-2 text-muted-foreground'
+    const preClass =
+        'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2'
+
+    const revalidator = useRevalidator()
+    const filesInDraft = useDocsState((state) => state.filesInDraft)
+    const is404 = isRouteErrorResponse(error) && error.status === 404
+
+    useEffect(() => {
+        if (
+            is404 &&
+            Object.keys(filesInDraft).length > 0 &&
+            revalidator.state === 'idle'
+        ) {
+            console.log(
+                'Revalidating files in draft due to 404 error',
+                filesInDraft,
+            )
+            revalidator.revalidate()
+        }
+    }, [filesInDraft, is404, revalidator.state])
+
+
+
+    if (isRouteErrorResponse(error)) {
+        const { status, statusText } = error
+
+        return (
+            <div className={containerClass}>
+                <h1 className={titleClass}>
+                    {error.status} {error.statusText}
+                </h1>
+                <p className={messageClass}>{error.data}</p>
+            </div>
+        )
+    } else if (error instanceof Error) {
+        return (
+            <div className={containerClass}>
+                <h1 className={titleClass}>Error</h1>
+                <p className={messageClass}>{error.message}</p>
+                <pre className={preClass}>{error.stack}</pre>
+            </div>
+        )
+    } else {
+        return (
+            <div className={containerClass}>
+                <h1 className={titleClass}>Unknown Error</h1>
+            </div>
+        )
     }
 }
