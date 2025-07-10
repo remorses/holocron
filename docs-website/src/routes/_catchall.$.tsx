@@ -10,6 +10,7 @@ import {
 } from 'react-router'
 import { useShallow } from 'zustand/react/shallow'
 import { useDocsState } from '../lib/docs-state'
+import { cn } from 'docs-website/src/lib/cn'
 
 import type { Route as RootRoute } from '../root'
 import type { Route } from './+types/_catchall.$'
@@ -670,6 +671,129 @@ function SocialIcon({ platform }: { platform: string }) {
     }
 }
 
+function MdxErrorDisplay({
+    error,
+    markdown,
+}: {
+    error: any
+    markdown: string
+}) {
+    // Extract error details
+    const errorLine = error.line || 1
+    const errorColumn = error.column || 1
+    const errorMessage = error.reason || error.message || 'Unknown error'
+
+    // Split markdown into lines
+    const lines = markdown.split('\n')
+
+    // Calculate line range to show (5 lines before and after the error)
+    const contextRange = 5
+    const startLine = Math.max(1, errorLine - contextRange)
+    const endLine = Math.min(lines.length, errorLine + contextRange)
+
+    return (
+        <div className='mt-[100px] bg-background p-8'>
+            <div className='max-w-4xl mx-auto'>
+                {/* Error Header */}
+                <div className='bg-destructive/10 border border-destructive rounded-lg p-6 mb-6'>
+                    <h1 className='text-2xl font-bold text-destructive mb-2'>
+                        MDX Compilation Error
+                    </h1>
+                    <p className='text-base text-destructive/90'>
+                        {errorMessage}
+                    </p>
+                    <p className='text-sm text-muted-foreground mt-2'>
+                        Line {errorLine}, Column {errorColumn}
+                    </p>
+                </div>
+
+                {/* Code Context */}
+                <div className='bg-muted/50 border border-border rounded-lg overflow-hidden'>
+                    <div className='bg-muted px-4 py-3 border-b border-border'>
+                        <h2 className='text-sm font-medium'>Error Context</h2>
+                    </div>
+                    <div className='p-0'>
+                        <pre className='text-sm overflow-x-auto'>
+                            <code>
+                                {lines
+                                    .slice(startLine - 1, endLine)
+                                    .map((line, index) => {
+                                        const lineNumber = startLine + index
+                                        const isErrorLine =
+                                            lineNumber === errorLine
+
+                                        return (
+                                            <div
+                                                key={lineNumber}
+                                                className={cn(
+                                                    'flex',
+                                                    isErrorLine &&
+                                                        'bg-destructive/10',
+                                                )}
+                                            >
+                                                {/* Line number */}
+                                                <span
+                                                    className={cn(
+                                                        'select-none px-4 py-1 text-muted-foreground border-r border-border',
+                                                        isErrorLine &&
+                                                            'text-destructive font-medium',
+                                                    )}
+                                                >
+                                                    {lineNumber
+                                                        .toString()
+                                                        .padStart(3, ' ')}
+                                                </span>
+
+                                                {/* Code line */}
+                                                <div className='flex-1 px-4 py-1'>
+                                                    <span
+                                                        className={cn(
+                                                            isErrorLine &&
+                                                                'text-destructive',
+                                                        )}
+                                                    >
+                                                        {line || ' '}
+                                                    </span>
+
+                                                    {/* Error indicator */}
+                                                    {isErrorLine &&
+                                                        errorColumn && (
+                                                            <div className='relative'>
+                                                                <span
+                                                                    className='absolute text-destructive font-bold'
+                                                                    style={{
+                                                                        left: `${(errorColumn - 1) * 0.6}ch`,
+                                                                    }}
+                                                                >
+                                                                    ^
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                            </code>
+                        </pre>
+                    </div>
+                </div>
+
+                {/* Additional error details if available */}
+                {error.stack && (
+                    <details className='mt-6'>
+                        <summary className='cursor-pointer text-sm text-muted-foreground hover:text-foreground'>
+                            Show full stack trace
+                        </summary>
+                        <pre className='mt-2 p-4 bg-muted/50 border border-border rounded-lg text-xs overflow-x-auto'>
+                            {error.stack}
+                        </pre>
+                    </details>
+                )}
+            </div>
+        </div>
+    )
+}
+
 const components = {
     ...mdxComponents,
     // TODO do the same for Image?
@@ -811,9 +935,12 @@ export const clientLoader = async ({
             const page = source.getPage(slugs)
             if (page) {
                 const extension = githubPath.endsWith('.mdx') ? 'mdx' : 'md'
-                const f = await getProcessor({ extension }).process(
-                    draft.content || '',
-                )
+                const f = await getProcessor({ extension })
+                    .process(draft.content || '')
+                    .catch((e) => {
+                        e.markdown = draft.content || ''
+                        throw e
+                    })
                 const data = f.data as ProcessorData
 
                 // Use cached server data as base structure, without fields available in root
@@ -851,7 +978,7 @@ export const clientLoader = async ({
 
 clientLoader.hydrate = true
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+export function ErrorBoundary({ error, loaderData, params }: Route.ErrorBoundaryProps) {
     const containerClass =
         'flex flex-col items-center justify-center min-h-screen px-6 py-12 text-center bg-background text-foreground'
     const titleClass = 'text-3xl font-semibold mb-3 text-primary'
@@ -861,11 +988,14 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
     const revalidator = useRevalidator()
     const filesInDraft = useDocsState((state) => state.filesInDraft)
-    const is404 = isRouteErrorResponse(error) && error.status === 404
+    const isRetryableErrorWithClientLoader =
+        (isRouteErrorResponse(error) && error.status === 404) ||
+        ('markdown' in error && error.markdown)
+    // const loaderData = useLoaderData() as LoaderData | undefined
 
     useEffect(() => {
         if (
-            is404 &&
+            isRetryableErrorWithClientLoader &&
             Object.keys(filesInDraft).length > 0 &&
             revalidator.state === 'idle'
         ) {
@@ -875,9 +1005,16 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
             )
             revalidator.revalidate()
         }
-    }, [filesInDraft, is404, revalidator.state])
+    }, [filesInDraft, isRetryableErrorWithClientLoader, revalidator.state])
 
+    // Check if this is an MDX/remark error with line information
+    const isMdxError = error instanceof Error && 'line' in error
 
+    const markdown = error?.['markdown']
+
+    if (isMdxError && markdown) {
+        return <MdxErrorDisplay error={error} markdown={markdown} />
+    }
 
     if (isRouteErrorResponse(error)) {
         const { status, statusText } = error

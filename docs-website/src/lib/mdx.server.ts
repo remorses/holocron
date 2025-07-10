@@ -45,14 +45,17 @@ export async function processMdxInServer({
                 markdown,
             },
         }
-    } catch (e) {
-        throw e
-
-        if ('line' in e) {
-            throw new Error(
-                `Invalid ${extension || 'mdx'} found in ${githubPath}:${e.line} \`${e.message}\``,
-            )
-        }
+    } catch (e: any) {
+        // // Preserve line and column information for better error display
+        // if (e.line || e.position?.start?.line) {
+        //     const error: any = new Error(e.reason || e.message || 'MDX compilation error')
+        //     error.line = e.line || e.position?.start?.line
+        //     error.column = e.column || e.position?.start?.column
+        //     error.reason = e.reason
+        //     error.stack = e.stack
+        //     throw error
+        // }
+        e.markdown = markdown
         throw e
     }
 }

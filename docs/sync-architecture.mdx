@@ -17,7 +17,7 @@ graph TB
     subgraph "GitHub"
         GH[GitHub Repository]
     end
-    
+
     subgraph "FumaBase Backend"
         API[API Routes<br/>spiceflow.ts]
         SYNC[Sync Engine<br/>sync.ts]
@@ -25,13 +25,13 @@ graph TB
         S3[S3/R2<br/>Media Storage]
         TRIEVE[Trieve<br/>Search Index]
     end
-    
+
     subgraph "Client Side"
         CLI[CLI<br/>cli.ts]
         WEB[Website<br/>React App]
         WS[WebSocket<br/>Live Updates]
     end
-    
+
     GH <--> API
     API --> SYNC
     SYNC <--> DB
@@ -58,12 +58,12 @@ sequenceDiagram
     participant DB as Database
     participant S3 as S3 Storage
     participant TR as Trieve Search
-    
+
     U->>API: POST /api/githubSync
     API->>GH: filesFromGithub()
     GH-->>API: AsyncGenerator<AssetForSync>
     API->>SYNC: syncSite(files)
-    
+
     loop For each file
         alt Page (MD/MDX)
             SYNC->>DB: upsert MarkdownPage
@@ -79,7 +79,7 @@ sequenceDiagram
             SYNC->>TR: deleteGroup()
         end
     end
-    
+
     SYNC-->>API: Sync complete
     API-->>U: Success response
 ```
@@ -95,17 +95,17 @@ sequenceDiagram
     participant SYNC as syncSite()
     participant DB as Database
     participant CF as Cloudflare
-    
+
     CLI->>CLI: findProjectFiles()
     CLI->>API: POST /api/upsertSiteFromFiles
     API->>DB: Create/Update Site
     API->>SYNC: syncSite(pagesFromFilesList())
-    
+
     loop For each domain in fumabase.jsonc
         SYNC->>CF: Create domain
         SYNC->>DB: Create Domain record
     end
-    
+
     SYNC->>DB: Sync all files
     SYNC-->>API: Site created
     API-->>CLI: Return docsJson + errors
@@ -123,7 +123,7 @@ sequenceDiagram
     participant WS as WebSocket Server
     participant BR as Browser
     participant WEB as Website
-    
+
     CLI->>FS: Watch files (chokidar)
     CLI->>WS: Start WebSocket tunnel
     BR->>WEB: Load preview URL
@@ -131,7 +131,7 @@ sequenceDiagram
     WS->>CLI: Browser ready
     CLI->>WS: Send initial files
     WS->>WEB: Update filesInDraft
-    
+
     loop File changes
         FS-->>CLI: File changed
         CLI->>WS: Send update
@@ -246,7 +246,7 @@ erDiagram
     MarkdownPage ||--|| MarkdownBlob : references
     MarkdownPage ||--o{ MarkdownPageSyncError : has
     MarkdownPage ||--o{ PageMediaAsset : uses
-    
+
     Site {
         string siteId PK
         string orgId FK
@@ -256,7 +256,7 @@ erDiagram
         number githubRepoId
         string githubFolder
     }
-    
+
     SiteBranch {
         string branchId PK
         string siteId FK
@@ -269,7 +269,7 @@ erDiagram
         string trieveReadApiKey
         datetime lastGithubSyncAt
     }
-    
+
     MarkdownPage {
         string pageId PK
         string branchId FK
@@ -280,7 +280,7 @@ erDiagram
         string extension
         json frontmatter
     }
-    
+
     MarkdownBlob {
         string githubSha PK
         string markdown
@@ -373,10 +373,10 @@ class SyncOrchestrator {
   async sync(config: SyncConfig): Promise<SyncResult> {
     const processor = new AssetProcessor(config)
     const assets = processor.processFiles(config.files)
-    
+
     const results = await this.processAssets(assets)
     await this.cleanupOrphaned(config, results)
-    
+
     return this.compileSyncResult(results)
   }
 
@@ -387,7 +387,7 @@ class SyncOrchestrator {
       config: this.syncConfig.bind(this),
       deleted: this.deleteAsset.bind(this)
     }
-    
+
     for await (const asset of assets) {
       await handlers[asset.type](asset)
     }
@@ -430,20 +430,20 @@ interface StorageService {
 ```typescript
 async function syncSiteTransactional(config: SyncConfig) {
   const syncId = generateSyncId()
-  
+
   try {
     await db.$transaction(async (tx) => {
       // Record sync start
       await tx.syncLog.create({
         data: { syncId, status: 'started', config }
       })
-      
+
       // Process all assets
       const results = await processAllAssets(tx, config)
-      
+
       // Verify sync integrity
       await verifySyncIntegrity(tx, results)
-      
+
       // Record sync success
       await tx.syncLog.update({
         where: { syncId },
@@ -486,14 +486,14 @@ interface SyncStatus {
 class BatchProcessor {
   private pagesBatch: MarkdownPage[] = []
   private mediaBatch: MediaAsset[] = []
-  
+
   async addPage(page: MarkdownPage) {
     this.pagesBatch.push(page)
     if (this.pagesBatch.length >= 100) {
       await this.flushPages()
     }
   }
-  
+
   async flushAll() {
     await Promise.all([
       this.flushPages(),
@@ -511,7 +511,7 @@ async function* processFilesInParallel(
 ): AsyncGenerator<AssetForSync> {
   const semaphore = new Sema(concurrency)
   const queue = new PQueue({ concurrency })
-  
+
   for await (const file of files) {
     queue.add(async () => {
       await semaphore.acquire()
@@ -523,7 +523,7 @@ async function* processFilesInParallel(
       }
     })
   }
-  
+
   yield* queue.all()
 }
 ```
@@ -547,7 +547,7 @@ app
     handler: syncFromGitHub
   })
   .route({
-    method: 'PUT', 
+    method: 'PUT',
     path: '/v1/sites/:siteId',
     handler: updateSite
   })
@@ -590,11 +590,11 @@ describe('GitHub Sync', () => {
       siteId: 'test-site',
       branchId: 'test-branch'
     })
-    
+
     expect(result.processed).toBe(mockFiles.length)
     expect(result.errors).toHaveLength(0)
   })
-  
+
   it('should handle sync failures gracefully', async () => {
     // Test with files that will cause errors
   })
@@ -607,7 +607,7 @@ class SyncVerifier {
   async verify(siteId: string, branchId: string): Promise<VerificationResult> {
     const github = await this.getGitHubState(siteId)
     const database = await this.getDatabaseState(branchId)
-    
+
     return {
       filesMatch: this.compareFiles(github, database),
       missingInDb: github.filter(f => !database.has(f)),
@@ -629,7 +629,3 @@ The current sync architecture works but could benefit from:
 6. **Comprehensive testing** to ensure sync reliability
 
 These improvements would make the codebase more maintainable and reduce the risk of sync-related bugs.
-
-<function_calls>
-<invoke name="TodoWrite">
-<parameter name="todos">[{"id": "1", "content": "Create sync flow documentation with diagrams", "status": "completed", "priority": "high"}, {"id": "2", "content": "Document all sync functions and their interactions", "status": "completed", "priority": "high"}, {"id": "3", "content": "Provide recommendations for type and function improvements", "status": "in_progress", "priority": "medium"}]
