@@ -1,4 +1,6 @@
 import remarkFrontmatter from 'remark-frontmatter'
+import { VFile } from 'vfile'
+
 import { Parser } from 'acorn'
 import { LooseParser } from 'acorn-loose'
 import acornJsx from 'acorn-jsx'
@@ -271,6 +273,13 @@ export const getProcessor = function getProcessor({
                 .use(remarkStructure, structureOptions)
         )
     }
+}
+
+export function getTocFromMdast(ast) {
+    const file = new VFile()
+    remark().use(remarkMdx).use(remarkHeading).runSync(ast, file)
+
+    return file.data?.toc as TOCItemType[]
 }
 
 export interface ProcessorDataFrontmatter {

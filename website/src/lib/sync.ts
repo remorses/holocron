@@ -344,11 +344,35 @@ export async function syncSite({
                 if (jsonData.domains && Array.isArray(jsonData.domains)) {
                     const existingDomains = await prisma.domain.findMany({
                         where: { branchId },
-                        select: { host: true },
+                        select: { host: true, domainType: true },
                     })
                     const existingHosts = new Set(
                         existingDomains.map((d) => d.host),
                     )
+                    const configuredHosts = new Set(jsonData.domains)
+
+                    // Remove internal domains that are no longer in the configuration
+                    const internalDomainsToRemove = existingDomains.filter(
+                        (domain) =>
+                            domain.domainType === 'internalDomain' &&
+                            !configuredHosts.has(domain.host),
+                    )
+
+                    if (internalDomainsToRemove.length > 0) {
+                        console.log(
+                            `Removing ${internalDomainsToRemove.length} internal domains that are no longer configured`,
+                        )
+                        for (const domain of internalDomainsToRemove) {
+                            await prisma.domain.delete({
+                                where: {
+                                    host: domain.host,
+                                },
+                            })
+                            console.log(
+                                `Removed internal domain: ${domain.host}`,
+                            )
+                        }
+                    }
 
                     const domainsToConnect = jsonData.domains.filter(
                         (domain: string) => !existingHosts.has(domain),
@@ -664,12 +688,17 @@ export async function syncSite({
                     }
                 }
 
+                const nonRecoverableErrors = errors.filter(
+                    (e) =>
+                        e.errorType === 'mdParse' || e.errorType === 'mdxParse',
+                )
                 const pageInput = {
                     slug: slug,
                     title: data.title || '',
                     frontmatter: data.frontmatter,
                     githubPath: asset.githubPath,
-                    githubSha: asset.githubSha,
+                    githubSha:
+                        nonRecoverableErrors.length > 0 ? '' : asset.githubSha,
                     extension: extension as MarkdownExtension,
                     description: data?.frontmatter?.description || '',
                 }
@@ -797,7 +826,9 @@ export async function syncSite({
                 })
 
                 if (pagesToDelete.length > 0) {
-                    console.log(`Found ${pagesToDelete.length} pages to delete for path ${asset.githubPath}`)
+                    console.log(
+                        `Found ${pagesToDelete.length} pages to delete for path ${asset.githubPath}`,
+                    )
 
                     // Delete from Trieve if available
                     if (trieve.datasetId) {
@@ -808,9 +839,14 @@ export async function syncSite({
                                     groupId: page.slug,
                                     trDataset: trieve.datasetId,
                                 })
-                                console.log(`Deleted Trieve chunks for page ${page.slug}`)
+                                console.log(
+                                    `Deleted Trieve chunks for page ${page.slug}`,
+                                )
                             } catch (error) {
-                                console.error(`Error deleting Trieve chunks for page ${page.slug}:`, error)
+                                console.error(
+                                    `Error deleting Trieve chunks for page ${page.slug}:`,
+                                    error,
+                                )
                             }
                         }
                     }
@@ -823,7 +859,9 @@ export async function syncSite({
                         },
                     })
 
-                    console.log(`Deleted ${deleteResult.count} pages from database for path ${asset.githubPath}`)
+                    console.log(
+                        `Deleted ${deleteResult.count} pages from database for path ${asset.githubPath}`,
+                    )
                 }
 
                 // Delete media assets with this githubPath
@@ -835,7 +873,9 @@ export async function syncSite({
                 })
 
                 if (mediaDeleteResult.count > 0) {
-                    console.log(`Deleted ${mediaDeleteResult.count} media assets for path ${asset.githubPath}`)
+                    console.log(
+                        `Deleted ${mediaDeleteResult.count} media assets for path ${asset.githubPath}`,
+                    )
                 }
 
                 // Delete meta files with this githubPath
@@ -847,7 +887,9 @@ export async function syncSite({
                 })
 
                 if (metaDeleteResult.count > 0) {
-                    console.log(`Deleted ${metaDeleteResult.count} meta files for path ${asset.githubPath}`)
+                    console.log(
+                        `Deleted ${metaDeleteResult.count} meta files for path ${asset.githubPath}`,
+                    )
                 }
             }
         } catch (e: any) {
@@ -963,11 +1005,12 @@ export async function* filesFromGithub({
         existingMediaAssets,
         existingMetaFiles,
     ] = await Promise.all([
-        !branch && octokit.rest.repos.get({
-            owner,
-            repo,
-            request: { signal },
-        }),
+        !branch &&
+            octokit.rest.repos.get({
+                owner,
+                repo,
+                request: { signal },
+            }),
         checkGitHubIsInstalled({ installationId }),
         prisma.markdownPage.findMany({
             where: {
@@ -1090,7 +1133,9 @@ export async function* filesFromGithub({
         return !currentGithubPaths.has(meta.githubPath)
     })
 
-    console.log(`Found ${deletedPages.length} deleted pages, ${deletedMediaAssets.length} deleted media assets, ${deletedMetaFiles.length} deleted meta files`)
+    console.log(
+        `Found ${deletedPages.length} deleted pages, ${deletedMediaAssets.length} deleted media assets, ${deletedMetaFiles.length} deleted meta files`,
+    )
     // console.log(files)
     const mediaAssetsDownloads = yieldTasksInParallel(
         6,

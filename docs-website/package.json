@@ -126,6 +126,7 @@
     "unist-util-visit": "^5.0.0",
     "use-stick-to-bottom": "^1.1.1",
     "vaul": "^1.1.2",
+    "vfile": "^6.0.3",
     "vite-plugin-environment": "^1.1.3",
     "website": "workspace:^",
     "x-is-array": "^0.1.0",

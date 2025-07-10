@@ -2,9 +2,7 @@ import { MediaAsset, PageMediaAsset, prisma } from 'db'
 import frontMatter from 'front-matter'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
-import {
-    isRouteErrorResponse,
-} from 'react-router'
+import { isRouteErrorResponse } from 'react-router'
 
 import type { Route as RootRoute } from './_catchall'
 import type { Route } from './+types/_catchall.$'
@@ -14,6 +12,7 @@ import JSONC from 'tiny-jsonc'
 import { LOCALES } from '../lib/locales'
 import {
     getProcessor,
+    getTocFromMdast,
     ProcessorData,
     ProcessorDataFrontmatter,
 } from '../lib/mdx-heavy'
@@ -168,7 +167,7 @@ export async function loader({
 }: Route.LoaderArgs): Promise<LoaderData> {
     const timerId = `loader-${Math.random().toString(36).substr(2, 9)}`
     console.time(`${timerId} - total loader time`)
-    
+
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
 
@@ -204,7 +203,7 @@ export async function loader({
         throw new Response('Branch not found', { status: 404 })
     }
     const languages = site.locales.map((x) => x.locale)
-    
+
     console.time(`${timerId} - get files for source`)
     const files = await getFilesForSource({
         branchId: siteBranch.branchId,
@@ -212,7 +211,7 @@ export async function loader({
         githubFolder: siteBranch.site?.githubFolder || '',
     })
     console.timeEnd(`${timerId} - get files for source`)
-    
+
     console.time(`${timerId} - create fumadocs source`)
     const source = getFumadocsSource({
         defaultLanguage: site.defaultLocale,
@@ -238,7 +237,10 @@ export async function loader({
                 const decodedContent = decodeURIComponent(docsJsonParam)
                 return JSONC.parse(decodedContent)
             } catch (error) {
-                console.error('Error parsing fumabase.jsonc query parameter:', error)
+                console.error(
+                    'Error parsing fumabase.jsonc query parameter:',
+                    error,
+                )
                 return siteBranch.docsJson as any
             }
         }
@@ -278,7 +280,7 @@ export async function loader({
     if (openapiUrl) {
         if (renderer === 'scalar') {
             console.timeEnd(`${timerId} - total loader time`)
-            
+
             return {
                 type: 'openapi_scalar' as const,
                 openapiUrl,
@@ -298,7 +300,7 @@ export async function loader({
         if (renderer === 'fumadocs') {
             const { type: _, ...restWithoutType } = rest
             console.timeEnd(`${timerId} - total loader time`)
-            
+
             return {
                 type: 'openapi_fumadocs' as const,
                 ...restWithoutType,
@@ -385,27 +387,43 @@ export async function loader({
     // fs.writeFileSync('scripts/rendered-mdx.mdx', page.markdown)
     // fs.writeFileSync('scripts/rendered-mdx.jsonc', JSON.stringify(ast, null, 2))
 
-    console.time(`${timerId} - process mdx content`)
-    const { data: markdownData } = await processMdxInServer({
-        extension: page.extension,
-        githubPath: page.githubPath,
-        markdown: page.content.markdown,
-    })
-    console.timeEnd(`${timerId} - process mdx content`)
-    
-    const frontmatter = markdownData.frontmatter || {}
+    // console.time(`${timerId} - process mdx content`)
+    // const { data: markdownData } = await processMdxInServer({
+    //     extension: page.extension,
+    //     githubPath: page.githubPath,
+    //     markdown: page.content.markdown,
+    // })
+    // console.timeEnd(`${timerId} - process mdx content`)
+
+    const frontmatter: ProcessorDataFrontmatter =
+        (page.frontmatter as any) || {}
 
     console.timeEnd(`${timerId} - total loader time`)
-    
+
+    let mdast = page.content?.mdast as any
+
+    if (!mdast) {
+        console.time(`${timerId} - process mdx content`)
+        const { data: markdownData } = await processMdxInServer({
+            extension: page.extension,
+            githubPath: page.githubPath,
+            markdown: page.content.markdown,
+        })
+        console.timeEnd(`${timerId} - process mdx content`)
+        mdast = markdownData.ast
+    }
+    console.time(`${timerId} - get toc from mdast`)
+    const toc = getTocFromMdast(mdast)
+    console.timeEnd(`${timerId} - get toc from mdast`)
     return {
         type: 'page' as const,
         openapiUrl: '',
-        toc: markdownData.toc,
-        title: markdownData.title || '',
-        githubFolder: site.githubFolder || '',
+        toc: toc,
+        title: frontmatter?.title || '',
         description: frontmatter.description || '',
-        markdown: markdownData.markdown,
-        ast: markdownData.ast,
+        markdown: page.content?.markdown,
+        ast: mdast,
+        githubFolder: site.githubFolder || '',
         slugs,
         slug,
         locale,
@@ -420,12 +438,6 @@ export async function loader({
 export default function Page(props: Route.ComponentProps): any {
     return <ClientPage {...props} />
 }
-
-
-
-
-
-
 
 // export function HydrateFallback() {
 //     return null
@@ -530,7 +542,11 @@ export const clientLoader = async ({
 
 clientLoader.hydrate = true
 
-export function ErrorBoundary({ error, loaderData, params }: Route.ErrorBoundaryProps) {
+export function ErrorBoundary({
+    error,
+    loaderData,
+    params,
+}: Route.ErrorBoundaryProps) {
     const containerClass =
         'flex flex-col items-center justify-center min-h-screen px-6 py-12 text-center bg-background text-foreground'
     const titleClass = 'text-3xl font-semibold mb-3 text-primary'

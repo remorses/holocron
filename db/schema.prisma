@@ -219,6 +219,8 @@ model MarkdownBlob {
   githubSha            String   @id           // git blob SHA – immutable
   markdown       String   @db.Text
   structuredData Json     @default("{}")
+  mdast Json     @default("{}")
+
 
   createdAt      DateTime @default(now())
 

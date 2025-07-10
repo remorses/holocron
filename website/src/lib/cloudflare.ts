@@ -128,6 +128,10 @@ export class CloudflareClient {
             console.log(`skipping creating domain ${domain} in cloudflare`)
             return {} as any
         }
+        if (domain.endsWith(env.APPS_DOMAIN!)) {
+            console.log(`skipping creating domain ${domain} in cloudflare`)
+            return {} as any
+        }
         return await this.fetch('/custom_hostnames', {
             method: 'POST',
             body: JSON.stringify({

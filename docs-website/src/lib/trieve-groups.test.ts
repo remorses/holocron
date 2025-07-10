@@ -49,6 +49,7 @@ describe('Trieve Groups API', () => {
                 "/essentials/frontmatter",
                 "/essentials/images",
                 "/essentials/markdown",
+                "/sync-architecture",
                 "/writing/accessibility",
                 "/writing/code-examples",
                 "/writing/content-structure",
