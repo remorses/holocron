@@ -193,7 +193,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 signal: request.signal,
                 branchId,
                 basePath: githubFolder,
-
+                branch: githubBranch,
                 forceFullSync: true,
                 // forceFullSync: true,
             })

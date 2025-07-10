@@ -935,6 +935,17 @@ export async function* filesFromGithub({
     signal,
     onlyGithubPaths = new Set<string>(),
     forceFullSync = false,
+    branch,
+}: {
+    repo: string
+    owner: string
+    installationId: number
+    branchId: string
+    basePath?: string
+    signal?: AbortSignal
+    onlyGithubPaths?: Set<string>
+    forceFullSync?: boolean
+    branch?: string
 }) {
     if (basePath) {
         if (!basePath.startsWith('/')) {
@@ -944,6 +955,7 @@ export async function* filesFromGithub({
     if (!installationId) throw new Error('Installation ID is required')
     const octokit = await getOctokit({ installationId })
     const timeId = Date.now()
+    
     const [
         repoResult,
         ok,
@@ -951,7 +963,7 @@ export async function* filesFromGithub({
         existingMediaAssets,
         existingMetaFiles,
     ] = await Promise.all([
-        octokit.rest.repos.get({
+        !branch && octokit.rest.repos.get({
             owner,
             repo,
             request: { signal },
@@ -978,12 +990,22 @@ export async function* filesFromGithub({
             },
         }),
     ])
+    
+    if (!branch && repoResult) {
+        branch = repoResult.data.default_branch
+    }
+    
     console.timeEnd(`${owner}/${repo} - repo checks ${timeId}`)
 
     if (!ok) {
         throw new Error('Github app no longer installed')
     }
-    let branch = repoResult.data.default_branch
+    
+    // Ensure branch is defined at this point
+    if (!branch) {
+        throw new Error('Branch name is required')
+    }
+    
     const existingPathsPlusSha = new Set<string>(
         existingPages
             .map((f) => f.githubPath + f.githubSha)
