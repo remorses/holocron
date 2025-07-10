@@ -6,7 +6,7 @@
         "deployment": "pnpm -r --parallel --no-bail run deployment",
         "watch": "pnpm -r watch",
         "typecheck": "pnpm -r --parallel --stream typecheck",
-        "build": "pnpm -r build",
+        "build": "pnpm --filter fumadocs-root build:pnpm && pnpm --filter './*' build",
         "release": "pnpm build && changeset"
     },
     "devDependencies": {
