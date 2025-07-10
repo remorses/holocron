@@ -166,9 +166,13 @@ export async function loader({
     params,
     request,
 }: Route.LoaderArgs): Promise<LoaderData> {
+    const timerId = `loader-${Math.random().toString(36).substr(2, 9)}`
+    console.time(`${timerId} - total loader time`)
+    
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
 
+    console.time(`${timerId} - find site branch from database`)
     const siteBranch = await prisma.siteBranch.findFirst({
         where: {
             domains: {
@@ -186,6 +190,7 @@ export async function loader({
             },
         },
     })
+    console.timeEnd(`${timerId} - find site branch from database`)
 
     const site = siteBranch?.site
 
@@ -199,16 +204,22 @@ export async function loader({
         throw new Response('Branch not found', { status: 404 })
     }
     const languages = site.locales.map((x) => x.locale)
+    
+    console.time(`${timerId} - get files for source`)
     const files = await getFilesForSource({
         branchId: siteBranch.branchId,
 
         githubFolder: siteBranch.site?.githubFolder || '',
     })
+    console.timeEnd(`${timerId} - get files for source`)
+    
+    console.time(`${timerId} - create fumadocs source`)
     const source = getFumadocsSource({
         defaultLanguage: site.defaultLocale,
         languages: languages,
         files,
     })
+    console.timeEnd(`${timerId} - create fumadocs source`)
 
     let slugs = params['*']?.split('/').filter((v) => v.length > 0) || []
 
@@ -239,6 +250,7 @@ export async function loader({
 
     const slug = fumadocsPage?.url || '/' + slugs.join('/')
 
+    console.time(`${timerId} - find markdown page in database`)
     let [page] = await Promise.all([
         prisma.markdownPage.findFirst({
             where: {
@@ -255,13 +267,18 @@ export async function loader({
             },
         }),
     ])
+    console.timeEnd(`${timerId} - find markdown page in database`)
 
+    console.time(`${timerId} - get openapi document`)
     const { openapiUrl, renderer, ...rest } = await getOpenapiDocument({
         docsJson,
         url,
     })
+    console.timeEnd(`${timerId} - get openapi document`)
     if (openapiUrl) {
         if (renderer === 'scalar') {
+            console.timeEnd(`${timerId} - total loader time`)
+            
             return {
                 type: 'openapi_scalar' as const,
                 openapiUrl,
@@ -280,6 +297,8 @@ export async function loader({
         }
         if (renderer === 'fumadocs') {
             const { type: _, ...restWithoutType } = rest
+            console.timeEnd(`${timerId} - total loader time`)
+            
             return {
                 type: 'openapi_fumadocs' as const,
                 ...restWithoutType,
@@ -366,13 +385,18 @@ export async function loader({
     // fs.writeFileSync('scripts/rendered-mdx.mdx', page.markdown)
     // fs.writeFileSync('scripts/rendered-mdx.jsonc', JSON.stringify(ast, null, 2))
 
+    console.time(`${timerId} - process mdx content`)
     const { data: markdownData } = await processMdxInServer({
         extension: page.extension,
         githubPath: page.githubPath,
         markdown: page.content.markdown,
     })
+    console.timeEnd(`${timerId} - process mdx content`)
+    
     const frontmatter = markdownData.frontmatter || {}
 
+    console.timeEnd(`${timerId} - total loader time`)
+    
     return {
         type: 'page' as const,
         openapiUrl: '',

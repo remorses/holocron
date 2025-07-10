@@ -49,6 +49,9 @@ function parseCookies(cookieHeader: string | null): Record<string, string> {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
+    const timerId = `root-loader-${Math.random().toString(36).substr(2, 9)}`
+    console.time(`${timerId} - total root loader time`)
+    
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
 
@@ -71,6 +74,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         })
     }
 
+    console.time(`${timerId} - find site branch from database`)
     const siteBranch = await prisma.siteBranch.findFirst({
         where: {
             domains: {
@@ -88,6 +92,7 @@ export async function loader({ request }: Route.LoaderArgs) {
             },
         },
     })
+    console.timeEnd(`${timerId} - find site branch from database`)
 
     const site = siteBranch?.site
 
@@ -99,17 +104,22 @@ export async function loader({ request }: Route.LoaderArgs) {
         })
     }
 
+    console.time(`${timerId} - get files for source`)
     const files = await getFilesForSource({
         branchId: siteBranch.branchId,
         githubFolder: site.githubFolder || '',
     })
+    console.timeEnd(`${timerId} - get files for source`)
 
     const languages = site.locales.map((x) => x.locale)
+    
+    console.time(`${timerId} - create fumadocs source`)
     const source = getFumadocsSource({
         defaultLanguage: site.defaultLocale,
         files,
         languages: languages,
     })
+    console.timeEnd(`${timerId} - create fumadocs source`)
 
     const i18n = source._i18n
 
@@ -132,6 +142,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         return siteBranch.docsJson as any
     })()
 
+    console.time(`${timerId} - process banner markdown`)
     let bannerAst = await (async () => {
         if (docsJson?.banner?.content) {
             try {
@@ -147,6 +158,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         }
         return null
     })()
+    console.timeEnd(`${timerId} - process banner markdown`)
 
     // Check for preview websocket ID in cookies
     const cookies = parseCookies(request.headers.get('Cookie'))
@@ -154,6 +166,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     const trieveReadApiKey = siteBranch.trieveReadApiKey
     const trieveDatasetId = siteBranch.trieveDatasetId
 
+    console.time(`${timerId} - get openapi document`)
     const {
         openapiUrl,
         renderer: openapiRenderer,
@@ -162,7 +175,10 @@ export async function loader({ request }: Route.LoaderArgs) {
         docsJson,
         url,
     })
+    console.timeEnd(`${timerId} - get openapi document`)
 
+    console.timeEnd(`${timerId} - total root loader time`)
+    
     return {
         openapiUrl,
         openapiRenderer,

@@ -11,13 +11,6 @@ export async function getFilesForSource({ branchId, githubFolder }) {
             where: {
                 branchId,
             },
-            include: {
-                content: {
-                    select: {
-                        structuredData: true,
-                    },
-                },
-            },
         }),
         prisma.metaFile.findMany({
             where: {
@@ -29,14 +22,13 @@ export async function getFilesForSource({ branchId, githubFolder }) {
 
     const files = allPages
         .map((x) => {
-            const structuredData = x.content.structuredData
             let githubPath = x.githubPath
             if (githubPath.startsWith(githubFolder)) {
                 githubPath = githubPath.slice(githubFolder.length)
             }
             githubPath = removeFrontSlash(githubPath)
             const res: VirtualFile = {
-                data: { ...(x.frontmatter as any), structuredData },
+                data: { ...(x.frontmatter as any) },
                 path: githubPath,
                 type: 'page',
 

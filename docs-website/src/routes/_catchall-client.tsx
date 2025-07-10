@@ -71,16 +71,17 @@ export function ClientPage(props: Route.ComponentProps) {
     if (props.loaderData.type === 'openapi_fumadocs') {
         const { openapiUrl, processedOpenAPI, operations } = props.loaderData
 
-        return (
-            <APIPageInner
-                {...{
-                    processed: processedOpenAPI,
-                    hasHead: false,
-                    operations,
-                    // disablePlayground: true,
-                }}
-            />
-        )
+        return null
+        // return (
+        //     <APIPageInner
+        //         {...{
+        //             processed: processedOpenAPI,
+        //             hasHead: false,
+        //             operations,
+        //             // disablePlayground: true,
+        //         }}
+        //     />
+        // )
     }
     return <PageContent {...props} />
 }

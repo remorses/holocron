@@ -98,3 +98,9 @@ mark {
 .animate-fade-in {
     animation: fade-in 0.18s cubic-bezier(0.33, 1, 0.68, 1) both;
 }
+
+/* TODO Optimize rendering for long content pages */
+.docs-page-article > * {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 500px;
+}
