@@ -21,6 +21,9 @@ import {
 import {
     Outlet,
     useLoaderData,
+    useNavigation,
+    useRevalidator,
+    useSearchParams,
 } from 'react-router'
 import { useShallow } from 'zustand/react/shallow'
 import type { Route } from './+types/root'
@@ -33,6 +36,8 @@ import {
     usePersistentDocsState,
 } from './lib/docs-state'
 import { useDocsJson } from './lib/hooks'
+import { useDebouncedEffect } from './lib/hooks-debounced'
+import JSONC from 'tiny-jsonc'
 import { LOCALE_LABELS } from './lib/locales'
 import { Markdown } from 'contesto/src/lib/markdown'
 import { mdxComponents } from './components/mdx-components'
@@ -223,10 +228,46 @@ if (typeof window !== 'undefined') {
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
     const loaderData = useLoaderData<Route.ComponentProps['loaderData']>()
+    const navigation = useNavigation()
+    const revalidator = useRevalidator()
+    const [searchParams, setSearchParams] = useSearchParams()
+    const filesInDraft = useDocsState((state) => state.filesInDraft)
+    
     if (loaderData && typeof window !== 'undefined') {
         globalThis.rootServerLoaderData = loaderData
     }
     const { previewWebsocketId } = loaderData || {}
+    
+    // Watch for changes to fumabase.jsonc file in draft and revalidate
+    useDebouncedEffect(
+        () => {
+            // Check if fumabase.jsonc file exists in draft files
+            const fumabaseJsoncPath = Object.keys(filesInDraft).find((path) => 
+                path.endsWith('fumabase.jsonc')
+            )
+            
+            if (fumabaseJsoncPath && filesInDraft[fumabaseJsoncPath]?.content) {
+                try {
+                    const docsJsonContent = filesInDraft[fumabaseJsoncPath].content
+                    const encodedContent = encodeURIComponent(docsJsonContent)
+                    const currentParam = searchParams.get('fumabase.jsonc')
+                    
+                    // Only update if the content is different
+                    if (currentParam !== encodedContent) {
+                        const newSearchParams = new URLSearchParams(searchParams)
+                        newSearchParams.set('fumabase.jsonc', encodedContent)
+                        setSearchParams(newSearchParams, { replace: true })
+                    }
+                } catch (error) {
+                    console.error('Error encoding fumabase.jsonc content:', error)
+                }
+            }
+        },
+        [filesInDraft],
+        500, // 500ms debounce
+        revalidator.state === 'idle' && navigation.state === 'idle'
+    )
+    
     useEffect(() => {
         console.log(`remounting docs layout`, { previewWebsocketId })
         if (previewWebsocketId) {

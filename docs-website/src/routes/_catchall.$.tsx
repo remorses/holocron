@@ -10,6 +10,7 @@ import type { Route as RootRoute } from '../root'
 import type { Route } from './+types/_catchall.$'
 
 import { DocsJsonType } from '../lib/docs-json'
+import JSONC from 'tiny-jsonc'
 import { LOCALES } from '../lib/locales'
 import {
     getProcessor,
@@ -218,7 +219,20 @@ export async function loader({
     }
 
     // Check for redirects from docsJson configuration
-    const docsJson: DocsJsonType = siteBranch.docsJson as any
+    // Check if there's a fumabase.jsonc query parameter with updated content
+    const docsJsonParam = url.searchParams.get('fumabase.jsonc')
+    const docsJson: DocsJsonType = (() => {
+        if (docsJsonParam) {
+            try {
+                const decodedContent = decodeURIComponent(docsJsonParam)
+                return JSONC.parse(decodedContent)
+            } catch (error) {
+                console.error('Error parsing fumabase.jsonc query parameter:', error)
+                return siteBranch.docsJson as any
+            }
+        }
+        return siteBranch.docsJson as any
+    })()
 
     // const slug = '/' + slugs.join('/')
     const fumadocsPage = source.getPage(slugs, locale)

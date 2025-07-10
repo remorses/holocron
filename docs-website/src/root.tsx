@@ -13,6 +13,7 @@ import {
 // @ts-ignore
 import type { Route } from './+types/root'
 import { DocsJsonType } from './lib/docs-json'
+import JSONC from 'tiny-jsonc'
 import { env } from './lib/env'
 import { processMdxInServer } from './lib/mdx.server'
 import { getFilesForSource } from './lib/source.server'
@@ -113,7 +114,20 @@ export async function loader({ request }: Route.LoaderArgs) {
     const i18n = source._i18n
 
     // Process banner markdown if it exists
-    const docsJson: DocsJsonType = siteBranch.docsJson as any
+    // Check if there's a fumabase.jsonc query parameter with updated content
+    const docsJsonParam = url.searchParams.get('fumabase.jsonc')
+    const docsJson: DocsJsonType = (() => {
+        if (docsJsonParam) {
+            try {
+                const decodedContent = decodeURIComponent(docsJsonParam)
+                return JSONC.parse(decodedContent)
+            } catch (error) {
+                console.error('Error parsing fumabase.jsonc query parameter:', error)
+                return siteBranch.docsJson as any
+            }
+        }
+        return siteBranch.docsJson as any
+    })()
 
     let bannerAst = await (async () => {
         if (docsJson?.banner?.content) {
