@@ -990,7 +990,7 @@ export function ErrorBoundary({ error, loaderData, params }: Route.ErrorBoundary
     const filesInDraft = useDocsState((state) => state.filesInDraft)
     const isRetryableErrorWithClientLoader =
         (isRouteErrorResponse(error) && error.status === 404) ||
-        ('markdown' in error && error.markdown)
+        ('markdown' in (error as any) && error.markdown)
     // const loaderData = useLoaderData() as LoaderData | undefined
 
     useEffect(() => {
