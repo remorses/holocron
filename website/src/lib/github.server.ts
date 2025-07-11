@@ -371,6 +371,8 @@ export async function doesRepoExist({
     }
 }
 
+
+
 export async function createNewRepo({
     // branch,
     files,
@@ -384,7 +386,7 @@ export async function createNewRepo({
 }: {
     owner
     isGithubOrg
-    files: { filePath: string; content: string }[]
+    files: { filePath: string; content: string; encoding?: string }[]
     repo: string
     octokit: Octokit['rest']
     privateRepo: boolean
@@ -471,12 +473,12 @@ export async function createNewRepo({
     console.log('getting blobs')
     const withBlobs = await Promise.all(
         files.map(async (x) => {
-            const encoding = 'utf-8'
+
             const blobData = await octokit.git.createBlob({
                 owner: owner,
                 repo,
                 content: x.content,
-                encoding,
+                encoding: x.encoding || 'udf-8',
             })
             return {
                 ...x,

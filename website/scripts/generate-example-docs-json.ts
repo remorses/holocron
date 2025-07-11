@@ -4,9 +4,9 @@ import { glob } from 'tinyglobby';
 import { fileURLToPath } from 'url';
 
 interface DocFile {
-  contents: string;
-  relativePath: string;
-  downloadUrl?: string;
+  content: string;
+  filePath: string;
+  encoding?: 'utf-8' | 'base64';
 }
 
 async function generateExampleDocsJson() {
@@ -31,29 +31,26 @@ async function generateExampleDocsJson() {
       const isMediaFile = /\.(jpg|jpeg|png|gif|bmp|webp|svg|ico|tif|tiff|avif|mp4|mov|avi|wmv|flv|webm|mkv|m4v|3gp|ogg|ogv)$/i.test(relativePath);
 
       if (isMediaFile) {
-        // For media files, use empty contents and add downloadUrl
-        const baseUrl = 'https://raw.githubusercontent.com';
-        const repo = 'remorses/fumabase';
-        const branch = 'main';
-        const docsPath = 'website/scripts/example-docs-site';
-        const downloadUrl = `${baseUrl}/${repo}/${branch}/${docsPath}/${relativePath}`;
+        // For media files, read as base64
+        const buffer = fs.readFileSync(filePath);
+        const base64Content = buffer.toString('base64');
         return {
-          contents: '',
-          relativePath,
-          downloadUrl
+          content:base64Content,
+          filePath: relativePath,
+          encoding: 'base64' as const
         };
       } else {
         // For text files, read contents normally
         const contents = fs.readFileSync(filePath, 'utf-8');
         return {
-          contents,
-          relativePath
+          content:contents,
+          filePath: relativePath
         };
       }
     });
 
     // Sort by relative path for consistent output
-    docFiles.sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+    docFiles.sort((a, b) => a.filePath.localeCompare(b.filePath));
 
     const jsonOutput = JSON.stringify(docFiles, null, 2);
 
@@ -65,7 +62,10 @@ async function generateExampleDocsJson() {
     // Print summary of files processed
     console.log('\nProcessed files:');
     docFiles.forEach(file => {
-      console.log(`  - ${file.relativePath} (${file.contents.length} chars)`);
+      const sizeInfo = file.encoding === 'base64'
+        ? `base64: ${file.content.length} chars`
+        : `${file.content.length} chars`;
+      console.log(`  - ${file.filePath} (${sizeInfo})`);
     });
 
   } catch (error) {

@@ -23,7 +23,7 @@ import {
     getOctokit,
     pushToPrOrBranch,
 } from './github.server'
-import { filesFromGithub, pagesFromFilesList, syncSite } from './sync'
+import { filesFromGithub, assetsFromFilesList, syncSite } from './sync'
 
 import { createHash } from 'crypto'
 import { fileUpdateSchema } from './edit-tool'
@@ -1072,7 +1072,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             }
 
             // Convert files to pages format
-            const assets = pagesFromFilesList({
+            const assets = assetsFromFilesList({
                 files,
                 docsJson,
                 githubFolder: githubFolder || '',

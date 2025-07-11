@@ -27,10 +27,11 @@ import {
 } from 'docs-website/src/lib/docs-json-examples'
 import { env, supportEmail } from '../lib/env'
 import { createNewRepo, doesRepoExist, getOctokit } from '../lib/github.server'
-import { pagesFromFilesList, syncSite } from '../lib/sync'
+import { AssetForSync, assetsFromFilesList, syncSite } from '../lib/sync'
 import exampleDocs from 'website/scripts/example-docs.json'
 import type { Route } from './+types/org.$orgId.onboarding'
 import { cloudflareClient } from '../lib/cloudflare'
+import { isTruthy } from '../lib/utils'
 
 export async function loader({ request, params }: Route.LoaderArgs) {
     const sessionData = await getSession({ request })
@@ -105,8 +106,18 @@ export async function action({ request, params }: Route.ActionArgs) {
                       internalHost,
                   ]
                 : [internalHost]
-        const files = pagesFromFilesList({
-            files: exampleDocs,
+        const files = assetsFromFilesList({
+            files: exampleDocs
+                .map((x) => {
+                    const { content, filePath, encoding } = x
+                    const asset = {
+                        relativePath: filePath,
+                        contents: encoding === 'base64' ? '' : content,
+                        downloadUrl: encoding === 'base64' ? 'data:base64,' + content : undefined,
+                    }
+                    return asset
+                })
+                .filter(isTruthy),
             githubFolder: '',
             docsJson: {
                 ...defaultStartingFumabaseJson,
@@ -122,7 +133,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 
         // First create the GitHub repository to get the repository ID
         const result = await createNewRepo({
-            files: await Array.fromAsync(files),
+            files: exampleDocs,
             isGithubOrg: githubInstallation.accountType === 'ORGANIZATION',
             octokit: octokit.rest,
             owner,

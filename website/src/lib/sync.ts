@@ -75,6 +75,9 @@ export type AssetForSync =
     | {
           type: 'mediaAsset'
           githubSha: string
+          /**
+           * The file is uploaded first to S3 if the downloadUrl is not in the UPLOADS_BASE_URL url already, the docs website then expects the file to be in {UPLOADS_BASE_URL}/site/${siteId}/mediaAssets${slug}
+           */
           downloadUrl: string
           githubPath: string
           width?: number
@@ -136,7 +139,7 @@ export function isMediaFile(path: string): boolean {
     return mediaExtensions.some((ext) => path.toLowerCase().endsWith(ext))
 }
 
-export async function* pagesFromFilesList({
+export async function* assetsFromFilesList({
     files,
     docsJson,
     docsJsonComments,
@@ -151,7 +154,7 @@ export async function* pagesFromFilesList({
     githubFolder: string
     docsJson?: DocsJsonType
     docsJsonComments?: JsonCComments
-}): AsyncGenerator<AssetForSync & { filePath: string; content: string }> {
+}): AsyncGenerator<AssetForSync> {
     // First handle meta.json files
     const metaFiles = files.filter((file) =>
         file.relativePath.endsWith('meta.json'),
@@ -162,7 +165,7 @@ export async function* pagesFromFilesList({
             content: file.contents,
             githubPath: file.relativePath,
             githubSha: gitBlobSha(file.contents),
-            filePath: file.relativePath,
+            // filePath: file.relativePath,
         }
     }
 
@@ -187,7 +190,7 @@ export async function* pagesFromFilesList({
             content,
             githubPath: path.posix.join(githubFolder, 'fumabase.jsonc'),
             githubSha: gitBlobSha(content),
-            filePath: path.posix.join(githubFolder, 'fumabase.jsonc'),
+            // filePath: path.posix.join(githubFolder, 'fumabase.jsonc'),
         }
     }
 
@@ -203,7 +206,7 @@ export async function* pagesFromFilesList({
             content: stylesCssFile.contents,
             githubPath: stylesCssFile.relativePath,
             githubSha: gitBlobSha(stylesCssFile.contents),
-            filePath: stylesCssFile.relativePath,
+            // filePath: stylesCssFile.relativePath,
         }
     }
 
@@ -211,15 +214,15 @@ export async function* pagesFromFilesList({
     const mediaFiles = files.filter((file) => isMediaFile(file.relativePath))
     for (const file of mediaFiles) {
         yield {
-            type: 'mediaAsset',
-            githubSha: gitBlobSha(file.contents || file.downloadUrl || ''),
+            type: 'mediaAsset' as const,
+            githubSha: '',
             downloadUrl: file.downloadUrl || '', // Use provided downloadUrl or empty for local files
             githubPath: file.relativePath,
             width: file.metadata?.width,
             height: file.metadata?.height,
             bytes: file.metadata?.bytes,
-            filePath: file.relativePath,
-            content: file.contents,
+            // filePath: file.relativePath,
+            // content: file.contents,
         }
     }
 
@@ -234,8 +237,8 @@ export async function* pagesFromFilesList({
             markdown: file.contents,
             githubPath: file.relativePath,
             githubSha: gitBlobSha(file.contents),
-            filePath: file.relativePath,
-            content: file.contents,
+            // filePath: file.relativePath,
+            // content: file.contents,
         }
     }
 }
