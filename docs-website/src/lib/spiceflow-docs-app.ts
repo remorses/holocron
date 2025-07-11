@@ -25,10 +25,12 @@ const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
 // Tool input schemas
 export const searchDocsInputSchema = z.object({
-    query: z
-        .string()
+    terms: z
+        .array(z.string().min(1))
         .min(1)
-        .describe('The search query to find relevant documentation content'),
+        .describe(
+            'An array of search terms to find relevant documentation content. Wrap a term in "" to do an exact phrase search.',
+        ),
 })
 
 export const goToPageInputSchema = z.object({
@@ -150,11 +152,11 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                 tools: {
                     searchDocs: tool({
                         inputSchema: searchDocsInputSchema,
-                        execute: async ({ query }) => {
+                        execute: async ({ terms }) => {
                             let tag = ''
                             const results = await searchDocsWithTrieve({
                                 trieveDatasetId: siteBranch.trieveDatasetId,
-                                query,
+                                query: terms,
                                 tag,
                             })
                             return formatTrieveSearchResults({
@@ -171,7 +173,10 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                             if (!page) {
                                 return { error: `page ${slug} not found` }
                             }
-                            return { slug: page.url, message: `Navigating to ${page.url}` }
+                            return {
+                                slug: page.url,
+                                message: `Navigating to ${page.url}`,
+                            }
                         },
                     }),
                     getCurrentPage: tool({

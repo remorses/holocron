@@ -48,9 +48,11 @@ export type GroupSearchResults = {
 export async function searchDocsWithTrieve({
     query,
     tag,
+    exact,
     trieveDatasetId,
 }: {
-    query: string
+    query: string | string[]
+    exact?: boolean
     trieveDatasetId?: string | null
     tag?: string
 }): Promise<SortedResult[]> {
@@ -80,13 +82,21 @@ export async function searchDocsWithTrieve({
         return []
     }
 
+    let queries = Array.isArray(query) ? query : [query]
+    if (exact) {
+        queries = queries.map((q) =>
+            q.startsWith('"') && q.endsWith('"') ? q : `"${q}"`,
+        )
+    }
+    let queryInput = queries.map((q) => ({ query: q, weight: 1 }))
+
     const request: SearchOverGroupsReqPayload = {
-        query,
+        query: queryInput,
         search_type: 'fulltext',
         score_threshold: 1,
         group_size: 4,
         metadata: {
-          line: true
+            line: true,
         },
         highlight_options: {
             highlight_results: false,
@@ -129,7 +139,9 @@ function groupResults(groups: GroupChunk[]): SortedResult[] {
                     ? `${chunk.link}#${chunk.metadata.section_id}`
                     : chunk.link || '',
                 content: chunk.chunk_html || '',
-                line: chunk.metadata.line ? parseInt(chunk.metadata.line) : undefined,
+                line: chunk.metadata.line
+                    ? parseInt(chunk.metadata.line)
+                    : undefined,
             })
         }
     }
@@ -191,12 +203,14 @@ export function formatTrieveSearchResults({
     baseUrl: string
 }): string {
     let output = ''
-    
+
     for (const result of results) {
         if (result.content) {
             // Convert HTML mark tags to markdown bold
-            const markdownContent = result.content.replace(/<mark>/g, '**').replace(/<\/mark>/g, '**')
-            
+            const markdownContent = result.content
+                .replace(/<mark>/g, '**')
+                .replace(/<\/mark>/g, '**')
+
             // Add startLine parameter if line number is available
             const urlPath = result.url.replace(/#.*$/, '') // Remove any existing fragment
             const fragment = result.url.match(/#(.*)$/)?.[1] || ''
@@ -207,7 +221,7 @@ export function formatTrieveSearchResults({
             output += section
         }
     }
-    
+
     return output
 }
 

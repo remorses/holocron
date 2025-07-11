@@ -1,6 +1,9 @@
 import { prisma } from 'db'
-import { getFilesForSource,  } from './source.server'
-import { searchDocsWithTrieve, formatTrieveSearchResults } from './trieve-search'
+import { getFilesForSource } from './source.server'
+import {
+    searchDocsWithTrieve,
+    formatTrieveSearchResults,
+} from './trieve-search'
 import { getFumadocsSource } from './source'
 
 export async function generateLlmsFullTxt({
@@ -8,7 +11,7 @@ export async function generateLlmsFullTxt({
     searchQuery,
 }: {
     domain: string
-    searchQuery?: string
+    searchQuery?: string[]
 }): Promise<string> {
     const baseUrl = `https://${domain}`
 
@@ -36,7 +39,6 @@ export async function generateLlmsFullTxt({
         },
     })
 
-
     const site = siteBranch?.site
 
     if (!site || !siteBranch) {
@@ -47,6 +49,7 @@ export async function generateLlmsFullTxt({
         // Use Trieve search for search queries
         const searchResults = await searchDocsWithTrieve({
             query: searchQuery,
+            // exact: true,
             trieveDatasetId: siteBranch.trieveDatasetId,
         })
 
