@@ -1,5 +1,11 @@
 # fumabase
 
+## 0.1.4
+
+### Patch Changes
+
+- improve cli colors
+
 ## 0.1.3
 
 ### Patch Changes
