@@ -113,7 +113,7 @@ export async function action({ request, params }: Route.ActionArgs) {
                     const asset = {
                         relativePath: filePath,
                         contents: encoding === 'base64' ? '' : content,
-                        downloadUrl: encoding === 'base64' ? 'data:base64,' + content : undefined,
+                        // downloadUrl: encoding === 'base64' ? 'data:base64,' + content : undefined,
                     }
                     return asset
                 })
