@@ -30,7 +30,7 @@ import {
     CommandItem,
     CommandList,
 } from '../components/ui/command'
-import { Drawer, DrawerContent } from '../components/ui/drawer'
+import {Sheet, SheetContent} from '../components/ui/sheet'
 import {
     Popover,
     PopoverContent,
@@ -102,7 +102,7 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                     />
                 )}
             </AnimatePresence>
-            <Drawer
+            <Sheet
                 onOpenChange={(open) => {
                     console.log('Drawer open state changed:', open)
                     if (drawerState === 'minimized') {
@@ -113,11 +113,11 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                     })
                 }}
                 open={drawerState !== 'closed'}
-                direction='right'
+
                 modal={false}
-                disablePreventScroll={drawerState === 'minimized'}
+
             >
-                <DrawerContent
+              <SheetContent
                     className='bg-background lg:min-w-[600px] min-w-full'
                     style={drawerContentStyle}
                 >
@@ -128,8 +128,8 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                     >
                         <Chat />
                     </div>
-                </DrawerContent>
-            </Drawer>
+                </SheetContent>
+            </Sheet>
         </ChatProvider>
     )
 }
