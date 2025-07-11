@@ -16,6 +16,9 @@ import {
     openUrlInBrowser,
     readTopLevelDocsJson,
     safeParseJson,
+    getGitRepoRoot,
+    getGitHubInfo,
+    checkGitStatus,
 } from './utils.js'
 import { randomInt } from 'crypto'
 import { homedir } from 'os'
@@ -245,36 +248,7 @@ function getContentType(filePath: string): string {
     return lookup(filePath) || 'application/octet-stream'
 }
 
-function getGitRepoRoot(): string | null {
-    try {
-        const repoRoot = execSync('git rev-parse --show-toplevel', {
-            encoding: 'utf-8',
-        }).trim()
-        return path.resolve(repoRoot)
-    } catch (error) {
-        // Not a git repo
-        return null
-    }
-}
 
-function getGitHubInfo() {
-    try {
-        const remoteUrl = execSync('git remote get-url origin', {
-            encoding: 'utf-8',
-        }).trim()
-        const match = remoteUrl.match(/github\.com[\/:]([^\/]+)\/([^\/\.]+)/)
-        if (match) {
-            return {
-                githubOwner: match[1],
-                githubRepo: match[2],
-                name: match[2],
-            }
-        }
-    } catch (error) {
-        // No git remote or not a git repo
-    }
-    return null
-}
 
 async function determineTemplateDownload({
     markdownFileCount,
@@ -1205,67 +1179,42 @@ cli.command('sync', 'Sync current branch with GitHub').action(async () => {
             process.exit(1)
         }
 
-        // Check for uncommitted changes
-        try {
-            const gitStatus = execSync('git status --porcelain', {
-                encoding: 'utf-8',
-            }).trim()
-
-            if (gitStatus) {
-                console.error(pc.red('Error: You have uncommitted changes'))
-                console.error(
-                    pc.yellow(
-                        'The sync command only syncs files that are already pushed to GitHub',
-                    ),
-                )
-                console.error(
-                    pc.yellow(
-                        'Please commit and push your changes first before running sync',
-                    ),
-                )
-                process.exit(1)
-            }
-        } catch (error) {
-            console.error(pc.red('Error checking git status: ' + error.message))
+        // Check git status using improved function
+        const gitStatus = checkGitStatus()
+        
+        if (gitStatus.error) {
+            console.error(pc.red('Error checking git status: ' + gitStatus.error))
             process.exit(1)
         }
 
-        // Check for unpushed commits
-        try {
-            const unpushedCommits = execSync(
-                `git log origin/${gitBranch}..${gitBranch} --oneline`,
-                { encoding: 'utf-8' },
-            ).trim()
+        if (gitStatus.hasUncommittedChanges) {
+            console.error(pc.red('Error: You have uncommitted changes'))
+            console.error(
+                pc.yellow(
+                    'The sync command only syncs files that are already pushed to GitHub',
+                ),
+            )
+            console.error(
+                pc.yellow(
+                    'Please commit and push your changes first before running sync',
+                ),
+            )
+            process.exit(1)
+        }
 
-            if (unpushedCommits) {
-                console.error(pc.red('Error: You have unpushed commits'))
-                console.error(
-                    pc.yellow(
-                        'The sync command only syncs files that are already pushed to GitHub',
-                    ),
-                )
-                console.error(
-                    pc.yellow(
-                        'Please push your commits first before running sync',
-                    ),
-                )
-                console.error(pc.red('\nUnpushed commits:'))
-                console.error(pc.gray(unpushedCommits))
-                process.exit(1)
-            }
-        } catch (error) {
-            // If the command fails, it might be because the remote branch doesn't exist
-            // In that case, we should still inform the user
-            if (error.message.includes('unknown revision')) {
-                console.error(pc.red('Error: Remote branch not found'))
-                console.error(
-                    pc.yellow(
-                        'Please push your branch to GitHub first before running sync',
-                    ),
-                )
-                process.exit(1)
-            }
-            // For other errors, just continue - the sync might still work
+        if (gitStatus.hasUnpushedCommits) {
+            console.error(pc.red('Error: You have unpushed commits'))
+            console.error(
+                pc.yellow(
+                    'The sync command only syncs files that are already pushed to GitHub',
+                ),
+            )
+            console.error(
+                pc.yellow(
+                    'Please push your commits first before running sync',
+                ),
+            )
+            process.exit(1)
         }
 
         // Get GitHub info to validate this is a GitHub repo
