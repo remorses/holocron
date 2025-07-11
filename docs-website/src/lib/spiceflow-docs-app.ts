@@ -15,7 +15,7 @@ import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 
 import { notifyError } from './errors'
 import { getFilesForSource } from './source.server'
-import { searchDocsWithTrieve } from './trieve-search'
+import { searchDocsWithTrieve, formatTrieveSearchResults } from './trieve-search'
 import { getFumadocsSource } from './source'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
@@ -152,7 +152,10 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                                 query,
                                 tag,
                             })
-                            return results
+                            return formatTrieveSearchResults({
+                                results,
+                                baseUrl: currentOrigin,
+                            })
                         },
                     }),
                     goToPage: tool({

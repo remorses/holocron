@@ -17,7 +17,6 @@ import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { MdastToJsx } from 'safe-mdx'
 import { mdxComponents } from 'docs-website/src/components/mdx-components'
 import {
-    getCacheTagForMediaAsset,
     getKeyForMediaAsset,
     getPresignedUrl,
     s3,
@@ -28,7 +27,7 @@ import { ChunkReqPayload, TrieveSDK } from 'trieve-ts-sdk'
 import { cloudflareClient } from './cloudflare'
 import { env } from './env'
 import { notifyError } from './errors'
-import { getCacheTagForPage } from 'docs-website/src/lib/cache-tags'
+import { getCacheTagForPage, getCacheTagForMediaAsset } from 'docs-website/src/lib/cache-tags'
 import {
     addFrontSlashToPath,
     checkGitHubIsInstalled,

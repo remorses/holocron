@@ -1,6 +1,6 @@
 import { prisma } from 'db'
 import { getFilesForSource,  } from './source.server'
-import { searchDocsWithTrieve } from './trieve-search'
+import { searchDocsWithTrieve, formatTrieveSearchResults } from './trieve-search'
 import { getFumadocsSource } from './source'
 
 export async function generateLlmsFullTxt({
@@ -50,23 +50,10 @@ export async function generateLlmsFullTxt({
             trieveDatasetId: siteBranch.trieveDatasetId,
         })
 
-        // Process results as they are
-        for (const result of searchResults) {
-            if (result.content) {
-                // Convert HTML mark tags to markdown bold
-                const markdownContent = result.content.replace(/<mark>/g, '**').replace(/<\/mark>/g, '**')
-                // const markdownContent = result.content.replace(/<mark>/g, '**').replace(/<\/mark>/g, '**')
-                
-                // Add startLine parameter if line number is available
-                const urlPath = result.url.replace(/#.*$/, '') // Remove any existing fragment
-                const fragment = result.url.match(/#(.*)$/)?.[1] || ''
-                const lineParam = result.line ? `?startLine=${result.line}` : ''
-                const sourceUrl = `${baseUrl}${urlPath}.md${lineParam}${fragment ? '#' + fragment : ''}`
-
-                const section = `**Source:** ${sourceUrl}\n\n${markdownContent}\n\n━━━\n\n`
-                output += section
-            }
-        }
+        output += formatTrieveSearchResults({
+            results: searchResults,
+            baseUrl,
+        })
     } else {
         // No search query - return all pages
         const languages = site.locales.map((x) => x.locale)

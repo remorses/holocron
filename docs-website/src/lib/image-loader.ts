@@ -1,5 +1,6 @@
 import { prisma } from 'db'
-import { getKeyForMediaAsset, s3, getCacheTagForMediaAsset } from '../lib/s3'
+import { getKeyForMediaAsset, s3 } from '../lib/s3'
+import { getCacheTagForMediaAsset } from '../lib/cache-tags'
 
 export async function imageLoader({ request }) {
     const url = new URL(request.url)

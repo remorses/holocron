@@ -111,13 +111,18 @@ export class CloudflareClient {
             messages: any[]
         }[] = []
         for (const batch of batches) {
-            const res = await this.fetch('/purge_cache', {
-                method: 'POST',
-                body: JSON.stringify({
-                    tags: batch,
-                }),
-            })
-            results.push(res)
+            if (batch.length > 0) {
+                console.log(
+                    `Cloudflare: invalidating cache for ${batch.length} tag(s): ${batch.join(', ')}`
+                )
+                const res = await this.fetch('/purge_cache', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        tags: batch,
+                    }),
+                })
+                results.push(res)
+            }
         }
         return results
     }

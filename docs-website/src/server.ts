@@ -14,7 +14,7 @@ export default await createHonoServer({
             // Check if URL ends with .md or .mdx
             if (url.endsWith('.md') || url.endsWith('.mdx')) {
                 const query = c.req.query()
-                const showLineNumbers = query.showLineNumbers === 'true'
+                const showLineNumbers = query.showLineNumbers != undefined && query.showLineNumbers !== 'false'
                 const startLine = query.startLine ? parseInt(query.startLine, 10) : undefined
                 const endLine = query.endLine ? parseInt(query.endLine, 10) : undefined
 
