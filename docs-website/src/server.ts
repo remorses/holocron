@@ -18,7 +18,7 @@ export default await createHonoServer({
                 const startLine = query.startLine ? parseInt(query.startLine, 10) : undefined
                 const endLine = query.endLine ? parseInt(query.endLine, 10) : undefined
 
-                const markdown = await serveRawMarkdown({
+                const result = await serveRawMarkdown({
                     domain: host,
                     path: url,
                     showLineNumbers,
@@ -26,10 +26,11 @@ export default await createHonoServer({
                     endLine,
                 })
 
-                if (markdown != null) {
-                    return c.text(markdown, 200, {
+                if (result != null) {
+                    return c.text(result.markdown, 200, {
                         'Content-Type': 'text/plain; charset=utf-8',
-                        'Cache-Control': 'public, max-age=3600',
+                        'Cache-Control': 'public, max-age=300, s-maxage=300',
+                        'Cache-Tag': result.cacheTag,
                     })
                 }
                 // If markdown not found, continue to next handler

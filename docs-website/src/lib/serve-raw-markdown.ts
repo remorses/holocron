@@ -2,6 +2,7 @@ import { prisma } from 'db'
 import { getFilesForSource } from './source.server'
 import { LOCALES } from './locales'
 import { getFumadocsSource } from './source'
+import { getCacheTagForPage } from './cache-tags'
 
 export async function serveRawMarkdown({
     domain,
@@ -15,7 +16,7 @@ export async function serveRawMarkdown({
     showLineNumbers?: boolean
     startLine?: number
     endLine?: number
-}) {
+}): Promise<{ markdown: string; cacheTag: string } | null> {
     const siteBranch = await prisma.siteBranch.findFirst({
         where: {
             domains: {
@@ -100,14 +101,29 @@ export async function serveRawMarkdown({
             }),
         ])
         const markdown = indexPage?.content.markdown || null
-        return markdown ? formatMarkdown(markdown, showLineNumbers, startLine, endLine) : null
+        if (markdown) {
+            const formattedMarkdown = formatMarkdown(markdown, showLineNumbers, startLine, endLine)
+            const cacheTag = getCacheTagForPage({
+                branchId: siteBranch.branchId,
+                slug: indexPage?.slug || '/',
+                locale,
+            })
+            return { markdown: formattedMarkdown, cacheTag }
+        }
+        return null
     }
 
     if (!page) {
         return null
     }
 
-    return formatMarkdown(page.content.markdown, showLineNumbers, startLine, endLine)
+    const formattedMarkdown = formatMarkdown(page.content.markdown, showLineNumbers, startLine, endLine)
+    const cacheTag = getCacheTagForPage({
+        branchId: siteBranch.branchId,
+        slug: page.slug,
+        locale,
+    })
+    return { markdown: formattedMarkdown, cacheTag }
 }
 
 function formatMarkdown(
