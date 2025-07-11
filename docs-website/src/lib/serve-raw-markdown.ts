@@ -166,27 +166,21 @@ function formatMarkdown(
                 return `${paddedNumber}  ${line}`
             })
         
-        // Add truncation indicators
+        // Add end of file indicator if at the end
         const result: string[] = []
-        if (hasContentAbove) {
-            result.push(`...${actualStart} lines above`)
-        }
         result.push(...formattedLines)
-        if (hasContentBelow) {
-            result.push(`...${lines.length - actualEnd} lines below`)
+        if (!hasContentBelow) {
+            result.push('end of file')
         }
         
         return result.join('\n')
     }
     
-    // For non-line-numbered output, also add truncation indicators
+    // For non-line-numbered output, also add end of file indicator
     const result: string[] = []
-    if (hasContentAbove) {
-        result.push(`...${actualStart} lines above`)
-    }
     result.push(...filteredLines)
-    if (hasContentBelow) {
-        result.push(`...${lines.length - actualEnd} lines below`)
+    if (!hasContentBelow) {
+        result.push('end of file')
     }
     
     return result.join('\n')
