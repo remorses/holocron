@@ -608,6 +608,7 @@ export async function syncSite({
                 }> = []
 
                 let markdown = asset.markdown
+                let mdast = null as any
                 const relativeImagesSlugs = [] as string[]
                 try {
                     const result = await processMdxInServer({
@@ -616,6 +617,7 @@ export async function syncSite({
                         extension: extension as MarkdownExtension,
                     })
                     data = result.data
+                    mdast = result.data.ast
                     try {
                         function registerRelativeImagePaths({ src }) {
                             if (
@@ -726,11 +728,13 @@ export async function syncSite({
                             where: { githubSha: asset.githubSha },
                             update: {
                                 markdown,
+                                mdast,
                                 structuredData: data.structuredData as any,
                             },
                             create: {
                                 githubSha: asset.githubSha,
                                 markdown,
+                                mdast,
                                 structuredData: data.structuredData as any,
                             },
                         })
