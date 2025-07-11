@@ -14,7 +14,10 @@ export type DocsTools = {
     }
     goToPage: {
         input: GoToPageInput
-        output: any
+        output: {
+            slug: string
+            error?: string
+        }
     }
     getCurrentPage: {
         input: GetCurrentPageInput
@@ -26,7 +29,12 @@ export type DocsTools = {
     }
     selectText: {
         input: SelectTextInput
-        output: any
+        output: {
+            slug: string
+            startLine?: number
+            endLine?: number
+            error?: string
+        }
     }
 }
 

@@ -15,7 +15,10 @@ import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 
 import { notifyError } from './errors'
 import { getFilesForSource } from './source.server'
-import { searchDocsWithTrieve, formatTrieveSearchResults } from './trieve-search'
+import {
+    searchDocsWithTrieve,
+    formatTrieveSearchResults,
+} from './trieve-search'
 import { getFumadocsSource } from './source'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
@@ -49,7 +52,9 @@ export const fetchUrlInputSchema = z.object({
 })
 
 export const selectTextInputSchema = z.object({
-    slug: z.string().describe('The page slug to navigate to and select text on'),
+    slug: z
+        .string()
+        .describe('The page slug to navigate to and select text on'),
     startLine: z.number().describe('Starting line number to select (1-based)'),
     endLine: z.number().describe('Ending line number to select (1-based)'),
 })
@@ -164,9 +169,9 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                             const slugParts = slug.split('/').filter(Boolean)
                             const page = source.getPage(slugParts)
                             if (!page) {
-                                return `page ${slug} not found`
+                                return { error: `page ${slug} not found` }
                             }
-                            return `went to page ${slug}`
+                            return { slug: page.url, message: `Navigating to ${page.url}` }
                         },
                     }),
                     getCurrentPage: tool({
@@ -230,17 +235,29 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                     selectText: tool({
                         inputSchema: selectTextInputSchema,
                         execute: async ({ slug, startLine, endLine }) => {
+                            // Remove .md extension if present
+                            const cleanSlug = slug.endsWith('.md')
+                                ? slug.slice(0, -3)
+                                : slug
+
                             // if (endLine - startLine + 1 > maxLines) {
-                            //     return `Cannot select more than 10 lines of text. You requested ${endLine - startLine + 1} lines.`
+                            //     return { error: `Cannot select more than 10 lines of text. You requested ${endLine - startLine + 1} lines.` }
                             // }
 
-                            const slugParts = slug.split('/').filter(Boolean)
+                            const slugParts = cleanSlug
+                                .split('/')
+                                .filter(Boolean)
                             const page = source.getPage(slugParts)
                             if (!page) {
-                                return `Page ${slug} not found`
+                                return { error: `Page ${cleanSlug} not found` }
                             }
 
-                            return `Text selection will be highlighted on page ${slug} from line ${startLine} to ${endLine}`
+                            return {
+                                slug: page.url,
+                                startLine,
+                                endLine,
+                                message: `highlighted text on ${page.url} from ${startLine} to ${endLine}`,
+                            }
                         },
                     }),
                 },

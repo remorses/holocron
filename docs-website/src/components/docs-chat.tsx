@@ -30,7 +30,7 @@ import {
     CommandItem,
     CommandList,
 } from '../components/ui/command'
-import {Sheet, SheetContent} from '../components/ui/sheet'
+import { Sheet, SheetContent } from '../components/ui/sheet'
 import {
     Popover,
     PopoverContent,
@@ -113,11 +113,9 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                     })
                 }}
                 open={drawerState !== 'closed'}
-
                 modal={false}
-
             >
-              <SheetContent
+                <SheetContent
                     className='bg-background lg:min-w-[600px] min-w-full'
                     style={drawerContentStyle}
                 >
@@ -496,51 +494,52 @@ function Footer() {
                 generateId,
             }),
         )
-        // Add a cleanupPath function that removes trailing .mdx?
-        function cleanupPath(targetSlug: string) {
-            if (!targetSlug) return ''
-            // Remove query string if present
-            let cleanSlug = targetSlug.split('?')[0]
-            // Remove trailing .md or .mdx
-            cleanSlug = cleanSlug.replace(/\.mdx?$/, '')
-            return cleanSlug
-        }
-
         async function updateDocsSite() {
             for await (const newMessages of effectsIter) {
-                const lastMessage = newMessages[newMessages.length - 1]
-                const lastPart = lastMessage.parts[lastMessage.parts.length - 1]
-                if (
-                    lastMessage.role === 'assistant' &&
-                    lastPart?.type === 'tool-selectText' &&
-                    lastPart.state === 'input-available'
-                ) {
-                    const targetSlug = lastPart.input?.slug
+                try {
+                    const lastMessage = newMessages[newMessages.length - 1]
+                    const lastPart =
+                        lastMessage.parts[lastMessage.parts.length - 1]
                     if (
-                        targetSlug &&
-                        typeof targetSlug === 'string' &&
-                        cleanupPath(targetSlug) !== location.pathname
+                        lastMessage.role === 'assistant' &&
+                        lastPart?.type === 'tool-selectText' &&
+                        lastPart.state === 'output-available'
                     ) {
-                        await navigate(cleanupPath(targetSlug))
+                        if (lastPart.output.error) {
+                            continue
+                        }
+                        const targetSlug = lastPart.output?.slug
+                        if (
+                            targetSlug &&
+                            typeof targetSlug === 'string' &&
+                            targetSlug !== location.pathname
+                        ) {
+                            await navigate(targetSlug)
+                        }
+                        usePersistentDocsState.setState({
+                            drawerState: 'minimized',
+                        })
+                        await new Promise((res) => setTimeout(res, 10))
+                        highlightText(lastPart.input)
                     }
-                    highlightText(lastPart.input)
-                    // Minimize drawer when text is selected
-                    usePersistentDocsState.setState({
-                        drawerState: 'minimized',
-                    })
-                }
-                if (
-                    lastMessage.role === 'assistant' &&
-                    lastPart?.type === 'tool-goToPage' &&
-                    lastPart.state === 'input-available'
-                ) {
-                    const targetSlug = lastPart.input?.slug
                     if (
-                        typeof targetSlug === 'string' &&
-                        cleanupPath(targetSlug) !== location.pathname
+                        lastMessage.role === 'assistant' &&
+                        lastPart?.type === 'tool-goToPage' &&
+                        lastPart.state === 'output-available'
                     ) {
-                        await navigate(cleanupPath(targetSlug))
+                        if (lastPart.output.error) {
+                            continue
+                        }
+                        const targetSlug = lastPart.output?.slug
+                        if (
+                            typeof targetSlug === 'string' &&
+                            targetSlug !== location.pathname
+                        ) {
+                            await navigate(targetSlug)
+                        }
                     }
+                } catch (error) {
+                    console.error('Error in updateDocsSite loop:', error)
                 }
             }
         }
