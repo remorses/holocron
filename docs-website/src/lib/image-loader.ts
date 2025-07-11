@@ -50,7 +50,7 @@ export async function imageLoader({ request }) {
             'Content-Type': stat.type,
             'Cache-Control': 'public, max-age=31536000, immutable',
             'Cache-Tag': getCacheTagForMediaAsset({
-                siteId,
+                branchId: siteBranch.branchId,
                 slug,
             }),
             'Content-Length': stat.size.toString(),

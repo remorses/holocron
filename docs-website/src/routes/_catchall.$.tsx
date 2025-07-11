@@ -2,7 +2,7 @@ import { MediaAsset, PageMediaAsset, prisma } from 'db'
 import frontMatter from 'front-matter'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
-import { isRouteErrorResponse } from 'react-router'
+import { isRouteErrorResponse, data } from 'react-router'
 
 import type { Route as RootRoute } from './_catchall'
 import type { Route } from './+types/_catchall.$'
@@ -22,6 +22,7 @@ import { getOpenapiDocument } from '../lib/openapi.server'
 import { getFilesForSource } from '../lib/source.server'
 import { useDocsState } from '../lib/docs-state'
 import { ClientPage, ClientErrorBoundary } from './_catchall-client'
+import { getCacheTagForPage } from 'docs-website/src/lib/cache-tags'
 const openapiPath = `/api-reference`
 
 type MediaAssetProp = PageMediaAsset & { asset?: MediaAsset }
@@ -161,10 +162,7 @@ export function meta({ data, matches }: Route.MetaArgs): any {
     ].filter(Boolean)
 }
 
-export async function loader({
-    params,
-    request,
-}: Route.LoaderArgs): Promise<LoaderData> {
+export async function loader({ params, request }: Route.LoaderArgs) {
     const timerId = `loader-${Math.random().toString(36).substr(2, 9)}`
     console.time(`${timerId} - total loader time`)
 
@@ -281,43 +279,71 @@ export async function loader({
         if (renderer === 'scalar') {
             console.timeEnd(`${timerId} - total loader time`)
 
-            return {
-                type: 'openapi_scalar' as const,
-                openapiUrl,
-                githubFolder: site.githubFolder || '',
-                mediaAssets: [] as MediaAssetProp[],
-                toc: [],
-                title: '',
-                description: '',
-                markdown: '',
-                ast: null,
-                githubPath: '',
-                slugs,
+            const cacheTag = getCacheTagForPage({
+                branchId: siteBranch.branchId,
                 slug,
-                lastEditedAt: new Date(),
-            }
+                locale,
+            })
+
+            return data(
+                {
+                    type: 'openapi_scalar' as const,
+                    openapiUrl,
+                    githubFolder: site.githubFolder || '',
+                    mediaAssets: [] as MediaAssetProp[],
+                    toc: [],
+                    title: '',
+                    description: '',
+                    markdown: '',
+                    ast: null,
+                    githubPath: '',
+                    slugs,
+                    slug,
+                    lastEditedAt: new Date(),
+                },
+                {
+                    headers: {
+                        'Cache-Control': 'public, max-age=300, s-maxage=300',
+                        'Cache-Tag': cacheTag,
+                    },
+                },
+            )
         }
         if (renderer === 'fumadocs') {
             const { type: _, ...restWithoutType } = rest
             console.timeEnd(`${timerId} - total loader time`)
 
-            return {
-                type: 'openapi_fumadocs' as const,
-                ...restWithoutType,
-                githubFolder: site.githubFolder || '',
-                processedOpenAPI: rest.processedOpenAPI,
-                openapiUrl,
-                mediaAssets: [] as MediaAssetProp[],
-                toc: [],
-                title: '',
-                description: '',
-                markdown: '',
-                ast: null,
-                githubPath: '',
-                slugs,
+            const cacheTag = getCacheTagForPage({
+                branchId: siteBranch.branchId,
                 slug,
-                lastEditedAt: new Date(),
-            }
+                locale,
+            })
+
+            return data(
+                {
+                    type: 'openapi_fumadocs' as const,
+                    ...restWithoutType,
+                    githubFolder: site.githubFolder || '',
+                    processedOpenAPI: rest.processedOpenAPI,
+                    openapiUrl,
+                    mediaAssets: [] as MediaAssetProp[],
+                    toc: [],
+                    title: '',
+                    description: '',
+                    markdown: '',
+                    ast: null,
+                    githubPath: '',
+                    slugs,
+                    slug,
+                    lastEditedAt: new Date(),
+                },
+                {
+                    headers: {
+                        'Cache-Control': 'public, max-age=300, s-maxage=300',
+                        'Cache-Tag': cacheTag,
+                    },
+                },
+            )
         }
     }
 
@@ -415,24 +441,39 @@ export async function loader({
     console.time(`${timerId} - get toc from mdast`)
     const toc = getTocFromMdast(mdast)
     console.timeEnd(`${timerId} - get toc from mdast`)
-    return {
-        type: 'page' as const,
-        openapiUrl: '',
-        toc: toc,
-        title: frontmatter?.title || '',
-        description: frontmatter.description || '',
-        markdown: page.content?.markdown,
-        ast: mdast,
-        githubFolder: site.githubFolder || '',
-        slugs,
+
+    const cacheTag = getCacheTagForPage({
+        branchId: siteBranch.branchId,
         slug,
         locale,
-        i18n: source._i18n,
-        githubPath: page.githubPath,
-        tree,
-        lastEditedAt: page.lastEditedAt || new Date(),
-        mediaAssets: page.mediaAssets,
-    }
+    })
+
+    return data(
+        {
+            type: 'page' as const,
+            openapiUrl: '',
+            toc: toc,
+            title: frontmatter?.title || '',
+            description: frontmatter.description || '',
+            markdown: page.content?.markdown,
+            ast: mdast,
+            githubFolder: site.githubFolder || '',
+            slugs,
+            slug,
+            locale,
+            i18n: source._i18n,
+            githubPath: page.githubPath,
+            tree,
+            lastEditedAt: page.lastEditedAt || new Date(),
+            mediaAssets: page.mediaAssets,
+        },
+        {
+            headers: {
+                'Cache-Control': 'public, max-age=300, s-maxage=300',
+                'Cache-Tag': cacheTag,
+            },
+        },
+    )
 }
 
 export default function Page(props: Route.ComponentProps): any {

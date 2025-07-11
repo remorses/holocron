@@ -54,6 +54,6 @@ export function parseKeyForMediaAsset(key: string): {
     return { siteId }
 }
 
-export function getCacheTagForMediaAsset({ siteId, slug }) {
-    return `mediaAsset:site:${siteId}:${slug}`
+export function getCacheTagForMediaAsset({ branchId, slug }) {
+    return `mediaAsset:siteBranch:${branchId}:${slug}`
 }

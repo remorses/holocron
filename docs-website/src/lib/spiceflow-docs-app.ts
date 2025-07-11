@@ -227,16 +227,16 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                     selectText: tool({
                         inputSchema: selectTextInputSchema,
                         execute: async ({ slug, startLine, endLine }) => {
-                            if (endLine - startLine + 1 > 10) {
-                                return `Cannot select more than 10 lines of text. You requested ${endLine - startLine + 1} lines.`
-                            }
-                            
+                            // if (endLine - startLine + 1 > maxLines) {
+                            //     return `Cannot select more than 10 lines of text. You requested ${endLine - startLine + 1} lines.`
+                            // }
+
                             const slugParts = slug.split('/').filter(Boolean)
                             const page = source.getPage(slugParts)
                             if (!page) {
                                 return `Page ${slug} not found`
                             }
-                            
+
                             return `Text selection will be highlighted on page ${slug} from line ${startLine} to ${endLine}`
                         },
                     }),

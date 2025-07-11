@@ -28,6 +28,7 @@ import { ChunkReqPayload, TrieveSDK } from 'trieve-ts-sdk'
 import { cloudflareClient } from './cloudflare'
 import { env } from './env'
 import { notifyError } from './errors'
+import { getCacheTagForPage } from 'docs-website/src/lib/cache-tags'
 import {
     addFrontSlashToPath,
     checkGitHubIsInstalled,
@@ -549,7 +550,7 @@ export async function syncSite({
                     })
 
                     const cacheTag = getCacheTagForMediaAsset({
-                        siteId,
+                        branchId,
                         slug,
                     })
                     cacheTagsToInvalidate.push(cacheTag)
@@ -812,6 +813,14 @@ export async function syncSite({
                         })(),
                 ])
                 processedSlugs.add(slug)
+                
+                // Add cache tag for invalidation
+                const pageCacheTag = getCacheTagForPage({
+                    branchId,
+                    slug,
+                })
+                cacheTagsToInvalidate.push(pageCacheTag)
+                
                 console.log(
                     ` -> Upserted page: ${pageInput.title} (ID: ${slug}, path: ${asset.githubPath})`,
                 )
@@ -836,6 +845,15 @@ export async function syncSite({
                     console.log(
                         `Found ${pagesToDelete.length} pages to delete for path ${asset.githubPath}`,
                     )
+
+                    // Add cache tags for invalidation
+                    for (const page of pagesToDelete) {
+                        const pageCacheTag = getCacheTagForPage({
+                            branchId,
+                            slug: page.slug,
+                        })
+                        cacheTagsToInvalidate.push(pageCacheTag)
+                    }
 
                     // Delete from Trieve if available
                     if (trieve.datasetId) {
