@@ -144,20 +144,50 @@ function formatMarkdown(
         return lines
     })()
     
+    // Check if content is truncated
+    const actualStart = startLine ? Math.max(0, startLine - 1) : 0
+    const actualEnd = endLine ? Math.min(endLine, lines.length) : lines.length
+    const hasContentAbove = actualStart > 0
+    const hasContentBelow = actualEnd < lines.length
+    
+    // Show line numbers if requested or if line ranges are specified
+    const shouldShowLineNumbers = showLineNumbers || startLine !== undefined || endLine !== undefined
+    
     // Add line numbers if requested
-    if (showLineNumbers) {
+    if (shouldShowLineNumbers) {
         const startLineNumber = startLine || 1
         const maxLineNumber = startLineNumber + filteredLines.length - 1
         const padding = maxLineNumber.toString().length
         
-        return filteredLines
+        const formattedLines = filteredLines
             .map((line, index) => {
                 const lineNumber = startLineNumber + index
                 const paddedNumber = lineNumber.toString().padStart(padding, ' ')
                 return `${paddedNumber}  ${line}`
             })
-            .join('\n')
+        
+        // Add truncation indicators
+        const result: string[] = []
+        if (hasContentAbove) {
+            result.push(`...${actualStart} lines above`)
+        }
+        result.push(...formattedLines)
+        if (hasContentBelow) {
+            result.push(`...${lines.length - actualEnd} lines below`)
+        }
+        
+        return result.join('\n')
     }
     
-    return filteredLines.join('\n')
+    // For non-line-numbered output, also add truncation indicators
+    const result: string[] = []
+    if (hasContentAbove) {
+        result.push(`...${actualStart} lines above`)
+    }
+    result.push(...filteredLines)
+    if (hasContentBelow) {
+        result.push(`...${lines.length - actualEnd} lines below`)
+    }
+    
+    return result.join('\n')
 }
