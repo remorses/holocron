@@ -430,8 +430,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
     if (!mdast) {
         console.time(`${timerId} - process mdx content`)
+        // Determine the file extension from the githubPath
+        const extension = page.githubPath?.split('.').pop() || 'mdx'
+
         const { data: markdownData } = await processMdxInServer({
-            extension: page.extension,
+            extension: extension,
             githubPath: page.githubPath,
             markdown: page.content.markdown,
         })

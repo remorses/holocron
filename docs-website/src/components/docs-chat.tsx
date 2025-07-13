@@ -274,7 +274,7 @@ function MessageRenderer({ message }: { message: DocsUIMessage }) {
                         >
                             <Markdown
                                 isStreaming={isChatGenerating}
-                                markdown={`🔍 Searching docs: ${part.input?.query || 'unknown'}`}
+                                markdown={`🔍 Searching docs: ${part.input?.terms?.join(', ') || 'unknown'}`}
                             />
                         </div>
                     )

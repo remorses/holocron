@@ -32,6 +32,7 @@ import Handlebars from 'handlebars'
 import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
 import agentPrompt from '../prompts/agent.md?raw'
 import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
+import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
@@ -173,7 +174,9 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                             const path = x.githubPath
                             let title = ''
                             if (x.type === 'page') {
-                                title = x.title
+                                const frontmatter =
+                                    x.frontmatter as ProcessorDataFrontmatter
+                                title = frontmatter?.title || ''
                             }
                             return { path, title }
                         })

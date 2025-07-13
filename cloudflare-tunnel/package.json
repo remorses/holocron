@@ -17,9 +17,7 @@
     "author": "Tommaso De Rossi, morse <beats.by.morse@gmail.com>",
     "license": "",
     "devDependencies": {
-        "@cloudflare/workers-types": "^4.20250520.0",
-        "wrangler": "^4.16.1"
-    },
-    "dependencies": {},
-    "peerDependencies": {}
+        "@cloudflare/workers-types": "^4.20250712.0",
+        "wrangler": "^4.24.3"
+    }
 }

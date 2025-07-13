@@ -47,6 +47,7 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([token])
+  @@index([userId])
 }
 
 model Account {
@@ -64,6 +65,8 @@ model Account {
   password              String?   @db.Text
   createdAt             DateTime
   updatedAt             DateTime
+
+  @@index([userId])
 }
 
 model Verification {
@@ -81,6 +84,8 @@ model TwoFactor {
   backupCodes String @db.Text
   userId      String
   user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 enum UserRole {
@@ -123,6 +128,8 @@ model OrgInviteLink {
   forSiteId String?
   forPageId String?
   org       Org      @relation(fields: [orgId], references: [orgId], onDelete: Cascade)
+
+  @@index([orgId])
 }
 
 model Org {
@@ -186,6 +193,7 @@ model Site {
   githubInstallations SiteGithubInstallation[]
 
   @@index([createdAt])
+  @@index([orgId])
 }
 
 model SiteBranch {
@@ -213,6 +221,8 @@ model SiteBranch {
 
   chats    Chat[]
   feedback PageFeedback[]
+
+  @@index([siteId])
 }
 
 model MarkdownBlob {
@@ -230,22 +240,18 @@ model MarkdownBlob {
 model MarkdownPage {
   pageId       String     @id @default(cuid())
   slug         String
-  // id    String @unique @id
+
   branchId     String
   branch       SiteBranch @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
-  title        String     @db.Text
+
   content      MarkdownBlob @relation(fields: [githubSha], references: [githubSha], onDelete: Cascade)
   createdAt    DateTime   @default(now())
-  // updatedAt DateTime @updatedAt
+
   lastEditedAt DateTime?  @updatedAt
 
-  // ogImage      String?           @db.Text
-  description String? @db.Text
-  // keywords     String?           @db.Text
-  icon        String?
   /// [FrontmatterJson]
   frontmatter Json?
-  extension MarkdownExtension @default(mdx)
+
 
   githubSha      String
   githubPath     String
@@ -255,6 +261,7 @@ model MarkdownPage {
   @@unique([branchId, slug])
   @@index([branchId])
   @@index([slug])
+  @@index([githubSha])
 }
 
 enum MarkdownExtension {
@@ -288,6 +295,7 @@ model PageMediaAsset {
 
   @@id([pageId, assetSlug, branchId])
   @@index([assetSlug, branchId])
+  @@index([pageId])
 }
 
 
@@ -300,6 +308,7 @@ model MetaFile {
   branch SiteBranch @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
 
   @@id([githubPath, branchId])
+  @@index([branchId])
 }
 
 enum DomainType {
@@ -317,6 +326,8 @@ model Domain {
   // lastCheck        DateTime?
   branch   SiteBranch? @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
   branchId String?
+
+  @@index([branchId])
 }
 
 model SiteGithubInstallation {
@@ -400,6 +411,9 @@ model Chat {
   branch          SiteBranch    @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
   // addedLines   Int           @default(0)
   // deletedLines Int           @default(0)
+
+  @@index([userId])
+  @@index([branchId])
 }
 
 model ChatMessage {
@@ -417,6 +431,8 @@ model ChatMessage {
   // dataParts       DataPart[]
 
   createdAt DateTime          @default(now())
+
+  @@index([chatId])
 }
 
 model ChatPartText {
@@ -509,6 +525,8 @@ model PageFeedback {
 
   ipHash    String   @default("")
   createdAt DateTime @default(now())
+
+  @@index([branchId])
 }
 
 
@@ -519,6 +537,8 @@ model CliLoginSession {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   expiresAt DateTime
+
+  @@index([userId])
 }
 
 model ApiKey {
@@ -545,6 +565,7 @@ model ApiKey {
   permissions         String?
   metadata            String?
 
+  @@index([userId])
 }
 
 enum MarkdownPageSyncErrorType {

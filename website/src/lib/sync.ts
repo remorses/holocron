@@ -792,7 +792,7 @@ export async function syncSite({
                         }
 
                         console.log(
-                            `Page upsert complete: ${page.pageId} (${page.title})${errors.length > 0 ? ` with ${errors.length} error(s)` : ''}`,
+                            `Page upsert complete: ${page.pageId} (${page.githubPath})${errors.length > 0 ? ` with ${errors.length} error(s)` : ''}`,
                         )
 
                         return page
@@ -812,14 +812,14 @@ export async function syncSite({
                         })(),
                 ])
                 processedSlugs.add(slug)
-                
+
                 // Add cache tag for invalidation
                 const pageCacheTag = getCacheTagForPage({
                     branchId,
                     slug,
                 })
                 cacheTagsToInvalidate.push(pageCacheTag)
-                
+
                 console.log(
                     ` -> Upserted page: ${pageInput.title} (ID: ${slug}, path: ${asset.githubPath})`,
                 )

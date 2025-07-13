@@ -27,7 +27,7 @@
         "@ariakit/react": "^0.4.17",
         "@better-auth/stripe": "^1.2.10",
         "@bugsnag/cuid": "^3.2.1",
-        "@cloudflare/vite-plugin": "^1.6.0",
+        "@cloudflare/vite-plugin": "^1.9.4",
         "@hookform/resolvers": "^5.1.1",
         "@iconify-json/lucide": "^1.2.49",
         "@motionone/dom": "^10.18.0",
@@ -50,7 +50,7 @@
         "@radix-ui/react-switch": "^1.2.5",
         "@radix-ui/react-tabs": "^1.1.12",
         "@radix-ui/react-tooltip": "^1.2.7",
-        "@react-router/cloudflare": "^7.6.2",
+        "@react-router/cloudflare": "^7.6.3",
         "@react-router/fs-routes": "^7.6.2",
         "@react-router/node": "^7.6.2",
         "@remixicon/react": "^4.6.0",
@@ -127,7 +127,7 @@
         "zustand": "^5.0.5"
     },
     "devDependencies": {
-        "@cloudflare/workers-types": "^4.20250614.0",
+        "@cloudflare/workers-types": "^4.20250712.0",
         "@react-router/dev": "^7.6.2",
         "@tailwindcss/typography": "^0.5.16",
         "@tailwindcss/vite": "^4.1.10",
@@ -140,10 +140,10 @@
         "postcss": "^8.5.5",
         "tailwindcss": "^4.1.10",
         "typescript": "^5.8.3",
-        "vite": "^6.3.5",
+        "vite": "^7.0.4",
         "vite-plugin-environment": "^1.1.3",
         "vite-tsconfig-paths": "^5.1.4",
         "vitest": "^3.2.4",
-        "wrangler": "^4.22.0"
+        "wrangler": "^4.24.3"
     }
 }
