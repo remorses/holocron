@@ -19,6 +19,7 @@
         "declaration": true,
         "declarationMap": true,
         "strict": true,
+        "noFallthroughCasesInSwitch": true,
         "downlevelIteration": true,
         "esModuleInterop": true,
         "noImplicitAny": false,

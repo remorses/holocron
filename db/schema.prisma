@@ -397,8 +397,7 @@ model Chat {
   title           String?
   description     String?
   messages        ChatMessage[]
-  // siteId          String
-  // site            Site          @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
+
   // a chat is different for each user, this is to prevent the case where 2 users are updating the same chat, causing data loos and override. instead each user sees a different set of chats so they cannot possibly override each other chats.
   userId          String
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -409,8 +408,7 @@ model Chat {
   prNumber        Int?
   branchId        String
   branch          SiteBranch    @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
-  // addedLines   Int           @default(0)
-  // deletedLines Int           @default(0)
+
 
   @@index([userId])
   @@index([branchId])

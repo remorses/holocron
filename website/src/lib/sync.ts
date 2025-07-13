@@ -1,7 +1,7 @@
 import { createHash } from 'crypto'
 import { lookup } from 'mime-types'
 import { MarkdownExtension, Prisma, prisma } from 'db'
-import { Sema } from 'sema4'
+import { Sema } from 'async-sema'
 import { request } from 'undici'
 import { Readable } from 'node:stream'
 
@@ -27,7 +27,10 @@ import { ChunkReqPayload, TrieveSDK } from 'trieve-ts-sdk'
 import { cloudflareClient } from './cloudflare'
 import { env } from './env'
 import { notifyError } from './errors'
-import { getCacheTagForPage, getCacheTagForMediaAsset } from 'docs-website/src/lib/cache-tags'
+import {
+    getCacheTagForPage,
+    getCacheTagForMediaAsset,
+} from 'docs-website/src/lib/cache-tags'
 import {
     addFrontSlashToPath,
     checkGitHubIsInstalled,
@@ -35,7 +38,11 @@ import {
     getRepoFiles,
     isMarkdown,
 } from './github.server'
-import { mdxRegex, yieldTasksInParallel } from './utils'
+import {
+    mdxRegex,
+    yieldTasksInParallel,
+    processGeneratorConcurrentlyInOrder,
+} from './utils'
 import { imageDimensionsFromData } from 'image-dimensions'
 import {
     applyJsonCComments,
@@ -264,7 +271,7 @@ export async function syncSite({
     const semaphore = new Sema(concurrencyLimit)
 
     const chunkSize = 120
-    let chunksToSync: ChunkReqPayload[] = []
+    let allChunksToSync: ChunkReqPayload[] = []
 
     const trieve = new TrieveSDK({
         apiKey: env.TRIEVE_API_KEY!,
@@ -293,658 +300,696 @@ export async function syncSite({
         select: { slug: true },
     })
     const mediaAssetSlugs = new Set(allMediaAssets.map((asset) => asset.slug))
-    for await (const asset of files) {
-        await semaphore.acquire() // Acquire permit for file processing
+
+    // Closure functions for each asset type
+    async function syncMetaFile(
+        asset: AssetForSync,
+    ): Promise<ChunkReqPayload[]> {
+        if (asset.type !== 'metaFile') return []
+
+        let metaJsonData
         try {
-            if (asset.type === 'metaFile') {
-                let metaJsonData
-                try {
-                    metaJsonData = JSON.parse(asset.content)
-                } catch {
-                    metaJsonData = {}
-                }
-                await prisma.metaFile.upsert({
-                    where: {
-                        githubPath_branchId: {
-                            githubPath: asset.githubPath,
-                            branchId,
-                        },
-                    },
-                    update: {
-                        githubSha: asset.githubSha,
-                        githubPath: asset.githubPath,
-                        jsonData: metaJsonData,
-                        branchId,
-                    },
-                    create: {
-                        githubPath: asset.githubPath,
-                        jsonData: metaJsonData,
-                        branchId,
-                        githubSha: asset.githubSha,
-                    },
-                })
-            }
-            if (asset.type === 'docsJson') {
-                console.log(`Updating docsJson for branch ${branchId}`)
-                const { data: jsonData, comments } = extractJsonCComments(
-                    asset.content,
+            metaJsonData = JSON.parse(asset.content)
+        } catch {
+            metaJsonData = {}
+        }
+        await prisma.metaFile.upsert({
+            where: {
+                githubPath_branchId: {
+                    githubPath: asset.githubPath,
+                    branchId,
+                },
+            },
+            update: {
+                githubSha: asset.githubSha,
+                githubPath: asset.githubPath,
+                jsonData: metaJsonData,
+                branchId,
+            },
+            create: {
+                githubPath: asset.githubPath,
+                jsonData: metaJsonData,
+                branchId,
+                githubSha: asset.githubSha,
+            },
+        })
+        return []
+    }
+
+    async function syncDocsJson(
+        asset: AssetForSync,
+    ): Promise<ChunkReqPayload[]> {
+        if (asset.type !== 'docsJson') return []
+
+        console.log(`Updating docsJson for branch ${branchId}`)
+        const { data: jsonData, comments } = extractJsonCComments(asset.content)
+        await prisma.siteBranch.update({
+            where: { branchId },
+            data: { docsJson: jsonData, docsJsonComments: comments },
+        })
+
+        // Update site name if it's defined in docsJson
+        if (jsonData.name) {
+            await prisma.site.update({
+                where: { siteId },
+                data: { name: jsonData.name },
+            })
+            console.log(`Updated site name to: ${jsonData.name}`)
+        }
+
+        // Handle domain connections
+        if (jsonData.domains && Array.isArray(jsonData.domains)) {
+            const existingDomains = await prisma.domain.findMany({
+                where: { branchId },
+                select: { host: true, domainType: true },
+            })
+            const existingHosts = new Set(existingDomains.map((d) => d.host))
+            const configuredHosts = new Set(jsonData.domains)
+
+            // Remove internal domains that are no longer in the configuration
+            const internalDomainsToRemove = existingDomains.filter(
+                (domain) =>
+                    domain.domainType === 'internalDomain' &&
+                    !configuredHosts.has(domain.host),
+            )
+
+            if (internalDomainsToRemove.length > 0) {
+                console.log(
+                    `Removing ${internalDomainsToRemove.length} internal domains that are no longer configured`,
                 )
-                await prisma.siteBranch.update({
-                    where: { branchId },
-                    data: { docsJson: jsonData, docsJsonComments: comments },
-                })
-
-                // Update site name if it's defined in docsJson
-                if (jsonData.name) {
-                    await prisma.site.update({
-                        where: { siteId },
-                        data: { name: jsonData.name },
+                for (const domain of internalDomainsToRemove) {
+                    await prisma.domain.delete({
+                        where: {
+                            host: domain.host,
+                        },
                     })
-                    console.log(`Updated site name to: ${jsonData.name}`)
+                    console.log(`Removed internal domain: ${domain.host}`)
                 }
+            }
 
-                // Handle domain connections
-                if (jsonData.domains && Array.isArray(jsonData.domains)) {
-                    const existingDomains = await prisma.domain.findMany({
-                        where: { branchId },
-                        select: { host: true, domainType: true },
+            const domainsToConnect = jsonData.domains.filter(
+                (domain: string) => !existingHosts.has(domain),
+            )
+
+            if (domainsToConnect.length > 0) {
+                console.log(
+                    `Connecting ${domainsToConnect.length} new domains for site ${siteId}`,
+                )
+                for (const host of domainsToConnect) {
+                    const domainTaken = await prisma.domain.findFirst({
+                        where: { host },
                     })
-                    const existingHosts = new Set(
-                        existingDomains.map((d) => d.host),
-                    )
-                    const configuredHosts = new Set(jsonData.domains)
-
-                    // Remove internal domains that are no longer in the configuration
-                    const internalDomainsToRemove = existingDomains.filter(
-                        (domain) =>
-                            domain.domainType === 'internalDomain' &&
-                            !configuredHosts.has(domain.host),
-                    )
-
-                    if (internalDomainsToRemove.length > 0) {
+                    if (domainTaken) {
                         console.log(
-                            `Removing ${internalDomainsToRemove.length} internal domains that are no longer configured`,
+                            `Domain ${host} is already taken, skipping.`,
                         )
-                        for (const domain of internalDomainsToRemove) {
-                            await prisma.domain.delete({
-                                where: {
-                                    host: domain.host,
-                                },
-                            })
-                            console.log(
-                                `Removed internal domain: ${domain.host}`,
-                            )
-                        }
+                        // TODO add a way to show errors to the user in cases like this (domain already taken), if domain is already taken, send them an email?
+                        continue
                     }
-
-                    const domainsToConnect = jsonData.domains.filter(
-                        (domain: string) => !existingHosts.has(domain),
-                    )
-
-                    if (domainsToConnect.length > 0) {
-                        console.log(
-                            `Connecting ${domainsToConnect.length} new domains for site ${siteId}`,
-                        )
-                        for (const host of domainsToConnect) {
-                            const domainTaken = await prisma.domain.findFirst({
-                                where: { host },
-                            })
-                            if (domainTaken) {
-                                console.log(
-                                    `Domain ${host} is already taken, skipping.`,
+                    const domainType: DomainType =
+                        host.endsWith('.' + env.APPS_DOMAIN) ||
+                        host.endsWith('.localhost')
+                            ? 'internalDomain'
+                            : 'customDomain'
+                    if (domainType === 'customDomain') {
+                        const takenInCloudflare = await cloudflareClient
+                            .get(host)
+                            .catch((e) => {
+                                notifyError(
+                                    e,
+                                    `Cloudflare domain check for ${host}`,
                                 )
-                                // TODO add a way to show errors to the user in cases like this (domain already taken), if domain is already taken, send them an email?
-                                continue
-                            }
-                            const domainType: DomainType =
-                                host.endsWith('.' + env.APPS_DOMAIN) ||
-                                host.endsWith('.localhost')
-                                    ? 'internalDomain'
-                                    : 'customDomain'
-                            if (domainType === 'customDomain') {
-                                const takenInCloudflare = await cloudflareClient
-                                    .get(host)
-                                    .catch((e) => {
-                                        notifyError(
-                                            e,
-                                            `Cloudflare domain check for ${host}`,
-                                        )
-                                        return null
-                                    })
-                                if (takenInCloudflare)
-                                    console.log(takenInCloudflare)
-                                if (takenInCloudflare?.id) {
-                                    console.log(
-                                        `Domain ${host} is already taken in Cloudflare, skipping.`,
-                                    )
-                                    continue
-                                }
-                            }
-                            try {
-                                await cloudflareClient.createDomain(host)
-
-                                await prisma.domain.create({
-                                    data: {
-                                        host,
-                                        branchId,
-                                        domainType,
-                                    },
-                                })
-                            } catch (e) {
-                                if (
-                                    typeof e?.message === 'string' &&
-                                    e.message.includes('409 Conflict')
-                                ) {
-                                    console.log(
-                                        `stopping addition of domain, 409 Conflict when creating domain ${host}: ${e.message}`,
-                                    )
-                                } else {
-                                    throw e
-                                }
-                            }
+                                return null
+                            })
+                        if (takenInCloudflare) console.log(takenInCloudflare)
+                        if (takenInCloudflare?.id) {
+                            console.log(
+                                `Domain ${host} is already taken in Cloudflare, skipping.`,
+                            )
+                            continue
                         }
                     }
-                }
-            }
-            if (asset.type === 'stylesCss') {
-                console.log(`Updating stylesCss for branch ${branchId}`)
-                await prisma.siteBranch.update({
-                    where: { branchId },
-                    data: { cssStyles: asset.content },
-                })
-            }
-            if (asset.type === 'mediaAsset') {
-                let slug = getSlugFromPath({
-                    githubPath: asset.githubPath,
-                    githubFolder,
-                })
-                mediaAssetSlugs.add(slug)
-                const downloadUrl = asset.downloadUrl
-
-                let imageMetadata = {
-                    width: asset.width,
-                    height: asset.height,
-                    bytes: asset.bytes,
-                }
-
-                // Check if this is an image file based on extension
-                const isImage = [
-                    '.jpg',
-                    '.jpeg',
-                    '.png',
-                    '.gif',
-                    '.bmp',
-                    '.webp',
-                    '.tif',
-                    '.tiff',
-                    '.avif',
-                ].some((ext) => asset.githubPath.toLowerCase().endsWith(ext))
-
-                async function uploadAndGetMetadata() {
-                    if (!downloadUrl) return imageMetadata
-
-                    // Skip downloading/uploading if the downloadUrl is from our own uploads base URL
-                    if (
-                        downloadUrl &&
-                        isValidUrl(downloadUrl) &&
-                        downloadUrl.startsWith(env.UPLOADS_BASE_URL!)
-                    ) {
-                        console.log(
-                            `Skipping upload for asset ${slug} as it is already hosted at UPLOADS_BASE_URL (${env.UPLOADS_BASE_URL})`,
-                        )
-                        return imageMetadata
-                    }
-
-                    const readable = await request(downloadUrl, { signal })
-
-                    const ok =
-                        readable.statusCode >= 200 && readable.statusCode < 300
-                    if (!ok) {
-                        throw new Error(
-                            `Failed to download asset ${readable.statusCode} ${slug}`,
-                        )
-                    }
-                    if (!readable.body) {
-                        throw new Error(`Failed to get body for asset ${slug}`)
-                    }
-
-                    const key = getKeyForMediaAsset({ siteId, slug })
-
-                    // Download the full file
-                    const buffer = Buffer.from(
-                        await readable.body.arrayBuffer(),
-                    )
-                    imageMetadata.bytes = buffer.length
-
-                    // For images, extract dimensions
-                    if (isImage) {
-                        try {
-                            const dimensions = imageDimensionsFromData(buffer)
-                            if (dimensions) {
-                                imageMetadata.width = dimensions.width
-                                imageMetadata.height = dimensions.height
-                            }
-                        } catch (error) {
-                            // Continue without dimensions
-                        }
-                    }
-
-                    const contentType = lookup(asset.githubPath) || ''
-
-                    const signedUrl = await getPresignedUrl({
-                        method: 'PUT',
-                        key,
-                        headers: {
-                            'content-type': contentType,
-                            'Content-Length': buffer.length.toString(),
-                        },
-                    })
-                    const response = await fetch(signedUrl, {
-                        method: 'PUT',
-                        body: buffer,
-                        headers: {
-                            'Content-Type': contentType,
-                            'Content-Length': buffer.length.toString(),
-                        },
-                    })
-
-                    const cacheTag = getCacheTagForMediaAsset({
-                        branchId,
-                        slug,
-                    })
-                    cacheTagsToInvalidate.push(cacheTag)
-
-                    return imageMetadata
-                }
-
-                console.log(`uploading media asset ${asset.githubPath}`)
-
-                // First download and get metadata
-                const metadata = await uploadAndGetMetadata()
-
-                // Then update database with the metadata
-                await prisma.mediaAsset.upsert({
-                    where: {
-                        slug_branchId: {
-                            branchId,
-                            slug,
-                        },
-                    },
-                    update: {
-                        slug,
-                        branchId,
-                        width: metadata.width,
-                        height: metadata.height,
-                        bytes: metadata.bytes,
-                    },
-                    create: {
-                        githubSha: asset.githubSha,
-                        slug,
-                        githubPath: asset.githubPath,
-                        branchId,
-                        width: metadata.width,
-                        height: metadata.height,
-                        bytes: metadata.bytes || 0,
-                    },
-                })
-            }
-            if (asset.type === 'page') {
-                const slug = getSlugFromPath({
-                    githubPath: asset.githubPath,
-                    githubFolder,
-                })
-
-                const extension = asset.githubPath.endsWith('.mdx')
-                    ? 'mdx'
-                    : 'md'
-
-                if (processedSlugs.has(slug)) {
-                    console.log(`Skipping duplicate page with slug: ${slug}`)
-                    continue
-                }
-
-                let data: ProcessorData
-                let errors: Array<{
-                    errorMessage: string
-                    line: number
-                    errorType: 'mdxParse' | 'mdParse' | 'render'
-                }> = []
-
-                let markdown = asset.markdown
-                let mdast = null as any
-                const relativeImagesSlugs = [] as string[]
-                try {
-                    const result = await processMdxInServer({
-                        markdown: asset.markdown,
-                        githubPath: asset.githubPath,
-                        extension: extension as MarkdownExtension,
-                    })
-                    data = result.data
-                    mdast = result.data.ast
                     try {
-                        function registerRelativeImagePaths({ src }) {
-                            if (
-                                typeof src === 'string' &&
-                                src.startsWith('/')
-                            ) {
-                                // Convert relative path to slug (remove leading slash)
-                                const assetSlug = src
-                                // Only add if the media asset exists
-                                if (mediaAssetSlugs.has(assetSlug)) {
-                                    relativeImagesSlugs.push(src)
-                                }
-                            }
-                        }
-                        const visitor = new MdastToJsx({
-                            markdown: asset.markdown,
-                            mdast: data.ast,
-                            components: {
-                                ...mdxComponents,
-                                img: registerRelativeImagePaths,
-                                Image: registerRelativeImagePaths,
+                        await cloudflareClient.createDomain(host)
+
+                        await prisma.domain.create({
+                            data: {
+                                host,
+                                branchId,
+                                domainType,
                             },
                         })
-                        visitor.run()
-
-                        // Add safe-mdx errors as render errors
-                        if (visitor.errors && visitor.errors.length > 0) {
-                            for (const safeMdxError of visitor.errors) {
-                                errors.push({
-                                    errorMessage: safeMdxError.message,
-                                    line: safeMdxError.line || 1,
-                                    errorType: 'render',
-                                })
-                            }
+                    } catch (e) {
+                        if (
+                            typeof e?.message === 'string' &&
+                            e.message.includes('409 Conflict')
+                        ) {
+                            console.log(
+                                `stopping addition of domain, 409 Conflict when creating domain ${host}: ${e.message}`,
+                            )
+                        } else {
+                            throw e
                         }
-                    } catch (safeMdxError: any) {
-                        markdown = ''
-                        // If safe-mdx throws an error, add it as a render error
+                    }
+                }
+            }
+        }
+        return []
+    }
+
+    async function syncStylesCss(
+        asset: AssetForSync,
+    ): Promise<ChunkReqPayload[]> {
+        if (asset.type !== 'stylesCss') return []
+
+        console.log(`Updating stylesCss for branch ${branchId}`)
+        await prisma.siteBranch.update({
+            where: { branchId },
+            data: { cssStyles: asset.content },
+        })
+        return []
+    }
+
+    async function syncMediaAsset(
+        asset: AssetForSync,
+    ): Promise<ChunkReqPayload[]> {
+        if (asset.type !== 'mediaAsset') return []
+
+        let slug = getSlugFromPath({
+            githubPath: asset.githubPath,
+            githubFolder,
+        })
+        mediaAssetSlugs.add(slug)
+        const downloadUrl = asset.downloadUrl
+
+        let imageMetadata = {
+            width: asset.width,
+            height: asset.height,
+            bytes: asset.bytes,
+        }
+
+        // Check if this is an image file based on extension
+        const isImage = [
+            '.jpg',
+            '.jpeg',
+            '.png',
+            '.gif',
+            '.bmp',
+            '.webp',
+            '.tif',
+            '.tiff',
+            '.avif',
+        ].some((ext) => asset.githubPath.toLowerCase().endsWith(ext))
+
+        async function uploadAndGetMetadata() {
+            if (!downloadUrl) return imageMetadata
+
+            // Skip downloading/uploading if the downloadUrl is from our own uploads base URL
+            if (
+                downloadUrl &&
+                isValidUrl(downloadUrl) &&
+                downloadUrl.startsWith(env.UPLOADS_BASE_URL!)
+            ) {
+                console.log(
+                    `Skipping upload for asset ${slug} as it is already hosted at UPLOADS_BASE_URL (${env.UPLOADS_BASE_URL})`,
+                )
+                return imageMetadata
+            }
+
+            const readable = await request(downloadUrl, { signal })
+
+            const ok = readable.statusCode >= 200 && readable.statusCode < 300
+            if (!ok) {
+                throw new Error(
+                    `Failed to download asset ${readable.statusCode} ${slug}`,
+                )
+            }
+            if (!readable.body) {
+                throw new Error(`Failed to get body for asset ${slug}`)
+            }
+
+            const key = getKeyForMediaAsset({ siteId, slug })
+
+            // Download the full file
+            const buffer = Buffer.from(await readable.body.arrayBuffer())
+            imageMetadata.bytes = buffer.length
+
+            // For images, extract dimensions
+            if (isImage) {
+                try {
+                    const dimensions = imageDimensionsFromData(buffer)
+                    if (dimensions) {
+                        imageMetadata.width = dimensions.width
+                        imageMetadata.height = dimensions.height
+                    }
+                } catch (error) {
+                    // Continue without dimensions
+                }
+            }
+
+            const contentType = lookup(asset.githubPath) || ''
+
+            const signedUrl = await getPresignedUrl({
+                method: 'PUT',
+                key,
+                headers: {
+                    'content-type': contentType,
+                    'Content-Length': buffer.length.toString(),
+                },
+            })
+            const response = await fetch(signedUrl, {
+                method: 'PUT',
+                body: buffer,
+                headers: {
+                    'Content-Type': contentType,
+                    'Content-Length': buffer.length.toString(),
+                },
+            })
+
+            const cacheTag = getCacheTagForMediaAsset({
+                branchId,
+                slug,
+            })
+            cacheTagsToInvalidate.push(cacheTag)
+
+            return imageMetadata
+        }
+
+        console.log(`uploading media asset ${asset.githubPath}`)
+
+        // First download and get metadata
+        const metadata = await uploadAndGetMetadata()
+
+        // Then update database with the metadata
+        await prisma.mediaAsset.upsert({
+            where: {
+                slug_branchId: {
+                    branchId,
+                    slug,
+                },
+            },
+            update: {
+                slug,
+                branchId,
+                width: metadata.width,
+                height: metadata.height,
+                bytes: metadata.bytes,
+            },
+            create: {
+                githubSha: asset.githubSha,
+                slug,
+                githubPath: asset.githubPath,
+                branchId,
+                width: metadata.width,
+                height: metadata.height,
+                bytes: metadata.bytes || 0,
+            },
+        })
+        return []
+    }
+
+    async function syncPage(asset: AssetForSync): Promise<ChunkReqPayload[]> {
+        if (asset.type !== 'page') return []
+
+        const chunksToSync: ChunkReqPayload[] = []
+        const slug = getSlugFromPath({
+            githubPath: asset.githubPath,
+            githubFolder,
+        })
+
+        const extension = asset.githubPath.endsWith('.mdx') ? 'mdx' : 'md'
+
+        if (processedSlugs.has(slug)) {
+            console.log(`Skipping duplicate page with slug: ${slug}`)
+            return chunksToSync
+        }
+
+        let data: ProcessorData
+        let errors: Array<{
+            errorMessage: string
+            line: number
+            errorType: 'mdxParse' | 'mdParse' | 'render'
+        }> = []
+
+        let markdown = asset.markdown
+        let mdast = null as any
+        const relativeImagesSlugs = [] as string[]
+        try {
+            const result = await processMdxInServer({
+                markdown: asset.markdown,
+                githubPath: asset.githubPath,
+                extension: extension as MarkdownExtension,
+            })
+            data = result.data
+            mdast = result.data.ast
+            try {
+                function registerRelativeImagePaths({ src }) {
+                    if (typeof src === 'string' && src.startsWith('/')) {
+                        // Convert relative path to slug (remove leading slash)
+                        const assetSlug = src
+                        // Only add if the media asset exists
+                        if (mediaAssetSlugs.has(assetSlug)) {
+                            relativeImagesSlugs.push(src)
+                        }
+                    }
+                }
+                const visitor = new MdastToJsx({
+                    markdown: asset.markdown,
+                    mdast: data.ast,
+                    components: {
+                        ...mdxComponents,
+                        img: registerRelativeImagePaths,
+                        Image: registerRelativeImagePaths,
+                    },
+                })
+                visitor.run()
+
+                // Add safe-mdx errors as render errors
+                if (visitor.errors && visitor.errors.length > 0) {
+                    for (const safeMdxError of visitor.errors) {
                         errors.push({
-                            errorMessage: `rendering error: ${safeMdxError.message}`,
-                            line: 1,
+                            errorMessage: safeMdxError.message,
+                            line: safeMdxError.line || 1,
                             errorType: 'render',
                         })
                     }
-                } catch (error: any) {
-                    markdown = ''
-                    const line =
-                        'line' in error && typeof error.line === 'number'
-                            ? error.line
-                            : 1
-                    // Determine error type based on the extension
-                    const errorType =
-                        extension === 'mdx' ? 'mdxParse' : 'mdParse'
-                    errors.push({
-                        errorMessage: error.message,
-                        line,
-                        errorType,
-                    })
-                    console.error(
-                        `Failed to process ${asset.githubPath}:`,
-                        error.message,
-                    )
-                    // Create placeholder data for failed processing
-                    data = {
-                        title: asset.githubPath,
-                        frontmatter: {},
-                        structuredData: { headings: [], contents: [] },
-                        ast: { type: 'root', children: [] },
-                        toc: [],
-                    }
                 }
-
-                const nonRecoverableErrors = errors.filter(
-                    (e) =>
-                        e.errorType === 'mdParse' || e.errorType === 'mdxParse',
-                )
-                const pageInput = {
-                    slug: slug,
-                    title: data.title || '',
-                    frontmatter: data.frontmatter,
-                    githubPath: asset.githubPath,
-                    githubSha:
-                        nonRecoverableErrors.length > 0 ? '' : asset.githubSha,
-                    extension: extension as MarkdownExtension,
-                    description: data?.frontmatter?.description || '',
-                }
-
-                const structuredData = data.structuredData
-
-                if (pageInput.title)
-                    chunksToSync.push(
-                        ...processForTrieve({
-                            _id: slug,
-                            title: pageInput.title,
-                            url: slug,
-                            structured: structuredData,
-                            pageSlug: slug,
-                        }),
-                    )
-
-                console.log(
-                    `Upserting page with slug: ${slug}, title: ${pageInput.title}...`,
-                )
-                await Promise.all([
-                    prisma.$transaction(async (prisma) => {
-                        // Upsert the MarkdownBlob first
-                        await prisma.markdownBlob.upsert({
-                            where: { githubSha: asset.githubSha },
-                            update: {
-                                markdown,
-                                mdast,
-                                structuredData: data.structuredData as any,
-                            },
-                            create: {
-                                githubSha: asset.githubSha,
-                                markdown,
-                                mdast,
-                                structuredData: data.structuredData as any,
-                            },
-                        })
-
-                        // Upsert the page
-                        const page = await prisma.markdownPage.upsert({
-                            where: {
-                                branchId_slug: { branchId, slug: slug },
-                            },
-                            update: pageInput,
-                            create: { ...pageInput, branchId },
-                        })
-
-                        // Delete existing sync errors for this page
-                        await prisma.markdownPageSyncError.deleteMany({
-                            where: { pageId: page.pageId },
-                        })
-
-                        errors = deduplicateBy(errors, (x) =>
-                            String(x.line || 0),
-                        )
-                        // Create new sync errors if there were processing errors
-                        if (errors.length > 0) {
-                            for (const error of errors) {
-                                await prisma.markdownPageSyncError.create({
-                                    data: {
-                                        pageId: page.pageId,
-                                        line: error.line,
-                                        errorMessage: error.errorMessage,
-                                        errorType: error.errorType,
-                                    },
-                                })
-                            }
-                        }
-
-                        // Delete existing PageMediaAsset records for this page
-                        await prisma.pageMediaAsset.deleteMany({
-                            where: { pageId: page.pageId },
-                        })
-
-                        // Create new PageMediaAsset records for relative image paths
-                        for (const imageSrc of relativeImagesSlugs) {
-                            const assetSlug = imageSrc
-
-                            await prisma.pageMediaAsset.create({
-                                data: {
-                                    pageId: page.pageId,
-                                    assetSlug,
-                                    branchId,
-                                },
-                            })
-                        }
-
-                        console.log(
-                            `Page upsert complete: ${page.pageId} (${page.githubPath})${errors.length > 0 ? ` with ${errors.length} error(s)` : ''}`,
-                        )
-
-                        return page
-                    }),
-                    chunksToSync.length >= chunkSize &&
-                        (async () => {
-                            if (trieve.datasetId) {
-                                console.log(
-                                    `Syncing ${chunkSize} chunks to Trieve...`,
-                                )
-                                await trieve.createChunk(
-                                    chunksToSync.slice(0, chunkSize),
-                                )
-                            }
-                            console.log('Chunks synced to Trieve successfully.')
-                            chunksToSync = chunksToSync.slice(chunkSize)
-                        })(),
-                ])
-                processedSlugs.add(slug)
-
-                // Add cache tag for invalidation
-                const pageCacheTag = getCacheTagForPage({
-                    branchId,
-                    slug,
+            } catch (safeMdxError: any) {
+                markdown = ''
+                // If safe-mdx throws an error, add it as a render error
+                errors.push({
+                    errorMessage: `rendering error: ${safeMdxError.message}`,
+                    line: 1,
+                    errorType: 'render',
                 })
-                cacheTagsToInvalidate.push(pageCacheTag)
-
-                console.log(
-                    ` -> Upserted page: ${pageInput.title} (ID: ${slug}, path: ${asset.githubPath})`,
-                )
             }
-            if (asset.type === 'deletedAsset') {
-                console.log(`Processing deleted asset: ${asset.githubPath}`)
-                deletedAssetPaths.push(asset.githubPath)
+        } catch (error: any) {
+            markdown = ''
+            const line =
+                'line' in error && typeof error.line === 'number'
+                    ? error.line
+                    : 1
+            // Determine error type based on the extension
+            const errorType = extension === 'mdx' ? 'mdxParse' : 'mdParse'
+            errors.push({
+                errorMessage: error.message,
+                line,
+                errorType,
+            })
+            console.error(
+                `Failed to process ${asset.githubPath}:`,
+                error.message,
+            )
+            // Create placeholder data for failed processing
+            data = {
+                title: asset.githubPath,
+                frontmatter: {},
+                structuredData: { headings: [], contents: [] },
+                ast: { type: 'root', children: [] },
+                toc: [],
+            }
+        }
 
-                // Find and delete pages with this githubPath
-                const pagesToDelete = await prisma.markdownPage.findMany({
-                    where: {
-                        branchId,
-                        githubPath: asset.githubPath,
-                    },
-                    select: {
-                        pageId: true,
-                        slug: true,
-                    },
-                })
+        const nonRecoverableErrors = errors.filter(
+            (e) => e.errorType === 'mdParse' || e.errorType === 'mdxParse',
+        )
+        const pageInput: Prisma.MarkdownPageUncheckedCreateInput = {
+            slug: slug,
+            branchId,
+            frontmatter: data.frontmatter,
+            githubPath: asset.githubPath,
+            githubSha: nonRecoverableErrors.length > 0 ? '' : asset.githubSha,
+        }
 
-                if (pagesToDelete.length > 0) {
-                    console.log(
-                        `Found ${pagesToDelete.length} pages to delete for path ${asset.githubPath}`,
-                    )
+        const structuredData = data.structuredData
 
-                    // Add cache tags for invalidation
-                    for (const page of pagesToDelete) {
-                        const pageCacheTag = getCacheTagForPage({
-                            branchId,
-                            slug: page.slug,
-                        })
-                        cacheTagsToInvalidate.push(pageCacheTag)
-                    }
+        if (data.frontmatter.title)
+            chunksToSync.push(
+                ...processForTrieve({
+                    _id: slug,
+                    title: data.frontmatter.title,
+                    url: slug,
+                    structured: structuredData,
+                    pageSlug: slug,
+                }),
+            )
 
-                    // Delete from Trieve if available
-                    if (trieve.datasetId) {
-                        for (const page of pagesToDelete) {
-                            try {
-                                await trieve.deleteGroup({
-                                    deleteChunks: true,
-                                    groupId: page.slug,
-                                    trDataset: trieve.datasetId,
-                                })
-                                console.log(
-                                    `Deleted Trieve chunks for page ${page.slug}`,
-                                )
-                            } catch (error) {
-                                console.error(
-                                    `Error deleting Trieve chunks for page ${page.slug}:`,
-                                    error,
-                                )
-                            }
-                        }
-                    }
+        console.log(
+            `Upserting page with slug: ${slug}, title: ${data.frontmatter.title}...`,
+        )
+        await prisma.$transaction(async (prisma) => {
+            // Upsert the MarkdownBlob first
+            await prisma.markdownBlob.upsert({
+                where: { githubSha: asset.githubSha },
+                update: {
+                    markdown,
+                    mdast,
+                    structuredData: data.structuredData as any,
+                },
+                create: {
+                    githubSha: asset.githubSha,
+                    markdown,
+                    mdast,
+                    structuredData: data.structuredData as any,
+                },
+            })
 
-                    // Delete from database
-                    const deleteResult = await prisma.markdownPage.deleteMany({
-                        where: {
-                            branchId,
-                            githubPath: asset.githubPath,
+            // Upsert the page
+            const page = await prisma.markdownPage.upsert({
+                where: {
+                    branchId_slug: { branchId, slug: slug },
+                },
+                update: pageInput,
+                create: { ...pageInput, branchId },
+            })
+
+            // Delete existing sync errors for this page
+            await prisma.markdownPageSyncError.deleteMany({
+                where: { pageId: page.pageId },
+            })
+
+            errors = deduplicateBy(errors, (x) => String(x.line || 0))
+            // Create new sync errors if there were processing errors
+            if (errors.length > 0) {
+                for (const error of errors) {
+                    await prisma.markdownPageSyncError.create({
+                        data: {
+                            pageId: page.pageId,
+                            line: error.line,
+                            errorMessage: error.errorMessage,
+                            errorType: error.errorType,
                         },
                     })
-
-                    console.log(
-                        `Deleted ${deleteResult.count} pages from database for path ${asset.githubPath}`,
-                    )
-                }
-
-                // Delete media assets with this githubPath
-                const mediaDeleteResult = await prisma.mediaAsset.deleteMany({
-                    where: {
-                        branchId,
-                        githubPath: asset.githubPath,
-                    },
-                })
-
-                if (mediaDeleteResult.count > 0) {
-                    console.log(
-                        `Deleted ${mediaDeleteResult.count} media assets for path ${asset.githubPath}`,
-                    )
-                }
-
-                // Delete meta files with this githubPath
-                const metaDeleteResult = await prisma.metaFile.deleteMany({
-                    where: {
-                        branchId,
-                        githubPath: asset.githubPath,
-                    },
-                })
-
-                if (metaDeleteResult.count > 0) {
-                    console.log(
-                        `Deleted ${metaDeleteResult.count} meta files for path ${asset.githubPath}`,
-                    )
                 }
             }
-        } catch (e: any) {
-            if (
-                e.message.includes(
-                    'lone leading surrogate in hex escape at line ',
-                )
-            ) {
-                console.error(e)
-                return
+
+            // Delete existing PageMediaAsset records for this page
+            await prisma.pageMediaAsset.deleteMany({
+                where: { pageId: page.pageId },
+            })
+
+            // Create new PageMediaAsset records for relative image paths
+            for (const imageSrc of relativeImagesSlugs) {
+                const assetSlug = imageSrc
+
+                await prisma.pageMediaAsset.create({
+                    data: {
+                        pageId: page.pageId,
+                        assetSlug,
+                        branchId,
+                    },
+                })
             }
-            throw e
-        } finally {
-            semaphore.release() // Release permit after file processing
+
+            console.log(
+                `Page upsert complete: ${page.pageId} (${page.githubPath})${errors.length > 0 ? ` with ${errors.length} error(s)` : ''}`,
+            )
+
+            return page
+        })
+        processedSlugs.add(slug)
+
+        // Add cache tag for invalidation
+        const pageCacheTag = getCacheTagForPage({
+            branchId,
+            slug,
+        })
+        cacheTagsToInvalidate.push(pageCacheTag)
+
+        console.log(
+            ` -> Upserted page: ${pageInput.title} (ID: ${slug}, path: ${asset.githubPath})`,
+        )
+
+        return chunksToSync
+    }
+
+    async function syncDeletedAsset(
+        asset: AssetForSync,
+    ): Promise<ChunkReqPayload[]> {
+        if (asset.type !== 'deletedAsset') return []
+
+        console.log(`Processing deleted asset: ${asset.githubPath}`)
+        deletedAssetPaths.push(asset.githubPath)
+
+        // Find and delete pages with this githubPath
+        const pagesToDelete = await prisma.markdownPage.findMany({
+            where: {
+                branchId,
+                githubPath: asset.githubPath,
+            },
+            select: {
+                pageId: true,
+                slug: true,
+            },
+        })
+
+        if (pagesToDelete.length > 0) {
+            console.log(
+                `Found ${pagesToDelete.length} pages to delete for path ${asset.githubPath}`,
+            )
+
+            // Add cache tags for invalidation
+            for (const page of pagesToDelete) {
+                const pageCacheTag = getCacheTagForPage({
+                    branchId,
+                    slug: page.slug,
+                })
+                cacheTagsToInvalidate.push(pageCacheTag)
+            }
+
+            // Delete from Trieve if available
+            if (trieve.datasetId) {
+                for (const page of pagesToDelete) {
+                    try {
+                        await trieve.deleteGroup({
+                            deleteChunks: true,
+                            groupId: page.slug,
+                            trDataset: trieve.datasetId,
+                        })
+                        console.log(
+                            `Deleted Trieve chunks for page ${page.slug}`,
+                        )
+                    } catch (error) {
+                        console.error(
+                            `Error deleting Trieve chunks for page ${page.slug}:`,
+                            error,
+                        )
+                    }
+                }
+            }
+
+            // Delete from database
+            const deleteResult = await prisma.markdownPage.deleteMany({
+                where: {
+                    branchId,
+                    githubPath: asset.githubPath,
+                },
+            })
+
+            console.log(
+                `Deleted ${deleteResult.count} pages from database for path ${asset.githubPath}`,
+            )
+        }
+
+        // Delete media assets with this githubPath
+        const mediaDeleteResult = await prisma.mediaAsset.deleteMany({
+            where: {
+                branchId,
+                githubPath: asset.githubPath,
+            },
+        })
+
+        if (mediaDeleteResult.count > 0) {
+            console.log(
+                `Deleted ${mediaDeleteResult.count} media assets for path ${asset.githubPath}`,
+            )
+        }
+
+        // Delete meta files with this githubPath
+        const metaDeleteResult = await prisma.metaFile.deleteMany({
+            where: {
+                branchId,
+                githubPath: asset.githubPath,
+            },
+        })
+
+        if (metaDeleteResult.count > 0) {
+            console.log(
+                `Deleted ${metaDeleteResult.count} meta files for path ${asset.githubPath}`,
+            )
+        }
+
+        return []
+    }
+
+    // Process all assets concurrently using processGeneratorConcurrentlyInOrder
+    for await (const chunks of processGeneratorConcurrentlyInOrder(
+        files,
+        concurrencyLimit,
+        async (asset) => {
+            await semaphore.acquire()
+            try {
+                try {
+                    switch (asset.type) {
+                        case 'metaFile':
+                            return await syncMetaFile(asset)
+                        case 'docsJson':
+                            return await syncDocsJson(asset)
+                        case 'stylesCss':
+                            return await syncStylesCss(asset)
+                        case 'mediaAsset':
+                            return await syncMediaAsset(asset)
+                        case 'page':
+                            return await syncPage(asset)
+                        case 'deletedAsset':
+                            return await syncDeletedAsset(asset)
+                        default:
+                            return []
+                    }
+                } catch (e: any) {
+                    if (
+                        e.message.includes(
+                            'lone leading surrogate in hex escape at line ',
+                        )
+                    ) {
+                        console.error(e)
+                        return []
+                    }
+                    throw e
+                }
+            } finally {
+                semaphore.release()
+            }
+        },
+    )) {
+        allChunksToSync.push(...chunks)
+        if (chunks.length >= chunkSize && trieve.datasetId) {
+            console.log(`Syncing ${chunks.length} chunks to Trieve...`)
+            const groups = groupByN(chunks, chunkSize)
+            chunks.length = 0
+            waitUntil(
+                Promise.all(groups.map((group) => trieve.createChunk(group))),
+            )
         }
     }
-    if (cacheTagsToInvalidate.length) {
-        await cloudflareClient.invalidateCacheTags(cacheTagsToInvalidate)
-    }
 
-    if (chunksToSync.length > 0) {
+    // Process any remaining chunks that didn't reach batch size
+    if (allChunksToSync.length > 0) {
         console.log(
-            `Flushing remaining ${chunksToSync.length} chunks to Trieve...`,
+            `Syncing remaining ${allChunksToSync.length} chunks to Trieve...`,
         )
-        const groups = groupByN(chunksToSync, chunkSize)
+        const groups = groupByN(allChunksToSync, chunkSize)
         if (trieve.datasetId) {
             await Promise.all(groups.map((group) => trieve.createChunk(group)))
         }
         console.log('Remaining chunks synced to Trieve successfully.')
     } else {
         console.log('No remaining chunks to sync to Trieve.')
+    }
+
+    // Invalidate cache tags
+    if (cacheTagsToInvalidate.length) {
+        await cloudflareClient.invalidateCacheTags(cacheTagsToInvalidate)
     }
 
     // Clean up orphaned Trieve chunks after sync is complete
@@ -1635,4 +1680,18 @@ function getSlugFromPath({ githubPath = '', githubFolder }) {
 
     githubPath = githubPath.replace(mdxRegex, '')
     return '/' + githubPath
+}
+
+/**
+ * Utility function that waits until the given promise resolves, but does not block the event loop.
+ * Returns the input promise, to allow for fire-and-forget async processing.
+ * Useful for triggering background tasks without awaiting them directly.
+ */
+function waitUntil<T>(promise: Promise<T>): Promise<T> {
+    // Swallow any unhandled rejections
+    promise.catch((e) => {
+        // Optionally log error, but don't interrupt execution
+        notifyError(e, 'waitUntil error:')
+    })
+    return promise
 }

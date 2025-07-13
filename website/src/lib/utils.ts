@@ -124,5 +124,38 @@ export function debounce<T extends (...args: any[]) => any>(
     } as any
 }
 
-// teeAsync.ts
-// Requires the DOM lib for `ReadableStream` types (e.g. `tsconfig.json` → `"lib": ["esnext", "dom"]`).
+
+
+export async function* processGeneratorConcurrentlyInOrder<T, R>(
+    iterable: AsyncIterable<T>,
+    maxConcurrent = 3,
+    mapper: (item: T) => Promise<R>,
+): AsyncGenerator<R> {
+    const queue: Promise<R>[] = []
+    const iterator = iterable[Symbol.asyncIterator]()
+    let done = false
+
+    // fill the queue
+    while (queue.length < maxConcurrent) {
+        const { value, done: iterDone } = await iterator.next()
+        if (iterDone) {
+            done = true
+            break
+        }
+        queue.push(mapper(value))
+    }
+
+    while (queue.length) {
+        const nextPromise = queue.shift()!
+        // Start next only if not done
+        if (!done) {
+            const { value, done: iterDone } = await iterator.next()
+            if (!iterDone) {
+                queue.push(mapper(value))
+            } else {
+                done = true
+            }
+        }
+        yield await nextPromise
+    }
+}
