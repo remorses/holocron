@@ -33,7 +33,7 @@ jobs:
           run_install: false
       - uses: dopplerhq/cli-action@v3
       - run: pnpm install --frozen-lockfile=false
-      - uses: remorses/self-healing-ci@v1
+      - uses: remorses/self-healing-ci@main
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           command: "pnpm build"
