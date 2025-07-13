@@ -300,6 +300,8 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     return children
 }
 
+
+
 export function CSSVariables({ docsJson }: { docsJson: DocsJsonType }) {
     // Always expect { dark, light }
     const cssVariables = docsJson?.cssVariables
