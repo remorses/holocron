@@ -87,6 +87,27 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
     const { installationId, owner, repoName, repoId, githubBranch, commits } = args
     const latestCommit = commits[commits.length - 1]
 
+    // Check if the repository exists in the database before creating pending check
+    const repoExists = await prisma.site.findFirst({
+        where: {
+            githubOwner: owner,
+            githubRepoId: repoId,
+            githubInstallations: {
+                some: {
+                    installationId,
+                    appId: env.GITHUB_APP_ID,
+                },
+            },
+        },
+    })
+
+    if (!repoExists) {
+        logger.log(
+            `Repository ${owner}/${repoName} is not connected to the database, skipping webhook processing`,
+        )
+        return
+    }
+
     // Set check to pending state at the start
     await createPendingCheckRun({
         installationId,
