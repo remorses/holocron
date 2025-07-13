@@ -338,16 +338,16 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                         />
                     )
                 }
-                if (part.type === 'tool-str_replace_editor') {
+                if (part.type === 'tool-strReplaceEditor') {
                     return <EditorToolPreview key={index} {...part} />
                 }
-                if (part.type === 'tool-get_project_files') {
+                if (part.type === 'tool-getProjectFiles') {
                     return <FilesTreePreview key={index} {...part} />
                 }
-                if (part.type === 'tool-render_form') {
+                if (part.type === 'tool-renderForm') {
                     return <RenderFormPreview key={index} {...part} />
                 }
-                if (part.type === 'tool-delete_pages') {
+                if (part.type === 'tool-deletePages') {
                     const filePaths = part.input?.filePaths || []
                     return (
                         <ToolPreviewContainer key={index} {...part}>
@@ -548,7 +548,7 @@ function Footer() {
                         lastMessage.parts[lastMessage.parts.length - 1]
                     if (
                         lastMessage.role === 'assistant' &&
-                        lastPart?.type === 'tool-str_replace_editor'
+                        lastPart?.type === 'tool-strReplaceEditor'
                     ) {
                         const args: Partial<EditToolParamSchema> =
                             lastPart.input as any

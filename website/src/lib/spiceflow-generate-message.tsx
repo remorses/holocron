@@ -69,19 +69,19 @@ const websiteFetchUrlInputSchema = z.object({
 })
 
 export type WebsiteTools = {
-    str_replace_editor: {
+    strReplaceEditor: {
         input: EditToolParamSchema
         output: any
     }
-    get_project_files: {
+    getProjectFiles: {
         input: {}
         output: string
     }
-    render_form: {
+    renderForm: {
         input: RenderFormParameters //
         output: any
     }
-    delete_pages: {
+    deletePages: {
         input: z.infer<typeof deletePagesSchema>
         output: {
             deletedFiles: string[]
@@ -200,7 +200,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             },
         })
 
-        const str_replace_editor = model.modelId.includes('claude')
+        const strReplaceEditor = model.modelId.includes('claude')
             ? anthropic.tools.textEditor_20250124({
                   execute: editFilesExecute as any,
               })
@@ -232,9 +232,9 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 } satisfies OpenAIResponsesProviderOptions,
             },
             tools: {
-                str_replace_editor,
+                strReplaceEditor,
 
-                get_project_files: tool({
+                getProjectFiles: tool({
                     description:
                         'Returns a directory tree diagram of the current project files as plain text. Useful for giving an overview or locating files.',
                     inputSchema: z.object({}),
@@ -257,7 +257,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                                 branch.site.githubFolder || '.',
                                 'fumabase.jsonc',
                             ),
-                            title: 'Use the render_form tool to update these values',
+                            title: 'Use the renderForm tool to update these values',
                         })
                         // filePaths.push({ path: 'styles.css', title: 'The CSS styles for the website. Only update this file for advanced CSS customisations' })
                         return printDirectoryTree({
@@ -266,7 +266,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     },
                 }),
 
-                render_form: tool({
+                renderForm: tool({
                     description:
                         'Render a series of input elements so the user can provide structured data. Array-style names such as items[0].color are supported.',
                     inputSchema: RenderFormParameters,
@@ -274,7 +274,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     execute: createRenderFormExecute({}),
                 }),
 
-                delete_pages: tool({
+                deletePages: tool({
                     description:
                         'Delete pages from the website. paths should never start with /. Paths should include the extension.',
                     inputSchema: deletePagesSchema,

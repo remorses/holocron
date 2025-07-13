@@ -224,7 +224,7 @@ export function RenderFormPreview({
     state,
     output: result,
     toolCallId,
-}: Extract<WebsiteToolPart, { type: 'tool-render_form' }>) {
+}: Extract<WebsiteToolPart, { type: 'tool-renderForm' }>) {
     const { handleSubmit } = useFormContext()
 
     if (!args?.fields || args.fields.length === 0) {

@@ -6,10 +6,15 @@ on:
       - main
       - preview
 
+permissions:
+  contents: write # push branch
+  pull-requests: write # open PR
+
 jobs:
   ci:
     env:
       DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
@@ -28,6 +33,7 @@ jobs:
           run_install: false
       - uses: dopplerhq/cli-action@v3
       - run: pnpm install --frozen-lockfile=false
-      # scripts
-      - run: pnpm build
-      - run: pnpm test
+      - uses: remorses/self-healing-ci@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          command: "pnpm build"

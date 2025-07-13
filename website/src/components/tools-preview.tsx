@@ -14,7 +14,7 @@ export function EditorToolPreview({
     state,
     toolCallId,
     output: result,
-}: Extract<WebsiteToolPart, { type: 'tool-str_replace_editor' }>) {
+}: Extract<WebsiteToolPart, { type: 'tool-strReplaceEditor' }>) {
     const isChatGenerating = useChatState((x) => x.isGenerating)
     let code = args?.new_str || args?.file_text || ''
     if (code && typeof code === 'object') {
@@ -114,7 +114,7 @@ export function EditorToolPreview({
 
 export function FilesTreePreview({
     output,
-}: Extract<WebsiteToolPart, { type: 'tool-get_project_files' }>) {
+}: Extract<WebsiteToolPart, { type: 'tool-getProjectFiles' }>) {
     const isChatGenerating = useChatState((x) => x.isGenerating)
     const code = output || '\n'
     if (!code) return null
