@@ -817,7 +817,7 @@ export async function syncSite({
         cacheTagsToInvalidate.push(pageCacheTag)
 
         console.log(
-            ` -> Upserted page: ${pageInput.title} (ID: ${slug}, path: ${asset.githubPath})`,
+            ` -> Upserted page: ${data.title} (ID: ${slug}, path: ${asset.githubPath})`,
         )
 
         return chunksToSync
