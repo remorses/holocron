@@ -538,68 +538,78 @@ function Footer() {
         // First iteration: handle docs/edit-tool logic
         let isPostMessageBusy = false
         async function updateDocsSite() {
-            for await (const newMessages of editIter) {
-                const lastMessage = newMessages[newMessages.length - 1]
-                const lastPart = lastMessage.parts[lastMessage.parts.length - 1]
-                if (
-                    lastMessage.role === 'assistant' &&
-                    lastPart?.type === 'tool-str_replace_editor'
-                ) {
-                    if ('input' in lastPart) {
-                        const args: Partial<EditToolParamSchema> =
-                            lastPart.input as any
-                        if (args?.command === 'view') {
-                            continue
-                        }
-                        if (!isParameterComplete(args)) {
-                            continue
-                        }
-                        const currentSlug = generateSlugFromPath(
-                            args.path || '',
-                            githubFolder,
-                        )
-                        if (
-                            lastPart.state === 'input-streaming' ||
-                            lastPart.state === 'input-available'
-                        ) {
-                            if (isPostMessageBusy) continue
-                            let updatedPagesCopy = { ...filesInDraft }
-                            const execute = createEditExecute({
-                                filesInDraft: updatedPagesCopy,
-                                getPageContent,
-                            })
-                            await execute(args as any)
-                            isPostMessageBusy = true
-                            docsRpcClient
-                                .setDocsState({
-                                    filesInDraft: updatedPagesCopy,
-                                    currentSlug,
-                                    isMarkdownStreaming: true,
-                                })
-                                .then(() => {
-                                    isPostMessageBusy = false
-                                })
-                        } else if (lastPart.state === 'output-available') {
-                            await execute(args as any)
-                            console.log(
-                                `applying the setState update to the docs site`,
-                                lastPart,
-                            )
 
-                            await docsRpcClient.setDocsState(
-                                {
-                                    filesInDraft: filesInDraft,
-                                    isMarkdownStreaming: false,
-                                    currentSlug,
-                                },
-                                lastPart.toolCallId,
+            for await (const newMessages of editIter) {
+                try {
+                    const lastMessage = newMessages[newMessages.length - 1]
+                    const lastPart =
+                        lastMessage.parts[lastMessage.parts.length - 1]
+                    if (
+                        lastMessage.role === 'assistant' &&
+                        lastPart?.type === 'tool-str_replace_editor'
+                    ) {
+                        if ('input' in lastPart) {
+                            const args: Partial<EditToolParamSchema> =
+                                lastPart.input as any
+                            if (args?.command === 'view') {
+                                continue
+                            }
+                            if (!isParameterComplete(args)) {
+                                continue
+                            }
+                            const currentSlug = generateSlugFromPath(
+                                args.path || '',
+                                githubFolder,
                             )
-                            useWebsiteState.setState({
-                                filesInDraft,
-                                currentSlug,
-                            })
+                            if (
+                                lastPart.state === 'input-streaming' ||
+                                lastPart.state === 'input-available'
+                            ) {
+                                if (isPostMessageBusy) continue
+                                let updatedPagesCopy = { ...filesInDraft }
+                                const execute = createEditExecute({
+                                    filesInDraft: updatedPagesCopy,
+                                    getPageContent,
+                                })
+                                await execute(args as any)
+                                isPostMessageBusy = true
+                                docsRpcClient
+                                    .setDocsState({
+                                        filesInDraft: updatedPagesCopy,
+                                        currentSlug,
+                                        isMarkdownStreaming: true,
+                                    })
+                                    .then(() => {
+                                        isPostMessageBusy = false
+                                    })
+                            } else if (lastPart.state === 'output-available') {
+                                await execute(args as any)
+                                console.log(
+                                    `applying the setState update to the docs site`,
+                                    lastPart,
+                                )
+
+                                await docsRpcClient
+                                    .setDocsState(
+                                        {
+                                            filesInDraft: filesInDraft,
+                                            isMarkdownStreaming: false,
+                                            currentSlug,
+                                        },
+                                        lastPart.toolCallId,
+                                    )
+                                    .catch((e) => {
+                                        console.error('failed setDocsState', e)
+                                    })
+                                useWebsiteState.setState({
+                                    filesInDraft,
+                                    currentSlug,
+                                })
+                            }
                         }
                     }
+                } catch (e) {
+                    console.error(e)
                 }
             }
         }
