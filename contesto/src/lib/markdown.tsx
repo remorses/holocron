@@ -41,7 +41,7 @@ export const Markdown = function MarkdownRender(props: MarkdownRendererProps) {
             )}
         >
             <SafeMdxRenderer
-            addMarkdownLineNumbers
+                addMarkdownLineNumbers
                 renderNode={props.renderNode}
                 components={props.components}
                 markdown={props.markdown}

@@ -19,6 +19,7 @@ export function MarkdownRuntime({
     showDiff = false,
     previousMarkdown = '',
     className = '',
+
 }) {
     const onAst = (ast) => {
         if (showDiff && previousMarkdown) {
@@ -37,6 +38,7 @@ export function MarkdownRuntime({
             markdown={markdown}
             processor={processor}
             components={mdxComponents}
+
             className={className}
         />
     )

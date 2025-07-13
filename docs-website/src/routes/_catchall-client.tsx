@@ -493,6 +493,7 @@ function DocsMarkdown(): any {
                 {...{
                     extension,
                     isStreaming,
+
                     showDiff,
                     markdown,
                     previousMarkdown,

@@ -63,7 +63,7 @@ function ChatDrawerWrapper() {
 
 const openapiPath = `/api-reference`
 
-const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, '')]
+const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, ''), 'http://localhost:7664']
 
 let onFirstStateMessage = () => {}
 const firstStateReceived = new Promise<void>((resolve) => {

@@ -1,4 +1,5 @@
 import { MediaAsset, PageMediaAsset, prisma } from 'db'
+import { Root } from 'mdast'
 import frontMatter from 'front-matter'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
@@ -426,9 +427,9 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
     console.timeEnd(`${timerId} - total loader time`)
 
-    let mdast = page.content?.mdast as any
+    let mdast: Root = page.content?.mdast as any
 
-    if (!mdast) {
+    if (!mdast?.children) {
         console.time(`${timerId} - process mdx content`)
         // Determine the file extension from the githubPath
         const extension = page.githubPath?.split('.').pop() || 'mdx'

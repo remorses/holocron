@@ -157,6 +157,8 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             providerOptions: {
                 openai: {
                     reasoningSummary: 'detailed',
+                    strictJsonSchema: true,
+
                 } satisfies OpenAIResponsesProviderOptions,
             },
             tools: {
@@ -393,7 +395,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                                     })
                                 } else {
                                     console.log(
-                                        `unhandled part tool type with state ${part.state}`,
+                                        `unhandled part tool type ${part.type} with state ${part.state}`,
                                     )
                                 }
                             } else if (part.type === 'file') {
