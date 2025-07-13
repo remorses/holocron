@@ -66,10 +66,10 @@ export const usePersistentDocsState = create<PersistentDocsState>(
 export function saveChatMessages(chatId: string, messages: UIMessage[]) {
     const state = usePersistentDocsState.getState()
     const existingHistory = state.chatHistory[chatId]
-    
+
     // Keep only last 10 messages
     const limitedMessages = messages.slice(-10)
-    
+
     const updatedHistory = {
         ...state.chatHistory,
         [chatId]: {
@@ -77,14 +77,14 @@ export function saveChatMessages(chatId: string, messages: UIMessage[]) {
             createdAt: existingHistory?.createdAt || new Date().toISOString(),
         },
     }
-    
+
     // Keep only the most recent 10 chats to prevent localStorage from growing too large
     const sortedChats = Object.entries(updatedHistory)
         .sort(([, a], [, b]) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 10)
-    
+
     const limitedHistory = Object.fromEntries(sortedChats)
-    
+
     usePersistentDocsState.setState({
         chatHistory: limitedHistory,
     })
@@ -121,5 +121,6 @@ if (typeof window !== 'undefined') {
 export type IframeRpcMessage = {
     id: string
     state?: DocsState
+    currentSlug?: string
     error?: string
 }

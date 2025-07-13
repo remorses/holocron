@@ -1,6 +1,7 @@
 import { createSpiceflowClient, SpiceflowClient } from 'spiceflow/client'
 import { DocsState, IframeRpcMessage } from 'docs-website/src/lib/docs-state'
 import { debounce } from './utils'
+import { useWebsiteState } from './state'
 
 export function createIframeRpcClient({
     iframeRef,
@@ -66,7 +67,12 @@ export function createIframeRpcClient({
         })
     }
     function onMessage(e: MessageEvent) {
-        const { id, state, error } = (e.data ?? {}) as IframeRpcMessage
+        const { id, currentSlug, state, error } = (e.data ??
+            {}) as IframeRpcMessage
+
+        if (currentSlug) {
+            useWebsiteState.setState({ currentSlug })
+        }
 
         if (!id) return
 

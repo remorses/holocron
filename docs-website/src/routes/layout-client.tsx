@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import React from 'react'
 import { useNProgress } from 'docs-website/src/lib/nprogress'
@@ -63,7 +63,10 @@ function ChatDrawerWrapper() {
 
 const openapiPath = `/api-reference`
 
-const allowedOrigins = [env.NEXT_PUBLIC_URL!.replace(/\/$/, ''), 'http://localhost:7664']
+const allowedOrigins = [
+    env.NEXT_PUBLIC_URL!.replace(/\/$/, ''),
+    'http://localhost:7664',
+]
 
 let onFirstStateMessage = () => {}
 const firstStateReceived = new Promise<void>((resolve) => {
@@ -143,15 +146,13 @@ async function iframeMessagesHandling() {
     }
     // Set up ping interval
     setInterval(() => {
-        if (typeof window !== 'undefined') {
-            if (window.parent !== window) {
-                window.parent?.postMessage?.(
-                    { type: 'ping' },
-                    {
-                        targetOrigin: '*',
-                    },
-                )
-            }
+        if (typeof window !== 'undefined' && window.parent !== window) {
+            window.parent?.postMessage?.(
+                { type: 'ping' },
+                {
+                    targetOrigin: '*',
+                },
+            )
         }
     }, 500)
 }
@@ -228,45 +229,63 @@ if (typeof window !== 'undefined') {
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
     const loaderData = useLoaderData<Route.ComponentProps['loaderData']>()
-    const navigation = useNavigation()
-    const revalidator = useRevalidator()
-    const [searchParams, setSearchParams] = useSearchParams()
-    const filesInDraft = useDocsState((state) => state.filesInDraft)
 
     if (loaderData && typeof window !== 'undefined') {
         globalThis.rootServerLoaderData = loaderData
     }
     const { previewWebsocketId } = loaderData || {}
 
+    // const navigation = useNavigation()
+    // const revalidator = useRevalidator()
+    // const [searchParams, setSearchParams] = useSearchParams()
+    // const filesInDraft = useDocsState((state) => state.filesInDraft)
     // Watch for changes to fumabase.jsonc file in draft and revalidate
-    useDebouncedEffect(
-        () => {
-            // Check if fumabase.jsonc file exists in draft files
-            const fumabaseJsoncPath = Object.keys(filesInDraft).find((path) =>
-                path.endsWith('fumabase.jsonc')
+    // useDebouncedEffect(
+    //     () => {
+    //         // Check if fumabase.jsonc file exists in draft files
+    //         const fumabaseJsoncPath = Object.keys(filesInDraft).find((path) =>
+    //             path.endsWith('fumabase.jsonc')
+    //         )
+
+    //         if (fumabaseJsoncPath && filesInDraft[fumabaseJsoncPath]?.content) {
+    //             try {
+    //                 const docsJsonContent = filesInDraft[fumabaseJsoncPath].content
+    //                 const encodedContent = encodeURIComponent(docsJsonContent)
+    //                 const currentParam = searchParams.get('fumabase.jsonc')
+
+    //                 // Only update if the content is different
+    //                 if (currentParam !== encodedContent) {
+    //                     const newSearchParams = new URLSearchParams(searchParams)
+    //                     newSearchParams.set('fumabase.jsonc', encodedContent)
+    //                     setSearchParams(newSearchParams, { replace: true })
+    //                 }
+    //             } catch (error) {
+    //                 console.error('Error encoding fumabase.jsonc content:', error)
+    //             }
+    //         }
+    //     },
+    //     [filesInDraft],
+    //     500, // 500ms debounce
+    //     revalidator.state === 'idle' && navigation.state === 'idle'
+    // )
+    //
+    // // --- Start insert: useNavigation + effect on path change ---
+
+    const navigation = useNavigation()
+
+    useEffect(() => {
+        let currentSlug = navigation.location?.pathname
+
+        // Only postMessage if we're in an iframe
+        if (window.parent !== window && currentSlug) {
+            window.parent?.postMessage?.(
+                { currentSlug },
+                {
+                    targetOrigin: '*',
+                },
             )
-
-            if (fumabaseJsoncPath && filesInDraft[fumabaseJsoncPath]?.content) {
-                try {
-                    const docsJsonContent = filesInDraft[fumabaseJsoncPath].content
-                    const encodedContent = encodeURIComponent(docsJsonContent)
-                    const currentParam = searchParams.get('fumabase.jsonc')
-
-                    // Only update if the content is different
-                    if (currentParam !== encodedContent) {
-                        const newSearchParams = new URLSearchParams(searchParams)
-                        newSearchParams.set('fumabase.jsonc', encodedContent)
-                        setSearchParams(newSearchParams, { replace: true })
-                    }
-                } catch (error) {
-                    console.error('Error encoding fumabase.jsonc content:', error)
-                }
-            }
-        },
-        [filesInDraft],
-        500, // 500ms debounce
-        revalidator.state === 'idle' && navigation.state === 'idle'
-    )
+        }
+    }, [navigation.location?.pathname])
 
     useEffect(() => {
         console.log(`remounting docs layout`, { previewWebsocketId })
@@ -596,7 +615,8 @@ function PreviewBanner({ websocketId }: { websocketId?: string }) {
 
 function UserBanner({ docsJson }: { docsJson?: any }) {
     const [dismissed, setDismissed] = useState(false)
-    const { bannerAst } = useLoaderData<Route.ComponentProps['loaderData']>() || {}
+    const { bannerAst } =
+        useLoaderData<Route.ComponentProps['loaderData']>() || {}
     const banner = docsJson?.banner
 
     if (!banner || dismissed) return null
