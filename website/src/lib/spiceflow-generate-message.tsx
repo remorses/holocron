@@ -28,6 +28,23 @@ import {
     createRenderFormExecute,
 } from './render-form-tool'
 import { mdxRegex } from './utils'
+import {
+    searchDocsInputSchema,
+    goToPageInputSchema,
+    getCurrentPageInputSchema,
+    selectTextInputSchema,
+    type SearchDocsInput,
+    type GoToPageInput,
+    type GetCurrentPageInput,
+    type SelectTextInput,
+} from './shared-docs-tools'
+import {
+    searchDocsWithTrieve,
+    formatTrieveSearchResults,
+} from 'docs-website/src/lib/trieve-search'
+import { cleanSlug } from 'docs-website/src/lib/slug-utils'
+import { getFilesForSource } from 'docs-website/src/lib/source.server'
+import { getFumadocsSource } from 'docs-website/src/lib/source'
 import Handlebars from 'handlebars'
 import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
 import agentPrompt from '../prompts/agent.md?raw'
@@ -40,6 +57,15 @@ const deletePagesSchema = z.object({
     filePaths: z
         .array(z.string())
         .describe('Array of file paths to delete from the website'),
+})
+
+// Website-specific fetchUrl schema that requires absolute URLs
+const websiteFetchUrlInputSchema = z.object({
+    url: z
+        .string()
+        .describe(
+            'The absolute URL to fetch. Must start with https://. Use this to fetch content from external websites.',
+        ),
 })
 
 export type WebsiteTools = {
@@ -59,6 +85,34 @@ export type WebsiteTools = {
         input: z.infer<typeof deletePagesSchema>
         output: {
             deletedFiles: string[]
+        }
+    }
+    searchDocs: {
+        input: SearchDocsInput
+        output: any
+    }
+    goToPage: {
+        input: GoToPageInput
+        output: {
+            slug: string
+            error?: string
+        }
+    }
+    getCurrentPage: {
+        input: GetCurrentPageInput
+        output: any
+    }
+    fetchUrl: {
+        input: z.infer<typeof websiteFetchUrlInputSchema>
+        output: any
+    }
+    selectText: {
+        input: SelectTextInput
+        output: {
+            slug: string
+            startLine?: number
+            endLine?: number
+            error?: string
         }
     }
 }
@@ -98,12 +152,28 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 },
             },
             include: {
-                site: true,
+                site: {
+                    include: {
+                        locales: true,
+                    },
+                },
             },
         })
         if (!branch) {
             throw new Error('You do not have access to this branch')
         }
+
+        // Create source for page navigation
+        const files = await getFilesForSource({
+            branchId,
+            githubFolder: branch.site?.githubFolder || '',
+        })
+        const source = getFumadocsSource({
+            files,
+            defaultLanguage: branch.site?.defaultLocale || 'en',
+            languages: branch.site?.locales?.map((x) => x.locale) || [],
+        })
+
         let model = openai.responses('gpt-4.1')
         // model = anthropic('claude-3-5-haiku-latest')
         const editFilesExecute = createEditExecute({
@@ -231,6 +301,125 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                         return { deletedFiles }
                     },
                 }),
+
+                // Add docs tools - these provide basic functionality for the website context
+                searchDocs: tool({
+                    inputSchema: searchDocsInputSchema,
+                    execute: async ({ terms, searchType = 'fulltext' }) => {
+                        // Try using Trieve search if available, otherwise fallback to simple search
+                        if (branch.trieveDatasetId) {
+                            try {
+                                const results = await searchDocsWithTrieve({
+                                    trieveDatasetId: branch.trieveDatasetId,
+                                    query: terms,
+                                    searchType,
+                                    tag: '',
+                                })
+                                return formatTrieveSearchResults({
+                                    results,
+                                    baseUrl: `${process.env.PUBLIC_URL || 'https://fumabase.com'}`,
+                                })
+                            } catch (error) {
+                                console.error('Trieve search failed, falling back to simple search:', error)
+                            }
+                        }
+
+                        // Fallback to simple search through existing pages
+                        const allFiles = await getTabFilesWithoutContents({ branchId })
+                        const pages = allFiles.filter((x) => x.type === 'page')
+
+                        const results = pages.filter((page) => {
+                            const title = (page.frontmatter as any)?.title || ''
+                            const searchText = `${title} ${page.githubPath}`.toLowerCase()
+                            return terms.some((term) => searchText.includes(term.toLowerCase()))
+                        })
+
+                        return `Found ${results.length} pages matching search terms:\n` +
+                            results.map((page) => {
+                                const title = (page.frontmatter as any)?.title || 'Untitled'
+                                return `- ${title} (${page.githubPath})`
+                            }).join('\n')
+                    },
+                }),
+
+                goToPage: tool({
+                    inputSchema: goToPageInputSchema,
+                    execute: async ({ slug }) => {
+                        const cleanedSlug = cleanSlug(slug)
+                        const slugParts = cleanedSlug.split('/').filter(Boolean)
+                        const page = source.getPage(slugParts)
+
+                        if (!page) {
+                            return { error: `Page ${cleanedSlug} not found` }
+                        }
+
+                        return {
+                            slug: page.url,
+                            message: `Found page: ${page.url}`,
+                        }
+                    },
+                }),
+
+                getCurrentPage: tool({
+                    inputSchema: getCurrentPageInputSchema,
+                    execute: async () => {
+                        return `Current page slug: ${currentSlug}`
+                    },
+                }),
+
+                fetchUrl: tool({
+                    description: 'Fetch content from external websites. Only absolute HTTPS URLs are allowed.',
+                    inputSchema: websiteFetchUrlInputSchema,
+                    execute: async ({ url }) => {
+                        // Validate that URL starts with https://
+                        if (!url.startsWith('https://')) {
+                            return `Error: Only HTTPS URLs are allowed. URL must start with https://`
+                        }
+
+                        try {
+                            const response = await fetch(url)
+                            if (!response.ok) {
+                                return `Failed to fetch ${url}: ${response.status} ${response.statusText}`
+                            }
+
+                            const contentType = response.headers.get('content-type') || ''
+
+                            if (contentType.includes('application/json')) {
+                                const data = await response.json()
+                                const jsonString = JSON.stringify(data, null, 2)
+                                return jsonString.substring(0, 2000) + (jsonString.length > 2000 ? '...' : '')
+                            } else if (contentType.includes('text/html')) {
+                                const html = await response.text()
+                                return html.substring(0, 2000) + (html.length > 2000 ? '...' : '')
+                            } else {
+                                const text = await response.text()
+                                return text.substring(0, 2000) + (text.length > 2000 ? '...' : '')
+                            }
+                        } catch (error) {
+                            return `Error fetching ${url}: ${error.message}`
+                        }
+                    },
+                }),
+
+                selectText: tool({
+                    inputSchema: selectTextInputSchema,
+                    execute: async ({ slug, startLine, endLine }) => {
+                        const cleanedSlug = cleanSlug(slug)
+                        const slugParts = cleanedSlug.split('/').filter(Boolean)
+                        const page = source.getPage(slugParts)
+
+                        if (!page) {
+                            return { error: `Page ${cleanedSlug} not found` }
+                        }
+
+                        return {
+                            slug: page.url,
+                            startLine,
+                            endLine,
+                            message: `Selected text on ${page.url} from line ${startLine} to ${endLine}`,
+                        }
+                    },
+                }),
             },
 
             // tools: {
@@ -248,7 +437,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
 
         const lastUserMessage = messages.findLast((x) => x.role === 'user')
         if (lastUserMessage) {
-            console.log(`creating message for`, lastUserMessage)
+            // console.log(`creating message for`, lastUserMessage)
             // Extract text content from parts
             const content = lastUserMessage.parts
                 .filter((part) => part.type === 'text')
@@ -284,7 +473,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             async onFinish({ messages: uiMessages }) {
                 console.log(`chat finished, saving the chat in database`)
                 const resultMessages = [...messages, ...uiMessages]
-                console.log(resultMessages)
+
 
                 const previousMessages = await prisma.chatMessage.findMany({
                     where: { chatId },
@@ -445,6 +634,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             },
         })
         yield* readableStreamToAsyncIterable(stream)
+
     },
 })
 

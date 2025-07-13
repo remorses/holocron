@@ -50,11 +50,13 @@ export async function searchDocsWithTrieve({
     tag,
     exact,
     trieveDatasetId,
+    searchType = 'fulltext',
 }: {
     query: string | string[]
     exact?: boolean
     trieveDatasetId?: string | null
     tag?: string
+    searchType?: 'fulltext' | 'bm25' | 'semantic'
 }): Promise<SortedResult[]> {
     const trieve = new TrieveSDK({
         apiKey: env.TRIEVE_API_KEY!,
@@ -92,7 +94,7 @@ export async function searchDocsWithTrieve({
 
     const request: SearchOverGroupsReqPayload = {
         query: queryInput,
-        search_type: 'fulltext',
+        search_type: searchType,
         score_threshold: 1,
         group_size: 4,
         metadata: {

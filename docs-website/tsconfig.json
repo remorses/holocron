@@ -17,6 +17,7 @@
         "baseUrl": ".",
         "paths": {
             "docs-website/*": ["./*"],
+            "website/*": ["../website/*"],
         },
         "esModuleInterop": true,
         // "verbatimModuleSyntax": true,

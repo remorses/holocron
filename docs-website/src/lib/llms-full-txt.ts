@@ -50,6 +50,7 @@ export async function generateLlmsFullTxt({
         const searchResults = await searchDocsWithTrieve({
             query: searchQuery,
             // exact: true,
+            searchType: 'bm25',
             trieveDatasetId: siteBranch.trieveDatasetId,
         })
 

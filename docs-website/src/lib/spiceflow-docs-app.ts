@@ -20,53 +20,21 @@ import {
     formatTrieveSearchResults,
 } from './trieve-search'
 import { getFumadocsSource } from './source'
+import {
+    searchDocsInputSchema,
+    goToPageInputSchema,
+    getCurrentPageInputSchema,
+    fetchUrlInputSchema,
+    selectTextInputSchema,
+    type SearchDocsInput,
+    type GoToPageInput,
+    type GetCurrentPageInput,
+    type FetchUrlInput,
+    type SelectTextInput,
+} from 'website/src/lib/shared-docs-tools'
+import { cleanSlug } from './slug-utils'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
-
-// Tool input schemas
-export const searchDocsInputSchema = z.object({
-    terms: z
-        .array(z.string().min(1))
-        .min(1)
-        .describe(
-            'An array of search terms to find relevant documentation content. Wrap a term in "" to do an exact phrase search.',
-        ),
-})
-
-export const goToPageInputSchema = z.object({
-    slug: z
-        .string()
-        .describe(
-            'The page slug/path to navigate to (e.g., "getting-started" or "api/authentication")',
-        ),
-})
-
-export const getCurrentPageInputSchema = z
-    .object({})
-    .describe('Get the current page slug that the user is viewing')
-
-export const fetchUrlInputSchema = z.object({
-    url: z
-        .string()
-        .describe(
-            'The URL to fetch. Can be a full URL (https://example.com) or a relative path (/docs/guide). For documentation pages, use .md extension (e.g., "/docs/getting-started.md") to fetch the markdown content.',
-        ),
-})
-
-export const selectTextInputSchema = z.object({
-    slug: z
-        .string()
-        .describe('The page slug to navigate to and select text on'),
-    startLine: z.number().describe('Starting line number to select (1-based)'),
-    endLine: z.number().describe('Ending line number to select (1-based)'),
-})
-
-// Export types with capitalized names
-export type SearchDocsInput = z.infer<typeof searchDocsInputSchema>
-export type GoToPageInput = z.infer<typeof goToPageInputSchema>
-export type GetCurrentPageInput = z.infer<typeof getCurrentPageInputSchema>
-export type FetchUrlInput = z.infer<typeof fetchUrlInputSchema>
-export type SelectTextInput = z.infer<typeof selectTextInputSchema>
 
 export const docsApp = new Spiceflow({ basePath: '/api' })
     .route({
@@ -152,12 +120,13 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                 tools: {
                     searchDocs: tool({
                         inputSchema: searchDocsInputSchema,
-                        execute: async ({ terms }) => {
+                        execute: async ({ terms, searchType = 'fulltext' }) => {
                             let tag = ''
                             const results = await searchDocsWithTrieve({
                                 trieveDatasetId: siteBranch.trieveDatasetId,
                                 query: terms,
                                 tag,
+                                searchType,
                             })
                             return formatTrieveSearchResults({
                                 results,
@@ -240,21 +209,19 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                     selectText: tool({
                         inputSchema: selectTextInputSchema,
                         execute: async ({ slug, startLine, endLine }) => {
-                            // Remove .md extension if present
-                            const cleanSlug = slug.endsWith('.md')
-                                ? slug.slice(0, -3)
-                                : slug
+                            // Clean the slug using the utility function
+                            const cleanedSlug = cleanSlug(slug)
 
                             // if (endLine - startLine + 1 > maxLines) {
                             //     return { error: `Cannot select more than 10 lines of text. You requested ${endLine - startLine + 1} lines.` }
                             // }
 
-                            const slugParts = cleanSlug
+                            const slugParts = cleanedSlug
                                 .split('/')
                                 .filter(Boolean)
                             const page = source.getPage(slugParts)
                             if (!page) {
-                                return { error: `Page ${cleanSlug} not found` }
+                                return { error: `Page ${cleanedSlug} not found` }
                             }
 
                             return {

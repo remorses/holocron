@@ -524,11 +524,9 @@ Tabs.displayName = 'Tabs'
 export const mdxComponents = {
     CodeBlockTab: fumadocsComponents.CodeBlockTab,
     CodeBlockTabs: fumadocsComponents.CodeBlockTabs,
-    // CodeBlockTabsList: fumadocsComponents.CodeBlockTabsList,
-    // CodeBlockTabsTrigger: fumadocsComponents.CodeBlockTabsTrigger,
+
     pre: fumadocsComponents.pre,
-    // Card: fumadocsComponents.Card,
-    // Cards: fumadocsComponents.Cards,
+
     a: fumadocsComponents.a,
     img: fumadocsComponents.img,
     h1: fumadocsComponents.h1,
