@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useMemo, useState } from 'react'
+import { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 
 import { createIdGenerator, UIMessage } from 'ai'
 import { uiStreamToUIMessages } from 'contesto/src/lib/process-chat'
@@ -300,6 +300,7 @@ function Footer() {
     const isPending = useChatState((x) => x.isGenerating)
     const text = useChatState((x) => x.text || '')
     const durableUrl = `/api/generateMessage?chatId=${CHAT_ID}`
+    const abortControllerRef = useRef<AbortController | null>(null)
 
     useEffect(() => {
         durableFetchClient.isInProgress(durableUrl).then(({ inProgress }) => {
@@ -333,32 +334,47 @@ function Footer() {
     const submitMessageWithoutDelete = async () => {
         const messages = useChatState.getState()?.messages
         const generateId = createIdGenerator()
+        const controller = new AbortController()
+        abortControllerRef.current = controller
 
-        const { data: generator, error } =
-            await apiClientWithDurableFetch.api.generateMessage.post(
-                {
-                    messages: messages,
-                    siteId: 'cmclq67zf0002htommqegrrw4',
-                    branchId: 'cmclq68780003htome4ryjfg9',
-                    currentSlug: '',
-                    filesInDraft: {},
-                    chatId: CHAT_ID,
-                },
-                { query: { chatId: CHAT_ID } },
-            )
-        if (error) throw error
+        try {
+            const { data: generator, error } =
+                await apiClientWithDurableFetch.api.generateMessage.post(
+                    {
+                        messages: messages,
+                        siteId: 'cmclq67zf0002htommqegrrw4',
+                        branchId: 'cmclq68780003htome4ryjfg9',
+                        currentSlug: '',
+                        filesInDraft: {},
+                        chatId: CHAT_ID,
+                    },
+                    { query: { chatId: CHAT_ID }, fetch: { signal: controller.signal } },
+                )
+            if (error) throw error
 
-        const stateIter = uiStreamToUIMessages({
-            uiStream: generator,
-            messages: messages,
-            generateId,
-        })
-
-        // Second iteration: update chat state
-        for await (const newMessages of stateIter) {
-            startTransition(() => {
-                useChatState.setState({ messages: newMessages })
+            const stateIter = uiStreamToUIMessages({
+                uiStream: generator,
+                messages: messages,
+                generateId,
             })
+
+            // Second iteration: update chat state
+            for await (const newMessages of stateIter) {
+                if (controller.signal.aborted) {
+                    break
+                }
+                startTransition(() => {
+                    useChatState.setState({ messages: newMessages })
+                })
+            }
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                console.log('Generation aborted')
+            } else {
+                throw error
+            }
+        } finally {
+            abortControllerRef.current = null
         }
     }
     const url = `/api/generateMessage?chatId=${CHAT_ID}`
@@ -369,6 +385,12 @@ function Footer() {
         '@/docs/changelog.md',
         '@/docs/faq.md',
     ]
+
+    const stopGeneration = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort()
+        }
+    }
 
     async function onSubmit() {
         await durableFetchClient.delete(url)
@@ -402,13 +424,23 @@ function Footer() {
                         />
                         <ChatRecordButton transcribeAudio={transcribeAudio} />
                         <div className='grow'></div>
-                        <Button
-                            className='rounded-md h-8'
-                            onClick={onSubmit}
-                            disabled={isPending || !text.trim()}
-                        >
-                            {isPending ? 'Loading...' : 'Generate'}
-                        </Button>
+                        {isPending ? (
+                            <Button
+                                className='rounded-md h-8'
+                                onClick={stopGeneration}
+                                variant='outline'
+                            >
+                                Stop
+                            </Button>
+                        ) : (
+                            <Button
+                                className='rounded-md h-8'
+                                onClick={onSubmit}
+                                disabled={!text.trim()}
+                            >
+                                Generate
+                            </Button>
+                        )}
                     </div>
                 </motion.div>
                 <ChatAutocomplete
