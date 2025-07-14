@@ -707,6 +707,8 @@ function Logo({ docsJson = {} as DocsJsonType }) {
     )
 }
 
+
+
 // Extend globalThis to include our type-safe variable
 declare global {
     var rootServerLoaderData: Route.ComponentProps['loaderData'] | null
