@@ -204,6 +204,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 name: site.name || '',
                 trieveDatasetId: branch.trieveDatasetId || undefined,
                 files: pages,
+                docsJson: (branch.docsJson || {}) as DocsJsonType,
             })
 
             await prisma.siteBranch.update({
@@ -1088,8 +1089,8 @@ export const app = new Spiceflow({ basePath: '/api' })
                 githubFolder: githubFolder || '',
                 branchId: finalBranchId,
                 siteId: finalSiteId,
-
                 name,
+                docsJson,
             })
 
             // Get the generated docsJson and any sync errors

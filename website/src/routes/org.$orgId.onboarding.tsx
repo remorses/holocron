@@ -1,5 +1,6 @@
 import { prisma } from 'db'
 import cuid from '@bugsnag/cuid'
+import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import {
     Form,
     href,
@@ -106,6 +107,12 @@ export async function action({ request, params }: Route.ActionArgs) {
                       internalHost,
                   ]
                 : [internalHost]
+        const docsJson: DocsJsonType = {
+            ...defaultStartingFumabaseJson,
+            siteId,
+            name,
+            domains,
+        }
         const files = assetsFromFilesList({
             files: exampleDocs
                 .map((x) => {
@@ -119,12 +126,7 @@ export async function action({ request, params }: Route.ActionArgs) {
                 })
                 .filter(isTruthy),
             githubFolder: '',
-            docsJson: {
-                ...defaultStartingFumabaseJson,
-                siteId,
-                name,
-                domains,
-            },
+            docsJson,
             docsJsonComments: {
                 ...defaultDocsJsonComments,
             },
@@ -181,6 +183,7 @@ export async function action({ request, params }: Route.ActionArgs) {
             branchId,
             siteId,
             name: `${githubAccountLogin} docs`,
+            docsJson,
         })
 
         // Create a chat for the branch

@@ -57,7 +57,7 @@ const app = new Spiceflow({ basePath: '/api/github' })
                     repoId,
                     githubBranch,
                     commits,
-                    secret: SERVICE_SECRET,
+                    SERVICE_SECRET,
                 })
 
                 return {
@@ -178,6 +178,7 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
             githubFolder: siteBranch.site.githubFolder,
             files: changedFiles,
             name: siteBranch.site.name || '',
+            docsJson: (siteBranch.docsJson || {}) as DocsJsonType,
         })
 
         // Update last sync info

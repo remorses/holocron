@@ -4,6 +4,7 @@ import { MarkdownExtension, Prisma, prisma } from 'db'
 import { Sema } from 'async-sema'
 import { request } from 'undici'
 import { Readable } from 'node:stream'
+import micromatch from 'micromatch'
 
 import { DomainType } from 'db/src/generated/enums'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
@@ -258,6 +259,7 @@ export async function syncSite({
     name,
     signal,
     githubFolder,
+    docsJson,
 }: {
     files: AsyncIterable<AssetForSync>
     branchId: string
@@ -266,9 +268,40 @@ export async function syncSite({
     trieveDatasetId?: string
     name: string
     signal?: AbortSignal
+    docsJson: DocsJsonType
 }) {
     const concurrencyLimit = 10
     const semaphore = new Sema(concurrencyLimit)
+
+    const ignorePatterns = docsJson?.ignore || []
+
+    // Helper function to check if a file should be ignored
+    const shouldIgnoreFile = (githubPath: string): boolean => {
+        if (ignorePatterns.length === 0) return false
+
+        // Remove leading slash and githubFolder prefix for matching
+        let pathForMatching = githubPath
+        if (pathForMatching.startsWith('/')) {
+            pathForMatching = pathForMatching.substring(1)
+        }
+        if (githubFolder && githubFolder !== '/' && githubFolder !== '') {
+            const folderPrefix = githubFolder.startsWith('/')
+                ? githubFolder.substring(1)
+                : githubFolder
+            if (pathForMatching.startsWith(folderPrefix + '/')) {
+                pathForMatching = pathForMatching.substring(
+                    folderPrefix.length + 1,
+                )
+            } else if (pathForMatching.startsWith(folderPrefix)) {
+                pathForMatching = pathForMatching.substring(folderPrefix.length)
+            }
+        }
+        if (pathForMatching.startsWith('/')) {
+            pathForMatching = pathForMatching.substring(1)
+        }
+
+        return micromatch.isMatch(pathForMatching, ignorePatterns)
+    }
 
     const chunkSize = 120
     let allChunksToSync: ChunkReqPayload[] = []
@@ -930,6 +963,20 @@ export async function syncSite({
             await semaphore.acquire()
             try {
                 try {
+                    // Check if the file should be ignored (except for deletedAsset and docsJson)
+                    if (
+                        asset.type !== 'deletedAsset' &&
+                        asset.type !== 'docsJson' &&
+                        'githubPath' in asset
+                    ) {
+                        if (shouldIgnoreFile(asset.githubPath)) {
+                            console.log(
+                                `Ignoring file ${asset.githubPath} due to ignore patterns`,
+                            )
+                            return []
+                        }
+                    }
+
                     switch (asset.type) {
                         case 'metaFile':
                             return await syncMetaFile(asset)
