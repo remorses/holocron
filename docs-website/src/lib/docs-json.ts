@@ -3,6 +3,21 @@ import { zodToJsonSchema } from 'zod-to-json-schema'
 import { extractNamePathsFromSchema } from './schema-path-utils.js'
 import dedent from 'dedent'
 
+// Dynamic theme imports using vite glob
+const themeModules = import.meta.glob('../themes/*.css', {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+})
+
+// Extract theme names from file paths
+const themeNames = Object.keys(themeModules).map((path) => {
+    const match = path.match(/\/([^/]+)\.css$/)
+    return match ? match[1] : ''
+}).filter(Boolean)
+
+export { themeModules, themeNames }
+
 // === Primitive helper schemas ===
 const Color = z
     .string()
@@ -445,10 +460,10 @@ export const DocsConfigSchema = z
             .array(z.string())
             .optional()
             .describe('Array of glob patterns to ignore when syncing the site. Files matching these patterns will be excluded from the sync process.'),
-        // theme: z
-        //     .enum(['black', 'dusk'])
-        //     .optional()
-        //     .describe('Color theme for the documentation site'),
+        theme: z
+            .enum(themeNames as [string, ...string[]])
+            .optional()
+            .describe('Color theme for the documentation site'),
     })
     .strict()
     .describe('Schema for fumabase.jsonc configuration')

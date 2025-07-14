@@ -354,7 +354,7 @@ export function ClientApp() {
     const docsJson = useDocsJson()
     useNProgress()
     // Inline DocsProvider
-    const { i18n, trieveReadApiKey, trieveDatasetId, cssStyles } =
+    const { i18n, trieveReadApiKey, trieveDatasetId, cssStyles, themeCSS } =
         loaderData || {}
     const locale = i18n?.defaultLanguage
 
@@ -394,6 +394,13 @@ export function ClientApp() {
                             <style
                                 dangerouslySetInnerHTML={{
                                     __html: cssStyles,
+                                }}
+                            />
+                        )}
+                        {themeCSS && (
+                            <style
+                                dangerouslySetInnerHTML={{
+                                    __html: themeCSS,
                                 }}
                             />
                         )}

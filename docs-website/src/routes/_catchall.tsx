@@ -12,7 +12,7 @@ import {
 } from 'react-router'
 // @ts-ignore
 import type { Route } from './+types/root'
-import { DocsJsonType } from 'docs-website/src/lib/docs-json'
+import { DocsJsonType, themeModules } from 'docs-website/src/lib/docs-json'
 import JSONC from 'tiny-jsonc'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
@@ -177,6 +177,17 @@ export async function loader({ request }: Route.LoaderArgs) {
     })
     console.timeEnd(`${timerId} - get openapi document`)
 
+    // Get theme CSS if theme is specified
+    const themeCSS = (() => {
+        if (docsJson.theme) {
+            const themePath = `../themes/${docsJson.theme}.css`
+            if (themeModules[themePath]) {
+                return themeModules[themePath] as string
+            }
+        }
+        return ''
+    })()
+
     console.timeEnd(`${timerId} - total root loader time`)
     
     return {
@@ -199,6 +210,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         githubBranch: siteBranch.githubBranch || 'main',
         branchId: siteBranch.branchId,
         site,
+        themeCSS,
     }
 }
 
