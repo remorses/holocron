@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useImperativeHandle, useMemo, useState } from 'react'
 
 import { createIdGenerator, UIMessage } from 'ai'
 import { uiStreamToUIMessages } from 'contesto/src/lib/process-chat'
@@ -111,7 +111,7 @@ Let me know what you'd like to do first!
     },
 ]
 
-exampleMessages = []
+// exampleMessages = []
 
 export default function Page({ loaderData }: Route.ComponentProps) {
     const initialChatState = useMemo<Partial<ChatState>>(
@@ -123,33 +123,11 @@ export default function Page({ loaderData }: Route.ComponentProps) {
     )
     return (
         <ChatProvider initialValue={initialChatState}>
-            <div className=' h-full max-h-full  w-full  flex flex-col grow'>
-                <DrawerDemo />
+            <style>{`body { background: #000 !important; }`}</style>
+            <div className='h-full  max-h-full w-full py-18 flex flex-col grow min-h-0 pb-0'>
+                <Chat />
             </div>
         </ChatProvider>
-    )
-}
-
-export function DrawerDemo() {
-    return (
-        <Drawer defaultOpen direction='right'>
-            <div className='flex flex-col items-center justify-center h-full '>
-                <DrawerTrigger asChild>
-                    <Button variant='outline'>Open Drawer</Button>
-                </DrawerTrigger>
-            </div>
-            <DrawerContent className=' min-w-[600px]'>
-                <DrawerHeader>
-                    <DrawerTitle>Chat</DrawerTitle>
-                    <DrawerDescription>
-                        Set your daily activity goal.
-                    </DrawerDescription>
-                </DrawerHeader>
-                <div className='p-4 flex flex-col min-h-0 grow pb-0'>
-                    <Chat />
-                </div>
-            </DrawerContent>
-        </Drawer>
     )
 }
 
@@ -157,18 +135,16 @@ function Chat({}) {
     const { scrollRef, contentRef } = useStickToBottom({
         initial: 'instant',
     })
+    useImperativeHandle(scrollRef, () => {
+        return document.scrollingElement as HTMLElement
+    }, [])
 
     return (
-        <ScrollArea
-            ref={scrollRef}
-            className='[&>div>div]:grow -mr-4 pr-4 relative items-stretch rounded max-h-full flex flex-col grow justify-center '
-        >
-            <div className='flex flex-col gap-4 relative h-full justify-center'>
-                <Messages ref={contentRef} />
-                <WelcomeMessage />
-                <Footer />
-            </div>
-        </ScrollArea>
+        <div className='flex flex-col gap-8 py-12 items-center mx-auto w-4xl relative h-full justify-center'>
+            <Messages ref={contentRef} />
+            <WelcomeMessage />
+            <Footer />
+        </div>
     )
 }
 
@@ -176,12 +152,15 @@ function WelcomeMessage() {
     const messages = useChatState((x) => x?.messages)
     if (messages?.length) return null
     return (
-        <Markdown
-            markdown={
-                'Hi, I am fumabase, I can help you with customizing your docs website or add new content. Here are some example things you can do:\n'
-            }
-            isStreaming={false}
-        />
+        <div className='text-center max-w-xl'>
+            <Markdown
+                markdown={
+                    'Hi, I am fumabase, I can help you with customizing your docs website or add new content. Here are some example things you can do:\n'
+                }
+                className='text-lg '
+                isStreaming={false}
+            />
+        </div>
     )
 }
 
@@ -190,7 +169,7 @@ function Messages({ ref }) {
 
     if (!messages.length) return null
     return (
-        <div ref={ref} className={cn('w-full flex flex-col grow gap-6')}>
+        <div ref={ref} className={cn('w-full flex flex-col grow gap-12')}>
             {messages.map((message) => {
                 return <MessageRenderer key={message.id} message={message} />
             })}
@@ -225,7 +204,6 @@ function MessageRenderer({ message }: { message: UIMessage }) {
     return (
         <ChatAssistantMessage message={message}>
             {message.parts.map((part, index) => {
-
                 if (part.type === 'text') {
                     return (
                         <Markdown
