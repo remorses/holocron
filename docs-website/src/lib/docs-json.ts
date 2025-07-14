@@ -441,6 +441,10 @@ export const DocsConfigSchema = z
             .boolean()
             .optional()
             .describe('Hide the sidebar completely from the documentation site'),
+        ignore: z
+            .array(z.string())
+            .optional()
+            .describe('Array of glob patterns to ignore when syncing the site. Files matching these patterns will be excluded from the sync process.'),
         // theme: z
         //     .enum(['black', 'dusk'])
         //     .optional()

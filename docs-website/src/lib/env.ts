@@ -4,6 +4,7 @@ export const env = {
     NEXT_PUBLIC_URL: process.env.PUBLIC_URL,
     DATABASE_URL: process.env.DATABASE_URL,
     SECRET: process.env.SECRET,
+    SERVICE_SECRET: process.env.SERVICE_SECRET,
     GOOGLE_ID: process.env.GOOGLE_ID,
     GOOGLE_SECRET: process.env.GOOGLE_SECRET,
 

@@ -228,7 +228,6 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 openai: {
                     reasoningSummary: 'detailed',
                     strictJsonSchema: true,
-
                 } satisfies OpenAIResponsesProviderOptions,
             },
             tools: {
@@ -320,25 +319,39 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                                     baseUrl: `${process.env.PUBLIC_URL || 'https://fumabase.com'}`,
                                 })
                             } catch (error) {
-                                console.error('Trieve search failed, falling back to simple search:', error)
+                                console.error(
+                                    'Trieve search failed, falling back to simple search:',
+                                    error,
+                                )
                             }
                         }
 
                         // Fallback to simple search through existing pages
-                        const allFiles = await getTabFilesWithoutContents({ branchId })
+                        const allFiles = await getTabFilesWithoutContents({
+                            branchId,
+                        })
                         const pages = allFiles.filter((x) => x.type === 'page')
 
                         const results = pages.filter((page) => {
                             const title = (page.frontmatter as any)?.title || ''
-                            const searchText = `${title} ${page.githubPath}`.toLowerCase()
-                            return terms.some((term) => searchText.includes(term.toLowerCase()))
+                            const searchText =
+                                `${title} ${page.githubPath}`.toLowerCase()
+                            return terms.some((term) =>
+                                searchText.includes(term.toLowerCase()),
+                            )
                         })
 
-                        return `Found ${results.length} pages matching search terms:\n` +
-                            results.map((page) => {
-                                const title = (page.frontmatter as any)?.title || 'Untitled'
-                                return `- ${title} (${page.githubPath})`
-                            }).join('\n')
+                        return (
+                            `Found ${results.length} pages matching search terms:\n` +
+                            results
+                                .map((page) => {
+                                    const title =
+                                        (page.frontmatter as any)?.title ||
+                                        'Untitled'
+                                    return `- ${title} (${page.githubPath})`
+                                })
+                                .join('\n')
+                        )
                     },
                 }),
 
@@ -368,7 +381,8 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 }),
 
                 fetchUrl: tool({
-                    description: 'Fetch content from external websites. Only absolute HTTPS URLs are allowed.',
+                    description:
+                        'Fetch content from external websites. Only absolute HTTPS URLs are allowed.',
                     inputSchema: websiteFetchUrlInputSchema,
                     execute: async ({ url }) => {
                         // Validate that URL starts with https://
@@ -382,18 +396,28 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                                 return `Failed to fetch ${url}: ${response.status} ${response.statusText}`
                             }
 
-                            const contentType = response.headers.get('content-type') || ''
+                            const contentType =
+                                response.headers.get('content-type') || ''
 
                             if (contentType.includes('application/json')) {
                                 const data = await response.json()
                                 const jsonString = JSON.stringify(data, null, 2)
-                                return jsonString.substring(0, 2000) + (jsonString.length > 2000 ? '...' : '')
+                                return (
+                                    jsonString.substring(0, 2000) +
+                                    (jsonString.length > 2000 ? '...' : '')
+                                )
                             } else if (contentType.includes('text/html')) {
                                 const html = await response.text()
-                                return html.substring(0, 2000) + (html.length > 2000 ? '...' : '')
+                                return (
+                                    html.substring(0, 2000) +
+                                    (html.length > 2000 ? '...' : '')
+                                )
                             } else {
                                 const text = await response.text()
-                                return text.substring(0, 2000) + (text.length > 2000 ? '...' : '')
+                                return (
+                                    text.substring(0, 2000) +
+                                    (text.length > 2000 ? '...' : '')
+                                )
                             }
                         } catch (error) {
                             return `Error fetching ${url}: ${error.message}`
@@ -421,18 +445,6 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     },
                 }),
             },
-
-            // tools: {
-            //   some: tool({
-            //     description: "A sample tool",
-            //     parameters: z.object({ hello: z.string() }),
-
-            //     execute: async (args, {}) => {
-            //       args.hello;
-            //       return "Tool executed";
-            //     },
-            //   }),
-            // },
         })
 
         const lastUserMessage = messages.findLast((x) => x.role === 'user')
@@ -473,7 +485,6 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             async onFinish({ messages: uiMessages }) {
                 console.log(`chat finished, saving the chat in database`)
                 const resultMessages = [...messages, ...uiMessages]
-
 
                 const previousMessages = await prisma.chatMessage.findMany({
                     where: { chatId },
@@ -634,7 +645,6 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             },
         })
         yield* readableStreamToAsyncIterable(stream)
-
     },
 })
 

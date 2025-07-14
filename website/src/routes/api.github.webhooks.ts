@@ -115,7 +115,7 @@ function getWebhooks() {
 
             // Ensure the body matches the webhookWorkerRequestSchema type
             const body = webhookWorkerRequestSchema.parse({
-                secret: env.SECRET,
+                SERVICE_SECRET: env.SERVICE_SECRET,
                 installationId: Number(installationId),
                 owner: repo.owner.login,
                 repoName: repo.name,

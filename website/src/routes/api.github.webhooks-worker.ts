@@ -6,18 +6,14 @@ import { prisma } from 'db'
 import { env } from 'website/src/lib/env'
 import { notifyError } from 'website/src/lib/errors'
 import { getOctokit } from 'website/src/lib/github.server'
-import {
-    isDocsJsonFile,
-    syncSite,
-    filesFromGithub,
-} from 'website/src/lib/sync'
+import { isDocsJsonFile, syncSite, filesFromGithub } from 'website/src/lib/sync'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 
 const logger = console
 const DEFAULT_DOCS_URL = 'https://docs.fumabase.com'
 
 export const webhookWorkerRequestSchema = z.object({
-    secret: z.string(),
+    SERVICE_SECRET: z.string(),
     installationId: z.number(),
     owner: z.string(),
     repoName: z.string(),
@@ -40,7 +36,7 @@ const app = new Spiceflow({ basePath: '/api/github' })
         request: webhookWorkerRequestSchema,
         async handler({ request }) {
             const {
-                secret,
+                SERVICE_SECRET,
                 installationId,
                 owner,
                 repoName,
@@ -49,7 +45,7 @@ const app = new Spiceflow({ basePath: '/api/github' })
                 commits,
             } = await request.json()
 
-            if (secret !== env.SECRET) {
+            if (SERVICE_SECRET !== env.SERVICE_SECRET) {
                 throw new Error('Invalid secret')
             }
 
@@ -61,7 +57,7 @@ const app = new Spiceflow({ basePath: '/api/github' })
                     repoId,
                     githubBranch,
                     commits,
-                    secret,
+                    secret: SERVICE_SECRET,
                 })
 
                 return {
@@ -84,7 +80,8 @@ const app = new Spiceflow({ basePath: '/api/github' })
 type WebhookWorkerRequest = z.infer<typeof webhookWorkerRequestSchema>
 
 async function updatePagesFromCommits(args: WebhookWorkerRequest) {
-    const { installationId, owner, repoName, repoId, githubBranch, commits } = args
+    const { installationId, owner, repoName, repoId, githubBranch, commits } =
+        args
     const latestCommit = commits[commits.length - 1]
 
     // Check if the repository exists in the database before creating pending check
@@ -154,7 +151,8 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
                     owner,
                     repoName,
                     commitSha: latestCommit.id,
-                    errorMessage: 'No configured branch found for this repository',
+                    errorMessage:
+                        'No configured branch found for this repository',
                 })
                 return
             }
@@ -216,7 +214,8 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
 }
 
 async function tryCreateBranchFromDocsJson(args: WebhookWorkerRequest) {
-    const { installationId, owner, repoName, repoId, githubBranch, commits } = args
+    const { installationId, owner, repoName, repoId, githubBranch, commits } =
+        args
     const octokit = await getOctokit({ installationId })
 
     // Look for fumabase.jsonc in the commits
@@ -471,7 +470,12 @@ async function reportErrorsToGithub({
 
         // Get the first internal domain for the website URL
         const websiteUrl = (() => {
-            if (siteBranch && siteBranch.domains && siteBranch.domains.length > 0 && siteBranch.domains[0].host) {
+            if (
+                siteBranch &&
+                siteBranch.domains &&
+                siteBranch.domains.length > 0 &&
+                siteBranch.domains[0].host
+            ) {
                 return `https://${siteBranch.domains[0].host}`
             }
             return DEFAULT_DOCS_URL
@@ -495,7 +499,9 @@ async function reportErrorsToGithub({
         }
 
         // Check if all errors are recoverable render errors
-        const nonRenderErrors = syncErrors.filter(error => error.errorType !== 'render')
+        const nonRenderErrors = syncErrors.filter(
+            (error) => error.errorType !== 'render',
+        )
         const hasOnlyRenderErrors = nonRenderErrors.length === 0
 
         // Convert sync errors to GitHub annotations (max 50 per request)
@@ -503,14 +509,20 @@ async function reportErrorsToGithub({
             path: error.page.githubPath,
             start_line: error.line,
             end_line: error.line,
-            annotation_level: error.errorType === 'render' ? 'warning' as const : 'failure' as const,
+            annotation_level:
+                error.errorType === 'render'
+                    ? ('warning' as const)
+                    : ('failure' as const),
             message: `${error.errorType}: ${error.errorMessage}`,
         }))
 
-        const errorsByType = syncErrors.reduce((acc, error) => {
-            acc[error.errorType] = (acc[error.errorType] || 0) + 1
-            return acc
-        }, {} as Record<string, number>)
+        const errorsByType = syncErrors.reduce(
+            (acc, error) => {
+                acc[error.errorType] = (acc[error.errorType] || 0) + 1
+                return acc
+            },
+            {} as Record<string, number>,
+        )
 
         const summary = Object.entries(errorsByType)
             .map(([type, count]) => `${count} ${type} error(s)`)
@@ -548,7 +560,9 @@ async function reportErrorsToGithub({
             })
         }
 
-        logger.log(`Reported ${syncErrors.length} errors to GitHub Checks API for commit ${commitSha}`)
+        logger.log(
+            `Reported ${syncErrors.length} errors to GitHub Checks API for commit ${commitSha}`,
+        )
     } catch (error) {
         logger.error('Failed to report errors to GitHub Checks API:', error)
         notifyError(error, 'GitHub Checks API error reporting')

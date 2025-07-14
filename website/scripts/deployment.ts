@@ -25,7 +25,7 @@ async function main() {
         cron: '*/10 * * * *',
         scheduleId: 'nightly-page-blobs-cleanup',
         method: 'POST',
-        body: JSON.stringify({ secret: env.SECRET }),
+        body: JSON.stringify({ SERVICE_SECRET: env.SERVICE_SECRET }),
     })
 
     const port = 7664

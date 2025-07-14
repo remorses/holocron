@@ -206,7 +206,6 @@ export const app = new Spiceflow({ basePath: '/api' })
                 files: pages,
             })
 
-
             await prisma.siteBranch.update({
                 where: { branchId },
                 data: {
@@ -985,7 +984,8 @@ export const app = new Spiceflow({ basePath: '/api' })
                         name,
                         githubOwner: githubOwner || existingSite.githubOwner,
                         githubRepo: githubRepo || existingSite.githubRepo,
-                        githubRepoId: githubRepoId || existingSite.githubRepoId || 0,
+                        githubRepoId:
+                            githubRepoId || existingSite.githubRepoId || 0,
                         githubFolder: githubFolder || existingSite.githubFolder,
                     },
                 })
@@ -1274,13 +1274,13 @@ export const app = new Spiceflow({ basePath: '/api' })
         method: 'POST',
         path: '/databaseNightlyCleanup',
         request: z.object({
-            SECRET: z.string().min(1, 'SECRET is required'),
+            SERVICE_SECRET: z.string().min(1, 'SERVICE_SECRET is required'),
         }),
         async handler({ request }) {
-            const { SECRET } = await request.json()
+            const { SERVICE_SECRET } = await request.json()
 
             // Validate the secret key
-            if (!env.SECRET || SECRET !== env.SECRET) {
+            if (!env.SERVICE_SECRET || SERVICE_SECRET !== env.SERVICE_SECRET) {
                 throw new AppError('Invalid secret key')
             }
 
