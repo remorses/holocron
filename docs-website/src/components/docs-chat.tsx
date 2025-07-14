@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { createIdGenerator, UIMessage } from 'ai'
 import { uiStreamToUIMessages } from 'contesto/src/lib/process-chat'
@@ -426,6 +426,7 @@ function Footer() {
     const location = useLocation()
     const currentSlug = location.pathname
     const durableUrl = `/api/generateMessage?chatId=${chatId}`
+    const abortControllerRef = useRef<AbortController | null>(null)
 
     // Get files from root loader data
     const rootLoaderData = useRouteLoaderData(
@@ -471,21 +472,24 @@ function Footer() {
     const submitMessageWithoutDelete = async () => {
         const messages = useChatState.getState()?.messages as DocsUIMessage[]
         const generateId = createIdGenerator()
+        const controller = new AbortController()
+        abortControllerRef.current = controller
         const currentOrigin =
             typeof window !== 'undefined' ? window.location.origin : ''
 
-        const { data: generator, error } =
-            await docsApiClientWithDurableFetch.api.generateMessage.post(
-                {
-                    messages: messages,
-                    currentSlug: currentSlug,
-                    currentOrigin: currentOrigin,
-                    chatId: chatId,
-                    locale: 'en',
-                },
-                { query: { chatId: chatId } },
-            )
-        if (error) throw error
+        try {
+            const { data: generator, error } =
+                await docsApiClientWithDurableFetch.api.generateMessage.post(
+                    {
+                        messages: messages,
+                        currentSlug: currentSlug,
+                        currentOrigin: currentOrigin,
+                        chatId: chatId,
+                        locale: 'en',
+                    },
+                    { query: { chatId: chatId }, fetch: { signal: controller.signal } },
+                )
+            if (error) throw error
 
         const [effectsIter, stateIter] = teeAsyncIterable(
             uiStreamToUIMessages<DocsUIMessage>({
@@ -545,17 +549,29 @@ function Footer() {
         }
         updateDocsSite()
 
-        // Second iteration: update chat state
-        for await (const newMessages of stateIter) {
-            startTransition(() => {
-                useChatState.setState({ messages: newMessages })
-            })
-        }
+            // Second iteration: update chat state
+            for await (const newMessages of stateIter) {
+                if (controller.signal.aborted) {
+                    break
+                }
+                startTransition(() => {
+                    useChatState.setState({ messages: newMessages })
+                })
+            }
 
-        // Save final messages to persistent storage
-        const finalMessages = useChatState.getState().messages
-        if (finalMessages && finalMessages.length > 0) {
-            saveChatMessages(chatId, finalMessages)
+            // Save final messages to persistent storage
+            const finalMessages = useChatState.getState().messages
+            if (finalMessages && finalMessages.length > 0) {
+                saveChatMessages(chatId, finalMessages)
+            }
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                console.log('Generation aborted')
+            } else {
+                throw error
+            }
+        } finally {
+            abortControllerRef.current = null
         }
     }
     const url = `/api/generateMessage?chatId=${chatId}`
@@ -564,6 +580,12 @@ function Footer() {
     const contextOptions = files
         .filter((file) => file.type === 'page')
         .map((file) => `@${file.path.replace(/\.mdx\?$/, '')}`)
+
+    const stopGeneration = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort()
+        }
+    }
 
     async function onSubmit() {
         await docsDurableFetchClient.delete(url)
@@ -598,13 +620,23 @@ function Footer() {
                         /> */}
                         <ChatRecordButton transcribeAudio={transcribeAudio} />
                         <div className='grow'></div>
-                        <Button
-                            className='rounded-md h-8'
-                            onClick={onSubmit}
-                            disabled={isPending || !text.trim()}
-                        >
-                            {isPending ? 'Loading...' : 'Generate'}
-                        </Button>
+                        {isPending ? (
+                            <Button
+                                className='rounded-md h-8'
+                                onClick={stopGeneration}
+                                variant='outline'
+                            >
+                                Stop
+                            </Button>
+                        ) : (
+                            <Button
+                                className='rounded-md h-8'
+                                onClick={onSubmit}
+                                disabled={!text.trim()}
+                            >
+                                Generate
+                            </Button>
+                        )}
                     </div>
                 </motion.div>
                 <ChatAutocomplete

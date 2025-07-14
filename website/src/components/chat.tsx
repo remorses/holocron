@@ -2,7 +2,7 @@
 
 import { createIdGenerator, isToolUIPart, UIMessage } from 'ai'
 import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
-import { memo, startTransition, useEffect, useMemo, useState } from 'react'
+import { memo, startTransition, useEffect, useMemo, useRef, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import {
     ChatAssistantMessage,
@@ -451,6 +451,7 @@ function Footer() {
     const isPending = useChatState((x) => x.isGenerating)
     const text = useChatState((x) => x.text || '')
     const revalidator = useRevalidator()
+    const abortControllerRef = useRef<AbortController | null>(null)
     const { chat, githubFolder, prUrl, mentionOptions, branchId } =
         useLoaderData() as Route.ComponentProps['loaderData']
     const siteData = useRouteLoaderData(
@@ -499,23 +500,26 @@ function Footer() {
     const submitWithoutDeleteOnDurablefetch = async () => {
         const messages = useChatState.getState()?.messages as WebsiteUIMessage[]
         const generateId = createIdGenerator()
+        const controller = new AbortController()
+        abortControllerRef.current = controller
 
         const filesInDraft = useWebsiteState.getState()?.filesInDraft || {}
         const currentSlug = useWebsiteState.getState()?.currentSlug || ''
 
-        const { data: generator, error } =
-            await apiClientWithDurableFetch.api.generateMessage.post(
-                {
-                    messages: messages,
-                    siteId,
-                    branchId,
-                    currentSlug,
-                    filesInDraft,
-                    chatId: chat.chatId,
-                },
-                { query: { chatId: chat.chatId } },
-            )
-        if (error) throw error
+        try {
+            const { data: generator, error } =
+                await apiClientWithDurableFetch.api.generateMessage.post(
+                    {
+                        messages: messages,
+                        siteId,
+                        branchId,
+                        currentSlug,
+                        filesInDraft,
+                        chatId: chat.chatId,
+                    },
+                    { query: { chatId: chat.chatId }, fetch: { signal: controller.signal } },
+                )
+            if (error) throw error
 
         async function getPageContent(x) {
             const { data, error } = await apiClient.api.getPageContent.post({
@@ -618,10 +622,22 @@ function Footer() {
         }
         updateDocsSite()
 
-        for await (const newMessages of stateIter) {
-            startTransition(() => {
-                useChatState.setState({ messages: newMessages })
-            })
+            for await (const newMessages of stateIter) {
+                if (controller.signal.aborted) {
+                    break
+                }
+                startTransition(() => {
+                    useChatState.setState({ messages: newMessages })
+                })
+            }
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                console.log('Generation aborted')
+            } else {
+                throw error
+            }
+        } finally {
+            abortControllerRef.current = null
         }
 
         window.dispatchEvent(
@@ -643,6 +659,12 @@ function Footer() {
     }, [filesInDraft])
     const showCreatePR = hasFilesInDraft || prUrl
     const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+    const stopGeneration = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort()
+        }
+    }
+
     async function onSubmit() {
         await durableFetchClient.delete(durableUrl)
         await submitWithoutDeleteOnDurablefetch()
@@ -769,13 +791,23 @@ function Footer() {
                                 </div>
                                 {/* Right buttons */}
                                 <div className='flex items-center gap-2'>
-                                    <Button
-                                        className='rounded-full h-8'
-                                        onClick={onSubmit}
-                                        disabled={isPending || !text.trim()}
-                                    >
-                                        {isPending ? 'Loading...' : 'Generate'}
-                                    </Button>
+                                    {isPending ? (
+                                        <Button
+                                            className='rounded-full h-8'
+                                            onClick={stopGeneration}
+                                            variant='outline'
+                                        >
+                                            Stop
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            className='rounded-full h-8'
+                                            onClick={onSubmit}
+                                            disabled={!text.trim()}
+                                        >
+                                            Generate
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         </div>
