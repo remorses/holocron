@@ -36,4 +36,4 @@ jobs:
       - uses: remorses/self-healing-ci@main
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          command: "pnpm build"
+          command: "pnpm --filter fumadocs-root build:pnpm && pnpm deployment"
