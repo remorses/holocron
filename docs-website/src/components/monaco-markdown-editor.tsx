@@ -188,7 +188,7 @@ export function MonacoMarkdownEditor({
     // - Code block detection
 
     return (
-        <div className='not-prose '>
+        <div className='not-prose -mx-8'>
             <Editor
                 // key={resolvedTheme}
                 height={height}
