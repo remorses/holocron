@@ -45,7 +45,7 @@ export async function generateLlmsFullTxt({
         return ''
     }
 
-    if (searchQuery) {
+    if (searchQuery?.length) {
         // Use Trieve search for search queries
         const searchResults = await searchDocsWithTrieve({
             query: searchQuery,

@@ -7,6 +7,7 @@ import {
     ChunkFilter,
     SearchOverGroupsReqPayload,
     ChunkMetadata,
+    QueryTypes,
 } from 'trieve-ts-sdk'
 import { prisma } from 'db'
 
@@ -90,7 +91,11 @@ export async function searchDocsWithTrieve({
             q.startsWith('"') && q.endsWith('"') ? q : `"${q}"`,
         )
     }
-    let queryInput = queries.map((q) => ({ query: q, weight: 1 }))
+    let queryInput: QueryTypes = queries.map((q) => ({ query: q, weight: 1 }))
+    if (searchType === 'bm25') {
+      // bm25 does not support multiple terms
+        queryInput = queryInput.map((x) => x.query).join(' ')
+    }
 
     const request: SearchOverGroupsReqPayload = {
         query: queryInput,
