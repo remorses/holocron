@@ -38,6 +38,8 @@ instead of adding packages directly in package.json use `pnpm install package` i
 
 - use || over in: avoid 'x' in obj checks. prefer doing `obj?.x || ''` over doing `'x' in obj ? obj.x : ''`. only use the in operator if that field causes problems in typescript checks because typescript thinks the field is missing, as a last resort.
 
+- NEVER start the development server with pnpm dev yourself. there is not reason to do so, even with &
+
 ```ts
 // BAD. DO NOT DO THIS
 let favicon: string | undefined

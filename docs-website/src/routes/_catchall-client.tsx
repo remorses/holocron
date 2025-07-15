@@ -517,7 +517,7 @@ function DocsMarkdown(): any {
                             },
                         }))
                     }}
-                    className="h-[calc(100vh-16rem)] w-full border rounded-lg overflow-hidden"
+                    className="w-full border rounded-lg overflow-hidden"
                 />
             </Suspense>
         )
