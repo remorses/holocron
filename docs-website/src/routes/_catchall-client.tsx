@@ -5,7 +5,7 @@ import { MediaAsset, PageMediaAsset } from 'db'
 import frontMatter from 'front-matter'
 import { useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
 import { useShallow } from 'zustand/react/shallow'
-import { useDocsState } from '../lib/docs-state'
+import { useDocsState, updateFileInDocsEditor } from '../lib/docs-state'
 import { cn } from 'docs-website/src/lib/cn'
 import type { Route as RootRoute } from '../routes/_catchall'
 import type { Route } from './+types/_catchall.$'
@@ -159,7 +159,7 @@ function PageContent(props: Route.ComponentProps): any {
                         contextual={docsJson?.contextual}
                     />
                     <AskAIButton />
-                    <EditorToggle />
+                    {/* <EditorToggle /> */}
                 </div>
 
                 <div className='prose flex-1 text-fd-foreground/80'>
@@ -456,7 +456,7 @@ const components = {
     },
 }
 
-const MonacoMarkdownEditor = lazy(() => 
+const MonacoMarkdownEditor = lazy(() =>
     import('../components/monaco-markdown-editor').then((mod) => ({
         default: mod.MonacoMarkdownEditor,
     }))
@@ -466,7 +466,7 @@ function DocsMarkdown(): any {
     const loaderData = useLoaderData<Route.ComponentProps['loaderData']>()
     let { ast, markdown, isStreaming, contentMode } = useDocsState(
         useShallow((x) => {
-            const { filesInDraft, isMarkdownStreaming: isStreaming, contentMode } = x
+            const { filesInDraft, isMarkdownStreaming: isStreaming, previewMode: contentMode } = x
 
             const override = filesInDraft[loaderData.githubPath]
 
@@ -506,16 +506,7 @@ function DocsMarkdown(): any {
                 <MonacoMarkdownEditor
                     value={markdown}
                     onChange={(value) => {
-                        useDocsState.setState((state) => ({
-                            ...state,
-                            filesInDraft: {
-                                ...state.filesInDraft,
-                                [loaderData.githubPath]: {
-                                    content: value || '',
-                                    githubPath: loaderData.githubPath,
-                                },
-                            },
-                        }))
+                        updateFileInDocsEditor(loaderData.githubPath, value || '')
                     }}
                     className="w-full border rounded-lg overflow-hidden"
                 />
@@ -552,14 +543,14 @@ function DocsMarkdown(): any {
 }
 
 function EditorToggle() {
-    const contentMode = useDocsState((state) => state.contentMode)
-    
+    const contentMode = useDocsState((state) => state.previewMode)
+
     return (
         <button
             onClick={() => {
                 useDocsState.setState((state) => ({
                     ...state,
-                    contentMode: state.contentMode === 'editor' ? 'preview' : 'editor',
+                    previewMode: state.previewMode === 'editor' ? 'preview' : 'editor',
                 }))
             }}
             className={cn(

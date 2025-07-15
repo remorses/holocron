@@ -279,7 +279,10 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         // Only postMessage if we're in an iframe
         if (window.parent !== window && currentSlug) {
             window.parent?.postMessage?.(
-                { currentSlug },
+                {
+                    id: Math.random().toString(36).slice(2),
+                    state: { currentSlug },
+                } satisfies IframeRpcMessage,
                 {
                     targetOrigin: '*',
                 },
@@ -299,8 +302,6 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     }, [])
     return children
 }
-
-
 
 export function CSSVariables({ docsJson }: { docsJson: DocsJsonType }) {
     // Always expect { dark, light }
@@ -713,8 +714,6 @@ function Logo({ docsJson = {} as DocsJsonType }) {
         </div>
     )
 }
-
-
 
 // Extend globalThis to include our type-safe variable
 declare global {

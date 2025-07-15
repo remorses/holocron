@@ -221,7 +221,9 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                                 .filter(Boolean)
                             const page = source.getPage(slugParts)
                             if (!page) {
-                                return { error: `Page ${cleanedSlug} not found` }
+                                return {
+                                    error: `Page ${cleanedSlug} not found`,
+                                }
                             }
 
                             return {

@@ -43,13 +43,13 @@ export type DocsState = {
     deletedPages: Array<{
         slug: string
     }>
-    contentMode?: 'preview' | 'editor'
+    previewMode?: 'preview' | 'editor'
 }
 
 const defaultState: DocsState = {
     filesInDraft: {},
     deletedPages: [],
-    contentMode: 'preview',
+    previewMode: 'preview',
 }
 
 const defaultPersistentState: PersistentDocsState = {
@@ -82,7 +82,11 @@ export function saveChatMessages(chatId: string, messages: UIMessage[]) {
 
     // Keep only the most recent 10 chats to prevent localStorage from growing too large
     const sortedChats = Object.entries(updatedHistory)
-        .sort(([, a], [, b]) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .sort(
+            ([, a], [, b]) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime(),
+        )
         .slice(0, 10)
 
     const limitedHistory = Object.fromEntries(sortedChats)
@@ -96,6 +100,36 @@ export function saveChatMessages(chatId: string, messages: UIMessage[]) {
 export function loadChatMessages(chatId: string): UIMessage[] {
     const state = usePersistentDocsState.getState()
     return state.chatHistory[chatId]?.messages || []
+}
+
+// Update file content in docs editor and notify parent window
+export function updateFileInDocsEditor(githubPath: string, content: string) {
+    const updatedFile = {
+        content,
+        githubPath,
+    }
+
+    // Update local state
+    useDocsState.setState((state) => ({
+        ...state,
+        filesInDraft: {
+            ...state.filesInDraft,
+            [githubPath]: updatedFile,
+        },
+    }))
+
+    // Send message to parent window if we're in an iframe - only send the changed file in state shape
+    if (typeof window !== 'undefined' && window.parent !== window) {
+        const message: IframeRpcMessage = {
+            id: generateChatId(),
+            state: {
+                filesInDraft: {
+                    [githubPath]: updatedFile,
+                },
+            },
+        }
+        window.parent.postMessage(message, '*')
+    }
 }
 
 // Persist and rehydrate persistent docs state
@@ -122,7 +156,7 @@ if (typeof window !== 'undefined') {
 
 export type IframeRpcMessage = {
     id: string
-    state?: DocsState
-    currentSlug?: string
+    state?: Partial<DocsState>
+
     error?: string
 }

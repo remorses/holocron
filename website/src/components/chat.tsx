@@ -2,7 +2,14 @@
 
 import { createIdGenerator, isToolUIPart, UIMessage } from 'ai'
 import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
-import { memo, startTransition, useEffect, useMemo, useRef, useState } from 'react'
+import {
+    memo,
+    startTransition,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import {
     ChatAssistantMessage,
@@ -517,110 +524,115 @@ function Footer() {
                         filesInDraft,
                         chatId: chat.chatId,
                     },
-                    { query: { chatId: chat.chatId }, fetch: { signal: controller.signal } },
+                    {
+                        query: { chatId: chat.chatId },
+                        fetch: { signal: controller.signal },
+                    },
                 )
             if (error) throw error
 
-        async function getPageContent(x) {
-            const { data, error } = await apiClient.api.getPageContent.post({
-                branchId,
-                githubPath: x.githubPath,
+            async function getPageContent(x) {
+                const { data, error } = await apiClient.api.getPageContent.post(
+                    {
+                        branchId,
+                        githubPath: x.githubPath,
+                    },
+                )
+                if (error) return ''
+                return data?.content
+            }
+            const execute = createEditExecute({
+                filesInDraft: filesInDraft,
+                getPageContent,
             })
-            if (error) return ''
-            return data?.content
-        }
-        const execute = createEditExecute({
-            filesInDraft: filesInDraft,
-            getPageContent,
-        })
-        // Split the async iterator into two: one for docs edit, one for state updates
-        const [editIter, stateIter] = teeAsyncIterable(
-            uiStreamToUIMessages<WebsiteUIMessage>({
-                uiStream: generator,
-                messages: messages,
-                generateId,
-            }),
-        )
+            // Split the async iterator into two: one for docs edit, one for state updates
+            const [editIter, stateIter] = teeAsyncIterable(
+                uiStreamToUIMessages<WebsiteUIMessage>({
+                    uiStream: generator,
+                    messages: messages,
+                    generateId,
+                }),
+            )
 
-        // First iteration: handle docs/edit-tool logic
-        let isPostMessageBusy = false
-        async function updateDocsSite() {
-            for await (const newMessages of editIter) {
-                try {
-                    const lastMessage = newMessages[newMessages.length - 1]
-                    const lastPart =
-                        lastMessage.parts[lastMessage.parts.length - 1]
-                    if (
-                        lastMessage.role === 'assistant' &&
-                        lastPart?.type === 'tool-strReplaceEditor'
-                    ) {
-                        const args: Partial<EditToolParamSchema> =
-                            lastPart.input as any
-                        if (args?.command === 'view') {
-                            continue
-                        }
-                        if (!isParameterComplete(args)) {
-                            continue
-                        }
-                        const currentSlug = generateSlugFromPath(
-                            args.path || '',
-                            githubFolder,
-                        )
+            // First iteration: handle docs/edit-tool logic
+            let isPostMessageBusy = false
+            async function updateDocsSite() {
+                for await (const newMessages of editIter) {
+                    try {
+                        const lastMessage = newMessages[newMessages.length - 1]
+                        const lastPart =
+                            lastMessage.parts[lastMessage.parts.length - 1]
                         if (
-                            lastPart.state === 'input-streaming' ||
-                            lastPart.state === 'input-available'
+                            lastMessage.role === 'assistant' &&
+                            lastPart?.type === 'tool-strReplaceEditor'
                         ) {
-                            if (isPostMessageBusy) continue
-                            let updatedPagesCopy = { ...filesInDraft }
-                            const execute = createEditExecute({
-                                filesInDraft: updatedPagesCopy,
-                                getPageContent,
-                            })
-                            await execute(args as any)
-                            isPostMessageBusy = true
-                            docsRpcClient
-                                .setDocsState({
-                                    filesInDraft: updatedPagesCopy,
-                                    currentSlug,
-                                    isMarkdownStreaming: true,
-                                })
-                                .then(() => {
-                                    isPostMessageBusy = false
-                                })
-                                .catch((e) => {
-                                    console.error(e)
-                                })
-                        } else if (lastPart.state === 'output-available') {
-                            await execute(args as any)
-                            console.log(
-                                `applying the setState update to the docs site`,
-                                lastPart,
+                            const args: Partial<EditToolParamSchema> =
+                                lastPart.input as any
+                            if (args?.command === 'view') {
+                                continue
+                            }
+                            if (!isParameterComplete(args)) {
+                                continue
+                            }
+                            const currentSlug = generateSlugFromPath(
+                                args.path || '',
+                                githubFolder,
                             )
-
-                            await docsRpcClient
-                                .setDocsState(
-                                    {
-                                        filesInDraft: filesInDraft,
-                                        isMarkdownStreaming: false,
-                                        currentSlug,
-                                    },
-                                    lastPart.toolCallId,
-                                )
-                                .catch((e) => {
-                                    console.error('failed setDocsState', e)
+                            if (
+                                lastPart.state === 'input-streaming' ||
+                                lastPart.state === 'input-available'
+                            ) {
+                                if (isPostMessageBusy) continue
+                                let updatedPagesCopy = { ...filesInDraft }
+                                const execute = createEditExecute({
+                                    filesInDraft: updatedPagesCopy,
+                                    getPageContent,
                                 })
-                            useWebsiteState.setState({
-                                filesInDraft,
-                                currentSlug,
-                            })
+                                await execute(args as any)
+                                isPostMessageBusy = true
+                                docsRpcClient
+                                    .setDocsState({
+                                        filesInDraft: updatedPagesCopy,
+                                        currentSlug,
+                                        isMarkdownStreaming: true,
+                                    })
+                                    .then(() => {
+                                        isPostMessageBusy = false
+                                    })
+                                    .catch((e) => {
+                                        console.error(e)
+                                    })
+                            } else if (lastPart.state === 'output-available') {
+                                await execute(args as any)
+                                console.log(
+                                    `applying the setState update to the docs site`,
+                                    lastPart,
+                                )
+
+                                await docsRpcClient
+                                    .setDocsState(
+                                        {
+                                            filesInDraft: filesInDraft,
+                                            isMarkdownStreaming: false,
+                                            currentSlug,
+                                        },
+                                        lastPart.toolCallId,
+                                    )
+                                    .catch((e) => {
+                                        console.error('failed setDocsState', e)
+                                    })
+                                useWebsiteState.setState({
+                                    filesInDraft,
+                                    currentSlug,
+                                })
+                            }
                         }
+                    } catch (e) {
+                        console.error(e)
                     }
-                } catch (e) {
-                    console.error(e)
                 }
             }
-        }
-        updateDocsSite()
+            updateDocsSite()
 
             for await (const newMessages of stateIter) {
                 if (controller.signal.aborted) {

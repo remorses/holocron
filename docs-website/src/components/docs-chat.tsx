@@ -487,67 +487,70 @@ function Footer() {
                         chatId: chatId,
                         locale: 'en',
                     },
-                    { query: { chatId: chatId }, fetch: { signal: controller.signal } },
+                    {
+                        query: { chatId: chatId },
+                        fetch: { signal: controller.signal },
+                    },
                 )
             if (error) throw error
 
-        const [effectsIter, stateIter] = teeAsyncIterable(
-            uiStreamToUIMessages<DocsUIMessage>({
-                uiStream: generator,
-                messages: messages,
-                generateId,
-            }),
-        )
-        async function updateDocsSite() {
-            for await (const newMessages of effectsIter) {
-                try {
-                    const lastMessage = newMessages[newMessages.length - 1]
-                    const lastPart =
-                        lastMessage.parts[lastMessage.parts.length - 1]
-                    if (
-                        lastMessage.role === 'assistant' &&
-                        lastPart?.type === 'tool-selectText' &&
-                        lastPart.state === 'output-available'
-                    ) {
-                        if (lastPart.output.error) {
-                            continue
-                        }
-                        const targetSlug = lastPart.output?.slug
+            const [effectsIter, stateIter] = teeAsyncIterable(
+                uiStreamToUIMessages<DocsUIMessage>({
+                    uiStream: generator,
+                    messages: messages,
+                    generateId,
+                }),
+            )
+            async function updateDocsSite() {
+                for await (const newMessages of effectsIter) {
+                    try {
+                        const lastMessage = newMessages[newMessages.length - 1]
+                        const lastPart =
+                            lastMessage.parts[lastMessage.parts.length - 1]
                         if (
-                            targetSlug &&
-                            typeof targetSlug === 'string' &&
-                            targetSlug !== location.pathname
+                            lastMessage.role === 'assistant' &&
+                            lastPart?.type === 'tool-selectText' &&
+                            lastPart.state === 'output-available'
                         ) {
-                            await navigate(targetSlug)
+                            if (lastPart.output.error) {
+                                continue
+                            }
+                            const targetSlug = lastPart.output?.slug
+                            if (
+                                targetSlug &&
+                                typeof targetSlug === 'string' &&
+                                targetSlug !== location.pathname
+                            ) {
+                                await navigate(targetSlug)
+                            }
+                            usePersistentDocsState.setState({
+                                drawerState: 'minimized',
+                            })
+                            await new Promise((res) => setTimeout(res, 10))
+                            highlightText(lastPart.input)
                         }
-                        usePersistentDocsState.setState({
-                            drawerState: 'minimized',
-                        })
-                        await new Promise((res) => setTimeout(res, 10))
-                        highlightText(lastPart.input)
-                    }
-                    if (
-                        lastMessage.role === 'assistant' &&
-                        lastPart?.type === 'tool-goToPage' &&
-                        lastPart.state === 'output-available'
-                    ) {
-                        if (lastPart.output.error) {
-                            continue
-                        }
-                        const targetSlug = lastPart.output?.slug
                         if (
-                            typeof targetSlug === 'string' &&
-                            targetSlug !== location.pathname
+                            lastMessage.role === 'assistant' &&
+                            lastPart?.type === 'tool-goToPage' &&
+                            lastPart.state === 'output-available'
                         ) {
-                            await navigate(targetSlug)
+                            if (lastPart.output.error) {
+                                continue
+                            }
+                            const targetSlug = lastPart.output?.slug
+                            if (
+                                typeof targetSlug === 'string' &&
+                                targetSlug !== location.pathname
+                            ) {
+                                await navigate(targetSlug)
+                            }
                         }
+                    } catch (error) {
+                        console.error('Error in updateDocsSite loop:', error)
                     }
-                } catch (error) {
-                    console.error('Error in updateDocsSite loop:', error)
                 }
             }
-        }
-        updateDocsSite()
+            updateDocsSite()
 
             // Second iteration: update chat state
             for await (const newMessages of stateIter) {

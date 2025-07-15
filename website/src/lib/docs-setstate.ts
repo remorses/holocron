@@ -67,11 +67,17 @@ export function createIframeRpcClient({
         })
     }
     function onMessage(e: MessageEvent) {
-        const { id, currentSlug, state, error } = (e.data ??
-            {}) as IframeRpcMessage
+        const { id, state, error } = (e.data ?? {}) as IframeRpcMessage
 
-        if (currentSlug) {
-            useWebsiteState.setState({ currentSlug })
+        if (state) {
+            const prev = useWebsiteState.getState()
+            useWebsiteState.setState({
+                ...state,
+                filesInDraft: {
+                    ...prev.filesInDraft,
+                    ...state.filesInDraft,
+                },
+            })
         }
 
         if (!id) return

@@ -1,4 +1,10 @@
-import { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import {
+    useEffect,
+    useImperativeHandle,
+    useMemo,
+    useRef,
+    useState,
+} from 'react'
 
 import { createIdGenerator, UIMessage } from 'ai'
 import { uiStreamToUIMessages } from 'contesto/src/lib/process-chat'
@@ -348,7 +354,10 @@ function Footer() {
                         filesInDraft: {},
                         chatId: CHAT_ID,
                     },
-                    { query: { chatId: CHAT_ID }, fetch: { signal: controller.signal } },
+                    {
+                        query: { chatId: CHAT_ID },
+                        fetch: { signal: controller.signal },
+                    },
                 )
             if (error) throw error
 
