@@ -5,7 +5,7 @@
     "private": true,
     "repository": "https://github.com/remorses/",
     "scripts": {
-        "deployment": "wrangler deploy",
+        "deployment": "if [ -n \"$CLOUDFLARE_API_TOKEN\" ]; then wrangler deploy; else echo 'CLOUDFLARE_API_TOKEN not set, skipping deployment'; fi",
         "dev": "wrangler dev"
     },
     "files": [

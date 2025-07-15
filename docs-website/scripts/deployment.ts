@@ -3,7 +3,20 @@ import { deployFly, getDopplerEnv, shell } from '@xmorse/deployment-utils'
 
 async function main() {
     // const stage = getCurrentStage()
-    const env = await getDopplerEnv({ stage: 'production', project: 'website' })
+    let env: Record<string, string>
+    try {
+        env = getDopplerEnv({ stage: 'production', project: 'website' })
+    } catch (error) {
+        console.log('Production environment not available, trying preview...')
+        try {
+            env = getDopplerEnv({ stage: 'preview', project: 'website' })
+        } catch (previewError) {
+            console.log(
+                'Preview environment not available, skipping deployment',
+            )
+            return
+        }
+    }
     env.FORCE_COLOR = '1'
     await shell(`pnpm react-router typegen`)
     await Promise.all([
