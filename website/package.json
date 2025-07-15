@@ -58,6 +58,7 @@
         "@types/nprogress": "^0.2.3",
         "@uiw/react-color": "^2.6.0",
         "@upstash/qstash": "^2.8.1",
+        "@urlpack/base62": "^2.0.1",
         "ai": "5.0.0-beta.11",
         "ai-fallback": "^0.1.5",
         "async-sema": "^3.1.1",

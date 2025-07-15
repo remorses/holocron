@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write # push branch
+  id-token: write # get a github access token with buildmedic github app
   pull-requests: write # open PR
 
 jobs:
