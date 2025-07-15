@@ -43,11 +43,13 @@ export type DocsState = {
     deletedPages: Array<{
         slug: string
     }>
+    contentMode?: 'preview' | 'editor'
 }
 
 const defaultState: DocsState = {
     filesInDraft: {},
     deletedPages: [],
+    contentMode: 'preview',
 }
 
 const defaultPersistentState: PersistentDocsState = {

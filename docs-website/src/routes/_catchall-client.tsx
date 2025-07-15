@@ -32,8 +32,11 @@ import {
     LinkedinIcon,
     MessageCircleIcon,
     TwitterIcon,
+    Edit3Icon,
+    EyeIcon,
 } from 'lucide-react'
 import { AskAIButton, LLMCopyButton, ViewOptions } from '../components/llm'
+import { buttonVariants } from 'docs-website/src/components/ui/button'
 import { mdxComponents } from '../components/mdx-components'
 import { PoweredBy } from '../components/poweredby'
 import { Rate } from '../components/rate'
@@ -44,7 +47,7 @@ import { useScrollToFirstAddedIfAtTop } from '../lib/diff-highlight'
 import { MarkdownRuntime } from '../lib/markdown-runtime'
 import { renderNode } from '../lib/mdx-code-block'
 import { ScalarOpenApi } from '../components/scalar'
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { ProcessorDataFrontmatter } from '../lib/mdx-heavy'
 import { LoaderData } from './_catchall.$'
 import { APIPageInner } from 'fumadocs-openapi/render/api-page-inner'
@@ -156,6 +159,7 @@ function PageContent(props: Route.ComponentProps): any {
                         contextual={docsJson?.contextual}
                     />
                     <AskAIButton />
+                    <EditorToggle />
                 </div>
 
                 <div className='prose flex-1 text-fd-foreground/80'>
@@ -452,11 +456,17 @@ const components = {
     },
 }
 
+const MonacoMarkdownEditor = lazy(() => 
+    import('../components/monaco-markdown-editor').then((mod) => ({
+        default: mod.MonacoMarkdownEditor,
+    }))
+)
+
 function DocsMarkdown(): any {
     const loaderData = useLoaderData<Route.ComponentProps['loaderData']>()
-    let { ast, markdown, isStreaming } = useDocsState(
+    let { ast, markdown, isStreaming, contentMode } = useDocsState(
         useShallow((x) => {
-            const { filesInDraft, isMarkdownStreaming: isStreaming } = x
+            const { filesInDraft, isMarkdownStreaming: isStreaming, contentMode } = x
 
             const override = filesInDraft[loaderData.githubPath]
 
@@ -465,6 +475,7 @@ function DocsMarkdown(): any {
                     markdown: override.content || '',
                     isStreaming,
                     ast: undefined,
+                    contentMode,
                 }
             }
             console.log(
@@ -473,9 +484,9 @@ function DocsMarkdown(): any {
 
             return {
                 isStreaming,
-
                 ast: loaderData.ast,
-                markdown: '',
+                markdown: loaderData.markdown || '',
+                contentMode,
             }
         }),
     )
@@ -484,16 +495,43 @@ function DocsMarkdown(): any {
     useAddedHighlighter({ enabled: showDiff })
     const extension = loaderData.githubPath.split('.').pop()
 
+    // If contentMode is 'editor', render the Monaco editor
+    if (contentMode === 'editor') {
+        return (
+            <Suspense fallback={
+                <div className="flex items-center justify-center h-96">
+                    <div className="text-muted-foreground">Loading editor...</div>
+                </div>
+            }>
+                <MonacoMarkdownEditor
+                    value={markdown}
+                    onChange={(value) => {
+                        useDocsState.setState((state) => ({
+                            ...state,
+                            filesInDraft: {
+                                ...state.filesInDraft,
+                                [loaderData.githubPath]: {
+                                    content: value || '',
+                                    githubPath: loaderData.githubPath,
+                                },
+                            },
+                        }))
+                    }}
+                    className="h-[calc(100vh-16rem)] w-full border rounded-lg overflow-hidden"
+                />
+            </Suspense>
+        )
+    }
+
+    // Default preview mode
     if (!ast) {
         const previousMarkdown = loaderData.markdown
-        // console.log(markdown)
         return (
             <MarkdownRuntime
                 className='page-content-markdown'
                 {...{
                     extension,
                     isStreaming,
-
                     showDiff,
                     markdown,
                     previousMarkdown,
@@ -510,6 +548,40 @@ function DocsMarkdown(): any {
             components={components}
             ast={ast}
         />
+    )
+}
+
+function EditorToggle() {
+    const contentMode = useDocsState((state) => state.contentMode)
+    
+    return (
+        <button
+            onClick={() => {
+                useDocsState.setState((state) => ({
+                    ...state,
+                    contentMode: state.contentMode === 'editor' ? 'preview' : 'editor',
+                }))
+            }}
+            className={cn(
+                buttonVariants({
+                    variant: 'secondary',
+                    size: 'xs',
+                    className: 'gap-2',
+                }),
+            )}
+        >
+            {contentMode === 'editor' ? (
+                <>
+                    <EyeIcon className="size-3.5" />
+                    Preview
+                </>
+            ) : (
+                <>
+                    <Edit3Icon className="size-3.5" />
+                    Edit
+                </>
+            )}
+        </button>
     )
 }
 
