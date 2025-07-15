@@ -41,45 +41,10 @@ export function MonacoMarkdownEditor({
     onChange,
     className,
 }: MonacoMarkdownEditorProps) {
-    const { resolvedTheme:theme, forcedTheme } = useTheme()
+    const { resolvedTheme: theme, forcedTheme } = useTheme()
     const resolvedTheme = forcedTheme || theme
     const monaco = useMonaco()
     const editorRef = useRef<Parameters<OnMount>[0] | null>(null)
-    const [height, setHeight] = useState(200)
-    const timeoutRef = useRef<NodeJS.Timeout>(undefined)
-
-    // Debounced height calculation
-    const calculateHeight = useCallback(() => {
-        if (!editorRef.current) return
-
-        const model = editorRef.current.getModel()
-        if (!model) return
-
-        const lineCount = model.getLineCount()
-        const columnCount = model.getLineMaxColumn(lineCount)
-        const lastCharTop = editorRef.current.getTopForPosition(
-            lineCount - 1,
-            1,
-        )
-        const lineHeight = 10 // Based on fontSize: 14 with typical line spacing
-        const contentHeight = lastCharTop + lineHeight + 32 // Add padding
-
-        const newHeight = Math.max(200, contentHeight)
-        console.log({ lastCharTop, lineCount })
-
-        // Only update if height changed significantly (avoid micro-updates)
-        if (Math.abs(newHeight - height) > 5) {
-            console.log(`using monaco height ${newHeight}`)
-            setHeight(newHeight)
-        }
-    }, [height])
-
-    const debouncedCalculateHeight = useCallback(() => {
-        if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current)
-        }
-        timeoutRef.current = setTimeout(calculateHeight, 150)
-    }, [calculateHeight])
 
     const defineCustomTheme = useCallback(() => {
         if (!monaco) return
@@ -134,41 +99,7 @@ export function MonacoMarkdownEditor({
 
         // Set up custom theme with CSS variable background
         defineCustomTheme()
-
-        // Initial sizing
-        calculateHeight()
-
-        // Only recalculate on significant content changes, not every keystroke
-        editor.onDidChangeModelContent((e) => {
-            // Only recalculate if lines were added/removed
-            if (
-                e.changes.some(
-                    (change) =>
-                        change.text.includes('\n') ||
-                        change.range.endLineNumber !==
-                            change.range.startLineNumber,
-                )
-            ) {
-                debouncedCalculateHeight()
-            }
-        })
     }
-
-    // Whenever height changes, force a layout so Monaco redraws
-    useEffect(() => {
-        if (editorRef.current) {
-            editorRef.current.layout()
-        }
-    }, [height])
-
-    // Cleanup timeout on unmount
-    useEffect(() => {
-        return () => {
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current)
-            }
-        }
-    }, [])
 
     // Update theme when resolvedTheme changes
     useEffect(() => {
@@ -188,10 +119,13 @@ export function MonacoMarkdownEditor({
     // - Code block detection
 
     return (
-        <div className='not-prose -mx-8'>
+        <div
+            className='not-prose -mx-8'
+            style={{ height: 'calc(100vh - var(--fd-nav-height))' }}
+        >
             <Editor
                 // key={resolvedTheme}
-                height={height}
+                height='100%'
                 defaultLanguage='markdown'
                 className='grow-0 not-prose'
                 language='markdown'
@@ -202,10 +136,9 @@ export function MonacoMarkdownEditor({
                 options={{
                     minimap: { enabled: false },
                     scrollbar: {
-                        vertical: 'hidden',
-                        horizontal: 'hidden',
-                        handleMouseWheel: false,
-
+                        vertical: 'auto',
+                        horizontal: 'auto',
+                        handleMouseWheel: true,
                         alwaysConsumeMouseWheel: false,
                     },
                     overviewRulerLanes: 0,
@@ -216,7 +149,7 @@ export function MonacoMarkdownEditor({
                     lineNumbers: 'on',
                     wordWrap: 'on',
                     scrollBeyondLastLine: false,
-                    automaticLayout: false,
+                    automaticLayout: true,
                     tabSize: 2,
                     insertSpaces: true,
                     formatOnPaste: true,

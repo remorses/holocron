@@ -100,10 +100,10 @@ function PageContent(props: Route.ComponentProps): any {
     const repo = rootData.githubRepo
     const githubBranch = rootData.githubBranch
     const branchId = rootData.branchId
-    let { title, description, toc } = useDocsState(
+    let { title, description, toc, previewMode, markdown } = useDocsState(
         useShallow((state) => {
             const { title, description } = loaderData || {}
-            const { filesInDraft } = state
+            const { filesInDraft, previewMode } = state
 
             const override = filesInDraft[loaderData.githubPath]
             const toc = state.toc || loaderData?.toc
@@ -117,16 +117,57 @@ function PageContent(props: Route.ComponentProps): any {
                     toc,
                     title: data.title || title,
                     description: data.description || description,
+                    previewMode,
+                    markdown: override.content || '',
                 }
             }
 
-            return { title, description, toc }
+            return {
+                title,
+                description,
+                toc,
+                previewMode,
+                markdown: loaderData.markdown || '',
+            }
         }),
     )
     const githubUrl = `https://github.com/${owner}/${repo}`
     const tableOfContentStyle = 'clerk'
 
     const docsJson = useDocsJson()
+
+    // Early return for editor mode
+    if (previewMode === 'editor') {
+        return (
+            <PageRoot
+                toc={{
+                    toc: toc as any,
+                }}
+            >
+                <PageArticle className='docs-page-article !pt-0'>
+                    <Suspense
+                        fallback={
+                            <div className='flex items-center justify-center h-96'>
+                                <div className='text-muted-foreground'>
+                                    Loading editor...
+                                </div>
+                            </div>
+                        }
+                    >
+                        <MonacoMarkdownEditor
+                            value={markdown}
+                            onChange={(value) => {
+                                updateFileInDocsEditor(
+                                    loaderData.githubPath,
+                                    value || '',
+                                )
+                            }}
+                        />
+                    </Suspense>
+                </PageArticle>
+            </PageRoot>
+        )
+    }
 
     return (
         <PageRoot
@@ -459,14 +500,14 @@ const components = {
 const MonacoMarkdownEditor = lazy(() =>
     import('../components/monaco-markdown-editor').then((mod) => ({
         default: mod.MonacoMarkdownEditor,
-    }))
+    })),
 )
 
 function DocsMarkdown(): any {
     const loaderData = useLoaderData<Route.ComponentProps['loaderData']>()
-    let { ast, markdown, isStreaming, contentMode } = useDocsState(
+    let { ast, markdown, isStreaming } = useDocsState(
         useShallow((x) => {
-            const { filesInDraft, isMarkdownStreaming: isStreaming, previewMode: contentMode } = x
+            const { filesInDraft, isMarkdownStreaming: isStreaming } = x
 
             const override = filesInDraft[loaderData.githubPath]
 
@@ -475,7 +516,6 @@ function DocsMarkdown(): any {
                     markdown: override.content || '',
                     isStreaming,
                     ast: undefined,
-                    contentMode,
                 }
             }
             console.log(
@@ -486,7 +526,6 @@ function DocsMarkdown(): any {
                 isStreaming,
                 ast: loaderData.ast,
                 markdown: loaderData.markdown || '',
-                contentMode,
             }
         }),
     )
@@ -494,25 +533,6 @@ function DocsMarkdown(): any {
     useScrollToFirstAddedIfAtTop({ enabled: showDiff })
     useAddedHighlighter({ enabled: showDiff })
     const extension = loaderData.githubPath.split('.').pop()
-
-    // If contentMode is 'editor', render the Monaco editor
-    if (contentMode === 'editor') {
-        return (
-            <Suspense fallback={
-                <div className="flex items-center justify-center h-96">
-                    <div className="text-muted-foreground">Loading editor...</div>
-                </div>
-            }>
-                <MonacoMarkdownEditor
-                    value={markdown}
-                    onChange={(value) => {
-                        updateFileInDocsEditor(loaderData.githubPath, value || '')
-                    }}
-                    className="w-full border rounded-lg overflow-hidden"
-                />
-            </Suspense>
-        )
-    }
 
     // Default preview mode
     if (!ast) {
@@ -550,7 +570,8 @@ function EditorToggle() {
             onClick={() => {
                 useDocsState.setState((state) => ({
                     ...state,
-                    previewMode: state.previewMode === 'editor' ? 'preview' : 'editor',
+                    previewMode:
+                        state.previewMode === 'editor' ? 'preview' : 'editor',
                 }))
             }}
             className={cn(
@@ -563,12 +584,12 @@ function EditorToggle() {
         >
             {contentMode === 'editor' ? (
                 <>
-                    <EyeIcon className="size-3.5" />
+                    <EyeIcon className='size-3.5' />
                     Preview
                 </>
             ) : (
                 <>
-                    <Edit3Icon className="size-3.5" />
+                    <Edit3Icon className='size-3.5' />
                     Edit
                 </>
             )}
