@@ -25,7 +25,7 @@ import { AppSidebar } from '../components/app-sidebar'
 import { BrowserWindow } from '../components/browser-window'
 import { SidebarInset, SidebarProvider } from '../components/ui/sidebar'
 import { getSession } from '../lib/better-auth'
-import { createIframeRpcClient } from '../lib/docs-setstate'
+import { createIframeRpcClient, docsRpcClient } from '../lib/docs-setstate'
 import { getTabFilesWithoutContents } from '../lib/spiceflow-generate-message'
 
 import { State, WebsiteStateProvider } from '../lib/state'
@@ -277,31 +277,42 @@ function Content() {
     const siteData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
-    const [searchParams, setSearchParams] = useSearchParams()
-
     const iframeRef = useRef<HTMLIFrameElement>(null)
+    const [activeTab, setActiveTab] = useState<'preview' | 'editor'>('preview')
+    const previewMode = activeTab
+    
     useEffect(() => {
         console.log('iframe sidebar remounted')
     }, [])
 
-    const activeTab = searchParams.get('tab') || 'preview'
-
     const handleTabChange = (value: string) => {
-        const newSearchParams = new URLSearchParams(searchParams)
-        if (value === 'preview') {
-            newSearchParams.delete('tab')
-        } else {
-            newSearchParams.set('tab', value)
+        const newValue = value as 'preview' | 'editor'
+        setActiveTab(newValue)
+
+        // Update the iframe's docs state when switching tabs
+        const iframe = iframeRef.current
+        if (iframe) {
+            const state = {
+                previewMode: newValue,
+            }
+
+            docsRpcClient.setDocsState(state).catch(console.error)
         }
-        setSearchParams(newSearchParams)
     }
 
     return (
         <div className='flex flex-col h-full gap-3'>
-            <Tabs value={activeTab} onValueChange={handleTabChange} className='flex flex-col h-full'>
+            <Tabs
+                value={activeTab}
+                onValueChange={handleTabChange}
+                className='flex flex-col gap-4 h-full'
+            >
                 <div className='flex gap-2'>
                     <TabsList>
-                        <TabsTrigger value='preview'>Browser Preview</TabsTrigger>
+                        <TabsTrigger value='preview'>
+                            Browser Preview
+                        </TabsTrigger>
+                        <TabsTrigger value='editor'>Editor</TabsTrigger>
                         {/* <TabsTrigger value='errors'>Errors</TabsTrigger> */}
                     </TabsList>
                     <div className='grow'></div>
@@ -310,7 +321,7 @@ function Content() {
                     <GitHubSyncButton />
                 </div>
 
-                <TabsContent value='preview' className='flex grow flex-col'>
+                <div className='flex grow flex-col'>
                     <BrowserWindow
                         url={iframeUrl}
                         onSearchBarClick={() => {
@@ -342,7 +353,9 @@ function Content() {
 
                                 const state = {
                                     currentSlug: chat.currentSlug || undefined,
-                                    filesInDraft: (chat.filesInDraft as any) || {},
+                                    filesInDraft:
+                                        (chat.filesInDraft as any) || {},
+                                    previewMode,
                                 }
                                 let sentFirstMessage = false
                                 // do it as soon as the page loads to not wait for the ready message
@@ -374,7 +387,10 @@ function Content() {
                             }}
                             key={chat.chatId}
                             style={scaleDownElement(0.9)}
-                            className={cn(' inset-0 bg-transparent', 'absolute')}
+                            className={cn(
+                                ' inset-0 bg-transparent',
+                                'absolute',
+                            )}
                             frameBorder={0}
                             allowTransparency={true}
                             name='preview' // tell iframe preview props is enabled
@@ -382,13 +398,7 @@ function Content() {
                             src={iframeUrl.toString()}
                         ></iframe>
                     </BrowserWindow>
-                </TabsContent>
-
-                <TabsContent value='errors' className='flex grow flex-col'>
-                    <div className='flex items-center justify-center h-full border rounded-xl bg-muted/30'>
-                        <p className='text-muted-foreground'>Errors tab - Not implemented yet</p>
-                    </div>
-                </TabsContent>
+                </div>
             </Tabs>
         </div>
     )

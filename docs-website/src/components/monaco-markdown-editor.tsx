@@ -41,7 +41,7 @@ export function MonacoMarkdownEditor({
     onChange,
     className,
 }: MonacoMarkdownEditorProps) {
-    const { theme, forcedTheme } = useTheme()
+    const { resolvedTheme:theme, forcedTheme } = useTheme()
     const resolvedTheme = forcedTheme || theme
     const monaco = useMonaco()
     const editorRef = useRef<Parameters<OnMount>[0] | null>(null)
