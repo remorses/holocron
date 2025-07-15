@@ -1,10 +1,7 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - main
-      - preview
+  pull_request:
 
 permissions:
   contents: write # push branch
@@ -22,7 +19,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-
       - uses: actions/setup-node@v3
         with:
           node-version: 22
@@ -37,4 +33,4 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         with:
-          command: "pnpm --filter fumadocs-root build:pnpm && pnpm deployment"
+          command: "pnpm --filter fumadocs-root build:pnpm && pnpm build"
