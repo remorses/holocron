@@ -233,7 +233,14 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     if (loaderData && typeof window !== 'undefined') {
         globalThis.rootServerLoaderData = loaderData
     }
-    const { previewWebsocketId } = loaderData || {}
+    const { previewWebsocketId, editorPreviewMode } = loaderData || {}
+    
+    // Initialize docs state with editor preview mode if provided
+    useEffect(() => {
+        if (editorPreviewMode) {
+            useDocsState.setState({ previewMode: 'editor' })
+        }
+    }, [editorPreviewMode])
 
     // const navigation = useNavigation()
     // const revalidator = useRevalidator()

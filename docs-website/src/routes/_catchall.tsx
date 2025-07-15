@@ -188,6 +188,9 @@ export async function loader({ request }: Route.LoaderArgs) {
         return ''
     })()
 
+    // Check for editor preview mode query parameter
+    const editorPreviewMode = url.searchParams.get('editorPreviewMode') === 'true'
+    
     console.timeEnd(`${timerId} - total root loader time`)
     
     return {
@@ -211,6 +214,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         branchId: siteBranch.branchId,
         site,
         themeCSS,
+        editorPreviewMode,
     }
 }
 
