@@ -13,7 +13,7 @@ on:
 jobs:
     claude:
         env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+          DOPPLER_TOKEN: ${{ github.ref_name == 'main' && secrets.DOPPLER_TOKEN_PROD ||  secrets.DOPPLER_TOKEN_PREVIEW }}
         if: |
             (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
             (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||

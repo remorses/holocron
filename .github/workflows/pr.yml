@@ -10,7 +10,7 @@ permissions:
 jobs:
   ci:
     env:
-      DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+      DOPPLER_TOKEN: ${{ github.ref_name == 'main' && secrets.DOPPLER_TOKEN_PROD ||  secrets.DOPPLER_TOKEN_PREVIEW }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 30
     runs-on: ubuntu-latest
@@ -33,4 +33,4 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         with:
-          command: "pnpm --filter fumadocs-root build:pnpm && pnpm build"
+          run: "pnpm --filter fumadocs-root build:pnpm && pnpm build"
