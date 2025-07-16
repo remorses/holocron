@@ -10,6 +10,7 @@ import {
     useRef,
     useState,
 } from 'react'
+import memoize from 'micro-memoize'
 import { FormProvider, useForm } from 'react-hook-form'
 import {
     ChatAssistantMessage,
@@ -125,7 +126,6 @@ const setDocsJsonState = ({
         [githubPath]: {
             content: newJson,
             githubPath,
-            ...calculateLineChanges(previousJsonString, newJson),
         },
     }
     const newFilesInDraft: FilesInDraft = {
@@ -662,13 +662,7 @@ function Footer() {
     // Listen for regenerate events
 
     const hasFilesInDraft = Object.keys(filesInDraft).length > 0
-    const updatedLines = useMemo(() => {
-        return Object.values(filesInDraft).reduce(
-            (sum, file: FileUpdate) =>
-                sum + (file.addedLines || 0) + (file.deletedLines || 0),
-            0,
-        )
-    }, [filesInDraft])
+
     const showCreatePR = hasFilesInDraft || prUrl
     const textareaRef = React.useRef<HTMLTextAreaElement>(null)
     const stopGeneration = () => {
@@ -708,7 +702,7 @@ function Footer() {
                             )}
                             <div className='justify-end flex grow'>
                                 {!!siteData.site.githubInstallations?.length ? (
-                                    <PrButton updatedLines={updatedLines} />
+                                    <PrButton />
                                 ) : (
                                     <InstallGithubApp />
                                 )}
@@ -833,7 +827,7 @@ function Footer() {
     )
 }
 
-function PrButton({ updatedLines }) {
+function PrButton({}) {
     const [isLoading, setIsLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
     const [buttonText, setButtonText] = useTemporaryState('', 2000)
@@ -863,9 +857,6 @@ function PrButton({ updatedLines }) {
             return true
         }
         if (errorMessage) {
-            return true
-        }
-        if (!updatedLines) {
             return true
         }
 
@@ -1046,13 +1037,55 @@ interface DiffStatsProps {
 
 export const DiffStats = memo(function DiffStats({
     filesInDraft,
-    hasNonPushedChanges = false,
     className = '',
 }: DiffStatsProps) {
+    const { branchId } = useLoaderData() as Route.ComponentProps['loaderData']
+
+    const getPageContent = useMemo(() => {
+        return memoize(async (githubPath: string) => {
+            const { data, error } = await apiClient.api.getPageContent.post({
+                branchId,
+                githubPath,
+            })
+            if (error) return ''
+            return data?.content || ''
+        })
+    }, [branchId])
+
+    const computedStats = useMemo(() => {
+        const computeStatsForFile = async (file: FileUpdate) => {
+            const originalContent = await getPageContent(file.githubPath)
+            const currentContent = file.content || ''
+            return calculateLineChanges(originalContent, currentContent)
+        }
+
+        return Object.entries(filesInDraft).map(async ([path, file]) => {
+            const stats = await computeStatsForFile(file)
+            return {
+                path,
+                file,
+                addedLines: stats.addedLines,
+                deletedLines: stats.deletedLines,
+            }
+        })
+    }, [filesInDraft, getPageContent])
+
+    const [resolvedStats, setResolvedStats] = useState<
+        Array<{
+            path: string
+            file: FileUpdate
+            addedLines: number
+            deletedLines: number
+        }>
+    >([])
+
+    useEffect(() => {
+        Promise.all(computedStats).then(setResolvedStats)
+    }, [computedStats])
+
     // Only include files that have additions or deletions
-    const changedFiles = Object.entries(filesInDraft).filter(
-        ([, file]) =>
-            (file?.addedLines || 0) > 0 || (file?.deletedLines || 0) > 0,
+    const changedFiles = resolvedStats.filter(
+        ({ addedLines, deletedLines }) => addedLines > 0 || deletedLines > 0,
     )
     const fileCount = changedFiles.length
 
@@ -1062,11 +1095,11 @@ export const DiffStats = memo(function DiffStats({
     }
 
     const totalAdded = changedFiles.reduce(
-        (sum, [, file]) => sum + (file?.addedLines || 0),
+        (sum, { addedLines }) => sum + addedLines,
         0,
     )
     const totalDeleted = changedFiles.reduce(
-        (sum, [, file]) => sum + (file?.deletedLines || 0),
+        (sum, { deletedLines }) => sum + deletedLines,
         0,
     )
 

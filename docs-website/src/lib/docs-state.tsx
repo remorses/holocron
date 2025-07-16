@@ -14,8 +14,6 @@ export type FilesInDraft = Record<
     {
         content: string | null
         githubPath: string
-        addedLines?: number
-        deletedLines?: number
     }
 >
 
