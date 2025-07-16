@@ -1,6 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { bearer } from 'better-auth/plugins'
-import { prisma } from 'db/'
+import { prisma } from 'db'
 import { stripe } from '@better-auth/stripe'
 import { apiKey } from 'better-auth/plugins'
 import Stripe from 'stripe'

@@ -47,7 +47,13 @@ import { getFilesForSource } from 'docs-website/src/lib/source.server'
 import { getFumadocsSource } from 'docs-website/src/lib/source'
 import Handlebars from 'handlebars'
 import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
-import agentPrompt from '../prompts/agent.md?raw'
+import { readFileSync } from 'fs'
+import { join } from 'path'
+
+const agentPrompt = readFileSync(
+    join(process.cwd(), 'src/prompts/agent.md'),
+    'utf-8',
+)
 import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
 
