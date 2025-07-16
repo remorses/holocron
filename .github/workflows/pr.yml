@@ -23,6 +23,7 @@ jobs:
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org/
+
       - uses: pnpm/action-setup@master
         with:
           version: 10
