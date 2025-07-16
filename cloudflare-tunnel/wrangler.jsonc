@@ -4,6 +4,7 @@
     "name": "ws-tunnel",
     "main": "src/tunnel.ts",
     "compatibility_date": "2025-06-27",
+    "account_id": "103e73569e2f6d4aea0fb679ceb8709b",
 
     "workers_dev": false,
 

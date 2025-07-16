@@ -14,8 +14,9 @@ permissions:
 jobs:
   ci:
     env:
-      DOPPLER_TOKEN: ${{ github.ref_name == 'main' && secrets.DOPPLER_TOKEN_PROD ||  secrets.DOPPLER_TOKEN_PREVIEW }}
+      DOPPLER_TOKEN: ${{ github.ref_name == 'main' && secrets.DOPPLER_PRODUCTION_TOKEN ||  secrets.DOPPLER_PREVIEW_TOKEN }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
