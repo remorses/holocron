@@ -304,11 +304,11 @@ prisma upsert calls are preferable over updates, so that you also handle the cas
 
 never make changes to schema.prisma yourself, instead propose a change with a message and ask me to do it. this file is too important to be edited by agents.
 
-## prisma queries for relation
+### prisma queries for relations
 
 - NEVER add more than 1 include nesting. This is very bad for performance because prisma will have to do the query to get the relation sequentially. Instead of adding a new nested `include` you should add a new prisma query and wrap them in a `Promise.all`
 
-## prisma transactions for complex relations inserts
+### prisma transactions for complex relations inserts
 
 for very complex updates or inserts that involve more than 3 related tables, for example a Chat with ChatMessages and ChatMessagePath, you should use transaction instead of a super complex single query:
 
@@ -317,7 +317,7 @@ for very complex updates or inserts that involve more than 3 related tables, for
 - recreate all the tables again, reuse the old existing rows data when you don't have all the fields available
 - make sure to create all the rows in the related tables. use for loops if necessary
 
-## always make sure use has access to prisma tables
+### prisma, always make sure use has access to prisma tables
 
 > IMPORTANT! always read the schema.prisma file before adding a new prisma query, to understand how to structure it
 
@@ -325,7 +325,7 @@ try to never write sql by hand, user prisma
 
 if a query becomes too complex because fetching too deeply into related tables (more than 1 `include` nesting), use different queries instead, put them in a Promise.all
 
-## concurrency
+### prisma, concurrency
 
 when doing prisma queries or other async operations try to parallelize them using Promise.all
 
@@ -333,7 +333,7 @@ this will speed up operations that can be done concurrently.
 
 this is especially important in react-router loaders
 
-## security
+### prisma security
 
 All loaders, actions and Spiceflow routes of the project should have authorization checks.
 
@@ -349,6 +349,18 @@ if (!resource) {
     throw new AppError(`cannot find resource`)
 }
 ```
+
+### prisma transactions
+
+NEVER use prisma interactive transatciont (passing a function to `prisma.$transaction`), instead pass an array of operations. this is basically the same thing, operations are executed in order, but it has much better performance.
+
+If you need to use complex logic to construct the array of operations, create a empty array using `const operations: Prisma.PrismaPromise<any>[]` first, then push to this array the queries you want to excecute
+
+> IMPORTANT! while constructing the operations array you should never call await in between, this would cause the prisma query to start and would make the transaction invalid.
+
+
+
+```typescript
 
 ## errors
 

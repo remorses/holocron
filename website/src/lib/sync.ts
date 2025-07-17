@@ -770,9 +770,13 @@ export async function syncSite({
         console.log(
             `Upserting page with slug: ${slug}, title: ${data.frontmatter.title}...`,
         )
-        await prisma.$transaction(async (prisma) => {
-            // Upsert the MarkdownBlob first
-            await prisma.markdownBlob.upsert({
+
+        errors = deduplicateBy(errors, (x) => String(x.line || 0))
+
+        // Execute all operations in a single transaction array for data consistency
+        // First, we need to handle the upsert and get the page
+        const [, page] = await prisma.$transaction([
+            prisma.markdownBlob.upsert({
                 where: { githubSha: asset.githubSha },
                 update: {
                     markdown,
@@ -785,27 +789,32 @@ export async function syncSite({
                     mdast,
                     structuredData: data.structuredData as any,
                 },
-            })
-
-            // Upsert the page
-            const page = await prisma.markdownPage.upsert({
+            }),
+            prisma.markdownPage.upsert({
                 where: {
                     branchId_slug: { branchId, slug: slug },
                 },
                 update: pageInput,
                 create: { ...pageInput, branchId },
             })
+        ])
 
-            // Delete existing sync errors for this page
-            await prisma.markdownPageSyncError.deleteMany({
+        // Now handle all relation operations in a single atomic transaction
+        const relationOps: Prisma.PrismaPromise<any>[] = [
+            // Delete existing relations first
+            prisma.markdownPageSyncError.deleteMany({
                 where: { pageId: page.pageId },
-            })
+            }),
+            prisma.pageMediaAsset.deleteMany({
+                where: { pageId: page.pageId },
+            }),
+        ]
 
-            errors = deduplicateBy(errors, (x) => String(x.line || 0))
-            // Create new sync errors if there were processing errors
-            if (errors.length > 0) {
-                for (const error of errors) {
-                    await prisma.markdownPageSyncError.create({
+        // Add new sync errors if there were processing errors
+        if (errors.length > 0) {
+            relationOps.push(
+                ...errors.map((error) =>
+                    prisma.markdownPageSyncError.create({
                         data: {
                             pageId: page.pageId,
                             line: error.line,
@@ -813,33 +822,31 @@ export async function syncSite({
                             errorType: error.errorType,
                         },
                     })
-                }
-            }
-
-            // Delete existing PageMediaAsset records for this page
-            await prisma.pageMediaAsset.deleteMany({
-                where: { pageId: page.pageId },
-            })
-
-            // Create new PageMediaAsset records for relative image paths
-            for (const imageSrc of relativeImagesSlugs) {
-                const assetSlug = imageSrc
-
-                await prisma.pageMediaAsset.create({
-                    data: {
-                        pageId: page.pageId,
-                        assetSlug,
-                        branchId,
-                    },
-                })
-            }
-
-            console.log(
-                `Page upsert complete: ${page.pageId} (${page.githubPath})${errors.length > 0 ? ` with ${errors.length} error(s)` : ''}`,
+                )
             )
+        }
 
-            return page
-        })
+        // Add new PageMediaAsset records for relative image paths
+        if (relativeImagesSlugs.length > 0) {
+            relationOps.push(
+                ...relativeImagesSlugs.map((imageSrc) =>
+                    prisma.pageMediaAsset.create({
+                        data: {
+                            pageId: page.pageId,
+                            assetSlug: imageSrc,
+                            branchId,
+                        },
+                    })
+                )
+            )
+        }
+
+        // Execute all relation operations atomically - this ensures delete and create are together
+        await prisma.$transaction(relationOps)
+
+        console.log(
+            `Page upsert complete: ${page.pageId} (${page.githubPath})${errors.length > 0 ? ` with ${errors.length} error(s)` : ''}`,
+        )
         processedSlugs.add(slug)
 
         // Add cache tag for invalidation
