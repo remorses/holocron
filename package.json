@@ -3,7 +3,7 @@
     "private": true,
     "scripts": {
         "test": "NODE_ENV=test vitest",
-        "deployment": "pnpm -r --parallel --stream --no-bail run deployment",
+        "deployment": "pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm && pnpm -r --parallel --stream --no-bail run deployment",
         "watch": "pnpm -r watch",
         "typecheck": "pnpm -r --parallel --stream typecheck",
         "ci": "pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm && pnpm --filter './*' build",
@@ -29,7 +29,7 @@
     "license": "",
     "dependencies": {
         "@types/node": "^24.0.1",
-        "unframer": "link:../../../.local/share/pnpm/global/5/node_modules/unframer",
+        "unframer": "latest",
         "vite-node": "^3.2.4"
     }
 }

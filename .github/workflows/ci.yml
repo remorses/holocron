@@ -39,4 +39,4 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         with:
-          run: "pnpm --filter fumadocs-root build:pnpm && pnpm deployment"
+          run: "pnpm deployment"

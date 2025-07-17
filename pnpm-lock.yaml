@@ -15,8 +15,8 @@ importers:
         specifier: ^24.0.1
         version: 24.0.1
       unframer:
-        specifier: link:../../../.local/share/pnpm/global/5/node_modules/unframer
-        version: link:../../../.local/share/pnpm/global/5/node_modules/unframer
+        specifier: latest
+        version: 3.0.2(@modelcontextprotocol/sdk@1.15.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       vite-node:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)
@@ -2027,7 +2027,7 @@ importers:
         version: 7.10.0
       unframer:
         specifier: link:/Users/morse/Documents/GitHub/unframer-private/unframer/unframer
-        version: link:../../../../../../Users/morse/Documents/GitHub/unframer-private/unframer/unframer
+        version: link:../../unframer-private/unframer/unframer
       use-stick-to-bottom:
         specifier: ^1.1.1
         version: 1.1.1(react@19.1.0)
@@ -21706,6 +21706,7 @@ snapshots:
       tiny-jsonc: 1.0.2
       trieve-ts-sdk: 0.0.122
       tw-animate-css: 1.3.5
+      unframer: 3.0.2(@modelcontextprotocol/sdk@1.15.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       unified: 11.0.5
       unist-util-size: 4.0.0
       unist-util-visit: 5.0.0
@@ -21718,6 +21719,9 @@ snapshots:
       zod: 3.25.76
       zustand: 5.0.6(@types/react@19.1.8)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
     transitivePeerDependencies:
+      - '@biomejs/wasm-bundler'
+      - '@biomejs/wasm-web'
+      - '@emotion/is-prop-valid'
       - '@modelcontextprotocol/sdk'
       - '@react-router/dev'
       - '@types/node'
@@ -28122,7 +28126,7 @@ snapshots:
       trieve-ts-sdk: 0.0.122
       tw-animate-css: 1.3.4
       undici: 7.10.0
-      unframer: link:../../../../../Users/morse/Documents/GitHub/unframer-private/unframer/unframer
+      unframer: link:../unframer-private/unframer/unframer
       use-stick-to-bottom: 1.1.1(react@19.1.0)
       uuid: 11.1.0
       vaul: 1.1.2(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
