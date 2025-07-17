@@ -175,7 +175,7 @@ function Chat({}) {
 
     return (
         <ScrollArea
-            ref={scrollRef}
+            ref={scrollRef as any}
             className='[&>div>div]:grow -mr-4 pr-4 relative items-stretch rounded max-h-full flex flex-col grow justify-center '
         >
             <div className='flex flex-col gap-4 relative h-full justify-center'>

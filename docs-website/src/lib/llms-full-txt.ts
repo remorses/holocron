@@ -98,7 +98,7 @@ export async function generateLlmsFullTxt({
 
             // Create a map for quick lookup
             const pageContentMap = new Map(
-                markdownPages.map((page) => [page.slug, page.content.markdown]),
+                markdownPages.map((page) => [page.slug, page.content?.markdown ||'']),
             )
 
             // Add each page in the batch

@@ -33,7 +33,7 @@ type BaseLoaderData = {
     toc: any[]
     title: string
     description: string
-    markdown: string
+    markdown?: string
     ast: any
     githubPath: string
     slugs: string[]
@@ -437,7 +437,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         const { data: markdownData } = await processMdxInServer({
             extension: extension,
             githubPath: page.githubPath,
-            markdown: page.content.markdown,
+            markdown: page.content?.markdown ||'',
         })
         console.timeEnd(`${timerId} - process mdx content`)
         mdast = markdownData.ast

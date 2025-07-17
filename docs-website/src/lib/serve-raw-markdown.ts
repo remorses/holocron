@@ -100,7 +100,7 @@ export async function serveRawMarkdown({
                 },
             }),
         ])
-        const markdown = indexPage?.content.markdown || null
+        const markdown = indexPage?.content?.markdown || null
         if (markdown) {
             const formattedMarkdown = formatMarkdown(markdown, showLineNumbers, startLine, endLine)
             const cacheTag = getCacheTagForPage({
@@ -117,7 +117,7 @@ export async function serveRawMarkdown({
         return null
     }
 
-    const formattedMarkdown = formatMarkdown(page.content.markdown, showLineNumbers, startLine, endLine)
+    const formattedMarkdown = formatMarkdown(page.content?.markdown ||'', showLineNumbers, startLine, endLine)
     const cacheTag = getCacheTagForPage({
         branchId: siteBranch.branchId,
         slug: page.slug,
@@ -133,7 +133,7 @@ function formatMarkdown(
     endLine?: number,
 ): string {
     const lines = markdown.split('\n')
-    
+
     // Filter lines by range if specified
     const filteredLines = (() => {
         if (startLine !== undefined || endLine !== undefined) {
@@ -143,45 +143,45 @@ function formatMarkdown(
         }
         return lines
     })()
-    
+
     // Check if content is truncated
     const actualStart = startLine ? Math.max(0, startLine - 1) : 0
     const actualEnd = endLine ? Math.min(endLine, lines.length) : lines.length
     const hasContentAbove = actualStart > 0
     const hasContentBelow = actualEnd < lines.length
-    
+
     // Show line numbers if requested or if line ranges are specified
     const shouldShowLineNumbers = showLineNumbers || startLine !== undefined || endLine !== undefined
-    
+
     // Add line numbers if requested
     if (shouldShowLineNumbers) {
         const startLineNumber = startLine || 1
         const maxLineNumber = startLineNumber + filteredLines.length - 1
         const padding = maxLineNumber.toString().length
-        
+
         const formattedLines = filteredLines
             .map((line, index) => {
                 const lineNumber = startLineNumber + index
                 const paddedNumber = lineNumber.toString().padStart(padding, ' ')
                 return `${paddedNumber}  ${line}`
             })
-        
+
         // Add end of file indicator if at the end
         const result: string[] = []
         result.push(...formattedLines)
         if (!hasContentBelow) {
             result.push('end of file')
         }
-        
+
         return result.join('\n')
     }
-    
+
     // For non-line-numbered output, also add end of file indicator
     const result: string[] = []
     result.push(...filteredLines)
     if (!hasContentBelow) {
         result.push('end of file')
     }
-    
+
     return result.join('\n')
 }
