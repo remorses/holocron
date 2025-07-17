@@ -68,7 +68,7 @@ export default defineConfig({
         viteExternalsPlugin({
             externals: ['pg', 'shiki', 'json-schema-library'],
         }),
-        !process.env.VITEST && tailwindcss(),
+        tailwindcss(),
         process.env.ANALYZE &&
             analyzer({ openAnalyzer: false, analyzerMode: 'static' }),
     ],
