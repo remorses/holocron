@@ -3,7 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "pnpm generate-example-docs-json && NODE_ENV=production doppler run -c production --preserve-env -- react-router build",
+        "build": "pnpm generate-example-docs-json && NODE_OPTIONS=--max-old-space-size=6144 NODE_ENV=production doppler run -c production --preserve-env -- react-router build",
         "dev": "doppler run -- react-router dev --port 7664",
         "dev:prod": "doppler run -c production -- react-router dev --port 7664",
         "fly": "fly --app fumabase-website-prod",
