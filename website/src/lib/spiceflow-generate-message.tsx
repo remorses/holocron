@@ -815,7 +815,7 @@ export async function getPageContent({ githubPath, branchId }) {
                 content: true,
             },
         })
-        return pageWithContent?.content.markdown || ''
+        return pageWithContent?.content?.markdown || ''
     }
     return JSON.stringify(metaFile?.jsonData, null, 2) || ''
 }
