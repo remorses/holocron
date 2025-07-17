@@ -5,7 +5,13 @@ import { I18nConfig } from 'fumadocs-core/i18n'
 import { StructuredData } from './mdx-heavy'
 import { deduplicateBy } from './utils'
 
-export async function getFilesForSource({ branchId, githubFolder }) {
+export async function getFilesForSource({
+    branchId,
+    githubFolder,
+}: {
+    branchId: string
+    githubFolder: string
+}): Promise<VirtualFile[]> {
     const [allPages, metaFiles] = await Promise.all([
         prisma.markdownPage.findMany({
             where: {
