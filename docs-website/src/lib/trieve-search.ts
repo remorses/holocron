@@ -92,7 +92,7 @@ export async function searchDocsWithTrieve({
         )
     }
     let queryInput: QueryTypes = queries.map((q) => ({ query: q, weight: 1 }))
-    if (searchType === 'bm25') {
+    if (searchType === 'bm25' || searchType === 'fulltext') {
       // bm25 does not support multiple terms
         queryInput = queryInput.map((x) => x.query).join(' ')
     }
