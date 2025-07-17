@@ -25,8 +25,8 @@ importers:
         specifier: ^2.29.4
         version: 2.29.4
       '@prisma/client':
-        specifier: ^6.11.1
-        version: 6.11.1(prisma@6.11.1(typescript@5.8.3))(typescript@5.8.3)
+        specifier: ^6.12.0
+        version: 6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)
       prettier:
         specifier: ^3.5.3
         version: 3.5.3
@@ -79,8 +79,8 @@ importers:
         specifier: ^0.1.3
         version: 0.1.3
       spiceflow:
-        specifier: ^1.13.3
-        version: 1.13.3(@modelcontextprotocol/sdk@1.15.0)
+        specifier: ^1.14.0
+        version: 1.14.0(@modelcontextprotocol/sdk@1.15.0)
       tiny-jsonc:
         specifier: ^1.0.2
         version: 1.0.2
@@ -99,10 +99,10 @@ importers:
         version: 8.18.1
       docs-website:
         specifier: file:../docs-website
-        version: file:docs-website(@modelcontextprotocol/sdk@1.15.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/node@24.0.7)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(babel-plugin-macros@3.1.0)(lightningcss@1.30.1)(prisma@6.11.1(typescript@5.8.3))(terser@5.42.0)(typescript@5.8.3)(use-sync-external-store@1.5.0(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))
+        version: file:docs-website(@modelcontextprotocol/sdk@1.15.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/node@24.0.7)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(babel-plugin-macros@3.1.0)(lightningcss@1.30.1)(prisma@6.12.0(typescript@5.8.3))(terser@5.42.0)(typescript@5.8.3)(use-sync-external-store@1.5.0(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))
       website:
         specifier: file:../website
-        version: file:website(@babel/runtime@7.27.6)(@cloudflare/workers-types@4.20250712.0)(@modelcontextprotocol/sdk@1.15.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/node@24.0.7)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(prisma@6.11.1(typescript@5.8.3))(typescript@5.8.3)(use-sync-external-store@1.5.0(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))
+        version: file:website(@babel/runtime@7.27.6)(@cloudflare/workers-types@4.20250712.0)(@modelcontextprotocol/sdk@1.15.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/node@24.0.7)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)(use-sync-external-store@1.5.0(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))
 
   cloudflare-tunnel:
     devDependencies:
@@ -116,17 +116,17 @@ importers:
   contesto:
     dependencies:
       '@ai-sdk/openai':
-        specifier: 2.0.0-beta.5
-        version: 2.0.0-beta.5(zod@3.25.76)
+        specifier: 2.0.0-beta.10
+        version: 2.0.0-beta.10(zod@4.0.5)
       '@ai-sdk/provider':
         specifier: 2.0.0-beta.1
         version: 2.0.0-beta.1
       '@ai-sdk/react':
-        specifier: 2.0.0-beta.11
-        version: 2.0.0-beta.11(react@19.1.0)(zod@3.25.76)
+        specifier: 2.0.0-beta.23
+        version: 2.0.0-beta.23(react@19.1.0)(zod@4.0.5)
       '@ai-sdk/ui-utils':
         specifier: ^1.2.11
-        version: 1.2.11(zod@3.25.76)
+        version: 1.2.11(zod@4.0.5)
       '@ariakit/react':
         specifier: ^0.4.17
         version: 0.4.17(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -149,8 +149,8 @@ importers:
         specifier: ^5.81.5
         version: 5.81.5(react@19.1.0)
       ai:
-        specifier: 5.0.0-beta.11
-        version: 5.0.0-beta.11(zod@3.25.76)
+        specifier: 5.0.0-beta.23
+        version: 5.0.0-beta.23(zod@4.0.5)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -209,8 +209,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.0
       safe-mdx:
-        specifier: ^1.3.1
-        version: 1.3.1(react@19.1.0)
+        specifier: ^1.3.2
+        version: 1.3.2(react@19.1.0)
       shiki:
         specifier: ^3.7.0
         version: 3.7.0
@@ -233,8 +233,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)
       zod:
-        specifier: 3.25.76
-        version: 3.25.76
+        specifier: 4.0.5
+        version: 4.0.5
       zustand:
         specifier: ^5.0.6
         version: 5.0.6(@types/react@19.1.8)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
@@ -258,11 +258,11 @@ importers:
   db:
     dependencies:
       '@prisma/adapter-pg':
-        specifier: ^6.11.1
-        version: 6.11.1
+        specifier: ^6.12.0
+        version: 6.12.0
       '@prisma/client':
-        specifier: ^6.11.1
-        version: 6.11.1(prisma@6.11.1(typescript@5.8.3))(typescript@5.8.3)
+        specifier: ^6.12.0
+        version: 6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)
       docs-website:
         specifier: workspace:*
         version: link:../docs-website
@@ -273,8 +273,8 @@ importers:
         specifier: ^3.4.7
         version: 3.4.7
       prisma:
-        specifier: ^6.11.1
-        version: 6.11.1(typescript@5.8.3)
+        specifier: ^6.12.0
+        version: 6.12.0(typescript@5.8.3)
     devDependencies:
       '@types/node':
         specifier: ^24.0.1
@@ -286,11 +286,11 @@ importers:
   docs-website:
     dependencies:
       '@ai-sdk/anthropic':
-        specifier: 2.0.0-beta.4
-        version: 2.0.0-beta.4(zod@3.25.76)
+        specifier: 2.0.0-beta.7
+        version: 2.0.0-beta.7(zod@4.0.5)
       '@ai-sdk/openai':
-        specifier: 2.0.0-beta.5
-        version: 2.0.0-beta.5(zod@3.25.76)
+        specifier: 2.0.0-beta.10
+        version: 2.0.0-beta.10(zod@4.0.5)
       '@ai-sdk/provider':
         specifier: 2.0.0-beta.1
         version: 2.0.0-beta.1
@@ -313,8 +313,8 @@ importers:
         specifier: ^3.1.7
         version: 3.1.7
       '@prisma/client':
-        specifier: ^6.11.1
-        version: 6.11.1(prisma@6.11.1(typescript@5.8.3))(typescript@5.8.3)
+        specifier: ^6.12.0
+        version: 6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)
       '@radix-ui/react-dialog':
         specifier: ^1.1.14
         version: 1.1.14(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -388,8 +388,8 @@ importers:
         specifier: ^8.5.2
         version: 8.5.2
       ai:
-        specifier: 5.0.0-beta.11
-        version: 5.0.0-beta.11(zod@3.25.76)
+        specifier: 5.0.0-beta.23
+        version: 5.0.0-beta.23(zod@4.0.5)
       async-sema:
         specifier: ^3.1.1
         version: 3.1.1
@@ -580,8 +580,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.0
       safe-mdx:
-        specifier: ^1.3.1
-        version: 1.3.1(react@19.1.0)
+        specifier: ^1.3.2
+        version: 1.3.2(react@19.1.0)
       sentries:
         specifier: ^0.2.2
         version: 0.2.2(@cloudflare/workers-types@4.20250712.0)
@@ -589,8 +589,8 @@ importers:
         specifier: ^3.6.0
         version: 3.6.0
       spiceflow:
-        specifier: ^1.13.3
-        version: 1.13.3(@modelcontextprotocol/sdk@1.15.0)
+        specifier: ^1.14.0
+        version: 1.14.0(@modelcontextprotocol/sdk@1.15.0)
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.3.1
@@ -634,8 +634,8 @@ importers:
         specifier: ^0.1.0
         version: 0.1.0
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.0.5
+        version: 4.0.5
       zustand:
         specifier: ^5.0.5
         version: 5.0.5(@types/react@19.1.8)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
@@ -690,7 +690,7 @@ importers:
         version: 4.24.3(@cloudflare/workers-types@4.20250712.0)
       zod-to-json-schema:
         specifier: ^3.24.5
-        version: 3.24.5(zod@3.25.76)
+        version: 3.24.5(zod@4.0.5)
 
   fumadocs:
     devDependencies:
@@ -865,8 +865,8 @@ importers:
         specifier: ^11.0.5
         version: 11.0.5
       zod:
-        specifier: ^3.25.67
-        version: 3.25.76
+        specifier: ^4.0.5
+        version: 4.0.5
 
   fumadocs/packages/core:
     dependencies:
@@ -904,7 +904,7 @@ importers:
         specifier: ^2.7.1
         version: 2.7.1(@types/react@19.1.8)(react@19.1.0)
       remark:
-        specifier: ^15.0.0
+        specifier: ^15.0.1
         version: 15.0.1
       remark-gfm:
         specifier: ^4.0.1
@@ -941,7 +941,7 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@types/mdast':
-        specifier: ^4.0.3
+        specifier: ^4.0.4
         version: 4.0.4
       '@types/negotiator':
         specifier: ^0.6.4
@@ -1128,8 +1128,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       zod:
-        specifier: ^3.25.67
-        version: 3.25.76
+        specifier: ^4.0.5
+        version: 4.0.5
     devDependencies:
       '@mdx-js/mdx':
         specifier: ^3.1.0
@@ -1141,7 +1141,7 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@types/mdast':
-        specifier: ^4.0.3
+        specifier: ^4.0.4
         version: 4.0.4
       '@types/node':
         specifier: 24.0.7
@@ -1153,7 +1153,7 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0
       remark:
-        specifier: ^15.0.0
+        specifier: ^15.0.1
         version: 15.0.1
       tsconfig:
         specifier: workspace:*
@@ -1206,8 +1206,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       zod:
-        specifier: ^3.25.67
-        version: 3.25.76
+        specifier: ^4.0.5
+        version: 4.0.5
     devDependencies:
       '@fumadocs/mdx-remote':
         specifier: workspace:*
@@ -1216,7 +1216,7 @@ importers:
         specifier: ^4.0.9
         version: 4.0.9
       '@types/mdast':
-        specifier: ^4.0.3
+        specifier: ^4.0.4
         version: 4.0.4
       '@types/mdx':
         specifier: ^2.0.13
@@ -1261,8 +1261,8 @@ importers:
         specifier: ^4.0.3
         version: 4.0.3
       zod:
-        specifier: ^3.25.67
-        version: 3.25.76
+        specifier: ^4.0.5
+        version: 4.0.5
     devDependencies:
       '@types/mdx':
         specifier: ^2.0.13
@@ -1319,8 +1319,8 @@ importers:
         specifier: 0.18.0
         version: 0.18.0
       ai:
-        specifier: ^4.3.16
-        version: 4.3.17(react@19.1.0)(zod@3.25.76)
+        specifier: 5.0.0-beta.23
+        version: 5.0.0-beta.23(zod@4.0.5)
       ajv:
         specifier: ^8.17.1
         version: 8.17.1
@@ -1471,7 +1471,7 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@types/mdast':
-        specifier: ^4.0.3
+        specifier: ^4.0.4
         version: 4.0.4
       '@types/node':
         specifier: 24.0.7
@@ -1529,7 +1529,7 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@types/mdast':
-        specifier: ^4.0.3
+        specifier: ^4.0.4
         version: 4.0.4
       '@types/node':
         specifier: 24.0.7
@@ -1659,8 +1659,8 @@ importers:
         specifier: ^1.0.2
         version: 1.15.0
       ai:
-        specifier: 5.0.0-beta.11
-        version: 5.0.0-beta.11(zod@3.25.76)
+        specifier: 5.0.0-beta.23
+        version: 5.0.0-beta.23(zod@4.0.5)
       contesto:
         specifier: workspace:*
         version: link:../contesto
@@ -1729,14 +1729,14 @@ importers:
   website:
     dependencies:
       '@ai-sdk/anthropic':
-        specifier: 2.0.0-beta.4
-        version: 2.0.0-beta.4(zod@3.25.76)
+        specifier: 2.0.0-beta.7
+        version: 2.0.0-beta.7(zod@4.0.5)
       '@ai-sdk/openai':
-        specifier: 2.0.0-beta.5
-        version: 2.0.0-beta.5(zod@3.25.76)
+        specifier: 2.0.0-beta.10
+        version: 2.0.0-beta.10(zod@4.0.5)
       '@ai-sdk/ui-utils':
         specifier: ^1.2.11
-        version: 1.2.11(zod@3.25.76)
+        version: 1.2.11(zod@4.0.5)
       '@ariakit/react':
         specifier: ^0.4.17
         version: 0.4.17(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1765,8 +1765,8 @@ importers:
         specifier: ^14.0.2
         version: 14.0.2
       '@prisma/client':
-        specifier: ^6.11.1
-        version: 6.11.1(prisma@6.11.1(typescript@5.8.3))(typescript@5.8.3)
+        specifier: ^6.12.0
+        version: 6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)
       '@radix-ui/react-alert-dialog':
         specifier: ^1.1.14
         version: 1.1.14(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1843,11 +1843,11 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       ai:
-        specifier: 5.0.0-beta.11
-        version: 5.0.0-beta.11(zod@3.25.76)
+        specifier: 5.0.0-beta.23
+        version: 5.0.0-beta.23(zod@4.0.5)
       ai-fallback:
         specifier: ^0.1.5
-        version: 0.1.5(zod@3.25.76)
+        version: 0.1.5(zod@4.0.5)
       async-sema:
         specifier: ^3.1.1
         version: 3.1.1
@@ -1981,8 +1981,8 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0(react@19.1.0)
       safe-mdx:
-        specifier: ^1.3.1
-        version: 1.3.1(react@19.1.0)
+        specifier: ^1.3.2
+        version: 1.3.2(react@19.1.0)
       sema4:
         specifier: ^0.1.3
         version: 0.1.3
@@ -1996,8 +1996,8 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       spiceflow:
-        specifier: ^1.13.3
-        version: 1.13.3(@modelcontextprotocol/sdk@1.15.0)
+        specifier: ^1.14.0
+        version: 1.14.0(@modelcontextprotocol/sdk@1.15.0)
       string-dedent:
         specifier: ^3.0.1
         version: 3.0.1
@@ -2038,11 +2038,11 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.0.5
+        version: 4.0.5
       zod-to-json-schema:
         specifier: ^3.24.5
-        version: 3.24.5(zod@3.25.76)
+        version: 3.24.5(zod@4.0.5)
       zustand:
         specifier: ^5.0.5
         version: 5.0.5(@types/react@19.1.8)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
@@ -2126,23 +2126,23 @@ packages:
   '@actions/io@1.1.3':
     resolution: {integrity: sha512-wi9JjgKLYS7U/z8PPbco+PvTb/nRWjeoFlJ1Qer83k/3C5PHQi28hiVdeE2kHXmIL99mQFawx8qt/JPjZilJ8Q==}
 
-  '@ai-sdk/anthropic@2.0.0-beta.4':
-    resolution: {integrity: sha512-L1QgwVopOa+BQW3pq/+TYu0YG4J4lulDDGFohtr5+SwXcnlkmw3GI2x63z1Jo1BJR90qj6sQQmvNFLgy4i88FA==}
+  '@ai-sdk/anthropic@2.0.0-beta.7':
+    resolution: {integrity: sha512-Z4hHKnLgwlwvQ37GntZq2v+lozzIVVqxBWcFpTMI9XtN2Tgv+Re/3IdS63GDR4Vq3D0tbEP4ZCXu5VasdeRs3g==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: ^3.25.49
+      zod: ^3.25.76 || ^4
 
-  '@ai-sdk/gateway@1.0.0-beta.4':
-    resolution: {integrity: sha512-P5/dS7pb+cBRWnTP0Aezq3/3PIrF+p64fUTxBAyZIert8qTyHm2gd6atbAJZprZ304Ui3QjA9MFybAa849//2w==}
+  '@ai-sdk/gateway@1.0.0-beta.9':
+    resolution: {integrity: sha512-lr0pmit6oAXPKkyN1QsxHOESiWiIb/jheiO+xiZnidjoZz2V7Se0drW1FH7sinheyK5EjmFMLW+0gBERyo33Ng==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: ^3.25.49
+      zod: ^3.25.76 || ^4
 
-  '@ai-sdk/openai@2.0.0-beta.5':
-    resolution: {integrity: sha512-jDd3NKFIbLHam25XSkTsR9U0SZ7tgdl9z+HO0pu7n6sde6f5+CW/3zIk6BJoCNJKU9382kEDKu8u+6PREYd9ZQ==}
+  '@ai-sdk/openai@2.0.0-beta.10':
+    resolution: {integrity: sha512-Arrd6rwughV76lGvmoR+Nns5X6QTBOFN7IBUoC9zozekVGln09cQRn8Lo4KEE8coFtN85/668S4NI3Z7xV/mBw==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: ^3.25.49
+      zod: ^3.25.76 || ^4
 
   '@ai-sdk/provider-utils@2.2.8':
     resolution: {integrity: sha512-fqhG+4sCVv8x7nFzYnFo19ryhAa3w096Kmc3hWxMQfW/TubPOmt3A6tYZhl4mUfQWWQMsuSkLrtjlWuXBVSGQA==}
@@ -2150,11 +2150,11 @@ packages:
     peerDependencies:
       zod: ^3.23.8
 
-  '@ai-sdk/provider-utils@3.0.0-beta.2':
-    resolution: {integrity: sha512-H4K+4weOVgWqrDDeAbQWoA4U5mN4WrQPHQFdH7ynQYcnhj/pzctU9Q6mGlR5ESMWxaXxazxlOblSITlXo9bahA==}
+  '@ai-sdk/provider-utils@3.0.0-beta.4':
+    resolution: {integrity: sha512-6/ldkUlM7qZCe7sUD/YzgR6dRADjp68whGODikuh9L2HJJElKrOetRD3wE6fA0/TYGcG8g3gUVmiXj+dGhYiFA==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: ^3.25.49
+      zod: ^3.25.76 || ^4
 
   '@ai-sdk/provider@1.1.3':
     resolution: {integrity: sha512-qZMxYJ0qqX/RfnuIaab+zp8UAeJn/ygXXAffR5I4N0n1IrvA6qBsjc8hXLmBiMV2zoXlifkacF7sEFnYnjBcqg==}
@@ -2164,22 +2164,12 @@ packages:
     resolution: {integrity: sha512-Z8SPncMtS3RsoXITmT7NVwrAq6M44dmw0DoUOYJqNNtCu8iMWuxB8Nxsoqpa0uEEy9R1V1ZThJAXTYgjTUxl3w==}
     engines: {node: '>=18'}
 
-  '@ai-sdk/react@1.2.12':
-    resolution: {integrity: sha512-jK1IZZ22evPZoQW3vlkZ7wvjYGYF+tRBKXtrcolduIkQ/m/sOAVcVeVDUDvh1T91xCnWCdUGCPZg2avZ90mv3g==}
+  '@ai-sdk/react@2.0.0-beta.23':
+    resolution: {integrity: sha512-ftZy4bk46v1lSsHtGGszI99Ua/BJrCUR8VxJrbH47jKLw/xA523F8jSSo/4yj/WI7a93WQYMYYpSGU1JwbOlvg==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ^19 || ^19.0.0-rc
-      zod: ^3.23.8
-    peerDependenciesMeta:
-      zod:
-        optional: true
-
-  '@ai-sdk/react@2.0.0-beta.11':
-    resolution: {integrity: sha512-twritdquNQSBAS24Qme3+AMwMbQa41WF2zcgmnTbgkeltG+gl1be1rWtaOKAXlm5nuQOH9CriUvvRskHkx+mDw==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      react: ^18 || ^19 || ^19.0.0-rc
-      zod: ^3.25.49
+      zod: ^3.25.76 || ^4
     peerDependenciesMeta:
       zod:
         optional: true
@@ -2516,6 +2506,10 @@ packages:
 
   '@babel/types@7.28.0':
     resolution: {integrity: sha512-jYnje+JyZG5YThjHiF28oT4SIZLnYOcSBb6+SDaFIyzDVSkXQmQQYclJ2R+YxcdmK0AX6x1E5OQNtuh3jHDrUg==}
+    engines: {node: '>=6.9.0'}
+
+  '@babel/types@7.28.1':
+    resolution: {integrity: sha512-x0LvFTekgSX+83TI28Y9wYPUfzrnl2aT5+5QLnO6v7mSJYtEEevuDRN0F0uSHRk1G1IWZC43o00Y0xDDrpBGPQ==}
     engines: {node: '>=6.9.0'}
 
   '@better-auth/stripe@1.2.10':
@@ -4861,11 +4855,11 @@ packages:
   '@poppinss/exception@1.2.2':
     resolution: {integrity: sha512-m7bpKCD4QMlFCjA/nKTs23fuvoVFoA83brRKmObCUNmi/9tVu8Ve3w4YQAnJu4q3Tjf5fr685HYIC/IA2zHRSg==}
 
-  '@prisma/adapter-pg@6.11.1':
-    resolution: {integrity: sha512-30wZL5UaSO8ypHQfpxFxveMNuH1hTkmP5VkNC9QpEqwhdMrf/4Rb9x0BVbzomFDPX24uwKG1w+welfIxnUrK5w==}
+  '@prisma/adapter-pg@6.12.0':
+    resolution: {integrity: sha512-lyNDD0oJntw9D6WilEUCXqaKPZWDLNwePbUZogadhIJ4qICaIoPXQuLGGe7auXdvGcfesCb1y1UKvdYj0iFgQg==}
 
-  '@prisma/client@6.11.1':
-    resolution: {integrity: sha512-5CLFh8QP6KxRm83pJ84jaVCeSVPQr8k0L2SEtOJHwdkS57/VQDcI/wQpGmdyOZi+D9gdNabdo8tj1Uk+w+upsQ==}
+  '@prisma/client@6.12.0':
+    resolution: {integrity: sha512-wn98bJ3Cj6edlF4jjpgXwbnQIo/fQLqqQHPk2POrZPxTlhY3+n90SSIF3LMRVa8VzRFC/Gec3YKJRxRu+AIGVA==}
     engines: {node: '>=18.18'}
     peerDependencies:
       prisma: '*'
@@ -4876,26 +4870,26 @@ packages:
       typescript:
         optional: true
 
-  '@prisma/config@6.11.1':
-    resolution: {integrity: sha512-z6rCTQN741wxDq82cpdzx2uVykpnQIXalLhrWQSR0jlBVOxCIkz3HZnd8ern3uYTcWKfB3IpVAF7K2FU8t/8AQ==}
+  '@prisma/config@6.12.0':
+    resolution: {integrity: sha512-HovZWzhWEMedHxmjefQBRZa40P81N7/+74khKFz9e1AFjakcIQdXgMWKgt20HaACzY+d1LRBC+L4tiz71t9fkg==}
 
-  '@prisma/debug@6.11.1':
-    resolution: {integrity: sha512-lWRb/YSWu8l4Yum1UXfGLtqFzZkVS2ygkWYpgkbgMHn9XJlMITIgeMvJyX5GepChzhmxuSuiq/MY/kGFweOpGw==}
+  '@prisma/debug@6.12.0':
+    resolution: {integrity: sha512-plbz6z72orcqr0eeio7zgUrZj5EudZUpAeWkFTA/DDdXEj28YHDXuiakvR6S7sD6tZi+jiwQEJAPeV6J6m/tEQ==}
 
-  '@prisma/driver-adapter-utils@6.11.1':
-    resolution: {integrity: sha512-y09aIY3XTJIgPI1ZMfybn5kndbhu11Rjg81cH6pSi/Rg/PnbxomWVHhu4NnKmCGioidUqJ5KeQ7i75dIOVsSXQ==}
+  '@prisma/driver-adapter-utils@6.12.0':
+    resolution: {integrity: sha512-uSUKB17Xs4pZB1UJZL6+PHV9Ab6vCWD20nXoimb5YG4vPqtBVdPKNYa35QbDgdUQbX321daUcgYTsLY/jxOG3w==}
 
-  '@prisma/engines-version@6.11.1-1.f40f79ec31188888a2e33acda0ecc8fd10a853a9':
-    resolution: {integrity: sha512-swFJTOOg4tHyOM1zB/pHb3MeH0i6t7jFKn5l+ZsB23d9AQACuIRo9MouvuKGvnDogzkcjbWnXi/NvOZ0+n5Jfw==}
+  '@prisma/engines-version@6.12.0-15.8047c96bbd92db98a2abc7c9323ce77c02c89dbc':
+    resolution: {integrity: sha512-70vhecxBJlRr06VfahDzk9ow4k1HIaSfVUT3X0/kZoHCMl9zbabut4gEXAyzJZxaCGi5igAA7SyyfBI//mmkbQ==}
 
-  '@prisma/engines@6.11.1':
-    resolution: {integrity: sha512-6eKEcV6V8W2eZAUwX2xTktxqPM4vnx3sxz3SDtpZwjHKpC6lhOtc4vtAtFUuf5+eEqBk+dbJ9Dcaj6uQU+FNNg==}
+  '@prisma/engines@6.12.0':
+    resolution: {integrity: sha512-4BRZZUaAuB4p0XhTauxelvFs7IllhPmNLvmla0bO1nkECs8n/o1pUvAVbQ/VOrZR5DnF4HED0PrGai+rIOVePA==}
 
-  '@prisma/fetch-engine@6.11.1':
-    resolution: {integrity: sha512-NBYzmkXTkj9+LxNPRSndaAeALOL1Gr3tjvgRYNqruIPlZ6/ixLeuE/5boYOewant58tnaYFZ5Ne0jFBPfGXHpQ==}
+  '@prisma/fetch-engine@6.12.0':
+    resolution: {integrity: sha512-EamoiwrK46rpWaEbLX9aqKDPOd8IyLnZAkiYXFNuq0YsU0Z8K09/rH8S7feOWAVJ3xzeSgcEJtBlVDrajM9Sag==}
 
-  '@prisma/get-platform@6.11.1':
-    resolution: {integrity: sha512-b2Z8oV2gwvdCkFemBTFd0x4lsL4O2jLSx8lB7D+XqoFALOQZPa7eAPE1NU0Mj1V8gPHRxIsHnyUNtw2i92psUw==}
+  '@prisma/get-platform@6.12.0':
+    resolution: {integrity: sha512-nRerTGhTlgyvcBlyWgt8OLNIV7QgJS2XYXMJD1hysorMCuLAjuDDuoxmVt7C2nLxbuxbWPp7OuFRHC23HqD9dA==}
 
   '@prisma/instrumentation@6.8.2':
     resolution: {integrity: sha512-5NCTbZjw7a+WIZ/ey6G8SY+YKcyM2zBF0hOT1muvqC9TbVtTCr5Qv3RL/2iNDOzLUHEvo4I1uEfioyfuNOGK8Q==}
@@ -6611,9 +6605,6 @@ packages:
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
-  '@types/diff-match-patch@1.0.36':
-    resolution: {integrity: sha512-xFdR6tkm0MWvBfO8xXCSsinYxHcqkQUlcHeSpMC2ukzOb6lwQAfDmW+Qt0AvlGd8HpsS28qKsB+oPeJn9I39jg==}
-
   '@types/eslint-scope@3.7.7':
     resolution: {integrity: sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg==}
 
@@ -7337,21 +7328,12 @@ packages:
   ai-fallback@0.1.5:
     resolution: {integrity: sha512-/FhTd9SGMEUDYBKbO3ZyfS0CBGglJByMbMRQOGjjDYlxZinFZtn99w1SPh4NZYJWIP5jjoewytfZjp+30QPT1A==}
 
-  ai@4.3.17:
-    resolution: {integrity: sha512-uWqIQ94Nb1GTYtYElGHegJMOzv3r2mCKNFlKrqkft9xrfvIahTI5OdcnD5U9612RFGuUNGmSDTO1/YRNFXobaQ==}
+  ai@5.0.0-beta.23:
+    resolution: {integrity: sha512-cG+aeaqcYz/twJkjgQnctG+2jM16OyXGdgKYwCCVz00VzPmGj0vHRda+vTKhOIvqsO0+SttnTHQ+JyUO5I1jfg==}
     engines: {node: '>=18'}
+    hasBin: true
     peerDependencies:
-      react: ^18 || ^19 || ^19.0.0-rc
-      zod: ^3.23.8
-    peerDependenciesMeta:
-      react:
-        optional: true
-
-  ai@5.0.0-beta.11:
-    resolution: {integrity: sha512-go/+f+KKnIWLPcv5IIcCEoZ0J8IAnEIgGPJwFDti9g1zuafjlxoFlBza8gu5oGODWOfjS7aEKUMG5Ac7GPPXsQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.25.49
+      zod: ^3.25.76 || ^4
 
   ajv-draft-04@1.0.0:
     resolution: {integrity: sha512-mv00Te6nmYbRp5DCwclxtt7yV/joXJPGS7nM+97GdxvuttCOfgI3K4U25zboyeX0O+myI8ERluxQe5wljMmVIw==}
@@ -9908,11 +9890,6 @@ packages:
   jsonc-parser@3.3.1:
     resolution: {integrity: sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==}
 
-  jsondiffpatch@0.6.0:
-    resolution: {integrity: sha512-3QItJOXp2AP1uv7waBkao5nCvhEv+QmJAd38Ybq7wNI74Q+BBmnLn4EDKz6yI9xGAIQoUF87qHt+kc1IVxB4zQ==}
-    engines: {node: ^18.0.0 || >=20.0.0}
-    hasBin: true
-
   jsonfile@4.0.0:
     resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==}
 
@@ -11280,8 +11257,8 @@ packages:
   printable-characters@1.0.42:
     resolution: {integrity: sha512-dKp+C4iXWK4vVYZmYSd0KBH5F/h1HoZRsbJ82AVKRO3PEo8L4lBS/vLwhVtpwwuYcoIsVY+1JYKR268yn480uQ==}
 
-  prisma@6.11.1:
-    resolution: {integrity: sha512-VzJToRlV0s9Vu2bfqHiRJw73hZNCG/AyJeX+kopbu4GATTjTUdEWUteO3p4BLYoHpMS4o8pD3v6tF44BHNZI1w==}
+  prisma@6.12.0:
+    resolution: {integrity: sha512-pmV7NEqQej9WjizN6RSNIwf7Y+jeh9mY1JEX2WjGxJi4YZWexClhde1yz/FuvAM+cTwzchcMytu2m4I6wPkIzg==}
     engines: {node: '>=18.18'}
     hasBin: true
     peerDependencies:
@@ -11844,8 +11821,8 @@ packages:
   safe-buffer@5.2.1:
     resolution: {integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==}
 
-  safe-mdx@1.3.1:
-    resolution: {integrity: sha512-HZ/93zbL8Y9ctYxP/SS4jwQMHX7w4QSduSWHUMrN91dvdXijbkQz07leKHjv2DLZ0f4sBQ9gJg0RaD/hE3gpew==}
+  safe-mdx@1.3.2:
+    resolution: {integrity: sha512-tqnA9T+xL3EH+Idg6gJCAYGQ4AmpleuVsKSNroXGvTySVnflNtFAozKfFGkIpjZTpWjomhUly7t8RQYUXVBcug==}
     peerDependencies:
       react: '*'
 
@@ -12077,6 +12054,14 @@ packages:
 
   spiceflow@1.13.3:
     resolution: {integrity: sha512-lIKfaNDwgcouK3gcfHRgLMr0QuMb6mdAkRgjsX4QM9ePRtr/P+MU60RImJ0h4mbl4nKxdexVqGFxx7Kz5sO2bQ==}
+    peerDependencies:
+      '@modelcontextprotocol/sdk': '*'
+    peerDependenciesMeta:
+      '@modelcontextprotocol/sdk':
+        optional: true
+
+  spiceflow@1.14.0:
+    resolution: {integrity: sha512-CMbbthtD9Be8h9tLv+/Qz8Mt+2d81wFN+adOlIZs6+fg1XtbSlhsIpIU22d0xB/EfhRjGyPlQcsqQE+/tPF8KQ==}
     peerDependencies:
       '@modelcontextprotocol/sdk': '*'
     peerDependenciesMeta:
@@ -13412,6 +13397,9 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
+  zod@4.0.5:
+    resolution: {integrity: sha512-/5UuuRPStvHXu7RS+gmvRf4NXrNxpSllGwDnCBcJZtQsKrviYXm54yDGV2KYNLT5kq0lHGcl7lqWJLgSaG+tgA==}
+
   zustand@5.0.5:
     resolution: {integrity: sha512-mILtRfKW9xM47hqxGIxCv12gXusoY/xTSHBYApXozR0HmQv299whhBeeAcRy+KrPPybzosvJBCOmVjq6x12fCg==}
     engines: {node: '>=12.20.0'}
@@ -13489,38 +13477,38 @@ snapshots:
 
   '@actions/io@1.1.3': {}
 
-  '@ai-sdk/anthropic@2.0.0-beta.4(zod@3.25.76)':
+  '@ai-sdk/anthropic@2.0.0-beta.7(zod@4.0.5)':
     dependencies:
       '@ai-sdk/provider': 2.0.0-beta.1
-      '@ai-sdk/provider-utils': 3.0.0-beta.2(zod@3.25.76)
-      zod: 3.25.76
+      '@ai-sdk/provider-utils': 3.0.0-beta.4(zod@4.0.5)
+      zod: 4.0.5
 
-  '@ai-sdk/gateway@1.0.0-beta.4(zod@3.25.76)':
+  '@ai-sdk/gateway@1.0.0-beta.9(zod@4.0.5)':
     dependencies:
       '@ai-sdk/provider': 2.0.0-beta.1
-      '@ai-sdk/provider-utils': 3.0.0-beta.2(zod@3.25.76)
-      zod: 3.25.76
+      '@ai-sdk/provider-utils': 3.0.0-beta.4(zod@4.0.5)
+      zod: 4.0.5
 
-  '@ai-sdk/openai@2.0.0-beta.5(zod@3.25.76)':
+  '@ai-sdk/openai@2.0.0-beta.10(zod@4.0.5)':
     dependencies:
       '@ai-sdk/provider': 2.0.0-beta.1
-      '@ai-sdk/provider-utils': 3.0.0-beta.2(zod@3.25.76)
-      zod: 3.25.76
+      '@ai-sdk/provider-utils': 3.0.0-beta.4(zod@4.0.5)
+      zod: 4.0.5
 
-  '@ai-sdk/provider-utils@2.2.8(zod@3.25.76)':
+  '@ai-sdk/provider-utils@2.2.8(zod@4.0.5)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
       nanoid: 3.3.11
       secure-json-parse: 2.7.0
-      zod: 3.25.76
+      zod: 4.0.5
 
-  '@ai-sdk/provider-utils@3.0.0-beta.2(zod@3.25.76)':
+  '@ai-sdk/provider-utils@3.0.0-beta.4(zod@4.0.5)':
     dependencies:
       '@ai-sdk/provider': 2.0.0-beta.1
       '@standard-schema/spec': 1.0.0
       eventsource-parser: 3.0.3
-      zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod: 4.0.5
+      zod-to-json-schema: 3.24.6(zod@4.0.5)
 
   '@ai-sdk/provider@1.1.3':
     dependencies:
@@ -13530,32 +13518,22 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@1.2.12(react@19.1.0)(zod@3.25.76)':
+  '@ai-sdk/react@2.0.0-beta.23(react@19.1.0)(zod@4.0.5)':
     dependencies:
-      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
-      '@ai-sdk/ui-utils': 1.2.11(zod@3.25.76)
+      '@ai-sdk/provider-utils': 3.0.0-beta.4(zod@4.0.5)
+      ai: 5.0.0-beta.23(zod@4.0.5)
       react: 19.1.0
       swr: 2.3.4(react@19.1.0)
       throttleit: 2.1.0
     optionalDependencies:
-      zod: 3.25.76
+      zod: 4.0.5
 
-  '@ai-sdk/react@2.0.0-beta.11(react@19.1.0)(zod@3.25.76)':
-    dependencies:
-      '@ai-sdk/provider-utils': 3.0.0-beta.2(zod@3.25.76)
-      ai: 5.0.0-beta.11(zod@3.25.76)
-      react: 19.1.0
-      swr: 2.3.4(react@19.1.0)
-      throttleit: 2.1.0
-    optionalDependencies:
-      zod: 3.25.76
-
-  '@ai-sdk/ui-utils@1.2.11(zod@3.25.76)':
+  '@ai-sdk/ui-utils@1.2.11(zod@4.0.5)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
-      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
-      zod: 3.25.76
-      zod-to-json-schema: 3.24.5(zod@3.25.76)
+      '@ai-sdk/provider-utils': 2.2.8(zod@4.0.5)
+      zod: 4.0.5
+      zod-to-json-schema: 3.24.5(zod@4.0.5)
 
   '@algolia/client-abtesting@5.29.0':
     dependencies:
@@ -13861,14 +13839,14 @@ snapshots:
   '@babel/generator@7.28.0':
     dependencies:
       '@babel/parser': 7.28.0
-      '@babel/types': 7.28.0
+      '@babel/types': 7.28.1
       '@jridgewell/gen-mapping': 0.3.12
       '@jridgewell/trace-mapping': 0.3.29
       jsesc: 3.1.0
 
   '@babel/helper-annotate-as-pure@7.27.3':
     dependencies:
-      '@babel/types': 7.28.0
+      '@babel/types': 7.27.6
 
   '@babel/helper-compilation-targets@7.27.2':
     dependencies:
@@ -13907,14 +13885,14 @@ snapshots:
   '@babel/helper-member-expression-to-functions@7.27.1':
     dependencies:
       '@babel/traverse': 7.27.7
-      '@babel/types': 7.28.0
+      '@babel/types': 7.27.6
     transitivePeerDependencies:
       - supports-color
 
   '@babel/helper-module-imports@7.27.1':
     dependencies:
       '@babel/traverse': 7.27.7
-      '@babel/types': 7.28.0
+      '@babel/types': 7.27.6
     transitivePeerDependencies:
       - supports-color
 
@@ -13938,7 +13916,7 @@ snapshots:
 
   '@babel/helper-optimise-call-expression@7.27.1':
     dependencies:
-      '@babel/types': 7.28.0
+      '@babel/types': 7.27.6
 
   '@babel/helper-plugin-utils@7.27.1': {}
 
@@ -13963,7 +13941,7 @@ snapshots:
   '@babel/helper-skip-transparent-expression-wrappers@7.27.1':
     dependencies:
       '@babel/traverse': 7.27.7
-      '@babel/types': 7.28.0
+      '@babel/types': 7.27.6
     transitivePeerDependencies:
       - supports-color
 
@@ -13988,7 +13966,7 @@ snapshots:
 
   '@babel/parser@7.28.0':
     dependencies:
-      '@babel/types': 7.28.0
+      '@babel/types': 7.28.1
 
   '@babel/plugin-syntax-decorators@7.27.1(@babel/core@7.27.4)':
     dependencies:
@@ -14138,6 +14116,11 @@ snapshots:
       '@babel/helper-validator-identifier': 7.27.1
 
   '@babel/types@7.28.0':
+    dependencies:
+      '@babel/helper-string-parser': 7.27.1
+      '@babel/helper-validator-identifier': 7.27.1
+
+  '@babel/types@7.28.1':
     dependencies:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.27.1
@@ -16525,47 +16508,47 @@ snapshots:
 
   '@poppinss/exception@1.2.2': {}
 
-  '@prisma/adapter-pg@6.11.1':
+  '@prisma/adapter-pg@6.12.0':
     dependencies:
-      '@prisma/driver-adapter-utils': 6.11.1
+      '@prisma/driver-adapter-utils': 6.12.0
       pg: 8.13.1
       postgres-array: 3.0.4
     transitivePeerDependencies:
       - pg-native
 
-  '@prisma/client@6.11.1(prisma@6.11.1(typescript@5.8.3))(typescript@5.8.3)':
+  '@prisma/client@6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)':
     optionalDependencies:
-      prisma: 6.11.1(typescript@5.8.3)
+      prisma: 6.12.0(typescript@5.8.3)
       typescript: 5.8.3
 
-  '@prisma/config@6.11.1':
+  '@prisma/config@6.12.0':
     dependencies:
       jiti: 2.4.2
 
-  '@prisma/debug@6.11.1': {}
+  '@prisma/debug@6.12.0': {}
 
-  '@prisma/driver-adapter-utils@6.11.1':
+  '@prisma/driver-adapter-utils@6.12.0':
     dependencies:
-      '@prisma/debug': 6.11.1
+      '@prisma/debug': 6.12.0
 
-  '@prisma/engines-version@6.11.1-1.f40f79ec31188888a2e33acda0ecc8fd10a853a9': {}
+  '@prisma/engines-version@6.12.0-15.8047c96bbd92db98a2abc7c9323ce77c02c89dbc': {}
 
-  '@prisma/engines@6.11.1':
+  '@prisma/engines@6.12.0':
     dependencies:
-      '@prisma/debug': 6.11.1
-      '@prisma/engines-version': 6.11.1-1.f40f79ec31188888a2e33acda0ecc8fd10a853a9
-      '@prisma/fetch-engine': 6.11.1
-      '@prisma/get-platform': 6.11.1
+      '@prisma/debug': 6.12.0
+      '@prisma/engines-version': 6.12.0-15.8047c96bbd92db98a2abc7c9323ce77c02c89dbc
+      '@prisma/fetch-engine': 6.12.0
+      '@prisma/get-platform': 6.12.0
 
-  '@prisma/fetch-engine@6.11.1':
+  '@prisma/fetch-engine@6.12.0':
     dependencies:
-      '@prisma/debug': 6.11.1
-      '@prisma/engines-version': 6.11.1-1.f40f79ec31188888a2e33acda0ecc8fd10a853a9
-      '@prisma/get-platform': 6.11.1
+      '@prisma/debug': 6.12.0
+      '@prisma/engines-version': 6.12.0-15.8047c96bbd92db98a2abc7c9323ce77c02c89dbc
+      '@prisma/get-platform': 6.12.0
 
-  '@prisma/get-platform@6.11.1':
+  '@prisma/get-platform@6.12.0':
     dependencies:
-      '@prisma/debug': 6.11.1
+      '@prisma/debug': 6.12.0
 
   '@prisma/instrumentation@6.8.2(@opentelemetry/api@1.9.0)':
     dependencies:
@@ -18928,7 +18911,7 @@ snapshots:
       '@babel/code-frame': 7.27.1
       '@babel/core': 7.27.7
       '@babel/traverse': 7.27.7
-      '@babel/types': 7.28.0
+      '@babel/types': 7.28.1
       '@tanstack/router-utils': 1.121.21
       babel-dead-code-elimination: 1.0.10
       tiny-invariant: 1.3.3
@@ -19098,7 +19081,7 @@ snapshots:
       '@babel/plugin-syntax-typescript': 7.27.1(@babel/core@7.27.7)
       '@babel/template': 7.27.2
       '@babel/traverse': 7.27.7
-      '@babel/types': 7.28.0
+      '@babel/types': 7.28.1
       '@tanstack/router-core': 1.123.0
       '@tanstack/router-generator': 1.123.0
       '@tanstack/router-utils': 1.121.21
@@ -19133,7 +19116,7 @@ snapshots:
       '@babel/plugin-syntax-typescript': 7.27.1(@babel/core@7.27.7)
       '@babel/template': 7.27.2
       '@babel/traverse': 7.27.7
-      '@babel/types': 7.28.0
+      '@babel/types': 7.28.1
       '@tanstack/directive-functions-plugin': 1.122.1(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))
       babel-dead-code-elimination: 1.0.10
       tiny-invariant: 1.3.3
@@ -19152,7 +19135,7 @@ snapshots:
     dependencies:
       '@babel/code-frame': 7.26.2
       '@babel/core': 7.27.7
-      '@babel/types': 7.28.0
+      '@babel/types': 7.28.1
       '@tanstack/router-core': 1.123.0
       '@tanstack/router-generator': 1.123.0
       '@tanstack/router-plugin': 1.123.0(@tanstack/react-router@1.123.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.99.9)
@@ -19418,8 +19401,6 @@ snapshots:
       '@types/ms': 2.1.0
 
   '@types/deep-eql@4.0.2': {}
-
-  '@types/diff-match-patch@1.0.36': {}
 
   '@types/eslint-scope@3.7.7':
     dependencies:
@@ -20372,32 +20353,20 @@ snapshots:
 
   agent-base@7.1.3: {}
 
-  ai-fallback@0.1.5(zod@3.25.76):
+  ai-fallback@0.1.5(zod@4.0.5):
     dependencies:
       '@ai-sdk/provider': 1.1.3
-      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
+      '@ai-sdk/provider-utils': 2.2.8(zod@4.0.5)
     transitivePeerDependencies:
       - zod
 
-  ai@4.3.17(react@19.1.0)(zod@3.25.76):
+  ai@5.0.0-beta.23(zod@4.0.5):
     dependencies:
-      '@ai-sdk/provider': 1.1.3
-      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
-      '@ai-sdk/react': 1.2.12(react@19.1.0)(zod@3.25.76)
-      '@ai-sdk/ui-utils': 1.2.11(zod@3.25.76)
-      '@opentelemetry/api': 1.9.0
-      jsondiffpatch: 0.6.0
-      zod: 3.25.76
-    optionalDependencies:
-      react: 19.1.0
-
-  ai@5.0.0-beta.11(zod@3.25.76):
-    dependencies:
-      '@ai-sdk/gateway': 1.0.0-beta.4(zod@3.25.76)
+      '@ai-sdk/gateway': 1.0.0-beta.9(zod@4.0.5)
       '@ai-sdk/provider': 2.0.0-beta.1
-      '@ai-sdk/provider-utils': 3.0.0-beta.2(zod@3.25.76)
+      '@ai-sdk/provider-utils': 3.0.0-beta.4(zod@4.0.5)
       '@opentelemetry/api': 1.9.0
-      zod: 3.25.76
+      zod: 4.0.5
 
   ajv-draft-04@1.0.0(ajv@8.17.1):
     optionalDependencies:
@@ -21598,10 +21567,10 @@ snapshots:
 
   discontinuous-range@1.0.0: {}
 
-  docs-website@file:docs-website(@modelcontextprotocol/sdk@1.15.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/node@24.0.7)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(babel-plugin-macros@3.1.0)(lightningcss@1.30.1)(prisma@6.11.1(typescript@5.8.3))(terser@5.42.0)(typescript@5.8.3)(use-sync-external-store@1.5.0(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0)):
+  docs-website@file:docs-website(@modelcontextprotocol/sdk@1.15.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/node@24.0.7)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(babel-plugin-macros@3.1.0)(lightningcss@1.30.1)(prisma@6.12.0(typescript@5.8.3))(terser@5.42.0)(typescript@5.8.3)(use-sync-external-store@1.5.0(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0)):
     dependencies:
-      '@ai-sdk/anthropic': 2.0.0-beta.4(zod@3.25.76)
-      '@ai-sdk/openai': 2.0.0-beta.5(zod@3.25.76)
+      '@ai-sdk/anthropic': 2.0.0-beta.7(zod@4.0.5)
+      '@ai-sdk/openai': 2.0.0-beta.10(zod@4.0.5)
       '@ai-sdk/provider': 2.0.0-beta.1
       '@cloudflare/vite-plugin': 1.9.4(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))
       '@cloudflare/workers-types': 4.20250712.0
@@ -21609,7 +21578,7 @@ snapshots:
       '@matejmazur/react-katex': 3.1.3(katex@0.16.22)(react@19.1.0)
       '@monaco-editor/react': 4.7.0(monaco-editor@0.52.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@orama/tokenizers': 3.1.7
-      '@prisma/client': 6.11.1(prisma@6.11.1(typescript@5.8.3))(typescript@5.8.3)
+      '@prisma/client': 6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)
       '@radix-ui/react-dialog': 1.1.14(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@radix-ui/react-popover': 1.1.14(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@radix-ui/react-scroll-area': 1.2.9(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -21634,7 +21603,7 @@ snapshots:
       acorn: 8.15.0
       acorn-jsx: 5.3.2(acorn@8.15.0)
       acorn-loose: 8.5.2
-      ai: 5.0.0-beta.11(zod@3.25.76)
+      ai: 5.0.0-beta.23(zod@4.0.5)
       async-sema: 3.1.1
       aws4fetch: 1.0.20
       class-variance-authority: 0.7.1
@@ -21698,10 +21667,10 @@ snapshots:
       remark-html: 16.0.1
       remark-mdx: 3.1.0
       remark-stringify: 11.0.0
-      safe-mdx: 1.3.1(react@19.1.0)
+      safe-mdx: 1.3.2(react@19.1.0)
       sentries: 0.2.2(@cloudflare/workers-types@4.20250712.0)
       shiki: 3.7.0
-      spiceflow: 1.13.3(@modelcontextprotocol/sdk@1.15.0)
+      spiceflow: 1.14.0(@modelcontextprotocol/sdk@1.15.0)
       tailwind-merge: 3.3.1
       tiny-jsonc: 1.0.2
       trieve-ts-sdk: 0.0.122
@@ -21716,7 +21685,7 @@ snapshots:
       vite-plugin-environment: 1.1.3(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))
       website: link:website
       x-is-array: 0.1.0
-      zod: 3.25.76
+      zod: 4.0.5
       zustand: 5.0.6(@types/react@19.1.8)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
     transitivePeerDependencies:
       - '@biomejs/wasm-bundler'
@@ -23203,7 +23172,7 @@ snapshots:
     dependencies:
       '@babel/generator': 7.28.0
       '@babel/parser': 7.28.0
-      '@babel/types': 7.28.0
+      '@babel/types': 7.28.1
       html-entities: 2.6.0
       parse5: 7.3.0
       style-to-object: 1.0.9
@@ -23637,12 +23606,6 @@ snapshots:
 
   jsonc-parser@3.3.1: {}
 
-  jsondiffpatch@0.6.0:
-    dependencies:
-      '@types/diff-match-patch': 1.0.36
-      chalk: 5.4.1
-      diff-match-patch: 1.0.5
-
   jsonfile@4.0.0:
     optionalDependencies:
       graceful-fs: 4.2.11
@@ -23892,7 +23855,7 @@ snapshots:
   magicast@0.3.5:
     dependencies:
       '@babel/parser': 7.28.0
-      '@babel/types': 7.28.0
+      '@babel/types': 7.28.1
       source-map-js: 1.2.1
 
   markdown-extensions@2.0.0: {}
@@ -25443,10 +25406,10 @@ snapshots:
 
   printable-characters@1.0.42: {}
 
-  prisma@6.11.1(typescript@5.8.3):
+  prisma@6.12.0(typescript@5.8.3):
     dependencies:
-      '@prisma/config': 6.11.1
-      '@prisma/engines': 6.11.1
+      '@prisma/config': 6.12.0
+      '@prisma/engines': 6.12.0
     optionalDependencies:
       typescript: 5.8.3
 
@@ -26337,7 +26300,7 @@ snapshots:
 
   safe-buffer@5.2.1: {}
 
-  safe-mdx@1.3.1(react@19.1.0):
+  safe-mdx@1.3.2(react@19.1.0):
     dependencies:
       '@standard-schema/spec': 1.0.0
       collapse-white-space: 2.1.0
@@ -26688,6 +26651,19 @@ snapshots:
   spdx-license-ids@3.0.21: {}
 
   spiceflow@1.13.3(@modelcontextprotocol/sdk@1.15.0):
+    dependencies:
+      '@medley/router': 0.2.1
+      '@standard-schema/spec': 1.0.0
+      copy-anything: 3.0.5
+      eventsource-parser: 3.0.3
+      openapi-types: 12.1.3
+      superjson: 2.2.2
+      zod: 3.25.76
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
+    optionalDependencies:
+      '@modelcontextprotocol/sdk': 1.15.0
+
+  spiceflow@1.14.0(@modelcontextprotocol/sdk@1.15.0):
     dependencies:
       '@medley/router': 0.2.1
       '@standard-schema/spec': 1.0.0
@@ -28025,11 +28001,11 @@ snapshots:
       - esbuild
       - uglify-js
 
-  website@file:website(@babel/runtime@7.27.6)(@cloudflare/workers-types@4.20250712.0)(@modelcontextprotocol/sdk@1.15.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/node@24.0.7)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(prisma@6.11.1(typescript@5.8.3))(typescript@5.8.3)(use-sync-external-store@1.5.0(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0)):
+  website@file:website(@babel/runtime@7.27.6)(@cloudflare/workers-types@4.20250712.0)(@modelcontextprotocol/sdk@1.15.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/node@24.0.7)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)(use-sync-external-store@1.5.0(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0)):
     dependencies:
-      '@ai-sdk/anthropic': 2.0.0-beta.4(zod@3.25.76)
-      '@ai-sdk/openai': 2.0.0-beta.5(zod@3.25.76)
-      '@ai-sdk/ui-utils': 1.2.11(zod@3.25.76)
+      '@ai-sdk/anthropic': 2.0.0-beta.7(zod@4.0.5)
+      '@ai-sdk/openai': 2.0.0-beta.10(zod@4.0.5)
+      '@ai-sdk/ui-utils': 1.2.11(zod@4.0.5)
       '@ariakit/react': 0.4.17(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@better-auth/stripe': 1.2.10
       '@bugsnag/cuid': 3.2.1
@@ -28039,7 +28015,7 @@ snapshots:
       '@motionone/dom': 10.18.0
       '@motionone/easing': 10.18.0
       '@octokit/webhooks': 14.0.2
-      '@prisma/client': 6.11.1(prisma@6.11.1(typescript@5.8.3))(typescript@5.8.3)
+      '@prisma/client': 6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)
       '@radix-ui/react-alert-dialog': 1.1.14(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@radix-ui/react-avatar': 1.1.10(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@radix-ui/react-checkbox': 1.3.2(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -28065,8 +28041,8 @@ snapshots:
       '@uiw/react-color': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@upstash/qstash': 2.8.1
       '@urlpack/base62': 2.0.1
-      ai: 5.0.0-beta.11(zod@3.25.76)
-      ai-fallback: 0.1.5(zod@3.25.76)
+      ai: 5.0.0-beta.23(zod@4.0.5)
+      ai-fallback: 0.1.5(zod@4.0.5)
       async-sema: 3.1.1
       better-auth: 1.2.10
       canvas-confetti: 1.9.3
@@ -28111,12 +28087,12 @@ snapshots:
       react-router: 7.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-router-hono-server: 2.13.0(@cloudflare/workers-types@4.20250712.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/react@19.1.8)(react-router@7.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))
       react-sound-visualizer: 1.4.0(react@19.1.0)
-      safe-mdx: 1.3.1(react@19.1.0)
+      safe-mdx: 1.3.2(react@19.1.0)
       sema4: 0.1.3
       sentries: 0.2.2(@cloudflare/workers-types@4.20250712.0)
       shiki: 3.7.0
       sonner: 2.0.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      spiceflow: 1.13.3(@modelcontextprotocol/sdk@1.15.0)
+      spiceflow: 1.14.0(@modelcontextprotocol/sdk@1.15.0)
       string-dedent: 3.0.1
       stripe: 18.2.1(@types/node@24.0.7)
       tailwind-merge: 3.3.1
@@ -28130,8 +28106,8 @@ snapshots:
       use-stick-to-bottom: 1.1.1(react@19.1.0)
       uuid: 11.1.0
       vaul: 1.1.2(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      zod: 3.25.76
-      zod-to-json-schema: 3.24.5(zod@3.25.76)
+      zod: 4.0.5
+      zod-to-json-schema: 3.24.5(zod@4.0.5)
       zustand: 5.0.6(@types/react@19.1.8)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
     transitivePeerDependencies:
       - '@babel/runtime'
@@ -28419,15 +28395,25 @@ snapshots:
     dependencies:
       zod: 3.25.76
 
+  zod-to-json-schema@3.24.5(zod@4.0.5):
+    dependencies:
+      zod: 4.0.5
+
   zod-to-json-schema@3.24.6(zod@3.25.76):
     dependencies:
       zod: 3.25.76
+
+  zod-to-json-schema@3.24.6(zod@4.0.5):
+    dependencies:
+      zod: 4.0.5
 
   zod@3.22.3: {}
 
   zod@3.24.1: {}
 
   zod@3.25.76: {}
+
+  zod@4.0.5: {}
 
   zustand@5.0.5(@types/react@19.1.8)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0)):
     optionalDependencies:

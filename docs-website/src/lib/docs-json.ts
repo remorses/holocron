@@ -1,5 +1,5 @@
-import { z } from 'zod'
-import { zodToJsonSchema } from 'zod-to-json-schema'
+import { toJSONSchema, z } from 'zod'
+
 import { extractNamePathsFromSchema } from './schema-path-utils.js'
 import dedent from 'dedent'
 
@@ -11,10 +11,12 @@ const themeModules = import.meta.glob('../themes/*.css', {
 })
 
 // Extract theme names from file paths
-const themeNames = Object.keys(themeModules).map((path) => {
-    const match = path.match(/\/([^/]+)\.css$/)
-    return match ? match[1] : ''
-}).filter(Boolean)
+const themeNames = Object.keys(themeModules)
+    .map((path) => {
+        const match = path.match(/\/([^/]+)\.css$/)
+        return match ? match[1] : ''
+    })
+    .filter(Boolean)
 
 export { themeModules, themeNames }
 
@@ -179,7 +181,7 @@ const FooterLinkColumn = z
 const FooterSchema = z
     .object({
         socials: z
-            .record(z.string().url())
+            .record(z.string(), z.string().url())
             .optional()
             .describe('Social media links'),
         links: z
@@ -201,7 +203,9 @@ const SearchSchema = z
 
 const SeoSchema = z
     .object({
-        metatags: z.record(z.string()).describe('Additional meta tags'),
+        metatags: z
+            .record(z.string(), z.string())
+            .describe('Additional meta tags'),
         indexing: z
             .enum(['navigable', 'all'])
             .optional()
@@ -399,8 +403,8 @@ const IntegrationsSchema = z
 
 const CSSVariablesSchema = z
     .object({
-        light: z.record(z.string()),
-        dark: z.record(z.string()),
+        light: z.record(z.string(), z.string()),
+        dark: z.record(z.string(), z.string()),
     })
     .strict().describe(dedent`
         Object mapping "light" and "dark" to CSS variable name/value pairs to inject into the website as CSS custom properties.
@@ -455,11 +459,15 @@ export const DocsConfigSchema = z
         hideSidebar: z
             .boolean()
             .optional()
-            .describe('Hide the sidebar completely from the documentation site'),
+            .describe(
+                'Hide the sidebar completely from the documentation site',
+            ),
         ignore: z
             .array(z.string())
             .optional()
-            .describe('Array of glob patterns to ignore when syncing the site. Files matching these patterns will be excluded from the sync process.'),
+            .describe(
+                'Array of glob patterns to ignore when syncing the site. Files matching these patterns will be excluded from the sync process.',
+            ),
         theme: z
             .enum(themeNames as [string, ...string[]])
             .optional()
@@ -470,9 +478,7 @@ export const DocsConfigSchema = z
 
 export type DocsJsonType = z.infer<typeof DocsConfigSchema>
 
-export const docsJsonSchema = zodToJsonSchema(DocsConfigSchema, {
-    $refStrategy: 'none',
-})
+export const docsJsonSchema = toJSONSchema(DocsConfigSchema, {})
 
 export const exampleNamePathsForDocsJson = extractNamePathsFromSchema(
     docsJsonSchema as any,

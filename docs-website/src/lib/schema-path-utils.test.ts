@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest'
-import { zodToJsonSchema } from 'zod-to-json-schema'
+import {toJSONSchema} from 'zod'
 import type { JSONSchema7 } from 'json-schema'
 import { extractNamePathsFromSchema } from './schema-path-utils'
 import { DocsConfigSchema } from 'docs-website/src/lib/docs-json'
@@ -14,7 +14,7 @@ type SimpleSchema = {
 }
 
 describe('schema-path-utils', () => {
-    const docsConfigJsonSchema = zodToJsonSchema(DocsConfigSchema)
+    const docsConfigJsonSchema = toJSONSchema(DocsConfigSchema)
 
     describe('extractPaths', () => {
         test('extracts paths from DocsConfigSchema', () => {

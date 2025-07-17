@@ -10,7 +10,7 @@ import {
     stepCountIs,
     isToolUIPart,
 } from 'ai'
-import { prisma } from 'db'
+import { prisma, Prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import path from 'path'
 import { Spiceflow } from 'spiceflow'
@@ -21,6 +21,7 @@ import {
     EditToolParamSchema,
     editToolParamsSchema,
     fileUpdateSchema,
+    type FileUpdate,
 } from './edit-tool'
 import { notifyError } from './errors'
 import {
@@ -126,7 +127,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
         chatId: z.string(),
         branchId: z.string(),
         currentSlug: z.string(),
-        filesInDraft: z.record(fileUpdateSchema),
+        filesInDraft: z.record(z.string(),fileUpdateSchema),
     }),
     async *handler({ request, waitUntil, state: { userId } }) {
         const {
@@ -491,150 +492,161 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
 
                     orderBy: { createdAt: 'asc' },
                 })
-                await prisma.$transaction(async (prisma) => {
-                    // Get previous message parts
-                    const prevChat = await prisma.chat
-                        .delete({
-                            where: { chatId },
-                        })
-                        .catch((e) => null)
+                // Build operations array for transaction
+                const operations: Prisma.PrismaPromise<any>[] = []
 
-                    const chatRow = await prisma.chat.create({
+                // First get previous chat data, then delete and recreate
+                const prevChat = await prisma.chat.findFirst({
+                    where: { chatId },
+                })
+
+                // Delete existing chat (this will cascade delete related records)
+                operations.push(prisma.chat.deleteMany({
+                    where: { chatId },
+                }))
+
+                // Create chat row
+                operations.push(prisma.chat.create({
+                    data: {
+                        chatId,
+                        createdAt: prevChat?.createdAt,
+                        userId,
+                        branchId,
+                        currentSlug,
+                        filesInDraft: filesInDraft as any || {},
+                        lastPushedFiles: prevChat?.lastPushedFiles || {},
+                        title: prevChat?.title,
+                        prNumber: prevChat?.prNumber,
+                        description: prevChat?.description,
+                    },
+                }))
+
+                // Create message operations
+                for (const [msgIdx, msg] of resultMessages.entries()) {
+                    const parts = 'parts' in msg ? msg.parts || [] : []
+
+                    if (msg.role !== 'assistant' && msg.role !== 'user') {
+                        console.log(
+                            `ignoring message with role ${msg.role}`,
+                        )
+                        msg.role
+                        continue
+                    }
+                    const content =
+                        ('content' in msg ? msg.content : null) ||
+                        parts
+                            .filter((x: any) => x.type === 'text')
+                            .reduce(
+                                (acc: string, cur: any) => acc + cur.text,
+                                '\n',
+                            )
+                    const prevMessage = previousMessages.find(
+                        (x) => x.id === msg.id,
+                    )
+
+                    // Add message create operation
+                    operations.push(prisma.chatMessage.create({
                         data: {
                             chatId,
-                            createdAt: prevChat?.createdAt,
-                            userId,
-                            branchId,
-                            currentSlug,
-                            filesInDraft: filesInDraft || {},
-                            lastPushedFiles: prevChat?.lastPushedFiles || {},
-                            title: prevChat?.title,
-                            prNumber: prevChat?.prNumber,
-                            description: prevChat?.description,
+                            id: msg.id,
+                            createdAt: prevMessage?.createdAt || new Date(),
+                            role: msg.role ?? 'user',
                         },
-                    })
+                    }))
 
-                    for (const [msgIdx, msg] of resultMessages.entries()) {
-                        const parts = 'parts' in msg ? msg.parts || [] : []
-
-                        if (msg.role !== 'assistant' && msg.role !== 'user') {
-                            console.log(
-                                `ignoring message with role ${msg.role}`,
-                            )
-                            msg.role
-                            continue
-                        }
-                        const content =
-                            ('content' in msg ? msg.content : null) ||
-                            parts
-                                .filter((x: any) => x.type === 'text')
-                                .reduce(
-                                    (acc: string, cur: any) => acc + cur.text,
-                                    '\n',
-                                )
-                        const prevMessage = previousMessages.find(
-                            (x) => x.id === msg.id,
-                        )
-                        const chatMessage = await prisma.chatMessage.create({
-                            data: {
-                                chatId: chatRow.chatId,
-
-                                id: msg.id,
-                                createdAt: prevMessage?.createdAt || new Date(),
-                                role: msg.role ?? 'user',
-                            },
-                        })
-                        for (const [index, part] of parts.entries()) {
-                            // Handle only 'text', 'reasoning', and 'tool-invocation' types for now
-                            if (part.type === 'text') {
-                                // ChatMessagePart: { type: 'text', text: string }
-                                await prisma.chatPartText.create({
+                    // Add part operations
+                    for (const [index, part] of parts.entries()) {
+                        // Handle only 'text', 'reasoning', and 'tool-invocation' types for now
+                        if (part.type === 'text') {
+                            // ChatMessagePart: { type: 'text', text: string }
+                            operations.push(prisma.chatPartText.create({
+                                data: {
+                                    messageId: msg.id,
+                                    type: 'text',
+                                    index,
+                                    text: part.text,
+                                },
+                            }))
+                        } else if (part.type === 'reasoning') {
+                            // ChatMessagePart: { type: 'reasoning', text: string }
+                            operations.push(prisma.chatPartReasoning.create({
+                                data: {
+                                    messageId: msg.id,
+                                    type: 'reasoning',
+                                    text: part.text,
+                                    index,
+                                },
+                            }))
+                        } else if (isToolUIPart(part)) {
+                            const { input, toolCallId } = part
+                            if (part.state === 'output-available') {
+                                operations.push(prisma.chatPartTool.create({
                                     data: {
-                                        messageId: chatMessage.id,
-                                        type: 'text',
-
                                         index,
-                                        text: part.text,
+                                        input: input as any,
+                                        output: part.output as any,
+                                        toolCallId,
+                                        messageId: msg.id,
+                                        state: part.state,
+                                        type: part.type,
                                     },
-                                })
-                            } else if (part.type === 'reasoning') {
-                                // ChatMessagePart: { type: 'reasoning', text: string }
-                                await prisma.chatPartReasoning.create({
+                                }))
+                            } else if (part.state === 'output-error') {
+                                operations.push(prisma.chatPartTool.create({
                                     data: {
-                                        messageId: chatMessage.id,
-                                        type: 'reasoning',
-                                        text: part.text,
                                         index,
+                                        input: input as any,
+                                        errorText: part.errorText,
+                                        toolCallId,
+                                        messageId: msg.id,
+                                        state: part.state,
+                                        type: part.type,
                                     },
-                                })
-                            } else if (isToolUIPart(part)) {
-                                const { input, toolCallId } = part
-                                if (part.state === 'output-available') {
-                                    await prisma.chatPartTool.create({
-                                        data: {
-                                            index,
-                                            input: input as any,
-                                            output: part.output as any,
-                                            toolCallId,
-                                            messageId: chatMessage.id,
-                                            state: part.state,
-                                            type: part.type,
-                                        },
-                                    })
-                                } else if (part.state === 'output-error') {
-                                    await prisma.chatPartTool.create({
-                                        data: {
-                                            index,
-                                            input: input as any,
-                                            errorText: part.errorText,
-                                            toolCallId,
-                                            messageId: chatMessage.id,
-                                            state: part.state,
-                                            type: part.type,
-                                        },
-                                    })
-                                } else {
-                                    console.log(
-                                        `unhandled part tool type ${part.type} with state ${part.state}`,
-                                    )
-                                }
-                            } else if (part.type === 'file') {
-                                // Handle ChatPartFile
-                                await prisma.chatPartFile.create({
-                                    data: {
-                                        messageId: chatMessage.id,
-                                        type: 'file',
-                                        index,
-                                        mediaType: part.mediaType,
-                                        filename: part.filename,
-                                        url: part.url,
-                                    },
-                                })
-                            } else if (part.type === 'source-url') {
-                                // Handle ChatPartSourceUrl
-                                await prisma.chatPartSourceUrl.create({
-                                    data: {
-                                        messageId: chatMessage.id,
-                                        type: 'source-url',
-                                        index,
-                                        sourceId: part.sourceId,
-                                        url: part.url,
-                                        title: part.title,
-                                        providerMetadata:
-                                            part.providerMetadata as any,
-                                    },
-                                })
+                                }))
                             } else {
-                                part.type
                                 console.log(
-                                    `skipping message of type ${part.type} in the database`,
+                                    `unhandled part tool type ${part.type} with state ${part.state}`,
                                 )
-                                part.type
                             }
-                            // Ignore all other part types for now
+                        } else if (part.type === 'file') {
+                            // Handle ChatPartFile
+                            operations.push(prisma.chatPartFile.create({
+                                data: {
+                                    messageId: msg.id,
+                                    type: 'file',
+                                    index,
+                                    mediaType: part.mediaType,
+                                    filename: part.filename,
+                                    url: part.url,
+                                },
+                            }))
+                        } else if (part.type === 'source-url') {
+                            // Handle ChatPartSourceUrl
+                            operations.push(prisma.chatPartSourceUrl.create({
+                                data: {
+                                    messageId: msg.id,
+                                    type: 'source-url',
+                                    index,
+                                    sourceId: part.sourceId,
+                                    url: part.url,
+                                    title: part.title,
+                                    providerMetadata:
+                                        part.providerMetadata as any,
+                                },
+                            }))
+                        } else {
+                            part.type
+                            console.log(
+                                `skipping message of type ${part.type} in the database`,
+                            )
+                            part.type
                         }
+                        // Ignore all other part types for now
                     }
-                })
+                }
+
+                // Execute all operations in a single transaction
+                await prisma.$transaction(operations)
                 waitUntil(
                     generateAndSaveChatTitle({
                         resultMessages,

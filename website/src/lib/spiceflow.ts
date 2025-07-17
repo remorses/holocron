@@ -573,7 +573,7 @@ export const app = new Spiceflow({ basePath: '/api' })
         path: '/commitChangesToRepo',
         request: z.object({
             branchId: z.string().min(1, 'branchId is required'),
-            filesInDraft: z.record(fileUpdateSchema),
+            filesInDraft: z.record(z.string(), fileUpdateSchema),
         }),
         async handler({ request, state: { userId } }) {
             const { branchId, filesInDraft } = await request.json()
@@ -668,7 +668,7 @@ export const app = new Spiceflow({ basePath: '/api' })
         request: z.object({
             branchId: z.string().min(1, 'branchId is required'),
             chatId: z.string().min(1, 'chatId is required'),
-            filesInDraft: z.record(fileUpdateSchema),
+            filesInDraft: z.record(z.string(), fileUpdateSchema),
         }),
         async handler({ request, state }) {
             const { userId } = state
@@ -792,8 +792,8 @@ export const app = new Spiceflow({ basePath: '/api' })
                 await prisma.chat.update({
                     where: { chatId, userId },
                     data: {
-                        lastPushedFiles: filesInDraft,
-                        filesInDraft: filesInDraft,
+                        lastPushedFiles: filesInDraft as any,
+                        filesInDraft: filesInDraft as any,
                     },
                 })
                 return { prUrl: result.prUrl || existingPr.html_url }

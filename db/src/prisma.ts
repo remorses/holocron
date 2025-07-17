@@ -1,4 +1,5 @@
 import { PrismaPg } from '@prisma/adapter-pg'
+export * from './generated/models.js'
 export * from './generated/client.js'
 import { PrismaClient } from './generated/client.js'
 

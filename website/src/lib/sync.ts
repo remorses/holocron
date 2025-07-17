@@ -796,7 +796,7 @@ export async function syncSite({
                 },
                 update: pageInput,
                 create: { ...pageInput, branchId },
-            })
+            }),
         ])
 
         // Now handle all relation operations in a single atomic transaction
@@ -821,8 +821,8 @@ export async function syncSite({
                             errorMessage: error.errorMessage,
                             errorType: error.errorType,
                         },
-                    })
-                )
+                    }),
+                ),
             )
         }
 
@@ -836,8 +836,8 @@ export async function syncSite({
                             assetSlug: imageSrc,
                             branchId,
                         },
-                    })
-                )
+                    }),
+                ),
             )
         }
 

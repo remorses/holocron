@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { zodToJsonSchema } from 'zod-to-json-schema'
+import {toJSONSchema} from 'zod'
 import * as schemaLib from 'json-schema-library'
 const compileSchema = schemaLib.compileSchema || schemaLib?.['default']?.compileSchema
 import { describe, expect, test } from 'vitest'
@@ -29,7 +29,7 @@ describe('compileSchema with union in array', () => {
         ),
     })
 
-    const schema = zodToJsonSchema(zodSchema)
+    const schema = toJSONSchema(zodSchema)
     const compiled = compileSchema(schema)
 
     test('should resolve pointer to field existing in only some unions: sms', () => {
@@ -92,7 +92,7 @@ describe('compileSchema with array union of string or object', () => {
         ),
     })
 
-    const schema = zodToJsonSchema(zodSchema)
+    const schema = toJSONSchema(zodSchema)
     const compiled = compileSchema(schema)
 
     test('should resolve pointer to field in string-or-object union: type', () => {
@@ -379,8 +379,8 @@ describe('DocsConfigSchema', () => {
 })
 
 test('render form tool schema is readable', () => {
-    const schema = zodToJsonSchema(RenderFormParameters, {
-        $refStrategy: 'none',
+    const schema = toJSONSchema(RenderFormParameters, {
+
     })
     expect(schema).toMatchInlineSnapshot(`
       {
