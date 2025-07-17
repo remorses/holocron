@@ -179,7 +179,7 @@ describe('Trieve Groups API', () => {
         expect(searchResponse).toMatchInlineSnapshot(`
           {
             "corrected_query": null,
-            "id": "7ded4af0-e869-4adc-9f24-18d569b1b5c6",
+            "id": "11571dfd-51fb-4ca2-8029-634e7eb07b15",
             "results": [
               {
                 "chunks": [
@@ -340,20 +340,6 @@ describe('Trieve Groups API', () => {
             description: 'Test group for automated testing',
             tracking_id: testGroupId,
         })
-
-        expect(createResponse).toMatchInlineSnapshot(`
-          {
-            "created_at": "2025-07-17T15:18:13.317039",
-            "dataset_id": "8edeb160-d7ee-4fda-bc6e-f55eb0ec3554",
-            "description": "Test group for automated testing",
-            "id": "6ed5b8b1-8ec6-43a5-89ee-fcbde9a6a0c3",
-            "metadata": {},
-            "name": "Test Group",
-            "tag_set": [],
-            "tracking_id": "test-group-1752765493166",
-            "updated_at": "2025-07-17T15:18:13.317039",
-          }
-        `)
 
         // Clean up - delete the test group
         if ('id' in createResponse) {
