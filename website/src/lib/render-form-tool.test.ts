@@ -109,6 +109,8 @@ describe('compileSchema with array union of string or object', () => {
         expect(getTypeForNameInSchema('container.0.nested.foo', compiled))
             .toMatchInlineSnapshot(`
               {
+                "maximum": 9007199254740991,
+                "minimum": -9007199254740991,
                 "type": "integer",
               }
             `)
@@ -133,6 +135,8 @@ describe('compileSchema with array union of string or object', () => {
                     "type": "string",
                   },
                   "foo": {
+                    "maximum": 9007199254740991,
+                    "minimum": -9007199254740991,
                     "type": "integer",
                   },
                 },
@@ -374,7 +378,11 @@ describe('DocsConfigSchema', () => {
     // cssVariables: arbitrary properties, each string
     test('cssVariables.light.someVar', () => {
         expect(getTypeForNameInSchema('cssVariables.light.someVar'))
-            .toMatchInlineSnapshot(`undefined`)
+            .toMatchInlineSnapshot(`
+              {
+                "type": "string",
+              }
+            `)
     })
 })
 
@@ -384,51 +392,75 @@ test('render form tool schema is readable', () => {
     })
     expect(schema).toMatchInlineSnapshot(`
       {
-        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
         "properties": {
           "fields": {
             "items": {
               "additionalProperties": false,
-              "description": "Each field requires a name property that describes the filed updated on that fumabase.jsonc scalar field, it can be siteId, name, description, logo.light, logo.dark, logo.href, logo.text, favicon.light, favicon.dark, navbar.links.{index}.label, navbar.links.{index}.href, navbar.links.{index}.icon, navbar.primary.type, navbar.primary.label, navbar.primary.href, navbar.primary.type, navbar.primary.href, footer.socials, footer.links.{index}.header, footer.links.{index}.items.{index}.label, footer.links.{index}.items.{index}.href, seo.metatags, seo.indexing, redirects.{index}.source, redirects.{index}.destination, redirects.{index}.permanent, banner.content, banner.dismissible, contextual.options.{index}, cssVariables.light, cssVariables.dark, domains.{index} where {index} is a number. NEVER use [index] syntax, for example instead of domains[0] use domains.0",
+              "description": "Each field requires a name property that describes the filed updated on that fumabase.jsonc scalar field, it can be siteId, name, description, logo.light, logo.dark, logo.href, logo.text, favicon.light, favicon.dark, navbar.links.{index}.label, navbar.links.{index}.href, navbar.links.{index}.icon, navbar.primary.type, navbar.primary.label, navbar.primary.href, navbar.primary.type, navbar.primary.href, tabs.{index}.tab, tabs.{index}.openapi, tabs.{index}.renderer, tabs.{index}.tab, tabs.{index}.mcp, footer.socials, footer.links.{index}.header, footer.links.{index}.items.{index}.label, footer.links.{index}.items.{index}.href, seo.metatags, seo.indexing, redirects.{index}.source, redirects.{index}.destination, redirects.{index}.permanent, banner.content, banner.dismissible, contextual.options.{index}, cssVariables.light, cssVariables.dark, domains.{index}, hideSidebar, ignore.{index}, theme where {index} is a number. NEVER use [index] syntax, for example instead of domains[0] use domains.0",
               "properties": {
                 "description": {
-                  "type": [
-                    "string",
-                    "null",
+                  "anyOf": [
+                    {
+                      "type": "string",
+                    },
+                    {
+                      "type": "null",
+                    },
                   ],
                 },
                 "groupTitle": {
-                  "description": "Optional group title. When consecutive fields share the same groupTitle, they will be wrapped in a container with this title. ONLY use this for array of objects to put each object in the array into its own group. ",
-                  "type": [
-                    "string",
-                    "null",
+                  "anyOf": [
+                    {
+                      "type": "string",
+                    },
+                    {
+                      "type": "null",
+                    },
                   ],
+                  "description": "Optional group title. When consecutive fields share the same groupTitle, they will be wrapped in a container with this title. ONLY use this for array of objects to put each object in the array into its own group. ",
                 },
                 "href": {
-                  "type": [
-                    "string",
-                    "null",
+                  "anyOf": [
+                    {
+                      "type": "string",
+                    },
+                    {
+                      "type": "null",
+                    },
                   ],
                 },
                 "initialValue": {
                   "anyOf": [
                     {
-                      "type": [
-                        "string",
-                        "null",
+                      "anyOf": [
+                        {
+                          "type": "string",
+                        },
+                        {
+                          "type": "null",
+                        },
                       ],
                     },
                     {
-                      "type": [
-                        "number",
-                        "null",
+                      "anyOf": [
+                        {
+                          "type": "number",
+                        },
+                        {
+                          "type": "null",
+                        },
                       ],
                     },
                     {
-                      "type": [
-                        "boolean",
-                        "null",
+                      "anyOf": [
+                        {
+                          "type": "boolean",
+                        },
+                        {
+                          "type": "null",
+                        },
                       ],
                     },
                   ],
@@ -437,15 +469,23 @@ test('render form tool schema is readable', () => {
                   "type": "string",
                 },
                 "max": {
-                  "type": [
-                    "number",
-                    "null",
+                  "anyOf": [
+                    {
+                      "type": "number",
+                    },
+                    {
+                      "type": "null",
+                    },
                   ],
                 },
                 "min": {
-                  "type": [
-                    "number",
-                    "null",
+                  "anyOf": [
+                    {
+                      "type": "number",
+                    },
+                    {
+                      "type": "null",
+                    },
                   ],
                 },
                 "name": {
@@ -478,21 +518,33 @@ test('render form tool schema is readable', () => {
                   ],
                 },
                 "placeholder": {
-                  "type": [
-                    "string",
-                    "null",
+                  "anyOf": [
+                    {
+                      "type": "string",
+                    },
+                    {
+                      "type": "null",
+                    },
                   ],
                 },
                 "required": {
-                  "type": [
-                    "boolean",
-                    "null",
+                  "anyOf": [
+                    {
+                      "type": "boolean",
+                    },
+                    {
+                      "type": "null",
+                    },
                   ],
                 },
                 "step": {
-                  "type": [
-                    "number",
-                    "null",
+                  "anyOf": [
+                    {
+                      "type": "number",
+                    },
+                    {
+                      "type": "null",
+                    },
                   ],
                 },
                 "type": {
