@@ -115,9 +115,6 @@ export let docsRpcClient = {
         idempotenceId?: string,
     ): Promise<any> {
         console.error(new Error(`docs rpc client still not initialized`))
-        return Promise.reject(
-            new Error(`docs rpc client still not initialized`),
-        )
     },
     cleanup() {},
 }

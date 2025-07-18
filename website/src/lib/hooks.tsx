@@ -126,12 +126,13 @@ export function shouldHideBrowser() {
     const { mentionOptions = [] } = chatData || {}
     let hideBrowser = !mentionOptions.length
     const filesInDraft = useWebsiteState((x) => x.filesInDraft || {})
-
+    // console.log('filesInDraft', filesInDraft)
     const hasDraftFiles = Object.values(filesInDraft)?.some((x) => {
         if (x.githubPath.endsWith('fumabase.jsonc')) {
             return false
         }
         return x.content
     })
+    // return true
     return hideBrowser && !hasDraftFiles
 }

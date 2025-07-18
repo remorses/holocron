@@ -150,10 +150,7 @@ const setDocsJsonState = ({
     })
 }
 
-export default function Chat({}) {
-    const { scrollRef, contentRef } = useStickToBottom({
-        initial: 'instant',
-    })
+export default function Chat({ ref }) {
     const loaderData = useLoaderData() as Route.ComponentProps['loaderData']
     const { chat, siteId, branchId } = loaderData
     const { chatId } = useParams()
@@ -301,32 +298,81 @@ export default function Chat({}) {
 
             // First iteration: handle docs/edit-tool logic
             let isPostMessageBusy = false
+            const processedToolCallIds = new Set<string>()
+
             async function updateDocsSite() {
                 for await (const newMessages of editIter) {
                     try {
                         const lastMessage = newMessages[newMessages.length - 1]
-                        const lastPart =
-                            lastMessage.parts[lastMessage.parts.length - 1]
-                        if (
-                            lastMessage.role === 'assistant' &&
-                            lastPart?.type === 'tool-strReplaceEditor'
-                        ) {
-                            const args: Partial<EditToolParamSchema> =
-                                lastPart.input as any
-                            if (args?.command === 'view') {
-                                continue
+
+                        if (lastMessage.role === 'assistant') {
+                            // Process all tool parts that have output available and haven't been processed yet
+                            for (const part of lastMessage.parts) {
+                                if (
+                                    part?.type === 'tool-strReplaceEditor' &&
+                                    part.state === 'output-available' &&
+                                    part.toolCallId &&
+                                    !processedToolCallIds.has(part.toolCallId)
+                                ) {
+                                    processedToolCallIds.add(part.toolCallId)
+
+                                    const args: Partial<EditToolParamSchema> =
+                                        part.input as any
+                                    if (args?.command === 'view') {
+                                        continue
+                                    }
+
+                                    const currentSlug = generateSlugFromPath(
+                                        args.path || '',
+                                        githubFolder,
+                                    )
+
+                                    await execute(args as any)
+                                    console.log(
+                                        `applying the setState update to the docs site`,
+                                        part,
+                                    )
+
+                                    try {
+                                        await docsRpcClient.setDocsState(
+                                            {
+                                                filesInDraft: filesInDraft,
+                                                isMarkdownStreaming: false,
+                                                currentSlug,
+                                            },
+                                            part.toolCallId,
+                                        )
+                                    } catch (e) {
+                                        console.error('failed setDocsState', e)
+                                    }
+                                    useWebsiteState.setState({
+                                        filesInDraft: { ...filesInDraft },
+                                        currentSlug,
+                                    })
+                                }
                             }
-                            if (!isParameterComplete(args)) {
-                                continue
-                            }
-                            const currentSlug = generateSlugFromPath(
-                                args.path || '',
-                                githubFolder,
-                            )
+
+                            // Handle streaming/preview state for the last tool part
+                            const lastPart =
+                                lastMessage.parts[lastMessage.parts.length - 1]
                             if (
-                                lastPart.state === 'input-streaming' ||
-                                lastPart.state === 'input-available'
+                                lastPart?.type === 'tool-strReplaceEditor' &&
+                                (lastPart.state === 'input-streaming' ||
+                                    lastPart.state === 'input-available')
                             ) {
+                                const args: Partial<EditToolParamSchema> =
+                                    lastPart.input as any
+                                if (args?.command === 'view') {
+                                    continue
+                                }
+                                if (!isParameterComplete(args)) {
+                                    continue
+                                }
+                                const currentSlug = generateSlugFromPath(
+                                    args.path || '',
+                                    githubFolder,
+                                )
+
                                 if (isPostMessageBusy) continue
                                 let updatedPagesCopy = { ...filesInDraft }
                                 const execute = createEditExecute({
@@ -335,41 +381,20 @@ export default function Chat({}) {
                                 })
                                 await execute(args as any)
                                 isPostMessageBusy = true
-                                docsRpcClient
-                                    .setDocsState({
-                                        filesInDraft: updatedPagesCopy,
-                                        currentSlug,
-                                        isMarkdownStreaming: true,
-                                    })
-                                    .then(() => {
-                                        isPostMessageBusy = false
-                                    })
-                                    .catch((e) => {
-                                        console.error(e)
-                                    })
-                            } else if (lastPart.state === 'output-available') {
-                                await execute(args as any)
-                                console.log(
-                                    `applying the setState update to the docs site`,
-                                    lastPart,
-                                )
-
                                 try {
-                                    await docsRpcClient.setDocsState(
-                                        {
-                                            filesInDraft: filesInDraft,
-                                            isMarkdownStreaming: false,
+                                    docsRpcClient
+                                        .setDocsState({
+                                            filesInDraft: updatedPagesCopy,
                                             currentSlug,
-                                        },
-                                        lastPart.toolCallId,
-                                    )
-                                } catch (e) {
-                                    console.error('failed setDocsState', e)
-                                }
-                                useWebsiteState.setState({
-                                    filesInDraft,
-                                    currentSlug,
-                                })
+                                            isMarkdownStreaming: true,
+                                        })
+                                        .catch((e) => {
+                                            console.error(e)
+                                        })
+                                        .finally(() => {
+                                            isPostMessageBusy = false
+                                        })
+                                } catch (e) {}
                             }
                         }
                     } catch (e) {
@@ -406,16 +431,11 @@ export default function Chat({}) {
             initialValue={initialChatState}
         >
             <FormProvider {...methods}>
-                <ScrollArea
-                    ref={scrollRef}
-                    className='[&>div>div]:grow max-w-full h-full flex flex-col grow '
-                >
-                    <div className='flex flex-col gap-3 px-6 relative h-full grow justify-center'>
-                        <Messages ref={contentRef} />
-                        <WelcomeMessage />
-                        <Footer />
-                    </div>
-                </ScrollArea>
+                <div className='flex grow min-h-0 flex-col gap-3 px-6 h-full justify-center'>
+                    <Messages ref={ref} />
+                    <WelcomeMessage />
+                    <Footer />
+                </div>
             </FormProvider>
         </ChatProvider>
     )

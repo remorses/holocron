@@ -43,6 +43,7 @@ import { shouldHideBrowser, useThrowingFn } from '../lib/hooks'
 import { apiClient } from '../lib/spiceflow-client'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
 import Chat from '../components/chat'
+import { useStickToBottom } from 'use-stick-to-bottom'
 
 export type { Route }
 
@@ -237,10 +238,17 @@ export default function Page({
 
 function ChatContent() {
     const hideBrowser = shouldHideBrowser()
-
+    const { scrollRef, contentRef } = useStickToBottom({
+        initial: 'instant',
+    })
     return hideBrowser ? (
-        <div className='flex bg-black p-12 grow mx-auto self-center items-stretch h-full flex-col w-4xl gap-4 '>
-            <Chat />
+        <div
+            ref={scrollRef}
+            className='max-h-full h-full flex flex-col overflow-y-auto w-full p-12'
+        >
+            <div className='flex flex-col  grow mx-auto w-3xl gap-4'>
+                <Chat ref={contentRef} />
+            </div>
         </div>
     ) : (
         <SidebarProvider

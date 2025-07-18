@@ -4,6 +4,7 @@ import { create } from 'zustand'
 import { createContext, useContext, useMemo, useEffect, useRef } from 'react'
 import type { StoreApi, UseBoundStore } from 'zustand'
 import { ComboboxStore } from '@ariakit/react'
+import { cn } from '../lib/cn.js'
 
 const ChatContext = createContext<UseBoundStore<StoreApi<ChatState>> | null>(
     null,
@@ -17,6 +18,7 @@ const ChatProvider = (props: {
         abortController: AbortController
     }) => Promise<void>
     initialValue: Partial<ChatState>
+    className?: string
 }) => {
     const mentionsCombobox = Ariakit.useComboboxStore()
 
@@ -149,7 +151,8 @@ const ChatProvider = (props: {
 
     return (
         <form
-            style={{ display: 'contents' }}
+            // style={{ display: 'contents' }}
+            className={cn('flex flex-col grow', props.className)}
             onSubmit={(e) => {
                 e.preventDefault()
                 onSubmit()

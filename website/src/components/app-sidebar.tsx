@@ -36,6 +36,7 @@ import type { Route as SiteRoute } from 'website/src/routes/org.$orgId.site.$sit
 import type { Route as OrgRoute } from 'website/src/routes/org.$orgId'
 import type { Route as ChatRoute } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId'
 import { apiClient } from 'website/src/lib/spiceflow-client'
+import { useStickToBottom } from 'use-stick-to-bottom'
 
 function ChatCombobox({ chatId }: { chatId?: string }) {
     const siteData = useRouteLoaderData(
@@ -192,6 +193,9 @@ export function ChatLeftSidebar({
     const params = useParams()
     const { chatId } = params
     const { userSites } = orgData
+    const { scrollRef, contentRef } = useStickToBottom({
+        initial: 'instant',
+    })
 
     return (
         <Sidebar
@@ -200,10 +204,10 @@ export function ChatLeftSidebar({
             className='dark flex  bg-black h-full flex-col grow scheme-only-dark py-4 px-0'
         >
             <div
-                className='grid grow bg-black h-full grid-rows-24 grid-cols-1  items-stretch gap-2'
+                className='grid grow bg-black min-h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
                 // style={{ height: 'var(--sidebar-header-height, 64px)' }}
             >
-                <div className='justify-between w-full row-span-1 gap-2 flex px-6'>
+                <div className='justify-between w-full row-span-1 z-10 gap-2 flex px-6'>
                     <TeamSwitcher className='grow ' sites={userSites} />
 
                     <div className='flex items-start gap-2'>
@@ -213,8 +217,11 @@ export function ChatLeftSidebar({
                     </div>
                 </div>
 
-                <div className='p-0 grow row-span-23 flex flex-col '>
-                    <Chat />
+                <div
+                    ref={scrollRef}
+                    className='p-0 grow relative h-full overflow-y-auto row-span-23 flex flex-col '
+                >
+                    <Chat ref={contentRef} />
                 </div>
             </div>
         </Sidebar>

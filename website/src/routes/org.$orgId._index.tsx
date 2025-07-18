@@ -4,10 +4,7 @@ import { href } from 'react-router'
 import { getSession } from '../lib/better-auth'
 import type { Route } from './+types/org.$orgId._index'
 
-export async function loader({
-    request,
-    params: { orgId },
-}: Route.LoaderArgs) {
+export async function loader({ request, params: { orgId } }: Route.LoaderArgs) {
     const { userId, redirectTo } = await getSession({ request })
     if (redirectTo) {
         throw redirect(redirectTo)
@@ -31,9 +28,16 @@ export async function loader({
     const site = await prisma.site.findFirst({
         where: {
             orgId,
+            branches: {
+                some: {
+                    pages: {
+                        some: {},
+                    },
+                },
+            },
         },
         include: {
-          // TODO change the param siteId to be branchId instead
+            // TODO change the param siteId to be branchId instead
             branches: {
                 take: 1,
                 orderBy: {
@@ -78,7 +82,7 @@ export async function loader({
             orgId,
             siteId: site.siteId,
             chatId: chat.chatId,
-        })
+        }),
     )
 }
 

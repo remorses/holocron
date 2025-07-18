@@ -142,14 +142,10 @@ export function ChatRecordButton({ transcribeAudio }: RecordButtonProps) {
                         exit={{ opacity: 0 }}
                         className='absolute inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center rounded-[20px] overflow-hidden'
                     >
-                        <div className='w-full h-full flex flex-col items-center justify-center gap-4 p-4'>
+                        <div className='w-full h-full flex flex-col items-center justify-center gap-4 p-2'>
                             {isRecording ? (
                                 <>
-                                    <div className='text-sm text-foreground/70 font-medium'>
-                                        Recording...
-                                    </div>
-
-                                    <div className='w-full max-w-md h-24'>
+                                    <div className='w-full max-w-md rounded-xl overflow-hidden min-h-0 max-h-18'>
                                         <Visualizer
                                             audio={audio}
                                             strokeColor={
