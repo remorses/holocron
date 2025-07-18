@@ -196,6 +196,18 @@ model Site {
   @@index([orgId])
 }
 
+// model PreviewDataForSite {
+//   id String @id
+//   branchId String
+//   branch SiteBranch @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
+
+//   docsJson Json @default("{}")
+//   filesInDraft Json @default("{}")
+//   chatId String?
+//   chat Chat? @relation(fields: [chatId], references: [chatId], onDelete: Cascade)
+//   createdAt DateTime @default(now())
+// }
+
 model SiteBranch {
   branchId     String @id @default(cuid())
   site         Site   @relation(fields: [siteId], references: [siteId], onDelete: Cascade)

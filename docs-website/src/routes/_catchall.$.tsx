@@ -403,8 +403,9 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
     if (!page) {
         console.log('Page not found for slug:', slug)
-        throw new Response(null, {
+        throw new Response('null', {
             status: 404,
+            statusText: 'Page not found',
             headers: { 'Content-Type': 'application/json' },
         })
     }
@@ -437,7 +438,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         const { data: markdownData } = await processMdxInServer({
             extension: extension,
             githubPath: page.githubPath,
-            markdown: page.content?.markdown ||'',
+            markdown: page.content?.markdown || '',
         })
         console.timeEnd(`${timerId} - process mdx content`)
         mdast = markdownData.ast

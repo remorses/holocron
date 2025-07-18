@@ -98,7 +98,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     if (!site) {
         console.log('Site not found for domain:', domain)
-        throw new Response('', {
+        throw new Response('null', {
             status: 404,
             headers: { 'Content-Type': 'application/json' },
         })

@@ -1,5 +1,5 @@
 import { prisma } from 'db'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import {
     Popover,
     PopoverTrigger,
@@ -298,6 +298,42 @@ function RightSide() {
         }
     }
 
+    const iframeRefCallback = useCallback((el) => {
+        iframeRef.current = el
+        if (!el) {
+            return
+        }
+        const docsRpcClient = createIframeRpcClient({
+            iframeRef,
+            targetOrigin: new URL(iframeUrl).origin,
+        })
+
+        const state = {
+            currentSlug: chat.currentSlug || undefined,
+            filesInDraft: (chat.filesInDraft as any) || {},
+            previewMode,
+        }
+        let sentFirstMessage = false
+        // do it as soon as the page loads to not wait for the ready message
+        docsRpcClient.setDocsState(state).then(() => {
+            sentFirstMessage = true
+        })
+        const waitForFirstMessage = (event) => {
+            if (
+                iframeRef.current &&
+                !sentFirstMessage &&
+                event.source === iframeRef.current.contentWindow
+            ) {
+                docsRpcClient.setDocsState(state)
+                window.removeEventListener('message', waitForFirstMessage)
+            }
+        }
+        window.addEventListener('message', waitForFirstMessage, { once: true })
+        return () => {
+            docsRpcClient.cleanup()
+        }
+    }, [iframeUrl])
+
     return (
         <div className='flex flex-col h-full gap-3'>
             <Tabs
@@ -339,50 +375,7 @@ function RightSide() {
                         )}
                     >
                         <iframe
-                            ref={(el) => {
-                                iframeRef.current = el
-                                if (!el) {
-                                    return
-                                }
-                                const docsRpcClient = createIframeRpcClient({
-                                    iframeRef,
-                                    targetOrigin: new URL(iframeUrl).origin,
-                                })
-
-                                const state = {
-                                    currentSlug: chat.currentSlug || undefined,
-                                    filesInDraft:
-                                        (chat.filesInDraft as any) || {},
-                                    previewMode,
-                                }
-                                let sentFirstMessage = false
-                                // do it as soon as the page loads to not wait for the ready message
-                                docsRpcClient.setDocsState(state).then(() => {
-                                    sentFirstMessage = true
-                                })
-                                const waitForFirstMessage = (event) => {
-                                    if (
-                                        iframeRef.current &&
-                                        !sentFirstMessage &&
-                                        event.source ===
-                                            iframeRef.current.contentWindow
-                                    ) {
-                                        docsRpcClient.setDocsState(state)
-                                        window.removeEventListener(
-                                            'message',
-                                            waitForFirstMessage,
-                                        )
-                                    }
-                                }
-                                window.addEventListener(
-                                    'message',
-                                    waitForFirstMessage,
-                                    { once: true },
-                                )
-                                return () => {
-                                    docsRpcClient.cleanup()
-                                }
-                            }}
+                            ref={iframeRefCallback}
                             key={chat.chatId}
                             style={scaleDownElement(0.9)}
                             className={cn(
