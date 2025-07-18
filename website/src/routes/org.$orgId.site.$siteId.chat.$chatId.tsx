@@ -21,14 +21,14 @@ import {
     useRevalidator,
     useSearchParams,
 } from 'react-router'
-import { AppSidebar } from '../components/app-sidebar'
+import { ChatLeftSidebar } from '../components/app-sidebar'
 import { BrowserWindow } from '../components/browser-window'
 import { SidebarInset, SidebarProvider } from '../components/ui/sidebar'
 import { getSession } from '../lib/better-auth'
 import { createIframeRpcClient, docsRpcClient } from '../lib/docs-setstate'
 import { getTabFilesWithoutContents } from '../lib/spiceflow-generate-message'
 
-import { State, WebsiteStateProvider } from '../lib/state'
+import { State, useWebsiteState, WebsiteStateProvider } from '../lib/state'
 import { cn } from '../lib/utils'
 import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from './org.$orgId.site.$siteId'
@@ -39,9 +39,10 @@ import { env } from 'docs-website/src/lib/env'
 import { formatDistanceToNow } from 'date-fns'
 import { Button } from '../components/ui/button'
 import { GithubIcon } from 'lucide-react'
-import { useThrowingFn } from '../lib/hooks'
+import { shouldHideBrowser, useThrowingFn } from '../lib/hooks'
 import { apiClient } from '../lib/spiceflow-client'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
+import Chat from '../components/chat'
 
 export type { Route }
 
@@ -106,7 +107,7 @@ export async function loader({
             },
             include: {
                 messages: {
-                    orderBy: { createdAt: 'asc' },
+                    orderBy: { index: 'asc' },
                     include: {
                         textParts: { orderBy: { index: 'asc' } },
                         reasoningParts: { orderBy: { index: 'asc' } },
@@ -166,7 +167,7 @@ export async function loader({
         : undefined
 
     // Create mention options from branch pages using getTabFilesWithoutContents
-    const mentionOptions: string[] = await (async () => {
+    const fileNames: string[] = await (async () => {
         const branchId = chat.branchId
         if (!branchId) return []
 
@@ -203,7 +204,7 @@ export async function loader({
         chatId,
         chat,
         prUrl,
-        mentionOptions,
+        mentionOptions: fileNames,
         iframeUrl,
         host,
         branchId,
@@ -227,52 +228,41 @@ export default function Page({
         }),
         [loaderData],
     )
-    const initialChatState = useMemo<Partial<ChatState>>(
-        () => ({
-            messages: chat.messages.map((msg) => {
-                const message: UIMessage = {
-                    ...msg,
-                    parts: [
-                        ...(msg.textParts || []),
-                        ...(msg.reasoningParts || []),
-                        ...(msg.toolParts || []),
-                        ...(msg.sourceUrlParts || []),
-                        ...(msg.fileParts || []),
-                    ]
-                        .flat()
-                        .sort((a, b) => a.index - b.index) as any,
-                }
-                return message
-            }),
-            isGenerating: false,
-        }),
-        [loaderData],
-    )
     return (
-        <ChatProvider initialValue={initialChatState}>
-            <WebsiteStateProvider initialValue={initialState}>
-                <SidebarProvider
-                    className='dark:bg-black'
-                    style={
-                        {
-                            '--sidebar-width': '480px',
-                            '--sidebar-width-mobile': '20rem',
-                        } as any
-                    }
-                >
-                    <AppSidebar />
-                    <SidebarInset>
-                        <div className='flex grow h-full flex-col gap-4 p-2'>
-                            <Content />
-                        </div>
-                    </SidebarInset>
-                </SidebarProvider>
-            </WebsiteStateProvider>
-        </ChatProvider>
+        <WebsiteStateProvider initialValue={initialState}>
+            <ChatContent />
+        </WebsiteStateProvider>
     )
 }
 
-function Content() {
+function ChatContent() {
+    const hideBrowser = shouldHideBrowser()
+
+    return hideBrowser ? (
+        <div className='flex bg-black p-12 grow mx-auto self-center items-stretch h-full flex-col w-4xl gap-4 '>
+            <Chat />
+        </div>
+    ) : (
+        <SidebarProvider
+            className='dark:bg-black'
+            style={
+                {
+                    '--sidebar-width': '480px',
+                    '--sidebar-width-mobile': '20rem',
+                } as any
+            }
+        >
+            <ChatLeftSidebar />
+            <SidebarInset>
+                <div className='flex grow h-full flex-col gap-4 p-2'>
+                    <RightSide />
+                </div>
+            </SidebarInset>
+        </SidebarProvider>
+    )
+}
+
+function RightSide() {
     const { chat, iframeUrl, host, siteBranch } = useLoaderData<typeof loader>()
     const siteData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId',
@@ -280,7 +270,7 @@ function Content() {
     const iframeRef = useRef<HTMLIFrameElement>(null)
     const [activeTab, setActiveTab] = useState<'preview' | 'editor'>('preview')
     const previewMode = activeTab
-    
+
     useEffect(() => {
         console.log('iframe sidebar remounted')
     }, [])

@@ -167,6 +167,11 @@ export const app = new Spiceflow({ basePath: '/api' })
             if (!site) {
                 throw new AppError('Site not found or user has no access')
             }
+            if (!site.githubOwner || !site.githubRepo) {
+                throw new AppError(
+                    'GitHub owner and repo must be set for the site',
+                )
+            }
 
             // Find the branch for this GitHub branch
             const branch = site.branches[0]
@@ -472,6 +477,11 @@ export const app = new Spiceflow({ basePath: '/api' })
                         const issueTitle = `Documentation feedback: ${url}`
                         const issueBody = `**Feedback Type:** ${opinion}\n**Page URL:** ${url}\n**User Message:**\n\n${message}\n\n> Forwarded from user feedback on docs site.`
 
+                        if (!site.githubOwner || !site.githubRepo) {
+                            throw new AppError(
+                                'GitHub owner and repo must be set for the site',
+                            )
+                        }
                         const { data: issue } =
                             await octokit.rest.issues.create({
                                 owner: site.githubOwner,
@@ -625,6 +635,11 @@ export const app = new Spiceflow({ basePath: '/api' })
             const installationId = githubInstallation.installationId
             const octokit = await getOctokit({ installationId })
 
+            if (!site.githubOwner || !site.githubRepo) {
+                throw new AppError(
+                    'GitHub owner and repo must be set for the site',
+                )
+            }
             const owner = site.githubOwner
             const repo = site.githubRepo
 
@@ -722,7 +737,13 @@ export const app = new Spiceflow({ basePath: '/api' })
             if (!chat) {
                 throw new AppError('Chat not found or access denied')
             }
+
             const site = prBranch.site
+            if (!site.githubOwner || !site.githubRepo) {
+                throw new AppError(
+                    'GitHub owner and repo must be set for the site',
+                )
+            }
             const githubInstallation = site.githubInstallations.find(
                 (x) => x.appId === env.GITHUB_APP_ID,
             )

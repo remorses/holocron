@@ -21,8 +21,8 @@
         "./*": "./*"
     },
     "dependencies": {
-        "@ai-sdk/anthropic": "2.0.0-beta.7",
-        "@ai-sdk/openai": "2.0.0-beta.10",
+        "@ai-sdk/anthropic": "2.0.0-beta.8",
+        "@ai-sdk/openai": "2.0.0-beta.11",
         "@ai-sdk/ui-utils": "^1.2.11",
         "@ariakit/react": "^0.4.17",
         "@better-auth/stripe": "^1.2.10",
@@ -59,7 +59,7 @@
         "@uiw/react-color": "^2.6.0",
         "@upstash/qstash": "^2.8.1",
         "@urlpack/base62": "^2.0.1",
-        "ai": "5.0.0-beta.23",
+        "ai": "5.0.0-beta.24",
         "ai-fallback": "^0.1.5",
         "async-sema": "^3.1.1",
         "better-auth": "^1.2.10",

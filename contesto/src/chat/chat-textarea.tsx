@@ -12,7 +12,7 @@ import { ScrollArea } from '../components/ui/scroll-area.js'
 interface MentionsTextAreaProps
     extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
     ref?: any
-    onSubmit: () => Promise<void> | void
+
     disabled?: boolean
     placeholder?: string
     className?: string
@@ -20,7 +20,6 @@ interface MentionsTextAreaProps
 }
 
 export function ChatTextarea({
-    onSubmit: _onSubmit,
     disabled = false,
     placeholder = 'Type @',
     className = '',
@@ -33,89 +32,13 @@ export function ChatTextarea({
     const selectedAutocompleteText = useChatState(
         (x) => x.selectedAutocompleteText,
     )
+    const submitForm = useChatState((x) => x.submitForm)
     const value = useChatState((x) => x.text || '')
-    function _onChange(text) {
+    function onChange(text) {
         useChatState.setState({ text })
     }
 
-    function onUserTextChange(text) {
-        _onChange(text)
-    }
-
-    async function onSubmit() {
-        const generateId = createIdGenerator()
-        const assistantMessageId = generateId()
-        const userMessageId = generateId()
-        const now = new Date()
-        if (!value.trim()) {
-            // For regenerate, use existing messages and just add new assistant message
-            useChatState.setState({
-                messages: [
-                    ...messages,
-                    {
-                        parts: [],
-                        role: 'assistant',
-                        id: assistantMessageId,
-                    },
-                ],
-            })
-        } else {
-            // Create user message for new requests
-            const userMessage: UIMessage = {
-                id: userMessageId,
-                role: 'user',
-                parts: [{ type: 'text', text: value }],
-            }
-
-            useChatState.setState({
-                messages: [
-                    ...messages,
-                    userMessage,
-                    {
-                        parts: [],
-                        role: 'assistant',
-                        id: assistantMessageId,
-                    },
-                ],
-            })
-            onUserTextChange('')
-        }
-        useChatState.setState({
-            isGenerating: true,
-            assistantErrorMessage: undefined,
-        })
-
-        try {
-            await _onSubmit?.()
-        } catch (error) {
-            // Remove only the failed assistant message, keep user message
-            const currentMessages = useChatState.getState().messages || []
-            let messagesWithoutAssistant = currentMessages.slice(0, -1)
-            useChatState.setState({
-                messages: messagesWithoutAssistant,
-                assistantErrorMessage:
-                    error instanceof Error
-                        ? error.message
-                        : 'An unexpected error occurred',
-            })
-        } finally {
-            useChatState.setState({ isGenerating: false })
-        }
-    }
-
     const messages = useChatState((x) => x.messages)
-
-    React.useEffect(() => {
-        const handleChatRegenerate = () => {
-            // Generate a new assistant response
-            onSubmit()
-        }
-
-        window.addEventListener('chatRegenerate', handleChatRegenerate)
-        return () => {
-            window.removeEventListener('chatRegenerate', handleChatRegenerate)
-        }
-    }, [onSubmit])
 
     const mentionsCombobox = useChatState((x) => x.mentionsCombobox)
 
@@ -171,7 +94,7 @@ export function ChatTextarea({
 
             event.preventDefault()
             if (!disabled && value.trim()) {
-                onSubmit()
+                submitForm()
             }
         }
     }
@@ -194,7 +117,7 @@ export function ChatTextarea({
             mentionsCombobox.hide()
         }
         // Sets our textarea value.
-        onUserTextChange(event.target.value)
+        onChange(event.target.value)
         // Sets the combobox value that will be used to search in the list.
         mentionsCombobox.setValue(searchValue)
     }
@@ -206,7 +129,7 @@ export function ChatTextarea({
         const displayValue = getValue(itemValue, trigger, mentionOptions)
         if (!displayValue) return
         setTrigger(null)
-        onUserTextChange(replaceValue(offset, searchValue, displayValue)(value))
+        onChange(replaceValue(offset, searchValue, displayValue)(value))
         const nextCaretOffset = offset + displayValue.length + 1
         setCaretOffset(nextCaretOffset)
     }

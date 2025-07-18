@@ -131,7 +131,6 @@ function NewChatButton() {
                                 handleNewChat(siteBranches[0]?.branchId!)
                             }
                         }}
-
                         asChild
                     >
                         <Button
@@ -183,18 +182,15 @@ function NewChatButton() {
     )
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-    const siteData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId',
-    ) as SiteRoute.ComponentProps['loaderData']
+export function ChatLeftSidebar({
+    ...props
+}: React.ComponentProps<typeof Sidebar>) {
     const orgData = useRouteLoaderData(
         'routes/org.$orgId',
     ) as OrgRoute.ComponentProps['loaderData']
-    const chatData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId.chat.$chatId',
-    ) as ChatRoute.ComponentProps['loaderData'] | undefined
+
     const params = useParams()
-    const { orgId, siteId, chatId } = params
+    const { chatId } = params
     const { userSites } = orgData
 
     return (

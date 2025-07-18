@@ -22,7 +22,7 @@ export function createIframeRpcClient({
     >()
     const usedIdempotenceIds = new Set<string>()
 
-    docsRpcClient.setDocsState = (
+    docsRpcClient.setDocsState = async (
         state: DocsState,
         idempotenceId?: string,
     ): Promise<any> => {

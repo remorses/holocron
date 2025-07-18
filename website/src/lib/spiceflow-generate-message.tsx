@@ -9,6 +9,7 @@ import {
     convertToModelMessages,
     stepCountIs,
     isToolUIPart,
+    createIdGenerator,
 } from 'ai'
 import { prisma, Prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
@@ -453,24 +454,26 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 .join('')
 
             // create the user message so it shows up when resuming chat
-            await prisma.chatMessage.upsert({
-                where: {
-                    id: lastUserMessage.id,
-                },
-                update: {
-                    createdAt: new Date(),
+            await prisma.chatMessage
+                .upsert({
+                    where: {
+                        id: lastUserMessage.id,
+                    },
+                    update: {
+                        createdAt: new Date(),
+                        role: 'user',
+                    },
+                    create: {
+                        chatId,
+                        createdAt: new Date(),
+                        id: lastUserMessage.id,
 
-                    role: 'user',
-                },
-                create: {
-                    chatId,
-                    createdAt: new Date(),
-                    id: lastUserMessage.id,
-
-                    role: 'user',
-                },
-            })
+                        role: 'user',
+                    },
+                })
+                
         }
+        const idGenerator = createIdGenerator()
         const stream = result.toUIMessageStream({
             // originalMessages: messages,
             messageMetadata: () => {
@@ -478,23 +481,26 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     createdAt: new Date(),
                 }
             },
+            originalMessages: messages,
+            generateMessageId: idGenerator,
             async onFinish({ messages: uiMessages }) {
                 console.log(`chat finished, saving the chat in database`)
-                const resultMessages = [...messages, ...uiMessages]
+                const resultMessages = uiMessages
+                console.log(resultMessages)
 
                 const previousMessages = await prisma.chatMessage.findMany({
                     where: { chatId },
 
-                    orderBy: { createdAt: 'asc' },
+                    orderBy: { index: 'asc' },
                 })
-                // Build operations array for transaction
-                const operations: Prisma.PrismaPromise<any>[] = []
 
                 // First get previous chat data, then delete and recreate
                 const prevChat = await prisma.chat.findFirst({
                     where: { chatId },
                 })
 
+                // Build operations array for transaction
+                const operations: Prisma.PrismaPromise<any>[] = []
                 // Delete existing chat (this will cascade delete related records)
                 operations.push(
                     prisma.chat.deleteMany({
@@ -549,6 +555,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                                 id: msg.id,
                                 createdAt: prevMessage?.createdAt || new Date(),
                                 role: msg.role ?? 'user',
+                                index: msgIdx,
                             },
                         }),
                     )
@@ -825,7 +832,7 @@ export async function getPageContent({ githubPath, branchId }) {
         }),
     ])
     if (!page && !metaFile) {
-        throw new Error(`Cannot find page in ${githubPath}`)
+      return
     }
     if (page) {
         // Get the content from the MarkdownBlob relation

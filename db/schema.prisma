@@ -183,8 +183,8 @@ model Site {
   branches SiteBranch[]
   /// should never start with / and if it is the base it should be '' and not '.'
   githubFolder String @default("")
-  githubOwner String
-  githubRepo  String
+  githubOwner String?
+  githubRepo  String?
   githubRepoId  Int @default(0)
 
 
@@ -421,6 +421,7 @@ model ChatMessage {
   chatId    String
   role      ChatMessageRole
 
+  index     Int @default(0)
   textParts       ChatPartText[]
   reasoningParts  ChatPartReasoning[]
   toolParts       ChatPartTool[]

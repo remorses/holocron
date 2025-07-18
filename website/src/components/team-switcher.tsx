@@ -130,7 +130,7 @@ export function TeamSwitcher({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className='gap-2 p-2' asChild>
                     <Link
-                        to={href('/org/:orgId/onboarding', {
+                        to={href('/org/:orgId/new-site', {
                             orgId: activeSite?.org.orgId || sites[0]?.org.orgId,
                         })}
                     >

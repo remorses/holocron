@@ -116,14 +116,14 @@ importers:
   contesto:
     dependencies:
       '@ai-sdk/openai':
-        specifier: 2.0.0-beta.10
-        version: 2.0.0-beta.10(zod@4.0.5)
+        specifier: 2.0.0-beta.11
+        version: 2.0.0-beta.11(zod@4.0.5)
       '@ai-sdk/provider':
         specifier: 2.0.0-beta.1
         version: 2.0.0-beta.1
       '@ai-sdk/react':
-        specifier: 2.0.0-beta.23
-        version: 2.0.0-beta.23(react@19.1.0)(zod@4.0.5)
+        specifier: 2.0.0-beta.24
+        version: 2.0.0-beta.24(react@19.1.0)(zod@4.0.5)
       '@ai-sdk/ui-utils':
         specifier: ^1.2.11
         version: 1.2.11(zod@4.0.5)
@@ -149,8 +149,8 @@ importers:
         specifier: ^5.81.5
         version: 5.81.5(react@19.1.0)
       ai:
-        specifier: 5.0.0-beta.23
-        version: 5.0.0-beta.23(zod@4.0.5)
+        specifier: 5.0.0-beta.24
+        version: 5.0.0-beta.24(zod@4.0.5)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -286,11 +286,11 @@ importers:
   docs-website:
     dependencies:
       '@ai-sdk/anthropic':
-        specifier: 2.0.0-beta.7
-        version: 2.0.0-beta.7(zod@4.0.5)
+        specifier: 2.0.0-beta.8
+        version: 2.0.0-beta.8(zod@4.0.5)
       '@ai-sdk/openai':
-        specifier: 2.0.0-beta.10
-        version: 2.0.0-beta.10(zod@4.0.5)
+        specifier: 2.0.0-beta.11
+        version: 2.0.0-beta.11(zod@4.0.5)
       '@ai-sdk/provider':
         specifier: 2.0.0-beta.1
         version: 2.0.0-beta.1
@@ -388,8 +388,8 @@ importers:
         specifier: ^8.5.2
         version: 8.5.2
       ai:
-        specifier: 5.0.0-beta.23
-        version: 5.0.0-beta.23(zod@4.0.5)
+        specifier: 5.0.0-beta.24
+        version: 5.0.0-beta.24(zod@4.0.5)
       async-sema:
         specifier: ^3.1.1
         version: 3.1.1
@@ -865,8 +865,8 @@ importers:
         specifier: ^11.0.5
         version: 11.0.5
       zod:
-        specifier: ^4.0.5
-        version: 4.0.5
+        specifier: ^3.25.76
+        version: 3.25.76
 
   fumadocs/packages/core:
     dependencies:
@@ -904,7 +904,7 @@ importers:
         specifier: ^2.7.1
         version: 2.7.1(@types/react@19.1.8)(react@19.1.0)
       remark:
-        specifier: ^15.0.1
+        specifier: ^15.0.0
         version: 15.0.1
       remark-gfm:
         specifier: ^4.0.1
@@ -941,7 +941,7 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@types/mdast':
-        specifier: ^4.0.4
+        specifier: ^4.0.3
         version: 4.0.4
       '@types/negotiator':
         specifier: ^0.6.4
@@ -1128,8 +1128,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       zod:
-        specifier: ^4.0.5
-        version: 4.0.5
+        specifier: ^3.25.76
+        version: 3.25.76
     devDependencies:
       '@mdx-js/mdx':
         specifier: ^3.1.0
@@ -1141,7 +1141,7 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@types/mdast':
-        specifier: ^4.0.4
+        specifier: ^4.0.3
         version: 4.0.4
       '@types/node':
         specifier: 24.0.7
@@ -1153,7 +1153,7 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0
       remark:
-        specifier: ^15.0.1
+        specifier: ^15.0.0
         version: 15.0.1
       tsconfig:
         specifier: workspace:*
@@ -1206,8 +1206,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       zod:
-        specifier: ^4.0.5
-        version: 4.0.5
+        specifier: ^3.25.76
+        version: 3.25.76
     devDependencies:
       '@fumadocs/mdx-remote':
         specifier: workspace:*
@@ -1216,7 +1216,7 @@ importers:
         specifier: ^4.0.9
         version: 4.0.9
       '@types/mdast':
-        specifier: ^4.0.4
+        specifier: ^4.0.3
         version: 4.0.4
       '@types/mdx':
         specifier: ^2.0.13
@@ -1261,8 +1261,8 @@ importers:
         specifier: ^4.0.3
         version: 4.0.3
       zod:
-        specifier: ^4.0.5
-        version: 4.0.5
+        specifier: ^3.25.76
+        version: 3.25.76
     devDependencies:
       '@types/mdx':
         specifier: ^2.0.13
@@ -1319,8 +1319,8 @@ importers:
         specifier: 0.18.0
         version: 0.18.0
       ai:
-        specifier: 5.0.0-beta.23
-        version: 5.0.0-beta.23(zod@4.0.5)
+        specifier: 5.0.0-beta.24
+        version: 5.0.0-beta.24(zod@4.0.5)
       ajv:
         specifier: ^8.17.1
         version: 8.17.1
@@ -1471,7 +1471,7 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@types/mdast':
-        specifier: ^4.0.4
+        specifier: ^4.0.3
         version: 4.0.4
       '@types/node':
         specifier: 24.0.7
@@ -1529,7 +1529,7 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@types/mdast':
-        specifier: ^4.0.4
+        specifier: ^4.0.3
         version: 4.0.4
       '@types/node':
         specifier: 24.0.7
@@ -1659,8 +1659,8 @@ importers:
         specifier: ^1.0.2
         version: 1.15.0
       ai:
-        specifier: 5.0.0-beta.23
-        version: 5.0.0-beta.23(zod@4.0.5)
+        specifier: 5.0.0-beta.24
+        version: 5.0.0-beta.24(zod@4.0.5)
       contesto:
         specifier: workspace:*
         version: link:../contesto
@@ -1729,11 +1729,11 @@ importers:
   website:
     dependencies:
       '@ai-sdk/anthropic':
-        specifier: 2.0.0-beta.7
-        version: 2.0.0-beta.7(zod@4.0.5)
+        specifier: 2.0.0-beta.8
+        version: 2.0.0-beta.8(zod@4.0.5)
       '@ai-sdk/openai':
-        specifier: 2.0.0-beta.10
-        version: 2.0.0-beta.10(zod@4.0.5)
+        specifier: 2.0.0-beta.11
+        version: 2.0.0-beta.11(zod@4.0.5)
       '@ai-sdk/ui-utils':
         specifier: ^1.2.11
         version: 1.2.11(zod@4.0.5)
@@ -1843,8 +1843,8 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       ai:
-        specifier: 5.0.0-beta.23
-        version: 5.0.0-beta.23(zod@4.0.5)
+        specifier: 5.0.0-beta.24
+        version: 5.0.0-beta.24(zod@4.0.5)
       ai-fallback:
         specifier: ^0.1.5
         version: 0.1.5(zod@4.0.5)
@@ -2132,6 +2132,18 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4
 
+  '@ai-sdk/anthropic@2.0.0-beta.8':
+    resolution: {integrity: sha512-j5G3PQ2rVp2vC6WNrq+0SwQVqMq/RXMVDmPKGlJUZ7fAhzwW7BMppLer8tv+B+wmccvZe4ggIgPzqw0PDXLjFQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4
+
+  '@ai-sdk/gateway@1.0.0-beta.10':
+    resolution: {integrity: sha512-v+LXXm8INLYAdxHnNMVAJ/B7k+Nejn5dCQMg/F8SRetB5dEQ4sbfimE+b6rawILJznnsy2fugUO1oFFXlUS5Yg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4
+
   '@ai-sdk/gateway@1.0.0-beta.9':
     resolution: {integrity: sha512-lr0pmit6oAXPKkyN1QsxHOESiWiIb/jheiO+xiZnidjoZz2V7Se0drW1FH7sinheyK5EjmFMLW+0gBERyo33Ng==}
     engines: {node: '>=18'}
@@ -2140,6 +2152,12 @@ packages:
 
   '@ai-sdk/openai@2.0.0-beta.10':
     resolution: {integrity: sha512-Arrd6rwughV76lGvmoR+Nns5X6QTBOFN7IBUoC9zozekVGln09cQRn8Lo4KEE8coFtN85/668S4NI3Z7xV/mBw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4
+
+  '@ai-sdk/openai@2.0.0-beta.11':
+    resolution: {integrity: sha512-HQXUMb1V6Xr8EBYvEDwNb8ISyRqyxg2zUst7lzPb6s1nGDKJRBTfSyytNWRL9dZ9vxjM2wK34cltCfZbjaHpAA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4
@@ -2156,6 +2174,12 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4
 
+  '@ai-sdk/provider-utils@3.0.0-beta.5':
+    resolution: {integrity: sha512-4Dv/wiGZrvO6fI7P0yMLa4XZru0XW8LPibTObbkHBdweLUVGIze7aCfxxQeY44Uqcbl/h6/yBTkx2XmPtwf/Ow==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4
+
   '@ai-sdk/provider@1.1.3':
     resolution: {integrity: sha512-qZMxYJ0qqX/RfnuIaab+zp8UAeJn/ygXXAffR5I4N0n1IrvA6qBsjc8hXLmBiMV2zoXlifkacF7sEFnYnjBcqg==}
     engines: {node: '>=18'}
@@ -2164,8 +2188,8 @@ packages:
     resolution: {integrity: sha512-Z8SPncMtS3RsoXITmT7NVwrAq6M44dmw0DoUOYJqNNtCu8iMWuxB8Nxsoqpa0uEEy9R1V1ZThJAXTYgjTUxl3w==}
     engines: {node: '>=18'}
 
-  '@ai-sdk/react@2.0.0-beta.23':
-    resolution: {integrity: sha512-ftZy4bk46v1lSsHtGGszI99Ua/BJrCUR8VxJrbH47jKLw/xA523F8jSSo/4yj/WI7a93WQYMYYpSGU1JwbOlvg==}
+  '@ai-sdk/react@2.0.0-beta.24':
+    resolution: {integrity: sha512-Hfgb+z7MteHMaSdQ3G8hhTDridmUk2fkuRa17OaFlsfySYaFQd/exC0EBJlT+05ljcJPInyurdrxbgZLtsoPpg==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ^19 || ^19.0.0-rc
@@ -7330,6 +7354,13 @@ packages:
 
   ai@5.0.0-beta.23:
     resolution: {integrity: sha512-cG+aeaqcYz/twJkjgQnctG+2jM16OyXGdgKYwCCVz00VzPmGj0vHRda+vTKhOIvqsO0+SttnTHQ+JyUO5I1jfg==}
+    engines: {node: '>=18'}
+    hasBin: true
+    peerDependencies:
+      zod: ^3.25.76 || ^4
+
+  ai@5.0.0-beta.24:
+    resolution: {integrity: sha512-glQIA+PGEP+UEPB+thdqNZi9Ot4Yjiqsl071S1KPaRTGHmBIg/c8OYb2mXCRM+3cNCFGVnCTudZoYUVNwBpFxg==}
     engines: {node: '>=18'}
     hasBin: true
     peerDependencies:
@@ -13483,6 +13514,18 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.0-beta.4(zod@4.0.5)
       zod: 4.0.5
 
+  '@ai-sdk/anthropic@2.0.0-beta.8(zod@4.0.5)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0-beta.1
+      '@ai-sdk/provider-utils': 3.0.0-beta.5(zod@4.0.5)
+      zod: 4.0.5
+
+  '@ai-sdk/gateway@1.0.0-beta.10(zod@4.0.5)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0-beta.1
+      '@ai-sdk/provider-utils': 3.0.0-beta.5(zod@4.0.5)
+      zod: 4.0.5
+
   '@ai-sdk/gateway@1.0.0-beta.9(zod@4.0.5)':
     dependencies:
       '@ai-sdk/provider': 2.0.0-beta.1
@@ -13493,6 +13536,12 @@ snapshots:
     dependencies:
       '@ai-sdk/provider': 2.0.0-beta.1
       '@ai-sdk/provider-utils': 3.0.0-beta.4(zod@4.0.5)
+      zod: 4.0.5
+
+  '@ai-sdk/openai@2.0.0-beta.11(zod@4.0.5)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0-beta.1
+      '@ai-sdk/provider-utils': 3.0.0-beta.5(zod@4.0.5)
       zod: 4.0.5
 
   '@ai-sdk/provider-utils@2.2.8(zod@4.0.5)':
@@ -13510,6 +13559,14 @@ snapshots:
       zod: 4.0.5
       zod-to-json-schema: 3.24.6(zod@4.0.5)
 
+  '@ai-sdk/provider-utils@3.0.0-beta.5(zod@4.0.5)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0-beta.1
+      '@standard-schema/spec': 1.0.0
+      eventsource-parser: 3.0.3
+      zod: 4.0.5
+      zod-to-json-schema: 3.24.6(zod@4.0.5)
+
   '@ai-sdk/provider@1.1.3':
     dependencies:
       json-schema: 0.4.0
@@ -13518,10 +13575,10 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@2.0.0-beta.23(react@19.1.0)(zod@4.0.5)':
+  '@ai-sdk/react@2.0.0-beta.24(react@19.1.0)(zod@4.0.5)':
     dependencies:
-      '@ai-sdk/provider-utils': 3.0.0-beta.4(zod@4.0.5)
-      ai: 5.0.0-beta.23(zod@4.0.5)
+      '@ai-sdk/provider-utils': 3.0.0-beta.5(zod@4.0.5)
+      ai: 5.0.0-beta.24(zod@4.0.5)
       react: 19.1.0
       swr: 2.3.4(react@19.1.0)
       throttleit: 2.1.0
@@ -20365,6 +20422,14 @@ snapshots:
       '@ai-sdk/gateway': 1.0.0-beta.9(zod@4.0.5)
       '@ai-sdk/provider': 2.0.0-beta.1
       '@ai-sdk/provider-utils': 3.0.0-beta.4(zod@4.0.5)
+      '@opentelemetry/api': 1.9.0
+      zod: 4.0.5
+
+  ai@5.0.0-beta.24(zod@4.0.5):
+    dependencies:
+      '@ai-sdk/gateway': 1.0.0-beta.10(zod@4.0.5)
+      '@ai-sdk/provider': 2.0.0-beta.1
+      '@ai-sdk/provider-utils': 3.0.0-beta.5(zod@4.0.5)
       '@opentelemetry/api': 1.9.0
       zod: 4.0.5
 

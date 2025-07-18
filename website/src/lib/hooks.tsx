@@ -1,5 +1,9 @@
 import React, { RefObject, useEffect, useRef } from 'react'
+import type { Route as ChatRoute } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId'
+
+import { useRouteLoaderData } from 'react-router'
 import { toast } from 'sonner'
+import { useWebsiteState } from './state'
 
 export function useThrowingFn({
     fn: fnToWrap,
@@ -113,4 +117,21 @@ export function useTemporaryState<T>(
     }
 
     return [state, customSetState]
+}
+
+export function shouldHideBrowser() {
+    const chatData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId.chat.$chatId',
+    ) as ChatRoute.ComponentProps['loaderData'] | undefined
+    const { mentionOptions = [] } = chatData || {}
+    let hideBrowser = !mentionOptions.length
+    const filesInDraft = useWebsiteState((x) => x.filesInDraft || {})
+
+    const hasDraftFiles = Object.values(filesInDraft)?.some((x) => {
+        if (x.githubPath.endsWith('fumabase.jsonc')) {
+            return false
+        }
+        return x.content
+    })
+    return hideBrowser && !hasDraftFiles
 }

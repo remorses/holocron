@@ -1,7 +1,14 @@
 'use client'
 
-import { createIdGenerator, isToolUIPart, UIMessage } from 'ai'
+import { createIdGenerator, UIMessage } from 'ai'
+import {
+    ChatAssistantMessage,
+    ChatErrorMessage,
+    ChatUserMessage,
+} from 'contesto/src/chat/chat-message'
+import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
 import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
+import memoize from 'micro-memoize'
 import {
     memo,
     startTransition,
@@ -10,14 +17,8 @@ import {
     useRef,
     useState,
 } from 'react'
-import memoize from 'micro-memoize'
 import { FormProvider, useForm } from 'react-hook-form'
-import {
-    ChatAssistantMessage,
-    ChatErrorMessage,
-    ChatUserMessage,
-} from 'contesto/src/chat/chat-message'
-import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
+
 import {
     EditorToolPreview,
     FilesTreePreview,
@@ -39,15 +40,29 @@ import {
 
 import { useStickToBottom } from 'use-stick-to-bottom'
 
-import { useTemporaryState } from '../lib/hooks'
 import { uiStreamToUIMessages } from 'contesto/src/lib/process-chat'
+import { shouldHideBrowser, useTemporaryState } from '../lib/hooks'
 import {
     apiClient,
     apiClientWithDurableFetch,
     durableFetchClient,
 } from '../lib/spiceflow-client'
-import { doFilesInDraftNeedPush, useWebsiteState } from '../lib/state'
+import {
+    doFilesInDraftNeedPush,
+    State,
+    useWebsiteState,
+    WebsiteStateProvider,
+} from '../lib/state'
 
+import {
+    ChatProvider,
+    ChatState,
+    useChatState,
+} from 'contesto/src/chat/chat-provider'
+import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
+import { ChatSuggestionButton } from 'contesto/src/chat/chat-suggestion'
+import { ChatUploadButton } from 'contesto/src/chat/chat-upload-button'
+import { teeAsyncIterable } from 'contesto/src/lib/utils'
 import { FilesInDraft } from 'docs-website/src/lib/docs-state'
 import { generateSlugFromPath } from 'docs-website/src/lib/utils'
 import {
@@ -68,7 +83,6 @@ import {
     useRouteLoaderData,
 } from 'react-router'
 import { AnimatePresence, motion } from 'unframer'
-import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
 import {
     Command,
     CommandEmpty,
@@ -85,15 +99,12 @@ import {
     FileUpdate,
     isParameterComplete,
 } from '../lib/edit-tool'
+import { WebsiteUIMessage } from '../lib/types'
 import { safeJsoncParse, slugKebabCaseKeepExtension } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
-import { useChatState } from 'contesto/src/chat/chat-provider'
-import { ChatSuggestionButton } from 'contesto/src/chat/chat-suggestion'
-import { ChatUploadButton } from 'contesto/src/chat/chat-upload-button'
-import { WebsiteUIMessage } from '../lib/types'
+import type { Route as ChatRoute } from '../routes/org.$orgId.site.$siteId.chat.$chatId'
 import { RenderFormPreview } from './render-form-preview'
-import { teeAsyncIterable } from 'contesto/src/lib/utils'
 
 function keyForDocsJson({ chatId }) {
     return `fumabase.jsonc-${chatId}`
@@ -143,6 +154,8 @@ export default function Chat({}) {
     const { scrollRef, contentRef } = useStickToBottom({
         initial: 'instant',
     })
+    const loaderData = useLoaderData() as Route.ComponentProps['loaderData']
+    const { chat, siteId, branchId } = loaderData
     const { chatId } = useParams()
 
     const methods = useForm({
@@ -203,19 +216,208 @@ export default function Chat({}) {
         return unSub
     }, [chatId, previousJsonString])
 
+    const initialChatState = useMemo<Partial<ChatState>>(
+        () => ({
+            messages: chat.messages.map((msg) => {
+                const message: UIMessage = {
+                    ...msg,
+                    parts: [
+                        ...(msg.textParts || []),
+                        ...(msg.reasoningParts || []),
+                        ...(msg.toolParts || []),
+                        ...(msg.sourceUrlParts || []),
+                        ...(msg.fileParts || []),
+                    ]
+                        .flat()
+                        .sort((a, b) => a.index - b.index) as any,
+                }
+                return message
+            }),
+            isGenerating: false,
+        }),
+        [loaderData],
+    )
+
+    const durableUrl = `/api/generateMessage?chatId=${chat.chatId}`
+
+    useEffect(() => {
+        durableFetchClient.isInProgress(durableUrl).then(({ inProgress }) => {
+            if (inProgress) {
+                submitWithoutDeleteOnDurablefetch()
+            }
+        })
+    }, [])
+    const abortControllerRef = useRef<AbortController | null>(null)
+    const revalidator = useRevalidator()
+    const submitWithoutDeleteOnDurablefetch = async () => {
+        const messages = useChatState.getState()?.messages as WebsiteUIMessage[]
+        const generateId = createIdGenerator()
+        const controller = new AbortController()
+        abortControllerRef.current = controller
+
+        const filesInDraft = useWebsiteState.getState()?.filesInDraft || {}
+        const currentSlug = useWebsiteState.getState()?.currentSlug || ''
+
+        try {
+            const { data: generator, error } =
+                await apiClientWithDurableFetch.api.generateMessage.post(
+                    {
+                        messages: messages,
+                        siteId,
+                        branchId,
+                        currentSlug,
+                        filesInDraft,
+                        chatId: chat.chatId,
+                    },
+                    {
+                        query: { chatId: chat.chatId },
+                        fetch: { signal: controller.signal },
+                    },
+                )
+            if (error) throw error
+
+            async function getPageContent(x) {
+                const { data, error } = await apiClient.api.getPageContent.post(
+                    {
+                        branchId,
+                        githubPath: x.githubPath,
+                    },
+                )
+                if (error) return ''
+                return data?.content
+            }
+            const execute = createEditExecute({
+                filesInDraft: filesInDraft,
+                getPageContent,
+            })
+            // Split the async iterator into two: one for docs edit, one for state updates
+            const [editIter, stateIter] = teeAsyncIterable(
+                uiStreamToUIMessages<WebsiteUIMessage>({
+                    uiStream: generator,
+                    messages: messages,
+                    generateId,
+                }),
+            )
+
+            // First iteration: handle docs/edit-tool logic
+            let isPostMessageBusy = false
+            async function updateDocsSite() {
+                for await (const newMessages of editIter) {
+                    try {
+                        const lastMessage = newMessages[newMessages.length - 1]
+                        const lastPart =
+                            lastMessage.parts[lastMessage.parts.length - 1]
+                        if (
+                            lastMessage.role === 'assistant' &&
+                            lastPart?.type === 'tool-strReplaceEditor'
+                        ) {
+                            const args: Partial<EditToolParamSchema> =
+                                lastPart.input as any
+                            if (args?.command === 'view') {
+                                continue
+                            }
+                            if (!isParameterComplete(args)) {
+                                continue
+                            }
+                            const currentSlug = generateSlugFromPath(
+                                args.path || '',
+                                githubFolder,
+                            )
+                            if (
+                                lastPart.state === 'input-streaming' ||
+                                lastPart.state === 'input-available'
+                            ) {
+                                if (isPostMessageBusy) continue
+                                let updatedPagesCopy = { ...filesInDraft }
+                                const execute = createEditExecute({
+                                    filesInDraft: updatedPagesCopy,
+                                    getPageContent,
+                                })
+                                await execute(args as any)
+                                isPostMessageBusy = true
+                                docsRpcClient
+                                    .setDocsState({
+                                        filesInDraft: updatedPagesCopy,
+                                        currentSlug,
+                                        isMarkdownStreaming: true,
+                                    })
+                                    .then(() => {
+                                        isPostMessageBusy = false
+                                    })
+                                    .catch((e) => {
+                                        console.error(e)
+                                    })
+                            } else if (lastPart.state === 'output-available') {
+                                await execute(args as any)
+                                console.log(
+                                    `applying the setState update to the docs site`,
+                                    lastPart,
+                                )
+
+                                try {
+                                    await docsRpcClient.setDocsState(
+                                        {
+                                            filesInDraft: filesInDraft,
+                                            isMarkdownStreaming: false,
+                                            currentSlug,
+                                        },
+                                        lastPart.toolCallId,
+                                    )
+                                } catch (e) {
+                                    console.error('failed setDocsState', e)
+                                }
+                                useWebsiteState.setState({
+                                    filesInDraft,
+                                    currentSlug,
+                                })
+                            }
+                        }
+                    } catch (e) {
+                        console.error(e)
+                    }
+                }
+            }
+            updateDocsSite()
+
+            for await (const newMessages of stateIter) {
+                if (controller.signal.aborted) {
+                    break
+                }
+                startTransition(() => {
+                    useChatState.setState({ messages: newMessages })
+                })
+            }
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                console.log('Generation aborted')
+            } else {
+                throw error
+            }
+        } finally {
+            abortControllerRef.current = null
+        }
+
+        await revalidator.revalidate()
+    }
+
     return (
-        <FormProvider {...methods}>
-            <ScrollArea
-                ref={scrollRef}
-                className='[&>div>div]:grow max-w-full h-full flex flex-col grow '
-            >
-                <div className='flex flex-col gap-3 px-6 relative h-full grow justify-center'>
-                    <Messages ref={contentRef} />
-                    <WelcomeMessage />
-                    <Footer />
-                </div>
-            </ScrollArea>
-        </FormProvider>
+        <ChatProvider
+            generateMessages={submitWithoutDeleteOnDurablefetch}
+            initialValue={initialChatState}
+        >
+            <FormProvider {...methods}>
+                <ScrollArea
+                    ref={scrollRef}
+                    className='[&>div>div]:grow max-w-full h-full flex flex-col grow '
+                >
+                    <div className='flex flex-col gap-3 px-6 relative h-full grow justify-center'>
+                        <Messages ref={contentRef} />
+                        <WelcomeMessage />
+                        <Footer />
+                    </div>
+                </ScrollArea>
+            </FormProvider>
+        </ChatProvider>
     )
 }
 
@@ -412,6 +614,10 @@ function ContextButton({
         }
     }
 
+    if (!contextOptions.length) {
+        return null
+    }
+
     return (
         <div className='ml-2 my-2 self-start'>
             <Popover open={open} onOpenChange={setOpen}>
@@ -457,8 +663,8 @@ function ContextButton({
 function Footer() {
     const isPending = useChatState((x) => x.isGenerating)
     const text = useChatState((x) => x.text || '')
-    const revalidator = useRevalidator()
-    const abortControllerRef = useRef<AbortController | null>(null)
+    const abortController = useChatState((x) => x.abortController)
+
     const { chat, githubFolder, prUrl, mentionOptions, branchId } =
         useLoaderData() as Route.ComponentProps['loaderData']
     const siteData = useRouteLoaderData(
@@ -471,16 +677,6 @@ function Footer() {
     const hasNonPushedChanges = useMemo(() => {
         return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
     }, [filesInDraft, lastPushedFiles])
-
-    const durableUrl = `/api/generateMessage?chatId=${chat.chatId}`
-
-    useEffect(() => {
-        durableFetchClient.isInProgress(durableUrl).then(({ inProgress }) => {
-            if (inProgress) {
-                submitWithoutDeleteOnDurablefetch()
-            }
-        })
-    }, [])
 
     const transcribeAudio = async (audioFile: File): Promise<string> => {
         try {
@@ -504,184 +700,20 @@ function Footer() {
         }
     }
 
-    const submitWithoutDeleteOnDurablefetch = async () => {
-        const messages = useChatState.getState()?.messages as WebsiteUIMessage[]
-        const generateId = createIdGenerator()
-        const controller = new AbortController()
-        abortControllerRef.current = controller
-
-        const filesInDraft = useWebsiteState.getState()?.filesInDraft || {}
-        const currentSlug = useWebsiteState.getState()?.currentSlug || ''
-
-        try {
-            const { data: generator, error } =
-                await apiClientWithDurableFetch.api.generateMessage.post(
-                    {
-                        messages: messages,
-                        siteId,
-                        branchId,
-                        currentSlug,
-                        filesInDraft,
-                        chatId: chat.chatId,
-                    },
-                    {
-                        query: { chatId: chat.chatId },
-                        fetch: { signal: controller.signal },
-                    },
-                )
-            if (error) throw error
-
-            async function getPageContent(x) {
-                const { data, error } = await apiClient.api.getPageContent.post(
-                    {
-                        branchId,
-                        githubPath: x.githubPath,
-                    },
-                )
-                if (error) return ''
-                return data?.content
-            }
-            const execute = createEditExecute({
-                filesInDraft: filesInDraft,
-                getPageContent,
-            })
-            // Split the async iterator into two: one for docs edit, one for state updates
-            const [editIter, stateIter] = teeAsyncIterable(
-                uiStreamToUIMessages<WebsiteUIMessage>({
-                    uiStream: generator,
-                    messages: messages,
-                    generateId,
-                }),
-            )
-
-            // First iteration: handle docs/edit-tool logic
-            let isPostMessageBusy = false
-            async function updateDocsSite() {
-                for await (const newMessages of editIter) {
-                    try {
-                        const lastMessage = newMessages[newMessages.length - 1]
-                        const lastPart =
-                            lastMessage.parts[lastMessage.parts.length - 1]
-                        if (
-                            lastMessage.role === 'assistant' &&
-                            lastPart?.type === 'tool-strReplaceEditor'
-                        ) {
-                            const args: Partial<EditToolParamSchema> =
-                                lastPart.input as any
-                            if (args?.command === 'view') {
-                                continue
-                            }
-                            if (!isParameterComplete(args)) {
-                                continue
-                            }
-                            const currentSlug = generateSlugFromPath(
-                                args.path || '',
-                                githubFolder,
-                            )
-                            if (
-                                lastPart.state === 'input-streaming' ||
-                                lastPart.state === 'input-available'
-                            ) {
-                                if (isPostMessageBusy) continue
-                                let updatedPagesCopy = { ...filesInDraft }
-                                const execute = createEditExecute({
-                                    filesInDraft: updatedPagesCopy,
-                                    getPageContent,
-                                })
-                                await execute(args as any)
-                                isPostMessageBusy = true
-                                docsRpcClient
-                                    .setDocsState({
-                                        filesInDraft: updatedPagesCopy,
-                                        currentSlug,
-                                        isMarkdownStreaming: true,
-                                    })
-                                    .then(() => {
-                                        isPostMessageBusy = false
-                                    })
-                                    .catch((e) => {
-                                        console.error(e)
-                                    })
-                            } else if (lastPart.state === 'output-available') {
-                                await execute(args as any)
-                                console.log(
-                                    `applying the setState update to the docs site`,
-                                    lastPart,
-                                )
-
-                                await docsRpcClient
-                                    .setDocsState(
-                                        {
-                                            filesInDraft: filesInDraft,
-                                            isMarkdownStreaming: false,
-                                            currentSlug,
-                                        },
-                                        lastPart.toolCallId,
-                                    )
-                                    .catch((e) => {
-                                        console.error('failed setDocsState', e)
-                                    })
-                                useWebsiteState.setState({
-                                    filesInDraft,
-                                    currentSlug,
-                                })
-                            }
-                        }
-                    } catch (e) {
-                        console.error(e)
-                    }
-                }
-            }
-            updateDocsSite()
-
-            for await (const newMessages of stateIter) {
-                if (controller.signal.aborted) {
-                    break
-                }
-                startTransition(() => {
-                    useChatState.setState({ messages: newMessages })
-                })
-            }
-        } catch (error) {
-            if (error.name === 'AbortError') {
-                console.log('Generation aborted')
-            } else {
-                throw error
-            }
-        } finally {
-            abortControllerRef.current = null
-        }
-
-        window.dispatchEvent(
-            new CustomEvent('chatGenerationFinished', {
-                detail: { chatId: chat.chatId },
-            }),
-        )
-        await revalidator.revalidate()
-    }
     // Listen for regenerate events
 
     const hasFilesInDraft = Object.keys(filesInDraft).length > 0
 
     const showCreatePR = hasFilesInDraft || prUrl
     const textareaRef = React.useRef<HTMLTextAreaElement>(null)
-    const stopGeneration = () => {
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort()
-        }
-    }
 
-    async function onSubmit() {
-        await durableFetchClient.delete(durableUrl)
-        await submitWithoutDeleteOnDurablefetch()
-    }
     return (
         <AnimatePresence mode='popLayout'>
             <motion.div
                 layoutId='textarea'
-                className='sticky bottom-0 pt-4  z-50 w-full'
+                className='sticky bottom-0 pt-4 z-50 w-full'
             >
-                <div className='max-w-3xl -mx-3 space-y-3'>
+                <div className='space-y-3'>
                     <div className='flex flex-col gap-2 '>
                         <div className='flex gap-1 empty:hidden justify-start items-center bg-black p-1 rounded-md'>
                             {showCreatePR && (
@@ -718,7 +750,6 @@ function Footer() {
                             </div>
                             <ChatTextarea
                                 ref={textareaRef}
-                                onSubmit={onSubmit}
                                 disabled={false}
                                 placeholder='Ask me anything...'
                                 className=''
@@ -800,7 +831,9 @@ function Footer() {
                                     {isPending ? (
                                         <Button
                                             className='rounded-full h-8'
-                                            onClick={stopGeneration}
+                                            onClick={() => {
+                                                abortController.abort()
+                                            }}
                                             variant='outline'
                                         >
                                             Stop
@@ -808,7 +841,7 @@ function Footer() {
                                     ) : (
                                         <Button
                                             className='rounded-full h-8'
-                                            onClick={onSubmit}
+                                            type='submit'
                                             disabled={!text.trim()}
                                         >
                                             Generate
@@ -992,6 +1025,10 @@ function InstallGithubApp() {
     const siteData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
+    const chatData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId.chat.$chatId',
+    ) as ChatRoute.ComponentProps['loaderData']
+
     const githubOwner = siteData.site.githubOwner
     const handleInstallGithub = () => {
         const nextUrl = new URL(window.location.href)
@@ -1005,6 +1042,10 @@ function InstallGithubApp() {
         url.searchParams.set('next', nextUrl.toString())
         const setupUrlWithNext = url.toString()
         window.location.href = setupUrlWithNext
+    }
+    const hideBrowser = shouldHideBrowser()
+    if (hideBrowser) {
+        return null
     }
 
     return (

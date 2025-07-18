@@ -19,7 +19,7 @@ export function meta() {
 export function Layout({ children }: { children: React.ReactNode }) {
     return (
         <html
-            className='h-full flex dark dark:bg-black flex-col grow'
+            className='h-full flex dark  flex-col grow'
             lang='en'
         >
             <head>
@@ -37,7 +37,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 )}
                 <Links />
             </head>
-            <body className='h-full flex flex-col grow'>
+            <body className='h-full flex flex-col grow dark:bg-black'>
                 {children}
                 <ScrollRestoration />
                 <Scripts />
