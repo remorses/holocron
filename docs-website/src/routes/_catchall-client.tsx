@@ -1,630 +1,728 @@
 'use client'
 
 import React from 'react'
-import { MediaAsset, PageMediaAsset } from 'db'
-import frontMatter from 'front-matter'
-import { useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
+import { useNProgress } from 'docs-website/src/lib/nprogress'
+import { Banner } from 'fumadocs-ui/components/banner'
+import { ReactRouterProvider } from 'fumadocs-core/framework/react-router'
+import { LinkItemType } from 'fumadocs-ui/layouts/links'
+import { DocsLayout as DocsLayoutNotebook } from 'fumadocs-ui/layouts/notebook'
+import type { Option } from 'fumadocs-ui/components/layout/root-toggle'
+import { RootProvider } from 'fumadocs-ui/provider/base'
+import { GithubIcon, XIcon } from 'lucide-react'
+import { ThemeProvider, useTheme } from 'next-themes'
+import {
+    lazy,
+    startTransition,
+    useEffect,
+    useMemo,
+    useState,
+    useSyncExternalStore,
+} from 'react'
+import {
+    Outlet,
+    useLoaderData,
+    useNavigation,
+    useRevalidator,
+    useSearchParams,
+} from 'react-router'
 import { useShallow } from 'zustand/react/shallow'
-import { useDocsState, updateFileInDocsEditor } from '../lib/docs-state'
-import { cn } from 'docs-website/src/lib/cn'
-import type { Route as RootRoute } from '../routes/_catchall'
-import type { Route } from './+types/_catchall.$'
-import { Markdown } from 'contesto/src/lib/markdown'
-import {
-    PageArticle,
-    PageTOCItems,
-    PageTOCPopoverItems,
-    PageTOCTitle,
-} from 'fumadocs-ui/layouts/docs/page'
-import {
-    PageBreadcrumb,
-    PageFooter,
-    PageLastUpdate,
-    PageRoot,
-    PageTOC,
-    PageTOCPopover,
-    PageTOCPopoverContent,
-    PageTOCPopoverTrigger,
-} from 'fumadocs-ui/layouts/docs/page-client'
-import {
-    ExternalLinkIcon,
-    GithubIcon,
-    LinkedinIcon,
-    MessageCircleIcon,
-    TwitterIcon,
-    Edit3Icon,
-    EyeIcon,
-} from 'lucide-react'
-import { AskAIButton, LLMCopyButton, ViewOptions } from '../components/llm'
-import { buttonVariants } from 'docs-website/src/components/ui/button'
-import { mdxComponents } from '../components/mdx-components'
-import { PoweredBy } from '../components/poweredby'
-import { Rate } from '../components/rate'
+import type { Route } from './_catchall'
+
 import { DocsJsonType } from '../lib/docs-json'
+import {
+    DocsState,
+    IframeRpcMessage,
+    useDocsState,
+    usePersistentDocsState,
+} from '../lib/docs-state'
 import { useDocsJson } from '../lib/hooks'
-import { useAddedHighlighter } from '../lib/_diff'
-import { useScrollToFirstAddedIfAtTop } from '../lib/diff-highlight'
-import { MarkdownRuntime } from '../lib/markdown-runtime'
-import { renderNode } from '../lib/mdx-code-block'
-import { ScalarOpenApi } from '../components/scalar'
-import { useEffect, lazy, Suspense } from 'react'
-import { ProcessorDataFrontmatter } from '../lib/mdx-heavy'
-import { LoaderData } from './_catchall.$'
-import { APIPageInner } from 'fumadocs-openapi/render/api-page-inner'
+import { useDebouncedEffect } from '../lib/hooks-debounced'
+import JSONC from 'tiny-jsonc'
+import { LOCALE_LABELS } from '../lib/locales'
+import { Markdown } from 'contesto/src/lib/markdown'
+import { mdxComponents } from '../components/mdx-components'
+import { cn, isInsidePreviewIframe } from '../lib/utils'
+import { DynamicIcon } from '../lib/icon'
+import { PoweredBy } from '../components/poweredby'
+import { CustomSearchDialog } from '../components/search'
+import { getTreeFromFiles } from '../lib/tree'
+import { getPageTreeForOpenAPI } from '../lib/openapi-client'
+import { env } from '../lib/env'
 
-type MediaAssetProp = PageMediaAsset & { asset?: MediaAsset }
-
-export function ClientPage(props: Route.ComponentProps) {
-    const { type } = props.loaderData
-
-    // Set global variable only when window is defined (client-side)
-    if (typeof window !== 'undefined') {
-        globalThis.lastServerLoaderData = props.loaderData
-    }
-    const rootData = useRouteLoaderData(
-        'routes/_catchall',
-    ) as RootRoute.ComponentProps['loaderData']
-    const docsJson = rootData?.docsJson as DocsJsonType
-
-    if (type === 'openapi_scalar') {
-        const { openapiUrl } = props.loaderData
-
-        return <ScalarOpenApi url={openapiUrl} />
-    }
-    if (props.loaderData.type === 'openapi_fumadocs') {
-        const { openapiUrl, processedOpenAPI, operations } = props.loaderData
-
-        return null
-        // return (
-        //     <APIPageInner
-        //         {...{
-        //             processed: processedOpenAPI,
-        //             hasHead: false,
-        //             operations,
-        //             // disablePlayground: true,
-        //         }}
-        //     />
-        // )
-    }
-    return <PageContent {...props} />
-}
-
-function PageContent(props: Route.ComponentProps): any {
-    const loaderData = props.loaderData
-    const rootData =
-        (useRouteLoaderData(
-            'routes/_catchall',
-        ) as RootRoute.ComponentProps['loaderData']) || {}
-    const { slug, slugs, githubPath, lastEditedAt } = loaderData || {}
-    const owner = rootData.githubOwner
-    const repo = rootData.githubRepo
-    const githubBranch = rootData.githubBranch
-    const branchId = rootData.branchId
-    let { title, description, toc, previewMode, markdown } = useDocsState(
-        useShallow((state) => {
-            const { title, description } = loaderData || {}
-            const { filesInDraft, previewMode } = state
-
-            const override = filesInDraft[loaderData.githubPath]
-            const toc = state.toc || loaderData?.toc
-            if (override) {
-                const { attributes: data } =
-                    frontMatter<ProcessorDataFrontmatter>(
-                        override.content || '',
-                    )
-
-                return {
-                    toc,
-                    title: data.title || title,
-                    description: data.description || description,
-                    previewMode,
-                    markdown: override.content || '',
-                }
-            }
-
-            return {
-                title,
-                description,
-                toc,
-                previewMode,
-                markdown: loaderData.markdown || '',
-            }
-        }),
-    )
-    const githubUrl = `https://github.com/${owner}/${repo}`
-    const tableOfContentStyle = 'clerk'
-
-    const docsJson = useDocsJson()
-
-    // Early return for editor mode
-    if (previewMode === 'editor') {
-        return (
-            <PageRoot
-                toc={{
-                    toc: toc as any,
-                }}
-            >
-                <PageArticle className='docs-page-article !pt-0'>
-                    <Suspense
-                        fallback={
-                            <div className='flex items-center justify-center h-96'>
-                                <div className='text-muted-foreground'>
-                                    Loading editor...
-                                </div>
-                            </div>
-                        }
-                    >
-                        <MonacoMarkdownEditor
-                            value={markdown}
-                            onChange={(value) => {
-                                updateFileInDocsEditor(
-                                    loaderData.githubPath,
-                                    value || '',
-                                )
-                            }}
-                        />
-                    </Suspense>
-                </PageArticle>
-            </PageRoot>
-        )
-    }
-
-    return (
-        <PageRoot
-            toc={{
-                toc: toc as any,
-            }}
-        >
-            {toc?.length > 0 && (
-                <PageTOCPopover>
-                    <PageTOCPopoverTrigger />
-                    <PageTOCPopoverContent>
-                        <PageTOCPopoverItems />
-                    </PageTOCPopoverContent>
-                </PageTOCPopover>
-            )}
-            <PageArticle className='docs-page-article'>
-                <PageBreadcrumb />
-                <h1 className='text-3xl font-semibold'>{title}</h1>
-                <p className='text-lg text-fd-muted-foreground'>
-                    {description}
-                </p>
-                <div className='flex flex-row gap-2 items-center border-b pb-6'>
-                    <LLMCopyButton
-                        slug={slugs}
-                        contextual={docsJson?.contextual}
-                    />
-                    <ViewOptions
-                        markdownUrl={`${slug}.mdx`}
-                        githubUrl={`https://github.com/${owner}/${repo}/blob/${githubBranch}/${githubPath}`}
-                        contextual={docsJson?.contextual}
-                    />
-                    <AskAIButton />
-                    {/* <EditorToggle /> */}
-                </div>
-
-                <div className='prose flex-1 text-fd-foreground/80'>
-                    <DocsMarkdown />
-                </div>
-                <div className='grow'></div>
-                <Rate
-                    onRateAction={async (url, feedback) => {
-                        const apiUrl = new URL(
-                            '/api/submitRateFeedback',
-                            process.env.PUBLIC_URL || 'https://fumabase.com',
-                        )
-                        const response = await fetch(apiUrl.toString(), {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                branchId,
-                                url,
-                                opinion: feedback.opinion,
-                                message: feedback.message,
-                            }),
-                        })
-
-                        if (!response.ok) {
-                            throw new Error('Failed to submit feedback')
-                        }
-
-                        const result = await response.json()
-                        return { githubUrl: result.githubUrl }
-                    }}
-                />
-                <div className='flex items-center gap-2'>
-                    {lastEditedAt && <PageLastUpdate date={lastEditedAt} />}
-                    <div className='grow'></div>
-                    <PoweredBy />
-                </div>
-
-                <Footer footer={docsJson?.footer} />
-                <PageFooter />
-            </PageArticle>
-
-            <PageTOC>
-                <PageTOCTitle />
-                <PageTOCItems variant={tableOfContentStyle} />
-            </PageTOC>
-        </PageRoot>
-    )
-}
-
-function Footer({ footer }: { footer?: any }): any {
-    if (!footer) return null
-
-    // Calculate responsive grid columns based on number of link columns
-    const numColumns = footer.links?.length || 0
-    const gridCols =
-        numColumns === 1
-            ? 'grid-cols-1'
-            : numColumns === 2
-              ? 'grid-cols-1 sm:grid-cols-2'
-              : numColumns === 3
-                ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
-                : numColumns === 4
-                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
-                  : numColumns === 5
-                    ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5'
-                    : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6'
-
-    return (
-        <div className='flex flex-col gap-4 border-t pt-4'>
-            {/* Social Links */}
-            {footer.socials && (
-                <div className='flex gap-3'>
-                    {Object.entries(footer.socials).map(
-                        ([platform, url]: [string, any]) => (
-                            <a
-                                key={platform}
-                                href={url}
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className='text-fd-muted-foreground hover:text-fd-foreground transition-colors'
-                                aria-label={platform}
-                            >
-                                <SocialIcon platform={platform} />
-                            </a>
-                        ),
-                    )}
-                </div>
-            )}
-
-            {/* Link Columns */}
-            {footer.links && (
-                <div className={`grid gap-6 ${gridCols}`}>
-                    {footer.links.map((column: any, index: number) => (
-                        <div key={index} className='flex flex-col gap-2'>
-                            {column.header && (
-                                <h4 className='font-medium text-fd-foreground text-sm'>
-                                    {column.header}
-                                </h4>
-                            )}
-                            <div className='flex flex-col gap-1'>
-                                {column.items.map(
-                                    (item: any, itemIndex: number) => (
-                                        <a
-                                            key={itemIndex}
-                                            href={item.href}
-                                            target={
-                                                item.href.startsWith('http')
-                                                    ? '_blank'
-                                                    : undefined
-                                            }
-                                            rel={
-                                                item.href.startsWith('http')
-                                                    ? 'noopener noreferrer'
-                                                    : undefined
-                                            }
-                                            className='text-sm text-fd-muted-foreground hover:text-fd-foreground transition-colors'
-                                        >
-                                            {item.label}
-                                        </a>
-                                    ),
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
-    )
-}
-
-function SocialIcon({ platform }: { platform: string }) {
-    const iconClass = 'w-4 h-4'
-
-    switch (platform.toLowerCase()) {
-        case 'github':
-            return <GithubIcon className={iconClass} />
-        case 'twitter':
-        case 'x':
-            return <TwitterIcon className={iconClass} />
-        case 'discord':
-            return <MessageCircleIcon className={iconClass} />
-        case 'linkedin':
-            return <LinkedinIcon className={iconClass} />
-        default:
-            return <ExternalLinkIcon className={iconClass} />
-    }
-}
-
-function MdxErrorDisplay({
-    error,
-    markdown,
-}: {
-    error: any
-    markdown: string
-}) {
-    // Extract error details
-    const errorLine = error.line || 1
-    const errorColumn = error.column || 1
-    const errorMessage = error.reason || error.message || 'Unknown error'
-
-    // Split markdown into lines
-    const lines = markdown.split('\n')
-
-    // Calculate line range to show (5 lines before and after the error)
-    const contextRange = 5
-    const startLine = Math.max(1, errorLine - contextRange)
-    const endLine = Math.min(lines.length, errorLine + contextRange)
-
-    return (
-        <div className='mt-[100px] bg-background p-8'>
-            <div className='max-w-4xl mx-auto'>
-                {/* Error Header */}
-                <div className='bg-destructive/10 border border-destructive rounded-lg p-6 mb-6'>
-                    <h1 className='text-2xl font-bold text-destructive mb-2'>
-                        MDX Compilation Error
-                    </h1>
-                    <p className='text-base text-destructive/90'>
-                        {errorMessage}
-                    </p>
-                    <p className='text-sm text-muted-foreground mt-2'>
-                        Line {errorLine}, Column {errorColumn}
-                    </p>
-                </div>
-
-                {/* Code Context */}
-                <div className='bg-muted/50 border border-border rounded-lg overflow-hidden'>
-                    <div className='bg-muted px-4 py-3 border-b border-border'>
-                        <h2 className='text-sm font-medium'>Error Context</h2>
-                    </div>
-                    <div className='p-0'>
-                        <pre className='text-sm overflow-x-auto'>
-                            <code>
-                                {lines
-                                    .slice(startLine - 1, endLine)
-                                    .map((line, index) => {
-                                        const lineNumber = startLine + index
-                                        const isErrorLine =
-                                            lineNumber === errorLine
-
-                                        return (
-                                            <div
-                                                key={lineNumber}
-                                                className={cn(
-                                                    'flex',
-                                                    isErrorLine &&
-                                                        'bg-destructive/10',
-                                                )}
-                                            >
-                                                {/* Line number */}
-                                                <span
-                                                    className={cn(
-                                                        'select-none px-4 py-1 text-muted-foreground border-r border-border',
-                                                        isErrorLine &&
-                                                            'text-destructive font-medium',
-                                                    )}
-                                                >
-                                                    {lineNumber
-                                                        .toString()
-                                                        .padStart(3, ' ')}
-                                                </span>
-
-                                                {/* Code line */}
-                                                <div className='flex-1 px-4 py-1'>
-                                                    <span
-                                                        className={cn(
-                                                            isErrorLine &&
-                                                                'text-destructive',
-                                                        )}
-                                                    >
-                                                        {line || ' '}
-                                                    </span>
-
-                                                    {/* Error indicator */}
-                                                    {isErrorLine &&
-                                                        errorColumn && (
-                                                            <div className='relative'>
-                                                                <span
-                                                                    className='absolute text-destructive font-bold'
-                                                                    style={{
-                                                                        left: `${(errorColumn - 1) * 0.6}ch`,
-                                                                    }}
-                                                                >
-                                                                    ^
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-                            </code>
-                        </pre>
-                    </div>
-                </div>
-
-                {/* Additional error details if available */}
-                {error.stack && (
-                    <details className='mt-6'>
-                        <summary className='cursor-pointer text-sm text-muted-foreground hover:text-foreground'>
-                            Show full stack trace
-                        </summary>
-                        <pre className='mt-2 p-4 bg-muted/50 border border-border rounded-lg text-xs overflow-x-auto'>
-                            {error.stack}
-                        </pre>
-                    </details>
-                )}
-            </div>
-        </div>
-    )
-}
-
-const components = {
-    ...mdxComponents,
-    // TODO do the same for Image?
-    img(props) {
-        const src = props.src || ''
-        const { mediaAssets } =
-            useLoaderData() as Route.ComponentProps['loaderData']
-
-        const media = mediaAssets.find((asset) => asset.assetSlug === src)
-
-        if (media) {
-            return (
-                <mdxComponents.img
-                    width={media.asset?.width}
-                    height={media.asset?.height}
-                    {...props}
-                />
-            )
-        }
-        return <mdxComponents.img {...props} />
-    },
-}
-
-const MonacoMarkdownEditor = lazy(() =>
-    import('../components/monaco-markdown-editor').then((mod) => ({
-        default: mod.MonacoMarkdownEditor,
+const ChatDrawer = lazy(() =>
+    import('../components/docs-chat').then((mod) => ({
+        default: mod.ChatDrawer,
     })),
 )
 
-function DocsMarkdown(): any {
-    const loaderData = useLoaderData<Route.ComponentProps['loaderData']>()
-    let { ast, markdown, isStreaming } = useDocsState(
-        useShallow((x) => {
-            const { filesInDraft, isMarkdownStreaming: isStreaming } = x
+function ChatDrawerWrapper() {
+    const drawerState = usePersistentDocsState((x) => x.drawerState)
+    if (drawerState === 'closed') return null
+    return <ChatDrawer />
+}
 
-            const override = filesInDraft[loaderData.githubPath]
+const openapiPath = `/api-reference`
 
-            if (override) {
-                return {
-                    markdown: override.content || '',
-                    isStreaming,
-                    ast: undefined,
-                }
-            }
-            console.log(
-                `no override for githubPath ${loaderData.githubPath}, using loader data`,
-            )
+const allowedOrigins = [
+    env.NEXT_PUBLIC_URL!.replace(/\/$/, ''),
+    'http://localhost:7664',
+]
 
-            return {
-                isStreaming,
-                ast: loaderData.ast,
-                markdown: loaderData.markdown || '',
-            }
-        }),
-    )
-    const showDiff = true
-    useScrollToFirstAddedIfAtTop({ enabled: showDiff })
-    useAddedHighlighter({ enabled: showDiff })
-    const extension = loaderData.githubPath.split('.').pop()
+let onFirstStateMessage = () => {}
+const firstStateReceived = new Promise<void>((resolve) => {
+    onFirstStateMessage = resolve
+})
 
-    // Default preview mode
-    if (!ast) {
-        const previousMarkdown = loaderData.markdown
-        return (
-            <MarkdownRuntime
-                className='page-content-markdown'
-                {...{
-                    extension,
-                    isStreaming,
-                    showDiff,
-                    markdown,
-                    previousMarkdown,
-                }}
-            />
-        )
+async function setDocsStateForMessage(partialState: Partial<DocsState>) {
+    const prevState = useDocsState.getState()
+    if (
+        partialState.currentSlug &&
+        prevState.currentSlug !== partialState.currentSlug &&
+        partialState.currentSlug !== window.location.pathname
+    ) {
+        // return await navigate(state.currentSlug!)
+        // TODO do client side navigation instead
+        window.location.pathname = partialState.currentSlug
     }
+    console.log(`setting docs-state from parent message state`, partialState)
+    startTransition(() => {
+        useDocsState.setState({
+            ...partialState,
+            filesInDraft: {
+                ...prevState?.filesInDraft,
+                ...partialState.filesInDraft,
+            },
+        })
+    })
+}
+
+async function iframeMessagesHandling() {
+    if (!isInsidePreviewIframe()) {
+        console.log(`not inside preview iframe, not connecting to postMessage`)
+        return
+    }
+    if (globalThis.postMessageHandlingDone) return
+    globalThis.postMessageHandlingDone = true
+    console.log(`docs iframe starts listening on message events`)
+    async function onParentPostMessage(e: MessageEvent) {
+        onFirstStateMessage()
+        if (!allowedOrigins.includes(e.origin)) {
+            console.warn(
+                `ignoring message from disallowed origin: ${e.origin}`,
+                allowedOrigins,
+                e.data,
+            )
+            return
+        }
+        try {
+            const data = e.data as IframeRpcMessage
+            const { id, state: partialState } = data || {}
+
+            if (partialState) {
+                await setDocsStateForMessage(partialState)
+            }
+        } finally {
+            // Only reply if not the same window (i.e., not itself)
+            if (e.source && e.source !== window) {
+                e.source.postMessage(
+                    { id: e?.data?.id } satisfies IframeRpcMessage,
+                    {
+                        targetOrigin: '*',
+                    },
+                )
+            }
+        }
+    }
+    window.addEventListener('message', onParentPostMessage)
+    if (typeof window !== 'undefined') {
+        if (window.parent !== window) {
+            window.parent?.postMessage?.(
+                { type: 'ready' },
+                {
+                    targetOrigin: '*',
+                },
+            )
+        }
+    }
+    // Set up ping interval
+    setInterval(() => {
+        if (typeof window !== 'undefined' && window.parent !== window) {
+            window.parent?.postMessage?.(
+                { type: 'ping' },
+                {
+                    targetOrigin: '*',
+                },
+            )
+        }
+    }, 500)
+}
+
+if (typeof window !== 'undefined') {
+    iframeMessagesHandling()
+}
+
+declare global {
+    interface Window {
+        websocketHandlingDone?: boolean
+        postMessageHandlingDone?: boolean
+    }
+}
+
+// Function for handling websocket connection based on session cookie
+async function websocketIdHandling(websocketId: string) {
+    if (isInsidePreviewIframe()) {
+        console.log('inside preview iframe, skipping websocket connection')
+        return
+    }
+    if (typeof window === 'undefined') return
+    if (globalThis.websocketHandlingDone) return
+    globalThis.websocketHandlingDone = true
+
+    console.log('connecting over preview websocketId', websocketId)
+    const websocketUrl = `wss://fumabase.com/_tunnel/client?id=${websocketId}`
+    const ws = new WebSocket(websocketUrl)
+    ws.onopen = () => {
+        useDocsState.setState({
+            websocketServerPreviewConnected: true,
+        })
+        ws.send(JSON.stringify({ type: 'ready' }))
+    }
+    ws.onclose = () => {
+        useDocsState.setState({
+            websocketServerPreviewConnected: false,
+        })
+    }
+    ws.onmessage = async (event) => {
+        let data: IframeRpcMessage
+        try {
+            data = JSON.parse(event.data)
+        } catch {
+            console.error(`websocket sent invalid json`, event.data)
+            return
+        }
+        const { id, state: partialState } = data || {}
+        if (partialState) {
+            await setDocsStateForMessage(partialState)
+        }
+        ws.send(JSON.stringify({ id } satisfies IframeRpcMessage))
+    }
+    // ping interval
+    setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'ping' }))
+        }
+    }, 1000)
+}
+
+if (typeof window !== 'undefined') {
+    window.addEventListener(
+        'startPreviewWebsocket',
+        (e: any) => {
+            const websocketId = e?.detail?.websocketId
+            if (websocketId) {
+                websocketIdHandling(websocketId)
+            }
+        },
+        { once: true },
+    )
+}
+
+export function ClientLayout({ children }: { children: React.ReactNode }) {
+    const loaderData = useLoaderData<Route.ComponentProps['loaderData']>()
+
+    if (loaderData && typeof window !== 'undefined') {
+        globalThis.rootServerLoaderData = loaderData
+    }
+    const { previewWebsocketId, editorPreviewMode } = loaderData || {}
+    
+    // Initialize docs state with editor preview mode if provided
+    useEffect(() => {
+        if (editorPreviewMode) {
+            useDocsState.setState({ previewMode: 'editor' })
+        }
+    }, [editorPreviewMode])
+
+    // const navigation = useNavigation()
+    // const revalidator = useRevalidator()
+    // const [searchParams, setSearchParams] = useSearchParams()
+    // const filesInDraft = useDocsState((state) => state.filesInDraft)
+    // Watch for changes to fumabase.jsonc file in draft and revalidate
+    // useDebouncedEffect(
+    //     () => {
+    //         // Check if fumabase.jsonc file exists in draft files
+    //         const fumabaseJsoncPath = Object.keys(filesInDraft).find((path) =>
+    //             path.endsWith('fumabase.jsonc')
+    //         )
+
+    //         if (fumabaseJsoncPath && filesInDraft[fumabaseJsoncPath]?.content) {
+    //             try {
+    //                 const docsJsonContent = filesInDraft[fumabaseJsoncPath].content
+    //                 const encodedContent = encodeURIComponent(docsJsonContent)
+    //                 const currentParam = searchParams.get('fumabase.jsonc')
+
+    //                 // Only update if the content is different
+    //                 if (currentParam !== encodedContent) {
+    //                     const newSearchParams = new URLSearchParams(searchParams)
+    //                     newSearchParams.set('fumabase.jsonc', encodedContent)
+    //                     setSearchParams(newSearchParams, { replace: true })
+    //                 }
+    //             } catch (error) {
+    //                 console.error('Error encoding fumabase.jsonc content:', error)
+    //             }
+    //         }
+    //     },
+    //     [filesInDraft],
+    //     500, // 500ms debounce
+    //     revalidator.state === 'idle' && navigation.state === 'idle'
+    // )
+    //
+    // // --- Start insert: useNavigation + effect on path change ---
+
+    const navigation = useNavigation()
+
+    useEffect(() => {
+        let currentSlug = navigation.location?.pathname
+
+        // Only postMessage if we're in an iframe
+        if (window.parent !== window && currentSlug) {
+            window.parent?.postMessage?.(
+                {
+                    id: Math.random().toString(36).slice(2),
+                    state: { currentSlug },
+                } satisfies IframeRpcMessage,
+                {
+                    targetOrigin: '*',
+                },
+            )
+        }
+    }, [navigation.location?.pathname])
+
+    useEffect(() => {
+        console.log(`remounting docs layout`, { previewWebsocketId })
+        if (previewWebsocketId) {
+            window.dispatchEvent(
+                new CustomEvent('startPreviewWebsocket', {
+                    detail: { websocketId: previewWebsocketId },
+                }),
+            )
+        }
+    }, [])
+    return children
+}
+
+export function CSSVariables({ docsJson }: { docsJson: DocsJsonType }) {
+    // Always expect { dark, light }
+    const cssVariables = docsJson?.cssVariables
+    if (!cssVariables) return null
+    const { dark, light } = cssVariables
+
+    // Early return if both missing
+    if (!light && !dark) return null
+
+    // Helper to build var block
+    const toCssBlock = (obj: Record<string, string> | undefined) =>
+        obj
+            ? Object.entries(obj)
+                  .map(([key, value]) => {
+                      const cssVar = key.startsWith('--') ? key : `--${key}`
+                      return `${cssVar}: ${value} !important;`
+                  })
+                  .join('\n  ')
+            : ''
+
+    // Don't render if both empty
+    if (
+        (!light || Object.keys(light).length === 0) &&
+        (!dark || Object.keys(dark).length === 0)
+    ) {
+        return null
+    }
+
+    let styleStr = ''
+    if (light && Object.keys(light).length > 0) {
+        styleStr += `:root {\n  ${toCssBlock(light)}\n}`
+    }
+    if (dark && Object.keys(dark).length > 0) {
+        if (styleStr) styleStr += '\n'
+        styleStr += `.dark {\n  ${toCssBlock(dark)}\n}`
+    }
+
     return (
-        <Markdown
-            className='page-content-markdown'
-            isStreaming={false}
-            markdown={markdown}
-            renderNode={renderNode}
-            components={components}
-            ast={ast}
+        <style
+            dangerouslySetInnerHTML={{
+                __html: styleStr,
+            }}
         />
     )
 }
 
-function EditorToggle() {
-    const contentMode = useDocsState((state) => state.previewMode)
+export function ClientApp() {
+    const loaderData = useLoaderData<Route.ComponentProps['loaderData']>()
+    const { previewWebsocketId } = loaderData || {}
+    const docsJson = useDocsJson()
+    useNProgress()
+    // Inline DocsProvider
+    const { i18n, trieveReadApiKey, trieveDatasetId, cssStyles, themeCSS } =
+        loaderData || {}
+    const locale = i18n?.defaultLanguage
 
     return (
-        <button
-            onClick={() => {
-                useDocsState.setState((state) => ({
-                    ...state,
-                    previewMode:
-                        state.previewMode === 'editor' ? 'preview' : 'editor',
-                }))
-            }}
-            className={cn(
-                buttonVariants({
-                    variant: 'secondary',
-                    size: 'xs',
-                    className: 'gap-2',
-                }),
-            )}
-        >
-            {contentMode === 'editor' ? (
-                <>
-                    <EyeIcon className='size-3.5' />
-                    Preview
-                </>
+        <>
+            <CSSVariables docsJson={docsJson} />
+            {previewWebsocketId ? (
+                <PreviewBanner websocketId={previewWebsocketId || ''} />
             ) : (
-                <>
-                    <Edit3Icon className='size-3.5' />
-                    Edit
-                </>
+                <UserBanner docsJson={docsJson} />
             )}
-        </button>
+
+            <ReactRouterProvider>
+                <RootProvider
+                    search={{
+                        options: {},
+                        SearchDialog: CustomSearchDialog,
+                        // enabled: !!trieveDatasetId,
+                    }}
+                    i18n={{
+                        locale: locale || '',
+                        locales: i18n?.languages.map((locale) => {
+                            return {
+                                locale,
+                                name: LOCALE_LABELS[locale] || '',
+                            }
+                        }),
+                    }}
+                >
+                    <ThemeProvider
+                        attribute='class'
+                        defaultTheme='system'
+                        enableSystem
+                        disableTransitionOnChange
+                    >
+                        {cssStyles && (
+                            <style
+                                dangerouslySetInnerHTML={{
+                                    __html: cssStyles,
+                                }}
+                            />
+                        )}
+                        {themeCSS && (
+                            <style
+                                dangerouslySetInnerHTML={{
+                                    __html: themeCSS,
+                                }}
+                            />
+                        )}
+                        <ChatDrawerWrapper />
+                        <DocsLayoutWrapper docsJson={docsJson}>
+                            <Outlet />
+                        </DocsLayoutWrapper>
+                    </ThemeProvider>
+                </RootProvider>
+            </ReactRouterProvider>
+        </>
     )
 }
 
-export function ClientErrorBoundary({ error }: { error: Error }) {
-    const revalidator = useRevalidator()
+function DocsLayoutWrapper({
+    children,
+    docsJson,
+}: {
+    children: React.ReactNode
+    docsJson: DocsJsonType
+}) {
+    const loaderData = useLoaderData<Route.ComponentProps['loaderData']>() || {}
+    const { i18n, previewWebsocketId, openapiUrl } = loaderData
+
+    // Create tree client-side using files and filesInDraft
     const filesInDraft = useDocsState((state) => state.filesInDraft)
 
-    const isRetryableErrorWithClientLoader =
-        'markdown' in (error as any) && (error as any).markdown
-
-    useEffect(() => {
-        if (
-            isRetryableErrorWithClientLoader &&
-            Object.keys(filesInDraft).length > 0 &&
-            revalidator.state === 'idle'
-        ) {
-            console.log(
-                'Revalidating files in draft due to 404 error',
+    const tree = useMemo(() => {
+        const { files, i18n, openapiUrl, githubFolder, processedOpenAPI } =
+            loaderData
+        if (processedOpenAPI?.document) {
+            const pageTree = getPageTreeForOpenAPI({
+                docsJson,
+                openapiDocument: processedOpenAPI?.document! as any,
                 filesInDraft,
-            )
-            revalidator.revalidate()
+            })
+            return pageTree
         }
-    }, [filesInDraft, isRetryableErrorWithClientLoader, revalidator.state])
+        return getTreeFromFiles({
+            files,
+            defaultLanguage: i18n?.defaultLanguage || 'en',
+            languages: i18n?.languages || [],
+            githubFolder,
+            filesInDraft,
+        })
+    }, [loaderData.files, loaderData.i18n, filesInDraft])
 
-    // Check if this is an MDX/remark error with line information
-    const isMdxError = error instanceof Error && 'line' in error
-    const markdown = error?.['markdown']
+    // Configure layout based on docsJson
+    let navMode = 'auto' as 'top' | 'auto'
+    if (docsJson.hideSidebar) {
+        navMode = 'top' as const
+    }
+    const disableThemeSwitch = false
+    const navTransparentMode = 'top'
+    const searchEnabled = true
+    let navTabMode = 'navbar' as 'sidebar' | 'navbar'
 
-    if (isMdxError && markdown) {
-        return <MdxErrorDisplay error={error} markdown={markdown} />
+    // Build links from docsJson navbar configuration
+    const links: LinkItemType[] = (() => {
+        const navbarLinks = docsJson?.navbar?.links || []
+        const primary = docsJson?.navbar?.primary
+
+        const mainLinks: LinkItemType[] = navbarLinks.map((link: any) => ({
+            text: link.label || '',
+            type: 'main',
+            url: link.href || '#',
+            icon: <DynamicIcon name={link.icon} />,
+            external: !link.href?.startsWith('/'),
+        }))
+
+        // Add primary CTA if configured
+        if (primary) {
+            if (primary.type === 'button') {
+                mainLinks.push({
+                    type: 'button',
+                    text: primary.label || '',
+                    url: primary.href || '#',
+                    external: !primary.href?.startsWith('/'),
+                })
+            } else if (primary.type === 'github') {
+                mainLinks.push({
+                    type: 'icon',
+                    icon: <GithubIcon className='w-4 h-4' />,
+                    text: 'GitHub',
+                    url: primary.href || '#',
+                    external: true,
+                })
+            }
+        }
+
+        return mainLinks
+    })()
+
+    // Build tabs from docsJson if present
+    const tabs: Option[] = (() => {
+        if (!docsJson?.tabs) return []
+
+        const tabs = docsJson.tabs
+            .map((tab) => {
+                if ('openapi' in tab) {
+                    // OpenAPI tab
+                    return {
+                        title: tab.tab,
+                        url: openapiPath,
+                        description: `API Reference`,
+                    }
+                }
+                return null
+            })
+            .filter(Boolean) as Option[]
+        if (tabs.length) {
+            tabs.unshift({
+                title: 'Docs',
+                url: '/',
+                description: '',
+            })
+        }
+        return tabs
+    })()
+
+    return (
+        <div className='h-full flex flex-col w-full'>
+            {docsJson?.hideSidebar && (
+                <style>{`
+                    #nd-sidebar { display: none !important; }
+                    article.docs-page-article { padding-left: 1rem;  }
+                    * { --fd-layout-width: 10160px !important; --fd-page-width: 1100px !important; }
+                    button[aria-label="Collapse Sidebar"] { display: none !important; }
+                    * { --fd-sidebar-width: 0px !important; }
+                `}</style>
+            )}
+            <DocsLayoutNotebook
+                searchToggle={{
+                    enabled: searchEnabled,
+                    components: {},
+                }}
+                nav={{
+                    mode: navMode,
+                    transparentMode: navTransparentMode,
+                    title: <Logo docsJson={docsJson} />,
+                }}
+                tabMode={navTabMode}
+                sidebar={{
+                    defaultOpenLevel: 2,
+                    collapsible: true,
+
+                    tabs,
+                    footer: (
+                        <div className='flex w-full text-center grow justify-center items-start'>
+                            <PoweredBy className='text-[12x]' />
+                        </div>
+                    ),
+                }}
+                i18n={i18n}
+                tree={tree}
+                {...{
+                    disableThemeSwitch,
+                    links,
+                }}
+            >
+                {children}
+            </DocsLayoutNotebook>
+        </div>
+    )
+}
+
+const noop = (callback: () => void) => {
+    return () => {}
+}
+
+function PreviewBanner({ websocketId }: { websocketId?: string }) {
+    if (!websocketId) return null
+    const handleDisconnect = () => {
+        // Remove websocketId from search params before reloading
+        const url = new URL(window.location.href)
+        url.searchParams.set('websocketId', '')
+        window.location.href = url.toString()
     }
 
-    return null
+    const websocketServerPreviewConnected = useDocsState(
+        (state) => state.websocketServerPreviewConnected,
+    )
+
+    const shouldShow = useSyncExternalStore(
+        noop,
+        () => !isInsidePreviewIframe(), // client snapshot
+        () => true, // server snapshot
+    )
+    if (!shouldShow) {
+        return null
+    }
+
+    return (
+        <Banner className='sticky top-0 z-50 bg-fd-muted text-fd-accent-foreground isolate px-4 py-1 flex items-center justify-between'>
+            <div className='flex items-center gap-2'>
+                <div
+                    className={cn(
+                        'w-2 h-2 rounded-full animate-pulse',
+                        websocketServerPreviewConnected
+                            ? 'bg-green-500'
+                            : 'bg-red-500',
+                    )}
+                ></div>
+                <span className='font-medium text-sm'>
+                    {websocketServerPreviewConnected
+                        ? 'Connected to local preview. Added content will be highlighted green'
+                        : 'Server disconnected. Please restart the preview server'}
+                </span>
+            </div>
+            <button
+                onClick={handleDisconnect}
+                className='flex items-center gap-1 bg-white/20 hover:bg-white/30 px-2 py-1 rounded text-sm transition-colors'
+                aria-label='Disconnect from preview'
+            >
+                <XIcon className='w-3 h-3' />
+                Disconnect
+            </button>
+        </Banner>
+    )
+}
+
+function UserBanner({ docsJson }: { docsJson?: any }) {
+    const [dismissed, setDismissed] = useState(false)
+    const { bannerAst } =
+        useLoaderData<Route.ComponentProps['loaderData']>() || {}
+    const banner = docsJson?.banner
+
+    if (!banner || dismissed) return null
+
+    return (
+        <div className='relative bg-fd-primary/10 border border-fd-primary/20 rounded-lg p-4 mb-4'>
+            <div className='prose prose-sm text-fd-foreground'>
+                <Markdown
+                    markdown={banner.content}
+                    ast={bannerAst}
+                    isStreaming={false}
+                    components={mdxComponents}
+                />
+            </div>
+            {banner.dismissible && (
+                <button
+                    onClick={() => {
+                        setDismissed(true)
+                    }}
+                    className='absolute top-2 right-2 p-1 rounded hover:bg-fd-primary/20 transition-colors'
+                    aria-label='Dismiss banner'
+                >
+                    <svg
+                        className='w-4 h-4'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                    >
+                        <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M6 18L18 6M6 6l12 12'
+                        />
+                    </svg>
+                </button>
+            )}
+        </div>
+    )
+}
+
+function Logo({ docsJson = {} as DocsJsonType }) {
+    const { name } = useLoaderData<Route.ComponentProps['loaderData']>()
+    const { theme, resolvedTheme } = useTheme()
+
+    const currentTheme = resolvedTheme || theme || 'light'
+
+    if (!docsJson.logo) {
+        return (
+            <span className='font-medium [.uwu_&]:hidden max-md:hidden'>
+                {docsJson?.name || name || 'Documentation'}
+            </span>
+        )
+    }
+
+    const logoImageUrl = (() => {
+        if (typeof docsJson.logo === 'string') {
+            return docsJson.logo
+        }
+
+        if (docsJson.logo?.dark && currentTheme === 'dark') {
+            return docsJson.logo.dark
+        }
+
+        return docsJson.logo?.light || ''
+    })()
+    const logoText = docsJson.logo?.text || ''
+
+    return (
+        <div className='flex gap-2 grow items-center'>
+            {logoImageUrl && (
+                <img
+                    alt='logo'
+                    src={logoImageUrl}
+                    suppressHydrationWarning
+                    className='h-8 [.uwu_&]:block'
+                    aria-label='logo'
+                />
+            )}
+            {logoText && (
+                <span className='font-medium text-lg max-md:hidden'>
+                    {logoText}
+                </span>
+            )}
+        </div>
+    )
+}
+
+// Extend globalThis to include our type-safe variable
+declare global {
+    var rootServerLoaderData: Route.ComponentProps['loaderData'] | null
 }

@@ -22,7 +22,7 @@ import { getFumadocsSource } from '../lib/source'
 import { getOpenapiDocument } from '../lib/openapi.server'
 import { getFilesForSource } from '../lib/source.server'
 import { useDocsState } from '../lib/docs-state'
-import { ClientPage, ClientErrorBoundary } from './_catchall-client'
+import { ClientPage, ClientErrorBoundary } from './_catchall-$-client'
 import { getCacheTagForPage } from 'docs-website/src/lib/cache-tags'
 const openapiPath = `/api-reference`
 

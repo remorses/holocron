@@ -19,7 +19,7 @@ import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { getFilesForSource } from 'docs-website/src/lib/source.server'
 import { getFumadocsSource } from 'docs-website/src/lib/source'
 import { getOpenapiDocument } from 'docs-website/src/lib/openapi.server'
-import { ClientLayout, ClientApp } from 'docs-website/src/routes/layout-client'
+import { ClientLayout, ClientApp } from 'docs-website/src/routes/_catchall-client'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -51,7 +51,7 @@ function parseCookies(cookieHeader: string | null): Record<string, string> {
 export async function loader({ request }: Route.LoaderArgs) {
     const timerId = `root-loader-${Math.random().toString(36).substr(2, 9)}`
     console.time(`${timerId} - total root loader time`)
-    
+
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
 
@@ -112,7 +112,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     console.timeEnd(`${timerId} - get files for source`)
 
     const languages = site.locales.map((x) => x.locale)
-    
+
     console.time(`${timerId} - create fumadocs source`)
     const source = getFumadocsSource({
         defaultLanguage: site.defaultLocale,
@@ -190,9 +190,9 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     // Check for editor preview mode query parameter
     const editorPreviewMode = url.searchParams.get('editorPreviewMode') === 'true'
-    
+
     console.timeEnd(`${timerId} - total root loader time`)
-    
+
     return {
         openapiUrl,
         openapiRenderer,
