@@ -1,73 +1,48 @@
-import { z } from 'zod'
+import { tool } from 'ai'
+import { extractNamePathsFromSchema } from 'docs-website/src/lib/schema-path-utils'
+import type { JSONSchema7 } from 'json-schema'
 import * as schemaLib from 'json-schema-library'
-const compileSchema = schemaLib.compileSchema || schemaLib?.['default']?.compileSchema
-import {
-    docsJsonSchema,
-    exampleNamePathsForDocsJson,
-} from 'docs-website/src/lib/docs-json'
+import { z } from 'zod'
 import { notifyError } from './errors'
+const compileSchema =
+    schemaLib.compileSchema || schemaLib?.['default']?.compileSchema
 
-const FieldTypeEnum = z.enum([
-    'input',
-    'password',
-    'textarea',
-    'number',
-    'select',
-    'slider',
-    'switch',
-    'color_picker',
-    'date_picker',
-    'image_upload',
-    'button',
-])
+export function createRenderFormTool({
+    jsonSchema,
+}: {
+    jsonSchema: JSONSchema7
+}) {
+    // Extract name paths from schema
+    const exampleNamePaths = extractNamePathsFromSchema(jsonSchema)
 
-export const UIFieldSchema = z
-    .object({
-        name: z.string(),
-        type: FieldTypeEnum,
-        label: z.string(),
-        description: z.string().nullable(),
-        // Common fields
-        required: z.boolean().nullable(),
-        // Group title for grouping consecutive fields
-        groupTitle: z
-            .string()
-            .nullable()
-            .describe(
-                `Optional group title. When consecutive fields share the same groupTitle, they will be wrapped in a container with this title. ONLY use this for array of objects to put each object in the array into its own group. `,
+    // Create render form parameters schema
+    const RenderFormParameters = z.object({
+        fields: z.array(
+            UIFieldSchema.describe(
+                `Each field requires a name property that describes the filed updated on that scalar field, it can be ${exampleNamePaths.join(', ')} where {index} is a number. NEVER use [index] syntax, for example instead of domains[0] use domains.0`,
             ),
-        // Input/textarea/password fields
-        placeholder: z.string().nullable(),
-        initialValue: z.union([
-            z.string().nullable(),
-            z.number().nullable(),
-            z.boolean().nullable(),
-        ]),
-        // Number/slider fields
-        min: z.number().nullable(),
-        max: z.number().nullable(),
-        step: z.number().nullable(),
-        // Select field
-        options: z
-            .array(z.object({ label: z.string(), value: z.string() }))
-            .nullable(),
-        // Button field
-        href: z.string().nullable(),
+        ),
     })
-    .describe(
-        `Each field requires a name property that describes the filed updated on that fumabase.jsonc scalar field, it can be ${exampleNamePathsForDocsJson.join(', ')} where {index} is a number. NEVER use [index] syntax, for example instead of domains[0] use domains.0`,
-    )
 
-export type UIField = z.infer<typeof UIFieldSchema>
+    // Compile the JSON schema once
+    const compiledSchema = compileSchema(jsonSchema)
 
-export const RenderFormParameters = z.object({
-    fields: z.array(UIFieldSchema),
-})
+    // Helper function to get type for name in schema
+    function getTypeForNameInSchema(name: string) {
+        const pointer =
+            '#' +
+            '/' +
+            name
+                .split('.')
+                .map((part) => (isNaN(Number(part)) ? part : 'items'))
+                .join('/')
+        console.log(pointer)
+        const { node, error } = compiledSchema.getNode(pointer)
+        return node?.schema
+    }
 
-export type RenderFormParameters = z.infer<typeof RenderFormParameters>
-
-export function createRenderFormExecute({}) {
-    return async (params: RenderFormParameters) => {
+    // Create execute function
+    async function execute(params: z.infer<typeof RenderFormParameters>) {
         const errors: string[] = []
         try {
             for (const field of params.fields) {
@@ -79,7 +54,7 @@ export function createRenderFormExecute({}) {
                 const schema = getTypeForNameInSchema(field.name)
                 if (!schema) {
                     errors.push(
-                        `name ${field.name} is not valid for the fumabase.jsonc schema`,
+                        `name ${field.name} is not valid for the schema`,
                     )
                 }
                 if (!isScalarSchema(schema)) {
@@ -97,13 +72,17 @@ export function createRenderFormExecute({}) {
             return { errors }
         }
     }
-}
-export const compiledDocsJsonSchema = compileSchema(docsJsonSchema)
 
-export function getTypeForNameInSchema(
-    name: string,
-    schema = compiledDocsJsonSchema,
-) {
+    return tool({
+        description:
+            'Render a series of input elements so the user can provide structured data. Array-style names such as items[0].color are supported.',
+        inputSchema: RenderFormParameters,
+        execute,
+    })
+}
+
+
+export function getTypeForNameInSchema(name: string, compiledSchema: any) {
     const pointer =
         '#' +
         '/' +
@@ -112,7 +91,7 @@ export function getTypeForNameInSchema(
             .map((part) => (isNaN(Number(part)) ? part : 'items'))
             .join('/')
     console.log(pointer)
-    const { node, error } = schema.getNode(pointer)
+    const { node, error } = compiledSchema.getNode(pointer)
     return node?.schema
 }
 
@@ -156,3 +135,58 @@ export function isScalarSchema(schema: any): boolean {
     }
     return scalarTypes.includes(schema.type)
 }
+
+// Legacy schema exports
+const FieldTypeEnum = z.enum([
+    'input',
+    'password',
+    'textarea',
+    'number',
+    'select',
+    'slider',
+    'switch',
+    'color_picker',
+    'date_picker',
+    'image_upload',
+    'button',
+])
+
+const UIFieldSchema = z.object({
+    name: z.string(),
+    type: FieldTypeEnum,
+    label: z.string(),
+    description: z.string().nullable(),
+    // Common fields
+    required: z.boolean().nullable(),
+    // Group title for grouping consecutive fields
+    groupTitle: z
+        .string()
+        .nullable()
+        .describe(
+            `Optional group title. When consecutive fields share the same groupTitle, they will be wrapped in a container with this title. ONLY use this for array of objects to put each object in the array into its own group. `,
+        ),
+    // Input/textarea/password fields
+    placeholder: z.string().nullable(),
+    initialValue: z.union([
+        z.string().nullable(),
+        z.number().nullable(),
+        z.boolean().nullable(),
+    ]),
+    // Number/slider fields
+    min: z.number().nullable(),
+    max: z.number().nullable(),
+    step: z.number().nullable(),
+    // Select field
+    options: z
+        .array(z.object({ label: z.string(), value: z.string() }))
+        .nullable(),
+    // Button field
+    href: z.string().nullable(),
+})
+
+export const RenderFormParameters = z.object({
+    fields: z.array(UIFieldSchema),
+})
+
+export type UIField = z.infer<typeof UIFieldSchema>
+export type RenderFormParameters = z.infer<typeof RenderFormParameters>

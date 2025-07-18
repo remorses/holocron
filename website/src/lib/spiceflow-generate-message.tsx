@@ -25,8 +25,8 @@ import {
 } from './edit-tool'
 import { notifyError } from './errors'
 import {
+    createRenderFormTool,
     RenderFormParameters,
-    createRenderFormExecute,
 } from './render-form-tool'
 import { mdxRegex } from './utils'
 import {
@@ -79,7 +79,7 @@ export type WebsiteTools = {
         output: string
     }
     renderForm: {
-        input: RenderFormParameters //
+        input: RenderFormParameters
         output: any
     }
     deletePages: {
@@ -117,6 +117,8 @@ export type WebsiteTools = {
         }
     }
 }
+
+const renderFormTool = createRenderFormTool({ jsonSchema: docsJsonSchema as any })
 
 export const generateMessageApp = new Spiceflow().state('userId', '').route({
     method: 'POST',
@@ -201,6 +203,8 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             },
         })
 
+
+
         const strReplaceEditor = model.modelId.includes('claude')
             ? anthropic.tools.textEditor_20250124({
                   execute: editFilesExecute as any,
@@ -266,13 +270,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     },
                 }),
 
-                renderForm: tool({
-                    description:
-                        'Render a series of input elements so the user can provide structured data. Array-style names such as items[0].color are supported.',
-                    inputSchema: RenderFormParameters,
-
-                    execute: createRenderFormExecute({}),
-                }),
+                renderForm: renderFormTool,
 
                 deletePages: tool({
                     description:
