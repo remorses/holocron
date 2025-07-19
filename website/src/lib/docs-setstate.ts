@@ -22,10 +22,11 @@ export function createIframeRpcClient({
     >()
     const usedIdempotenceIds = new Set<string>()
 
-    docsRpcClient.setDocsState = async (
-        state: DocsState,
-        idempotenceId?: string,
-    ): Promise<any> => {
+    docsRpcClient.setDocsState = async ({
+        idempotenceKey,
+        state,
+        revalidate,
+    }): Promise<any> => {
         console.log(`sending state to docs iframe`, state)
         // contentWindow is accessible even for cross-origin iframes, but you cannot access *properties* of the window if it's cross-origin.
         // Here, we just need to postMessage, which is allowed on cross-origin frames.
@@ -37,13 +38,14 @@ export function createIframeRpcClient({
         const message: IframeRpcMessage = {
             id,
             state,
+            revalidate,
         }
 
         return new Promise((resolve, reject) => {
             // If idempotenceId is specified and already used, return resolved promise immediately
-            if (idempotenceId && usedIdempotenceIds.has(idempotenceId)) {
+            if (idempotenceKey && usedIdempotenceIds.has(idempotenceKey)) {
                 console.log(
-                    `Idempotence ID ${idempotenceId} already used, skipping docs state set state`,
+                    `Idempotence ID ${idempotenceKey} already used, skipping docs state set state`,
                 )
                 return Promise.resolve(undefined)
             }
@@ -61,8 +63,8 @@ export function createIframeRpcClient({
             iframeWindow.postMessage(message, {
                 targetOrigin: targetOrigin,
             })
-            if (idempotenceId) {
-                usedIdempotenceIds.add(idempotenceId)
+            if (idempotenceKey) {
+                usedIdempotenceIds.add(idempotenceKey)
             }
         })
     }
@@ -110,10 +112,7 @@ export function createIframeRpcClient({
 }
 
 export let docsRpcClient = {
-    async setDocsState(
-        state: Partial<DocsState>,
-        idempotenceId?: string,
-    ): Promise<any> {
+    async setDocsState(state: Partial<IframeRpcMessage>): Promise<any> {
         console.error(new Error(`docs rpc client still not initialized`))
     },
     cleanup() {},

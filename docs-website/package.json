@@ -60,6 +60,7 @@
     "cmdk": "^1.1.1",
     "colord": "^2.9.3",
     "contesto": "workspace:*",
+    "cookie": "^1.0.2",
     "db": "workspace:*",
     "dedent": "^1.6.0",
     "diff": "^8.0.2",

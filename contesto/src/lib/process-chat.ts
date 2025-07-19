@@ -27,6 +27,7 @@ export async function* uiStreamToUIMessages<M extends UIMessage>({
 
     for await (let chunk of throttleGenerator(
         readUIMessageStream({
+
             stream: isReadableStream(uiStream)
                 ? uiStream
                 : asyncIterableToReadableStream(uiStream),

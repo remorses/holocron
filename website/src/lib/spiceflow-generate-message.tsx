@@ -185,6 +185,15 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 const content = await getPageContent({ githubPath, branchId })
                 return content
             },
+            async onFilesDraftStructureChange() {
+                // Update the chat with current filesInDraft state
+                await prisma.chat.update({
+                    where: { chatId, userId },
+                    data: {
+                        filesInDraft: (filesInDraft as any) || {},
+                    },
+                })
+            },
             async validateNewContent(x) {
                 if (mdxRegex.test(x.githubPath)) {
                     await processMdxInServer({
@@ -471,7 +480,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                         role: 'user',
                     },
                 })
-                
+
         }
         const idGenerator = createIdGenerator()
         const stream = result.toUIMessageStream({

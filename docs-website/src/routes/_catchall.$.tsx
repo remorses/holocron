@@ -1,6 +1,7 @@
 import { MediaAsset, PageMediaAsset, prisma } from 'db'
 import { Root } from 'mdast'
 import frontMatter from 'front-matter'
+import { parse as parseCookies, serialize as serializeCookie } from 'cookie'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { isRouteErrorResponse, data } from 'react-router'
@@ -21,10 +22,16 @@ import { getFumadocsSource } from '../lib/source'
 
 import { getOpenapiDocument } from '../lib/openapi.server'
 import { getFilesForSource } from '../lib/source.server'
-import { useDocsState } from '../lib/docs-state'
 import { ClientPage, ClientErrorBoundary } from './_catchall-$-client'
 import { getCacheTagForPage } from 'docs-website/src/lib/cache-tags'
 const openapiPath = `/api-reference`
+
+function removeGithubFolder(path: string, githubFolder: string): string {
+    if (githubFolder && path.startsWith(githubFolder)) {
+        return path.slice(githubFolder.length + 1)
+    }
+    return path
+}
 
 type MediaAssetProp = PageMediaAsset & { asset?: MediaAsset }
 
@@ -170,6 +177,14 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
 
+    // Check for chatId in query params and set as cookie if present
+    const chatIdFromQuery = url.searchParams.get('chatId')
+    
+    // Check for chatId cookie to fetch draft files
+    const cookieHeader = request.headers.get('Cookie') || ''
+    const cookies = parseCookies(cookieHeader)
+    const chatId = chatIdFromQuery || cookies.chatId || null
+
     console.time(`${timerId} - find site branch from database`)
     const siteBranch = await prisma.siteBranch.findFirst({
         where: {
@@ -201,6 +216,26 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         console.log('Branch not found for site:', site?.siteId)
         throw new Response('Branch not found', { status: 404 })
     }
+
+    // Fetch chat filesInDraft if chatId cookie exists
+    let chatFilesInDraft: Record<string, { content: string }> = {}
+    if (chatId) {
+        console.time(`${timerId} - fetch chat for draft files`)
+        const chat = await prisma.chat.findFirst({
+            where: {
+                chatId,
+                branchId: siteBranch.branchId,
+            },
+            select: {
+                filesInDraft: true,
+            },
+        })
+        console.timeEnd(`${timerId} - fetch chat for draft files`)
+        
+        if (chat && chat.filesInDraft) {
+            chatFilesInDraft = chat.filesInDraft as Record<string, { content: string }>
+        }
+    }
     const languages = site.locales.map((x) => x.locale)
 
     console.time(`${timerId} - get files for source`)
@@ -211,11 +246,40 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     })
     console.timeEnd(`${timerId} - get files for source`)
 
+    // Add draft files to the files array for navigation tree
+    const allFiles = [...files]
+    if (Object.keys(chatFilesInDraft).length > 0) {
+        const githubFolder = site?.githubFolder || ''
+
+        for (const [githubPath, draft] of Object.entries(chatFilesInDraft)) {
+            if (!draft?.content) continue
+            
+            const normalizedPath = removeGithubFolder(githubPath, githubFolder)
+            // Check if this file already exists in the files array
+            const existingFileIndex = allFiles.findIndex(f => f.path === normalizedPath)
+            
+            if (existingFileIndex >= 0) {
+                // Update existing file with draft content
+                allFiles[existingFileIndex] = {
+                    ...allFiles[existingFileIndex],
+                    // Note: we don't override the data here as it's used for meta information
+                }
+            } else {
+                // Add new draft file
+                allFiles.push({
+                    path: normalizedPath,
+                    data: {},
+                    type: 'page',
+                })
+            }
+        }
+    }
+
     console.time(`${timerId} - create fumadocs source`)
     const source = getFumadocsSource({
         defaultLanguage: site.defaultLocale,
         languages: languages,
-        files,
+        files: allFiles,
     })
     console.timeEnd(`${timerId} - create fumadocs source`)
 
@@ -227,26 +291,24 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         slugs = slugs.slice(1)
     }
 
-    // Check for redirects from docsJson configuration
-    // Check if there's a fumabase.jsonc query parameter with updated content
-    const docsJsonParam = url.searchParams.get('fumabase.jsonc')
-    const docsJson: DocsJsonType = (() => {
-        if (docsJsonParam) {
+    let docsJson: DocsJsonType = siteBranch.docsJson as any
+
+    // Check for draft docsJson file
+    if (Object.keys(chatFilesInDraft).length > 0) {
+        const draftDocsJsonFile = Object.entries(chatFilesInDraft).find(([path]) => 
+            path.endsWith('fumabase.jsonc')
+        )
+        
+        if (draftDocsJsonFile && draftDocsJsonFile[1]?.content) {
             try {
-                const decodedContent = decodeURIComponent(docsJsonParam)
-                return JSONC.parse(decodedContent)
-            } catch (error) {
-                console.error(
-                    'Error parsing fumabase.jsonc query parameter:',
-                    error,
-                )
-                return siteBranch.docsJson as any
+                const parsedDraftDocsJson = JSONC.parse(draftDocsJsonFile[1].content)
+                docsJson = parsedDraftDocsJson as DocsJsonType
+            } catch (e) {
+                console.warn('Failed to parse draft fumabase.jsonc:', e)
             }
         }
-        return siteBranch.docsJson as any
-    })()
+    }
 
-    // const slug = '/' + slugs.join('/')
     const fumadocsPage = source.getPage(slugs, locale)
 
     const slug = fumadocsPage?.url || '/' + slugs.join('/')
@@ -286,6 +348,19 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                 locale,
             })
 
+            const headers: Record<string, string> = {
+                'Cache-Control': 'public, max-age=300, s-maxage=300',
+                'Cache-Tag': cacheTag,
+            }
+            
+            if (chatIdFromQuery) {
+                headers['Set-Cookie'] = serializeCookie('chatId', chatIdFromQuery, {
+                    httpOnly: false, // Make it readable from JS
+                    path: '/',
+                    sameSite: 'lax',
+                })
+            }
+
             return data(
                 {
                     type: 'openapi_scalar' as const,
@@ -303,10 +378,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                     lastEditedAt: new Date(),
                 },
                 {
-                    headers: {
-                        'Cache-Control': 'public, max-age=300, s-maxage=300',
-                        'Cache-Tag': cacheTag,
-                    },
+                    headers,
                 },
             )
         }
@@ -319,6 +391,19 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                 slug,
                 locale,
             })
+
+            const headers: Record<string, string> = {
+                'Cache-Control': 'public, max-age=300, s-maxage=300',
+                'Cache-Tag': cacheTag,
+            }
+            
+            if (chatIdFromQuery) {
+                headers['Set-Cookie'] = serializeCookie('chatId', chatIdFromQuery, {
+                    httpOnly: false, // Make it readable from JS
+                    path: '/',
+                    sameSite: 'lax',
+                })
+            }
 
             return data(
                 {
@@ -339,10 +424,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                     lastEditedAt: new Date(),
                 },
                 {
-                    headers: {
-                        'Cache-Control': 'public, max-age=300, s-maxage=300',
-                        'Cache-Tag': cacheTag,
-                    },
+                    headers,
                 },
             )
         }
@@ -401,7 +483,51 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         page = indexPage || anotherPage
     }
 
-    if (!page) {
+    // Initialize with normal flow values (page content or defaults)
+    let markdown = page?.content?.markdown || ''
+    let frontmatter: ProcessorDataFrontmatter = (page?.frontmatter as any) || {}
+    let ast: Root | null = page?.content?.mdast as any
+    let toc: any[] | null = null
+    let githubPath = page?.githubPath || ''
+
+    // Override with draft content if available
+    if (Object.keys(chatFilesInDraft).length > 0) {
+        const githubFolder = site?.githubFolder || ''
+
+        // Look for draft files that could serve this slug
+        for (const [draftGithubPath, draft] of Object.entries(chatFilesInDraft)) {
+            if (!draft?.content) continue
+
+            const source = getFumadocsSource({
+                files: [
+                    {
+                        path: removeGithubFolder(draftGithubPath, githubFolder),
+                        data: {},
+                        type: 'page',
+                    },
+                ],
+            })
+            const draftPage = source.getPage(slugs)
+            if (draftPage) {
+                const extension = draftGithubPath.endsWith('.mdx') ? 'mdx' : 'md'
+                try {
+                    const f = await getProcessor({ extension }).process(draft.content)
+                    const data = f.data as ProcessorData
+                    
+                    markdown = draft.content
+                    frontmatter = (data.frontmatter as any) || {}
+                    ast = data.ast
+                    toc = data.toc
+                    githubPath = draftGithubPath
+                    break
+                } catch (e) {
+                    console.warn(`Failed to process draft content for ${draftGithubPath}:`, e)
+                }
+            }
+        }
+    }
+
+    if (!page && !markdown) {
         console.log('Page not found for slug:', slug)
         throw new Response('null', {
             status: 404,
@@ -412,39 +538,27 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
     const tree = source.getPageTree(locale)
 
-    // fs.writeFileSync('scripts/rendered-mdx.mdx', page.markdown)
-    // fs.writeFileSync('scripts/rendered-mdx.jsonc', JSON.stringify(ast, null, 2))
-
-    // console.time(`${timerId} - process mdx content`)
-    // const { data: markdownData } = await processMdxInServer({
-    //     extension: page.extension,
-    //     githubPath: page.githubPath,
-    //     markdown: page.content.markdown,
-    // })
-    // console.timeEnd(`${timerId} - process mdx content`)
-
-    const frontmatter: ProcessorDataFrontmatter =
-        (page.frontmatter as any) || {}
-
     console.timeEnd(`${timerId} - total loader time`)
 
-    let mdast: Root = page.content?.mdast as any
-
-    if (!mdast?.children) {
+    // Process AST if not already processed
+    if (!ast?.children && markdown) {
         console.time(`${timerId} - process mdx content`)
         // Determine the file extension from the githubPath
-        const extension = page.githubPath?.split('.').pop() || 'mdx'
+        const extension = githubPath?.split('.').pop() || 'mdx'
 
         const { data: markdownData } = await processMdxInServer({
             extension: extension,
-            githubPath: page.githubPath,
-            markdown: page.content?.markdown || '',
+            githubPath: githubPath,
+            markdown: markdown,
         })
         console.timeEnd(`${timerId} - process mdx content`)
-        mdast = markdownData.ast
+        ast = markdownData.ast
     }
+    
     console.time(`${timerId} - get toc from mdast`)
-    const toc = getTocFromMdast(mdast)
+    if (!toc) {
+        toc = getTocFromMdast(ast)
+    }
     console.timeEnd(`${timerId} - get toc from mdast`)
 
     const cacheTag = getCacheTagForPage({
@@ -453,6 +567,19 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         locale,
     })
 
+    const headers: Record<string, string> = {
+        'Cache-Control': 'public, max-age=300, s-maxage=300',
+        'Cache-Tag': cacheTag,
+    }
+    
+    if (chatIdFromQuery) {
+        headers['Set-Cookie'] = serializeCookie('chatId', chatIdFromQuery, {
+            httpOnly: false, // Make it readable from JS
+            path: '/',
+            sameSite: 'lax',
+        })
+    }
+
     return data(
         {
             type: 'page' as const,
@@ -460,23 +587,20 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             toc: toc,
             title: frontmatter?.title || '',
             description: frontmatter.description || '',
-            markdown: page.content?.markdown,
-            ast: mdast,
+            markdown: markdown,
+            ast: ast,
             githubFolder: site.githubFolder || '',
             slugs,
             slug,
             locale,
             i18n: source._i18n,
-            githubPath: page.githubPath,
+            githubPath: githubPath,
             tree,
-            lastEditedAt: page.lastEditedAt || new Date(),
-            mediaAssets: page.mediaAssets,
+            lastEditedAt: page?.lastEditedAt || new Date(),
+            mediaAssets: page?.mediaAssets || [],
         },
         {
-            headers: {
-                'Cache-Control': 'public, max-age=300, s-maxage=300',
-                'Cache-Tag': cacheTag,
-            },
+            headers,
         },
     )
 }
@@ -485,108 +609,7 @@ export default function Page(props: Route.ComponentProps): any {
     return <ClientPage {...props} />
 }
 
-// export function HydrateFallback() {
-//     return null
-// }
 
-export const clientLoader = async ({
-    params,
-    serverLoader,
-}): Promise<LoaderData> => {
-    try {
-        // Attempt to load server data
-        const serverData = await serverLoader()
-
-        if (serverData && typeof window !== 'undefined') {
-            globalThis.lastServerLoaderData = serverData
-        }
-
-        return serverData
-    } catch (err) {
-        const docsState = useDocsState.getState()
-        const { filesInDraft } = docsState
-        // Check if this is a 404 error
-        if (!isRouteErrorResponse(err) || err.status !== 404) {
-            // console.log(`forwarding non 404 error`, err)
-            throw err
-        }
-        const slugs = params['*']?.split('/').filter((v) => v.length > 0) || []
-        const slug = '/' + slugs.join('/')
-
-        // Server loader failed with 404, check if we have draft content to serve
-
-        const prevLoaderData =
-            globalThis.lastServerLoaderData || globalThis.rootServerLoaderData
-        console.log(
-            `running clientLoader to try fetch 404 page for ${slug}, githubFolder is ${prevLoaderData?.githubFolder}`,
-            Object.keys(filesInDraft),
-        )
-        function removeGithubFolder(p: string) {
-            let githubFolder = prevLoaderData?.githubFolder || ''
-            if (githubFolder && p.startsWith(githubFolder)) {
-                return p.slice(githubFolder.length + 1)
-            }
-            return p
-        }
-        // Look for draft files that could serve this slug
-        for (const [githubPath, draft] of Object.entries(filesInDraft)) {
-            // console.log({ path: removeGithubFolder(githubPath) })
-            if (!draft) continue
-
-            const source = getFumadocsSource({
-                files: [
-                    {
-                        path: removeGithubFolder(githubPath),
-                        data: {},
-                        type: 'page',
-                    },
-                ],
-            })
-            const page = source.getPage(slugs)
-            if (page) {
-                const extension = githubPath.endsWith('.mdx') ? 'mdx' : 'md'
-                const f = await getProcessor({ extension })
-                    .process(draft.content || '')
-                    .catch((e) => {
-                        e.markdown = draft.content || ''
-                        throw e
-                    })
-                const data = f.data as ProcessorData
-
-                // Use cached server data as base structure, without fields available in root
-                const baseData: {} = prevLoaderData || {
-                    locale: 'en',
-                    i18n: null,
-                }
-
-                const frontmatter: ProcessorDataFrontmatter =
-                    (data.frontmatter as any) || {}
-                return {
-                    openapiUrl: '',
-                    githubFolder: '',
-                    mediaAssets: [] as MediaAssetProp[],
-                    ...baseData,
-                    type: 'page' as const,
-                    locale: (baseData as any)?.locale || 'en',
-                    i18n: (baseData as any)?.i18n || null,
-                    tree: (baseData as any)?.tree || null,
-                    toc: data.toc,
-                    title: frontmatter.title || '',
-                    description: frontmatter.description || '',
-                    markdown: draft.content || '',
-                    ast: data.ast,
-                    githubPath,
-                    slugs,
-                    slug,
-                    lastEditedAt: new Date(),
-                }
-            }
-        }
-        throw err
-    }
-}
-
-clientLoader.hydrate = true
 
 export function ErrorBoundary({
     error,

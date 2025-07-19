@@ -155,6 +155,7 @@ if (typeof window !== 'undefined') {
 export type IframeRpcMessage = {
     id: string
     state?: Partial<DocsState>
-
+    revalidate?: boolean
+    idempotenceKey?: string
     error?: string
 }

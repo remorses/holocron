@@ -146,7 +146,7 @@ const setDocsJsonState = ({
     useWebsiteState.setState({ filesInDraft: newFilesInDraft })
     localStorage.setItem(keyForDocsJson({ chatId }), newJson)
     docsRpcClient.setDocsState({
-        filesInDraft: newChanges,
+        state: { filesInDraft: newChanges },
     })
 }
 
@@ -334,14 +334,15 @@ export default function Chat({ ref }) {
                                     )
 
                                     try {
-                                        await docsRpcClient.setDocsState(
-                                            {
+                                        await docsRpcClient.setDocsState({
+                                            state: {
                                                 filesInDraft: filesInDraft,
                                                 isMarkdownStreaming: false,
                                                 currentSlug,
                                             },
-                                            part.toolCallId,
-                                        )
+                                            revalidate: true,
+                                            idempotenceKey: part.toolCallId,
+                                        })
                                     } catch (e) {
                                         console.error('failed setDocsState', e)
                                     }
@@ -384,9 +385,11 @@ export default function Chat({ ref }) {
                                 try {
                                     docsRpcClient
                                         .setDocsState({
-                                            filesInDraft: updatedPagesCopy,
-                                            currentSlug,
-                                            isMarkdownStreaming: true,
+                                            state: {
+                                                filesInDraft: updatedPagesCopy,
+                                                currentSlug,
+                                                isMarkdownStreaming: true,
+                                            },
                                         })
                                         .catch((e) => {
                                             console.error(e)

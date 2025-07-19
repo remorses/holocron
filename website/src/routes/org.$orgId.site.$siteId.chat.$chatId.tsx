@@ -294,45 +294,50 @@ function RightSide() {
                 previewMode: newValue,
             }
 
-            docsRpcClient.setDocsState(state).catch(console.error)
+            docsRpcClient.setDocsState({ state }).catch(console.error)
         }
     }
 
-    const iframeRefCallback = useCallback((el) => {
-        iframeRef.current = el
-        if (!el) {
-            return
-        }
-        const docsRpcClient = createIframeRpcClient({
-            iframeRef,
-            targetOrigin: new URL(iframeUrl).origin,
-        })
-
-        const state = {
-            currentSlug: chat.currentSlug || undefined,
-            filesInDraft: (chat.filesInDraft as any) || {},
-            previewMode,
-        }
-        let sentFirstMessage = false
-        // do it as soon as the page loads to not wait for the ready message
-        docsRpcClient.setDocsState(state).then(() => {
-            sentFirstMessage = true
-        })
-        const waitForFirstMessage = (event) => {
-            if (
-                iframeRef.current &&
-                !sentFirstMessage &&
-                event.source === iframeRef.current.contentWindow
-            ) {
-                docsRpcClient.setDocsState(state)
-                window.removeEventListener('message', waitForFirstMessage)
+    const iframeRefCallback = useCallback(
+        (el) => {
+            iframeRef.current = el
+            if (!el) {
+                return
             }
-        }
-        window.addEventListener('message', waitForFirstMessage, { once: true })
-        return () => {
-            docsRpcClient.cleanup()
-        }
-    }, [iframeUrl])
+            const docsRpcClient = createIframeRpcClient({
+                iframeRef,
+                targetOrigin: new URL(iframeUrl).origin,
+            })
+
+            const state = {
+                currentSlug: chat.currentSlug || undefined,
+                filesInDraft: (chat.filesInDraft as any) || {},
+                previewMode,
+            }
+            let sentFirstMessage = false
+            // do it as soon as the page loads to not wait for the ready message
+            docsRpcClient.setDocsState({ state }).then(() => {
+                sentFirstMessage = true
+            })
+            const waitForFirstMessage = (event) => {
+                if (
+                    iframeRef.current &&
+                    !sentFirstMessage &&
+                    event.source === iframeRef.current.contentWindow
+                ) {
+                    docsRpcClient.setDocsState({ state })
+                    window.removeEventListener('message', waitForFirstMessage)
+                }
+            }
+            window.addEventListener('message', waitForFirstMessage, {
+                once: true,
+            })
+            return () => {
+                docsRpcClient.cleanup()
+            }
+        },
+        [iframeUrl],
+    )
 
     return (
         <div className='flex flex-col h-full gap-3'>

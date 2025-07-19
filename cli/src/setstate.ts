@@ -2,7 +2,14 @@ import type {
     DocsState,
     IframeRpcMessage,
 } from 'docs-website/src/lib/docs-state.js'
-import type { WebSocket } from 'ws'
+import type { WebSocket, RawData } from 'ws'
+
+export let docsRpcClient = {
+    async setDocsState(state: Partial<IframeRpcMessage>): Promise<any> {
+        console.error(new Error(`docs rpc client still not initialized`))
+    },
+    cleanup() {},
+}
 
 export function createIframeRpcClient({
     ws,
@@ -21,10 +28,15 @@ export function createIframeRpcClient({
     >()
     const usedIdempotenceIds = new Set<string>()
 
-    docsRpcClient.setDocsState = (
-        state: DocsState,
-        idempotenceId?: string,
-    ): Promise<any> => {
+    docsRpcClient.setDocsState = async ({
+        idempotenceKey,
+        state,
+        revalidate,
+    }: {
+        idempotenceKey?: string
+        state: DocsState
+        revalidate?: boolean
+    }): Promise<any> => {
         if (!ws || ws.readyState !== 1) {
             throw new Error('WebSocket instance not open.')
         }
@@ -34,13 +46,14 @@ export function createIframeRpcClient({
         const message: IframeRpcMessage = {
             id,
             state,
+            revalidate,
         }
 
         return new Promise((resolve, reject) => {
-            // If idempotenceId is specified and already used, return resolved promise immediately
-            if (idempotenceId && usedIdempotenceIds.has(idempotenceId)) {
+            // If idempotenceKey is specified and already used, return resolved promise immediately
+            if (idempotenceKey && usedIdempotenceIds.has(idempotenceKey)) {
                 console.log(
-                    `Idempotence ID ${idempotenceId} already used, skipping docs state set state`,
+                    `Idempotence ID ${idempotenceKey} already used, skipping docs state set state`,
                 )
                 return Promise.resolve(undefined)
             }
@@ -56,12 +69,12 @@ export function createIframeRpcClient({
             pendingRequests.set(id, { resolve, reject, timeout })
 
             ws.send(JSON.stringify(message))
-            if (idempotenceId) {
-                usedIdempotenceIds.add(idempotenceId)
+            if (idempotenceKey) {
+                usedIdempotenceIds.add(idempotenceKey)
             }
         })
     }
-    function onMessage(data: WebSocket.RawData, isBinary: boolean) {
+    function onMessage(data: RawData, isBinary: boolean) {
         let msg: IframeRpcMessage | undefined
         try {
             // Only parse if not binary
@@ -91,7 +104,7 @@ export function createIframeRpcClient({
 
     // Attach ws 'message' event handler
     // handle multiple calls gracefully
-    function messageHandler(data: WebSocket.RawData, isBinary: boolean) {
+    function messageHandler(data: RawData, isBinary: boolean) {
         onMessage(data, isBinary)
     }
 
@@ -99,7 +112,7 @@ export function createIframeRpcClient({
     docsRpcClient.cleanup = () => {
         ws.off('message', messageHandler)
         // Clean up any pending requests
-        for (const [id, pending] of pendingRequests) {
+        for (const [id, pending] of Array.from(pendingRequests)) {
             clearTimeout(pending.timeout)
             pending.reject(new Error('RPC client cleanup'))
         }
@@ -107,15 +120,4 @@ export function createIframeRpcClient({
         usedIdempotenceIds.clear()
     }
     return docsRpcClient
-}
-
-let docsRpcClient = {
-    async setDocsState(
-        state: Partial<DocsState>,
-        idempotenceId?: string,
-    ): Promise<any> {
-        console.error(new Error(`docs rpc client still not initialized`))
-
-    },
-    cleanup() {},
 }

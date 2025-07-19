@@ -10,6 +10,16 @@ import { cn } from 'docs-website/src/lib/cn'
 import type { Route as RootRoute } from './_catchall'
 import type { Route } from './+types/_catchall.$'
 import { Markdown } from 'contesto/src/lib/markdown'
+
+// Remove chatId cookie on page unload at module level
+if (typeof window !== 'undefined') {
+    const removeChatIdCookie = () => {
+        document.cookie = 'chatId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax'
+    }
+
+    window.addEventListener('beforeunload', removeChatIdCookie)
+    // window.addEventListener('pagehide', removeChatIdCookie)
+}
 import {
     PageArticle,
     PageTOCItems,
