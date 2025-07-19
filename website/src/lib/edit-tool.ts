@@ -69,12 +69,14 @@ export function createEditExecute({
     filesInDraft,
     getPageContent: _getPageContent,
     validateNewContent,
+    onNewFile: onFilesDraftStructureChange,
 }: {
     validateNewContent?: (x: { githubPath: string; content: string }) => any
     filesInDraft: Record<string, FileUpdate>
     getPageContent: (x: {
         githubPath: string
     }) => Promise<string | undefined | void>
+    onNewFile?: () => void | Promise<void>
 }) {
     const previousEdits = [] as FileUpdate[]
     const originalContent = new Map<string, string>()
@@ -193,6 +195,9 @@ export function createEditExecute({
                     content: file_text,
                     addedLines: lineCount,
                     deletedLines: 0,
+                }
+                if (onFilesDraftStructureChange) {
+                    await onFilesDraftStructureChange()
                 }
                 return file_text
             }

@@ -185,7 +185,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 const content = await getPageContent({ githubPath, branchId })
                 return content
             },
-            async onFilesDraftStructureChange() {
+            async onNewFile() {
                 // Update the chat with current filesInDraft state
                 await prisma.chat.update({
                     where: { chatId, userId },
@@ -302,6 +302,14 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                             }
                             deletedFiles.push(filePath)
                         }
+
+                        // Update the chat with current filesInDraft state after deletion
+                        await prisma.chat.update({
+                            where: { chatId, userId },
+                            data: {
+                                filesInDraft: (filesInDraft as any) || {},
+                            },
+                        })
 
                         return { deletedFiles }
                     },
