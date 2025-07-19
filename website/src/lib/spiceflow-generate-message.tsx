@@ -10,6 +10,7 @@ import {
     stepCountIs,
     isToolUIPart,
     createIdGenerator,
+    Tool,
 } from 'ai'
 import { prisma, Prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
@@ -141,27 +142,35 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             filesInDraft,
         } = await request.json()
         // First, check if the user can access the requested branch
-        const branch = await prisma.siteBranch.findFirst({
-            where: {
-                branchId,
-                site: {
-                    org: {
-                        users: {
-                            some: {
-                                userId,
+        // Fetch branch and chat in parallel for efficiency
+        const [branch, chat] = await Promise.all([
+            prisma.siteBranch.findFirst({
+                where: {
+                    branchId,
+                    site: {
+                        org: {
+                            users: {
+                                some: {
+                                    userId,
+                                },
                             },
                         },
                     },
                 },
-            },
-            include: {
-                site: {
-                    include: {
-                        locales: true,
+                include: {
+                    site: {
+                        include: {
+                            locales: true,
+                        },
                     },
                 },
-            },
-        })
+            }),
+            prisma.chat.findFirst({
+                where: {
+                    chatId,
+                },
+            }),
+        ])
         if (!branch) {
             throw new Error('You do not have access to this branch')
         }
@@ -178,6 +187,17 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
         })
 
         let model = openai.responses('gpt-4.1')
+        if (chat?.modelId && chat?.modelProvider) {
+            if (chat.modelProvider === 'openai') {
+                model = openai(chat.modelId)
+            } else if (chat.modelProvider === 'anthropic') {
+                model = anthropic(chat.modelId)
+            } else {
+                throw new Error(
+                    `Unsupported model provider: ${chat.modelProvider}`,
+                )
+            }
+        }
         // model = anthropic('claude-3-5-haiku-latest')
         const editFilesExecute = createEditExecute({
             filesInDraft,
@@ -221,8 +241,16 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                   execute: editFilesExecute,
               })
 
+        let webSearch: Tool = openai.tools.webSearchPreview({
+            searchContextSize: 'high',
+        })
+        if (model.modelId.includes('claude')) {
+            webSearch = anthropic.tools.webSearch_20250305({})
+        }
+
         const result = streamText({
             model,
+
             messages: [
                 {
                     role: 'system',
@@ -243,6 +271,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 } satisfies OpenAIResponsesProviderOptions,
             },
             tools: {
+                webSearch,
                 strReplaceEditor,
 
                 getProjectFiles: tool({
@@ -471,24 +500,22 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 .join('')
 
             // create the user message so it shows up when resuming chat
-            await prisma.chatMessage
-                .upsert({
-                    where: {
-                        id: lastUserMessage.id,
-                    },
-                    update: {
-                        createdAt: new Date(),
-                        role: 'user',
-                    },
-                    create: {
-                        chatId,
-                        createdAt: new Date(),
-                        id: lastUserMessage.id,
+            await prisma.chatMessage.upsert({
+                where: {
+                    id: lastUserMessage.id,
+                },
+                update: {
+                    createdAt: new Date(),
+                    role: 'user',
+                },
+                create: {
+                    chatId,
+                    createdAt: new Date(),
+                    id: lastUserMessage.id,
 
-                        role: 'user',
-                    },
-                })
-
+                    role: 'user',
+                },
+            })
         }
         const idGenerator = createIdGenerator()
         const stream = result.toUIMessageStream({
@@ -530,6 +557,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     prisma.chat.create({
                         data: {
                             chatId,
+                            modelId: model.modelId,
                             createdAt: prevChat?.createdAt,
                             userId,
                             branchId,
@@ -849,7 +877,7 @@ export async function getPageContent({ githubPath, branchId }) {
         }),
     ])
     if (!page && !metaFile) {
-      return
+        return
     }
     if (page) {
         // Get the content from the MarkdownBlob relation
