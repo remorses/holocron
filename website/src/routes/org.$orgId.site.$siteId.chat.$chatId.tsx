@@ -44,6 +44,7 @@ import { apiClient } from '../lib/spiceflow-client'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
 import Chat from '../components/chat'
 import { useStickToBottom } from 'use-stick-to-bottom'
+import { href } from 'react-router'
 
 export type { Route }
 
@@ -358,6 +359,7 @@ function RightSide() {
                     <GithubRepoButton />
                     <GitHubSyncStatus />
                     <GitHubSyncButton />
+                    <InstallGithubAppToolbar />
                 </div>
 
                 <div className='flex grow flex-col'>
@@ -419,27 +421,18 @@ function GithubRepoButton() {
     const githubFolder = siteData?.site.githubFolder
 
     const hasGithubRepo = githubOwner && githubRepo
-    const repoUrl = hasGithubRepo
-        ? `https://github.com/${githubOwner}/${githubRepo}${githubFolder ? '/' + githubFolder.replace(/^\/+/, '') : ''}`
-        : undefined
+    
+    // Return null if no repository is configured
+    if (!hasGithubRepo) return null
+    
+    const repoUrl = `https://github.com/${githubOwner}/${githubRepo}${githubFolder ? '/' + githubFolder.replace(/^\/+/, '') : ''}`
 
     return (
-        <Button
-            variant='secondary'
-            disabled={!hasGithubRepo}
-            asChild={!!hasGithubRepo}
-        >
-            {hasGithubRepo ? (
-                <a href={repoUrl} target='_blank' rel='noopener noreferrer'>
-                    <GithubIcon className='size-4 mr-2' />
-                    {githubOwner}/{githubRepo}
-                </a>
-            ) : (
-                <>
-                    <GithubIcon className='size-4 mr-2' />
-                    No repository
-                </>
-            )}
+        <Button variant='secondary' asChild>
+            <a href={repoUrl} target='_blank' rel='noopener noreferrer'>
+                <GithubIcon className='size-4 mr-2' />
+                {githubOwner}/{githubRepo}
+            </a>
         </Button>
     )
 }
@@ -585,5 +578,56 @@ function GitHubSyncButton() {
                 onClear={() => setErrorMessage('')}
             />
         </Popover>
+    )
+}
+
+function InstallGithubAppToolbar() {
+    const { orgId } = useParams()
+    const siteData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId',
+    ) as SiteRoute.ComponentProps['loaderData']
+    const chatData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId.chat.$chatId',
+    ) as Route.ComponentProps['loaderData'] | undefined
+
+    const githubOwner = siteData.site.githubOwner
+    const handleInstallGithub = () => {
+        const nextUrl = new URL(window.location.href)
+        nextUrl.searchParams.set('installGithubApp', 'true')
+        const setupUrl = href('/api/github/install')
+
+        const url = new URL(setupUrl, window.location.origin)
+        if (githubOwner) {
+            url.searchParams.set('chosenOrg', githubOwner)
+        }
+        url.searchParams.set('next', nextUrl.toString())
+        const setupUrlWithNext = url.toString()
+        window.location.href = setupUrlWithNext
+    }
+    const hideBrowser = shouldHideBrowser()
+    if (hideBrowser) {
+        return null
+    }
+
+    // Only show if site has NO GitHub installation
+    if (!!siteData.site.githubInstallations?.length) return null
+
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <Button
+                    variant='default'
+                    onClick={handleInstallGithub}
+                    size={'sm'}
+                    className='bg-purple-600 hover:bg-purple-700 text-white'
+                >
+                    <div className='flex items-center gap-2'>
+                        <GithubIcon className='size-4' />
+                        Connect GitHub
+                    </div>
+                </Button>
+            </TooltipTrigger>
+            <TooltipContent>Connect GitHub to create PRs</TooltipContent>
+        </Tooltip>
     )
 }

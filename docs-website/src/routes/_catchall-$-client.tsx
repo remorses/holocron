@@ -14,7 +14,8 @@ import { Markdown } from 'contesto/src/lib/markdown'
 // Remove chatId cookie on page unload at module level
 if (typeof window !== 'undefined') {
     const removeChatIdCookie = () => {
-        document.cookie = 'chatId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax'
+        document.cookie =
+            'chatId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax'
     }
 
     window.addEventListener('beforeunload', removeChatIdCookie)
@@ -44,6 +45,7 @@ import {
     TwitterIcon,
     Edit3Icon,
     EyeIcon,
+    SparklesIcon,
 } from 'lucide-react'
 import { AskAIButton, LLMCopyButton, ViewOptions } from '../components/llm'
 import { buttonVariants } from 'docs-website/src/components/ui/button'
@@ -159,7 +161,7 @@ function PageContent(props: Route.ComponentProps): any {
                         fallback={
                             <div className='flex items-center justify-center h-96'>
                                 <div className='text-muted-foreground'>
-                                    Loading editor...
+                                    {/* Loading editor... */}
                                 </div>
                             </div>
                         }
@@ -209,8 +211,8 @@ function PageContent(props: Route.ComponentProps): any {
                         githubUrl={`https://github.com/${owner}/${repo}/blob/${githubBranch}/${githubPath}`}
                         contextual={docsJson?.contextual}
                     />
+                    <EditorToggle />
                     <AskAIButton />
-                    {/* <EditorToggle /> */}
                 </div>
 
                 <div className='prose flex-1 text-fd-foreground/80'>

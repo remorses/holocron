@@ -7,6 +7,7 @@ import {
     Copy,
     ExternalLinkIcon,
     MessageCircleIcon,
+    SparklesIcon,
 } from 'lucide-react'
 import { cn } from 'docs-website/src/lib/cn'
 import { useCopyButton } from 'fumadocs-ui/utils/use-copy-button'
@@ -98,6 +99,7 @@ export function AskAIButton() {
                 }),
             )}
         >
+            <SparklesIcon />
             Ask AI
         </button>
     )

@@ -12,6 +12,15 @@ import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
 import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import { cn } from '../lib/cn'
+import { XIcon } from 'lucide-react'
+import { Button } from './ui/button'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from './ui/tooltip'
+import { useDocsState } from '../lib/docs-state'
 
 // Configure Monaco workers for Vite
 self.MonacoEnvironment = {
@@ -120,9 +129,31 @@ export function MonacoMarkdownEditor({
 
     return (
         <div
-            className='not-prose -mx-8'
+            className='not-prose -mx-8 relative'
             style={{ height: 'calc(100vh - var(--fd-nav-height))' }}
         >
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                            variant='ghost'
+                            size='sm'
+                            className='absolute top-2 right-6 z-10 size-8 p-0'
+                            onClick={() => {
+                                useDocsState.setState((state) => ({
+                                    ...state,
+                                    previewMode: 'preview',
+                                }))
+                            }}
+                        >
+                            <XIcon className='size-4' />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Close editor</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
             <Editor
                 // key={resolvedTheme}
                 height='100%'

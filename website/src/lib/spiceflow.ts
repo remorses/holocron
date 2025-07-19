@@ -859,6 +859,64 @@ export const app = new Spiceflow({ basePath: '/api' })
     })
     .route({
         method: 'POST',
+        path: '/saveChangesForChat',
+        request: z.object({
+            branchId: z.string().min(1, 'branchId is required'),
+            chatId: z.string().min(1, 'chatId is required'),
+            filesInDraft: z.record(z.string(), fileUpdateSchema),
+        }),
+        async handler({ request, state }) {
+            const { userId } = state
+            const { branchId, filesInDraft, chatId } = await request.json()
+
+            if (!userId) {
+                throw new AppError('Missing userId')
+            }
+
+            // Check user has access to the branch through chat
+            const [branch, chat] = await Promise.all([
+                prisma.siteBranch.findFirst({
+                    where: {
+                        branchId,
+                        site: {
+                            org: {
+                                users: {
+                                    some: { userId },
+                                },
+                            },
+                        },
+                    },
+                }),
+                prisma.chat.findFirst({
+                    where: {
+                        chatId,
+                        userId,
+                        branchId,
+                    },
+                }),
+            ])
+
+            if (!branch) {
+                throw new AppError('Branch not found or access denied')
+            }
+            if (!chat) {
+                throw new AppError('Chat not found or access denied')
+            }
+
+            // Update chat with the saved files
+            await prisma.chat.update({
+                where: { chatId, userId },
+                data: {
+                    lastPushedFiles: filesInDraft as any,
+                    filesInDraft: filesInDraft as any,
+                },
+            })
+
+            return { success: true }
+        },
+    })
+    .route({
+        method: 'POST',
         path: '/getCliSession',
         request: z.object({
             secret: z

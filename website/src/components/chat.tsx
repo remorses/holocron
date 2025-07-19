@@ -72,6 +72,7 @@ import {
     ImageIcon,
     ListTreeIcon,
     PaletteIcon,
+    Save,
     X,
 } from 'lucide-react'
 import React from 'react'
@@ -768,11 +769,8 @@ function Footer() {
                                 </a>
                             )}
                             <div className='justify-end flex grow'>
-                                {!!siteData.site.githubInstallations?.length ? (
-                                    <PrButton />
-                                ) : (
-                                    <InstallGithubApp />
-                                )}
+                                <PrButton />
+                                <SaveChangesButton />
                             </div>
                         </div>
 
@@ -914,6 +912,10 @@ function PrButton({}) {
 
     const revalidator = useRevalidator()
 
+    // Only show if site has GitHub installation AND repository configured
+    if (!siteData.site.githubInstallations?.length) return null
+    if (!siteData.site.githubOwner || !siteData.site.githubRepo) return null
+
     const isButtonDisabled: boolean = (() => {
         if (isLoading) {
             return true
@@ -1052,55 +1054,168 @@ function PrButton({}) {
     )
 }
 
-function InstallGithubApp() {
-    const { orgId } = useParams()
+function SaveChangesButton({}) {
+    const [isLoading, setIsLoading] = useState(false)
+    const [errorMessage, setErrorMessage] = useState('')
+    const [buttonText, setButtonText] = useTemporaryState('', 2000)
+    const { messages, isGenerating: isChatGenerating } = useChatContext()
+
+    const { chatId, branchId } =
+        useLoaderData() as Route.ComponentProps['loaderData']
     const siteData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
-    const chatData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId.chat.$chatId',
-    ) as ChatRoute.ComponentProps['loaderData']
 
-    const githubOwner = siteData.site.githubOwner
-    const handleInstallGithub = () => {
-        const nextUrl = new URL(window.location.href)
-        nextUrl.searchParams.set('installGithubApp', 'true')
-        const setupUrl = href('/api/github/install')
+    const filesInDraft = useWebsiteState((x) => x?.filesInDraft || {})
+    const lastPushedFiles = useWebsiteState((x) => x.lastPushedFiles)
+    const hasNonPushedChanges = useMemo(() => {
+        return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
+    }, [filesInDraft, lastPushedFiles])
 
-        const url = new URL(setupUrl, window.location.origin)
-        if (githubOwner) {
-            url.searchParams.set('chosenOrg', githubOwner)
+    const revalidator = useRevalidator()
+
+    // Only show if site has NO GitHub installation
+    if (!!siteData.site.githubInstallations?.length) return null
+
+    // Only show if there are files in draft with content
+    const hasFilesWithContent = Object.values(filesInDraft).some(file => file?.content?.trim())
+    if (!hasFilesWithContent) return null
+
+    const isButtonDisabled: boolean = (() => {
+        if (isLoading) {
+            return true
         }
-        url.searchParams.set('next', nextUrl.toString())
-        const setupUrlWithNext = url.toString()
-        window.location.href = setupUrlWithNext
-    }
-    const hideBrowser = shouldHideBrowser()
-    if (hideBrowser) {
+        if (isChatGenerating) {
+            return true
+        }
+        if (errorMessage) {
+            return true
+        }
+
+        // if (!hasNonPushedChanges) {
+        //     return true
+        // }
+        return false
+    })()
+
+    const getTooltipMessage = (): string | null => {
+        if (!hasNonPushedChanges) {
+            return 'No unsaved changes'
+        }
+        if (isChatGenerating) {
+            return 'Wait for chat to finish generating'
+        }
+        if (isLoading) {
+            return 'Saving changes...'
+        }
+        if (errorMessage) {
+            return 'Fix error before saving'
+        }
         return null
     }
 
+    const displayButtonText: string = (() => {
+        if (buttonText) {
+            return buttonText
+        }
+        if (isLoading) {
+            return 'loading...'
+        }
+        return 'Save Changes'
+    })()
+
+    const handleSaveChanges = async () => {
+        setIsLoading(true)
+        try {
+            const filesInDraft = useWebsiteState.getState()?.filesInDraft || {}
+
+            const result = await apiClient.api.saveChangesForChat.post({
+                branchId,
+                filesInDraft,
+                chatId,
+            })
+            if (result.error) throw result.error
+
+            await revalidator.revalidate()
+            setButtonText('Changes saved')
+        } catch (error) {
+            console.error('Failed to save changes:', error)
+            const message =
+                error instanceof Error ? error.message : 'Failed to save changes'
+            setErrorMessage(message)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+    if (!messages?.length) return null
+
     return (
         <div className='flex items-center gap-2'>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button
-                        variant='default'
-                        onClick={handleInstallGithub}
-                        size={'sm'}
-                        className='bg-purple-600 hover:bg-purple-700 text-white'
-                    >
-                        <div className='flex items-center gap-2'>
-                            <GitBranch className='size-4' />
-                            Connect GitHub
+            <Popover
+                onOpenChange={(x) => {
+                    if (!x) setErrorMessage('')
+                }}
+                open={!!errorMessage}
+            >
+                <PopoverTrigger asChild>
+                    <div className=''>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant='default'
+                                    onClick={handleSaveChanges}
+                                    disabled={isButtonDisabled}
+                                    size={'sm'}
+                                    className='bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50'
+                                >
+                                    <div className='flex items-center gap-2'>
+                                        <Save className='size-4' />
+                                        {displayButtonText}
+                                    </div>
+                                </Button>
+                            </TooltipTrigger>
+                            {Boolean(
+                                isButtonDisabled && getTooltipMessage(),
+                            ) && (
+                                <TooltipContent>
+                                    {getTooltipMessage()}
+                                </TooltipContent>
+                            )}
+                        </Tooltip>
+                    </div>
+                </PopoverTrigger>
+
+                {!!errorMessage && (
+                    <div
+                        style={{
+                            pointerEvents: 'auto',
+                        }}
+                        className='fixed inset-0 z-50 bg-black/20 transition-all duration-100'
+                    />
+                )}
+
+                <PopoverContent className='w-full min-w-[200px] z-50 max-w-[400px]'>
+                    <div className='flex items-start gap-3 '>
+                        <AlertCircle className='size-5 text-destructive mt-0.5 flex-shrink-0' />
+                        <div className='grow'>
+                            <h4 className='font-medium  mb-1'>Error</h4>
+                            <p className='text-sm '>{errorMessage}</p>
                         </div>
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent>Connect GitHub to create PRs</TooltipContent>
-            </Tooltip>
+                        <Button
+                            variant='ghost'
+                            size='sm'
+                            className='p-1 h-auto hover:text-destructive hover:bg-destructive/10'
+                            onClick={() => setErrorMessage('')}
+                        >
+                            <X className='size-4' />
+                        </Button>
+                    </div>
+                </PopoverContent>
+            </Popover>
         </div>
     )
 }
+
 
 interface DiffStatsProps {
     filesInDraft: Record<string, FileUpdate>
