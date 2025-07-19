@@ -1347,7 +1347,7 @@ export const app = new Spiceflow({ basePath: '/api' })
         },
     })
     .onError(({ error, request, path }) => {
-        notifyError(error, request.url)
+        notifyError(error, `spiceflow api error in ${request.url}`)
     })
 
 export type SpiceflowApp = typeof app

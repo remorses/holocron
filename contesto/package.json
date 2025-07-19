@@ -52,6 +52,7 @@
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
         "react-sound-visualizer": "^1.4.0",
+        "react-tracked": "^2.0.1",
         "remark": "^15.0.1",
         "remark-gfm": "^4.0.1",
         "remark-mdx": "^3.1.0",

@@ -110,9 +110,9 @@ export function ChatRecordButton({ transcribeAudio }: RecordButtonProps) {
 
             // Add transcribed text to chat input
             if (text) {
-                const currentText = useChatState.getState().text || ''
+                const currentText = useChatState.getState().draftText || ''
                 const newText = currentText + (currentText ? ' ' : '') + text
-                useChatState.setState({ text: newText })
+                useChatState.setState({ draftText: newText })
             }
         } catch (error) {
             console.error('Transcription error:', error)

@@ -117,10 +117,6 @@ export type WebsiteTools = {
     }
 }
 
-const renderFormTool = createRenderFormTool({
-    jsonSchema: docsJsonSchema as any,
-})
-
 export const generateMessageApp = new Spiceflow().state('userId', '').route({
     method: 'POST',
     path: '/generateMessage',
@@ -188,7 +184,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
 
         let model = openai.responses('gpt-4.1')
         if (chat?.modelId && chat?.modelProvider) {
-            if (chat.modelProvider === 'openai') {
+            if (chat.modelProvider.startsWith('openai')) {
                 model = openai(chat.modelId)
             } else if (chat.modelProvider === 'anthropic') {
                 model = anthropic(chat.modelId)
@@ -198,6 +194,10 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 )
             }
         }
+        const renderFormTool = createRenderFormTool({
+            jsonSchema: docsJsonSchema as any,
+            replaceOptionalsWithNulls: model.provider.startsWith('openai'),
+        })
         // model = anthropic('claude-3-5-haiku-latest')
         const editFilesExecute = createEditExecute({
             filesInDraft,
@@ -471,6 +471,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
         const result = streamText({
             model,
             tools,
+
             messages: [
                 {
                     role: 'system',

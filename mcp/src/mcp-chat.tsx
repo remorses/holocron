@@ -10,7 +10,7 @@ import {
 import {
     ChatProvider,
     ChatState,
-    useChatState,
+    useChatContext,
 } from 'contesto/src/chat/chat-provider'
 import { ChatTextarea } from 'contesto/src/chat/chat-textarea'
 import { useStickToBottom } from 'contesto/src/lib/stick-to-bottom'
@@ -121,7 +121,7 @@ export function Chat() {
 }
 
 function WelcomeMessage() {
-    const messages = useChatState((x) => x?.messages)
+    const { messages } = useChatContext()
     if (messages?.length) return null
 
     return (
@@ -137,7 +137,7 @@ function WelcomeMessage() {
 }
 
 function Messages({ ref }) {
-    const messages = useChatState((x) => x?.messages)
+    const { messages } = useChatContext()
 
     if (!messages?.length) return null
 
@@ -152,7 +152,7 @@ function Messages({ ref }) {
 }
 
 function MessageRenderer({ message }: { message: UIMessage }) {
-    const isChatGenerating = useChatState((x) => x.isGenerating)
+    const { isGenerating: isChatGenerating } = useChatContext()
 
     if (message.role === 'user') {
         return (
@@ -195,8 +195,7 @@ function MessageRenderer({ message }: { message: UIMessage }) {
 }
 
 function Footer() {
-    const isPending = useChatState((x) => x.isGenerating)
-    const text = useChatState((x) => x.text || '')
+    const { isGenerating: isPending, text } = useChatContext()
 
     const transcribeAudio = async (audioFile: File): Promise<string> => {
         console.log('Audio transcription not implemented yet', audioFile)

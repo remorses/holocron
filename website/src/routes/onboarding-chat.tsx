@@ -34,7 +34,7 @@ import {
 import {
     ChatProvider,
     ChatState,
-    useChatState,
+    useChatContext,
 } from 'contesto/src/chat/chat-provider'
 import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
 import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
@@ -155,7 +155,7 @@ function Chat({}) {
 }
 
 function WelcomeMessage() {
-    const messages = useChatState((x) => x?.messages)
+    const { messages } = useChatContext()
     if (messages?.length) return null
     return (
         <div className='text-center max-w-xl'>
@@ -171,7 +171,7 @@ function WelcomeMessage() {
 }
 
 function Messages({ ref }) {
-    const messages = useChatState((x) => x?.messages)
+    const { messages } = useChatContext()
 
     if (!messages.length) return null
     return (
@@ -185,7 +185,7 @@ function Messages({ ref }) {
 }
 
 function MessageRenderer({ message }: { message: UIMessage }) {
-    const isChatGenerating = useChatState((x) => x.isGenerating)
+    const { isGenerating: isChatGenerating } = useChatContext()
 
     if (message.role === 'user') {
         return (
@@ -252,13 +252,14 @@ const AUTOCOMPLETE_SUGGESTIONS = [
 
 function ContextButton({ contextOptions }) {
     const [open, setOpen] = useState(false)
+    const { draftText, setDraftText } = useChatContext()
 
     const handleContextSelect = (selectedValue) => {
         if (!selectedValue) return
 
-        const currentText = useChatState.getState().text || ''
+        const currentText = draftText || ''
         const newText = currentText + (currentText ? ' ' : '') + selectedValue
-        useChatState.setState({ text: newText })
+        setDraftText(newText)
         setOpen(false)
     }
 
@@ -303,8 +304,7 @@ function ContextButton({ contextOptions }) {
 }
 
 function Footer() {
-    const isPending = useChatState((x) => x.isGenerating)
-    const text = useChatState((x) => x.text || '')
+    const { isGenerating: isPending, draftText: text } = useChatContext()
     const durableUrl = `/api/generateMessage?chatId=${CHAT_ID}`
     const abortControllerRef = useRef<AbortController | null>(null)
 
@@ -338,7 +338,7 @@ function Footer() {
     }
 
     const submitMessageWithoutDelete = async () => {
-        const messages = useChatState.getState()?.messages
+        const { messages, setMessages } = useChatContext()
         const generateId = createIdGenerator()
         const controller = new AbortController()
         abortControllerRef.current = controller
@@ -373,7 +373,7 @@ function Footer() {
                     break
                 }
                 startTransition(() => {
-                    useChatState.setState({ messages: newMessages })
+                    setMessages(newMessages)
                 })
             }
         } catch (error) {
@@ -445,7 +445,7 @@ function Footer() {
                             <Button
                                 className='rounded-md h-8'
                                 onClick={onSubmit}
-                                disabled={!text.trim()}
+                                disabled={!text?.trim()}
                             >
                                 Generate
                             </Button>

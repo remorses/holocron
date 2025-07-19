@@ -1,4 +1,8 @@
 import { createIdGenerator, UIMessage } from 'ai'
+import { useShallow } from 'zustand/react/shallow'
+
+import { createTrackedSelector } from 'react-tracked'
+
 import * as Ariakit from '@ariakit/react'
 import { create } from 'zustand'
 import { createContext, useContext, useMemo, useEffect, useRef } from 'react'
@@ -10,24 +14,40 @@ const ChatContext = createContext<UseBoundStore<StoreApi<ChatState>> | null>(
     null,
 )
 
+import { shallow } from 'zustand/shallow'
+import { flushSync } from 'react-dom'
+
+function useShallowStable<T>(value: T): T {
+    const ref = useRef(value)
+    if (!shallow(ref.current, value)) ref.current = value
+    return ref.current
+}
+
 const DRAFT_MESSAGE_KEY = 'contesto-chat-draft'
 
 const ChatProvider = (props: {
     children?: React.ReactNode
-    generateMessages?: (x: {
-        abortController: AbortController
-    }) => Promise<void>
+    generateMessages?: (x: ChatState) => Promise<void>
     initialValue: Partial<ChatState>
     className?: string
 }) => {
     const mentionsCombobox = Ariakit.useComboboxStore()
-
+    const stableInitialState = useShallowStable(props.initialValue)
     const store = useMemo(() => {
         const abortController = new AbortController()
         let store = create<ChatState>(() => ({
             messages: [],
-            submitForm() {
-                return onSubmit()
+            submit() {
+                return submit()
+            },
+            stop() {
+                store.getState().abortController.abort('stop generation')
+            },
+            setDraftText(text) {
+                store.setState({ draftText: text })
+            },
+            setMessages(messages) {
+                store.setState({ messages })
             },
             abortController,
             mentionsCombobox,
@@ -35,27 +55,27 @@ const ChatProvider = (props: {
         }))
         Object.assign(useChatState, store)
         return store
-    }, [props.initialValue])
+    }, [stableInitialState])
     useEffect(() => {
         const handleChatRegenerate = () => {
             // Generate a new assistant response
-            onSubmit()
+            submit()
         }
 
         window.addEventListener('chatRegenerate', handleChatRegenerate)
         return () => {
             window.removeEventListener('chatRegenerate', handleChatRegenerate)
         }
-    }, [onSubmit])
-    async function onSubmit() {
+    }, [submit])
+    async function submit() {
         const generateId = createIdGenerator()
         const assistantMessageId = generateId()
         const userMessageId = generateId()
         const now = new Date()
-        const { text: value = '', messages } = useChatState.getState()
+        const { draftText: value = '', messages } = store.getState()
         if (!value.trim()) {
             // For regenerate, use existing messages and just add new assistant message
-            useChatState.setState({
+            store.setState({
                 messages: [
                     ...messages,
                     {
@@ -73,7 +93,7 @@ const ChatProvider = (props: {
                 parts: [{ type: 'text', text: value }],
             }
 
-            useChatState.setState({
+            store.setState({
                 messages: [
                     ...messages,
                     userMessage,
@@ -84,21 +104,22 @@ const ChatProvider = (props: {
                     },
                 ],
             })
-            useChatState.setState({ text: '' })
+            store.setState({ draftText: '' })
         }
-        useChatState.setState({
+
+        store.setState({
             isGenerating: true,
             assistantErrorMessage: undefined,
         })
 
         try {
-            const abortController = useChatState.getState().abortController
-            await props.generateMessages?.({ abortController })
+            await props.generateMessages?.(useChatState.getState())
         } catch (error) {
+            console.error('Error during message generation:', error)
             // Remove only the failed assistant message, keep user message
-            const currentMessages = useChatState.getState().messages || []
+            const currentMessages = store.getState().messages || []
             let messagesWithoutAssistant = currentMessages.slice(0, -1)
-            useChatState.setState({
+            store.setState({
                 messages: messagesWithoutAssistant,
                 assistantErrorMessage:
                     error instanceof Error
@@ -106,7 +127,7 @@ const ChatProvider = (props: {
                         : 'An unexpected error occurred',
             })
         } finally {
-            useChatState.setState({
+            store.setState({
                 isGenerating: false,
                 abortController: new AbortController(),
             })
@@ -116,30 +137,29 @@ const ChatProvider = (props: {
 
     useEffect(() => {
         const handleChatRegenerate = () => {
-            // Generate a new assistant response
-            onSubmit()
+            submit()
         }
 
         window.addEventListener('chatRegenerate', handleChatRegenerate)
         return () => {
             window.removeEventListener('chatRegenerate', handleChatRegenerate)
         }
-    }, [onSubmit])
+    }, [submit])
 
     useEffect(() => {
         // Load initial text from localStorage if not provided in props
-        if (!props.initialValue.text) {
+        if (!props.initialValue.draftText) {
             const savedDraft = localStorage.getItem(DRAFT_MESSAGE_KEY)
             if (savedDraft) {
-                store.setState({ text: savedDraft })
+                store.setState({ draftText: savedDraft })
             }
         }
 
         // Subscribe to text changes and persist to localStorage
         const unsubscribe = store.subscribe((state, prevState) => {
-            if (state.text !== prevState.text) {
-                if (state.text) {
-                    localStorage.setItem(DRAFT_MESSAGE_KEY, state.text)
+            if (state.draftText !== prevState.draftText) {
+                if (state.draftText) {
+                    localStorage.setItem(DRAFT_MESSAGE_KEY, state.draftText)
                 } else {
                     localStorage.removeItem(DRAFT_MESSAGE_KEY)
                 }
@@ -147,39 +167,42 @@ const ChatProvider = (props: {
         })
 
         return unsubscribe
-    }, [store, props.initialValue.text])
+    }, [store, props.initialValue.draftText])
 
     return (
-        <form
-            // style={{ display: 'contents' }}
-            className={cn('flex flex-col grow', props.className)}
-            onSubmit={(e) => {
-                e.preventDefault()
-                onSubmit()
-            }}
-        >
-            <ChatContext.Provider value={store}>
-                {props.children}
-            </ChatContext.Provider>
-        </form>
+        <ChatContext.Provider value={store}>
+            {props.children}
+        </ChatContext.Provider>
     )
 }
 
-const useChatState = ((
-    selector: Parameters<UseBoundStore<StoreApi<ChatState>>>[0],
-) => {
+export let useChatContext = () => {
     const store = useContext(ChatContext)
     if (store === null) {
         console.error('Missing provider for context:', ChatContext)
         throw new Error('Missing provider for context')
+    }
+    const trackedSelector = useMemo(() => createTrackedSelector(store), [store])
+    return trackedSelector()
+}
+
+let useChatState = ((
+    selector: Parameters<UseBoundStore<StoreApi<ChatState>>>[0],
+) => {
+    const store = useContext(ChatContext)
+    if (store === null) {
+        throw new Error('Missing provider for chat context')
     }
     return store(selector)
 }) as UseBoundStore<StoreApi<ChatState>>
 
 export type ChatState = {
     messages: UIMessage[]
-    text?: string
-    submitForm: () => any
+    draftText?: string
+    setDraftText: (text: string) => void
+    submit: () => Promise<any>
+    stop: () => void
+    setMessages: (messages: UIMessage[]) => void
     abortController: AbortController
     isGenerating?: boolean
     mentionsCombobox: ComboboxStore

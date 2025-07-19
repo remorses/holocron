@@ -13,7 +13,7 @@ import {
 import {
     ChatProvider,
     ChatState,
-    useChatState,
+    useChatContext,
 } from 'contesto/src/chat/chat-provider'
 import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
 import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
@@ -59,9 +59,132 @@ import { highlightText } from '../lib/highlight-text'
 
 export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
     const chatId = usePersistentDocsState((x) => x.chatId)
+    const location = useLocation()
+    const navigate = useNavigate()
+    const currentSlug = location.pathname
+
+    // Get files from root loader data
+    const rootLoaderData = useRouteLoaderData(
+        'routes/_catchall',
+    ) as Route.ComponentProps['loaderData']
+    const files = rootLoaderData?.files || []
+
+    const submitMessageWithoutDelete = async ({
+        messages,
+        setMessages,
+        abortController,
+    }: Partial<ChatState>) => {
+        const generateId = createIdGenerator()
+
+        const currentOrigin =
+            typeof window !== 'undefined' ? window.location.origin : ''
+
+        try {
+            const { data: generator, error } =
+                await docsApiClientWithDurableFetch.api.generateMessage.post(
+                    {
+                        messages: messages as DocsUIMessage[],
+                        currentSlug: currentSlug,
+                        currentOrigin: currentOrigin,
+                        chatId: chatId,
+                        locale: 'en',
+                    },
+                    {
+                        query: {
+                            lastMessageId: messages![messages!.length - 1]!.id,
+                        },
+                        fetch: { signal: abortController?.signal },
+                    },
+                )
+            if (error) throw error
+
+            const [effectsIter, stateIter] = teeAsyncIterable(
+                uiStreamToUIMessages<DocsUIMessage>({
+                    uiStream: generator,
+                    messages: messages as DocsUIMessage[],
+                    generateId,
+                }),
+            )
+            async function updateDocsSite() {
+                for await (const newMessages of effectsIter) {
+                    try {
+                        const lastMessage = newMessages[newMessages.length - 1]
+                        const lastPart =
+                            lastMessage.parts[lastMessage.parts.length - 1]
+                        if (
+                            lastMessage.role === 'assistant' &&
+                            lastPart?.type === 'tool-selectText' &&
+                            lastPart.state === 'output-available'
+                        ) {
+                            if (lastPart.output.error) {
+                                continue
+                            }
+                            const targetSlug = lastPart.output?.slug
+                            if (
+                                targetSlug &&
+                                typeof targetSlug === 'string' &&
+                                targetSlug !== location.pathname
+                            ) {
+                                await navigate(targetSlug)
+                            }
+                            usePersistentDocsState.setState({
+                                drawerState: 'minimized',
+                            })
+                            await new Promise((res) => setTimeout(res, 10))
+                            highlightText(lastPart.input)
+                        }
+                        if (
+                            lastMessage.role === 'assistant' &&
+                            lastPart?.type === 'tool-goToPage' &&
+                            lastPart.state === 'output-available'
+                        ) {
+                            if (lastPart.output.error) {
+                                continue
+                            }
+                            const targetSlug = lastPart.output?.slug
+                            if (
+                                typeof targetSlug === 'string' &&
+                                targetSlug !== location.pathname
+                            ) {
+                                await navigate(targetSlug)
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error in updateDocsSite loop:', error)
+                    }
+                }
+            }
+            updateDocsSite()
+
+            // Second iteration: update chat state
+            for await (const newMessages of stateIter) {
+                if (abortController?.signal.aborted) {
+                    break
+                }
+                startTransition(() => {
+                    setMessages?.(newMessages)
+                })
+            }
+
+            // Save final messages to persistent storage
+            const finalMessages = messages
+            if (finalMessages && finalMessages.length > 0) {
+                saveChatMessages(chatId, finalMessages)
+            }
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                console.log('Generation aborted')
+            } else {
+                throw error
+            }
+        } finally {
+        }
+    }
+
     const initialChatState = useMemo<Partial<ChatState>>(
         () => ({
             messages: loadChatMessages(chatId),
+            abortController: new AbortController(),
             isGenerating: false,
         }),
         [loaderData, chatId],
@@ -84,7 +207,10 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
     }
 
     return (
-        <ChatProvider initialValue={initialChatState}>
+        <ChatProvider
+            initialValue={initialChatState}
+            generateMessages={submitMessageWithoutDelete}
+        >
             <AnimatePresence>
                 {drawerState !== 'minimized' && (
                     <motion.div
@@ -133,10 +259,11 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
 }
 
 function ChatTopBar() {
+    const { setMessages } = useChatContext()
     const clearChat = () => {
         const newChatId = generateChatId()
         usePersistentDocsState.setState({ chatId: newChatId })
-        useChatState.setState({ messages: [] })
+        setMessages([])
     }
 
     const closeDrawer = () => {
@@ -188,7 +315,7 @@ function Chat({}) {
 }
 
 function WelcomeMessage() {
-    const messages = useChatState((x) => x?.messages)
+    const { messages } = useChatContext()
     if (messages?.length) return null
     return (
         <Markdown
@@ -202,7 +329,7 @@ function WelcomeMessage() {
 }
 
 function Messages({ ref }) {
-    const messages = useChatState((x) => x?.messages)
+    const { messages } = useChatContext()
 
     if (!messages.length) return null
     return (
@@ -221,7 +348,7 @@ function Messages({ ref }) {
 }
 
 function MessageRenderer({ message }: { message: DocsUIMessage }) {
-    const isChatGenerating = useChatState((x) => x.isGenerating)
+    const { isGenerating: isChatGenerating } = useChatContext()
 
     if (message.role === 'user') {
         return (
@@ -369,13 +496,14 @@ const AUTOCOMPLETE_SUGGESTIONS = [
 
 function ContextButton({ contextOptions }) {
     const [open, setOpen] = useState(false)
+    const { draftText, setDraftText } = useChatContext()
 
     const handleContextSelect = (selectedValue) => {
         if (!selectedValue) return
 
-        const currentText = useChatState.getState().text || ''
+        const currentText = draftText || ''
         const newText = currentText + (currentText ? ' ' : '') + selectedValue
-        useChatState.setState({ text: newText })
+        setDraftText(newText)
         setOpen(false)
     }
 
@@ -420,28 +548,14 @@ function ContextButton({ contextOptions }) {
 }
 
 function Footer() {
-    const isPending = useChatState((x) => x.isGenerating)
-    const text = useChatState((x) => x.text || '')
+    const { isGenerating, draftText, submit, stop } = useChatContext()
     const chatId = usePersistentDocsState((x) => x.chatId)
-    const location = useLocation()
-    const currentSlug = location.pathname
-    const durableUrl = `/api/generateMessage?chatId=${chatId}`
-    const abortControllerRef = useRef<AbortController | null>(null)
 
-    // Get files from root loader data
     const rootLoaderData = useRouteLoaderData(
         'routes/_catchall',
     ) as Route.ComponentProps['loaderData']
     const files = rootLoaderData?.files || []
 
-    useEffect(() => {
-        docsDurableFetchClient.isInProgress(durableUrl).then((res) => {
-            console.log('isInProgress response:', res)
-            if (res.inProgress) {
-                submitMessageWithoutDelete()
-            }
-        })
-    }, [])
     const transcribeAudio = async (audioFile: File): Promise<string> => {
         try {
             const formData = new FormData()
@@ -467,133 +581,24 @@ function Footer() {
         }
     }
 
-    const navigate = useNavigate()
-
-    const submitMessageWithoutDelete = async () => {
-        const messages = useChatState.getState()?.messages as DocsUIMessage[]
-        const generateId = createIdGenerator()
-        const controller = new AbortController()
-        abortControllerRef.current = controller
-        const currentOrigin =
-            typeof window !== 'undefined' ? window.location.origin : ''
-
-        try {
-            const { data: generator, error } =
-                await docsApiClientWithDurableFetch.api.generateMessage.post(
-                    {
-                        messages: messages,
-                        currentSlug: currentSlug,
-                        currentOrigin: currentOrigin,
-                        chatId: chatId,
-                        locale: 'en',
-                    },
-                    {
-                        query: { chatId: chatId },
-                        fetch: { signal: controller.signal },
-                    },
-                )
-            if (error) throw error
-
-            const [effectsIter, stateIter] = teeAsyncIterable(
-                uiStreamToUIMessages<DocsUIMessage>({
-                    uiStream: generator,
-                    messages: messages,
-                    generateId,
-                }),
-            )
-            async function updateDocsSite() {
-                for await (const newMessages of effectsIter) {
-                    try {
-                        const lastMessage = newMessages[newMessages.length - 1]
-                        const lastPart =
-                            lastMessage.parts[lastMessage.parts.length - 1]
-                        if (
-                            lastMessage.role === 'assistant' &&
-                            lastPart?.type === 'tool-selectText' &&
-                            lastPart.state === 'output-available'
-                        ) {
-                            if (lastPart.output.error) {
-                                continue
-                            }
-                            const targetSlug = lastPart.output?.slug
-                            if (
-                                targetSlug &&
-                                typeof targetSlug === 'string' &&
-                                targetSlug !== location.pathname
-                            ) {
-                                await navigate(targetSlug)
-                            }
-                            usePersistentDocsState.setState({
-                                drawerState: 'minimized',
-                            })
-                            await new Promise((res) => setTimeout(res, 10))
-                            highlightText(lastPart.input)
-                        }
-                        if (
-                            lastMessage.role === 'assistant' &&
-                            lastPart?.type === 'tool-goToPage' &&
-                            lastPart.state === 'output-available'
-                        ) {
-                            if (lastPart.output.error) {
-                                continue
-                            }
-                            const targetSlug = lastPart.output?.slug
-                            if (
-                                typeof targetSlug === 'string' &&
-                                targetSlug !== location.pathname
-                            ) {
-                                await navigate(targetSlug)
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Error in updateDocsSite loop:', error)
-                    }
-                }
+    const { messages } = useChatContext()
+    useEffect(() => {
+        const lastMessageId = messages[messages.length - 1]?.id || ''
+        if (!lastMessageId) return
+        const durableUrl = `/api/generateMessage?lastMessageId=${lastMessageId}`
+        docsDurableFetchClient.isInProgress(durableUrl).then((res) => {
+            console.log('isInProgress response:', res)
+            if (res.inProgress) {
+                submit()
             }
-            updateDocsSite()
-
-            // Second iteration: update chat state
-            for await (const newMessages of stateIter) {
-                if (controller.signal.aborted) {
-                    break
-                }
-                startTransition(() => {
-                    useChatState.setState({ messages: newMessages })
-                })
-            }
-
-            // Save final messages to persistent storage
-            const finalMessages = useChatState.getState().messages
-            if (finalMessages && finalMessages.length > 0) {
-                saveChatMessages(chatId, finalMessages)
-            }
-        } catch (error) {
-            if (error.name === 'AbortError') {
-                console.log('Generation aborted')
-            } else {
-                throw error
-            }
-        } finally {
-            abortControllerRef.current = null
-        }
-    }
-    const url = `/api/generateMessage?chatId=${chatId}`
+        })
+    }, [chatId])
 
     // Generate context options from actual files
     const contextOptions = files
         .filter((file) => file.type === 'page')
         .map((file) => `@${file.path.replace(/\.mdx\?$/, '')}`)
 
-    const stopGeneration = () => {
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort()
-        }
-    }
-
-    async function onSubmit() {
-        await docsDurableFetchClient.delete(url)
-        await submitMessageWithoutDelete()
-    }
     return (
         <AnimatePresence custom={false} onExitComplete={() => {}}>
             <div className=' sticky bottom-4 z-50 w-full mt-4'>
@@ -605,7 +610,6 @@ function Footer() {
                 >
                     <ContextButton contextOptions={contextOptions} />
                     <ChatTextarea
-                        onSubmit={onSubmit}
                         disabled={false}
                         placeholder='Ask me anything...'
                         className={cn('')}
@@ -623,10 +627,10 @@ function Footer() {
                         /> */}
                         <ChatRecordButton transcribeAudio={transcribeAudio} />
                         <div className='grow'></div>
-                        {isPending ? (
+                        {isGenerating ? (
                             <Button
                                 className='rounded-md h-8'
-                                onClick={stopGeneration}
+                                onClick={stop}
                                 variant='outline'
                             >
                                 Stop
@@ -634,8 +638,8 @@ function Footer() {
                         ) : (
                             <Button
                                 className='rounded-md h-8'
-                                onClick={onSubmit}
-                                disabled={!text.trim()}
+                                onClick={submit}
+                                disabled={!draftText?.trim()}
                             >
                                 Generate
                             </Button>

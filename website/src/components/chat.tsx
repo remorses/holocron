@@ -57,7 +57,7 @@ import {
 import {
     ChatProvider,
     ChatState,
-    useChatState,
+    useChatContext,
 } from 'contesto/src/chat/chat-provider'
 import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
 import { ChatSuggestionButton } from 'contesto/src/chat/chat-suggestion'
@@ -155,10 +155,9 @@ export default function Chat({ ref }) {
     const { chat, siteId, branchId } = loaderData
     const { chatId } = useParams()
 
-    const methods = useForm({
+    const formMethods = useForm({
         // values: initialDocsJsonData,
     })
-    const { reset, subscribe } = methods
 
     const { siteBranch, githubFolder } =
         useLoaderData() as Route.ComponentProps['loaderData']
@@ -183,7 +182,7 @@ export default function Chat({ ref }) {
         }
         if (!data) return
 
-        reset(data, { keepDefaultValues: true })
+        formMethods.reset(data, { keepDefaultValues: true })
         setDocsJsonState({
             values: data,
             githubFolder,
@@ -198,7 +197,7 @@ export default function Chat({ ref }) {
     }, [chatId, previousJsonString])
 
     useEffect(() => {
-        const unSub = subscribe({
+        const unSub = formMethods.subscribe({
             formState: { values: true },
 
             callback: ({ values, defaultValues }) =>
@@ -235,22 +234,13 @@ export default function Chat({ ref }) {
         [loaderData],
     )
 
-    const durableUrl = `/api/generateMessage?chatId=${chat.chatId}`
-
-    useEffect(() => {
-        durableFetchClient.isInProgress(durableUrl).then(({ inProgress }) => {
-            if (inProgress) {
-                submitWithoutDeleteOnDurablefetch()
-            }
-        })
-    }, [])
-    const abortControllerRef = useRef<AbortController | null>(null)
     const revalidator = useRevalidator()
-    const submitWithoutDeleteOnDurablefetch = async () => {
-        const messages = useChatState.getState()?.messages as WebsiteUIMessage[]
+    const submitMessages = async ({
+        messages,
+        setMessages,
+        abortController,
+    }: ChatState) => {
         const generateId = createIdGenerator()
-        const controller = new AbortController()
-        abortControllerRef.current = controller
 
         const filesInDraft = useWebsiteState.getState()?.filesInDraft || {}
         const currentSlug = useWebsiteState.getState()?.currentSlug || ''
@@ -259,7 +249,7 @@ export default function Chat({ ref }) {
             const { data: generator, error } =
                 await apiClientWithDurableFetch.api.generateMessage.post(
                     {
-                        messages: messages,
+                        messages: messages as WebsiteUIMessage[],
                         siteId,
                         branchId,
                         currentSlug,
@@ -267,12 +257,14 @@ export default function Chat({ ref }) {
                         chatId: chat.chatId,
                     },
                     {
-                        query: { chatId: chat.chatId },
-                        fetch: { signal: controller.signal },
+                        query: {
+                            lastMessageId: messages[messages.length - 1]?.id,
+                        },
+                        fetch: { signal: abortController.signal },
                     },
                 )
             if (error) throw error
-
+            console.log(generator)
             async function getPageContent(x) {
                 const { data, error } = await apiClient.api.getPageContent.post(
                     {
@@ -291,7 +283,7 @@ export default function Chat({ ref }) {
             const [editIter, stateIter] = teeAsyncIterable(
                 uiStreamToUIMessages<WebsiteUIMessage>({
                     uiStream: generator,
-                    messages: messages,
+                    messages: messages as WebsiteUIMessage[],
                     generateId,
                 }),
             )
@@ -410,21 +402,14 @@ export default function Chat({ ref }) {
             updateDocsSite()
 
             for await (const newMessages of stateIter) {
-                if (controller.signal.aborted) {
+                if (abortController.signal.aborted) {
                     break
                 }
                 startTransition(() => {
-                    useChatState.setState({ messages: newMessages })
+                    setMessages(newMessages)
                 })
             }
-        } catch (error) {
-            if (error.name === 'AbortError') {
-                console.log('Generation aborted')
-            } else {
-                throw error
-            }
         } finally {
-            abortControllerRef.current = null
         }
 
         await revalidator.revalidate()
@@ -432,22 +417,24 @@ export default function Chat({ ref }) {
 
     return (
         <ChatProvider
-            generateMessages={submitWithoutDeleteOnDurablefetch}
+            generateMessages={submitMessages}
             initialValue={initialChatState}
         >
-            <FormProvider {...methods}>
-                <div className='flex grow min-h-0 flex-col gap-3 px-6 h-full justify-center'>
-                    <Messages ref={ref} />
-                    <WelcomeMessage />
-                    <Footer />
-                </div>
-            </FormProvider>
+            <form onSubmit={formMethods.handleSubmit(() => {})}>
+                <FormProvider {...formMethods}>
+                    <div className='flex grow min-h-0 flex-col gap-3 px-6 h-full justify-center'>
+                        <Messages ref={ref} />
+                        <WelcomeMessage />
+                        <Footer />
+                    </div>
+                </FormProvider>
+            </form>
         </ChatProvider>
     )
 }
 
 function WelcomeMessage() {
-    const messages = useChatState((x) => x.messages)
+    const { messages } = useChatContext()
     if (messages.length) return null
     return (
         <ChatAssistantMessage
@@ -493,7 +480,7 @@ function WelcomeMessage() {
 }
 
 function Messages({ ref }) {
-    const messages = useChatState((x) => x?.messages)
+    const { messages } = useChatContext()
 
     if (!messages.length) return null
     return (
@@ -516,7 +503,7 @@ function Messages({ ref }) {
 }
 
 function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
-    const isChatGenerating = useChatState((x) => x.isGenerating)
+    const { isGenerating: isChatGenerating } = useChatContext()
 
     if (message.role === 'user') {
         return (
@@ -642,13 +629,13 @@ function ContextButton({
     textareaRef: React.RefObject<HTMLTextAreaElement | null>
 }) {
     const [open, setOpen] = useState(false)
-
+    const { draftText, setDraftText } = useChatContext()
     const handleContextSelect = (selectedValue: string) => {
         if (!selectedValue) return
 
-        const currentText = useChatState.getState().text || ''
+        const currentText = draftText || ''
         const newText = currentText + (currentText ? ' ' : '') + selectedValue
-        useChatState.setState({ text: newText })
+        setDraftText(newText)
         setOpen(false)
         // Focus the textarea if provided
         if (textareaRef?.current) {
@@ -703,9 +690,7 @@ function ContextButton({
 }
 
 function Footer() {
-    const isPending = useChatState((x) => x.isGenerating)
-    const text = useChatState((x) => x.text || '')
-    const abortController = useChatState((x) => x.abortController)
+    const { isGenerating: isPending, draftText: text } = useChatContext()
 
     const { chat, githubFolder, prUrl, mentionOptions, branchId } =
         useLoaderData() as Route.ComponentProps['loaderData']
@@ -719,7 +704,17 @@ function Footer() {
     const hasNonPushedChanges = useMemo(() => {
         return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
     }, [filesInDraft, lastPushedFiles])
-
+    const { stop, submit, messages } = useChatContext()
+    useEffect(() => {
+        const lastMessageId = messages[messages!.length - 1]?.id || ''
+        const durableUrl = `/api/generateMessage?lastMessageId=${lastMessageId}`
+        if (!lastMessageId) return
+        durableFetchClient.isInProgress(durableUrl).then(({ inProgress }) => {
+            if (inProgress) {
+                submit()
+            }
+        })
+    }, [])
     const transcribeAudio = async (audioFile: File): Promise<string> => {
         try {
             const formData = new FormData()
@@ -741,8 +736,6 @@ function Footer() {
             return ''
         }
     }
-
-    // Listen for regenerate events
 
     const hasFilesInDraft = Object.keys(filesInDraft).length > 0
 
@@ -873,9 +866,7 @@ function Footer() {
                                     {isPending ? (
                                         <Button
                                             className='rounded-full h-8'
-                                            onClick={() => {
-                                                abortController.abort()
-                                            }}
+                                            onClick={stop}
                                             variant='outline'
                                         >
                                             Stop
@@ -883,8 +874,8 @@ function Footer() {
                                     ) : (
                                         <Button
                                             className='rounded-full h-8'
-                                            type='submit'
-                                            disabled={!text.trim()}
+                                            onClick={submit}
+                                            disabled={!text?.trim()}
                                         >
                                             Generate
                                         </Button>
@@ -906,7 +897,7 @@ function PrButton({}) {
     const [isLoading, setIsLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
     const [buttonText, setButtonText] = useTemporaryState('', 2000)
-    const messages = useChatState((x) => x.messages)
+    const { messages, isGenerating: isChatGenerating } = useChatContext()
 
     const { chatId, chat, branchId } =
         useLoaderData() as Route.ComponentProps['loaderData']
@@ -920,7 +911,6 @@ function PrButton({}) {
     const hasNonPushedChanges = useMemo(() => {
         return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
     }, [filesInDraft, lastPushedFiles])
-    const isChatGenerating = useChatState((x) => x.isGenerating)
 
     const revalidator = useRevalidator()
 

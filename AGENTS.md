@@ -73,6 +73,15 @@ const favicon: string = () => {
 
 - when a package has to import files from another packages in the workspace never add a new tsconfig path, instead add that package as a workspace dependency using `pnpm i "package@workspace:*"`
 
+## react
+
+- never test react code. instead put as much code as possible in react agonistic function or classes and test those if needed.
+
+- hooks, all functions that start with use, MUST ALWAYS be called in the component render scope, never inside other closures in the component or event handlers. Follow react rules of hooks.
+
+
+
+
 # testing
 
 do not write new test files unless asked. do not write tests if there is not already a test or describe block for that function or module.

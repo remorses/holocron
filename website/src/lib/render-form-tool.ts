@@ -4,28 +4,32 @@ import type { JSONSchema7 } from 'json-schema'
 import * as schemaLib from 'json-schema-library'
 import { z } from 'zod'
 import { notifyError } from './errors'
+import { optionalToNullable } from './zod'
 const compileSchema =
     schemaLib.compileSchema || schemaLib?.['default']?.compileSchema
 
 export function createRenderFormTool({
     jsonSchema,
+    replaceOptionalsWithNulls,
 }: {
-    jsonSchema: JSONSchema7
+    jsonSchema?: JSONSchema7
+    replaceOptionalsWithNulls?: boolean
 }) {
-    // Extract name paths from schema
-    const exampleNamePaths = extractNamePathsFromSchema(jsonSchema)
+    let uiFieldsSchema = UIFieldSchema
+    if (replaceOptionalsWithNulls) {
+        uiFieldsSchema = optionalToNullable(uiFieldsSchema)
+    }
+    if (jsonSchema) {
+        const exampleNamePaths = extractNamePathsFromSchema(jsonSchema)
+        uiFieldsSchema = uiFieldsSchema.describe(
+            `Each field requires a name property that describes the filed updated on that scalar field, it can be ${exampleNamePaths.join(', ')} where {index} is a number. NEVER use [index] syntax, for example instead of domains[0] use domains.0`,
+        )
+    }
 
-    // Create render form parameters schema
+    const compiledSchema = compileSchema(jsonSchema || {})
     const RenderFormParameters = z.object({
-        fields: z.array(
-            UIFieldSchema.describe(
-                `Each field requires a name property that describes the filed updated on that scalar field, it can be ${exampleNamePaths.join(', ')} where {index} is a number. NEVER use [index] syntax, for example instead of domains[0] use domains.0`,
-            ),
-        ),
+        fields: z.array(uiFieldsSchema),
     })
-
-    // Compile the JSON schema once
-    const compiledSchema = compileSchema(jsonSchema)
 
     // Helper function to get type for name in schema
     function getTypeForNameInSchema(name: string) {
@@ -80,7 +84,6 @@ export function createRenderFormTool({
         execute,
     })
 }
-
 
 export function getTypeForNameInSchema(name: string, compiledSchema: any) {
     const pointer =
@@ -151,37 +154,33 @@ const FieldTypeEnum = z.enum([
     'button',
 ])
 
-const UIFieldSchema = z.object({
+export const UIFieldSchema = z.object({
     name: z.string(),
     type: FieldTypeEnum,
     label: z.string(),
-    description: z.string().nullable(),
+    description: z.string().optional(),
     // Common fields
-    required: z.boolean().nullable(),
+    required: z.boolean().optional(),
     // Group title for grouping consecutive fields
     groupTitle: z
         .string()
-        .nullable()
+        .optional()
         .describe(
             `Optional group title. When consecutive fields share the same groupTitle, they will be wrapped in a container with this title. ONLY use this for array of objects to put each object in the array into its own group. `,
         ),
     // Input/textarea/password fields
-    placeholder: z.string().nullable(),
-    initialValue: z.union([
-        z.string().nullable(),
-        z.number().nullable(),
-        z.boolean().nullable(),
-    ]),
+    placeholder: z.string().optional(),
+    initialValue: z.union([z.string(), z.number(), z.boolean()]).optional(),
     // Number/slider fields
-    min: z.number().nullable(),
-    max: z.number().nullable(),
-    step: z.number().nullable(),
+    min: z.number().optional(),
+    max: z.number().optional(),
+    step: z.number().optional(),
     // Select field
     options: z
         .array(z.object({ label: z.string(), value: z.string() }))
-        .nullable(),
+        .optional(),
     // Button field
-    href: z.string().nullable(),
+    href: z.string().optional(),
 })
 
 export const RenderFormParameters = z.object({

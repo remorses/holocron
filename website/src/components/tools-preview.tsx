@@ -6,7 +6,7 @@ import { WebsiteToolPart } from 'website/src/lib/types'
 import { useWebsiteState } from '../lib/state'
 import { EditToolParamSchema } from '../lib/edit-tool'
 import { RenderFormPreview } from './render-form-preview'
-import { useChatState } from 'contesto/src/chat/chat-provider'
+import { useChatContext } from 'contesto/src/chat/chat-provider'
 import { ChatPartTool } from 'db'
 
 export function EditorToolPreview({
@@ -15,7 +15,7 @@ export function EditorToolPreview({
     toolCallId,
     output: result,
 }: Extract<WebsiteToolPart, { type: 'tool-strReplaceEditor' }>) {
-    const isChatGenerating = useChatState((x) => x.isGenerating)
+    const { isGenerating: isChatGenerating } = useChatContext()
     let code = args?.new_str || args?.file_text || ''
     if (code && typeof code === 'object') {
         code = code?.['error'] || JSON.stringify(code, null, 2)
@@ -115,7 +115,7 @@ export function EditorToolPreview({
 export function FilesTreePreview({
     output,
 }: Extract<WebsiteToolPart, { type: 'tool-getProjectFiles' }>) {
-    const isChatGenerating = useChatState((x) => x.isGenerating)
+    const { isGenerating: isChatGenerating } = useChatContext()
     const code = output || '\n'
     if (!code) return null
     let markdown = ''

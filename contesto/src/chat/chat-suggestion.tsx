@@ -28,7 +28,7 @@ export function ChatSuggestionButton({
 
                     flushSync(() => {
                         useChatState.setState({
-                            text: userMessage,
+                            draftText: userMessage,
                         })
                     })
                     window.dispatchEvent(new CustomEvent('chatRegenerate'))

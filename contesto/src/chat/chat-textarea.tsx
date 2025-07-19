@@ -12,7 +12,6 @@ import { ScrollArea } from '../components/ui/scroll-area.js'
 interface MentionsTextAreaProps
     extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
     ref?: any
-
     disabled?: boolean
     placeholder?: string
     className?: string
@@ -32,10 +31,10 @@ export function ChatTextarea({
     const selectedAutocompleteText = useChatState(
         (x) => x.selectedAutocompleteText,
     )
-    const submitForm = useChatState((x) => x.submitForm)
-    const value = useChatState((x) => x.text || '')
+    const submitForm = useChatState((x) => x.submit)
+    const value = useChatState((x) => x.draftText || '')
     function onChange(text) {
-        useChatState.setState({ text })
+        useChatState.setState({ draftText: text })
     }
 
     const messages = useChatState((x) => x.messages)
@@ -242,7 +241,7 @@ export function ChatAutocomplete({
     )
 
     const text = useChatState((x) => {
-        return x.text || ''
+        return x.draftText || ''
     })
     const messages = useChatState((x) => x.messages)
 
@@ -305,7 +304,7 @@ export function ChatAutocomplete({
                     useChatState.getState()?.selectedAutocompleteText || ''
                 useChatState.setState({
                     selectedAutocompleteText: undefined,
-                    text: selectedAutocompleteText + ' ',
+                    draftText: selectedAutocompleteText + ' ',
                 })
                 return
             }
@@ -341,7 +340,7 @@ export function ChatAutocomplete({
                                 onClick={() => {
                                     useChatState.setState({
                                         selectedAutocompleteText: undefined,
-                                        text: item + ' ',
+                                        draftText: item + ' ',
                                     })
                                 }}
                             >
