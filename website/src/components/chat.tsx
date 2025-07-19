@@ -333,6 +333,8 @@ export default function Chat({ ref }) {
                                         part,
                                     )
 
+                                    let revalidate = args.command === 'create'
+
                                     try {
                                         await docsRpcClient.setDocsState({
                                             state: {
@@ -340,7 +342,7 @@ export default function Chat({ ref }) {
                                                 isMarkdownStreaming: false,
                                                 currentSlug,
                                             },
-                                            revalidate: true,
+                                            revalidate,
                                             idempotenceKey: part.toolCallId,
                                         })
                                     } catch (e) {

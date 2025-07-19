@@ -116,10 +116,14 @@ async function iframeMessagesHandling() {
         }
         try {
             const data = e.data as IframeRpcMessage
-            const { id, state: partialState } = data || {}
+            const { id, revalidate, state: partialState } = data || {}
 
             if (partialState) {
                 await setDocsStateForMessage(partialState)
+            }
+            if (revalidate) {
+                // TODO should i wait for revalidate to finish or not? if i wait updates will come slower from website
+                await revalidator?.revalidate()
             }
         } finally {
             // Only reply if not the same window (i.e., not itself)
@@ -200,9 +204,12 @@ async function websocketIdHandling(websocketId: string) {
             console.error(`websocket sent invalid json`, event.data)
             return
         }
-        const { id, state: partialState } = data || {}
+        const { id, revalidate, state: partialState } = data || {}
         if (partialState) {
             await setDocsStateForMessage(partialState)
+        }
+        if (revalidate) {
+            await revalidator?.revalidate()
         }
         ws.send(JSON.stringify({ id } satisfies IframeRpcMessage))
     }
@@ -227,6 +234,8 @@ if (typeof window !== 'undefined') {
     )
 }
 
+let revalidator: ReturnType<typeof useRevalidator> | null = null
+
 export function ClientLayout({ children }: { children: React.ReactNode }) {
     const loaderData = useLoaderData<Route.ComponentProps['loaderData']>()
 
@@ -234,13 +243,16 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         globalThis.rootServerLoaderData = loaderData
     }
     const { previewWebsocketId, editorPreviewMode } = loaderData || {}
-    
+
     // Initialize docs state with editor preview mode if provided
     useEffect(() => {
         if (editorPreviewMode) {
             useDocsState.setState({ previewMode: 'editor' })
         }
     }, [editorPreviewMode])
+
+    const localRevalidator = useRevalidator()
+    revalidator = localRevalidator
 
     // const navigation = useNavigation()
     // const revalidator = useRevalidator()
