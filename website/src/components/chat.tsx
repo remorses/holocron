@@ -602,10 +602,27 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                     )
                 }
 
-                return null
+                if (part.type.startsWith('tool-')) {
+                    return (
+                        <ToolPreviewContainer key={index} {...part}>
+                            <Markdown
+                                markdown={`🔨 calling ${spaceCase(part.type.replace('tool-', ''))}`}
+                                isStreaming={isChatGenerating}
+                                className='prose-sm'
+                            />
+                        </ToolPreviewContainer>
+                    )
+                }
             })}
         </ChatAssistantMessage>
     )
+}
+
+function spaceCase(str: string): string {
+    return str
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
+        .replace(/^./, (m) => m.toUpperCase())
 }
 
 // Static autocomplete suggestions for first message
