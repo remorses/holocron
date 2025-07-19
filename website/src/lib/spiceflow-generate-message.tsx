@@ -241,16 +241,236 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                   execute: editFilesExecute,
               })
 
-        let webSearch: Tool = openai.tools.webSearchPreview({
-            searchContextSize: 'high',
-        })
-        if (model.modelId.includes('claude')) {
-            webSearch = anthropic.tools.webSearch_20250305({})
+        const tools = {
+            strReplaceEditor,
+
+            getProjectFiles: tool({
+                description:
+                    'Returns a directory tree diagram of the current project files as plain text. Useful for giving an overview or locating files.',
+                inputSchema: z.object({}),
+                execute: async () => {
+                    const allFiles = await getTabFilesWithoutContents({
+                        branchId,
+                    })
+                    let filePaths = allFiles.map((x) => {
+                        const path = x.githubPath
+                        let title = ''
+                        if (x.type === 'page') {
+                            const frontmatter =
+                                x.frontmatter as ProcessorDataFrontmatter
+                            title = frontmatter?.title || ''
+                        }
+                        return { path, title }
+                    })
+                    filePaths.push({
+                        path: path.posix.join(
+                            branch.site.githubFolder || '.',
+                            'fumabase.jsonc',
+                        ),
+                        title: 'Use the renderForm tool to update these values',
+                    })
+                    // filePaths.push({ path: 'styles.css', title: 'The CSS styles for the website. Only update this file for advanced CSS customisations' })
+                    return printDirectoryTree({
+                        filePaths,
+                    })
+                },
+            }),
+
+            renderForm: renderFormTool,
+
+            deletePages: tool({
+                description:
+                    'Delete pages from the website. paths should never start with /. Paths should include the extension.',
+                inputSchema: deletePagesSchema,
+                execute: async ({ filePaths }) => {
+                    const deletedFiles: string[] = []
+
+                    for (const filePath of filePaths) {
+                        const content = await getPageContent({
+                            githubPath: filePath,
+                            branchId,
+                        }).catch(() => null)
+                        const lineCount =
+                            typeof content === 'string'
+                                ? content.split('\n').length
+                                : 1
+                        filesInDraft[filePath] = {
+                            content: null,
+                            githubPath: filePath,
+                            deletedLines: lineCount,
+                        }
+                        deletedFiles.push(filePath)
+                    }
+
+                    // Update the chat with current filesInDraft state after deletion
+                    await prisma.chat.update({
+                        where: { chatId, userId },
+                        data: {
+                            filesInDraft: (filesInDraft as any) || {},
+                        },
+                    })
+
+                    return { deletedFiles }
+                },
+            }),
+
+            // Add docs tools - these provide basic functionality for the website context
+            searchDocs: tool({
+                inputSchema: searchDocsInputSchema,
+                execute: async ({ terms, searchType = 'fulltext' }) => {
+                    // Try using Trieve search if available, otherwise fallback to simple search
+                    if (branch.trieveDatasetId) {
+                        try {
+                            const results = await searchDocsWithTrieve({
+                                trieveDatasetId: branch.trieveDatasetId,
+                                query: terms,
+                                searchType,
+                                tag: '',
+                            })
+                            return formatTrieveSearchResults({
+                                results,
+                                baseUrl: `${process.env.PUBLIC_URL || 'https://fumabase.com'}`,
+                            })
+                        } catch (error) {
+                            console.error(
+                                'Trieve search failed, falling back to simple search:',
+                                error,
+                            )
+                        }
+                    }
+
+                    // Fallback to simple search through existing pages
+                    const allFiles = await getTabFilesWithoutContents({
+                        branchId,
+                    })
+                    const pages = allFiles.filter((x) => x.type === 'page')
+
+                    const results = pages.filter((page) => {
+                        const title = (page.frontmatter as any)?.title || ''
+                        const searchText =
+                            `${title} ${page.githubPath}`.toLowerCase()
+                        return terms.some((term) =>
+                            searchText.includes(term.toLowerCase()),
+                        )
+                    })
+
+                    return (
+                        `Found ${results.length} pages matching search terms:\n` +
+                        results
+                            .map((page) => {
+                                const title =
+                                    (page.frontmatter as any)?.title ||
+                                    'Untitled'
+                                return `- ${title} (${page.githubPath})`
+                            })
+                            .join('\n')
+                    )
+                },
+            }),
+
+            goToPage: tool({
+                inputSchema: goToPageInputSchema,
+                execute: async ({ slug }) => {
+                    const cleanedSlug = cleanSlug(slug)
+                    const slugParts = cleanedSlug.split('/').filter(Boolean)
+                    const page = source.getPage(slugParts)
+
+                    if (!page) {
+                        return { error: `Page ${cleanedSlug} not found` }
+                    }
+
+                    return {
+                        slug: page.url,
+                        message: `Found page: ${page.url}`,
+                    }
+                },
+            }),
+
+            getCurrentPage: tool({
+                inputSchema: getCurrentPageInputSchema,
+                execute: async () => {
+                    return `Current page slug: ${currentSlug}`
+                },
+            }),
+
+            fetchUrl: tool({
+                description:
+                    'Fetch content from external websites. Only absolute HTTPS URLs are allowed.',
+                inputSchema: websiteFetchUrlInputSchema,
+                execute: async ({ url }) => {
+                    // Validate that URL starts with https://
+                    if (!url.startsWith('https://')) {
+                        return `Error: Only HTTPS URLs are allowed. URL must start with https://`
+                    }
+
+                    try {
+                        const response = await fetch(url)
+                        if (!response.ok) {
+                            return `Failed to fetch ${url}: ${response.status} ${response.statusText}`
+                        }
+
+                        const contentType =
+                            response.headers.get('content-type') || ''
+
+                        if (contentType.includes('application/json')) {
+                            const data = await response.json()
+                            const jsonString = JSON.stringify(data, null, 2)
+                            return (
+                                jsonString.substring(0, 2000) +
+                                (jsonString.length > 2000 ? '...' : '')
+                            )
+                        } else if (contentType.includes('text/html')) {
+                            const html = await response.text()
+                            return (
+                                html.substring(0, 2000) +
+                                (html.length > 2000 ? '...' : '')
+                            )
+                        } else {
+                            const text = await response.text()
+                            return (
+                                text.substring(0, 2000) +
+                                (text.length > 2000 ? '...' : '')
+                            )
+                        }
+                    } catch (error) {
+                        return `Error fetching ${url}: ${error.message}`
+                    }
+                },
+            }),
+
+            selectText: tool({
+                inputSchema: selectTextInputSchema,
+                execute: async ({ slug, startLine, endLine }) => {
+                    const cleanedSlug = cleanSlug(slug)
+                    const slugParts = cleanedSlug.split('/').filter(Boolean)
+                    const page = source.getPage(slugParts)
+
+                    if (!page) {
+                        return { error: `Page ${cleanedSlug} not found` }
+                    }
+
+                    return {
+                        slug: page.url,
+                        startLine,
+                        endLine,
+                        message: `Selected text on ${page.url} from line ${startLine} to ${endLine}`,
+                    }
+                },
+            }),
+
+            ...(model.provider === 'openai' && {
+                webSearchOpenAI: openai.tools.webSearchPreview({
+                    searchContextSize: 'high',
+                }),
+            }),
+            ...(model.provider === 'anthropic' && {
+                webSearchAnthropic: anthropic.tools.webSearch_20250305({}),
+            }),
         }
 
         const result = streamText({
             model,
-
+            tools,
             messages: [
                 {
                     role: 'system',
@@ -269,224 +489,6 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     reasoningSummary: 'detailed',
                     strictJsonSchema: true,
                 } satisfies OpenAIResponsesProviderOptions,
-            },
-            tools: {
-                webSearch,
-                strReplaceEditor,
-
-                getProjectFiles: tool({
-                    description:
-                        'Returns a directory tree diagram of the current project files as plain text. Useful for giving an overview or locating files.',
-                    inputSchema: z.object({}),
-                    execute: async () => {
-                        const allFiles = await getTabFilesWithoutContents({
-                            branchId,
-                        })
-                        let filePaths = allFiles.map((x) => {
-                            const path = x.githubPath
-                            let title = ''
-                            if (x.type === 'page') {
-                                const frontmatter =
-                                    x.frontmatter as ProcessorDataFrontmatter
-                                title = frontmatter?.title || ''
-                            }
-                            return { path, title }
-                        })
-                        filePaths.push({
-                            path: path.posix.join(
-                                branch.site.githubFolder || '.',
-                                'fumabase.jsonc',
-                            ),
-                            title: 'Use the renderForm tool to update these values',
-                        })
-                        // filePaths.push({ path: 'styles.css', title: 'The CSS styles for the website. Only update this file for advanced CSS customisations' })
-                        return printDirectoryTree({
-                            filePaths,
-                        })
-                    },
-                }),
-
-                renderForm: renderFormTool,
-
-                deletePages: tool({
-                    description:
-                        'Delete pages from the website. paths should never start with /. Paths should include the extension.',
-                    inputSchema: deletePagesSchema,
-                    execute: async ({ filePaths }) => {
-                        const deletedFiles: string[] = []
-
-                        for (const filePath of filePaths) {
-                            const content = await getPageContent({
-                                githubPath: filePath,
-                                branchId,
-                            }).catch(() => null)
-                            const lineCount =
-                                typeof content === 'string'
-                                    ? content.split('\n').length
-                                    : 1
-                            filesInDraft[filePath] = {
-                                content: null,
-                                githubPath: filePath,
-                                deletedLines: lineCount,
-                            }
-                            deletedFiles.push(filePath)
-                        }
-
-                        // Update the chat with current filesInDraft state after deletion
-                        await prisma.chat.update({
-                            where: { chatId, userId },
-                            data: {
-                                filesInDraft: (filesInDraft as any) || {},
-                            },
-                        })
-
-                        return { deletedFiles }
-                    },
-                }),
-
-                // Add docs tools - these provide basic functionality for the website context
-                searchDocs: tool({
-                    inputSchema: searchDocsInputSchema,
-                    execute: async ({ terms, searchType = 'fulltext' }) => {
-                        // Try using Trieve search if available, otherwise fallback to simple search
-                        if (branch.trieveDatasetId) {
-                            try {
-                                const results = await searchDocsWithTrieve({
-                                    trieveDatasetId: branch.trieveDatasetId,
-                                    query: terms,
-                                    searchType,
-                                    tag: '',
-                                })
-                                return formatTrieveSearchResults({
-                                    results,
-                                    baseUrl: `${process.env.PUBLIC_URL || 'https://fumabase.com'}`,
-                                })
-                            } catch (error) {
-                                console.error(
-                                    'Trieve search failed, falling back to simple search:',
-                                    error,
-                                )
-                            }
-                        }
-
-                        // Fallback to simple search through existing pages
-                        const allFiles = await getTabFilesWithoutContents({
-                            branchId,
-                        })
-                        const pages = allFiles.filter((x) => x.type === 'page')
-
-                        const results = pages.filter((page) => {
-                            const title = (page.frontmatter as any)?.title || ''
-                            const searchText =
-                                `${title} ${page.githubPath}`.toLowerCase()
-                            return terms.some((term) =>
-                                searchText.includes(term.toLowerCase()),
-                            )
-                        })
-
-                        return (
-                            `Found ${results.length} pages matching search terms:\n` +
-                            results
-                                .map((page) => {
-                                    const title =
-                                        (page.frontmatter as any)?.title ||
-                                        'Untitled'
-                                    return `- ${title} (${page.githubPath})`
-                                })
-                                .join('\n')
-                        )
-                    },
-                }),
-
-                goToPage: tool({
-                    inputSchema: goToPageInputSchema,
-                    execute: async ({ slug }) => {
-                        const cleanedSlug = cleanSlug(slug)
-                        const slugParts = cleanedSlug.split('/').filter(Boolean)
-                        const page = source.getPage(slugParts)
-
-                        if (!page) {
-                            return { error: `Page ${cleanedSlug} not found` }
-                        }
-
-                        return {
-                            slug: page.url,
-                            message: `Found page: ${page.url}`,
-                        }
-                    },
-                }),
-
-                getCurrentPage: tool({
-                    inputSchema: getCurrentPageInputSchema,
-                    execute: async () => {
-                        return `Current page slug: ${currentSlug}`
-                    },
-                }),
-
-                fetchUrl: tool({
-                    description:
-                        'Fetch content from external websites. Only absolute HTTPS URLs are allowed.',
-                    inputSchema: websiteFetchUrlInputSchema,
-                    execute: async ({ url }) => {
-                        // Validate that URL starts with https://
-                        if (!url.startsWith('https://')) {
-                            return `Error: Only HTTPS URLs are allowed. URL must start with https://`
-                        }
-
-                        try {
-                            const response = await fetch(url)
-                            if (!response.ok) {
-                                return `Failed to fetch ${url}: ${response.status} ${response.statusText}`
-                            }
-
-                            const contentType =
-                                response.headers.get('content-type') || ''
-
-                            if (contentType.includes('application/json')) {
-                                const data = await response.json()
-                                const jsonString = JSON.stringify(data, null, 2)
-                                return (
-                                    jsonString.substring(0, 2000) +
-                                    (jsonString.length > 2000 ? '...' : '')
-                                )
-                            } else if (contentType.includes('text/html')) {
-                                const html = await response.text()
-                                return (
-                                    html.substring(0, 2000) +
-                                    (html.length > 2000 ? '...' : '')
-                                )
-                            } else {
-                                const text = await response.text()
-                                return (
-                                    text.substring(0, 2000) +
-                                    (text.length > 2000 ? '...' : '')
-                                )
-                            }
-                        } catch (error) {
-                            return `Error fetching ${url}: ${error.message}`
-                        }
-                    },
-                }),
-
-                selectText: tool({
-                    inputSchema: selectTextInputSchema,
-                    execute: async ({ slug, startLine, endLine }) => {
-                        const cleanedSlug = cleanSlug(slug)
-                        const slugParts = cleanedSlug.split('/').filter(Boolean)
-                        const page = source.getPage(slugParts)
-
-                        if (!page) {
-                            return { error: `Page ${cleanedSlug} not found` }
-                        }
-
-                        return {
-                            slug: page.url,
-                            startLine,
-                            endLine,
-                            message: `Selected text on ${page.url} from line ${startLine} to ${endLine}`,
-                        }
-                    },
-                }),
             },
         })
 
