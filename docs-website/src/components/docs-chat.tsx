@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { createIdGenerator, UIMessage } from 'ai'
-import { uiStreamToUIMessages } from 'contesto/src/lib/process-chat'
+import {
+    uiStreamToUIMessages,
+    ToolPartOutputAvailable,
+    ToolPartInputStreaming,
+    ToolPart,
+    ToolPartInputAvailable,
+} from 'contesto/src/lib/process-chat'
 import { ScrollArea } from 'docs-website/src/components/ui/scroll-area'
 import { useStickToBottom } from 'use-stick-to-bottom'
 
@@ -38,6 +44,7 @@ import {
 } from '../components/ui/popover'
 
 import { cn } from '../lib/cn'
+import { throttle } from '../lib/utils'
 import {
     docsApiClientWithDurableFetch,
     docsDurableFetchClient,
@@ -54,19 +61,20 @@ import type { Route } from '../routes/_catchall'
 import { env } from '../lib/env'
 import { Trash2Icon, XIcon } from 'lucide-react'
 import { DocsUIMessage } from '../lib/types'
-import { teeAsyncIterable, throttleGenerator } from 'contesto/src/lib/utils'
+import { throttleGenerator } from 'contesto/src/lib/utils'
 import { EditorToolPreview } from '../components/tool-preview'
 import {
     createEditExecute,
     EditToolParamSchema,
     isStrReplaceParameterComplete,
+    ValidateNewContentArgs,
+    GetPageContentArgs,
 } from '../lib/edit-tool'
 
 export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
     const chatId = usePersistentDocsState((x) => x.chatId)
     const location = useLocation()
     const navigate = useNavigate()
-    const currentSlug = location.pathname
 
     // Get files from root loader data
     const rootLoaderData = useRouteLoaderData(
@@ -80,12 +88,12 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
         abortController,
     }: Partial<ChatState>) => {
         const generateId = createIdGenerator()
-
+        const currentSlug = location.pathname
         const currentOrigin =
             typeof window !== 'undefined' ? window.location.origin : ''
 
         const filesInDraft = useDocsState.getState()?.filesInDraft || {}
-
+        console.log({ currentSlug, currentOrigin })
         try {
             const { data: generator, error } =
                 await docsApiClientWithDurableFetch.api.generateMessage.post(
@@ -106,118 +114,119 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                 )
             if (error) throw error
 
-            const [effectsIter, stateIter] = teeAsyncIterable(
-                uiStreamToUIMessages<DocsUIMessage>({
-                    uiStream: generator,
-                    messages: messages as DocsUIMessage[],
-                    generateId,
-                }),
-            )
-            async function updateDocsSite() {
-                async function getPageContent(x) {
-                    // First check if the file is in filesInDraft
-                    const fileInDraft = filesInDraft[x.githubPath]
-                    if (fileInDraft && fileInDraft.content !== null) {
-                        return fileInDraft.content
+            async function getPageContent(x: GetPageContentArgs) {
+                let path = x.githubPath.startsWith('/')
+                    ? x.githubPath
+                    : '/' + x.githubPath
+                const res = await fetch(path)
+                if (!res.ok) {
+                    throw new Error(
+                        `Failed to fetch page content for ${path}: ${res.statusText}`,
+                    )
+                }
+                const text = await res.text()
+                return text
+            }
+
+            const onToolOutput = async (
+                toolPart: ToolPartOutputAvailable<DocsUIMessage>,
+            ) => {
+                // Handle selectText tool output
+                if (toolPart.type === 'tool-selectText') {
+                    if (toolPart.output?.error) {
+                        console.error(
+                            'selectText error:',
+                            toolPart.output.error,
+                        )
+                        return
                     }
 
-                    // For client-side, we can't easily access the database content
-                    // But the server-side implementation in spiceflow-docs-app.ts handles this properly
-                    // This function is mainly used for preview/streaming operations
-                    return ''
+                    const targetSlug = toolPart.output?.slug
+                    if (
+                        targetSlug &&
+                        typeof targetSlug === 'string' &&
+                        targetSlug !== location.pathname
+                    ) {
+                        await navigate(targetSlug)
+                    }
+                    usePersistentDocsState.setState({
+                        drawerState: 'minimized',
+                    })
+                    await new Promise((res) => setTimeout(res, 10))
+                    console.log('Highlighting lines:', toolPart.input)
+                    useDocsState.setState({
+                        highlightedLines: toolPart.input,
+                    })
                 }
 
-                for await (const newMessages of effectsIter) {
-                    try {
-                        const lastMessage = newMessages[newMessages.length - 1]
-                        const lastPart =
-                            lastMessage.parts[lastMessage.parts.length - 1]
+                // Handle goToPage tool output
+                if (toolPart.type === 'tool-goToPage') {
+                    if (toolPart.output?.error) {
+                        console.error('goToPage error:', toolPart.output.error)
+                        return
+                    }
 
-                        if (
-                            lastPart?.type === 'tool-strReplaceEditor' &&
-                            (lastPart.state === 'input-available' ||
-                                lastPart.state === 'input-streaming')
-                        ) {
-                            const args: Partial<EditToolParamSchema> =
-                                lastPart.input as any
-                            if (!isStrReplaceParameterComplete(args)) {
-                                console.log(
-                                    'Incomplete strReplaceEditor parameters, skipping execution',
-                                )
-                                continue
-                            }
-                            if (args?.command === 'view') {
-                                continue
-                            }
-
-                            let updatedPagesCopy = { ...filesInDraft }
-                            const execute = createEditExecute({
-                                filesInDraft: updatedPagesCopy,
-                                getPageContent,
-                            })
-
-                            await execute(args as any)
-                            console.log(
-                                'applying the setState update to the docs site',
-                                lastPart,
-                            )
-
-                            // Update docs state with new filesInDraft
-                            useDocsState.setState({
-                                filesInDraft: { ...updatedPagesCopy },
-                            })
-                        }
-
-                        if (
-                            lastMessage.role === 'assistant' &&
-                            lastPart?.type === 'tool-selectText' &&
-                            lastPart.state === 'output-available'
-                        ) {
-                            if (lastPart.output.error) {
-                                continue
-                            }
-                            const targetSlug = lastPart.output?.slug
-                            if (
-                                targetSlug &&
-                                typeof targetSlug === 'string' &&
-                                targetSlug !== location.pathname
-                            ) {
-                                await navigate(targetSlug)
-                            }
-                            usePersistentDocsState.setState({
-                                drawerState: 'minimized',
-                            })
-                            await new Promise((res) => setTimeout(res, 10))
-                            console.log('Highlighting lines:', lastPart.input)
-                            useDocsState.setState({
-                                highlightedLines: lastPart.input,
-                            })
-                        }
-                        if (
-                            lastMessage.role === 'assistant' &&
-                            lastPart?.type === 'tool-goToPage' &&
-                            lastPart.state === 'output-available'
-                        ) {
-                            if (lastPart.output.error) {
-                                continue
-                            }
-                            const targetSlug = lastPart.output?.slug
-                            if (
-                                typeof targetSlug === 'string' &&
-                                targetSlug !== location.pathname
-                            ) {
-                                await navigate(targetSlug)
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Error in updateDocsSite loop:', error)
+                    const targetSlug = toolPart.output?.slug
+                    if (
+                        typeof targetSlug === 'string' &&
+                        targetSlug !== location.pathname
+                    ) {
+                        await navigate(targetSlug)
                     }
                 }
             }
-            updateDocsSite()
+
+            // Use throttle instead of debounce to ensure the function executes at regular intervals
+            // and doesn't delay beyond the throttle period, which could cause it to override
+            // the output-available call that comes later
+            const onToolInputStreaming = throttle(
+                50,
+                async (
+                    toolPart:
+                        | ToolPartInputStreaming<DocsUIMessage>
+                        | ToolPartInputAvailable<DocsUIMessage>,
+                ) => {
+                    if (toolPart.type === 'tool-strReplaceEditor') {
+                        const args: Partial<EditToolParamSchema> =
+                            toolPart.input as any
+                        if (args?.command === 'view') {
+                            return
+                        }
+                        if (!isStrReplaceParameterComplete(args)) {
+                            return
+                        }
+
+                        let updatedPagesCopy = { ...filesInDraft }
+                        const execute = createEditExecute({
+                            filesInDraft: updatedPagesCopy,
+                            getPageContent,
+                        })
+
+                        await execute(args as any)
+                        console.log(
+                            'applying the setState update to the docs site',
+                            toolPart,
+                        )
+
+                        // Update docs state with new filesInDraft
+                        useDocsState.setState({
+                            filesInDraft: { ...updatedPagesCopy },
+                        })
+                    }
+                },
+            )
 
             let finalMessages = messages
-            for await (const newMessages of throttleGenerator(stateIter)) {
+            for await (const newMessages of uiStreamToUIMessages<DocsUIMessage>(
+                {
+                    uiStream: generator,
+                    messages: messages as DocsUIMessage[],
+                    generateId,
+                    onToolOutput,
+                    onToolInput: onToolInputStreaming,
+                    onToolInputStreaming,
+                },
+            )) {
                 finalMessages = newMessages
                 startTransition(() => {
                     setMessages?.(newMessages)

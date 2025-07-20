@@ -68,17 +68,19 @@ export function isStrReplaceParameterComplete(args: Partial<EditToolParamSchema>
     }
 }
 
+// Export callback argument types
+export type ValidateNewContentArgs = { githubPath: string; content: string }
+export type GetPageContentArgs = { githubPath: string }
+
 export function createEditExecute({
     filesInDraft,
     getPageContent: _getPageContent,
     validateNewContent,
     onNewFile: onFilesDraftStructureChange,
 }: {
-    validateNewContent?: (x: { githubPath: string; content: string }) => any
+    validateNewContent?: (x: ValidateNewContentArgs) => any
     filesInDraft: Record<string, FileUpdate>
-    getPageContent: (x: {
-        githubPath: string
-    }) => Promise<string | undefined | void>
+    getPageContent: (x: GetPageContentArgs) => Promise<string | undefined | void>
     onNewFile?: () => void | Promise<void>
 }) {
     const previousEdits = [] as FileUpdate[]
@@ -463,11 +465,9 @@ export function createEditTool({
     onNewFile,
     model,
 }: {
-    validateNewContent?: (x: { githubPath: string; content: string }) => any
+    validateNewContent?: (x: ValidateNewContentArgs) => any
     filesInDraft: Record<string, FileUpdate>
-    getPageContent: (x: {
-        githubPath: string
-    }) => Promise<string | undefined | void>
+    getPageContent: (x: GetPageContentArgs) => Promise<string | undefined | void>
     onNewFile?: () => void | Promise<void>
     model?: { provider?: string }
 }) {

@@ -40,6 +40,31 @@ export function debounce<T extends (...args: any[]) => any>(
     }
 }
 
+export function throttle<T extends (...args: any[]) => any>(
+    delay: number,
+    fn: T,
+) {
+    let lastExecTime = 0
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+    
+    return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
+        const now = Date.now()
+        
+        if (now - lastExecTime >= delay) {
+            // Execute immediately if enough time has passed
+            lastExecTime = now
+            fn.apply(this, args)
+        } else {
+            // Schedule execution for the remaining time
+            if (timeoutId) clearTimeout(timeoutId)
+            timeoutId = setTimeout(() => {
+                lastExecTime = Date.now()
+                fn.apply(this, args)
+            }, delay - (now - lastExecTime))
+        }
+    }
+}
+
 export function generateSlugFromPath(
     pathWithFrontSlash: string,
     basePath: string,

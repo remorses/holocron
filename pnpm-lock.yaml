@@ -16,7 +16,7 @@ importers:
         version: 24.0.1
       unframer:
         specifier: latest
-        version: 3.0.2(@modelcontextprotocol/sdk@1.15.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 3.0.2(@modelcontextprotocol/sdk@1.16.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       vite-node:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)
@@ -79,8 +79,8 @@ importers:
         specifier: ^0.1.3
         version: 0.1.3
       spiceflow:
-        specifier: ^1.14.0
-        version: 1.14.0(@modelcontextprotocol/sdk@1.15.0)
+        specifier: ^1.17.0
+        version: 1.17.0(@modelcontextprotocol/sdk@1.16.0)
       tiny-jsonc:
         specifier: ^1.0.2
         version: 1.0.2
@@ -99,10 +99,10 @@ importers:
         version: 8.18.1
       docs-website:
         specifier: file:../docs-website
-        version: file:docs-website(@modelcontextprotocol/sdk@1.15.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/node@24.0.7)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(babel-plugin-macros@3.1.0)(lightningcss@1.30.1)(prisma@6.12.0(typescript@5.8.3))(terser@5.42.0)(typescript@5.8.3)(use-sync-external-store@1.5.0(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))
+        version: file:docs-website(@modelcontextprotocol/sdk@1.16.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/node@24.0.7)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(babel-plugin-macros@3.1.0)(lightningcss@1.30.1)(prisma@6.12.0(typescript@5.8.3))(terser@5.42.0)(typescript@5.8.3)(use-sync-external-store@1.5.0(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))
       website:
         specifier: file:../website
-        version: file:website(@babel/runtime@7.27.6)(@cloudflare/workers-types@4.20250712.0)(@modelcontextprotocol/sdk@1.15.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/node@24.0.7)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)(use-sync-external-store@1.5.0(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))
+        version: file:website(@babel/runtime@7.27.6)(@cloudflare/workers-types@4.20250712.0)(@modelcontextprotocol/sdk@1.16.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/node@24.0.7)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)(use-sync-external-store@1.5.0(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))
 
   cloudflare-tunnel:
     devDependencies:
@@ -598,8 +598,8 @@ importers:
         specifier: ^3.6.0
         version: 3.6.0
       spiceflow:
-        specifier: ^1.14.0
-        version: 1.14.0(@modelcontextprotocol/sdk@1.15.0)
+        specifier: ^1.17.0
+        version: 1.17.0(@modelcontextprotocol/sdk@1.16.0)
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.3.1
@@ -614,7 +614,7 @@ importers:
         version: 1.3.4
       unframer:
         specifier: ^3.0.2
-        version: 3.0.2(@modelcontextprotocol/sdk@1.15.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 3.0.2(@modelcontextprotocol/sdk@1.16.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       unified:
         specifier: ^11.0.5
         version: 11.0.5
@@ -1310,8 +1310,8 @@ importers:
         specifier: ^1.1.3
         version: 1.1.3
       '@modelcontextprotocol/sdk':
-        specifier: ^1.15.0
-        version: 1.15.0
+        specifier: ^1.16.0
+        version: 1.16.0
       '@radix-ui/react-accordion':
         specifier: ^1.2.11
         version: 1.2.11(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1665,8 +1665,8 @@ importers:
   mcp:
     dependencies:
       '@modelcontextprotocol/sdk':
-        specifier: ^1.0.2
-        version: 1.15.0
+        specifier: ^1.16.0
+        version: 1.16.0
       ai:
         specifier: 5.0.0-beta.24
         version: 5.0.0-beta.24(zod@4.0.5)
@@ -2008,8 +2008,8 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       spiceflow:
-        specifier: ^1.14.0
-        version: 1.14.0(@modelcontextprotocol/sdk@1.15.0)
+        specifier: ^1.17.0
+        version: 1.17.0(@modelcontextprotocol/sdk@1.16.0)
       string-dedent:
         specifier: ^3.0.1
         version: 3.0.1
@@ -4015,8 +4015,8 @@ packages:
   '@mjackson/node-fetch-server@0.6.1':
     resolution: {integrity: sha512-9ZJnk/DJjt805uv5PPv11haJIW+HHf3YEEyVXv+8iLQxLD/iXA68FH220XoiTPBC4gCg5q+IMadDw8qPqlA5wg==}
 
-  '@modelcontextprotocol/sdk@1.15.0':
-    resolution: {integrity: sha512-67hnl/ROKdb03Vuu0YOr+baKTvf1/5YBHBm9KnZdjdAh8hjt4FRCPD5ucwxGB237sBpzlqQsLy1PFu7z/ekZ9Q==}
+  '@modelcontextprotocol/sdk@1.16.0':
+    resolution: {integrity: sha512-8ofX7gkZcLj9H9rSd50mCgm3SSF8C7XoclxJuLoV0Cz3rEQ1tv9MZRYYvJtm9n1BiEQQMzSmE/w2AEkNacLYfg==}
     engines: {node: '>=18'}
 
   '@monaco-editor/loader@1.5.0':
@@ -8787,10 +8787,6 @@ packages:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
 
-  eventsource-parser@3.0.2:
-    resolution: {integrity: sha512-6RxOBZ/cYgd8usLwsEl+EC09Au/9BcmCKYF2/xbml6DNczf7nv0MQb+7BA2F+li6//I+28VNlQR37XfQtcAJuA==}
-    engines: {node: '>=18.0.0'}
-
   eventsource-parser@3.0.3:
     resolution: {integrity: sha512-nVpZkTMM9rF6AQ9gPJpFsNAMt48wIzB5TQgiTLdHiuO8XEDhUgZEhqKlZWXbIzo9VmJ/HvysHqEaVeD5v9TPvA==}
     engines: {node: '>=20.0.0'}
@@ -12078,8 +12074,8 @@ packages:
       '@modelcontextprotocol/sdk':
         optional: true
 
-  spiceflow@1.14.0:
-    resolution: {integrity: sha512-CMbbthtD9Be8h9tLv+/Qz8Mt+2d81wFN+adOlIZs6+fg1XtbSlhsIpIU22d0xB/EfhRjGyPlQcsqQE+/tPF8KQ==}
+  spiceflow@1.17.0:
+    resolution: {integrity: sha512-14+iRP6Q/moqSkT0Hhp1HzI6gPXtLU0rTcoAys5LqyTnyFD18ip6lD+OwlAePvMmOSLx3Klm+1p6Cq4+tSRf0Q==}
     peerDependencies:
       '@modelcontextprotocol/sdk': '*'
     peerDependenciesMeta:
@@ -15623,14 +15619,14 @@ snapshots:
 
   '@mjackson/node-fetch-server@0.6.1': {}
 
-  '@modelcontextprotocol/sdk@1.15.0':
+  '@modelcontextprotocol/sdk@1.16.0':
     dependencies:
       ajv: 6.12.6
       content-type: 1.0.5
       cors: 2.8.5
       cross-spawn: 7.0.6
       eventsource: 3.0.7
-      eventsource-parser: 3.0.2
+      eventsource-parser: 3.0.3
       express: 5.1.0
       express-rate-limit: 7.5.1(express@5.1.0)
       pkce-challenge: 5.0.0
@@ -21591,7 +21587,7 @@ snapshots:
 
   discontinuous-range@1.0.0: {}
 
-  docs-website@file:docs-website(@modelcontextprotocol/sdk@1.15.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/node@24.0.7)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(babel-plugin-macros@3.1.0)(lightningcss@1.30.1)(prisma@6.12.0(typescript@5.8.3))(terser@5.42.0)(typescript@5.8.3)(use-sync-external-store@1.5.0(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0)):
+  docs-website@file:docs-website(@modelcontextprotocol/sdk@1.16.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/node@24.0.7)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(babel-plugin-macros@3.1.0)(lightningcss@1.30.1)(prisma@6.12.0(typescript@5.8.3))(terser@5.42.0)(typescript@5.8.3)(use-sync-external-store@1.5.0(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0)):
     dependencies:
       '@ai-sdk/anthropic': 2.0.0-beta.8(zod@4.0.5)
       '@ai-sdk/openai': 2.0.0-beta.11(zod@4.0.5)
@@ -21696,12 +21692,12 @@ snapshots:
       safe-mdx: 1.3.2(react@19.1.0)
       sentries: 0.2.2(@cloudflare/workers-types@4.20250712.0)
       shiki: 3.7.0
-      spiceflow: 1.14.0(@modelcontextprotocol/sdk@1.15.0)
+      spiceflow: 1.17.0(@modelcontextprotocol/sdk@1.16.0)
       tailwind-merge: 3.3.1
       tiny-jsonc: 1.0.2
       trieve-ts-sdk: 0.0.122
       tw-animate-css: 1.3.5
-      unframer: 3.0.2(@modelcontextprotocol/sdk@1.15.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      unframer: 3.0.2(@modelcontextprotocol/sdk@1.16.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       unified: 11.0.5
       unist-util-size: 4.0.0
       unist-util-visit: 5.0.0
@@ -22273,13 +22269,11 @@ snapshots:
 
   events@3.3.0: {}
 
-  eventsource-parser@3.0.2: {}
-
   eventsource-parser@3.0.3: {}
 
   eventsource@3.0.7:
     dependencies:
-      eventsource-parser: 3.0.2
+      eventsource-parser: 3.0.3
 
   execa@8.0.1:
     dependencies:
@@ -26685,7 +26679,7 @@ snapshots:
 
   spdx-license-ids@3.0.21: {}
 
-  spiceflow@1.13.3(@modelcontextprotocol/sdk@1.15.0):
+  spiceflow@1.13.3(@modelcontextprotocol/sdk@1.16.0):
     dependencies:
       '@medley/router': 0.2.1
       '@standard-schema/spec': 1.0.0
@@ -26696,9 +26690,9 @@ snapshots:
       zod: 3.25.76
       zod-to-json-schema: 3.24.6(zod@3.25.76)
     optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.15.0
+      '@modelcontextprotocol/sdk': 1.16.0
 
-  spiceflow@1.14.0(@modelcontextprotocol/sdk@1.15.0):
+  spiceflow@1.17.0(@modelcontextprotocol/sdk@1.16.0):
     dependencies:
       '@medley/router': 0.2.1
       '@standard-schema/spec': 1.0.0
@@ -26709,7 +26703,7 @@ snapshots:
       zod: 3.25.76
       zod-to-json-schema: 3.24.6(zod@3.25.76)
     optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.15.0
+      '@modelcontextprotocol/sdk': 1.16.0
 
   split2@4.2.0: {}
 
@@ -27328,7 +27322,7 @@ snapshots:
       pathe: 2.0.3
       ufo: 1.6.1
 
-  unframer@3.0.2(@modelcontextprotocol/sdk@1.15.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  unframer@3.0.2(@modelcontextprotocol/sdk@1.16.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       '@antfu/ni': 25.0.0
       '@babel/core': 7.27.7
@@ -27343,7 +27337,7 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
       real-framer-motion: framer-motion@12.23.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      spiceflow: 1.13.3(@modelcontextprotocol/sdk@1.15.0)
+      spiceflow: 1.13.3(@modelcontextprotocol/sdk@1.16.0)
       string-dedent: 3.0.1
       undici: 7.11.0
     transitivePeerDependencies:
@@ -28041,7 +28035,7 @@ snapshots:
       - esbuild
       - uglify-js
 
-  website@file:website(@babel/runtime@7.27.6)(@cloudflare/workers-types@4.20250712.0)(@modelcontextprotocol/sdk@1.15.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/node@24.0.7)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)(use-sync-external-store@1.5.0(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0)):
+  website@file:website(@babel/runtime@7.27.6)(@cloudflare/workers-types@4.20250712.0)(@modelcontextprotocol/sdk@1.16.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/node@24.0.7)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)(use-sync-external-store@1.5.0(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0)):
     dependencies:
       '@ai-sdk/anthropic': 2.0.0-beta.8(zod@4.0.5)
       '@ai-sdk/openai': 2.0.0-beta.11(zod@4.0.5)
@@ -28133,7 +28127,7 @@ snapshots:
       sentries: 0.2.2(@cloudflare/workers-types@4.20250712.0)
       shiki: 3.7.0
       sonner: 2.0.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      spiceflow: 1.14.0(@modelcontextprotocol/sdk@1.15.0)
+      spiceflow: 1.17.0(@modelcontextprotocol/sdk@1.16.0)
       string-dedent: 3.0.1
       stripe: 18.2.1(@types/node@24.0.7)
       tailwind-merge: 3.3.1

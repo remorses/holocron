@@ -78,8 +78,16 @@ export async function serveRawMarkdown({
     let [page] = await Promise.all([
         prisma.markdownPage.findFirst({
             where: {
-                slug,
-                branchId: siteBranch.branchId,
+                OR: [
+                    {
+                        slug,
+                        branchId: siteBranch.branchId,
+                    },
+                    {
+                        githubPath: path,
+                        branchId: siteBranch.branchId,
+                    },
+                ],
             },
             include: {
                 content: true,

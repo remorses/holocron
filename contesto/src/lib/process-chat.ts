@@ -5,9 +5,10 @@ import {
     throttleGenerator,
 } from './utils.js'
 
-type ToolPart = Extract<UIMessage['parts'][number], { type: `tool-${string}`; toolCallId: string; state: string }>
-
-
+export type ToolPart<M extends UIMessage = UIMessage> = Extract<M['parts'][number], { type: `tool-${string}`; toolCallId: string; state: string }>
+export type ToolPartOutputAvailable<M extends UIMessage = UIMessage> = Extract<ToolPart<M>, { state: 'output-available' }>
+export type ToolPartInputAvailable<M extends UIMessage = UIMessage> = Extract<ToolPart<M>, { state: 'input-available' }>
+export type ToolPartInputStreaming<M extends UIMessage = UIMessage> = Extract<ToolPart<M>, { state: 'input-streaming' }>
 
 export async function* uiStreamToUIMessages<M extends UIMessage>({
     uiStream,
@@ -22,9 +23,9 @@ export async function* uiStreamToUIMessages<M extends UIMessage>({
     messages: M[]
     generateId: () => string
     throttleMs?: number
-    onToolOutput?: (toolPart: ToolPart) => void
-    onToolInput?: (toolPart: ToolPart) => void
-    onToolInputStreaming?: (toolPart: ToolPart) => void
+    onToolOutput?: (toolPart: ToolPartOutputAvailable<M>) => void | Promise<void>
+    onToolInput?: (toolPart: ToolPartInputAvailable<M>) => void | Promise<void>
+    onToolInputStreaming?: (toolPart: ToolPartInputStreaming<M>) => void | Promise<void>
 }): AsyncIterable<M[]> {
     const lastMessage = messages[messages.length - 1]
     const replaceLastMessage = lastMessage?.role === 'assistant'
@@ -63,18 +64,18 @@ export async function* uiStreamToUIMessages<M extends UIMessage>({
             if (toolPart.state === 'output-available' && onToolOutput) {
                 if (!processedToolCallIds.has(toolPart.toolCallId)) {
                     processedToolCallIds.add(toolPart.toolCallId)
-                    onToolOutput(toolPart)
+                    await onToolOutput(toolPart as ToolPartOutputAvailable<M>)
                 }
             }
 
             // Check for tool input available
             if (toolPart.state === 'input-available' && onToolInput) {
-                onToolInput(toolPart)
+                await onToolInput(toolPart as ToolPartInputAvailable<M>)
             }
 
             // Check for tool input streaming
             if (toolPart.state === 'input-streaming' && onToolInputStreaming) {
-                onToolInputStreaming(toolPart)
+                await onToolInputStreaming(toolPart as ToolPartInputStreaming<M>)
             }
         }
 

@@ -40,7 +40,11 @@ import {
 
 import { useStickToBottom } from 'use-stick-to-bottom'
 
-import { uiStreamToUIMessages } from 'contesto/src/lib/process-chat'
+import { 
+    uiStreamToUIMessages,
+    ToolPartOutputAvailable,
+    ToolPartInputStreaming,
+} from 'contesto/src/lib/process-chat'
 import { shouldHideBrowser, useTemporaryState } from '../lib/hooks'
 import {
     apiClient,
@@ -62,7 +66,6 @@ import {
 import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
 import { ChatSuggestionButton } from 'contesto/src/chat/chat-suggestion'
 import { ChatUploadButton } from 'contesto/src/chat/chat-upload-button'
-import { teeAsyncIterable } from 'contesto/src/lib/utils'
 import { FilesInDraft } from 'docs-website/src/lib/docs-state'
 import { generateSlugFromPath } from 'docs-website/src/lib/utils'
 import {
@@ -99,8 +102,10 @@ import {
     EditToolParamSchema,
     FileUpdate,
     isStrReplaceParameterComplete,
+    ValidateNewContentArgs,
+    GetPageContentArgs,
 } from 'docs-website/src/lib/edit-tool'
-import { escapeMdxSyntax, truncateText } from 'docs-website/src/lib/utils'
+import { escapeMdxSyntax, truncateText, throttle } from 'docs-website/src/lib/utils'
 import { WebsiteUIMessage } from '../lib/types'
 import { safeJsoncParse, slugKebabCaseKeepExtension } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
@@ -267,7 +272,7 @@ export default function Chat({ ref }) {
                 )
             if (error) throw error
             console.log(generator)
-            async function getPageContent(x) {
+            async function getPageContent(x: GetPageContentArgs) {
                 const { data, error } = await apiClient.api.getPageContent.post(
                     {
                         branchId,
@@ -281,161 +286,126 @@ export default function Chat({ ref }) {
                 filesInDraft: filesInDraft,
                 getPageContent,
             })
-            // Split the async iterator into two: one for docs edit, one for state updates
-            const [editIter, stateIter] = teeAsyncIterable(
-                uiStreamToUIMessages<WebsiteUIMessage>({
-                    uiStream: generator,
-                    messages: messages as WebsiteUIMessage[],
-                    generateId,
-                }),
-            )
-
-            // First iteration: handle docs/edit-tool logic
+            
             let isPostMessageBusy = false
-            const processedToolCallIds = new Set<string>()
 
-            async function updateDocsSite() {
-                for await (const newMessages of editIter) {
+            const onToolOutput = async (toolPart: ToolPartOutputAvailable<WebsiteUIMessage>) => {
+                const args: Partial<EditToolParamSchema> = toolPart.input as any
+
+                // Handle strReplaceEditor tool output
+                if (toolPart.type === 'tool-strReplaceEditor') {
+                    if (args?.command === 'view') {
+                        return
+                    }
+
+                    const currentSlug = generateSlugFromPath(
+                        args.path || '',
+                        githubFolder,
+                    )
+
+                    await execute(args as any)
+                    console.log(
+                        `applying the setState update to the docs site`,
+                        toolPart,
+                    )
+
+                    let revalidate = args.command === 'create'
+
                     try {
-                        const lastMessage = newMessages[newMessages.length - 1]
-
-                        if (lastMessage.role === 'assistant') {
-                            // Process all tool parts that have output available and haven't been processed yet
-                            for (const part of lastMessage.parts) {
-                                if (
-                                    part?.type === 'tool-strReplaceEditor' &&
-                                    part.state === 'output-available' &&
-                                    part.toolCallId &&
-                                    !processedToolCallIds.has(part.toolCallId)
-                                ) {
-                                    processedToolCallIds.add(part.toolCallId)
-
-                                    const args: Partial<EditToolParamSchema> =
-                                        part.input as any
-                                    if (args?.command === 'view') {
-                                        continue
-                                    }
-
-                                    const currentSlug = generateSlugFromPath(
-                                        args.path || '',
-                                        githubFolder,
-                                    )
-
-                                    await execute(args as any)
-                                    console.log(
-                                        `applying the setState update to the docs site`,
-                                        part,
-                                    )
-
-                                    let revalidate = args.command === 'create'
-
-                                    try {
-                                        await docsRpcClient.setDocsState({
-                                            state: {
-                                                filesInDraft: filesInDraft,
-                                                isMarkdownStreaming: false,
-                                                currentSlug,
-                                            },
-                                            revalidate,
-                                            idempotenceKey: part.toolCallId,
-                                        })
-                                    } catch (e) {
-                                        console.error('failed setDocsState', e)
-                                    }
-                                    useWebsiteState.setState({
-                                        filesInDraft: { ...filesInDraft },
-                                        currentSlug,
-                                    })
-                                }
-
-                                // Handle selectText tool
-                                if (
-                                    part?.type === 'tool-selectText' &&
-                                    part.state === 'output-available' &&
-                                    part.toolCallId &&
-                                    !processedToolCallIds.has(part.toolCallId)
-                                ) {
-                                    processedToolCallIds.add(part.toolCallId)
-
-                                    if (part.output?.error) {
-                                        console.error('selectText error:', part.output.error)
-                                        continue
-                                    }
-
-                                    const targetSlug = part.output?.slug
-                                    if (targetSlug && typeof targetSlug === 'string') {
-                                        // Update current slug and highlightedLines in docs state
-                                        const currentSlug = targetSlug
-
-                                        try {
-                                            await docsRpcClient.setDocsState({
-                                                state: {
-                                                    currentSlug,
-                                                    highlightedLines: part.input,
-                                                },
-                                            })
-                                        } catch (e) {
-                                            console.error('failed to set highlight state:', e)
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Handle streaming/preview state for the last tool part
-                            const lastPart =
-                                lastMessage.parts[lastMessage.parts.length - 1]
-                            if (
-                                lastPart?.type === 'tool-strReplaceEditor' &&
-                                (lastPart.state === 'input-streaming' ||
-                                    lastPart.state === 'input-available')
-                            ) {
-                                const args: Partial<EditToolParamSchema> =
-                                    lastPart.input as any
-                                if (args?.command === 'view') {
-                                    continue
-                                }
-                                if (!isStrReplaceParameterComplete(args)) {
-                                    continue
-                                }
-                                const currentSlug = generateSlugFromPath(
-                                    args.path || '',
-                                    githubFolder,
-                                )
-
-                                if (isPostMessageBusy) continue
-                                let updatedPagesCopy = { ...filesInDraft }
-                                const localExecute = createEditExecute({
-                                    filesInDraft: updatedPagesCopy,
-                                    getPageContent,
-                                })
-                                await localExecute(args as any)
-                                isPostMessageBusy = true
-                                try {
-                                    docsRpcClient
-                                        .setDocsState({
-                                            state: {
-                                                filesInDraft: updatedPagesCopy,
-                                                currentSlug,
-                                                isMarkdownStreaming: true,
-                                            },
-                                        })
-                                        .catch((e) => {
-                                            console.error(e)
-                                        })
-                                        .finally(() => {
-                                            isPostMessageBusy = false
-                                        })
-                                } catch (e) {}
-                            }
-                        }
+                        await docsRpcClient.setDocsState({
+                            state: {
+                                filesInDraft: filesInDraft,
+                                isMarkdownStreaming: false,
+                                currentSlug,
+                            },
+                            revalidate,
+                            idempotenceKey: toolPart.toolCallId,
+                        })
                     } catch (e) {
-                        console.error(e)
+                        console.error('failed setDocsState', e)
+                    }
+                    useWebsiteState.setState({
+                        filesInDraft: { ...filesInDraft },
+                        currentSlug,
+                    })
+                }
+
+                // Handle selectText tool output
+                if (toolPart.type === 'tool-selectText') {
+                    if (toolPart.output?.error) {
+                        console.error('selectText error:', toolPart.output.error)
+                        return
+                    }
+
+                    const targetSlug = toolPart.output?.slug
+                    if (targetSlug && typeof targetSlug === 'string') {
+                        const currentSlug = targetSlug
+
+                        try {
+                            await docsRpcClient.setDocsState({
+                                state: {
+                                    currentSlug,
+                                    highlightedLines: toolPart.input,
+                                },
+                            })
+                        } catch (e) {
+                            console.error('failed to set highlight state:', e)
+                        }
                     }
                 }
             }
-            updateDocsSite()
 
-            for await (const newMessages of stateIter) {
+            // Use throttle instead of debounce to ensure the function executes at regular intervals
+            // and doesn't delay beyond the throttle period, which could cause it to override 
+            // the output-available call that comes later
+            const onToolInputStreaming = throttle(300, async (toolPart: ToolPartInputStreaming<WebsiteUIMessage>) => {
+                if (toolPart.type === 'tool-strReplaceEditor') {
+                    const args: Partial<EditToolParamSchema> = toolPart.input as any
+                    if (args?.command === 'view') {
+                        return
+                    }
+                    if (!isStrReplaceParameterComplete(args)) {
+                        return
+                    }
+                    const currentSlug = generateSlugFromPath(
+                        args.path || '',
+                        githubFolder,
+                    )
+
+                    if (isPostMessageBusy) return
+                    let updatedPagesCopy = { ...filesInDraft }
+                    const localExecute = createEditExecute({
+                        filesInDraft: updatedPagesCopy,
+                        getPageContent,
+                    })
+                    await localExecute(args as any)
+                    isPostMessageBusy = true
+                    try {
+                        docsRpcClient
+                            .setDocsState({
+                                state: {
+                                    filesInDraft: updatedPagesCopy,
+                                    currentSlug,
+                                    isMarkdownStreaming: true,
+                                },
+                            })
+                            .catch((e) => {
+                                console.error(e)
+                            })
+                            .finally(() => {
+                                isPostMessageBusy = false
+                            })
+                    } catch (e) {}
+                }
+            })
+
+            for await (const newMessages of uiStreamToUIMessages<WebsiteUIMessage>({
+                uiStream: generator,
+                messages: messages as WebsiteUIMessage[],
+                generateId,
+                onToolOutput,
+                onToolInputStreaming,
+            })) {
                 if (abortController.signal.aborted) {
                     break
                 }
