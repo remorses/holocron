@@ -404,11 +404,11 @@ export default function Chat({ ref }) {
 
                                 if (isPostMessageBusy) continue
                                 let updatedPagesCopy = { ...filesInDraft }
-                                const execute = createEditExecute({
+                                const localExecute = createEditExecute({
                                     filesInDraft: updatedPagesCopy,
                                     getPageContent,
                                 })
-                                await execute(args as any)
+                                await localExecute(args as any)
                                 isPostMessageBusy = true
                                 try {
                                     docsRpcClient

@@ -35,7 +35,7 @@ import {
 } from 'website/src/lib/shared-docs-tools'
 import { cleanSlug } from './slug-utils'
 import {
-    createEditExecute,
+    createEditTool,
     editToolParamsSchema,
     fileUpdateSchema,
     type FileUpdate,
@@ -117,137 +117,118 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                     return `- [${title}](${url}) // ${page.data.description}`
                 })
                 .join('\n')
-            const result = streamText({
-                model,
-                messages: [
-                    {
-                        role: 'system',
-                        content: agentPromptTemplate({ linksText }),
-                    },
-                    ...convertToModelMessages(
-                        messages.filter((x) => x.role !== 'system'),
-                    ),
-                ],
-                stopWhen: stepCountIs(100),
 
-                providerOptions: {
-                    openai: {
-                        reasoningSummary: 'detailed',
-                        strictJsonSchema: true,
-                    } satisfies OpenAIResponsesProviderOptions,
-                },
-                tools: {
-                    strReplaceEditor: tool({
-                        inputSchema: editToolParamsSchema,
-                        execute: createEditExecute({
-                            filesInDraft: filesInDraft,
-                            async getPageContent({
-                                githubPath: githubPathWrong,
-                            }) {
-                                const slug = cleanSlug(githubPathWrong)
-                                const sourcePage = source.getPage(
-                                    slug.split('/').filter(Boolean),
-                                )
-                                const githubPath = sourcePage?.file.path || ''
-                                if (!githubPath) {
-                                    const error = new Error(
-                                        `File not found for slug: ${slug}`,
-                                    )
-                                    console.error(error)
-                                    throw error
-                                }
-                                if (githubPath !== githubPathWrong) {
-                                    throw new Error(
-                                        `the canonical path of ${githubPathWrong} is ${githubPath}, please call again the tool using ${githubPath} instead`,
-                                    )
-                                }
+            const editTool = createEditTool({
+                model: { provider: model.provider },
+                filesInDraft: filesInDraft,
+                async getPageContent({
+                    githubPath: githubPathWrong,
+                }) {
+                    const slug = cleanSlug(githubPathWrong)
+                    const sourcePage = source.getPage(
+                        slug.split('/').filter(Boolean),
+                    )
+                    const githubPath = sourcePage?.file.path || ''
+                    if (!githubPath) {
+                        const error = new Error(
+                            `File not found for slug: ${slug}`,
+                        )
+                        console.error(error)
+                        throw error
+                    }
+                    if (githubPath !== githubPathWrong) {
+                        throw new Error(
+                            `the canonical path of ${githubPathWrong} is ${githubPath}, please call again the tool using ${githubPath} instead`,
+                        )
+                    }
 
-                                const fileInDraft = filesInDraft[githubPath]
-                                if (
-                                    fileInDraft &&
-                                    fileInDraft.content !== null
-                                ) {
-                                    return fileInDraft.content
-                                }
+                    const fileInDraft = filesInDraft[githubPath]
+                    if (
+                        fileInDraft &&
+                        fileInDraft.content !== null
+                    ) {
+                        return fileInDraft.content
+                    }
 
-                                // Otherwise, try to get content from database
-                                const [page, metaFile] = await Promise.all([
-                                    prisma.markdownPage.findFirst({
-                                        where: {
-                                            branchId: siteBranch.branchId,
-                                            githubPath: githubPath,
-                                        },
-                                        include: {
-                                            content: true,
-                                        },
-                                    }),
-                                    prisma.metaFile.findFirst({
-                                        where: {
-                                            branchId: siteBranch.branchId,
-                                            githubPath: githubPath,
-                                        },
-                                    }),
-                                ])
-
-                                if (page?.content?.markdown) {
-                                    return page.content.markdown
-                                }
-
-                                if (metaFile?.jsonData) {
-                                    return JSON.stringify(
-                                        metaFile.jsonData,
-                                        null,
-                                        2,
-                                    )
-                                }
-
-                                const error = new Error(
-                                    `File ${githubPath} not found in draft or database`,
-                                )
-                                console.error(error)
-                                throw error
+                    // Otherwise, try to get content from database
+                    const [page, metaFile] = await Promise.all([
+                        prisma.markdownPage.findFirst({
+                            where: {
+                                branchId: siteBranch.branchId,
+                                githubPath: githubPath,
+                            },
+                            include: {
+                                content: true,
                             },
                         }),
-                    }),
-                    searchDocs: tool({
-                        inputSchema: searchDocsInputSchema,
-                        execute: async ({ terms, searchType = 'fulltext' }) => {
-                            let tag = ''
-                            const results = await searchDocsWithTrieve({
-                                trieveDatasetId: siteBranch.trieveDatasetId,
-                                query: terms,
-                                tag,
-                                searchType,
-                            })
-                            return formatTrieveSearchResults({
-                                results,
-                                baseUrl: currentOrigin,
-                            })
-                        },
-                    }),
-                    goToPage: tool({
-                        inputSchema: goToPageInputSchema,
-                        execute: async ({ slug }) => {
-                            const slugParts = slug.split('/').filter(Boolean)
-                            const page = source.getPage(slugParts)
-                            if (!page) {
-                                return { error: `page ${slug} not found` }
-                            }
-                            return {
-                                slug: page.url,
-                                message: `Navigating to ${page.url}`,
-                            }
-                        },
-                    }),
-                    getCurrentPage: tool({
-                        inputSchema: getCurrentPageInputSchema,
-                        execute: async () => {
-                            return `Current page slug: ${currentSlug}`
-                        },
-                    }),
-                    fetchUrl: tool({
-                        inputSchema: fetchUrlInputSchema,
-                        execute: async ({ url }) => {
+                        prisma.metaFile.findFirst({
+                            where: {
+                                branchId: siteBranch.branchId,
+                                githubPath: githubPath,
+                            },
+                        }),
+                    ])
+
+                    if (page?.content?.markdown) {
+                        return page.content.markdown
+                    }
+
+                    if (metaFile?.jsonData) {
+                        return JSON.stringify(
+                            metaFile.jsonData,
+                            null,
+                            2,
+                        )
+                    }
+
+                    const error = new Error(
+                        `File ${githubPath} not found in draft or database`,
+                    )
+                    console.error(error)
+                    throw error
+                },
+            })
+
+            const tools: Record<string, any> = {
+                searchDocs: tool({
+                    inputSchema: searchDocsInputSchema,
+                    execute: async ({ terms, searchType = 'fulltext' }) => {
+                        let tag = ''
+                        const results = await searchDocsWithTrieve({
+                            trieveDatasetId: siteBranch.trieveDatasetId,
+                            query: terms,
+                            tag,
+                            searchType,
+                        })
+                        return formatTrieveSearchResults({
+                            results,
+                            baseUrl: currentOrigin,
+                        })
+                    },
+                }),
+                goToPage: tool({
+                    inputSchema: goToPageInputSchema,
+                    execute: async ({ slug }) => {
+                        const slugParts = slug.split('/').filter(Boolean)
+                        const page = source.getPage(slugParts)
+                        if (!page) {
+                            return { error: `page ${slug} not found` }
+                        }
+                        return {
+                            slug: page.url,
+                            message: `Navigating to ${page.url}`,
+                        }
+                    },
+                }),
+                getCurrentPage: tool({
+                    inputSchema: getCurrentPageInputSchema,
+                    execute: async () => {
+                        return `Current page slug: ${currentSlug}`
+                    },
+                }),
+                fetchUrl: tool({
+                    inputSchema: fetchUrlInputSchema,
+                    execute: async ({ url }) => {
                             let fullUrl: string
                             if (
                                 url.startsWith('http://') ||
@@ -297,35 +278,58 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                             }
                         },
                     }),
-                    selectText: tool({
-                        inputSchema: selectTextInputSchema,
-                        execute: async ({ slug, startLine, endLine }) => {
-                            // Clean the slug using the utility function
-                            const cleanedSlug = cleanSlug(slug)
+                selectText: tool({
+                    inputSchema: selectTextInputSchema,
+                    execute: async ({ slug, startLine, endLine }) => {
+                        // Clean the slug using the utility function
+                        const cleanedSlug = cleanSlug(slug)
 
-                            // if (endLine - startLine + 1 > maxLines) {
-                            //     return { error: `Cannot select more than 10 lines of text. You requested ${endLine - startLine + 1} lines.` }
-                            // }
+                        // if (endLine - startLine + 1 > maxLines) {
+                        //     return { error: `Cannot select more than 10 lines of text. You requested ${endLine - startLine + 1} lines.` }
+                        // }
 
-                            const slugParts = cleanedSlug
-                                .split('/')
-                                .filter(Boolean)
-                            const page = source.getPage(slugParts)
-                            if (!page) {
-                                return {
-                                    error: `Page ${cleanedSlug} not found`,
-                                }
-                            }
-
+                        const slugParts = cleanedSlug
+                            .split('/')
+                            .filter(Boolean)
+                        const page = source.getPage(slugParts)
+                        if (!page) {
                             return {
-                                slug: page.url,
-                                startLine,
-                                endLine,
-                                message: `highlighted text on ${page.url} from ${startLine} to ${endLine}`,
+                                error: `Page ${cleanedSlug} not found`,
                             }
-                        },
-                    }),
+                        }
+
+                        return {
+                            slug: page.url,
+                            startLine,
+                            endLine,
+                            message: `highlighted text on ${page.url} from ${startLine} to ${endLine}`,
+                        }
+                    },
+                }),
+            }
+
+            // Add edit tool 
+            tools.strReplaceEditor = editTool
+
+            const result = streamText({
+                model,
+                messages: [
+                    {
+                        role: 'system',
+                        content: agentPromptTemplate({ linksText }),
+                    },
+                    ...convertToModelMessages(
+                        messages.filter((x) => x.role !== 'system'),
+                    ),
+                ],
+                stopWhen: stepCountIs(100),
+                providerOptions: {
+                    openai: {
+                        reasoningSummary: 'detailed',
+                        strictJsonSchema: true,
+                    } satisfies OpenAIResponsesProviderOptions,
                 },
+                tools,
                 async onFinish({ response }) {},
             })
 

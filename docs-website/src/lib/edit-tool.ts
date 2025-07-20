@@ -1,5 +1,7 @@
 import z from 'zod'
 import { diffLines, createPatch } from 'diff'
+import { tool } from 'ai'
+import { anthropic } from '@ai-sdk/anthropic'
 
 export function calculateLineChanges(
     oldContent: string,
@@ -451,6 +453,43 @@ export function createEditExecute({
             }
         }
     }
+}
+
+export function createEditTool({
+    filesInDraft,
+    getPageContent,
+    validateNewContent,
+    onNewFile,
+    model,
+}: {
+    validateNewContent?: (x: { githubPath: string; content: string }) => any
+    filesInDraft: Record<string, FileUpdate>
+    getPageContent: (x: {
+        githubPath: string
+    }) => Promise<string | undefined | void>
+    onNewFile?: () => void | Promise<void>
+    model?: { provider?: string }
+}) {
+    const execute = createEditExecute({
+        filesInDraft,
+        getPageContent,
+        validateNewContent,
+        onNewFile,
+    })
+
+    // Use Anthropic's native text editor for Claude models that support it
+    if (model?.provider === 'anthropic') {
+        // Use the built-in text editor tool for Claude models
+        return anthropic.tools.textEditor_20250124({
+            execute: execute as any,
+        })
+    }
+
+    return tool({
+        description: editToolDescription,
+        inputSchema: editToolParamsSchema,
+        execute,
+    })
 }
 
 export const editToolDescription = `Update files. Notice that the view command will return text with lines prefixes, these should not be referenced in the str_replace commands or others.`

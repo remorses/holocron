@@ -19,7 +19,7 @@ import { Spiceflow } from 'spiceflow'
 import z from 'zod'
 import { printDirectoryTree } from '../components/directory-tree'
 import {
-    createEditExecute,
+    createEditTool,
     EditToolParamSchema,
     editToolParamsSchema,
     fileUpdateSchema,
@@ -199,7 +199,8 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             replaceOptionalsWithNulls: model.provider.startsWith('openai'),
         })
         // model = anthropic('claude-3-5-haiku-latest')
-        const editFilesExecute = createEditExecute({
+        const strReplaceEditor = createEditTool({
+            model: { provider: model.provider },
             filesInDraft,
             async getPageContent({ githubPath }) {
                 const content = await getPageContent({ githubPath, branchId })
@@ -231,15 +232,6 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 }
             },
         })
-
-        const strReplaceEditor = model.modelId.includes('claude')
-            ? anthropic.tools.textEditor_20250124({
-                  execute: editFilesExecute as any,
-              })
-            : tool({
-                  inputSchema: editToolParamsSchema,
-                  execute: editFilesExecute,
-              })
 
         const tools = {
             strReplaceEditor,
