@@ -29,9 +29,9 @@ export async function* uiStreamToUIMessages<M extends UIMessage>({
         stream: isReadableStream(uiStream)
             ? uiStream
             : asyncIterableToReadableStream(uiStream),
+
         message,
     })) {
-
         const currentMessages = [...messages]
         if (!replaceLastMessage) {
             currentMessages.push(generatedMessage)

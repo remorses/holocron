@@ -24,7 +24,7 @@ import {
     editToolParamsSchema,
     fileUpdateSchema,
     type FileUpdate,
-} from './edit-tool'
+} from 'docs-website/src/lib/edit-tool'
 import { notifyError } from './errors'
 import { createRenderFormTool, RenderFormParameters } from './render-form-tool'
 import { mdxRegex } from './utils'

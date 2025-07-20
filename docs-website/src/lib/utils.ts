@@ -111,3 +111,48 @@ export function groupBy<T, K extends string | number>(
         {} as Record<K, T[]>,
     )
 }
+
+/**
+ * Escapes MDX/Markdown syntax to prevent rendering as formatted content
+ * @param text - The text to escape
+ * @returns The escaped text with MDX/Markdown syntax rendered as plain text
+ */
+export function escapeMdxSyntax(text: string): string {
+    return text
+        // Escape HTML/JSX tags
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        // Escape JSX curly braces
+        .replace(/{/g, '&#123;')
+        .replace(/}/g, '&#125;')
+        // Escape markdown formatting
+        .replace(/\*/g, '&#42;')
+        .replace(/_/g, '&#95;')
+        .replace(/`/g, '&#96;')
+        .replace(/~/g, '&#126;')
+        .replace(/\^/g, '&#94;')
+        .replace(/\[/g, '&#91;')
+        .replace(/\]/g, '&#93;')
+        .replace(/\|/g, '&#124;')
+        .replace(/\\/g, '&#92;')
+        // Escape headers (# at start of line)
+        .replace(/^#/gm, '&#35;')
+        // Escape blockquotes (> at start of line)
+        .replace(/^>/gm, '&#62;')
+        // Escape newlines to prevent line breaks
+        .replace(/\n/g, ' ')
+        .replace(/\r/g, ' ')
+}
+
+/**
+ * Truncates text to a specified length and adds ellipsis
+ * @param text - The text to truncate
+ * @param maxLength - Maximum length before truncation (default: 500)
+ * @returns The truncated text with ellipsis if it was truncated
+ */
+export function truncateText(text: string, maxLength: number = 500): string {
+    if (text.length <= maxLength) {
+        return text
+    }
+    return text.slice(0, maxLength).trimEnd() + '...'
+}

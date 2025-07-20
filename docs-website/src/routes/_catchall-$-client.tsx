@@ -517,6 +517,10 @@ const MonacoMarkdownEditor = lazy(() =>
 
 function DocsMarkdown(): any {
     const loaderData = useLoaderData<Route.ComponentProps['loaderData']>()
+    const showDiff = true
+    useScrollToFirstAddedIfAtTop({ enabled: showDiff })
+    useAddedHighlighter({ enabled: showDiff })
+    const extension = loaderData.githubPath.split('.').pop()
     let { ast, markdown, isStreaming } = useDocsState(
         useShallow((x) => {
             const { filesInDraft, isMarkdownStreaming: isStreaming } = x
@@ -541,10 +545,6 @@ function DocsMarkdown(): any {
             }
         }),
     )
-    const showDiff = true
-    useScrollToFirstAddedIfAtTop({ enabled: showDiff })
-    useAddedHighlighter({ enabled: showDiff })
-    const extension = loaderData.githubPath.split('.').pop()
 
     // Default preview mode
     if (!ast) {

@@ -1,22 +1,30 @@
 import { memo } from 'react'
+import { MarkdownRuntime as Markdown } from '../lib/markdown-runtime'
+import { cn } from '../lib/cn'
+import { EditToolParamSchema } from '../lib/edit-tool'
+import { escapeMdxSyntax, truncateText } from '../lib/utils'
 
-import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
-import { cn } from 'website/src/lib/utils'
-import { escapeMdxSyntax, truncateText } from 'docs-website/src/lib/utils'
-import { WebsiteToolPart } from 'website/src/lib/types'
-import { useWebsiteState } from '../lib/state'
-import { EditToolParamSchema } from 'docs-website/src/lib/edit-tool'
-import { RenderFormPreview } from './render-form-preview'
-import { useChatContext } from 'contesto/src/chat/chat-provider'
-import { ChatPartTool } from 'db'
+// Types for docs tool parts
+export interface DocsToolPart {
+    type: string
+    input?: any
+    output?: any
+    state?: 'input-streaming' | 'input-available' | 'output-available' | 'output-error'
+    toolCallId?: string
+    errorText?: string
+}
+
+export interface EditorToolPart extends DocsToolPart {
+    type: 'tool-strReplaceEditor'
+    input?: any
+}
 
 export function EditorToolPreview({
     input: args,
     state,
     toolCallId,
     output: result,
-}: Extract<WebsiteToolPart, { type: 'tool-strReplaceEditor' }>) {
-    const { isGenerating: isChatGenerating } = useChatContext()
+}: EditorToolPart) {
     let code = args?.new_str || args?.file_text || ''
     if (code && typeof code === 'object') {
         code = code?.['error'] || JSON.stringify(code, null, 2)
@@ -28,7 +36,7 @@ export function EditorToolPreview({
         return (
             <ToolPreviewContainer>
                 <Markdown
-                    isStreaming={isChatGenerating}
+                    isStreaming={false}
                     markdown={`❌ Error: ${truncatedError}`}
                 />
             </ToolPreviewContainer>
@@ -44,7 +52,7 @@ export function EditorToolPreview({
         return (
             <ToolPreviewContainer>
                 <Markdown
-                    isStreaming={isChatGenerating}
+                    isStreaming={false}
                     markdown={`Reading \`${args?.path}${linesText}\` `}
                 />
             </ToolPreviewContainer>
@@ -57,7 +65,7 @@ export function EditorToolPreview({
             '````mdx' + ` title=" ${args?.path || ''}" \n` + code + '\n````'
         return (
             <ToolPreviewContainer>
-                <Markdown isStreaming={isChatGenerating} markdown={markdown} />
+                <Markdown isStreaming={false} markdown={markdown} />
             </ToolPreviewContainer>
         )
     }
@@ -87,7 +95,7 @@ export function EditorToolPreview({
             '\n````'
         return (
             <ToolPreviewContainer className='py-0'>
-                <Markdown isStreaming={isChatGenerating} markdown={markdown} />
+                <Markdown isStreaming={false} markdown={markdown} />
             </ToolPreviewContainer>
         )
     }
@@ -103,30 +111,14 @@ export function EditorToolPreview({
             '````diff' + ` title=" ${args?.path || ''}" \n` + diff + '\n````'
         return (
             <ToolPreviewContainer className='py-0'>
-                <Markdown isStreaming={isChatGenerating} markdown={markdown} />
+                <Markdown isStreaming={false} markdown={markdown} />
             </ToolPreviewContainer>
         )
     }
     markdown += '````mdx' + ` title=" ${args?.path || ''}" \n` + code + '\n````'
     return (
         <ToolPreviewContainer className='py-0'>
-            <Markdown isStreaming={isChatGenerating} markdown={markdown} />
-        </ToolPreviewContainer>
-    )
-}
-
-export function FilesTreePreview({
-    output,
-}: Extract<WebsiteToolPart, { type: 'tool-getProjectFiles' }>) {
-    const { isGenerating: isChatGenerating } = useChatContext()
-    const code = output || '\n'
-    if (!code) return null
-    let markdown = ''
-    markdown += 'Reading project structure\n'
-    markdown += '```sh' + ` \n` + code + '\n```'
-    return (
-        <ToolPreviewContainer className='py-0'>
-            <Markdown isStreaming={isChatGenerating} markdown={markdown} />
+            <Markdown isStreaming={false} markdown={markdown} />
         </ToolPreviewContainer>
     )
 }

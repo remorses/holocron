@@ -1,5 +1,6 @@
 import { tool } from 'ai'
 import z from 'zod'
+import { EditToolParamSchema } from 'docs-website/src/lib/edit-tool'
 
 // Tool input schemas - extracted from docs-website/src/lib/spiceflow-docs-app.ts
 export const searchDocsInputSchema = z.object({
@@ -55,6 +56,10 @@ export type SelectTextInput = z.infer<typeof selectTextInputSchema>
 
 // Types for tool definitions
 export type DocsTools = {
+    strReplaceEditor: {
+        input: EditToolParamSchema
+        output: any
+    }
     searchDocs: {
         input: SearchDocsInput
         output: any

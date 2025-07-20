@@ -1,4 +1,5 @@
 import { OpenAIResponsesProviderOptions, openai } from '@ai-sdk/openai'
+import { anthropic } from '@ai-sdk/anthropic'
 import {
     UIMessage,
     streamText,
@@ -33,6 +34,12 @@ import {
     type SelectTextInput,
 } from 'website/src/lib/shared-docs-tools'
 import { cleanSlug } from './slug-utils'
+import {
+    createEditExecute,
+    editToolParamsSchema,
+    fileUpdateSchema,
+    type FileUpdate,
+} from './edit-tool'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
@@ -46,10 +53,20 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
             locale: z.string(),
             currentSlug: z.string(),
             currentOrigin: z.string(),
+            filesInDraft: z
+                .record(z.string(), fileUpdateSchema)
+                .optional()
+                .default({}),
         }),
         async *handler({ request, waitUntil, state: {} }) {
-            const { messages, currentSlug, locale, chatId, currentOrigin } =
-                await request.json()
+            const {
+                messages,
+                currentSlug,
+                locale,
+                chatId,
+                currentOrigin,
+                filesInDraft = {},
+            } = await request.json()
             const url = new URL(request.url)
             const domain = url.hostname.split(':')[0]
 
@@ -90,7 +107,8 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
             })
             const pages = source.getPages(locale)
 
-            let model = openai.responses('gpt-4.1')
+            // let model = openai.responses('gpt-4.1')
+            let model = anthropic('claude-3-5-haiku-latest')
 
             const linksText = pages
                 .map((page) => {
@@ -115,9 +133,82 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                 providerOptions: {
                     openai: {
                         reasoningSummary: 'detailed',
+                        strictJsonSchema: true,
                     } satisfies OpenAIResponsesProviderOptions,
                 },
                 tools: {
+                    strReplaceEditor: tool({
+                        inputSchema: editToolParamsSchema,
+                        execute: createEditExecute({
+                            filesInDraft: filesInDraft,
+                            async getPageContent({
+                                githubPath: githubPathWrong,
+                            }) {
+                                const slug = cleanSlug(githubPathWrong)
+                                const sourcePage = source.getPage(
+                                    slug.split('/').filter(Boolean),
+                                )
+                                const githubPath = sourcePage?.file.path || ''
+                                if (!githubPath) {
+                                    const error = new Error(
+                                        `File not found for slug: ${slug}`,
+                                    )
+                                    console.error(error)
+                                    throw error
+                                }
+                                if (githubPath !== githubPathWrong) {
+                                    throw new Error(
+                                        `the canonical path of ${githubPathWrong} is ${githubPath}, please call again the tool using ${githubPath} instead`,
+                                    )
+                                }
+
+                                const fileInDraft = filesInDraft[githubPath]
+                                if (
+                                    fileInDraft &&
+                                    fileInDraft.content !== null
+                                ) {
+                                    return fileInDraft.content
+                                }
+
+                                // Otherwise, try to get content from database
+                                const [page, metaFile] = await Promise.all([
+                                    prisma.markdownPage.findFirst({
+                                        where: {
+                                            branchId: siteBranch.branchId,
+                                            githubPath: githubPath,
+                                        },
+                                        include: {
+                                            content: true,
+                                        },
+                                    }),
+                                    prisma.metaFile.findFirst({
+                                        where: {
+                                            branchId: siteBranch.branchId,
+                                            githubPath: githubPath,
+                                        },
+                                    }),
+                                ])
+
+                                if (page?.content?.markdown) {
+                                    return page.content.markdown
+                                }
+
+                                if (metaFile?.jsonData) {
+                                    return JSON.stringify(
+                                        metaFile.jsonData,
+                                        null,
+                                        2,
+                                    )
+                                }
+
+                                const error = new Error(
+                                    `File ${githubPath} not found in draft or database`,
+                                )
+                                console.error(error)
+                                throw error
+                            },
+                        }),
+                    }),
                     searchDocs: tool({
                         inputSchema: searchDocsInputSchema,
                         execute: async ({ terms, searchType = 'fulltext' }) => {

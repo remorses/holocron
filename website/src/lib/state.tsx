@@ -4,7 +4,7 @@ import { DocsState } from 'docs-website/src/lib/docs-state'
 import { createZustandContext } from 'docs-website/src/lib/zustand-context'
 import { create } from 'zustand'
 import { useDeferredValue, useMemo } from 'react'
-import { FileUpdate } from './edit-tool'
+import { FileUpdate } from 'docs-website/src/lib/edit-tool'
 
 export type State = {
     currentSlug: string

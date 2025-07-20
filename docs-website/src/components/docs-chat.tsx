@@ -55,6 +55,12 @@ import { env } from '../lib/env'
 import { Trash2Icon, XIcon } from 'lucide-react'
 import { DocsUIMessage } from '../lib/types'
 import { teeAsyncIterable, throttleGenerator } from 'contesto/src/lib/utils'
+import { EditorToolPreview } from '../components/tool-preview'
+import {
+    createEditExecute,
+    EditToolParamSchema,
+    isStrReplaceParameterComplete,
+} from '../lib/edit-tool'
 
 export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
     const chatId = usePersistentDocsState((x) => x.chatId)
@@ -78,6 +84,8 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
         const currentOrigin =
             typeof window !== 'undefined' ? window.location.origin : ''
 
+        const filesInDraft = useDocsState.getState()?.filesInDraft || {}
+
         try {
             const { data: generator, error } =
                 await docsApiClientWithDurableFetch.api.generateMessage.post(
@@ -87,6 +95,7 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                         currentOrigin: currentOrigin,
                         chatId: chatId,
                         locale: 'en',
+                        filesInDraft: filesInDraft,
                     },
                     {
                         query: {
@@ -105,12 +114,60 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                 }),
             )
             async function updateDocsSite() {
+                async function getPageContent(x) {
+                    // First check if the file is in filesInDraft
+                    const fileInDraft = filesInDraft[x.githubPath]
+                    if (fileInDraft && fileInDraft.content !== null) {
+                        return fileInDraft.content
+                    }
+
+                    // For client-side, we can't easily access the database content
+                    // But the server-side implementation in spiceflow-docs-app.ts handles this properly
+                    // This function is mainly used for preview/streaming operations
+                    return ''
+                }
+
                 for await (const newMessages of effectsIter) {
                     try {
                         const lastMessage = newMessages[newMessages.length - 1]
                         const lastPart =
                             lastMessage.parts[lastMessage.parts.length - 1]
-                        console.log({ lastPart })
+
+                        if (
+                            lastPart?.type === 'tool-strReplaceEditor' &&
+                            (lastPart.state === 'input-available' ||
+                                lastPart.state === 'input-streaming')
+                        ) {
+                            const args: Partial<EditToolParamSchema> =
+                                lastPart.input as any
+                            if (!isStrReplaceParameterComplete(args)) {
+                                console.log(
+                                    'Incomplete strReplaceEditor parameters, skipping execution',
+                                )
+                                continue
+                            }
+                            if (args?.command === 'view') {
+                                continue
+                            }
+
+                            let updatedPagesCopy = { ...filesInDraft }
+                            const execute = createEditExecute({
+                                filesInDraft: updatedPagesCopy,
+                                getPageContent,
+                            })
+
+                            await execute(args as any)
+                            console.log(
+                                'applying the setState update to the docs site',
+                                lastPart,
+                            )
+
+                            // Update docs state with new filesInDraft
+                            useDocsState.setState({
+                                filesInDraft: { ...updatedPagesCopy },
+                            })
+                        }
+
                         if (
                             lastMessage.role === 'assistant' &&
                             lastPart?.type === 'tool-selectText' &&
@@ -170,12 +227,6 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
             if (finalMessages && finalMessages.length > 0) {
                 saveChatMessages(chatId, finalMessages)
             }
-        } catch (error) {
-            if (error.name === 'AbortError') {
-                console.log('Generation aborted')
-            } else {
-                throw error
-            }
         } finally {
         }
     }
@@ -202,11 +253,12 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
         e.preventDefault()
         if (drawerState === 'minimized') {
             usePersistentDocsState.setState({ drawerState: 'open' })
-        }
-
-        const textarea = document.querySelector('.chat-textarea') as HTMLElement
-        if (textarea) {
-            textarea.focus()
+            const textarea = document.querySelector(
+                '.chat-textarea',
+            ) as HTMLElement
+            if (textarea) {
+                textarea.focus()
+            }
         }
     }
 
@@ -263,11 +315,16 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
 }
 
 function ChatTopBar() {
-    const { setMessages } = useChatContext()
-    const clearChat = () => {
+    const { setMessages, stop } = useChatContext()
+    const clearChat = (e) => {
+        stop()
         const newChatId = generateChatId()
         usePersistentDocsState.setState({ chatId: newChatId })
         setMessages([])
+        const textarea = document.querySelector('.chat-textarea') as HTMLElement
+        if (textarea) {
+            textarea.focus()
+        }
     }
 
     const closeDrawer = () => {
@@ -452,6 +509,10 @@ function MessageRenderer({ message }: { message: DocsUIMessage }) {
                         </div>
                     )
                 }
+                if (part.type === 'tool-strReplaceEditor') {
+                    return <EditorToolPreview key={index} {...part} />
+                }
+
                 if (part.type === 'tool-selectText') {
                     if (!part.input) return null
                     return (

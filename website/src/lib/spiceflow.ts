@@ -26,7 +26,7 @@ import {
 import { filesFromGithub, assetsFromFilesList, syncSite } from './sync'
 
 import { createHash } from 'crypto'
-import { fileUpdateSchema } from './edit-tool'
+import { fileUpdateSchema } from 'docs-website/src/lib/edit-tool'
 import {
     generateMessageApp,
     getPageContent,

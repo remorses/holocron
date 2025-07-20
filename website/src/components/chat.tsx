@@ -98,8 +98,9 @@ import {
     createEditExecute,
     EditToolParamSchema,
     FileUpdate,
-    isParameterComplete,
-} from '../lib/edit-tool'
+    isStrReplaceParameterComplete,
+} from 'docs-website/src/lib/edit-tool'
+import { escapeMdxSyntax, truncateText } from 'docs-website/src/lib/utils'
 import { WebsiteUIMessage } from '../lib/types'
 import { safeJsoncParse, slugKebabCaseKeepExtension } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
@@ -346,7 +347,7 @@ export default function Chat({ ref }) {
                                         currentSlug,
                                     })
                                 }
-                                
+
                                 // Handle selectText tool
                                 if (
                                     part?.type === 'tool-selectText' &&
@@ -355,17 +356,17 @@ export default function Chat({ ref }) {
                                     !processedToolCallIds.has(part.toolCallId)
                                 ) {
                                     processedToolCallIds.add(part.toolCallId)
-                                    
+
                                     if (part.output?.error) {
                                         console.error('selectText error:', part.output.error)
                                         continue
                                     }
-                                    
+
                                     const targetSlug = part.output?.slug
                                     if (targetSlug && typeof targetSlug === 'string') {
                                         // Update current slug and highlightedLines in docs state
                                         const currentSlug = targetSlug
-                                        
+
                                         try {
                                             await docsRpcClient.setDocsState({
                                                 state: {
@@ -393,7 +394,7 @@ export default function Chat({ ref }) {
                                 if (args?.command === 'view') {
                                     continue
                                 }
-                                if (!isParameterComplete(args)) {
+                                if (!isStrReplaceParameterComplete(args)) {
                                     continue
                                 }
                                 const currentSlug = generateSlugFromPath(
@@ -583,12 +584,14 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                     )
                 }
                 if (part && 'errorText' in part && part.errorText) {
+                    const escapedError = escapeMdxSyntax(String(part.errorText))
+                    const truncatedError = truncateText(escapedError, 300)
                     return (
                         <Markdown
                             key={index}
                             className='prose-sm text-red-600'
                             isStreaming={isChatGenerating}
-                            markdown={`[${part.type}] ${part.errorText}`}
+                            markdown={`[${part.type}] ${truncatedError}`}
                         />
                     )
                 }
