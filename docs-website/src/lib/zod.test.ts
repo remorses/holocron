@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest'
 import { z, toJSONSchema } from 'zod'
 import { optionalToNullable } from './zod'
-import { UIFieldSchema } from './render-form-tool'
+import { UIFieldSchema } from 'website/src/lib/render-form-tool'
 import { openai } from '@ai-sdk/openai'
 import { generateText, tool } from 'ai'
 

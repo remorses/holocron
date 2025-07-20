@@ -4,7 +4,7 @@ import type { JSONSchema7 } from 'json-schema'
 import * as schemaLib from 'json-schema-library'
 import { z } from 'zod'
 import { notifyError } from './errors'
-import { optionalToNullable } from './zod'
+import { optionalToNullable } from 'docs-website/src/lib/zod'
 const compileSchema =
     schemaLib.compileSchema || schemaLib?.['default']?.compileSchema
 

@@ -102,7 +102,7 @@ export async function serveRawMarkdown({
         ])
         const markdown = indexPage?.content?.markdown || null
         if (markdown) {
-            const formattedMarkdown = formatMarkdown(markdown, showLineNumbers, startLine, endLine)
+            const formattedMarkdown = formatFileWithLines(markdown, showLineNumbers, startLine, endLine)
             const cacheTag = getCacheTagForPage({
                 branchId: siteBranch.branchId,
                 slug: indexPage?.slug || '/',
@@ -117,7 +117,7 @@ export async function serveRawMarkdown({
         return null
     }
 
-    const formattedMarkdown = formatMarkdown(page.content?.markdown ||'', showLineNumbers, startLine, endLine)
+    const formattedMarkdown = formatFileWithLines(page.content?.markdown ||'', showLineNumbers, startLine, endLine)
     const cacheTag = getCacheTagForPage({
         branchId: siteBranch.branchId,
         slug: page.slug,
@@ -126,13 +126,13 @@ export async function serveRawMarkdown({
     return { markdown: formattedMarkdown, cacheTag }
 }
 
-function formatMarkdown(
-    markdown: string,
+function formatFileWithLines(
+    contents: string,
     showLineNumbers: boolean,
     startLine?: number,
     endLine?: number,
 ): string {
-    const lines = markdown.split('\n')
+    const lines = contents.split('\n')
 
     // Filter lines by range if specified
     const filteredLines = (() => {
