@@ -3,6 +3,7 @@ import type { PageTree, TOCItemType } from 'fumadocs-core/server'
 
 import { create } from 'zustand'
 import { createIdGenerator, UIMessage } from 'ai'
+import { highlightText } from './highlight-text'
 
 const generateId = createIdGenerator()
 export function generateChatId(): string {
@@ -42,6 +43,11 @@ export type DocsState = {
         slug: string
     }>
     previewMode?: 'preview' | 'editor'
+    highlightedLines?: {
+        slug: string
+        startLine: number
+        endLine: number
+    }
 }
 
 const defaultState: DocsState = {
@@ -147,9 +153,25 @@ if (typeof window !== 'undefined') {
     }
 
     // Subscribe to changes and persist to localStorage
-    usePersistentDocsState.subscribe((state) => {
+    const unsub = usePersistentDocsState.subscribe((state) => {
         localStorage.setItem(persistentStateKey, JSON.stringify(state))
     })
+
+    // Subscribe to highlightedLines changes
+    const unsub2 = useDocsState.subscribe((state, prevState) => {
+        if (
+            state.highlightedLines &&
+            state.highlightedLines !== prevState.highlightedLines
+        ) {
+            highlightText(state.highlightedLines)
+        }
+    })
+    if (import.meta.hot) {
+        import.meta.hot.dispose(() => {
+            unsub()
+            unsub2()
+        })
+    }
 }
 
 export type IframeRpcMessage = {

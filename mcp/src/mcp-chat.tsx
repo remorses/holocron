@@ -126,10 +126,10 @@ function WelcomeMessage() {
 
     return (
         <div className='text-center py-8'>
-            <h2 className='text-2xl font-semibold text-foreground mb-4'>
+            <h2 className='text-2xl select-none font-semibold text-foreground mb-4'>
                 Welcome to MCP Chat Demo
             </h2>
-            <p className='text-muted-foreground'>
+            <p className='text-muted-foreground select-none'>
                 Start a conversation by typing a message below
             </p>
         </div>

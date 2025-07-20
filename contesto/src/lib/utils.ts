@@ -88,11 +88,10 @@ export function teeAsyncIterable<T>(
         readableStreamToAsyncIterable(s2),
     ]
 }
-
 export async function* throttleGenerator<T>(
     generator: AsyncIterable<T>,
     delayMs: number = 16,
-): AsyncIterable<T[]> {
+): AsyncIterable<T> {
     let buffer: T[] = []
     let lastYield = 0
 
@@ -101,14 +100,16 @@ export async function* throttleGenerator<T>(
 
         const now = Date.now()
         if (now - lastYield >= delayMs) {
-            yield [...buffer]
-            buffer = []
+            if (buffer.length > 0) {
+                yield buffer[buffer.length - 1]
+                buffer = []
+            }
             lastYield = now
         }
     }
 
     if (buffer.length > 0) {
-        yield buffer
+        yield buffer[buffer.length - 1]
     }
 }
 

@@ -346,6 +346,38 @@ export default function Chat({ ref }) {
                                         currentSlug,
                                     })
                                 }
+                                
+                                // Handle selectText tool
+                                if (
+                                    part?.type === 'tool-selectText' &&
+                                    part.state === 'output-available' &&
+                                    part.toolCallId &&
+                                    !processedToolCallIds.has(part.toolCallId)
+                                ) {
+                                    processedToolCallIds.add(part.toolCallId)
+                                    
+                                    if (part.output?.error) {
+                                        console.error('selectText error:', part.output.error)
+                                        continue
+                                    }
+                                    
+                                    const targetSlug = part.output?.slug
+                                    if (targetSlug && typeof targetSlug === 'string') {
+                                        // Update current slug and highlightedLines in docs state
+                                        const currentSlug = targetSlug
+                                        
+                                        try {
+                                            await docsRpcClient.setDocsState({
+                                                state: {
+                                                    currentSlug,
+                                                    highlightedLines: part.input,
+                                                },
+                                            })
+                                        } catch (e) {
+                                            console.error('failed to set highlight state:', e)
+                                        }
+                                    }
+                                }
                             }
 
                             // Handle streaming/preview state for the last tool part
@@ -576,6 +608,18 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                             <Markdown
                                 markdown={`**🗑️ Deleting Pages:**\n\n${filePaths.map((path) => `- \`${path || ''}\``).join('\n')}`}
                                 isStreaming={isChatGenerating}
+                                className='prose-sm'
+                            />
+                        </ToolPreviewContainer>
+                    )
+                }
+                if (part.type === 'tool-selectText') {
+                    if (!part.input) return null
+                    return (
+                        <ToolPreviewContainer key={index} {...part}>
+                            <Markdown
+                                isStreaming={isChatGenerating}
+                                markdown={`🔎 Selecting lines ${part.input?.slug}:${part.input?.startLine || 0}-${part.input?.endLine || ''}`}
                                 className='prose-sm'
                             />
                         </ToolPreviewContainer>

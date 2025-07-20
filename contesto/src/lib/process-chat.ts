@@ -25,15 +25,13 @@ export async function* uiStreamToUIMessages<M extends UIMessage>({
               parts: [] as M['parts'],
           } as M)
 
-    for await (let chunk of throttleGenerator(
-        readUIMessageStream({
-            stream: isReadableStream(uiStream)
-                ? uiStream
-                : asyncIterableToReadableStream(uiStream),
-            message,
-        }),
-    )) {
-        const generatedMessage = chunk[chunk.length - 1]
+    for await (let generatedMessage of readUIMessageStream({
+        stream: isReadableStream(uiStream)
+            ? uiStream
+            : asyncIterableToReadableStream(uiStream),
+        message,
+    })) {
+
         const currentMessages = [...messages]
         if (!replaceLastMessage) {
             currentMessages.push(generatedMessage)

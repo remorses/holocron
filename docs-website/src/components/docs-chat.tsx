@@ -54,8 +54,7 @@ import type { Route } from '../routes/_catchall'
 import { env } from '../lib/env'
 import { Trash2Icon, XIcon } from 'lucide-react'
 import { DocsUIMessage } from '../lib/types'
-import { teeAsyncIterable } from 'contesto/src/lib/utils'
-import { highlightText } from '../lib/highlight-text'
+import { teeAsyncIterable, throttleGenerator } from 'contesto/src/lib/utils'
 
 export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
     const chatId = usePersistentDocsState((x) => x.chatId)
@@ -111,6 +110,7 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                         const lastMessage = newMessages[newMessages.length - 1]
                         const lastPart =
                             lastMessage.parts[lastMessage.parts.length - 1]
+                        console.log({ lastPart })
                         if (
                             lastMessage.role === 'assistant' &&
                             lastPart?.type === 'tool-selectText' &&
@@ -131,7 +131,10 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                                 drawerState: 'minimized',
                             })
                             await new Promise((res) => setTimeout(res, 10))
-                            highlightText(lastPart.input)
+                            console.log('Highlighting lines:', lastPart.input)
+                            useDocsState.setState({
+                                highlightedLines: lastPart.input,
+                            })
                         }
                         if (
                             lastMessage.role === 'assistant' &&
@@ -156,18 +159,14 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
             }
             updateDocsSite()
 
-            // Second iteration: update chat state
-            for await (const newMessages of stateIter) {
-                if (abortController?.signal.aborted) {
-                    break
-                }
+            let finalMessages = messages
+            for await (const newMessages of throttleGenerator(stateIter)) {
+                finalMessages = newMessages
                 startTransition(() => {
                     setMessages?.(newMessages)
                 })
             }
 
-            // Save final messages to persistent storage
-            const finalMessages = messages
             if (finalMessages && finalMessages.length > 0) {
                 saveChatMessages(chatId, finalMessages)
             }
@@ -203,6 +202,11 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
         e.preventDefault()
         if (drawerState === 'minimized') {
             usePersistentDocsState.setState({ drawerState: 'open' })
+        }
+
+        const textarea = document.querySelector('.chat-textarea') as HTMLElement
+        if (textarea) {
+            textarea.focus()
         }
     }
 
@@ -322,7 +326,7 @@ function WelcomeMessage() {
             markdown={
                 'Hi, I am fumabase, I can help you search and explain the docs\n'
             }
-            className='text-2xl text-center text-balance font-semibold'
+            className='text-2xl select-none text-center text-balance font-semibold'
             isStreaming={false}
         />
     )
@@ -612,7 +616,7 @@ function Footer() {
                     <ChatTextarea
                         disabled={false}
                         placeholder='Ask me anything...'
-                        className={cn('')}
+                        className={cn('chat-textarea')}
                         autoFocus
                         mentionOptions={contextOptions}
                     />
