@@ -241,6 +241,25 @@ export function ChatUserMessage({
     const editingMessageId = useChatState((x) => x.editingMessageId)
     const messageId = message.id
     const isEditing = editingMessageId === messageId
+    const messageRef = useRef<HTMLElement>(null)
+    const [scrollStyle, setScrollStyle] = useState<React.CSSProperties>({})
+
+    const MESSAGE_HEIGHT_THRESHOLD = 100 // Height threshold for considering a message "too tall"
+
+    useEffect(() => {
+        if (messageRef.current) {
+            const height = messageRef.current.offsetHeight
+            if (height > MESSAGE_HEIGHT_THRESHOLD) {
+                // For tall messages, set negative scroll-margin-top to show only top portion
+                const scrollMarginTop = -(height - 30)
+                setScrollStyle({ scrollMarginTop: `${scrollMarginTop}px` })
+            } else {
+                // For normal messages, use the default scroll-mt-6 (24px)
+                setScrollStyle({ scrollMarginTop: '24px' })
+            }
+        }
+    }, [children])
+
     const handleEditStart = () => {
         useChatState.setState({ editingMessageId: messageId })
     }
@@ -251,8 +270,10 @@ export function ChatUserMessage({
 
     return (
         <article
+            ref={messageRef}
             data-message-id={message.id}
-            className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end scroll-mt-6'
+            className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end'
+            style={scrollStyle}
         >
             <div className='max-w-full relative group/message bg-muted px-4 py-2 rounded-xl'>
                 <div className='absolute hidden group-hover/message:block -top-2 -right-2'>
