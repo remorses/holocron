@@ -77,6 +77,10 @@ export type WebsiteTools = {
         input: {}
         output: string
     }
+    updateFumabaseJsonc: {
+        input: RenderFormParameters
+        output: any
+    }
     renderForm: {
         input: RenderFormParameters
         output: any
@@ -139,7 +143,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
         } = await request.json()
         // First, check if the user can access the requested branch
         // Fetch branch and chat in parallel for efficiency
-        const [branch, chat] = await Promise.all([
+        const [branch, chat, pageCount] = await Promise.all([
             prisma.siteBranch.findFirst({
                 where: {
                     branchId,
@@ -166,10 +170,17 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     chatId,
                 },
             }),
+            prisma.markdownPage.count({
+                where: {
+                    branchId,
+                },
+            }),
         ])
         if (!branch) {
             throw new Error('You do not have access to this branch')
         }
+
+        const isOnboardingChat = !pageCount
 
         // Create source for page navigation
         const files = await getFilesForSource({
@@ -194,7 +205,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 )
             }
         }
-        const renderFormTool = createRenderFormTool({
+        const docsJsonRenderFormTool = createRenderFormTool({
             jsonSchema: docsJsonSchema as any,
             replaceOptionalsWithNulls: model.provider.startsWith('openai'),
         })
@@ -236,6 +247,17 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
         const tools = {
             strReplaceEditor,
 
+            ...(isOnboardingChat
+                ? {
+                      renderForm: createRenderFormTool({
+                          replaceOptionalsWithNulls:
+                              model.provider.startsWith('openai'),
+                      }),
+                  }
+                : {
+                      updateFumabaseJsonc: docsJsonRenderFormTool,
+                  }),
+
             getProjectFiles: tool({
                 description:
                     'Returns a directory tree diagram of the current project files as plain text. Useful for giving an overview or locating files.',
@@ -267,8 +289,6 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     })
                 },
             }),
-
-            renderForm: renderFormTool,
 
             deletePages: tool({
                 description:

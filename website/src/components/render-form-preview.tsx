@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
-import { Controller, useFormContext } from 'react-hook-form'
+import { Controller, DeepPartial, useFormContext } from 'react-hook-form'
 
-import type { UIField } from '../lib/render-form-tool'
+import type { RenderFormParameters, UIField } from '../lib/render-form-tool'
 
 import { ColorPickerButton } from './color-picker-button'
 import { Button } from './ui/button'
@@ -17,7 +17,6 @@ import { Slider } from './ui/slider'
 import { Switch } from './ui/switch'
 import { Textarea } from './ui/textarea'
 import { UploadButton } from './upload-button'
-import { WebsiteToolPart } from '../lib/types'
 
 type RenderFieldProps = {
     field: UIField
@@ -221,10 +220,11 @@ function RenderField({ field }: RenderFieldProps) {
 
 export function RenderFormPreview({
     input: args,
-    state,
     output: result,
-    toolCallId,
-}: Extract<WebsiteToolPart, { type: 'tool-renderForm' }>) {
+}: {
+    input?: DeepPartial<RenderFormParameters>
+    output?: any
+}) {
     const { handleSubmit } = useFormContext()
 
     if (!args?.fields || args.fields.length === 0) {

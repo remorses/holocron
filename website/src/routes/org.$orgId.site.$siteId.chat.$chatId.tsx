@@ -39,7 +39,7 @@ import { env } from 'docs-website/src/lib/env'
 import { formatDistanceToNow } from 'date-fns'
 import { Button } from '../components/ui/button'
 import { GithubIcon } from 'lucide-react'
-import { shouldHideBrowser, useThrowingFn } from '../lib/hooks'
+import { useShouldHideBrowser, useThrowingFn } from '../lib/hooks'
 import { apiClient } from '../lib/spiceflow-client'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
 import Chat from '../components/chat'
@@ -238,7 +238,7 @@ export default function Page({
 }
 
 function ChatContent() {
-    const hideBrowser = shouldHideBrowser()
+    const hideBrowser = useShouldHideBrowser()
     const { scrollRef, contentRef } = useStickToBottom({
         initial: 'instant',
     })
@@ -421,10 +421,10 @@ function GithubRepoButton() {
     const githubFolder = siteData?.site.githubFolder
 
     const hasGithubRepo = githubOwner && githubRepo
-    
+
     // Return null if no repository is configured
     if (!hasGithubRepo) return null
-    
+
     const repoUrl = `https://github.com/${githubOwner}/${githubRepo}${githubFolder ? '/' + githubFolder.replace(/^\/+/, '') : ''}`
 
     return (
@@ -604,7 +604,7 @@ function InstallGithubAppToolbar() {
         const setupUrlWithNext = url.toString()
         window.location.href = setupUrlWithNext
     }
-    const hideBrowser = shouldHideBrowser()
+    const hideBrowser = useShouldHideBrowser()
     if (hideBrowser) {
         return null
     }

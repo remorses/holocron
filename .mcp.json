@@ -1,5 +1,9 @@
 {
     "mcpServers": {
+        "playwright": {
+            "command": "npx",
+            "args": ["@playwright/mcp@latest"]
+        },
         "lsp": {
             "command": "mcp-language-server",
             "args": [

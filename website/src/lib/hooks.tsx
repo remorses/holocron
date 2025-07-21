@@ -119,7 +119,7 @@ export function useTemporaryState<T>(
     return [state, customSetState]
 }
 
-export function shouldHideBrowser() {
+export function useShouldHideBrowser() {
     const chatData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId.chat.$chatId',
     ) as ChatRoute.ComponentProps['loaderData'] | undefined

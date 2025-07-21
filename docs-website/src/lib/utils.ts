@@ -46,10 +46,10 @@ export function throttle<T extends (...args: any[]) => any>(
 ) {
     let lastExecTime = 0
     let timeoutId: ReturnType<typeof setTimeout> | undefined
-    
+
     return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
         const now = Date.now()
-        
+
         if (now - lastExecTime >= delay) {
             // Execute immediately if enough time has passed
             lastExecTime = now
@@ -57,10 +57,13 @@ export function throttle<T extends (...args: any[]) => any>(
         } else {
             // Schedule execution for the remaining time
             if (timeoutId) clearTimeout(timeoutId)
-            timeoutId = setTimeout(() => {
-                lastExecTime = Date.now()
-                fn.apply(this, args)
-            }, delay - (now - lastExecTime))
+            timeoutId = setTimeout(
+                () => {
+                    lastExecTime = Date.now()
+                    fn.apply(this, args)
+                },
+                delay - (now - lastExecTime),
+            )
         }
     }
 }
@@ -143,30 +146,32 @@ export function groupBy<T, K extends string | number>(
  * @returns The escaped text with MDX/Markdown syntax rendered as plain text
  */
 export function escapeMdxSyntax(text: string): string {
-    return text
-        // Escape HTML/JSX tags
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        // Escape JSX curly braces
-        .replace(/{/g, '&#123;')
-        .replace(/}/g, '&#125;')
-        // Escape markdown formatting
-        .replace(/\*/g, '&#42;')
-        .replace(/_/g, '&#95;')
-        .replace(/`/g, '&#96;')
-        .replace(/~/g, '&#126;')
-        .replace(/\^/g, '&#94;')
-        .replace(/\[/g, '&#91;')
-        .replace(/\]/g, '&#93;')
-        .replace(/\|/g, '&#124;')
-        .replace(/\\/g, '&#92;')
-        // Escape headers (# at start of line)
-        .replace(/^#/gm, '&#35;')
-        // Escape blockquotes (> at start of line)
-        .replace(/^>/gm, '&#62;')
-        // Escape newlines to prevent line breaks
-        .replace(/\n/g, ' ')
-        .replace(/\r/g, ' ')
+    return (
+        text
+            // Escape HTML/JSX tags
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            // Escape JSX curly braces
+            .replace(/{/g, '&#123;')
+            .replace(/}/g, '&#125;')
+            // Escape markdown formatting
+            .replace(/\*/g, '&#42;')
+            .replace(/_/g, '&#95;')
+            .replace(/`/g, '&#96;')
+            .replace(/~/g, '&#126;')
+            .replace(/\^/g, '&#94;')
+            .replace(/\[/g, '&#91;')
+            .replace(/\]/g, '&#93;')
+            .replace(/\|/g, '&#124;')
+            .replace(/\\/g, '&#92;')
+            // Escape headers (# at start of line)
+            .replace(/^#/gm, '&#35;')
+            // Escape blockquotes (> at start of line)
+            .replace(/^>/gm, '&#62;')
+            // Escape newlines to prevent line breaks
+            .replace(/\n/g, ' ')
+            .replace(/\r/g, ' ')
+    )
 }
 
 /**
@@ -180,4 +185,15 @@ export function truncateText(text: string, maxLength: number = 500): string {
         return text
     }
     return text.slice(0, maxLength).trimEnd() + '...'
+}
+
+/**
+ * Makes all properties of T optional, recursively.
+ */
+export type DeepPartial<T> = {
+    [P in keyof T]?: T[P] extends object
+        ? T[P] extends Function
+            ? T[P]
+            : DeepPartial<T[P]>
+        : T[P]
 }

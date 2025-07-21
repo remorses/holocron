@@ -17,7 +17,6 @@ import {
     useRef,
     useState,
 } from 'react'
-import { FormProvider, useForm } from 'react-hook-form'
 
 import {
     EditorToolPreview,
@@ -40,12 +39,12 @@ import {
 
 import { useStickToBottom } from 'use-stick-to-bottom'
 
-import { 
+import {
     uiStreamToUIMessages,
     ToolPartOutputAvailable,
     ToolPartInputStreaming,
 } from 'contesto/src/lib/process-chat'
-import { shouldHideBrowser, useTemporaryState } from '../lib/hooks'
+import { useShouldHideBrowser, useTemporaryState } from '../lib/hooks'
 import {
     apiClient,
     apiClientWithDurableFetch,
@@ -112,6 +111,7 @@ import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import type { Route as ChatRoute } from '../routes/org.$orgId.site.$siteId.chat.$chatId'
 import { RenderFormPreview } from './render-form-preview'
+import { FormProvider, useForm } from 'react-hook-form'
 
 function keyForDocsJson({ chatId }) {
     return `fumabase.jsonc-${chatId}`
@@ -132,7 +132,6 @@ const setDocsJsonState = ({
     const newJson = JSON.stringify(
         {
             ...safeJsoncParse(previousJsonString),
-
             ...values,
         },
         null,
@@ -140,13 +139,13 @@ const setDocsJsonState = ({
     )
     console.log(`updating fumabase.jsonc`, newJson)
 
-    const newChanges: FilesInDraft = {
+    const newChanges = {
         [githubPath]: {
             content: newJson,
             githubPath,
         },
     }
-    const newFilesInDraft: FilesInDraft = {
+    const newFilesInDraft = {
         ...useWebsiteState.getState().filesInDraft,
         ...newChanges,
     }
@@ -157,17 +156,12 @@ const setDocsJsonState = ({
     })
 }
 
-export default function Chat({ ref }) {
-    const loaderData = useLoaderData() as Route.ComponentProps['loaderData']
-    const { chat, siteId, branchId } = loaderData
+function ChatForm({ children }: { children: React.ReactNode }) {
     const { chatId } = useParams()
+    const formMethods = useForm({})
 
-    const formMethods = useForm({
-        // values: initialDocsJsonData,
-    })
+    const { siteBranch, githubFolder } = useLoaderData() as Route.ComponentProps['loaderData']
 
-    const { siteBranch, githubFolder } =
-        useLoaderData() as Route.ComponentProps['loaderData']
     const previousJsonString = useMemo(() => {
         return JSON.stringify(siteBranch.docsJson, null, 2)
     }, [siteBranch?.docsJson])
@@ -196,17 +190,11 @@ export default function Chat({ ref }) {
             previousJsonString,
             chatId,
         })
-
-        // setValue('root', data, {
-        //     shouldDirty: true,
-        //     shouldTouch: true,
-        // })
     }, [chatId, previousJsonString])
 
     useEffect(() => {
         const unSub = formMethods.subscribe({
             formState: { values: true },
-
             callback: ({ values, defaultValues }) =>
                 setDocsJsonState({
                     values: { ...defaultValues, ...values },
@@ -218,6 +206,21 @@ export default function Chat({ ref }) {
 
         return unSub
     }, [chatId, previousJsonString])
+
+    return (
+        <form onSubmit={formMethods.handleSubmit(() => {})}>
+            <FormProvider {...formMethods}>
+                {children}
+            </FormProvider>
+        </form>
+    )
+}
+
+export default function Chat({ ref }) {
+    const loaderData = useLoaderData() as Route.ComponentProps['loaderData']
+    const { chat, siteId, branchId } = loaderData
+    const { chatId } = useParams()
+
 
     const initialChatState = useMemo<Partial<ChatState>>(
         () => ({
@@ -240,6 +243,7 @@ export default function Chat({ ref }) {
         }),
         [loaderData],
     )
+    const hideBrowser = useShouldHideBrowser()
 
     const revalidator = useRevalidator()
     const submitMessages = async ({
@@ -251,6 +255,7 @@ export default function Chat({ ref }) {
 
         const filesInDraft = useWebsiteState.getState()?.filesInDraft || {}
         const currentSlug = useWebsiteState.getState()?.currentSlug || ''
+        const { githubFolder } = loaderData
 
         try {
             const { data: generator, error } =
@@ -286,7 +291,7 @@ export default function Chat({ ref }) {
                 filesInDraft: filesInDraft,
                 getPageContent,
             })
-            
+
             let isPostMessageBusy = false
 
             const onToolOutput = async (toolPart: ToolPartOutputAvailable<WebsiteUIMessage>) => {
@@ -356,7 +361,7 @@ export default function Chat({ ref }) {
             }
 
             // Use throttle instead of debounce to ensure the function executes at regular intervals
-            // and doesn't delay beyond the throttle period, which could cause it to override 
+            // and doesn't delay beyond the throttle period, which could cause it to override
             // the output-available call that comes later
             const onToolInputStreaming = throttle(300, async (toolPart: ToolPartInputStreaming<WebsiteUIMessage>) => {
                 if (toolPart.type === 'tool-strReplaceEditor') {
@@ -419,20 +424,20 @@ export default function Chat({ ref }) {
         await revalidator.revalidate()
     }
 
+
+
     return (
         <ChatProvider
             generateMessages={submitMessages}
             initialValue={initialChatState}
         >
-            <form onSubmit={formMethods.handleSubmit(() => {})}>
-                <FormProvider {...formMethods}>
-                    <div className='flex grow min-h-0 flex-col gap-3 px-6 h-full justify-center'>
-                        <Messages ref={ref} />
-                        <WelcomeMessage />
-                        <Footer />
-                    </div>
-                </FormProvider>
-            </form>
+            <ChatForm>
+                <div className='flex grow min-h-0 flex-col gap-3 px-6 h-full justify-center'>
+                    <Messages ref={ref} />
+                    <WelcomeMessage />
+                    <Footer />
+                </div>
+            </ChatForm>
         </ChatProvider>
     )
 }
@@ -572,6 +577,9 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                     return <FilesTreePreview key={index} {...part} />
                 }
                 if (part.type === 'tool-renderForm') {
+                    return <RenderFormPreview key={index} {...part} />
+                }
+                if (part.type === 'tool-updateFumabaseJsonc') {
                     return <RenderFormPreview key={index} {...part} />
                 }
                 if (part.type === 'tool-deletePages') {
