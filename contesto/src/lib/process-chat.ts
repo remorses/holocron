@@ -14,7 +14,7 @@ export async function* uiStreamToUIMessages<M extends UIMessage>({
     uiStream,
     messages,
     generateId,
-    throttleMs = 100,
+    throttleMs = 32,
     onToolOutput,
     onToolInput,
     onToolInputStreaming,

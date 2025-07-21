@@ -70,7 +70,7 @@ const ChatProvider = (props: {
     async function submit() {
         const generateId = createIdGenerator()
         const assistantMessageId = generateId()
-        const userMessageId = generateId()
+        let userMessageId = generateId()
         const now = new Date()
         const {
             draftText: value = '',
@@ -81,15 +81,21 @@ const ChatProvider = (props: {
             return
         }
         if (!value.trim()) {
-            store.setState({
-                messages: [
-                    ...messages,
-                    {
-                        parts: [],
-                        role: 'assistant',
-                        id: assistantMessageId,
-                    },
-                ],
+            const lastUserMessage = [...messages]
+                .reverse()
+                .find((msg) => msg.role === 'user')
+            userMessageId = lastUserMessage?.id || userMessageId
+            flushSync(() => {
+                store.setState({
+                    messages: [
+                        ...messages,
+                        {
+                            parts: [],
+                            role: 'assistant',
+                            id: assistantMessageId,
+                        },
+                    ],
+                })
             })
         } else {
             // Create user message for new requests
@@ -113,15 +119,19 @@ const ChatProvider = (props: {
                     draftText: '',
                 })
             })
-
-            const messageElement = document.querySelector(
-                `[data-message-id="${userMessageId}"]`,
+        }
+        const messageElement = document.querySelector(
+            `[data-message-id="${userMessageId}"]`,
+        )
+        if (messageElement) {
+            messageElement.scrollIntoView({
+                behavior: 'smooth',
+                // block: 'nearest',
+            })
+        } else {
+            console.warn(
+                `Message element with id ${userMessageId} not found for scrolling`,
             )
-            if (messageElement) {
-                messageElement.scrollIntoView({
-                    behavior: 'smooth',
-                })
-            }
         }
 
         store.setState({
@@ -197,7 +207,7 @@ export let useChatContext = () => {
     const store = useContext(ChatContext)
     if (store === null) {
         console.error('Missing provider for context:', ChatContext)
-        throw new Error('Missing provider for context')
+        throw new Error('Missing provider for chat context')
     }
     const trackedSelector = useMemo(() => createTrackedSelector(store), [store])
     return trackedSelector()

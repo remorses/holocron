@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useChatContext } from 'contesto'
 import { Controller, DeepPartial, useFormContext } from 'react-hook-form'
 
 import type { RenderFormParameters, UIField } from '../lib/render-form-tool'
@@ -13,15 +14,23 @@ import { Textarea } from './ui/textarea'
 import { UploadButton } from './upload-button'
 import { RadioGroup, RadioGroupItem } from './ui/radio-group'
 import { Label } from './ui/label'
+import { UIMessage } from 'ai'
+import { cn } from 'website/src/lib/cn'
 
 type RenderFieldProps = {
     field: UIField
+    disabled?: boolean
+    messageId?: string
 }
 
-function RenderField({ field }: RenderFieldProps) {
+function RenderField({ field, disabled, messageId }: RenderFieldProps) {
     const { control, getValues, register, setValue } = useFormContext()
 
+    const name = field.name
+
     useEffect(() => {
+        if (disabled) return
+
         const handler = () => {
             const value = getValues(field.name)
             if (!value && field.name && 'initialValue' in field) {
@@ -32,9 +41,9 @@ function RenderField({ field }: RenderFieldProps) {
         return () => {
             window.removeEventListener('chatGenerationFinished', handler)
         }
-    }, [field, setValue, getValues])
+    }, [field, setValue, getValues, disabled])
 
-    const key = field.name
+    const key = `${messageId}-${field.name}`
     if (!field.name) {
         return null
     }
@@ -48,7 +57,8 @@ function RenderField({ field }: RenderFieldProps) {
                 <div key={key} className='flex items-center space-x-2'>
                     <Input
                         placeholder={field.placeholder || ''}
-                        {...register(field.name, {})}
+                        {...(name && register(name, {}))}
+                        disabled={disabled}
                     />
                 </div>
             )
@@ -58,7 +68,8 @@ function RenderField({ field }: RenderFieldProps) {
                     key={key}
                     type='password'
                     placeholder={field.placeholder || ''}
-                    {...register(field.name)}
+                    {...(name && register(name))}
+                    disabled={disabled}
                 />
             )
         case 'number':
@@ -67,7 +78,9 @@ function RenderField({ field }: RenderFieldProps) {
                     key={key}
                     type='number'
                     placeholder={field.placeholder || ''}
-                    {...register(field.name, { valueAsNumber: true })}
+                    {...(!disabled &&
+                        register(field.name, { valueAsNumber: true }))}
+                    disabled={disabled}
                 />
             )
         case 'textarea':
@@ -75,132 +88,131 @@ function RenderField({ field }: RenderFieldProps) {
                 <Textarea
                     key={key}
                     placeholder={field.placeholder || ''}
-                    {...register(field.name)}
+                    {...(name && register(name))}
+                    disabled={disabled}
                 />
             )
         case 'select':
-            if (field.type === 'select') {
-                return (
-                    <SelectNative
-                        key={key}
-                        {...register(field.name)}
-                        defaultValue={field.placeholder ? '' : undefined}
-                    >
-                        {field.placeholder && (
-                            <option value='' disabled>
-                                {field.placeholder}
+            return (
+                <SelectNative
+                    key={key}
+                    {...(name && register(name))}
+                    defaultValue={field.placeholder ? '' : undefined}
+                    disabled={disabled}
+                >
+                    {field.placeholder && (
+                        <option value='' disabled>
+                            {field.placeholder}
+                        </option>
+                    )}
+                    {field.options?.map((opt) => {
+                        return (
+                            <option key={opt.value} value={opt.value}>
+                                {opt.label}
                             </option>
-                        )}
-                        {field.options?.map((opt) => {
-                            return (
-                                <option key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                </option>
-                            )
-                        })}
-                    </SelectNative>
-                )
-            }
-            return null
+                        )
+                    })}
+                </SelectNative>
+            )
         case 'radio':
-            if (field.type === 'radio') {
-                return (
-                    <Controller
-                        key={key}
-                        control={control}
-                        name={field.name}
-                        render={({ field: ctl }) => {
-                            return (
-                                <RadioGroup
-                                    className='gap-6'
-                                    value={ctl.value as string | undefined}
-                                    onValueChange={ctl.onChange}
-                                >
-                                    {field.options?.map((opt) => {
-                                        const radioId = `${field.name}-${opt.value}`
-                                        return (
-                                            <div
-                                                key={opt.value}
-                                                className='flex items-start gap-2'
-                                            >
-                                                <RadioGroupItem
-                                                    value={opt.value}
-                                                    id={radioId}
-                                                    aria-describedby={
-                                                        opt.description
-                                                            ? `${radioId}-description`
-                                                            : undefined
-                                                    }
-                                                />
-                                                <div className='grow'>
-                                                    <div className='grid grow gap-2'>
-                                                        <Label
-                                                            htmlFor={radioId}
+            return (
+                <Controller
+                    key={key}
+                    control={control}
+                    name={name}
+                    disabled={disabled}
+                    render={({ field: ctl }) => {
+                        return (
+                            <RadioGroup
+                                className='gap-6'
+                                value={ctl.value as string | undefined}
+                                onValueChange={
+                                    disabled ? undefined : ctl.onChange
+                                }
+                                disabled={disabled}
+                            >
+                                {field.options?.map((opt) => {
+                                    const radioId = `${messageId}-${field.name}-${opt.value}`
+                                    return (
+                                        <div
+                                            key={radioId}
+                                            className='flex items-start gap-2'
+                                        >
+                                            <RadioGroupItem
+                                                value={opt.value}
+                                                id={radioId}
+                                                disabled={disabled}
+                                            />
+                                            <div className='grow'>
+                                                <div className='grid grow gap-2'>
+                                                    <Label htmlFor={radioId}>
+                                                        {opt.label}
+                                                    </Label>
+                                                    {opt.description && (
+                                                        <p
+                                                            id={`${radioId}-description`}
+                                                            className='text-muted-foreground text-xs'
                                                         >
-                                                            {opt.label}
-                                                        </Label>
-                                                        {opt.description && (
-                                                            <p
-                                                                id={`${radioId}-description`}
-                                                                className='text-muted-foreground text-xs'
-                                                            >
-                                                                {
-                                                                    opt.description
-                                                                }
-                                                            </p>
-                                                        )}
-                                                    </div>
+                                                            {opt.description}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
-                                        )
-                                    })}
-                                </RadioGroup>
-                            )
-                        }}
-                    />
-                )
-            }
-            return null
+                                        </div>
+                                    )
+                                })}
+                            </RadioGroup>
+                        )
+                    }}
+                />
+            )
         case 'slider':
-            if (field.type === 'slider') {
-                return (
-                    <Controller
-                        key={key}
-                        control={control}
-                        name={field.name}
-                        render={({ field: ctl }) => {
-                            return (
-                                <div className='space-y-2'>
-                                    <Slider
-                                        min={field.min || undefined}
-                                        max={field.max || undefined}
-                                        step={field.step || 1}
-                                        value={[Number(ctl.value) || 0]}
-                                        onValueChange={(v) => {
-                                            ctl.onChange(v[0])
-                                        }}
-                                    />
-                                    <div className='text-xs text-muted-foreground text-center'>
-                                        {ctl.value}
-                                    </div>
+            return (
+                <Controller
+                    key={key}
+                    control={control}
+                    name={name}
+                    disabled={disabled}
+                    render={({ field: ctl }) => {
+                        return (
+                            <div className='space-y-2'>
+                                <Slider
+                                    min={field.min || undefined}
+                                    max={field.max || undefined}
+                                    step={field.step || 1}
+                                    value={[Number(ctl.value) || 0]}
+                                    onValueChange={
+                                        disabled
+                                            ? undefined
+                                            : (v) => {
+                                                  ctl.onChange(v[0])
+                                              }
+                                    }
+                                    disabled={disabled}
+                                />
+                                <div className='text-xs text-muted-foreground text-center'>
+                                    {ctl.value}
                                 </div>
-                            )
-                        }}
-                    />
-                )
-            }
-            return null
+                            </div>
+                        )
+                    }}
+                />
+            )
         case 'switch':
             return (
                 <Controller
                     key={key}
                     control={control}
-                    name={field.name}
+                    name={name}
+                    disabled={disabled}
                     render={({ field: ctl }) => {
                         return (
                             <Switch
                                 checked={ctl.value as boolean}
-                                onCheckedChange={ctl.onChange}
+                                onCheckedChange={
+                                    disabled ? undefined : ctl.onChange
+                                }
+                                disabled={disabled}
                             />
                         )
                     }}
@@ -211,30 +223,45 @@ function RenderField({ field }: RenderFieldProps) {
                 <Controller
                     key={key}
                     control={control}
-                    name={field.name}
+                    name={name}
+                    disabled={disabled}
                     render={({ field: ctl }) => {
                         return (
                             <ColorPickerButton
                                 value={ctl.value as string}
-                                onChange={ctl.onChange}
+                                onChange={disabled ? () => {} : ctl.onChange}
                                 buttonText={field.label}
+                                disabled={disabled}
                             />
                         )
                     }}
                 />
             )
         case 'date_picker':
-            return <Input key={key} type='date' {...register(field.name)} />
+            return (
+                <Input
+                    key={key}
+                    type='date'
+                    {...(name && register(name))}
+                    disabled={disabled}
+                />
+            )
         case 'image_upload':
             return (
                 <Controller
-                    name={field.name}
+                    name={name}
                     control={control}
                     defaultValue=''
+                    disabled={disabled}
                     render={({ field: { value, onChange } }) => (
                         <>
                             <UploadButton
-                                onUploadFinished={({ src }) => onChange(src)}
+                                onUploadFinished={
+                                    disabled
+                                        ? () => {}
+                                        : ({ src }) => onChange(src)
+                                }
+                                disabled={disabled}
                             />
                         </>
                     )}
@@ -242,11 +269,23 @@ function RenderField({ field }: RenderFieldProps) {
             )
         case 'button':
             return (
-                <Button key={key} asChild className='justify-start'>
+                <Button
+                    key={key}
+                    asChild
+                    className='justify-start'
+                    disabled={disabled}
+                >
                     <a
                         href={field.href || '#'}
                         target='_blank'
                         rel='noopener noreferrer'
+                        onClick={
+                            disabled
+                                ? (e) => {
+                                      e.preventDefault()
+                                  }
+                                : undefined
+                        }
                     >
                         {field.label}
                     </a>
@@ -260,13 +299,18 @@ function RenderField({ field }: RenderFieldProps) {
 export function RenderFormPreview({
     input: args,
     output: result,
+    message,
     showSubmitButton = false,
 }: {
     input?: DeepPartial<RenderFormParameters>
     output?: any
+    message: UIMessage
     showSubmitButton?: boolean
 }) {
     const { handleSubmit } = useFormContext()
+    const { messages, isGenerating } = useChatContext()
+
+    const disabled = messages[messages.length - 1]?.id !== message.id
 
     if (!args?.fields || args.fields.length === 0) {
         return (
@@ -311,7 +355,12 @@ export function RenderFormPreview({
     })
 
     return (
-        <div className='flex p-3 rounded-lg flex-col gap-3 animate-in border fade-in'>
+        <div
+            className={cn(
+                'flex p-3 rounded-lg flex-col gap-3 animate-in border fade-in',
+                disabled && 'opacity-50 pointer-events-none',
+            )}
+        >
             {fieldGroups.map((group, groupIndex) => {
                 if (group.title) {
                     return (
@@ -339,7 +388,11 @@ export function RenderFormPreview({
                                                     )}
                                                 </label>
                                             )}
-                                        <RenderField field={f} />
+                                        <RenderField
+                                            field={f}
+                                            disabled={disabled}
+                                            messageId={message.id}
+                                        />
                                         {f.description &&
                                             f.type !== 'button' && (
                                                 <p className='text-xs text-muted-foreground'>
@@ -365,7 +418,11 @@ export function RenderFormPreview({
                                         )}
                                     </label>
                                 )}
-                            <RenderField field={f} />
+                            <RenderField
+                                disabled={disabled}
+                                messageId={message.id}
+                                field={f}
+                            />
                             {f.description && f.type !== 'button' && (
                                 <p className='text-xs text-muted-foreground'>
                                     {f.description}
@@ -377,8 +434,12 @@ export function RenderFormPreview({
             })}
             {showSubmitButton &&
                 args.fields.some((f) => f && f.type !== 'button') && (
-                    <Button type='submit' className='w-full'>
-                        Submit
+                    <Button
+                        type='submit'
+                        className='w-full'
+                        disabled={disabled || isGenerating}
+                    >
+                        {isGenerating ? 'Loading...' : 'Submit'}
                     </Button>
                 )}
         </div>

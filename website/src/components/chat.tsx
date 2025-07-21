@@ -224,22 +224,20 @@ function ChatForm({ children }: { children: React.ReactNode }) {
                 if (isOnboardingChat) {
                     const currentValues = formMethods.getValues()
 
-                    // Hide the form tools and show nice formatted values
-                    const updatedMessages = messages.map((msg) => {
-                        if (msg.role === 'assistant') {
-                            return {
-                                ...msg,
-                                parts: msg.parts.filter(
-                                    (part) => part.type !== 'tool-renderForm',
-                                ),
-                            }
-                        }
-                        return msg
-                    })
-
-                    flushSync(() => {
-                        setMessages(updatedMessages)
-                    })
+                    // const updatedMessages = messages.map((msg) => {
+                    //     if (msg.role === 'assistant') {
+                    //         return {
+                    //             ...msg,
+                    //             parts: msg.parts.filter(
+                    //                 (part) => part.type !== 'tool-renderForm',
+                    //             ),
+                    //         }
+                    //     }
+                    //     return msg
+                    // })
+                    // flushSync(() => {
+                    //     setMessages(updatedMessages)
+                    // })
 
                     // Format values as key: value pairs instead of JSON
                     const formattedMessage = Object.entries(currentValues)
@@ -483,13 +481,11 @@ export default function Chat({
             generateMessages={submitMessages}
             initialValue={initialChatState}
         >
-            <ChatForm>
-                <div className='flex grow min-h-0 flex-col gap-3 px-6 h-full justify-center'>
-                    <Messages ref={ref} />
-                    <WelcomeMessage />
-                    <Footer />
-                </div>
-            </ChatForm>
+            <div className='flex grow min-h-0 flex-col gap-3 px-6 h-full justify-center'>
+                <Messages ref={ref} />
+                <WelcomeMessage />
+                <Footer />
+            </div>
         </ChatProvider>
     )
 }
@@ -591,115 +587,123 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
     let minHeight = isLastMessage ? 'calc(-248px + 100dvh)' : '0px'
 
     return (
-        <ChatAssistantMessage
-            style={{ minHeight }}
-            className=''
-            message={message}
-        >
-            {message.parts.map((part, index) => {
-                if (part.type === 'text') {
-                    return (
-                        <Markdown
-                            isStreaming={isChatGenerating}
-                            key={index}
-                            className='prose-sm '
-                            markdown={part.text}
-                        />
-                    )
-                }
+        <ChatForm>
+            <ChatAssistantMessage
+                style={{ minHeight }}
+                className=''
+                message={message}
+            >
+                {message.parts.map((part, index) => {
+                    if (part.type === 'text') {
+                        return (
+                            <Markdown
+                                isStreaming={isChatGenerating}
+                                key={index}
+                                className='prose-sm '
+                                markdown={part.text}
+                            />
+                        )
+                    }
 
-                if (part.type === 'reasoning') {
-                    return (
-                        <Markdown
-                            key={index}
-                            className='prose-sm'
-                            isStreaming={isChatGenerating}
-                            markdown={'thinking:' + part.text}
-                        />
-                    )
-                }
-                if (part && 'errorText' in part && part.errorText) {
-                    const escapedError = escapeMdxSyntax(String(part.errorText))
-                    const truncatedError = truncateText(escapedError, 300)
-                    return (
-                        <Markdown
-                            key={index}
-                            className='prose-sm text-red-600'
-                            isStreaming={isChatGenerating}
-                            markdown={`[${part.type}] ${truncatedError}`}
-                        />
-                    )
-                }
-                if (part.type === 'tool-strReplaceEditor') {
-                    return <EditorToolPreview key={index} {...part} />
-                }
-                if (part.type === 'tool-getProjectFiles') {
-                    return <FilesTreePreview key={index} {...part} />
-                }
-                if (part.type === 'tool-renderForm') {
-                    return (
-                        <RenderFormPreview
-                            key={index}
-                            {...part}
-                            showSubmitButton={hideBrowser}
-                        />
-                    )
-                }
-                if (part.type === 'tool-updateFumabaseJsonc') {
-                    return (
-                        <RenderFormPreview
-                            key={index}
-                            {...part}
-                            showSubmitButton={hideBrowser}
-                        />
-                    )
-                }
-                if (part.type === 'tool-deletePages') {
-                    const filePaths = part.input?.filePaths || []
-                    return (
-                        <ToolPreviewContainer key={index} {...part}>
+                    if (part.type === 'reasoning') {
+                        return (
                             <Markdown
-                                markdown={`**🗑️ Deleting Pages:**\n\n${filePaths.map((path) => `- \`${path || ''}\``).join('\n')}`}
-                                isStreaming={isChatGenerating}
+                                key={index}
                                 className='prose-sm'
+                                isStreaming={isChatGenerating}
+                                markdown={'thinking:' + part.text}
                             />
-                        </ToolPreviewContainer>
-                    )
-                }
-                if (part.type === 'tool-selectText') {
-                    if (!part.input) return null
-                    return (
-                        <ToolPreviewContainer key={index} {...part}>
+                        )
+                    }
+                    if (part && 'errorText' in part && part.errorText) {
+                        const escapedError = escapeMdxSyntax(
+                            String(part.errorText),
+                        )
+                        const truncatedError = truncateText(escapedError, 300)
+                        return (
                             <Markdown
+                                key={index}
+                                className='prose-sm text-red-600'
                                 isStreaming={isChatGenerating}
-                                markdown={`🔎 Selecting lines ${part.input?.slug}:${part.input?.startLine || 0}-${part.input?.endLine || ''}`}
-                                className='prose-sm'
+                                markdown={`[${part.type}] ${truncatedError}`}
                             />
-                        </ToolPreviewContainer>
-                    )
-                }
-                if (
-                    part.type.startsWith('tool-') &&
-                    process.env.NODE_ENV === 'development'
-                ) {
-                    return (
-                        <pre key={index}>{JSON.stringify(part, null, 2)}</pre>
-                    )
-                }
+                        )
+                    }
+                    if (part.type === 'tool-strReplaceEditor') {
+                        return <EditorToolPreview key={index} {...part} />
+                    }
+                    if (part.type === 'tool-getProjectFiles') {
+                        return <FilesTreePreview key={index} {...part} />
+                    }
+                    if (part.type === 'tool-renderForm') {
+                        return (
+                            <RenderFormPreview
+                                key={index}
+                                message={message}
+                                {...part}
+                                showSubmitButton={hideBrowser}
+                            />
+                        )
+                    }
+                    if (part.type === 'tool-updateFumabaseJsonc') {
+                        return (
+                            <RenderFormPreview
+                                message={message}
+                                key={index}
+                                {...part}
+                                showSubmitButton={hideBrowser}
+                            />
+                        )
+                    }
+                    if (part.type === 'tool-deletePages') {
+                        const filePaths = part.input?.filePaths || []
+                        return (
+                            <ToolPreviewContainer key={index} {...part}>
+                                <Markdown
+                                    markdown={`**🗑️ Deleting Pages:**\n\n${filePaths.map((path) => `- \`${path || ''}\``).join('\n')}`}
+                                    isStreaming={isChatGenerating}
+                                    className='prose-sm'
+                                />
+                            </ToolPreviewContainer>
+                        )
+                    }
+                    if (part.type === 'tool-selectText') {
+                        if (!part.input) return null
+                        return (
+                            <ToolPreviewContainer key={index} {...part}>
+                                <Markdown
+                                    isStreaming={isChatGenerating}
+                                    markdown={`🔎 Selecting lines ${part.input?.slug}:${part.input?.startLine || 0}-${part.input?.endLine || ''}`}
+                                    className='prose-sm'
+                                />
+                            </ToolPreviewContainer>
+                        )
+                    }
+                    if (
+                        part.type.startsWith('tool-') &&
+                        process.env.NODE_ENV === 'development'
+                    ) {
+                        return (
+                            <pre key={index}>
+                                {JSON.stringify(part, null, 2)}
+                            </pre>
+                        )
+                    }
 
-                if (part.type.startsWith('tool-')) {
-                    return (
-                        <ToolPreviewContainer key={index} {...part}>
-                            <Markdown
-                                markdown={`🔨 calling ${spaceCase(part.type.replace('tool-', ''))}`}
-                                isStreaming={isChatGenerating}
-                                className='prose-sm'
-                            />
-                        </ToolPreviewContainer>
-                    )
-                }
-            })}
-        </ChatAssistantMessage>
+                    if (part.type.startsWith('tool-')) {
+                        return (
+                            <ToolPreviewContainer key={index} {...part}>
+                                <Markdown
+                                    markdown={`🔨 calling ${spaceCase(part.type.replace('tool-', ''))}`}
+                                    isStreaming={isChatGenerating}
+                                    className='prose-sm'
+                                />
+                            </ToolPreviewContainer>
+                        )
+                    }
+                })}
+            </ChatAssistantMessage>
+        </ChatForm>
     )
 }
 

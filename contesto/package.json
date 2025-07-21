@@ -3,6 +3,7 @@
     "private": true,
     "description": "Chat components and utilities for fumabase",
     "type": "module",
+    "main": "src/index.ts",
     "repository": "https://github.com/remorses/",
     "scripts": {
         "build": "tsc",
