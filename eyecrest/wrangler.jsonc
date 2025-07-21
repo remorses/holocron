@@ -12,7 +12,7 @@
 
     "durable_objects": {
         "bindings": [
-            { "name": "REPO_CACHE", "class_name": "RepoCache" },
+            { "name": "DATASET_CACHE", "class_name": "DatasetCache" },
             { "name": "MCP_OBJECT", "class_name": "MyMCP" },
         ],
     },
@@ -25,6 +25,10 @@
         {
             "tag": "v2",
             "new_sqlite_classes": ["MyMCP"], // tells CF this DO uses the built‑in SQLite store
+        },
+        {
+            "tag": "v3",
+            "new_sqlite_classes": ["DatasetCache"], // tells CF this DO uses the built‑in SQLite store
         },
     ],
 

@@ -5,10 +5,7 @@
   "type": "module",
   "scripts": {
     "deployment": "tsc && pnpm wrangler deploy",
-    "test": "vitest",
-    "download-markdown-wasm": "curl -o src/tree-sitter-markdown.wasm https://raw.githubusercontent.com/pulsar-edit/pulsar/master/packages/language-gfm/grammars/tree-sitter-markdown/tree-sitter-markdown.wasm",
-    "download-core-wasm": "curl -o src/tree-sitter-core.wasm https://raw.githubusercontent.com/pulsar-edit/pulsar/master/vendor/web-tree-sitter/web-tree-sitter.wasm",
-    "download-wasm": "pnpm run download-markdown-wasm && pnpm run download-core-wasm"
+    "test": "vitest"
   },
   "keywords": [],
   "author": "remorses",
@@ -16,6 +13,7 @@
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.8.55",
     "@cloudflare/workers-types": "^4.20250712.0",
+    "@types/marked": "^6.0.0",
     "undici": "^7.11.0",
     "vite": "^6.3.5",
     "vitest": "^3.2.4",
@@ -26,9 +24,8 @@
     "@mjackson/tar-parser": "^0.3.0",
     "@modelcontextprotocol/sdk": "^1.16.0",
     "agents": "^0.0.109",
+    "marked": "^15.0.12",
     "spiceflow": "^1.17.2",
-    "tree-sitter-wasms": "^0.1.12",
-    "web-tree-sitter": "workspace:*",
     "zod": "^4.0.5"
   }
 }

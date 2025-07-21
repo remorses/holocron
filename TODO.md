@@ -1,5 +1,5 @@
 - done. disable submit in contesto if currently generating, enter now submits even if generating.
-- disable old messages forms in renderForm. this way there is no risk of having conflicting names in inputs and clicking one does not focus on one before. it also prevents performance issues where there are many forms. also decrease opacity for these old forms and prevent any interaction with them via pointer-events: none.
+- done. disable old messages forms in renderForm. this way there is no risk of having conflicting names in inputs and clicking one does not focus on one before. it also prevents performance issues where there are many forms. also decrease opacity for these old forms and prevent any interaction with them via pointer-events: none.
 -
 
 
