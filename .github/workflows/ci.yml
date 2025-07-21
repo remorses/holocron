@@ -38,6 +38,7 @@ jobs:
           version: 10
           run_install: false
       - uses: dopplerhq/cli-action@v3
+      - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: pnpm install --frozen-lockfile=false
       - uses: remorses/buildmedic@opencode
         env:

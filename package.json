@@ -17,6 +17,7 @@
         "tsx": "^4.20.3",
         "typescript": "^5.8.3",
         "vite": "^6.3.5",
+        "vite-node": "^3.2.4",
         "vitest": "^3.2.4"
     },
     "pnpm": {
@@ -29,7 +30,6 @@
     "license": "",
     "dependencies": {
         "@types/node": "^24.0.1",
-        "unframer": "latest",
-        "vite-node": "^3.2.4"
+        "unframer": "latest"
     }
 }
