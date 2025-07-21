@@ -2,7 +2,7 @@
     "$schema": "./node_modules/wrangler/config-schema.json",
     "name": "eyecrest-fumabase-worker",
     "main": "src/worker.ts",
-    "compatibility_date": "2025-07-20",
+    "compatibility_date": "2025-07-12",
     "compatibility_flags": ["nodejs_compat"],
 
     "assets": {

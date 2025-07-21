@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { findLineNumberInContent } from './worker.js';
+import { findLineNumberInContent } from './utils.js';
 
 
 describe('findLineNumberInContent', () => {
