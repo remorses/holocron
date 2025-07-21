@@ -14,6 +14,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 
 import { parseWithTreeSitter } from './tree-sitter-parser.js'
 import { findLineNumberInContent } from './utils.js'
+import { splitIntoSections } from './section-splitter.js'
 
 /* ---------- ENV interface ---------------------------- */
 
@@ -453,6 +454,170 @@ You can use both markdown _syntax_ and React components!`
                         error instanceof Error ? error.message : String(error),
                     stack: error instanceof Error ? error.stack : undefined,
                     hint: 'Check tree-sitter parser compatibility and WASM file loading',
+                })
+            }
+        },
+    })
+    .route({
+        method: 'GET',
+        path: '/sections/:extension',
+        handler: async ({ params }) => {
+            try {
+                const extension = params.extension || 'md'
+                const filePath = `example.${extension}`
+
+                // Example content based on extension  
+                const getExampleContent = (ext: string) => {
+                    switch (ext) {
+                        case 'js':
+                        case 'jsx':
+                            return `import React from 'react';
+import { useState, useEffect } from 'react';
+
+const API_URL = 'https://api.example.com';
+const DEBUG = true;
+const MAX_RETRIES = 3;
+
+function fetchUserData(userId) {
+  return fetch(\`\${API_URL}/users/\${userId}\`)
+    .then(res => res.json());
+}
+
+class UserService {
+  constructor(apiUrl) {
+    this.apiUrl = apiUrl;
+    this.cache = new Map();
+  }
+  
+  async getUser(id) {
+    if (this.cache.has(id)) {
+      return this.cache.get(id);
+    }
+    
+    const user = await fetchUserData(id);
+    this.cache.set(id, user);
+    return user;
+  }
+}
+
+export default UserService;`
+
+                        case 'md':
+                        case 'markdown':
+                            return `---
+title: "Section Splitting Demo"
+author: "Claude Code"
+date: 2024-01-01
+---
+
+# Main Documentation
+
+This document demonstrates how content gets split into sections.
+
+## Getting Started
+
+Here's how to get started with the project:
+
+1. Clone the repository
+2. Install dependencies
+3. Run the development server
+
+### Prerequisites
+
+You'll need the following installed:
+
+- Node.js 18+
+- npm or pnpm
+- Git
+
+## API Reference
+
+### Authentication
+
+All API requests require authentication.
+
+### Endpoints
+
+The following endpoints are available:
+
+- \`GET /users\` - List all users
+- \`POST /users\` - Create a new user
+
+## Conclusion
+
+That's it! You're ready to start using the API.`
+
+                        case 'ts':
+                        case 'tsx':
+                            return `interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+type UserAction = 'create' | 'update' | 'delete';
+
+const INITIAL_STATE: User[] = [];
+
+function createUser(userData: Omit<User, 'id'>): User {
+  return {
+    id: crypto.randomUUID(),
+    ...userData
+  };
+}
+
+class UserManager {
+  private users: User[] = INITIAL_STATE;
+  
+  addUser(userData: Omit<User, 'id'>): User {
+    const user = createUser(userData);
+    this.users.push(user);
+    return user;
+  }
+  
+  getUser(id: string): User | undefined {
+    return this.users.find(user => user.id === id);
+  }
+}
+
+export { UserManager, type User, type UserAction };`
+
+                        default:
+                            return `# Default Content
+
+This is default content for unknown file types.
+
+## Section 1
+
+Some content here.
+
+## Section 2
+
+More content.`
+                    }
+                }
+
+                const sourceCode = getExampleContent(extension)
+                const sections = splitIntoSections(sourceCode, filePath)
+
+                return json({
+                    success: true,
+                    message: `Split ${extension} content into ${sections.length} sections`,
+                    filePath,
+                    sourceCode,
+                    sections,
+                    stats: {
+                        totalSections: sections.length,
+                        sectionTypes: [...new Set(sections.map(s => s.type))],
+                        totalLines: sourceCode.split('\n').length
+                    }
+                })
+            } catch (error) {
+                return json({
+                    success: false,
+                    error: error instanceof Error ? error.message : String(error),
+                    stack: error instanceof Error ? error.stack : undefined,
+                    hint: 'Check section splitting logic and input content',
                 })
             }
         },
