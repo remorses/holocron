@@ -248,8 +248,6 @@ function getContentType(filePath: string): string {
     return lookup(filePath) || 'application/octet-stream'
 }
 
-
-
 async function determineTemplateDownload({
     markdownFileCount,
     fromTemplateFlag,
@@ -1093,7 +1091,7 @@ cli.command('dev', 'Preview your fumabase website')
             })
 
             // Watch for file changes and additions
-            const handleFileUpdate = async (filePath: string) => {
+            const handleFileUpdate = async (filePath: string, revalidate) => {
                 const fullPath = path.resolve(dir, filePath)
 
                 // Check if it's a media file
@@ -1121,11 +1119,14 @@ cli.command('dev', 'Preview your fumabase website')
                 console.log(
                     pc.gray(`Sending websocket update for ${githubPath}`),
                 )
-                return client.setDocsState({ filesInDraft: updatedFile })
+                return client.setDocsState({
+                    state: { filesInDraft: updatedFile },
+                    revalidate,
+                })
             }
 
-            watcher.on('add', handleFileUpdate)
-            watcher.on('change', handleFileUpdate)
+            watcher.on('add', (x) => handleFileUpdate(x, true))
+            watcher.on('change', (x) => handleFileUpdate(x, false))
 
             watcher.on('unlink', (filePath) => {
                 const githubPath = path.posix.join(
@@ -1147,7 +1148,10 @@ cli.command('dev', 'Preview your fumabase website')
                     console.log(
                         pc.gray(`Sending websocket message for deleted file`),
                     )
-                    client.setDocsState({ filesInDraft: deletedFile })
+                    client.setDocsState({
+                        state: { filesInDraft: deletedFile },
+                        revalidate: true,
+                    })
                 }
             })
         } catch (error) {
@@ -1181,9 +1185,11 @@ cli.command('sync', 'Sync current branch with GitHub').action(async () => {
 
         // Check git status using improved function
         const gitStatus = checkGitStatus()
-        
+
         if (gitStatus.error) {
-            console.error(pc.red('Error checking git status: ' + gitStatus.error))
+            console.error(
+                pc.red('Error checking git status: ' + gitStatus.error),
+            )
             process.exit(1)
         }
 
@@ -1210,9 +1216,7 @@ cli.command('sync', 'Sync current branch with GitHub').action(async () => {
                 ),
             )
             console.error(
-                pc.yellow(
-                    'Please push your commits first before running sync',
-                ),
+                pc.yellow('Please push your commits first before running sync'),
             )
             process.exit(1)
         }
@@ -1374,3 +1378,22 @@ cli.command('delete', 'Delete the current fumabase website')
             process.exit(1)
         }
     })
+
+cli.command('logout', 'Delete user token and config').action(async () => {
+    try {
+        if (fs.existsSync(configPath)) {
+            fs.unlinkSync(configPath)
+            console.log(pc.green('Logged out successfully!'))
+            console.log(pc.gray(`Config file removed: ${configPath}`))
+        } else {
+            console.log(pc.yellow('Already logged out.'))
+        }
+    } catch (error) {
+        console.error(
+            pc.red(
+                'Error during logout: ' + ((error as Error).message || error),
+            ),
+        )
+        process.exit(1)
+    }
+})
