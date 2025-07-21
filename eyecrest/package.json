@@ -6,7 +6,9 @@
   "scripts": {
     "deployment": "tsc && pnpm wrangler deploy",
     "test": "vitest",
-    "download-markdown-wasm": "curl -o src/tree-sitter-markdown.wasm https://ikatyang.github.io/tree-sitter-markdown/assets/tree-sitter-markdown-0.7.1/tree-sitter-markdown.wasm"
+    "download-markdown-wasm": "curl -o src/tree-sitter-markdown.wasm https://raw.githubusercontent.com/pulsar-edit/pulsar/master/packages/language-gfm/grammars/tree-sitter-markdown/tree-sitter-markdown.wasm",
+    "download-core-wasm": "curl -o src/tree-sitter-core.wasm https://raw.githubusercontent.com/pulsar-edit/pulsar/master/vendor/web-tree-sitter/web-tree-sitter.wasm",
+    "download-wasm": "pnpm run download-markdown-wasm && pnpm run download-core-wasm"
   },
   "keywords": [],
   "author": "remorses",

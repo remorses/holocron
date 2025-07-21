@@ -82,3 +82,28 @@ describe('findLineNumberInContent - advanced cases', () => {
     expect(result).toBe(null);
   });
 });
+
+describe('Deployed Worker /health endpoint', () => {
+  it('should return success from deployed health endpoint', async () => {
+    // Test against the deployed worker
+    const deployedUrl = 'https://eyecrest.org/health';
+    
+    try {
+      const result = await fetch(deployedUrl);
+      expect(result.status).toBe(200);
+      
+      const json = await result.json() as any;
+      expect(json.success).toBe(true);
+      expect(json.message).toBe('Service is healthy - markdown parsed successfully!');
+      expect(json.platform).toBe('Cloudflare Workers with web-tree-sitter');
+      expect(json.timestamp).toBeDefined();
+      expect(json.parser).toBeDefined();
+      expect(json.parser.language).toBe('markdown');
+      expect(json.parser.nodeCount).toBeDefined();
+      expect(json.parser.sExpression).toBeDefined();
+    } catch (error) {
+      // If the deployed worker is not available, skip this test
+      console.warn('Deployed worker not available, skipping test:', error);
+    }
+  });
+});

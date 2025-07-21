@@ -378,82 +378,53 @@ const app = new Spiceflow()
     })
     .route({
         method: 'GET',
-        path: '/tree-sitter-demo/:extension',
-        handler: async ({ params }) => {
+        path: '/health',
+        handler: async () => {
             try {
-                const extension = params.extension || 'md'
-                const filePath = `example.${extension}`
+                const filePath = 'example.md'
+                const sourceCode = `# Health Check
 
-                // Example content based on extension
-                const getExampleContent = (ext: string) => {
-                    switch (ext) {
-                        case 'js':
-                            return `function hello(name) {
-  console.log("Hello, " + name + "!");
-  return "Hello " + name;
-}
+This endpoint verifies that the Eyecrest service is working correctly.
 
-const greeting = hello("Tree-sitter");
-console.log(greeting);`
+## Status
 
-                        case 'md':
-                            return `# Welcome to Tree-sitter Demo
+The tree-sitter parser is **operational** and processing markdown content.
 
-This is a **markdown** document that demonstrates parsing capabilities.
+### Features
 
-## Features
-
-- Parse markdown content directly
-- Analyze with tree-sitter
-- Extract document structure
-- Support CommonMark spec
+- Markdown parsing with tree-sitter
+- Cloudflare Workers deployment
+- GitHub repository caching
+- Full-text search capabilities
 
 \`\`\`javascript
-function hello() {
-  console.log("Hello from markdown!");
-}
+// Service is running
+console.log("Eyecrest is healthy!");
 \`\`\`
 
-[Learn more](https://tree-sitter.github.io/)`
+**Response time:** ${new Date().toISOString()}`
 
-                        case 'mdx':
-                            return `# Welcome to MDX
-
-This is an **MDX** file that combines markdown with JSX.
-
-export const Button = ({ children }) => (
-  <button className="btn">{children}</button>
-)
-
-## Interactive Components
-
-<Button>Click me!</Button>
-
-You can use both markdown _syntax_ and React components!`
-
-                        default:
-                            return 'console.log("Hello World!");'
-                    }
-                }
-
-                const sourceCode = getExampleContent(extension)
                 const result = await parseWithTreeSitter(sourceCode, filePath)
 
                 return json({
                     success: true,
-                    message: `${result.language} content parsed with tree-sitter!`,
+                    message: 'Service is healthy - markdown parsed successfully!',
                     platform: 'Cloudflare Workers with web-tree-sitter',
-                    filePath,
-                    sourceCode,
-                    ...result,
+                    timestamp: new Date().toISOString(),
+                    parser: {
+                        language: result.language,
+                        nodeCount: result.stats.nodeCount,
+                        sExpression: result.sExpression,
+                    },
                 })
             } catch (error) {
                 return json({
                     success: false,
+                    message: 'Service health check failed',
                     error:
                         error instanceof Error ? error.message : String(error),
                     stack: error instanceof Error ? error.stack : undefined,
-                    hint: 'Check tree-sitter parser compatibility and WASM file loading',
+                    timestamp: new Date().toISOString(),
                 })
             }
         },
