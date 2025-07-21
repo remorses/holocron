@@ -189,12 +189,19 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                     if (toolPart.type === 'tool-strReplaceEditor') {
                         const args: Partial<EditToolParamSchema> =
                             toolPart.input as any
-                        if (args?.command === 'view') {
+                        if (
+                            args?.command === 'view' ||
+                            args?.command === 'undo_edit'
+                        ) {
                             return
                         }
                         if (!isStrReplaceParameterComplete(args)) {
                             return
                         }
+
+                        usePersistentDocsState.setState({
+                            drawerState: 'minimized',
+                        })
 
                         let updatedPagesCopy = { ...filesInDraft }
                         const execute = createEditExecute({
@@ -283,7 +290,7 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.15 }}
-                        className='fixed inset-0 bg-black/20 z-40'
+                        className='fixed inset-0 bg-black/50 z-40'
                         onClick={() => {
                             usePersistentDocsState.setState({
                                 drawerState: 'closed',
