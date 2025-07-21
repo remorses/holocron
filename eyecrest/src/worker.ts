@@ -11,11 +11,13 @@ import { mcp, addMcpTools } from "spiceflow/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { parseMarkdownIntoSections, isSupportedMarkdownFile, Section } from "./markdown-parser.js";
+import { computeGitBlobSHA, verifySHA } from "./sha-utils.js";
 
 /* ---------- ENV interface ---------------------------- */
 
 interface Env {
   DATASET_CACHE: DurableObjectNamespace;
+  REPO_CACHE: DurableObjectNamespace;
   ASSETS: Fetcher;
 }
 
@@ -26,6 +28,7 @@ interface Env {
 const FileSchema = z.object({
   filename: z.string().describe('Full file path without leading slash, including extension (md or mdx)'),
   content: z.string().describe('Raw file content'),
+  sha: z.string().optional().describe('Optional SHA-1 hash of the file content using Git blob format. If provided, will be validated against computed SHA.'),
 });
 
 const DeleteFilesSchema = z.object({
@@ -79,6 +82,7 @@ export class DatasetCache extends DurableObject {
       CREATE TABLE IF NOT EXISTS files (
         filename       TEXT PRIMARY KEY,
         content        TEXT,
+        sha            TEXT,
         created_at     INTEGER,
         updated_at     INTEGER
       );
@@ -95,37 +99,86 @@ export class DatasetCache extends DurableObject {
       );
 
       -- Full-text search index for sections
+      -- Using 'porter' tokenizer for better search results:
+      -- 1. Stemming: Porter reduces words to their root forms (e.g., "running" → "run", "components" → "component")
+      --    This helps match different forms of the same word in MDX/MD documentation
+      -- 2. Case-insensitive: Automatically handles case variations common in code/docs
+      -- 3. Language-aware: Better than 'unicode61' for English technical documentation
+      -- 4. Performance: More efficient than trigram tokenizer for typical search queries
+      -- 5. MDX/JSX friendly: Treats JSX tags and code snippets as regular tokens, indexing their content
       CREATE VIRTUAL TABLE IF NOT EXISTS sections_fts
         USING fts5(filename, heading, content, tokenize = 'porter');
 
       -- Metadata table
       CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, val TEXT);
     `);
+
+    // Migrate existing data to compute SHA for files missing it
+    this.migrateExistingFilesToSHA().catch(console.error);
+  }
+
+  /* ---------- Migration Methods ------------- */
+
+  private async migrateExistingFilesToSHA(): Promise<void> {
+    try {
+      // Find files without SHA
+      const filesWithoutSHA = [...this.sql.exec("SELECT filename, content FROM files WHERE sha IS NULL")];
+      
+      if (filesWithoutSHA.length > 0) {
+        console.log(`Migrating ${filesWithoutSHA.length} files to add SHA hashes`);
+        
+        for (const row of filesWithoutSHA) {
+          const filename = row.filename as string;
+          const content = row.content as string;
+          const sha = await computeGitBlobSHA(content);
+          
+          this.sql.exec("UPDATE files SET sha = ? WHERE filename = ?", sha, filename);
+        }
+        
+        console.log(`Successfully migrated ${filesWithoutSHA.length} files with SHA hashes`);
+      }
+    } catch (error) {
+      console.error("Error during SHA migration:", error);
+    }
   }
 
   /* ---------- API Methods ------------- */
 
-  async upsertFiles({ datasetId, files }: { datasetId: string; files: { filename: string; content: string }[] }): Promise<void> {
+  async upsertFiles({ datasetId, files }: { datasetId: string; files: { filename: string; content: string; sha?: string }[] }): Promise<void> {
     this.datasetId = datasetId;
 
     for (const file of files) {
       const now = Date.now();
 
-      // Check if file exists to determine if it's create or update
-      const existingFile = [...this.sql.exec("SELECT filename FROM files WHERE filename = ?", file.filename)];
+      // Compute SHA for the content
+      const computedSHA = await computeGitBlobSHA(file.content);
+
+      // If SHA was provided, validate it matches
+      if (file.sha && file.sha !== computedSHA) {
+        throw new Error(`SHA mismatch for file ${file.filename}. Expected: ${file.sha}, Computed: ${computedSHA}`);
+      }
+
+      // Check if file exists and needs update based on SHA
+      const existingFile = [...this.sql.exec("SELECT filename, sha FROM files WHERE filename = ?", file.filename)];
       const isUpdate = existingFile.length > 0;
+      const existingSHA = existingFile[0]?.sha as string;
+
+      // Skip update if SHA hasn't changed
+      if (isUpdate && existingSHA === computedSHA) {
+        continue;
+      }
 
       // Delete existing sections for this file
       this.sql.exec("DELETE FROM sections WHERE filename = ?", file.filename);
       this.sql.exec("DELETE FROM sections_fts WHERE filename = ?", file.filename);
 
-      // Upsert file
+      // Upsert file with SHA
       if (isUpdate) {
-        this.sql.exec("UPDATE files SET content = ?, updated_at = ? WHERE filename = ?",
-          file.content, now, file.filename);
+        this.sql.exec("UPDATE files SET content = ?, sha = ?, updated_at = ? WHERE filename = ?",
+          file.content, computedSHA, now, file.filename);
       } else {
-        this.sql.exec("INSERT INTO files (filename, content, created_at, updated_at) VALUES (?, ?, ?, ?)",
-          file.filename, file.content, now, now);
+        this.sql.exec("INSERT INTO files (filename, content, sha, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+          file.filename, file.content, computedSHA, now, now);
       }
 
       // Parse and store sections if it's a markdown file
@@ -165,10 +218,10 @@ export class DatasetCache extends DurableObject {
     showLineNumbers?: boolean;
     start?: number;
     end?: number;
-  }): Promise<{ content: string }> {
+  }): Promise<{ content: string; sha: string }> {
     this.datasetId = datasetId;
 
-    const results = [...this.sql.exec("SELECT content FROM files WHERE filename = ?", filePath)];
+    const results = [...this.sql.exec("SELECT content, sha FROM files WHERE filename = ?", filePath)];
     const row = results.length > 0 ? results[0] : null;
 
     if (!row) {
@@ -176,13 +229,14 @@ export class DatasetCache extends DurableObject {
     }
 
     let content = row.content as string;
+    const sha = row.sha as string;
 
     // Apply line formatting if any formatting options are specified
     if (showLineNumbers || start !== undefined || end !== undefined) {
       content = formatFileWithLines(content, showLineNumbers || false, start, end);
     }
 
-    return { content };
+    return { content, sha };
   }
 
   async searchSections({
@@ -344,7 +398,10 @@ const app = new Spiceflow()
     method: 'GET',
     path: '/v1/datasets/:datasetId/files/*',
     query: GetFileContentsQuerySchema,
-    response: z.object({ content: z.string().describe('Full file content or specified line range') }),
+    response: z.object({ 
+      content: z.string().describe('Full file content or specified line range'),
+      sha: z.string().describe('SHA-1 hash of the original file content using Git blob format')
+    }),
     async handler({ params, query, state }) {
       const { datasetId, '*': filePath } = params;
       const { showLineNumbers, start, end } = query;
@@ -437,6 +494,9 @@ const app = new Spiceflow()
 /* ======================================================================
    MCP Integration (keeping for compatibility)
    ==================================================================== */
+// Alias for backward compatibility
+export class RepoCache extends DatasetCache {}
+
 export class MyMCP extends McpAgent {
   server = new McpServer(
     {
@@ -463,6 +523,9 @@ export class MyMCP extends McpAgent {
 /* ======================================================================
    Export and Utility Functions
    ==================================================================== */
+
+// Export the app for client generation
+export { app };
 
 export default {
   fetch: (req: Request, env: Env, ctx: ExecutionContext) =>
