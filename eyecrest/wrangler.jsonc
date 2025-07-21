@@ -5,6 +5,11 @@
     "compatibility_date": "2025-07-20",
     "compatibility_flags": ["nodejs_compat"],
 
+    "assets": {
+        "directory": "./public",
+        "binding": "ASSETS"
+    },
+
     "durable_objects": {
         "bindings": [
             { "name": "REPO_CACHE", "class_name": "RepoCache" },

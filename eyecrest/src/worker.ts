@@ -16,6 +16,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 interface Env {
   REPO_CACHE: DurableObjectNamespace;
+  ASSETS: Fetcher;
   GITHUB_TOKEN?: string;
   CACHE_TTL_MS?: string; // e.g. "21600000" (6 h)
 }
@@ -152,8 +153,8 @@ export class RepoCache extends DurableObject {
       const cleanSnippet = snippet.replace(/^\.\.\.|\.\.\.$/, "");
       const lineNumber = findLineNumberInContent(content, cleanSnippet);
 
-      // Create gitchamber.com URL
-      const url = `https://gitchamber.com/repos/${params.owner}/${params.repo}/${params.branch}/file/${r.path}${lineNumber ? `?start=${lineNumber}` : ""}`;
+      // Create eyecrest.org URL
+      const url = `https://eyecrest.org/repos/${params.owner}/${params.repo}/${params.branch}/file/${r.path}${lineNumber ? `?start=${lineNumber}` : ""}`;
 
       return {
         path: r.path as string,
@@ -353,7 +354,8 @@ const app = new Spiceflow()
       const stub = state.env.REPO_CACHE.get(id) as any as RepoCache;
       return stub.searchFiles({ owner, repo, branch, query });
     },
-  });
+  })
+
 
 // from example https://github.com/cloudflare/ai/blob/main/demos/remote-mcp-authless/src/index.ts
 export class MyMCP extends McpAgent {

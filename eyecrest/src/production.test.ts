@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
 
 describe('GitChamber Production API', () => {
-  const baseUrl = 'https://gitchamber.com/repos/remorses/gitchamber/main';
+  const baseUrl = 'https://eyecrest.org/repos/remorses/gitchamber/main';
 
   it('should list files', async () => {
     const response = await fetch(`${baseUrl}/files`);
     const data = await response.json();
-    
+
     expect(response.status).toBe(200);
     expect(Array.isArray(data)).toBe(true);
     expect(data).toMatchInlineSnapshot(`
@@ -30,11 +30,11 @@ describe('GitChamber Production API', () => {
   it('should search repository', async () => {
     const response = await fetch(`${baseUrl}/search/DurableObject`);
     const text = await response.text();
-    
+
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('text/markdown; charset=utf-8');
     expect(text).toMatchInlineSnapshot(`
-      "## [src/mocks/cloudflare-workers.ts](https://gitchamber.com/repos/remorses/gitchamber/main/file/src/mocks/cloudflare-workers.ts?start=1) (line 1)
+      "## [src/mocks/cloudflare-workers.ts](https://eyecrest.org/repos/remorses/gitchamber/main/file/src/mocks/cloudflare-workers.ts?start=1) (line 1)
 
       \`\`\`
       // Mock for cloudflare:workers module
@@ -59,7 +59,7 @@ describe('GitChamber Production API', () => {
 
       ---
 
-      ## [src/worker.ts](https://gitchamber.com/repos/remorses/gitchamber/main/file/src/worker.ts?start=1) (line 1)
+      ## [src/worker.ts](https://eyecrest.org/repos/remorses/gitchamber/main/file/src/worker.ts?start=1) (line 1)
 
       \`\`\`
       /* -----------------------------------------------------------------------
@@ -95,7 +95,7 @@ describe('GitChamber Production API', () => {
   it('should get file content without line numbers', async () => {
     const response = await fetch(`${baseUrl}/file/package.json`);
     const text = await response.text();
-    
+
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8');
     expect(text).toMatchInlineSnapshot(`
@@ -130,7 +130,7 @@ describe('GitChamber Production API', () => {
   it('should get file content with line numbers', async () => {
     const response = await fetch(`${baseUrl}/file/package.json?showLineNumbers=true`);
     const text = await response.text();
-    
+
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8');
     expect(text).toMatchInlineSnapshot(`
@@ -158,7 +158,7 @@ describe('GitChamber Production API', () => {
       22      "zod": "^4.0.5"
       23    }
       24  }
-      25  
+      25
       end of file"
     `);
   });
@@ -166,7 +166,7 @@ describe('GitChamber Production API', () => {
   it('should get file content with start and end line numbers', async () => {
     const response = await fetch(`${baseUrl}/file/package.json?start=6&end=12`);
     const text = await response.text();
-    
+
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8');
     expect(text).toMatchInlineSnapshot(`
@@ -183,7 +183,7 @@ describe('GitChamber Production API', () => {
   it('should get file content with only start line number', async () => {
     const response = await fetch(`${baseUrl}/file/README.md?start=20`);
     const text = await response.text();
-    
+
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8');
     // Should show 50 lines starting from line 20
@@ -194,14 +194,14 @@ describe('GitChamber Production API', () => {
 
   it('should handle 404 for non-existent file', async () => {
     const response = await fetch(`${baseUrl}/file/nonexistent.txt`);
-    
+
     expect(response.status).toBe(404);
   });
 
   it('should handle search with no results', async () => {
     const response = await fetch(`${baseUrl}/search/thisdoesnotexistanywhere12345`);
     const text = await response.text();
-    
+
     expect(response.status).toBe(200);
     expect(text).toBe('No results found.');
   });
