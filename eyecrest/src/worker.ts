@@ -11,6 +11,17 @@ import { cors } from "spiceflow/cors";
 import { openapi } from "spiceflow/openapi";
 import { mcp, addMcpTools } from "spiceflow/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import jsWasm from "./tree-sitter-javascript.wasm";
+import coreWasm from "./tree-sitter-core.wasm";
+
+// Define Node.js globals for tree-sitter compatibility
+globalThis.__dirname = import.meta.dirname || "";
+globalThis.__filename = import.meta.filename || "";
+globalThis.process = globalThis.process || {
+  env: {},
+  cwd: () => "/",
+  platform: "cloudflare",
+} as any;
 
 /* ---------- ENV interface ---------------------------- */
 
@@ -353,6 +364,88 @@ const app = new Spiceflow()
       const id = state.env.REPO_CACHE.idFromName(`${owner}/${repo}/${branch}`);
       const stub = state.env.REPO_CACHE.get(id) as any as RepoCache;
       return stub.searchFiles({ owner, repo, branch, query });
+    },
+  })
+  .route({
+    method: "GET",
+    path: "/tree-sitter-demo",
+    handler: async ({ state }) => {
+      try {
+        // Import tree-sitter
+        const { Parser, Language } = await import("web-tree-sitter");
+        
+        // Initialize parser with locateFile to provide WASM module directly
+        await Parser.init({
+          locateFile(path: string) {
+            if (path.endsWith('tree-sitter.wasm')) {
+              // Return the imported core WASM module
+              return coreWasm as any;
+            }
+            return path;
+          }
+        });
+        
+        const parser = new Parser();
+        
+        // Load JavaScript language from build-time imported WASM
+        const jsLanguage = await Language.load(jsWasm as any);
+        parser.setLanguage(jsLanguage);
+        
+        // Example JavaScript code to parse
+        const sourceCode = `function hello(name) {
+  console.log("Hello, " + name + "!");
+  return "Hello " + name;
+}
+
+const greeting = hello("Tree-sitter");
+console.log(greeting);`;
+
+        // Parse the code
+        const tree = parser.parse(sourceCode);
+        
+        if (!tree) {
+          throw new Error("Failed to parse source code");
+        }
+        
+        // Get the root node
+        const rootNode = tree.rootNode;
+        
+        // Helper function to convert tree to JSON
+        function nodeToJson(node: any): any {
+          const children: any[] = [];
+          for (let i = 0; i < node.childCount; i++) {
+            children.push(nodeToJson(node.child(i)));
+          }
+          
+          return {
+            type: node.type,
+            startPosition: node.startPosition,
+            endPosition: node.endPosition,
+            text: node.text.length < 100 ? node.text : node.text.substring(0, 100) + "...",
+            children: children.length > 0 ? children : undefined,
+          };
+        }
+        
+        return json({
+          success: true,
+          message: "JavaScript successfully parsed with tree-sitter!",
+          platform: "Cloudflare Workers with @dqbd/web-tree-sitter",
+          sourceCode,
+          language: "javascript",
+          parseTree: nodeToJson(rootNode),
+          sExpression: rootNode.toString(),
+          stats: {
+            nodeCount: (rootNode as any).descendantCount || "unknown",
+          }
+        });
+      } catch (error) {
+        return json({
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          hint: "Check @dqbd/web-tree-sitter compatibility and WASM file loading",
+        });
+      }
     },
   })
 

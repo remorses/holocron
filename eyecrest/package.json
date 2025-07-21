@@ -21,6 +21,8 @@
     "@modelcontextprotocol/sdk": "^1.16.0",
     "agents": "^0.0.109",
     "spiceflow": "^1.17.2",
+    "tree-sitter-wasms": "^0.1.12",
+    "web-tree-sitter": "workspace:*",
     "zod": "^4.0.5"
   }
 }

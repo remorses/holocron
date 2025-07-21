@@ -1,0 +1,15 @@
+{
+  "name": "web-tree-sitter",
+  "version": "0.25.8-cloudflare-fix",
+  "description": "Tree-sitter bindings for the web (Cloudflare Workers compatible)",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./tree-sitter.js",
+      "require": "./tree-sitter.cjs",
+      "types": "./web-tree-sitter.d.ts"
+    },
+    "./tree-sitter.wasm": "./tree-sitter.wasm"
+  },
+  "types": "web-tree-sitter.d.ts"
+}
