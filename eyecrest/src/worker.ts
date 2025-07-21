@@ -58,6 +58,8 @@ const SearchSectionsResponseSchema = z.object({
       section: z.string().describe('Section heading'),
       snippet: z.string().describe('Highlighted excerpt'),
       score: z.number().describe('Relevance score'),
+      startLine: z.number().describe('Line number where section starts'),
+      metadata: z.any().optional().describe('File metadata if available'),
     })
   ),
   count: z.number().int().describe('Total matching sections'),
@@ -113,38 +115,11 @@ export class DatasetCache extends DurableObject {
       CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, val TEXT);
     `);
 
-    // Migrate existing data to compute SHA for files missing it
-    this.migrateExistingFilesToSHA().catch(console.error);
-  }
-
-  /* ---------- Migration Methods ------------- */
-
-  private async migrateExistingFilesToSHA(): Promise<void> {
-    try {
-      // Find files without SHA
-      const filesWithoutSHA = [...this.sql.exec("SELECT filename, content FROM files WHERE sha IS NULL")];
-      
-      if (filesWithoutSHA.length > 0) {
-        console.log(`Migrating ${filesWithoutSHA.length} files to add SHA hashes`);
-        
-        for (const row of filesWithoutSHA) {
-          const filename = row.filename as string;
-          const content = row.content as string;
-          const sha = await computeGitBlobSHA(content);
-          
-          this.sql.exec("UPDATE files SET sha = ? WHERE filename = ?", sha, filename);
-        }
-        
-        console.log(`Successfully migrated ${filesWithoutSHA.length} files with SHA hashes`);
-      }
-    } catch (error) {
-      console.error("Error during SHA migration:", error);
-    }
   }
 
   /* ---------- API Methods ------------- */
 
-  async upsertFiles({ datasetId, files }: { datasetId: string; files: { filename: string; content: string; sha?: string }[] }): Promise<void> {
+  async upsertFiles({ datasetId, files }: { datasetId: string; files: { filename: string; content: string; sha?: string; metadata?: Record<string, any> }[] }): Promise<void> {
     this.datasetId = datasetId;
 
     for (const file of files) {
@@ -218,10 +193,10 @@ export class DatasetCache extends DurableObject {
     showLineNumbers?: boolean;
     start?: number;
     end?: number;
-  }): Promise<{ content: string; sha: string }> {
+  }): Promise<{ content: string; sha: string; metadata?: any }> {
     this.datasetId = datasetId;
 
-    const results = [...this.sql.exec("SELECT content, sha FROM files WHERE filename = ?", filePath)];
+    const results = [...this.sql.exec("SELECT content, sha, metadata FROM files WHERE filename = ?", filePath)];
     const row = results.length > 0 ? results[0] : null;
 
     if (!row) {
@@ -230,13 +205,14 @@ export class DatasetCache extends DurableObject {
 
     let content = row.content as string;
     const sha = row.sha as string;
+    const metadata = row.metadata ? JSON.parse(row.metadata as string) : undefined;
 
     // Apply line formatting if any formatting options are specified
     if (showLineNumbers || start !== undefined || end !== undefined) {
       content = formatFileWithLines(content, showLineNumbers || false, start, end);
     }
 
-    return { content, sha };
+    return { content, sha, metadata };
   }
 
   async searchSections({
@@ -257,6 +233,8 @@ export class DatasetCache extends DurableObject {
       section: string;
       snippet: string;
       score: number;
+      startLine: number;
+      metadata?: any;
     }>;
     count: number;
     page: number;
@@ -303,11 +281,14 @@ export class DatasetCache extends DurableObject {
       }
 
       if (fileGroups[filename].length < maxChunksPerFile) {
+        const metadata = row.metadata ? JSON.parse(row.metadata as string) : undefined;
         fileGroups[filename].push({
           filename,
           section: row.heading as string,
           snippet: (row.snippet as string).replace(/<\/?mark>/g, ''), // Remove HTML marks for JSON response
           score: row.score as number,
+          startLine: row.start_line as number,
+          metadata,
         });
       }
     }
@@ -338,10 +319,19 @@ export class DatasetCache extends DurableObject {
   }): Promise<string> {
     const data = await this.searchSections({ datasetId, query, page, perPage, maxChunksPerFile });
 
-    // Convert to plain text format: "filename:section: snippet"
+    // Convert to markdown format with headings and URLs
     const textResult = data.results
-      .map((result: any) => `${result.filename}:${result.section}: ${result.snippet}`)
-      .join('\n');
+      .map((result: any) => {
+        const level = result.section.includes('#') ? result.section.match(/^#+/)?.[0].length || 2 : 2;
+        const headingPrefix = '#'.repeat(Math.min(level + 1, 6)); // Offset by 1 to show hierarchy
+        
+        // Build URL to read specific line
+        const baseUrl = `/v1/datasets/${datasetId}/files/${result.filename}`;
+        const lineUrl = result.startLine ? `${baseUrl}?showLineNumbers=true&start=${result.startLine}` : baseUrl;
+        
+        return `${headingPrefix} ${result.section}\n\n[${result.filename}:${result.startLine || '1'}](${lineUrl})\n\n${result.snippet}\n`;
+      })
+      .join('\n---\n\n');
 
     return textResult;
   }

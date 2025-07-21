@@ -5,6 +5,7 @@ export interface Section {
   content: string;
   level: number;
   orderIndex: number;
+  startLine: number;
 }
 
 export interface ParsedMarkdown {
@@ -20,11 +21,16 @@ export function parseMarkdownIntoSections(content: string): ParsedMarkdown {
   // Parse markdown to tokens
   const tokens = marked.lexer(content);
   
+  // Track line numbers
+  const lines = content.split('\n');
+  let currentLine = 1;
+  
   const sections: Section[] = [];
   let currentHeading = '';
   let currentLevel = 1;
   let currentContent: string[] = [];
   let orderIndex = 0;
+  let currentStartLine = 1;
 
   // Helper function to save current section
   const saveCurrentSection = () => {
@@ -33,7 +39,8 @@ export function parseMarkdownIntoSections(content: string): ParsedMarkdown {
         heading: currentHeading || 'Introduction',
         content: currentContent.join('\n').trim(),
         level: currentLevel,
-        orderIndex: orderIndex++
+        orderIndex: orderIndex++,
+        startLine: currentStartLine
       });
       currentContent = [];
     }
@@ -47,6 +54,7 @@ export function parseMarkdownIntoSections(content: string): ParsedMarkdown {
       // Start new section
       currentHeading = token.text;
       currentLevel = token.depth;
+      currentStartLine = currentLine;
     } else {
       // Add content to current section
       // Convert token back to markdown for storage
@@ -54,6 +62,13 @@ export function parseMarkdownIntoSections(content: string): ParsedMarkdown {
       if (tokenMarkdown.trim()) {
         currentContent.push(tokenMarkdown);
       }
+    }
+    
+    // Update line count based on token raw content
+    if (token.raw) {
+      // Count newlines in the raw token text
+      const newlines = (token.raw.match(/\n/g) || []).length;
+      currentLine += newlines;
     }
   }
 
@@ -66,7 +81,8 @@ export function parseMarkdownIntoSections(content: string): ParsedMarkdown {
       heading: 'Content',
       content: content.trim(),
       level: 1,
-      orderIndex: 0
+      orderIndex: 0,
+      startLine: 1
     });
   }
 

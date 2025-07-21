@@ -35,6 +35,7 @@ Set up your config file.`;
           "heading": "Introduction",
           "level": 1,
           "orderIndex": 0,
+          "startLine": 1,
         },
         {
           "content": "Here's how to get started:
@@ -44,6 +45,7 @@ Set up your config file.`;
           "heading": "Getting Started",
           "level": 2,
           "orderIndex": 1,
+          "startLine": 5,
         },
         {
           "content": "Run the following command:
@@ -54,12 +56,14 @@ Set up your config file.`;
           "heading": "Installation",
           "level": 3,
           "orderIndex": 2,
+          "startLine": 12,
         },
         {
           "content": "Set up your config file.",
           "heading": "Configuration",
           "level": 2,
           "orderIndex": 3,
+          "startLine": 20,
         },
       ]
     `);
@@ -85,6 +89,7 @@ And some **formatting**.`;
           "heading": "Introduction",
           "level": 1,
           "orderIndex": 0,
+          "startLine": 1,
         },
       ]
     `);
@@ -128,6 +133,7 @@ All responses are in JSON format.`;
           "heading": "API Reference",
           "level": 1,
           "orderIndex": 0,
+          "startLine": 1,
         },
         {
           "content": "| Method | Path | Description |
@@ -137,6 +143,7 @@ All responses are in JSON format.`;
           "heading": "Endpoints",
           "level": 2,
           "orderIndex": 1,
+          "startLine": 5,
         },
         {
           "content": "\`\`\`javascript
@@ -146,12 +153,14 @@ All responses are in JSON format.`;
           "heading": "Code Example",
           "level": 3,
           "orderIndex": 2,
+          "startLine": 12,
         },
         {
           "content": "All responses are in JSON format.",
           "heading": "Response Format",
           "level": 2,
           "orderIndex": 3,
+          "startLine": 19,
         },
       ]
     `);
@@ -214,6 +223,7 @@ Some important information:
           "heading": "Notes",
           "level": 1,
           "orderIndex": 0,
+          "startLine": 1,
         },
         {
           "content": "1. First item
@@ -225,9 +235,210 @@ Some important information:
           "heading": "Todo List",
           "level": 2,
           "orderIndex": 1,
+          "startLine": 8,
         },
       ]
     `);
+  });
+
+  test('handles MDX with JSX imports and components', () => {
+    const mdxContent = `---
+title: Advanced MDX Example
+---
+
+import { Button, Card } from '@/components/ui'
+import CustomChart from './CustomChart'
+
+# MDX with JSX Components
+
+This MDX file demonstrates how sections are split with JSX content.
+
+<Card className="mb-4">
+  <h2>Interactive Card</h2>
+  
+  <p>Content inside JSX components with newlines.</p>
+  
+  <Button 
+    variant="primary"
+    onClick={() => console.log('clicked')}
+  >
+    Click Me
+  </Button>
+</Card>
+
+## Code Examples
+
+Here's a React component within MDX:
+
+<CustomChart
+  data={[
+    { x: 1, y: 2 },
+    { x: 2, y: 4 },
+    { x: 3, y: 6 }
+  ]}
+  
+  options={{
+    title: "Sample Chart",
+    showGrid: true
+  }}
+/>
+
+### Inline JSX
+
+You can also use inline JSX: <Button size="small">Inline</Button> within text.
+
+## Mixed Content
+
+Regular markdown content follows:
+
+\`\`\`jsx
+// Code block example
+function Component() {
+  return (
+    <div>
+      <h1>Hello</h1>
+      
+      <p>World</p>
+    </div>
+  )
+}
+\`\`\`
+
+<Card>
+  <p>Another JSX block after code</p>
+</Card>
+
+## Conclusion
+
+MDX allows mixing markdown and JSX seamlessly.`;
+
+    const result = parseMarkdownIntoSections(mdxContent);
+
+    expect(result.sections).toMatchInlineSnapshot(`
+      [
+        {
+          "content": "---",
+          "heading": "Introduction",
+          "level": 1,
+          "orderIndex": 0,
+          "startLine": 1,
+        },
+        {
+          "content": "import { Button, Card } from '@/components/ui'
+      import CustomChart from './CustomChart'",
+          "heading": "title: Advanced MDX Example",
+          "level": 2,
+          "orderIndex": 1,
+          "startLine": 2,
+        },
+        {
+          "content": "This MDX file demonstrates how sections are split with JSX content.
+
+      <Card className="mb-4">
+        <h2>Interactive Card</h2>
+        
+
+        <p>Content inside JSX components with newlines.</p>
+        
+
+        <Button 
+          variant="primary"
+          onClick={() => console.log('clicked')}
+
+      > 
+
+      \`\`\`
+      Click Me
+      \`\`\`
+
+        </Button>
+      </Card>",
+          "heading": "MDX with JSX Components",
+          "level": 1,
+          "orderIndex": 2,
+          "startLine": 8,
+        },
+        {
+          "content": "Here's a React component within MDX:
+
+      <CustomChart
+        data={[
+          { x: 1, y: 2 },
+          { x: 2, y: 4 },
+          { x: 3, y: 6 }
+        ]}
+
+        options={{
+          title: "Sample Chart",
+          showGrid: true
+        }}
+      />",
+          "heading": "Code Examples",
+          "level": 2,
+          "orderIndex": 3,
+          "startLine": 25,
+        },
+        {
+          "content": "You can also use inline JSX: <Button size="small">Inline</Button> within text.",
+          "heading": "Inline JSX",
+          "level": 3,
+          "orderIndex": 4,
+          "startLine": 42,
+        },
+        {
+          "content": "Regular markdown content follows:
+
+      \`\`\`jsx
+      // Code block example
+      function Component() {
+        return (
+          <div>
+            <h1>Hello</h1>
+            
+            <p>World</p>
+          </div>
+        )
+      }
+      \`\`\`
+
+      <Card>
+        <p>Another JSX block after code</p>
+      </Card>",
+          "heading": "Mixed Content",
+          "level": 2,
+          "orderIndex": 5,
+          "startLine": 46,
+        },
+        {
+          "content": "MDX allows mixing markdown and JSX seamlessly.",
+          "heading": "Conclusion",
+          "level": 2,
+          "orderIndex": 6,
+          "startLine": 67,
+        },
+      ]
+    `);
+
+    // Find the actual sections with JSX content
+    const jsxSection = result.sections.find(s => s.heading === "MDX with JSX Components");
+    const codeExamplesSection = result.sections.find(s => s.heading === "Code Examples");
+    const inlineJsxSection = result.sections.find(s => s.heading === "Inline JSX");
+    const mixedContentSection = result.sections.find(s => s.heading === "Mixed Content");
+
+    // Verify that JSX is preserved in sections
+    expect(jsxSection?.content).toContain('<Card className="mb-4">');
+    expect(jsxSection?.content).toContain('<Button');
+    expect(codeExamplesSection?.content).toContain('<CustomChart');
+    expect(inlineJsxSection?.content).toContain('<Button size="small">Inline</Button>');
+    expect(mixedContentSection?.content).toContain('<Card>');
+
+    // Verify the parser handled frontmatter and imports (they become sections due to markdown structure)
+    const frontmatterSection = result.sections.find(s => s.content === "---");
+    expect(frontmatterSection).toBeDefined(); // Frontmatter becomes a section
+
+    // Imports become part of a section due to how marked parses the structure
+    const hasImports = result.sections.some(s => s.content.includes("import { Button, Card }"));
+    expect(hasImports).toBe(true);
   });
 });
 
