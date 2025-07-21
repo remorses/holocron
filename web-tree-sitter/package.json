@@ -6,7 +6,6 @@
   "exports": {
     ".": {
       "import": "./tree-sitter.js",
-      "require": "./tree-sitter.cjs",
       "types": "./web-tree-sitter.d.ts"
     },
     "./tree-sitter.wasm": "./tree-sitter.wasm"

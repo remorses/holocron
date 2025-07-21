@@ -11,8 +11,7 @@ import { cors } from "spiceflow/cors";
 import { openapi } from "spiceflow/openapi";
 import { mcp, addMcpTools } from "spiceflow/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import jsWasm from "./tree-sitter-javascript.wasm";
-import coreWasm from "./tree-sitter-core.wasm";
+import { parseCode } from "./parse-code.js";
 
 // Define Node.js globals for tree-sitter compatibility
 globalThis.__dirname = import.meta.dirname || "";
@@ -368,74 +367,32 @@ const app = new Spiceflow()
   })
   .route({
     method: "GET",
-    path: "/tree-sitter-demo",
+    path: "/health",
     handler: async ({ state }) => {
       try {
-        // Import tree-sitter
-        const { Parser, Language } = await import("web-tree-sitter");
+        // Example markdown content to parse for health check
+        const markdownContent = `# Service Health Check
         
-        // Initialize parser with locateFile to provide WASM module directly
-        await Parser.init({
-          locateFile(path: string) {
-            if (path.endsWith('tree-sitter.wasm')) {
-              // Return the imported core WASM module
-              return coreWasm as any;
-            }
-            return path;
-          }
+This is a **health check** for the tree-sitter parsing service.
+
+- Status: Operational
+- Parser: Working correctly
+- Platform: Cloudflare Workers`;
+
+        const result = await parseCode({
+          extension: 'md',
+          contents: markdownContent
         });
-        
-        const parser = new Parser();
-        
-        // Load JavaScript language from build-time imported WASM
-        const jsLanguage = await Language.load(jsWasm as any);
-        parser.setLanguage(jsLanguage);
-        
-        // Example JavaScript code to parse
-        const sourceCode = `function hello(name) {
-  console.log("Hello, " + name + "!");
-  return "Hello " + name;
-}
-
-const greeting = hello("Tree-sitter");
-console.log(greeting);`;
-
-        // Parse the code
-        const tree = parser.parse(sourceCode);
-        
-        if (!tree) {
-          throw new Error("Failed to parse source code");
-        }
-        
-        // Get the root node
-        const rootNode = tree.rootNode;
-        
-        // Helper function to convert tree to JSON
-        function nodeToJson(node: any): any {
-          const children: any[] = [];
-          for (let i = 0; i < node.childCount; i++) {
-            children.push(nodeToJson(node.child(i)));
-          }
-          
-          return {
-            type: node.type,
-            startPosition: node.startPosition,
-            endPosition: node.endPosition,
-            text: node.text.length < 100 ? node.text : node.text.substring(0, 100) + "...",
-            children: children.length > 0 ? children : undefined,
-          };
-        }
         
         return json({
           success: true,
-          message: "JavaScript successfully parsed with tree-sitter!",
-          platform: "Cloudflare Workers with @dqbd/web-tree-sitter",
-          sourceCode,
-          language: "javascript",
-          parseTree: nodeToJson(rootNode),
-          sExpression: rootNode.toString(),
-          stats: {
-            nodeCount: (rootNode as any).descendantCount || "unknown",
+          message: "Service is healthy - markdown parsed successfully!",
+          platform: "Cloudflare Workers with web-tree-sitter",
+          timestamp: new Date().toISOString(),
+          parser: {
+            language: result.language,
+            nodeCount: result.stats.nodeCount,
+            sExpression: result.sExpression
           }
         });
       } catch (error) {
@@ -443,7 +400,7 @@ console.log(greeting);`;
           success: false,
           error: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
-          hint: "Check @dqbd/web-tree-sitter compatibility and WASM file loading",
+          hint: "Health check failed - tree-sitter parsing service is down",
         });
       }
     },
