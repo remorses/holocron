@@ -327,7 +327,7 @@ export class DatasetCache extends DurableObject {
         
         // Build URL to read specific line
         const baseUrl = `/v1/datasets/${datasetId}/files/${result.filename}`;
-        const lineUrl = result.startLine ? `${baseUrl}?showLineNumbers=true&start=${result.startLine}` : baseUrl;
+        const lineUrl = result.startLine ? `${baseUrl}?start=${result.startLine}` : baseUrl;
         
         return `${headingPrefix} ${result.section}\n\n[${result.filename}:${result.startLine || '1'}](${lineUrl})\n\n${result.snippet}\n`;
       })
