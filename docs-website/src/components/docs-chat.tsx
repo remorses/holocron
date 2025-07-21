@@ -373,17 +373,10 @@ function ChatTopBar() {
 }
 
 function Chat({}) {
-    const { scrollRef, contentRef } = useStickToBottom({
-        initial: 'instant',
-    })
-
     return (
-        <ScrollArea
-            ref={scrollRef as any}
-            className='[&>div>div]:grow -mr-4 pr-4 relative items-stretch rounded max-h-full flex flex-col grow justify-center '
-        >
+        <ScrollArea className='[&>div>div]:grow -mr-4 [scrollbar-gutter:stable_both-edges] pr-4 relative items-stretch rounded max-h-full flex flex-col grow justify-center '>
             <div className='flex flex-col gap-4 relative h-full justify-center'>
-                <Messages ref={contentRef} />
+                <Messages />
                 <WelcomeMessage />
                 <Footer />
             </div>
@@ -405,7 +398,7 @@ function WelcomeMessage() {
     )
 }
 
-function Messages({ ref }) {
+function Messages({ ref }: { ref?: React.Ref<HTMLDivElement> }) {
     const { messages } = useChatContext()
 
     if (!messages.length) return null

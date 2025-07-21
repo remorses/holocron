@@ -1,4 +1,5 @@
 'use client'
+import { flushSync } from 'react-dom'
 
 import { createIdGenerator, UIMessage } from 'ai'
 import {
@@ -104,7 +105,11 @@ import {
     ValidateNewContentArgs,
     GetPageContentArgs,
 } from 'docs-website/src/lib/edit-tool'
-import { escapeMdxSyntax, truncateText, throttle } from 'docs-website/src/lib/utils'
+import {
+    escapeMdxSyntax,
+    truncateText,
+    throttle,
+} from 'docs-website/src/lib/utils'
 import { WebsiteUIMessage } from '../lib/types'
 import { safeJsoncParse, slugKebabCaseKeepExtension } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
@@ -159,14 +164,18 @@ const setDocsJsonState = ({
 function ChatForm({ children }: { children: React.ReactNode }) {
     const { chatId } = useParams()
     const formMethods = useForm({})
+    const { submit, messages, setMessages, setDraftText } = useChatContext()
 
-    const { siteBranch, githubFolder } = useLoaderData() as Route.ComponentProps['loaderData']
+    const { siteBranch, githubFolder } =
+        useLoaderData() as Route.ComponentProps['loaderData']
+    const isOnboardingChat = useShouldHideBrowser()
 
     const previousJsonString = useMemo(() => {
         return JSON.stringify(siteBranch.docsJson, null, 2)
     }, [siteBranch?.docsJson])
 
     useEffect(() => {
+        if (isOnboardingChat) return
         const persistedValues =
             typeof localStorage !== 'undefined'
                 ? localStorage.getItem(keyForDocsJson({ chatId }))
@@ -190,9 +199,10 @@ function ChatForm({ children }: { children: React.ReactNode }) {
             previousJsonString,
             chatId,
         })
-    }, [chatId, previousJsonString])
+    }, [isOnboardingChat, chatId, previousJsonString])
 
     useEffect(() => {
+        if (isOnboardingChat) return
         const unSub = formMethods.subscribe({
             formState: { values: true },
             callback: ({ values, defaultValues }) =>
@@ -205,22 +215,55 @@ function ChatForm({ children }: { children: React.ReactNode }) {
         })
 
         return unSub
-    }, [chatId, previousJsonString])
+    }, [isOnboardingChat, chatId, previousJsonString])
 
     return (
-        <form onSubmit={formMethods.handleSubmit(() => {})}>
-            <FormProvider {...formMethods}>
-                {children}
-            </FormProvider>
+        <form
+            className='flex flex-col grow'
+            onSubmit={formMethods.handleSubmit(() => {
+                if (isOnboardingChat) {
+                    const currentValues = formMethods.getValues()
+
+                    // Hide the form tools and show nice formatted values
+                    const updatedMessages = messages.map((msg) => {
+                        if (msg.role === 'assistant') {
+                            return {
+                                ...msg,
+                                parts: msg.parts.filter(
+                                    (part) => part.type !== 'tool-renderForm',
+                                ),
+                            }
+                        }
+                        return msg
+                    })
+
+                    flushSync(() => {
+                        setMessages(updatedMessages)
+                    })
+
+                    // Format values as key: value pairs instead of JSON
+                    const formattedMessage = Object.entries(currentValues)
+                        .filter(([, value]) => value !== '' && value != null)
+                        .map(([key, value]) => `${key}: ${value}`)
+                        .join('\n')
+
+                    setDraftText(formattedMessage)
+                    submit()
+                }
+            })}
+        >
+            <FormProvider {...formMethods}>{children}</FormProvider>
         </form>
     )
 }
 
-export default function Chat({ ref }) {
+export default function Chat({
+    ref,
+}: {
+    ref?: React.RefObject<HTMLDivElement>
+}) {
     const loaderData = useLoaderData() as Route.ComponentProps['loaderData']
     const { chat, siteId, branchId } = loaderData
-    const { chatId } = useParams()
-
 
     const initialChatState = useMemo<Partial<ChatState>>(
         () => ({
@@ -294,7 +337,9 @@ export default function Chat({ ref }) {
 
             let isPostMessageBusy = false
 
-            const onToolOutput = async (toolPart: ToolPartOutputAvailable<WebsiteUIMessage>) => {
+            const onToolOutput = async (
+                toolPart: ToolPartOutputAvailable<WebsiteUIMessage>,
+            ) => {
                 const args: Partial<EditToolParamSchema> = toolPart.input as any
 
                 // Handle strReplaceEditor tool output
@@ -338,7 +383,10 @@ export default function Chat({ ref }) {
                 // Handle selectText tool output
                 if (toolPart.type === 'tool-selectText') {
                     if (toolPart.output?.error) {
-                        console.error('selectText error:', toolPart.output.error)
+                        console.error(
+                            'selectText error:',
+                            toolPart.output.error,
+                        )
                         return
                     }
 
@@ -363,54 +411,60 @@ export default function Chat({ ref }) {
             // Use throttle instead of debounce to ensure the function executes at regular intervals
             // and doesn't delay beyond the throttle period, which could cause it to override
             // the output-available call that comes later
-            const onToolInputStreaming = throttle(300, async (toolPart: ToolPartInputStreaming<WebsiteUIMessage>) => {
-                if (toolPart.type === 'tool-strReplaceEditor') {
-                    const args: Partial<EditToolParamSchema> = toolPart.input as any
-                    if (args?.command === 'view') {
-                        return
-                    }
-                    if (!isStrReplaceParameterComplete(args)) {
-                        return
-                    }
-                    const currentSlug = generateSlugFromPath(
-                        args.path || '',
-                        githubFolder,
-                    )
+            const onToolInputStreaming = throttle(
+                300,
+                async (toolPart: ToolPartInputStreaming<WebsiteUIMessage>) => {
+                    if (toolPart.type === 'tool-strReplaceEditor') {
+                        const args: Partial<EditToolParamSchema> =
+                            toolPart.input as any
+                        if (args?.command === 'view') {
+                            return
+                        }
+                        if (!isStrReplaceParameterComplete(args)) {
+                            return
+                        }
+                        const currentSlug = generateSlugFromPath(
+                            args.path || '',
+                            githubFolder,
+                        )
 
-                    if (isPostMessageBusy) return
-                    let updatedPagesCopy = { ...filesInDraft }
-                    const localExecute = createEditExecute({
-                        filesInDraft: updatedPagesCopy,
-                        getPageContent,
-                    })
-                    await localExecute(args as any)
-                    isPostMessageBusy = true
-                    try {
-                        docsRpcClient
-                            .setDocsState({
-                                state: {
-                                    filesInDraft: updatedPagesCopy,
-                                    currentSlug,
-                                    isMarkdownStreaming: true,
-                                },
-                            })
-                            .catch((e) => {
-                                console.error(e)
-                            })
-                            .finally(() => {
-                                isPostMessageBusy = false
-                            })
-                    } catch (e) {}
-                }
-            })
+                        if (isPostMessageBusy) return
+                        let updatedPagesCopy = { ...filesInDraft }
+                        const localExecute = createEditExecute({
+                            filesInDraft: updatedPagesCopy,
+                            getPageContent,
+                        })
+                        await localExecute(args as any)
+                        isPostMessageBusy = true
+                        try {
+                            docsRpcClient
+                                .setDocsState({
+                                    state: {
+                                        filesInDraft: updatedPagesCopy,
+                                        currentSlug,
+                                        isMarkdownStreaming: true,
+                                    },
+                                })
+                                .catch((e) => {
+                                    console.error(e)
+                                })
+                                .finally(() => {
+                                    isPostMessageBusy = false
+                                })
+                        } catch (e) {}
+                    }
+                },
+            )
 
-            for await (const newMessages of uiStreamToUIMessages<WebsiteUIMessage>({
-                uiStream: generator,
-                messages: messages as WebsiteUIMessage[],
-                generateId,
-                onToolOutput,
-                onToolInputStreaming,
-            })) {
+            for await (const newMessages of uiStreamToUIMessages<WebsiteUIMessage>(
+                {
+                    uiStream: generator,
+                    messages: messages as WebsiteUIMessage[],
+                    generateId,
+                    onToolOutput,
+                    onToolInputStreaming,
+                },
+            )) {
                 if (abortController.signal.aborted) {
                     break
                 }
@@ -423,8 +477,6 @@ export default function Chat({ ref }) {
 
         await revalidator.revalidate()
     }
-
-
 
     return (
         <ChatProvider
@@ -512,8 +564,10 @@ function Messages({ ref }) {
 }
 
 function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
-    const { isGenerating: isChatGenerating } = useChatContext()
+    const { isGenerating: isChatGenerating, messages } = useChatContext()
+    const hideBrowser = useShouldHideBrowser()
 
+    const isLastMessage = messages[messages.length - 1]?.id === message.id
     if (message.role === 'user') {
         return (
             <ChatUserMessage message={message}>
@@ -534,8 +588,14 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
         )
     }
 
+    let minHeight = isLastMessage ? 'calc(-248px + 100dvh)' : '0px'
+
     return (
-        <ChatAssistantMessage className='' message={message}>
+        <ChatAssistantMessage
+            style={{ minHeight }}
+            className=''
+            message={message}
+        >
             {message.parts.map((part, index) => {
                 if (part.type === 'text') {
                     return (
@@ -577,10 +637,22 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                     return <FilesTreePreview key={index} {...part} />
                 }
                 if (part.type === 'tool-renderForm') {
-                    return <RenderFormPreview key={index} {...part} />
+                    return (
+                        <RenderFormPreview
+                            key={index}
+                            {...part}
+                            showSubmitButton={hideBrowser}
+                        />
+                    )
                 }
                 if (part.type === 'tool-updateFumabaseJsonc') {
-                    return <RenderFormPreview key={index} {...part} />
+                    return (
+                        <RenderFormPreview
+                            key={index}
+                            {...part}
+                            showSubmitButton={hideBrowser}
+                        />
+                    )
                 }
                 if (part.type === 'tool-deletePages') {
                     const filePaths = part.input?.filePaths || []
@@ -1103,7 +1175,9 @@ function SaveChangesButton({}) {
     if (!!siteData.site.githubInstallations?.length) return null
 
     // Only show if there are files in draft with content
-    const hasFilesWithContent = Object.values(filesInDraft).some(file => file?.content?.trim())
+    const hasFilesWithContent = Object.values(filesInDraft).some((file) =>
+        file?.content?.trim(),
+    )
     if (!hasFilesWithContent) return null
 
     const isButtonDisabled: boolean = (() => {
@@ -1166,7 +1240,9 @@ function SaveChangesButton({}) {
         } catch (error) {
             console.error('Failed to save changes:', error)
             const message =
-                error instanceof Error ? error.message : 'Failed to save changes'
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to save changes'
             setErrorMessage(message)
         } finally {
             setIsLoading(false)
@@ -1240,7 +1316,6 @@ function SaveChangesButton({}) {
         </div>
     )
 }
-
 
 interface DiffStatsProps {
     filesInDraft: Record<string, FileUpdate>

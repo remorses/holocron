@@ -6,17 +6,13 @@ import type { RenderFormParameters, UIField } from '../lib/render-form-tool'
 import { ColorPickerButton } from './color-picker-button'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from './ui/select'
+import { SelectNative } from './ui/select-native'
 import { Slider } from './ui/slider'
 import { Switch } from './ui/switch'
 import { Textarea } from './ui/textarea'
 import { UploadButton } from './upload-button'
+import { RadioGroup, RadioGroupItem } from './ui/radio-group'
+import { Label } from './ui/label'
 
 type RenderFieldProps = {
     field: UIField
@@ -85,37 +81,80 @@ function RenderField({ field }: RenderFieldProps) {
         case 'select':
             if (field.type === 'select') {
                 return (
+                    <SelectNative
+                        key={key}
+                        {...register(field.name)}
+                        defaultValue={field.placeholder ? '' : undefined}
+                    >
+                        {field.placeholder && (
+                            <option value='' disabled>
+                                {field.placeholder}
+                            </option>
+                        )}
+                        {field.options?.map((opt) => {
+                            return (
+                                <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </option>
+                            )
+                        })}
+                    </SelectNative>
+                )
+            }
+            return null
+        case 'radio':
+            if (field.type === 'radio') {
+                return (
                     <Controller
                         key={key}
                         control={control}
                         name={field.name}
                         render={({ field: ctl }) => {
                             return (
-                                <Select
-                                    {...ctl}
-                                    onValueChange={ctl.onChange}
+                                <RadioGroup
+                                    className='gap-6'
                                     value={ctl.value as string | undefined}
+                                    onValueChange={ctl.onChange}
                                 >
-                                    <SelectTrigger>
-                                        <SelectValue
-                                            placeholder={
-                                                field.placeholder || 'Select…'
-                                            }
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {field.options?.map((opt) => {
-                                            return (
-                                                <SelectItem
-                                                    key={opt.value}
+                                    {field.options?.map((opt) => {
+                                        const radioId = `${field.name}-${opt.value}`
+                                        return (
+                                            <div
+                                                key={opt.value}
+                                                className='flex items-start gap-2'
+                                            >
+                                                <RadioGroupItem
                                                     value={opt.value}
-                                                >
-                                                    {opt.label}
-                                                </SelectItem>
-                                            )
-                                        })}
-                                    </SelectContent>
-                                </Select>
+                                                    id={radioId}
+                                                    aria-describedby={
+                                                        opt.description
+                                                            ? `${radioId}-description`
+                                                            : undefined
+                                                    }
+                                                />
+                                                <div className='grow'>
+                                                    <div className='grid grow gap-2'>
+                                                        <Label
+                                                            htmlFor={radioId}
+                                                        >
+                                                            {opt.label}
+                                                        </Label>
+                                                        {opt.description && (
+                                                            <p
+                                                                id={`${radioId}-description`}
+                                                                className='text-muted-foreground text-xs'
+                                                            >
+                                                                {
+                                                                    opt.description
+                                                                }
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </RadioGroup>
                             )
                         }}
                     />
@@ -221,9 +260,11 @@ function RenderField({ field }: RenderFieldProps) {
 export function RenderFormPreview({
     input: args,
     output: result,
+    showSubmitButton = false,
 }: {
     input?: DeepPartial<RenderFormParameters>
     output?: any
+    showSubmitButton?: boolean
 }) {
     const { handleSubmit } = useFormContext()
 
@@ -334,18 +375,12 @@ export function RenderFormPreview({
                     ))
                 }
             })}
-            {/* <pre className='bg-muted p-2 rounded text-xs overflow-x-auto'>
-                {JSON.stringify(args, null, 2)}
-            </pre> */}
-            {/* {args.fields.some((f) => f.type !== 'button') && (
-                    <Button
-                        className='w-full'
-                        onClick={handleSubmit(onSubmit)}
-                        disabled={isChatGenerating}
-                    >
+            {showSubmitButton &&
+                args.fields.some((f) => f && f.type !== 'button') && (
+                    <Button type='submit' className='w-full'>
                         Submit
                     </Button>
-                )} */}
+                )}
         </div>
     )
 }

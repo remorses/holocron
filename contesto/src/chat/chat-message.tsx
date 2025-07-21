@@ -91,10 +91,12 @@ function isMessageAlmostEmpty(message: UIMessage) {
 export const ChatAssistantMessage = memo(function ChatMessage({
     message,
     children,
+    style,
     className,
 }: {
     message: UIMessage
     className?: string
+    style?: React.CSSProperties
     children: React.ReactNode
 }) {
     const isChatGenerating = useChatState((x) => x.isGenerating)
@@ -105,16 +107,19 @@ export const ChatAssistantMessage = memo(function ChatMessage({
             message.role === 'assistant',
     )
 
+    let content = children
     if (
         isLastAssistantMessage &&
         isChatGenerating &&
         isMessageAlmostEmpty(message)
     ) {
-        return <ChatLoadingSpinner />
+        content = <ChatLoadingSpinner />
     }
 
     return (
         <article
+            style={style}
+            data-message-id={message.id}
             className={cn(
                 'flex items-start select-text max-w-full w-full gap-4 min-w-0 leading-relaxed',
                 message.role === 'user' && 'justify-end',
@@ -127,7 +132,7 @@ export const ChatAssistantMessage = memo(function ChatMessage({
                     'space-y-4 w-full',
                 )}
             >
-                {children}
+                {content}
             </div>
         </article>
     )
@@ -185,7 +190,10 @@ const EditingUserMessage = memo(function EditingUserMessage({
     useClickOutside(editingBox, handleEditCancel)
 
     return (
-        <article className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end'>
+        <article
+            data-message-id={message.id}
+            className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end'
+        >
             <div className='max-w-full relative group/message grow bg-muted px-4 py-3 rounded-xl'>
                 <div className='prose  w-full max-w-full dark:prose-invert'>
                     <div ref={editingBox} className='space-y-2 w-full'>
@@ -242,7 +250,10 @@ export function ChatUserMessage({
     }
 
     return (
-        <article className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end'>
+        <article
+            data-message-id={message.id}
+            className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end scroll-mt-6'
+        >
             <div className='max-w-full relative group/message bg-muted px-4 py-2 rounded-xl'>
                 <div className='absolute hidden group-hover/message:block -top-2 -right-2'>
                     <Tooltip>

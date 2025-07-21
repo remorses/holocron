@@ -193,9 +193,6 @@ export function ChatLeftSidebar({
     const params = useParams()
     const { chatId } = params
     const { userSites } = orgData
-    const { scrollRef, contentRef } = useStickToBottom({
-        initial: 'instant',
-    })
 
     return (
         <Sidebar
@@ -217,11 +214,8 @@ export function ChatLeftSidebar({
                     </div>
                 </div>
 
-                <div
-                    ref={scrollRef}
-                    className='p-0 grow relative h-full overflow-y-auto row-span-23 flex flex-col '
-                >
-                    <Chat ref={contentRef} />
+                <div className='p-0 grow relative h-full overflow-y-auto row-span-23 flex flex-col '>
+                    <Chat />
                 </div>
             </div>
         </Sidebar>

@@ -98,19 +98,16 @@ export function Chat() {
         }),
         [],
     )
-    const { scrollRef, contentRef } = useStickToBottom({
-        initial: 'instant',
-    })
 
     return (
         <ChatProvider initialValue={initialChatState}>
             <div className='flex flex-col max-h-[700px] '>
                 <div
-                    ref={scrollRef}
+
                     className='px-3 py-4 w-full min-h-0 max-w-full max-h-full relative overflow-y-auto '
                 >
                     <div className='flex flex-col gap-4 relative h-full justify-center'>
-                        <Messages ref={contentRef} />
+                        <Messages />
                         <WelcomeMessage />
                         <Footer />
                     </div>

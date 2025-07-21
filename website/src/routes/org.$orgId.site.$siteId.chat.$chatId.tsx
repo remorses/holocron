@@ -1,5 +1,5 @@
 import { prisma } from 'db'
-import { useCallback, useState } from 'react'
+import { useCallback, useImperativeHandle, useState } from 'react'
 import {
     Popover,
     PopoverTrigger,
@@ -239,16 +239,11 @@ export default function Page({
 
 function ChatContent() {
     const hideBrowser = useShouldHideBrowser()
-    const { scrollRef, contentRef } = useStickToBottom({
-        initial: 'instant',
-    })
+
     return hideBrowser ? (
-        <div
-            ref={scrollRef}
-            className='max-h-full h-full flex flex-col overflow-y-auto w-full p-12'
-        >
+        <div className='max-h-full h-full flex flex-col overflow-y-auto w-full p-12'>
             <div className='flex flex-col  grow mx-auto w-3xl gap-4'>
-                <Chat ref={contentRef} />
+                <Chat />
             </div>
         </div>
     ) : (

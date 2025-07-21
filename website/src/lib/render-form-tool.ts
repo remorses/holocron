@@ -47,6 +47,9 @@ export function createRenderFormTool({
 
     // Create execute function
     async function execute(params: z.infer<typeof RenderFormParameters>) {
+        if (!jsonSchema) {
+            return 'Rendered form to the user, when the user will submit the form, the data will be sent as a message'
+        }
         const errors: string[] = []
         try {
             for (const field of params.fields) {
@@ -79,7 +82,7 @@ export function createRenderFormTool({
 
     return tool({
         description:
-            'Render a series of input elements so the user can provide structured data. Array-style names such as items[0].color are supported.',
+            'Render a series of input elements so the user can provide structured data. Array-style names such as items[0].color are supported. Use radio type for small number of options (less than 4) where you want to show option descriptions alongside the choices.',
         inputSchema: RenderFormParameters,
         execute,
     })
@@ -146,6 +149,7 @@ const FieldTypeEnum = z.enum([
     'textarea',
     'number',
     'select',
+    'radio',
     'slider',
     'switch',
     'color_picker',
@@ -177,7 +181,13 @@ export const UIFieldSchema = z.object({
     step: z.number().optional(),
     // Select field
     options: z
-        .array(z.object({ label: z.string(), value: z.string() }))
+        .array(
+            z.object({
+                label: z.string(),
+                value: z.string(),
+                description: z.string().optional(),
+            }),
+        )
         .optional(),
     // Button field
     href: z.string().optional(),

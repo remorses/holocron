@@ -72,9 +72,15 @@ const ChatProvider = (props: {
         const assistantMessageId = generateId()
         const userMessageId = generateId()
         const now = new Date()
-        const { draftText: value = '', messages } = store.getState()
+        const {
+            draftText: value = '',
+            messages,
+            isGenerating,
+        } = store.getState()
+        if (isGenerating) {
+            return
+        }
         if (!value.trim()) {
-            // For regenerate, use existing messages and just add new assistant message
             store.setState({
                 messages: [
                     ...messages,
@@ -93,18 +99,29 @@ const ChatProvider = (props: {
                 parts: [{ type: 'text', text: value }],
             }
 
-            store.setState({
-                messages: [
-                    ...messages,
-                    userMessage,
-                    {
-                        parts: [],
-                        role: 'assistant',
-                        id: assistantMessageId,
-                    },
-                ],
+            flushSync(() => {
+                store.setState({
+                    messages: [
+                        ...messages,
+                        userMessage,
+                        {
+                            parts: [],
+                            role: 'assistant',
+                            id: assistantMessageId,
+                        },
+                    ],
+                    draftText: '',
+                })
             })
-            store.setState({ draftText: '' })
+
+            const messageElement = document.querySelector(
+                `[data-message-id="${userMessageId}"]`,
+            )
+            if (messageElement) {
+                messageElement.scrollIntoView({
+                    behavior: 'smooth',
+                })
+            }
         }
 
         store.setState({

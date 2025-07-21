@@ -1,3 +1,11 @@
+- disable submit in contesto if currently generating, enter now submits even if generating.
+-
+-
+
+
+
+
+
 - [x] support for deleting pages using null as value for filesInDraft
 - [x] implement deletion of pages, test it
 - [x] support for adding new pages during preview, use clientLoader and add the page to the tree. do this based on new pages added to `filesInDraft` that are not in the current loader tree.
