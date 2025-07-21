@@ -1,0 +1,36 @@
+{
+    "$schema": "./node_modules/wrangler/config-schema.json",
+    "name": "eyecrest-fumabase-worker",
+    "main": "src/worker.ts",
+    "compatibility_date": "2025-07-20",
+    "compatibility_flags": ["nodejs_compat"],
+
+    "durable_objects": {
+        "bindings": [
+            { "name": "REPO_CACHE", "class_name": "RepoCache" },
+            { "name": "MCP_OBJECT", "class_name": "MyMCP" },
+        ],
+    },
+
+    "migrations": [
+        {
+            "tag": "v1",
+            "new_sqlite_classes": ["RepoCache"], // tells CF this DO uses the built‑in SQLite store
+        },
+        {
+            "tag": "v2",
+            "new_sqlite_classes": ["MyMCP"], // tells CF this DO uses the built‑in SQLite store
+        },
+    ],
+
+    "vars": {
+        "GITHUB_TOKEN": "", // optional – lifts rate limit to 5 000 req/h
+    },
+
+    "routes": [
+        {
+            "pattern": "eyecrest.org",
+            "custom_domain": true,
+        },
+    ],
+}
