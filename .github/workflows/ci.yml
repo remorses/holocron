@@ -42,8 +42,9 @@ jobs:
             - uses: dopplerhq/cli-action@v3
             - uses: superfly/flyctl-actions/setup-flyctl@master
             - run: pnpm install --frozen-lockfile=false
-            - uses: remorses/buildmedic@opencode
-              env:
-                  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-              with:
-                  run: 'pnpm deployment'
+            - run: 'pnpm deployment'
+            # - uses: remorses/buildmedic@opencode
+            #   env:
+            #       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+            #   with:
+            #       run: 'pnpm deployment'
