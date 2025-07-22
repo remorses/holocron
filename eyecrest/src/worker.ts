@@ -11,6 +11,7 @@ import { mcp, addMcpTools } from "spiceflow/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { importSPKI, jwtVerify } from "jose";
+import Slugger from "github-slugger";
 import { parseMarkdownIntoSections, isSupportedMarkdownFile, Section } from "./markdown-parser.js";
 import { computeGitBlobSHA, verifySHA } from "./sha-utils.js";
 
@@ -31,6 +32,7 @@ const FileSchema = z.object({
   filename: z.string().describe('Full file path without leading slash, including extension (md or mdx)'),
   content: z.string().describe('Raw file content'),
   sha: z.string().optional().describe('Optional SHA-1 hash of the file content using Git blob format. If provided, will be validated against computed SHA.'),
+  metadata: z.any().optional().describe('Optional user-provided metadata for the file (JSON object)'),
 });
 
 const DeleteFilesSchema = z.object({
@@ -58,6 +60,7 @@ const SearchSectionsResponseSchema = z.object({
     z.object({
       filename: z.string().describe('Source file path'),
       section: z.string().describe('Section heading'),
+      sectionSlug: z.string().describe('URL-friendly slug of the section heading'),
       snippet: z.string().describe('Highlighted excerpt'),
       score: z.number().describe('Relevance score'),
       startLine: z.number().describe('Line number where section starts'),
@@ -87,6 +90,7 @@ export class DatasetCache extends DurableObject {
         filename       TEXT PRIMARY KEY,
         content        TEXT,
         sha            TEXT,
+        metadata       TEXT,
         created_at     INTEGER,
         updated_at     INTEGER
       );
@@ -99,6 +103,7 @@ export class DatasetCache extends DurableObject {
         content       TEXT NOT NULL,
         level         INTEGER NOT NULL,
         order_index   INTEGER NOT NULL,
+        section_slug  TEXT NOT NULL,
         FOREIGN KEY (filename) REFERENCES files(filename) ON DELETE CASCADE
       );
 
@@ -171,22 +176,25 @@ export class DatasetCache extends DurableObject {
       this.sql.exec("DELETE FROM sections WHERE filename = ?", file.filename);
       this.sql.exec("DELETE FROM sections_fts WHERE filename = ?", file.filename);
 
-      // Upsert file with SHA
+      // Upsert file with SHA and metadata
+      const metadataJson = file.metadata ? JSON.stringify(file.metadata) : null;
       if (isUpdate) {
-        this.sql.exec("UPDATE files SET content = ?, sha = ?, updated_at = ? WHERE filename = ?",
-          file.content, computedSHA, now, file.filename);
+        this.sql.exec("UPDATE files SET content = ?, sha = ?, metadata = ?, updated_at = ? WHERE filename = ?",
+          file.content, computedSHA, metadataJson, now, file.filename);
       } else {
-        this.sql.exec("INSERT INTO files (filename, content, sha, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-          file.filename, file.content, computedSHA, now, now);
+        this.sql.exec("INSERT INTO files (filename, content, sha, metadata, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+          file.filename, file.content, computedSHA, metadataJson, now, now);
       }
 
       // Parse and store sections if it's a markdown file
       if (isSupportedMarkdownFile(file.filename)) {
         const parsed = parseMarkdownIntoSections(file.content);
+        const slugger = new Slugger();
 
         for (const section of parsed.sections) {
-          this.sql.exec("INSERT INTO sections (filename, heading, content, level, order_index) VALUES (?, ?, ?, ?, ?)",
-            file.filename, section.heading, section.content, section.level, section.orderIndex);
+          const sectionSlug = slugger.slug(section.heading);
+          this.sql.exec("INSERT INTO sections (filename, heading, content, level, order_index, section_slug) VALUES (?, ?, ?, ?, ?, ?)",
+            file.filename, section.heading, section.content, section.level, section.orderIndex, sectionSlug);
 
           this.sql.exec("INSERT INTO sections_fts (filename, heading, content) VALUES (?, ?, ?)",
             file.filename, section.heading, section.content);
@@ -228,7 +236,7 @@ export class DatasetCache extends DurableObject {
     // Verify ownership
     await this.verifyDatasetOwnership(datasetId, orgId);
 
-    const results = [...this.sql.exec("SELECT content, sha FROM files WHERE filename = ?", filePath)];
+    const results = [...this.sql.exec("SELECT content, sha, metadata FROM files WHERE filename = ?", filePath)];
     const row = results.length > 0 ? results[0] : null;
 
     if (!row) {
@@ -237,7 +245,7 @@ export class DatasetCache extends DurableObject {
 
     let content = row.content as string;
     const sha = row.sha as string;
-    const metadata = undefined; // Metadata column doesn't exist in production yet
+    const metadata = row.metadata ? JSON.parse(row.metadata as string) : undefined;
 
     // Apply line formatting if any formatting options are specified
     if (showLineNumbers || start !== undefined || end !== undefined) {
@@ -265,6 +273,7 @@ export class DatasetCache extends DurableObject {
     results: Array<{
       filename: string;
       section: string;
+      sectionSlug: string;
       snippet: string;
       score: number;
       startLine: number;
@@ -296,10 +305,13 @@ export class DatasetCache extends DurableObject {
       `SELECT
         sections.filename,
         sections.heading,
+        sections.section_slug,
         snippet(sections_fts, -1, '<mark>', '</mark>', '...', 64) as snippet,
-        bm25(sections_fts) as score
+        bm25(sections_fts) as score,
+        files.metadata
       FROM sections_fts
       JOIN sections ON sections.filename = sections_fts.filename AND sections.heading = sections_fts.heading
+      JOIN files ON sections.filename = files.filename
       WHERE sections_fts MATCH ?
       ORDER BY score
       LIMIT ? OFFSET ?`,
@@ -322,6 +334,7 @@ export class DatasetCache extends DurableObject {
         fileGroups[filename].push({
           filename,
           section: row.heading as string,
+          sectionSlug: row.section_slug as string,
           snippet: (row.snippet as string).replace(/<\/?mark>/g, ''), // Remove HTML marks for JSON response
           score: row.score as number,
           startLine: row.start_line as number,
@@ -364,9 +377,9 @@ export class DatasetCache extends DurableObject {
         const level = result.section.includes('#') ? result.section.match(/^#+/)?.[0].length || 2 : 2;
         const headingPrefix = '#'.repeat(Math.min(level + 1, 6)); // Offset by 1 to show hierarchy
         
-        // Build URL to read specific line
+        // Build URL to read specific line, including section slug as hash
         const baseUrl = `/v1/datasets/${datasetId}/files/${result.filename}`;
-        const lineUrl = result.startLine ? `${baseUrl}?start=${result.startLine}` : baseUrl;
+        const lineUrl = result.startLine ? `${baseUrl}?start=${result.startLine}#${result.sectionSlug}` : `${baseUrl}#${result.sectionSlug}`;
         
         return `${headingPrefix} ${result.section}\n\n[${result.filename}:${result.startLine || '1'}](${lineUrl})\n\n${result.snippet}\n`;
       })
@@ -507,7 +520,8 @@ const app = new Spiceflow()
     query: GetFileContentsQuerySchema,
     response: z.object({ 
       content: z.string().describe('Full file content or specified line range'),
-      sha: z.string().describe('SHA-1 hash of the original file content using Git blob format')
+      sha: z.string().describe('SHA-1 hash of the original file content using Git blob format'),
+      metadata: z.any().optional().describe('User-provided metadata for the file')
     }),
     async handler({ params, query, state }) {
       const { datasetId, '*': filePath } = params;
