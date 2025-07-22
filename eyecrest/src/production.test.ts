@@ -199,12 +199,31 @@ Upload markdown files and search through them.`;
     const data = await response.json() as any;
     expect(data.content).toMatchInlineSnapshot(`
       " 5  ## Features
-       6
+       6  
        7  - SHA validation
        8  - Section parsing
        9  - Full-text search
       10  "
     `);
+  });
+
+  test('should treat empty showLineNumbers as true', async () => {
+    const response = await fetch(
+      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/test.md?showLineNumbers=&start=1&end=3`,
+      {
+        headers: authHeaders
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`File retrieval failed with status ${response.status}: ${errorText}`);
+    }
+
+    const data = await response.json() as any;
+    expect(data.content).toContain('1  # Test File');
+    expect(data.content).toContain('2  ');
+    expect(data.content).toContain('3  This is a test file');
   });
 
   test('should upload multiple files including MDX', async () => {

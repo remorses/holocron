@@ -38,10 +38,10 @@ const DeleteFilesSchema = z.object({
 });
 
 const GetFileContentsQuerySchema = z.object({
-  showLineNumbers: z.enum(['true', 'false'])
+  showLineNumbers: z.string()
     .optional()
     .default('false')
-    .describe('Whether to prefix each line with its line number'),
+    .describe('Whether to prefix each line with its line number. Values: "true", "false", or empty string (treated as true)'),
   start: z.coerce.number().int().positive().optional().describe('Start line number (1-based)'),
   end: z.coerce.number().int().positive().optional().describe('End line number (inclusive)'),
 });
@@ -521,7 +521,7 @@ const app = new Spiceflow()
         datasetId,
         orgId,
         filePath,
-        showLineNumbers: showLineNumbers === 'true',
+        showLineNumbers: showLineNumbers === 'true' || showLineNumbers === '',
         start,
         end,
       });
