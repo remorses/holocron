@@ -7,7 +7,7 @@
 
     "assets": {
         "directory": "./public",
-        "binding": "ASSETS"
+        "binding": "ASSETS",
     },
 
     "durable_objects": {
@@ -21,23 +21,19 @@
     "migrations": [
         {
             "tag": "v1",
-            "new_sqlite_classes": ["RepoCache"], // tells CF this DO uses the built‑in SQLite store
+            "new_sqlite_classes": ["RepoCache"],
         },
         {
             "tag": "v2",
-            "new_sqlite_classes": ["MyMCP"], // tells CF this DO uses the built‑in SQLite store
+            "new_sqlite_classes": ["MyMCP"],
         },
         {
             "tag": "v3",
-            "new_sqlite_classes": ["DatasetCache"] // tells CF this DO uses the built‑in SQLite store
+            "new_sqlite_classes": ["DatasetCache"],
         },
     ],
 
-    "vars": {
-
-    },
-
-
+    "vars": {},
 
     "routes": [
         {
