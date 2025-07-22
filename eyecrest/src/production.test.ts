@@ -94,7 +94,7 @@ describe('Eyecrest Production API', () => {
     }
   });
 
-  test('should upload all test files', async () => {
+  test('should upload all test files including frontmatter and weights', async () => {
     // File 1: Basic test file
     const testContent = `# Test File
 
@@ -156,6 +156,26 @@ Content in second section.`;
     // File 5: SHA test file
     const shaTestContent = 'Test content for SHA check';
 
+    // File 6: File with frontmatter and custom weight
+    const frontmatterContent = `---
+title: Test Document
+author: Test Author
+date: 2025-01-01
+tags: [test, frontmatter]
+---
+
+# Document Title
+
+This document has frontmatter which should be parsed as a separate section with higher weight.
+
+## Section One
+
+Some content in section one.
+
+## Section Two
+
+More content in section two.`;
+
     // Prepare all files
     const files = [
       {
@@ -183,6 +203,11 @@ Content in second section.`;
       {
         filename: 'sha-test.md',
         content: shaTestContent
+      },
+      {
+        filename: 'frontmatter-test.md',
+        content: frontmatterContent,
+        weight: 1.5 // Custom file weight
       }
     ];
 
@@ -329,7 +354,7 @@ Content in second section.`;
       Run the following command:
       npm install eyecrest-client",
             "filename": "docs/install.md",
-            "score": -2.669456589528529,
+            "score": -3.138644641177744,
             "section": "Installation",
             "sectionSlug": "installation",
             "snippet": "## Installation
@@ -339,6 +364,7 @@ Content in second section.`;
       \`\`\`bash
       npm install eyecrest-client
       \`\`\`",
+            "startLine": 3,
           },
         ],
       }
@@ -371,19 +397,20 @@ Content in second section.`;
             "cleanedSnippet": "Configuration
       Configure your client with the API endpoint.",
             "filename": "docs/install.md",
-            "score": -0.9956804118952794,
+            "score": -1.3911668406847295,
             "section": "Configuration",
             "sectionSlug": "configuration",
             "snippet": "## Configuration
 
       Configure your client with the API endpoint.",
+            "startLine": 11,
           },
           {
             "cleanedSnippet": "Installation
       Run the following command:
       npm install eyecrest-client",
             "filename": "docs/install.md",
-            "score": -0.931881251714508,
+            "score": -1.3060476458435986,
             "section": "Installation",
             "sectionSlug": "installation",
             "snippet": "## Installation
@@ -393,6 +420,7 @@ Content in second section.`;
       \`\`\`bash
       npm install eyecrest-client
       \`\`\`",
+            "startLine": 3,
           },
         ],
       }
@@ -518,10 +546,46 @@ Content in second section.`;
     console.log(`⏱️  Search for 'section' took ${searchTime}ms and found ${searchData.count} results`);
     expect(searchData).toMatchInlineSnapshot(`
       {
-        "count": 3,
+        "count": 6,
         "page": 0,
         "perPage": 20,
         "results": [
+          {
+            "cleanedSnippet": "Section One
+      Some content in section one.",
+            "filename": "frontmatter-test.md",
+            "score": -1.514546329759106,
+            "section": "Section One",
+            "sectionSlug": "section-one",
+            "snippet": "## Section One
+
+      Some content in section one.",
+            "startLine": 13,
+          },
+          {
+            "cleanedSnippet": "Section Two
+      More content in section two.",
+            "filename": "frontmatter-test.md",
+            "score": -1.514546329759106,
+            "section": "Section Two",
+            "sectionSlug": "section-two",
+            "snippet": "## Section Two
+
+      More content in section two.",
+            "startLine": 17,
+          },
+          {
+            "cleanedSnippet": "Document Title
+      This document has frontmatter which should be parsed as a separate section with higher weight.",
+            "filename": "frontmatter-test.md",
+            "score": -0.8387003869096123,
+            "section": "Document Title",
+            "sectionSlug": "document-title",
+            "snippet": "# Document Title
+
+      This document has frontmatter which should be parsed as a separate section with higher weight.",
+            "startLine": 9,
+          },
           {
             "cleanedSnippet": "First Section
       Content in first section.",
@@ -537,12 +601,13 @@ Content in second section.`;
               ],
               "version": "1.0.0",
             },
-            "score": -1.403337815291314,
+            "score": -0.6884084499645802,
             "section": "First Section",
             "sectionSlug": "first-section",
             "snippet": "## First Section
 
       Content in first section.",
+            "startLine": 5,
           },
           {
             "cleanedSnippet": "Second Section
@@ -559,12 +624,13 @@ Content in second section.`;
               ],
               "version": "1.0.0",
             },
-            "score": -1.403337815291314,
+            "score": -0.6884084499645802,
             "section": "Second Section",
             "sectionSlug": "second-section",
             "snippet": "## Second Section
 
       Content in second section.",
+            "startLine": 9,
           },
           {
             "cleanedSnippet": "Features
@@ -572,7 +638,7 @@ Content in second section.`;
       - Section parsing
       - Full-text search",
             "filename": "test.md",
-            "score": -1.0309720050966873,
+            "score": -0.5108715339210831,
             "section": "Features",
             "sectionSlug": "features",
             "snippet": "## Features
@@ -580,6 +646,7 @@ Content in second section.`;
       - SHA validation
       - Section parsing
       - Full-text search",
+            "startLine": 5,
           },
         ],
       }
@@ -627,6 +694,31 @@ Content in second section.`;
     `);
   });
 
+
+  test('should prioritize frontmatter in search results', async () => {
+    // Search for a term that appears in frontmatter
+    const searchStart = Date.now();
+    const response = await fetch(
+      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=author`,
+      {
+        headers: authHeaders
+      }
+    );
+    const searchTime = Date.now() - searchStart;
+
+    expect(response.ok).toBe(true);
+    const data = await response.json() as any;
+    console.log(`⏱️  Search for 'author' took ${searchTime}ms and found ${data.count} results`);
+    
+    // The frontmatter section should appear first due to higher weight
+    expect(data.results.length).toBeGreaterThan(0);
+    const firstResult = data.results[0];
+    expect(firstResult.section).toBe(''); // Frontmatter has empty heading
+    expect(firstResult.filename).toBe('frontmatter-test.md');
+    
+    // Verify the content includes our frontmatter
+    expect(firstResult.snippet).toContain('author: Test Author');
+  });
 
   test('should delete specific files', async () => {
     // Delete the sha-test.md file

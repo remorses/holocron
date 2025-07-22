@@ -38,6 +38,7 @@ const FileSchema = z.object({
   content: z.string().describe('Raw file content'),
   sha: z.string().optional().describe('Optional SHA-1 hash of the file content using Git blob format. If provided, will be validated against computed SHA.'),
   metadata: z.any().optional().describe('Optional user-provided metadata for the file (JSON object)'),
+  weight: z.number().optional().default(1.0).describe('Optional weight for ranking in search results (default: 1.0)'),
 });
 
 const DeleteFilesSchema = z.object({
@@ -98,6 +99,7 @@ export class DatasetCache extends DurableObject {
         content        TEXT,
         sha            TEXT,
         metadata       TEXT,
+        weight         REAL DEFAULT 1.0,
         created_at     INTEGER,
         updated_at     INTEGER
       );
@@ -111,6 +113,9 @@ export class DatasetCache extends DurableObject {
         level         INTEGER NOT NULL,
         order_index   INTEGER NOT NULL,
         section_slug  TEXT NOT NULL,
+        start_line    INTEGER NOT NULL,
+        weight        REAL DEFAULT 1.0,
+        is_frontmatter BOOLEAN DEFAULT 0,
         FOREIGN KEY (filename) REFERENCES files(filename) ON DELETE CASCADE
       );
 
@@ -141,7 +146,7 @@ export class DatasetCache extends DurableObject {
 
   /* ---------- API Methods ------------- */
 
-  async upsertFiles({ datasetId, orgId, files }: { datasetId: string; orgId: string; files: { filename: string; content: string; sha?: string; metadata?: Record<string, any> }[] }): Promise<void> {
+  async upsertFiles({ datasetId, orgId, files }: { datasetId: string; orgId: string; files: { filename: string; content: string; sha?: string; metadata?: Record<string, any>; weight?: number }[] }): Promise<void> {
     this.datasetId = datasetId;
     const startTime = Date.now();
 
@@ -211,14 +216,15 @@ export class DatasetCache extends DurableObject {
       this.sql.exec("DELETE FROM sections WHERE filename = ?", file.filename);
       this.sql.exec("DELETE FROM sections_fts WHERE filename = ?", file.filename);
 
-      // Upsert file with SHA and metadata
+      // Upsert file with SHA, metadata, and weight
       const metadataJson = file.metadata ? JSON.stringify(file.metadata) : null;
+      const fileWeight = file.weight ?? 1.0;
       if (isUpdate) {
-        this.sql.exec("UPDATE files SET content = ?, sha = ?, metadata = ?, updated_at = ? WHERE filename = ?",
-          file.content, computedSHA, metadataJson, now, file.filename);
+        this.sql.exec("UPDATE files SET content = ?, sha = ?, metadata = ?, weight = ?, updated_at = ? WHERE filename = ?",
+          file.content, computedSHA, metadataJson, fileWeight, now, file.filename);
       } else {
-        this.sql.exec("INSERT INTO files (filename, content, sha, metadata, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
-          file.filename, file.content, computedSHA, metadataJson, now, now);
+        this.sql.exec("INSERT INTO files (filename, content, sha, metadata, weight, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          file.filename, file.content, computedSHA, metadataJson, fileWeight, now, now);
       }
 
       // Parse and store sections if it's a markdown file
@@ -234,18 +240,22 @@ export class DatasetCache extends DurableObject {
           const ftsValues: any[] = [];
           
           for (const section of parsed.sections) {
-            const sectionSlug = slugger.slug(section.heading);
+            // Handle empty headings (frontmatter) specially
+            const sectionSlug = section.heading ? slugger.slug(section.heading) : `frontmatter-${section.orderIndex}`;
             // Combine heading and content for FTS, preserving markdown syntax
-            const headingMarkdown = '#'.repeat(section.level) + ' ' + section.heading;
+            const headingMarkdown = section.isFrontmatter ? '---' : '#'.repeat(section.level) + ' ' + section.heading;
             const fullContent = headingMarkdown + '\n\n' + section.content;
-            sectionValues.push(file.filename, section.heading, section.content, section.level, section.orderIndex, sectionSlug);
+            // Use section weight if defined, otherwise inherit file weight
+            const sectionWeight = section.weight ?? fileWeight;
+            const isFrontmatter = section.isFrontmatter ? 1 : 0;
+            sectionValues.push(file.filename, section.heading, section.content, section.level, section.orderIndex, sectionSlug, section.startLine, sectionWeight, isFrontmatter);
             ftsValues.push(file.filename, sectionSlug, fullContent);
           }
 
           // Batch insert into sections table
-          const sectionPlaceholders = parsed.sections.map(() => '(?, ?, ?, ?, ?, ?)').join(', ');
+          const sectionPlaceholders = parsed.sections.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
           this.sql.exec(
-            `INSERT INTO sections (filename, heading, content, level, order_index, section_slug) VALUES ${sectionPlaceholders}`,
+            `INSERT INTO sections (filename, heading, content, level, order_index, section_slug, start_line, weight, is_frontmatter) VALUES ${sectionPlaceholders}`,
             ...sectionValues
           );
 
@@ -369,14 +379,21 @@ export class DatasetCache extends DurableObject {
 
     // Get paginated results with section details
     // Join using section_slug for simpler and more performant matching
+    // Apply weights to BM25 score for better ranking
     const rows = [...this.sql.exec(
       `SELECT
         sections.filename,
         sections.heading,
         sections.section_slug,
+        sections.start_line,
         snippet(sections_fts, 2, '', '', '', ?) as snippet,
-        bm25(sections_fts) as score,
-        files.metadata
+        bm25(sections_fts) as base_score,
+        sections.weight as section_weight,
+        files.weight as file_weight,
+        sections.is_frontmatter,
+        files.metadata,
+        -- Combined score: BM25 score * section weight * file weight
+        (bm25(sections_fts) * sections.weight * files.weight) as score
       FROM sections_fts
       JOIN sections ON sections.filename = sections_fts.filename 
         AND sections.section_slug = sections_fts.section_slug

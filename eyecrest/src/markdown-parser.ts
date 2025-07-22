@@ -6,6 +6,8 @@ export interface Section {
   level: number;
   orderIndex: number;
   startLine: number;
+  weight?: number; // Optional weight for ranking
+  isFrontmatter?: boolean; // Whether this section is frontmatter
 }
 
 export interface ParsedMarkdown {
@@ -18,19 +20,45 @@ export interface ParsedMarkdown {
  * Each section includes a heading and the content that follows it until the next heading
  */
 export function parseMarkdownIntoSections(content: string): ParsedMarkdown {
+  const sections: Section[] = [];
+  let orderIndex = 0;
+  
+  // Check for frontmatter at the beginning of the file
+  const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n/m);
+  let contentWithoutFrontmatter = content;
+  let lineOffset = 0;
+  
+  if (frontmatterMatch) {
+    const frontmatterContent = frontmatterMatch[1];
+    const frontmatterLines = frontmatterMatch[0].split('\n').length;
+    lineOffset = frontmatterLines;
+    
+    // Add frontmatter as a special section with higher weight
+    sections.push({
+      heading: '',
+      content: frontmatterContent,
+      level: 0, // Special level for frontmatter
+      orderIndex: orderIndex++,
+      startLine: 1,
+      weight: 2.0, // Higher weight for frontmatter
+      isFrontmatter: true
+    });
+    
+    // Remove frontmatter from content for further processing
+    contentWithoutFrontmatter = content.substring(frontmatterMatch[0].length);
+  }
+  
   // Parse markdown to tokens
-  const tokens = marked.lexer(content);
+  const tokens = marked.lexer(contentWithoutFrontmatter);
   
   // Track line numbers
   const lines = content.split('\n');
-  let currentLine = 1;
+  let currentLine = lineOffset + 1;
   
-  const sections: Section[] = [];
   let currentHeading = '';
   let currentLevel = 1;
   let currentContent: string[] = [];
-  let orderIndex = 0;
-  let currentStartLine = 1;
+  let currentStartLine = lineOffset + 1;
 
   // Helper function to save current section
   const saveCurrentSection = () => {

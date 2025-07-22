@@ -1,5 +1,19 @@
 # Changelog
 
+## 2025-07-22 15:30
+
+- **Frontmatter Support and Weight-based Ranking:**
+  - Added frontmatter parsing support for markdown files
+  - Frontmatter is now recognized as its own section with empty heading
+  - Added weight support for both files and individual sections
+  - Files can have a weight property (default 1.0) to influence search ranking
+  - Frontmatter sections have higher default weight (2.0) for better ranking
+  - Search results now use combined scoring: BM25 score × section weight × file weight
+  - Updated database schema with weight columns for files and sections
+  - Added is_frontmatter column to sections table for identification
+  - Fixed slug generation for empty headings using `frontmatter-{orderIndex}` pattern
+  - All tests passing with updated snapshots
+
 ## 2025-07-22 15:10
 
 - **Added dataset ID validation:**

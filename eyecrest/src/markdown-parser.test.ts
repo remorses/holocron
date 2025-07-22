@@ -2,6 +2,55 @@ import { describe, test, expect } from 'vitest';
 import { parseMarkdownIntoSections, isSupportedMarkdownFile } from './markdown-parser.js';
 
 describe('parseMarkdownIntoSections', () => {
+  test('handles frontmatter', () => {
+    const content = `---
+title: My Document
+author: John Doe
+date: 2024-01-01
+tags: [test, documentation]
+---
+
+# Introduction
+
+This is the intro section.
+
+## Getting Started
+
+Here's how to get started.`;
+
+    const result = parseMarkdownIntoSections(content);
+    
+    expect(result.sections).toMatchInlineSnapshot(`
+      [
+        {
+          "content": "title: My Document
+      author: John Doe
+      date: 2024-01-01
+      tags: [test, documentation]",
+          "heading": "",
+          "isFrontmatter": true,
+          "level": 0,
+          "orderIndex": 0,
+          "startLine": 1,
+          "weight": 2,
+        },
+        {
+          "content": "This is the intro section.",
+          "heading": "Introduction",
+          "level": 1,
+          "orderIndex": 1,
+          "startLine": 9,
+        },
+        {
+          "content": "Here's how to get started.",
+          "heading": "Getting Started",
+          "level": 2,
+          "orderIndex": 2,
+          "startLine": 13,
+        },
+      ]
+    `);
+  });
   test('parses simple markdown with headings', () => {
     const content = `# Introduction
 
@@ -317,19 +366,21 @@ MDX allows mixing markdown and JSX seamlessly.`;
     expect(result.sections).toMatchInlineSnapshot(`
       [
         {
-          "content": "---",
-          "heading": "Introduction",
-          "level": 1,
+          "content": "title: Advanced MDX Example",
+          "heading": "",
+          "isFrontmatter": true,
+          "level": 0,
           "orderIndex": 0,
           "startLine": 1,
+          "weight": 2,
         },
         {
           "content": "import { Button, Card } from '@/components/ui'
       import CustomChart from './CustomChart'",
-          "heading": "title: Advanced MDX Example",
-          "level": 2,
+          "heading": "Introduction",
+          "level": 1,
           "orderIndex": 1,
-          "startLine": 2,
+          "startLine": 5,
         },
         {
           "content": "This MDX file demonstrates how sections are split with JSX content.
@@ -356,7 +407,7 @@ MDX allows mixing markdown and JSX seamlessly.`;
           "heading": "MDX with JSX Components",
           "level": 1,
           "orderIndex": 2,
-          "startLine": 8,
+          "startLine": 9,
         },
         {
           "content": "Here's a React component within MDX:
@@ -376,14 +427,14 @@ MDX allows mixing markdown and JSX seamlessly.`;
           "heading": "Code Examples",
           "level": 2,
           "orderIndex": 3,
-          "startLine": 25,
+          "startLine": 26,
         },
         {
           "content": "You can also use inline JSX: <Button size="small">Inline</Button> within text.",
           "heading": "Inline JSX",
           "level": 3,
           "orderIndex": 4,
-          "startLine": 42,
+          "startLine": 43,
         },
         {
           "content": "Regular markdown content follows:
@@ -407,14 +458,14 @@ MDX allows mixing markdown and JSX seamlessly.`;
           "heading": "Mixed Content",
           "level": 2,
           "orderIndex": 5,
-          "startLine": 46,
+          "startLine": 47,
         },
         {
           "content": "MDX allows mixing markdown and JSX seamlessly.",
           "heading": "Conclusion",
           "level": 2,
           "orderIndex": 6,
-          "startLine": 67,
+          "startLine": 68,
         },
       ]
     `);
@@ -432,13 +483,15 @@ MDX allows mixing markdown and JSX seamlessly.`;
     expect(inlineJsxSection?.content).toContain('<Button size="small">Inline</Button>');
     expect(mixedContentSection?.content).toContain('<Card>');
 
-    // Verify the parser handled frontmatter and imports (they become sections due to markdown structure)
-    const frontmatterSection = result.sections.find(s => s.content === "---");
-    expect(frontmatterSection).toBeDefined(); // Frontmatter becomes a section
+    // Verify the parser handled frontmatter correctly
+    const frontmatterSection = result.sections.find(s => s.isFrontmatter === true);
+    expect(frontmatterSection).toBeDefined();
+    expect(frontmatterSection?.heading).toBe('');
+    expect(frontmatterSection?.weight).toBe(2);
 
-    // Imports become part of a section due to how marked parses the structure
-    const hasImports = result.sections.some(s => s.content.includes("import { Button, Card }"));
-    expect(hasImports).toBe(true);
+    // Imports become part of the Introduction section
+    const introSection = result.sections.find(s => s.heading === "Introduction");
+    expect(introSection?.content).toContain("import { Button, Card }");
   });
 });
 

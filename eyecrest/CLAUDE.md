@@ -1,5 +1,11 @@
 - this is a cloudflare worker and durable objects that exposes an api to upsert and search on markdown files. it also automatically chunks them into sections. search is powered by FT5 and sqlite in durable objects sqlite storage
 
+- to run tests use `pnpm test`. all new tests should be made of match(result).toMatchInlineSnapshot(). prefer inline snapshots over custom expects. instead add comments with what the snapshot should contain if it is important or add sparingly some expect() if it is really important to check something specific.
+
+- never update inline snapshots yourself. run `pnpm test -u` instead
+
+- if a snapshot is too long use `toMatchSnapshot()` instead of `toMatchInlineSnapshot()`. use `toMatchFileSnapshot()` if very large and if it makes sense to keep the extension to have them syntax highlighted in the editor.
+
 - never write sqlite migrations. let's instead just create always new datasets in the tests
 
 - tests that upsert files should delete them at the end to not accumulate garbage
