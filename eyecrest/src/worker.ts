@@ -79,6 +79,13 @@ const SearchSectionsResponseSchema = z.object({
   perPage: z.number().int().describe('Results per page'),
 });
 
+// Export types for SDK use
+export type File = z.infer<typeof FileSchema>;
+export type DeleteFilesRequest = z.infer<typeof DeleteFilesSchema>;
+export type GetFileContentsQuery = z.infer<typeof GetFileContentsQuerySchema>;
+export type SearchSectionsQuery = z.infer<typeof SearchSectionsQuerySchema>;
+export type SearchSectionsResponse = z.infer<typeof SearchSectionsResponseSchema>;
+
 /* ======================================================================
    Durable Object: per‑dataset file storage
    ==================================================================== */

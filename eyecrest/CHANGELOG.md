@@ -1,5 +1,26 @@
 # Changelog
 
+## 2025-07-22 16:20
+
+- **Updated SDK Client:**
+  - Removed `searchText` method and replaced with `returnAsText` parameter in `search` method
+  - Added TypeScript overloads for proper return type inference based on `returnAsText` value
+  - Updated tests to use real worker server instead of mocking fetch
+  - Replaced all `toBe` expects with inline snapshots for better test maintainability
+  - When `returnAsText` is true, returns formatted markdown text; otherwise returns JSON response
+
+## 2025-07-22 16:05
+
+- **Added TypeScript SDK Client:**
+  - Created `EyecrestClient` class in `src/sdk.ts` for easy API integration
+  - Constructor accepts object with `token` (required) and `baseUrl` (optional)
+  - Implements all API methods: `upsertFiles`, `deleteFiles`, `getFile`, `search`
+  - Throws errors on non-OK responses with detailed error messages
+  - Exports inferred types (not schemas) from worker for type-safe usage
+  - Added package.json exports for easy import: `import { EyecrestClient } from 'eyecrest/sdk'`
+  - Full test coverage for SDK functionality
+  - Documentation in `docs/sdk.md`
+
 ## 2025-07-22 15:53
 
 - **Improved Search Performance by Removing Count Query:**

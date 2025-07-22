@@ -1,3 +1,6 @@
+- object args are always preferred over positional args. for classes always
+
+
 - this is a cloudflare worker and durable objects that exposes an api to upsert and search on markdown files. it also automatically chunks them into sections. search is powered by FT5 and sqlite in durable objects sqlite storage
 
 - to run tests use `pnpm test`. all new tests should be made of match(result).toMatchInlineSnapshot(). prefer inline snapshots over custom expects. instead add comments with what the snapshot should contain if it is important or add sparingly some expect() if it is really important to check something specific.
@@ -23,3 +26,5 @@
 - always update CHANGELOG.md with the changes you made after you finish. on corrections, update the entry just made instead of adding new one.
 
 - after your changes deploy and run the tests with update snapshots enabled. then read again the test files diff and make sure the snapshots are what you expect
+
+- if you want to create documentation markdown files put them in the `docs/` folder. do not use upper case names.

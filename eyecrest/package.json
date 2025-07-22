@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "description": "",
   "type": "module",
+  "exports": {
+    ".": "./src/worker.js",
+    "./sdk": "./src/sdk.js"
+  },
   "scripts": {
     "deployment": "tsc && pnpm wrangler deploy",
     "test": "vitest"
