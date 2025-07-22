@@ -19,6 +19,66 @@ const jsonHeaders = {
   ...authHeaders
 };
 
+describe('Eyecrest Performance Tests', () => {
+  test('upsert performance with multiple files', async () => {
+    const perfDatasetId = `perf-test-${Date.now()}`;
+    
+    // Create 10 test files
+    const testFiles = Array.from({ length: 10 }, (_, i) => ({
+      filename: `perf-test-${i}.md`,
+      content: `# Performance Test File ${i}
+
+## Section 1
+This is a test file to measure performance. ${Array(100).fill('Lorem ipsum dolor sit amet. ').join('')}
+
+## Section 2
+More content here. ${Array(100).fill('consectetur adipiscing elit. ').join('')}
+
+## Section 3
+Even more content. ${Array(100).fill('sed do eiusmod tempor. ').join('')}
+
+## Section 4
+Additional sections. ${Array(100).fill('incididunt ut labore. ').join('')}
+
+## Section 5
+Final section. ${Array(100).fill('et dolore magna aliqua. ').join('')}`
+    }));
+
+    console.log(`🚀 Uploading ${testFiles.length} files to measure performance...`);
+    
+    const uploadStart = Date.now();
+    const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${perfDatasetId}/files`, {
+      method: 'PUT',
+      headers: jsonHeaders,
+      body: JSON.stringify({ files: testFiles })
+    });
+
+    expect(response.ok).toBe(true);
+    const uploadTime = Date.now() - uploadStart;
+    console.log(`✅ Upload completed in ${uploadTime}ms (${Math.round(uploadTime / testFiles.length)}ms per file)`);
+
+    // Re-upload same files to test SHA skipping
+    console.log(`🔄 Re-uploading same files to test SHA skipping...`);
+    const reuploadStart = Date.now();
+    const reuploadResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${perfDatasetId}/files`, {
+      method: 'PUT',
+      headers: jsonHeaders,
+      body: JSON.stringify({ files: testFiles })
+    });
+
+    expect(reuploadResponse.ok).toBe(true);
+    const reuploadTime = Date.now() - reuploadStart;
+    console.log(`✅ Re-upload completed in ${reuploadTime}ms (should be faster due to SHA skipping)`);
+
+    // Clean up
+    await fetch(`${PRODUCTION_URL}/v1/datasets/${perfDatasetId}/files`, {
+      method: 'DELETE',
+      headers: jsonHeaders,
+      body: JSON.stringify({ filenames: testFiles.map(f => f.filename) })
+    });
+  });
+});
+
 describe('Eyecrest Search Tokenization Research', () => {
   // Use git commit SHA for consistent dataset ID
   const TEST_DATASET_ID = `search-research-${process.env.GITHUB_SHA || '2e26fe2'}`;
@@ -190,28 +250,6 @@ Each of these phrases represents a specific action in our API.`
     const data = await response.json();
     expect(data).toMatchInlineSnapshot(`
       {
-        "__superjsonMeta": {
-          "values": {
-            "results.0.metadata": [
-              "undefined",
-            ],
-            "results.0.startLine": [
-              "undefined",
-            ],
-            "results.1.metadata": [
-              "undefined",
-            ],
-            "results.1.startLine": [
-              "undefined",
-            ],
-            "results.2.metadata": [
-              "undefined",
-            ],
-            "results.2.startLine": [
-              "undefined",
-            ],
-          },
-        },
         "count": 3,
         "page": 0,
         "perPage": 20,
@@ -224,7 +262,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case: \`user_data\`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
-            "metadata": null,
             "score": -1.2769059546177988,
             "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
@@ -236,7 +273,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case: \`user_data\`
 
       Understanding when to use each pattern is important for maintaining consistent code.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "In real-world code, you might encounter different variations:
@@ -246,7 +282,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case variant: \`user_get_data\`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
-            "metadata": null,
             "score": -1.2353847252625032,
             "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
@@ -258,20 +293,17 @@ Each of these phrases represents a specific action in our API.`
       - Snake case variant: \`user_get_data\`
 
       Each style has its use cases depending on the context and language conventions.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
             "filename": "camelCase-test.md",
-            "metadata": null,
             "score": -1.171874847916563,
             "section": "CamelCase Patterns",
             "sectionSlug": "camelcase-patterns",
             "snippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
 
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like \`camelCase\`, \`camelCasePattern\`, and \`thisIsCamelCase\` follow this convention.",
-            "startLine": null,
           },
         ],
       }
@@ -358,40 +390,6 @@ Each of these phrases represents a specific action in our API.`
     const data = await response.json();
     expect(data).toMatchInlineSnapshot(`
       {
-        "__superjsonMeta": {
-          "values": {
-            "results.0.metadata": [
-              "undefined",
-            ],
-            "results.0.startLine": [
-              "undefined",
-            ],
-            "results.1.metadata": [
-              "undefined",
-            ],
-            "results.1.startLine": [
-              "undefined",
-            ],
-            "results.2.metadata": [
-              "undefined",
-            ],
-            "results.2.startLine": [
-              "undefined",
-            ],
-            "results.3.metadata": [
-              "undefined",
-            ],
-            "results.3.startLine": [
-              "undefined",
-            ],
-            "results.4.metadata": [
-              "undefined",
-            ],
-            "results.4.startLine": [
-              "undefined",
-            ],
-          },
-        },
         "count": 5,
         "page": 0,
         "perPage": 20,
@@ -404,7 +402,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case: \`user_data\`
       Choose the notation that best fits your language and framework conventions.",
             "filename": "dot.notation.test.md",
-            "metadata": null,
             "score": -1.323551828046987,
             "section": "Mixed Notations",
             "sectionSlug": "mixed-notations",
@@ -416,20 +413,17 @@ Each of these phrases represents a specific action in our API.`
       - Snake case: \`user_data\`
 
       Choose the notation that best fits your language and framework conventions.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "In JavaScript and many other languages, dot notation is used for property access. Common patterns include  user.data ,  user.info ,  config.settings , and  profile.update .
       You can chain property access for nested objects:  object.property  or even deeper nesting like  nested.object.property .",
             "filename": "dot.notation.test.md",
-            "metadata": null,
             "score": -0.7219841425932825,
             "section": "Dot Notation Patterns",
             "sectionSlug": "dot-notation-patterns",
             "snippet": "In JavaScript and many other languages, dot notation is used for property access. Common patterns include \`user.data\`, \`user.info\`, \`config.settings\`, and \`profile.update\`.
 
       You can chain property access for nested objects: \`object.property\` or even deeper nesting like \`nested.object.property\`.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "In projects, you often see multiple naming conventions side by side:
@@ -439,7 +433,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case: \`user_data\`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
-            "metadata": null,
             "score": -1.2985616886363094,
             "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
@@ -451,20 +444,17 @@ Each of these phrases represents a specific action in our API.`
       - Snake case: \`user_data\`
 
       Understanding when to use each pattern is important for maintaining consistent code.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "Kebab-case is commonly used in URLs, CSS classes, and CLI commands. Examples include  user-data ,  user-info ,  set-user-name , and  update-user-profile .
       This naming convention uses hyphens to separate words:  kebab-case ,  kebab-case-pattern , and  this-is-kebab-case .",
             "filename": "kebab-case-test.md",
-            "metadata": null,
             "score": -0.7219841425932825,
             "section": "Kebab Case Patterns",
             "sectionSlug": "kebab-case-patterns",
             "snippet": "Kebab-case is commonly used in URLs, CSS classes, and CLI commands. Examples include \`user-data\`, \`user-info\`, \`set-user-name\`, and \`update-user-profile\`.
 
       This naming convention uses hyphens to separate words: \`kebab-case\`, \`kebab-case-pattern\`, and \`this-is-kebab-case\`.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "Here are some common multi-word technical phrases:
@@ -473,7 +463,6 @@ Each of these phrases represents a specific action in our API.`
       - For deletions: "delete user account"
       Each of these phrases represents a specific action in our API.",
             "filename": "exact-phrases.md",
-            "metadata": null,
             "score": -0.7973135314512333,
             "section": "Multi-word Phrases",
             "sectionSlug": "multi-word-phrases",
@@ -484,7 +473,6 @@ Each of these phrases represents a specific action in our API.`
       - For deletions: "delete user account"
 
       Each of these phrases represents a specific action in our API.",
-            "startLine": null,
           },
         ],
       }
@@ -531,16 +519,6 @@ Each of these phrases represents a specific action in our API.`
     const data = await response.json();
     expect(data).toMatchInlineSnapshot(`
       {
-        "__superjsonMeta": {
-          "values": {
-            "results.0.metadata": [
-              "undefined",
-            ],
-            "results.0.startLine": [
-              "undefined",
-            ],
-          },
-        },
         "count": 1,
         "page": 0,
         "perPage": 20,
@@ -548,12 +526,10 @@ Each of these phrases represents a specific action in our API.`
           {
             "cleanedSnippet": ""User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
             "filename": "exact-phrases.md",
-            "metadata": null,
             "score": -2.467474297326108,
             "section": "Common Technical Phrases",
             "sectionSlug": "common-technical-phrases",
             "snippet": ""User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
-            "startLine": null,
           },
         ],
       }
@@ -621,22 +597,6 @@ Each of these phrases represents a specific action in our API.`
     const data = await response.json();
     expect(data).toMatchInlineSnapshot(`
       {
-        "__superjsonMeta": {
-          "values": {
-            "results.0.metadata": [
-              "undefined",
-            ],
-            "results.0.startLine": [
-              "undefined",
-            ],
-            "results.1.metadata": [
-              "undefined",
-            ],
-            "results.1.startLine": [
-              "undefined",
-            ],
-          },
-        },
         "count": 2,
         "page": 0,
         "perPage": 20,
@@ -644,22 +604,18 @@ Each of these phrases represents a specific action in our API.`
           {
             "cleanedSnippet": "Contact information might include email addresses such as  user@example.com  or  admin@test.org .",
             "filename": "special_chars_test.md",
-            "metadata": null,
             "score": -0.24426339055549692,
             "section": "Email Addresses",
             "sectionSlug": "email-addresses",
             "snippet": "Contact information might include email addresses such as \`user@example.com\` or \`admin@test.org\`.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": ""User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
             "filename": "exact-phrases.md",
-            "metadata": null,
             "score": -0.21223273710722873,
             "section": "Common Technical Phrases",
             "sectionSlug": "common-technical-phrases",
             "snippet": ""User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
-            "startLine": null,
           },
         ],
       }
@@ -765,40 +721,6 @@ Each of these phrases represents a specific action in our API.`
     const data = await response.json();
     expect(data).toMatchInlineSnapshot(`
       {
-        "__superjsonMeta": {
-          "values": {
-            "results.0.metadata": [
-              "undefined",
-            ],
-            "results.0.startLine": [
-              "undefined",
-            ],
-            "results.1.metadata": [
-              "undefined",
-            ],
-            "results.1.startLine": [
-              "undefined",
-            ],
-            "results.2.metadata": [
-              "undefined",
-            ],
-            "results.2.startLine": [
-              "undefined",
-            ],
-            "results.3.metadata": [
-              "undefined",
-            ],
-            "results.3.startLine": [
-              "undefined",
-            ],
-            "results.4.metadata": [
-              "undefined",
-            ],
-            "results.4.startLine": [
-              "undefined",
-            ],
-          },
-        },
         "count": 5,
         "page": 0,
         "perPage": 20,
@@ -811,7 +733,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case variant: \`user_get_data\`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
-            "metadata": null,
             "score": -1.398563897382732,
             "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
@@ -823,20 +744,17 @@ Each of these phrases represents a specific action in our API.`
       - Snake case variant: \`user_get_data\`
 
       Each style has its use cases depending on the context and language conventions.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
             "filename": "camelCase-test.md",
-            "metadata": null,
             "score": -1.0414712365394965,
             "section": "CamelCase Patterns",
             "sectionSlug": "camelcase-patterns",
             "snippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
 
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like \`camelCase\`, \`camelCasePattern\`, and \`thisIsCamelCase\` follow this convention.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "JavaScript provides multiple ways to access data:
@@ -844,7 +762,6 @@ Each of these phrases represents a specific action in our API.`
       - Object bracket notation: \`object["key"]\`
       - Map methods: \`map.get("key")\`",
             "filename": "special_chars_test.md",
-            "metadata": null,
             "score": -0.9261562168328792,
             "section": "Array and Object Access",
             "sectionSlug": "array-and-object-access",
@@ -853,7 +770,6 @@ Each of these phrases represents a specific action in our API.`
       - Array access: \`array[0]\`
       - Object bracket notation: \`object["key"]\`
       - Map methods: \`map.get("key")\`",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "Here are some common multi-word technical phrases:
@@ -862,7 +778,6 @@ Each of these phrases represents a specific action in our API.`
       - For deletions: "delete user account"
       Each of these phrases represents a specific action in our API.",
             "filename": "exact-phrases.md",
-            "metadata": null,
             "score": -0.7973135314512333,
             "section": "Multi-word Phrases",
             "sectionSlug": "multi-word-phrases",
@@ -873,7 +788,6 @@ Each of these phrases represents a specific action in our API.`
       - For deletions: "delete user account"
 
       Each of these phrases represents a specific action in our API.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "In projects, you often see multiple naming conventions side by side:
@@ -883,7 +797,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case: \`user_data\`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
-            "metadata": null,
             "score": -0.7705158567427064,
             "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
@@ -895,7 +808,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case: \`user_data\`
 
       Understanding when to use each pattern is important for maintaining consistent code.",
-            "startLine": null,
           },
         ],
       }
@@ -1050,28 +962,6 @@ Each of these phrases represents a specific action in our API.`
     const data = await response.json();
     expect(data).toMatchInlineSnapshot(`
       {
-        "__superjsonMeta": {
-          "values": {
-            "results.0.metadata": [
-              "undefined",
-            ],
-            "results.0.startLine": [
-              "undefined",
-            ],
-            "results.1.metadata": [
-              "undefined",
-            ],
-            "results.1.startLine": [
-              "undefined",
-            ],
-            "results.2.metadata": [
-              "undefined",
-            ],
-            "results.2.startLine": [
-              "undefined",
-            ],
-          },
-        },
         "count": 3,
         "page": 0,
         "perPage": 20,
@@ -1084,7 +974,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case: \`user_data\`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
-            "metadata": null,
             "score": -2.5538119092355975,
             "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
@@ -1096,7 +985,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case: \`user_data\`
 
       Understanding when to use each pattern is important for maintaining consistent code.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "In real-world code, you might encounter different variations:
@@ -1106,7 +994,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case variant: \`user_get_data\`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
-            "metadata": null,
             "score": -2.4707694505250064,
             "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
@@ -1118,20 +1005,17 @@ Each of these phrases represents a specific action in our API.`
       - Snake case variant: \`user_get_data\`
 
       Each style has its use cases depending on the context and language conventions.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
             "filename": "camelCase-test.md",
-            "metadata": null,
             "score": -2.343749695833126,
             "section": "CamelCase Patterns",
             "sectionSlug": "camelcase-patterns",
             "snippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
 
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like \`camelCase\`, \`camelCasePattern\`, and \`thisIsCamelCase\` follow this convention.",
-            "startLine": null,
           },
         ],
       }
@@ -1148,28 +1032,6 @@ Each of these phrases represents a specific action in our API.`
     const data = await response.json();
     expect(data).toMatchInlineSnapshot(`
       {
-        "__superjsonMeta": {
-          "values": {
-            "results.0.metadata": [
-              "undefined",
-            ],
-            "results.0.startLine": [
-              "undefined",
-            ],
-            "results.1.metadata": [
-              "undefined",
-            ],
-            "results.1.startLine": [
-              "undefined",
-            ],
-            "results.2.metadata": [
-              "undefined",
-            ],
-            "results.2.startLine": [
-              "undefined",
-            ],
-          },
-        },
         "count": 3,
         "page": 0,
         "perPage": 20,
@@ -1182,7 +1044,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case variant: \`user_get_data\`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
-            "metadata": null,
             "score": -1.7938463133948674,
             "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
@@ -1194,7 +1055,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case variant: \`user_get_data\`
 
       Each style has its use cases depending on the context and language conventions.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "JavaScript provides multiple ways to access data:
@@ -1202,7 +1062,6 @@ Each of these phrases represents a specific action in our API.`
       - Object bracket notation: \`object["key"]\`
       - Map methods: \`map.get("key")\`",
             "filename": "special_chars_test.md",
-            "metadata": null,
             "score": -1.5348345888423418,
             "section": "Array and Object Access",
             "sectionSlug": "array-and-object-access",
@@ -1211,7 +1070,6 @@ Each of these phrases represents a specific action in our API.`
       - Array access: \`array[0]\`
       - Object bracket notation: \`object["key"]\`
       - Map methods: \`map.get("key")\`",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "Here are some common multi-word technical phrases:
@@ -1220,7 +1078,6 @@ Each of these phrases represents a specific action in our API.`
       - For deletions: "delete user account"
       Each of these phrases represents a specific action in our API.",
             "filename": "exact-phrases.md",
-            "metadata": null,
             "score": -1.3213153072687398,
             "section": "Multi-word Phrases",
             "sectionSlug": "multi-word-phrases",
@@ -1231,7 +1088,6 @@ Each of these phrases represents a specific action in our API.`
       - For deletions: "delete user account"
 
       Each of these phrases represents a specific action in our API.",
-            "startLine": null,
           },
         ],
       }
@@ -1267,28 +1123,6 @@ Each of these phrases represents a specific action in our API.`
     // Note: SQLite snippet function may return longer snippets than requested
     expect(data).toMatchInlineSnapshot(`
       {
-        "__superjsonMeta": {
-          "values": {
-            "results.0.metadata": [
-              "undefined",
-            ],
-            "results.0.startLine": [
-              "undefined",
-            ],
-            "results.1.metadata": [
-              "undefined",
-            ],
-            "results.1.startLine": [
-              "undefined",
-            ],
-            "results.2.metadata": [
-              "undefined",
-            ],
-            "results.2.startLine": [
-              "undefined",
-            ],
-          },
-        },
         "count": 3,
         "page": 0,
         "perPage": 20,
@@ -1301,7 +1135,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case: \`user_data\`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
-            "metadata": null,
             "score": -1.2769059546177988,
             "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
@@ -1313,7 +1146,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case: \`user_data\`
 
       Understanding when to use each pattern is important for maintaining consistent code.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "In real-world code, you might encounter different variations:
@@ -1323,7 +1155,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case variant: \`user_get_data\`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
-            "metadata": null,
             "score": -1.2353847252625032,
             "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
@@ -1335,20 +1166,17 @@ Each of these phrases represents a specific action in our API.`
       - Snake case variant: \`user_get_data\`
 
       Each style has its use cases depending on the context and language conventions.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
             "filename": "camelCase-test.md",
-            "metadata": null,
             "score": -1.171874847916563,
             "section": "CamelCase Patterns",
             "sectionSlug": "camelcase-patterns",
             "snippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
 
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like \`camelCase\`, \`camelCasePattern\`, and \`thisIsCamelCase\` follow this convention.",
-            "startLine": null,
           },
         ],
       }
@@ -1365,28 +1193,6 @@ Each of these phrases represents a specific action in our API.`
     const data = await response.json();
     expect(data).toMatchInlineSnapshot(`
       {
-        "__superjsonMeta": {
-          "values": {
-            "results.0.metadata": [
-              "undefined",
-            ],
-            "results.0.startLine": [
-              "undefined",
-            ],
-            "results.1.metadata": [
-              "undefined",
-            ],
-            "results.1.startLine": [
-              "undefined",
-            ],
-            "results.2.metadata": [
-              "undefined",
-            ],
-            "results.2.startLine": [
-              "undefined",
-            ],
-          },
-        },
         "count": 3,
         "page": 0,
         "perPage": 20,
@@ -1399,7 +1205,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case: \`user_data\`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
-            "metadata": null,
             "score": -1.2769059546177988,
             "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
@@ -1411,7 +1216,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case: \`user_data\`
 
       Understanding when to use each pattern is important for maintaining consistent code.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "In real-world code, you might encounter different variations:
@@ -1421,7 +1225,6 @@ Each of these phrases represents a specific action in our API.`
       - Snake case variant: \`user_get_data\`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
-            "metadata": null,
             "score": -1.2353847252625032,
             "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
@@ -1433,20 +1236,17 @@ Each of these phrases represents a specific action in our API.`
       - Snake case variant: \`user_get_data\`
 
       Each style has its use cases depending on the context and language conventions.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
             "filename": "camelCase-test.md",
-            "metadata": null,
             "score": -1.171874847916563,
             "section": "CamelCase Patterns",
             "sectionSlug": "camelcase-patterns",
             "snippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
 
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like \`camelCase\`, \`camelCasePattern\`, and \`thisIsCamelCase\` follow this convention.",
-            "startLine": null,
           },
         ],
       }

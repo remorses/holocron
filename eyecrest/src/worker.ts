@@ -139,8 +139,10 @@ export class DatasetCache extends DurableObject {
 
   async upsertFiles({ datasetId, orgId, files }: { datasetId: string; orgId: string; files: { filename: string; content: string; sha?: string; metadata?: Record<string, any> }[] }): Promise<void> {
     this.datasetId = datasetId;
+    const startTime = Date.now();
 
     // Check if dataset exists and verify ownership
+    const ownershipStart = Date.now();
     const datasetRows = [...this.sql.exec("SELECT org_id FROM datasets WHERE dataset_id = ?", datasetId)];
     if (datasetRows.length > 0) {
       const existingOrgId = datasetRows[0].org_id as string;
@@ -153,12 +155,36 @@ export class DatasetCache extends DurableObject {
       this.sql.exec("INSERT INTO datasets (dataset_id, org_id, created_at, updated_at) VALUES (?, ?, ?, ?)",
         datasetId, orgId, now, now);
     }
+    console.log(`[upsert] Ownership check: ${Date.now() - ownershipStart}ms`);
 
-    for (const file of files) {
+    // Parallelize SHA computations
+    const shaStart = Date.now();
+    const shaComputations = await Promise.all(
+      files.map(async (file) => ({
+        file,
+        computedSHA: await computeGitBlobSHA(file.content)
+      }))
+    );
+    console.log(`[upsert] SHA computations (${files.length} files): ${Date.now() - shaStart}ms`);
+
+    // Get all existing files in one query
+    const existingCheckStart = Date.now();
+    const filenames = files.map(f => f.filename);
+    const placeholders = filenames.map(() => '?').join(',');
+    const existingFiles = [...this.sql.exec(
+      `SELECT filename, sha FROM files WHERE filename IN (${placeholders})`, 
+      ...filenames
+    )];
+    const existingMap = new Map(existingFiles.map(row => [row.filename as string, row.sha as string]));
+    console.log(`[upsert] Existing files check: ${Date.now() - existingCheckStart}ms`);
+
+    // Process each file
+    let processedCount = 0;
+    let skippedCount = 0;
+    const processingStart = Date.now();
+
+    for (const { file, computedSHA } of shaComputations) {
       const now = Date.now();
-
-      // Compute SHA for the content
-      const computedSHA = await computeGitBlobSHA(file.content);
 
       // If SHA was provided, validate it matches
       if (file.sha && file.sha !== computedSHA) {
@@ -166,14 +192,16 @@ export class DatasetCache extends DurableObject {
       }
 
       // Check if file exists and needs update based on SHA
-      const existingFile = [...this.sql.exec("SELECT filename, sha FROM files WHERE filename = ?", file.filename)];
-      const isUpdate = existingFile.length > 0;
-      const existingSHA = existingFile[0]?.sha as string;
+      const existingSHA = existingMap.get(file.filename);
+      const isUpdate = existingSHA !== undefined;
 
       // Skip update if SHA hasn't changed
       if (isUpdate && existingSHA === computedSHA) {
+        skippedCount++;
         continue;
       }
+
+      processedCount++;
 
       // Delete existing sections for this file
       this.sql.exec("DELETE FROM sections WHERE filename = ?", file.filename);
@@ -191,19 +219,45 @@ export class DatasetCache extends DurableObject {
 
       // Parse and store sections if it's a markdown file
       if (isSupportedMarkdownFile(file.filename)) {
+        const parseStart = Date.now();
         const parsed = parseMarkdownIntoSections(file.content);
         const slugger = new Slugger();
 
-        for (const section of parsed.sections) {
-          const sectionSlug = slugger.slug(section.heading);
-          this.sql.exec("INSERT INTO sections (filename, heading, content, level, order_index, section_slug) VALUES (?, ?, ?, ?, ?, ?)",
-            file.filename, section.heading, section.content, section.level, section.orderIndex, sectionSlug);
+        // Batch insert sections for better performance
+        if (parsed.sections.length > 0) {
+          // Prepare values for batch insert
+          const sectionValues: any[] = [];
+          const ftsValues: any[] = [];
+          
+          for (const section of parsed.sections) {
+            const sectionSlug = slugger.slug(section.heading);
+            sectionValues.push(file.filename, section.heading, section.content, section.level, section.orderIndex, sectionSlug);
+            ftsValues.push(file.filename, section.heading, section.content);
+          }
 
-          this.sql.exec("INSERT INTO sections_fts (filename, heading, content) VALUES (?, ?, ?)",
-            file.filename, section.heading, section.content);
+          // Batch insert into sections table
+          const sectionPlaceholders = parsed.sections.map(() => '(?, ?, ?, ?, ?, ?)').join(', ');
+          this.sql.exec(
+            `INSERT INTO sections (filename, heading, content, level, order_index, section_slug) VALUES ${sectionPlaceholders}`,
+            ...sectionValues
+          );
+
+          // Batch insert into FTS table
+          const ftsPlaceholders = parsed.sections.map(() => '(?, ?, ?)').join(', ');
+          this.sql.exec(
+            `INSERT INTO sections_fts (filename, heading, content) VALUES ${ftsPlaceholders}`,
+            ...ftsValues
+          );
+        }
+        
+        if (parsed.sections.length > 10) {
+          console.log(`[upsert] Parsed ${file.filename} (${parsed.sections.length} sections): ${Date.now() - parseStart}ms`);
         }
       }
     }
+    
+    console.log(`[upsert] Processing files (${processedCount} processed, ${skippedCount} skipped): ${Date.now() - processingStart}ms`);
+    console.log(`[upsert] Total time: ${Date.now() - startTime}ms`);
   }
 
   async deleteFiles({ datasetId, orgId, filenames }: { datasetId: string; orgId: string; filenames: string[] }): Promise<void> {
@@ -448,7 +502,7 @@ async function verifyJWT(token: string, publicKey: string): Promise<JWTPayload> 
    Main Spiceflow App
    ==================================================================== */
 
-const app = new Spiceflow()
+const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
   .state("env", {} as Env)
   .state("ctx", {} as ExecutionContext)
   .state("orgId", null as string | null)

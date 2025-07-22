@@ -157,13 +157,6 @@ Upload markdown files and search through them.`;
     const data = await response.json() as any;
     expect(data).toMatchInlineSnapshot(`
       {
-        "__superjsonMeta": {
-          "values": {
-            "metadata": [
-              "undefined",
-            ],
-          },
-        },
         "content": "# Test File
 
       This is a test file for the Eyecrest API.
@@ -177,7 +170,6 @@ Upload markdown files and search through them.`;
       ## Usage
 
       Upload markdown files and search through them.",
-        "metadata": null,
         "sha": "888714a3a2b2d0f763ddcd537ac56c4d61abe77a",
       }
     `);
@@ -295,28 +287,6 @@ Configure your client with the API endpoint.`;
     const data = await response.json() as any;
     expect(data).toMatchInlineSnapshot(`
       {
-        "__superjsonMeta": {
-          "values": {
-            "results.0.metadata": [
-              "undefined",
-            ],
-            "results.0.startLine": [
-              "undefined",
-            ],
-            "results.1.metadata": [
-              "undefined",
-            ],
-            "results.1.startLine": [
-              "undefined",
-            ],
-            "results.2.metadata": [
-              "undefined",
-            ],
-            "results.2.startLine": [
-              "undefined",
-            ],
-          },
-        },
         "count": 3,
         "page": 0,
         "perPage": 20,
@@ -324,32 +294,26 @@ Configure your client with the API endpoint.`;
           {
             "cleanedSnippet": "docs/install.md",
             "filename": "docs/install.md",
-            "metadata": null,
             "score": -0.6817175152436655,
             "section": "Installation",
             "sectionSlug": "installation",
             "snippet": "docs/install.md",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "docs/install.md",
             "filename": "docs/install.md",
-            "metadata": null,
             "score": -0.6096543529557517,
             "section": "Documentation",
             "sectionSlug": "documentation",
             "snippet": "docs/install.md",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "docs/install.md",
             "filename": "docs/install.md",
-            "metadata": null,
             "score": -0.44986974874894,
             "section": "Configuration",
             "sectionSlug": "configuration",
             "snippet": "docs/install.md",
-            "startLine": null,
           },
         ],
       }
@@ -371,22 +335,6 @@ Configure your client with the API endpoint.`;
     const data = await response.json() as any;
     expect(data).toMatchInlineSnapshot(`
       {
-        "__superjsonMeta": {
-          "values": {
-            "results.0.metadata": [
-              "undefined",
-            ],
-            "results.0.startLine": [
-              "undefined",
-            ],
-            "results.1.metadata": [
-              "undefined",
-            ],
-            "results.1.startLine": [
-              "undefined",
-            ],
-          },
-        },
         "count": 3,
         "page": 0,
         "perPage": 2,
@@ -394,22 +342,18 @@ Configure your client with the API endpoint.`;
           {
             "cleanedSnippet": "Configure your client with the API endpoint.",
             "filename": "docs/install.md",
-            "metadata": null,
             "score": -0.44986974874894,
             "section": "Configuration",
             "sectionSlug": "configuration",
             "snippet": "Configure your client with the API endpoint.",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "This is a test file for the Eyecrest API.",
             "filename": "test.md",
-            "metadata": null,
             "score": -0.4185290405632374,
             "section": "Test File",
             "sectionSlug": "test-file",
             "snippet": "This is a test file for the Eyecrest API.",
-            "startLine": null,
           },
         ],
       }
@@ -568,22 +512,6 @@ Content in second section.`;
     const searchData = await searchResponse.json() as any;
     expect(searchData).toMatchInlineSnapshot(`
       {
-        "__superjsonMeta": {
-          "values": {
-            "results.0.startLine": [
-              "undefined",
-            ],
-            "results.1.startLine": [
-              "undefined",
-            ],
-            "results.2.metadata": [
-              "undefined",
-            ],
-            "results.2.startLine": [
-              "undefined",
-            ],
-          },
-        },
         "count": 3,
         "page": 0,
         "perPage": 20,
@@ -606,7 +534,6 @@ Content in second section.`;
             "section": "First Section",
             "sectionSlug": "first-section",
             "snippet": "First Section",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "Second Section",
@@ -626,21 +553,18 @@ Content in second section.`;
             "section": "Second Section",
             "sectionSlug": "second-section",
             "snippet": "Second Section",
-            "startLine": null,
           },
           {
             "cleanedSnippet": "- SHA validation
       - Section parsing
       - Full-text search",
             "filename": "test.md",
-            "metadata": null,
             "score": -0.9033710596991084,
             "section": "Features",
             "sectionSlug": "features",
             "snippet": "- SHA validation
       - Section parsing
       - Full-text search",
-            "startLine": null,
           },
         ],
       }
@@ -694,15 +618,7 @@ Content in second section.`;
     const data = await getResponse.json() as any;
     expect(data).toMatchInlineSnapshot(`
       {
-        "__superjsonMeta": {
-          "values": {
-            "metadata": [
-              "undefined",
-            ],
-          },
-        },
         "content": "Test content for SHA check",
-        "metadata": null,
         "sha": "1782917c7c9a9c41779b7f69d27db008019f9b92",
       }
     `);
