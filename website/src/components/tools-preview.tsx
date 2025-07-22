@@ -6,7 +6,7 @@ import { escapeMdxSyntax, truncateText } from 'docs-website/src/lib/utils'
 import { WebsiteToolPart } from 'website/src/lib/types'
 import { useWebsiteState } from '../lib/state'
 import { EditToolParamSchema } from 'docs-website/src/lib/edit-tool'
-import { RenderFormPreview } from './render-form-preview'
+import { RenderFormPreview } from 'contesto'
 import { useChatContext } from 'contesto/src/chat/chat-provider'
 import { ChatPartTool } from 'db'
 

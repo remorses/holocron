@@ -115,7 +115,7 @@ import { safeJsoncParse, slugKebabCaseKeepExtension } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import type { Route as ChatRoute } from '../routes/org.$orgId.site.$siteId.chat.$chatId'
-import { RenderFormPreview } from './render-form-preview'
+import { RenderFormPreview } from 'contesto'
 import { FormProvider, useForm } from 'react-hook-form'
 
 function keyForDocsJson({ chatId }) {

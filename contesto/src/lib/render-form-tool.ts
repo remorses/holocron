@@ -1,20 +1,24 @@
 import { tool } from 'ai'
-import { extractNamePathsFromSchema } from 'docs-website/src/lib/schema-path-utils'
 import type { JSONSchema7 } from 'json-schema'
 import * as schemaLib from 'json-schema-library'
 import { z } from 'zod'
-import { notifyError } from './errors'
-import { optionalToNullable } from 'docs-website/src/lib/zod'
+import { optionalToNullable } from './zod.js'
+import { extractNamePathsFromSchema } from './schema-path-utils.js'
+
 const compileSchema =
     schemaLib.compileSchema || schemaLib?.['default']?.compileSchema
+
+export interface RenderFormToolConfig {
+    jsonSchema?: JSONSchema7
+    replaceOptionalsWithNulls?: boolean
+    notifyError?: (error: any, msg?: string) => void
+}
 
 export function createRenderFormTool({
     jsonSchema,
     replaceOptionalsWithNulls,
-}: {
-    jsonSchema?: JSONSchema7
-    replaceOptionalsWithNulls?: boolean
-}) {
+    notifyError = (err, msg) => console.error(msg || 'Error in createRenderFormTool', err),
+}: RenderFormToolConfig) {
     let uiFieldsSchema = UIFieldSchema
     if (replaceOptionalsWithNulls) {
         uiFieldsSchema = optionalToNullable(uiFieldsSchema)

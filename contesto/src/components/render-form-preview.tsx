@@ -1,21 +1,21 @@
 import { useEffect } from 'react'
-import { useChatContext } from 'contesto'
+import { useChatContext } from '../index.js'
 import { Controller, DeepPartial, useFormContext } from 'react-hook-form'
-
-import type { RenderFormParameters, UIField } from '../lib/render-form-tool'
-
-import { ColorPickerButton } from './color-picker-button'
-import { Button } from './ui/button'
-import { Input } from './ui/input'
-import { SelectNative } from './ui/select-native'
-import { Slider } from './ui/slider'
-import { Switch } from './ui/switch'
-import { Textarea } from './ui/textarea'
-import { UploadButton } from './upload-button'
-import { RadioGroup, RadioGroupItem } from './ui/radio-group'
-import { Label } from './ui/label'
 import { UIMessage } from 'ai'
-import { cn } from 'website/src/lib/cn'
+
+import type { RenderFormParameters, UIField } from '../lib/render-form-tool.js'
+import { cn } from '../lib/cn.js'
+
+import { ColorPickerButton } from './color-picker-button.js'
+import { Button } from './ui/button.js'
+import { Input } from './ui/input.js'
+import { SelectNative } from './ui/select-native.js'
+import { Slider } from './ui/slider.js'
+import { Switch } from './ui/switch.js'
+import { Textarea } from './ui/textarea.js'
+import { UploadButton } from './upload-button.js'
+import { RadioGroup, RadioGroupItem } from './ui/radio-group.js'
+import { Label } from './ui/label.js'
 
 type RenderFieldProps = {
     field: UIField

@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest'
 import {toJSONSchema} from 'zod'
 import type { JSONSchema7 } from 'json-schema'
-import { extractNamePathsFromSchema } from './schema-path-utils'
+import { extractNamePathsFromSchema } from 'contesto'
 import { DocsConfigSchema } from 'docs-website/src/lib/docs-json'
 
 type SimpleSchema = {

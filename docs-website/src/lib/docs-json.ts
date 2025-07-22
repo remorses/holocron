@@ -1,6 +1,6 @@
 import { toJSONSchema, z } from 'zod'
 
-import { extractNamePathsFromSchema } from './schema-path-utils.js'
+import { extractNamePathsFromSchema } from 'contesto'
 import dedent from 'dedent'
 
 // Dynamic theme imports using vite glob

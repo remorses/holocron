@@ -26,7 +26,7 @@ import {
     type FileUpdate,
 } from 'docs-website/src/lib/edit-tool'
 import { notifyError } from './errors'
-import { createRenderFormTool, RenderFormParameters } from './render-form-tool'
+import { createRenderFormTool, RenderFormParameters } from 'contesto'
 import { mdxRegex } from './utils'
 import {
     searchDocsInputSchema,

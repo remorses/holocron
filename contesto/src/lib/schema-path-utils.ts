@@ -1,4 +1,4 @@
-// website/src/lib/schema-path-utils.ts
+// contesto/src/lib/schema-path-utils.ts
 // ---------------------------------------------------------------
 // 1.  extractPaths()   →  every legal name the LLM can emit
 // 2.  applyPath()      →  get or set a value given such a name

@@ -136,9 +136,15 @@ importers:
       '@radix-ui/react-scroll-area':
         specifier: ^1.2.9
         version: 1.2.9(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-slider':
+        specifier: ^1.3.5
+        version: 1.3.5(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@radix-ui/react-slot':
         specifier: ^1.2.3
         version: 1.2.3(@types/react@19.1.8)(react@19.1.0)
+      '@radix-ui/react-switch':
+        specifier: ^1.2.5
+        version: 1.2.5(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@radix-ui/react-tooltip':
         specifier: ^1.2.7
         version: 1.2.7(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -148,6 +154,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.81.5
         version: 5.81.5(react@19.1.0)
+      '@uiw/react-color':
+        specifier: ^2.6.0
+        version: 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       ai:
         specifier: 5.0.0-beta.24
         version: 5.0.0-beta.24(zod@4.0.5)
@@ -172,6 +181,12 @@ importers:
       fumadocs-ui:
         specifier: ^15.6.1
         version: 15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(algoliasearch@5.29.0)(next@15.3.5(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(tailwindcss@4.1.11)
+      json-schema:
+        specifier: ^0.4.0
+        version: 0.4.0
+      json-schema-library:
+        specifier: ^10.1.2
+        version: 10.1.2
       lucide-react:
         specifier: ^0.525.0
         version: 0.525.0(react@19.1.0)
@@ -184,12 +199,18 @@ importers:
       micro-memoize:
         specifier: ^4.1.3
         version: 4.1.3
+      radix-ui:
+        specifier: ^1.4.2
+        version: 1.4.2(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react:
         specifier: ^19.1.0
         version: 19.1.0
       react-dom:
         specifier: ^19.1.0
         version: 19.1.0(react@19.1.0)
+      react-hook-form:
+        specifier: ^7.60.0
+        version: 7.60.0(react@19.1.0)
       react-sound-visualizer:
         specifier: ^1.4.0
         version: 1.4.0(react@19.1.0)
@@ -715,6 +736,12 @@ importers:
       agents:
         specifier: ^0.0.109
         version: 0.0.109(@cloudflare/workers-types@4.20250712.0)(react@19.1.0)
+      ajv:
+        specifier: ^8.17.1
+        version: 8.17.1
+      jose:
+        specifier: ^6.0.12
+        version: 6.0.12
       marked:
         specifier: ^15.0.12
         version: 15.0.12
@@ -9957,6 +9984,9 @@ packages:
   jose@5.10.0:
     resolution: {integrity: sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg==}
 
+  jose@6.0.12:
+    resolution: {integrity: sha512-T8xypXs8CpmiIi78k0E+Lk7T2zlK4zDyg+o1CZ4AkOHgDg98ogdP2BeZ61lTFKFyoEwJ9RgAgN+SdM3iPgNonQ==}
+
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
@@ -11610,6 +11640,12 @@ packages:
 
   react-hook-form@7.59.0:
     resolution: {integrity: sha512-kmkek2/8grqarTJExFNjy+RXDIP8yM+QTl3QL6m6Q8b2bih4ltmiXxH7T9n+yXNK477xPh5yZT/6vD8sYGzJTA==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17 || ^18 || ^19
+
+  react-hook-form@7.60.0:
+    resolution: {integrity: sha512-SBrYOvMbDB7cV8ZfNpaiLcgjH/a1c7aK0lK+aNigpf4xWLO8q+o4tcvVurv3c4EOyzn/3dCsYt4GKD42VvJ/+A==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
@@ -15478,6 +15514,11 @@ snapshots:
     dependencies:
       '@standard-schema/utils': 0.3.0
       react-hook-form: 7.58.1(react@19.1.0)
+
+  '@hookform/resolvers@5.1.1(react-hook-form@7.59.0(react@19.1.0))':
+    dependencies:
+      '@standard-schema/utils': 0.3.0
+      react-hook-form: 7.59.0(react@19.1.0)
 
   '@humanfs/core@0.19.1': {}
 
@@ -23844,6 +23885,8 @@ snapshots:
 
   jose@5.10.0: {}
 
+  jose@6.0.12: {}
+
   joycon@3.1.1: {}
 
   js-base64@3.7.7: {}
@@ -26004,6 +26047,10 @@ snapshots:
       react: 19.1.0
 
   react-hook-form@7.59.0(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+
+  react-hook-form@7.60.0(react@19.1.0):
     dependencies:
       react: 19.1.0
 
@@ -28370,7 +28417,7 @@ snapshots:
       '@better-auth/stripe': 1.2.10
       '@bugsnag/cuid': 3.2.1
       '@cloudflare/vite-plugin': 1.9.4(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.25.0(@cloudflare/workers-types@4.20250712.0))
-      '@hookform/resolvers': 5.1.1(react-hook-form@7.58.1(react@19.1.0))
+      '@hookform/resolvers': 5.1.1(react-hook-form@7.59.0(react@19.1.0))
       '@iconify-json/lucide': 1.2.49
       '@motionone/dom': 10.18.0
       '@motionone/easing': 10.18.0
@@ -28442,7 +28489,7 @@ snapshots:
       react: 19.1.0
       react-color: 2.19.3(react@19.1.0)
       react-dom: 19.1.0(react@19.1.0)
-      react-hook-form: 7.58.1(react@19.1.0)
+      react-hook-form: 7.59.0(react@19.1.0)
       react-markdown: 10.1.0(@types/react@19.1.8)(react@19.1.0)
       react-router: 7.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-router-hono-server: 2.13.0(@cloudflare/workers-types@4.20250712.0)(@react-router/dev@7.6.3(@react-router/serve@7.6.3(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))(@types/node@24.0.7)(babel-plugin-macros@3.1.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.42.0)(tsx@4.20.3)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.25.0(@cloudflare/workers-types@4.20250712.0))(yaml@2.8.0))(@types/react@19.1.8)(react-router@7.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(wrangler@4.25.0(@cloudflare/workers-types@4.20250712.0))

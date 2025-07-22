@@ -2,7 +2,7 @@ import z from 'zod'
 import { diffLines, createPatch } from 'diff'
 import { tool } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
-import { optionalToNullable } from './zod'
+import { optionalToNullable } from 'contesto'
 
 export function calculateLineChanges(
     oldContent: string,

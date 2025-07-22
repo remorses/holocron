@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest'
 import {
     getTypeForNameInSchema,
     RenderFormParameters,
-} from './render-form-tool'
+} from 'contesto'
 import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
 
 test('compileSchema can be called on {}', () => {
