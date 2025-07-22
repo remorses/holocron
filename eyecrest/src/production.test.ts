@@ -354,8 +354,7 @@ More content in section two.`;
       Run the following command:
       npm install eyecrest-client",
             "filename": "docs/install.md",
-            "score": -3.138644641177744,
-            "section": "Installation",
+            "score": -3.1295619879170515,
             "sectionSlug": "installation",
             "snippet": "## Installation
 
@@ -397,8 +396,7 @@ More content in section two.`;
             "cleanedSnippet": "Configuration
       Configure your client with the API endpoint.",
             "filename": "docs/install.md",
-            "score": -1.3911668406847295,
-            "section": "Configuration",
+            "score": -1.3858796934759985,
             "sectionSlug": "configuration",
             "snippet": "## Configuration
 
@@ -410,8 +408,7 @@ More content in section two.`;
       Run the following command:
       npm install eyecrest-client",
             "filename": "docs/install.md",
-            "score": -1.3060476458435986,
-            "section": "Installation",
+            "score": -1.300613008639193,
             "sectionSlug": "installation",
             "snippet": "## Installation
 
@@ -554,37 +551,34 @@ More content in section two.`;
             "cleanedSnippet": "Section One
       Some content in section one.",
             "filename": "frontmatter-test.md",
-            "score": -1.514546329759106,
-            "section": "Section One",
+            "score": -0.695240701845541,
             "sectionSlug": "section-one",
             "snippet": "## Section One
 
       Some content in section one.",
-            "startLine": 13,
+            "startLine": 12,
           },
           {
             "cleanedSnippet": "Section Two
       More content in section two.",
             "filename": "frontmatter-test.md",
-            "score": -1.514546329759106,
-            "section": "Section Two",
+            "score": -0.695240701845541,
             "sectionSlug": "section-two",
             "snippet": "## Section Two
 
       More content in section two.",
-            "startLine": 17,
+            "startLine": 16,
           },
           {
             "cleanedSnippet": "Document Title
       This document has frontmatter which should be parsed as a separate section with higher weight.",
             "filename": "frontmatter-test.md",
-            "score": -0.8387003869096123,
-            "section": "Document Title",
+            "score": -0.38397358494692446,
             "sectionSlug": "document-title",
             "snippet": "# Document Title
 
       This document has frontmatter which should be parsed as a separate section with higher weight.",
-            "startLine": 9,
+            "startLine": 8,
           },
           {
             "cleanedSnippet": "First Section
@@ -601,8 +595,7 @@ More content in section two.`;
               ],
               "version": "1.0.0",
             },
-            "score": -0.6884084499645802,
-            "section": "First Section",
+            "score": -0.6867358602892863,
             "sectionSlug": "first-section",
             "snippet": "## First Section
 
@@ -624,8 +617,7 @@ More content in section two.`;
               ],
               "version": "1.0.0",
             },
-            "score": -0.6884084499645802,
-            "section": "Second Section",
+            "score": -0.6867358602892863,
             "sectionSlug": "second-section",
             "snippet": "## Second Section
 
@@ -638,8 +630,7 @@ More content in section two.`;
       - Section parsing
       - Full-text search",
             "filename": "test.md",
-            "score": -0.5108715339210831,
-            "section": "Features",
+            "score": -0.5090314408051558,
             "sectionSlug": "features",
             "snippet": "## Features
 
@@ -713,7 +704,7 @@ More content in section two.`;
     // The frontmatter section should appear first due to higher weight
     expect(data.results.length).toBeGreaterThan(0);
     const firstResult = data.results[0];
-    expect(firstResult.section).toBe(''); // Frontmatter has empty heading
+    expect(firstResult.sectionSlug).toBe('frontmatter'); // Frontmatter has special slug
     expect(firstResult.filename).toBe('frontmatter-test.md');
     
     // Verify the content includes our frontmatter

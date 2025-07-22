@@ -66,7 +66,6 @@ const SearchSectionsResponseSchema = z.object({
   results: z.array(
     z.object({
       filename: z.string().describe('Source file path'),
-      section: z.string().describe('Section heading'),
       sectionSlug: z.string().describe('URL-friendly slug of the section heading'),
       snippet: z.string().describe('Raw markdown excerpt'),
       cleanedSnippet: z.string().describe('Cleaned text excerpt without markdown syntax'),
@@ -108,14 +107,12 @@ export class DatasetCache extends DurableObject {
       CREATE TABLE IF NOT EXISTS sections (
         id            INTEGER PRIMARY KEY AUTOINCREMENT,
         filename      TEXT NOT NULL,
-        heading       TEXT NOT NULL,
-        content       TEXT NOT NULL,
+        content       TEXT NOT NULL,  -- Full markdown content including heading
         level         INTEGER NOT NULL,
         order_index   INTEGER NOT NULL,
         section_slug  TEXT NOT NULL,
         start_line    INTEGER NOT NULL,
         weight        REAL DEFAULT 1.0,
-        is_frontmatter BOOLEAN DEFAULT 0,
         FOREIGN KEY (filename) REFERENCES files(filename) ON DELETE CASCADE
       );
 
@@ -240,22 +237,17 @@ export class DatasetCache extends DurableObject {
           const ftsValues: any[] = [];
           
           for (const section of parsed.sections) {
-            // Handle empty headings (frontmatter) specially
-            const sectionSlug = section.heading ? slugger.slug(section.heading) : `frontmatter-${section.orderIndex}`;
-            // Combine heading and content for FTS, preserving markdown syntax
-            const headingMarkdown = section.isFrontmatter ? '---' : '#'.repeat(section.level) + ' ' + section.heading;
-            const fullContent = headingMarkdown + '\n\n' + section.content;
             // Use section weight if defined, otherwise inherit file weight
             const sectionWeight = section.weight ?? fileWeight;
-            const isFrontmatter = section.isFrontmatter ? 1 : 0;
-            sectionValues.push(file.filename, section.heading, section.content, section.level, section.orderIndex, sectionSlug, section.startLine, sectionWeight, isFrontmatter);
-            ftsValues.push(file.filename, sectionSlug, fullContent);
+            
+            sectionValues.push(file.filename, section.content, section.level, section.orderIndex, section.headingSlug, section.startLine, sectionWeight);
+            ftsValues.push(file.filename, section.headingSlug, section.content);
           }
 
           // Batch insert into sections table
-          const sectionPlaceholders = parsed.sections.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
+          const sectionPlaceholders = parsed.sections.map(() => '(?, ?, ?, ?, ?, ?, ?)').join(', ');
           this.sql.exec(
-            `INSERT INTO sections (filename, heading, content, level, order_index, section_slug, start_line, weight, is_frontmatter) VALUES ${sectionPlaceholders}`,
+            `INSERT INTO sections (filename, content, level, order_index, section_slug, start_line, weight) VALUES ${sectionPlaceholders}`,
             ...sectionValues
           );
 
@@ -348,7 +340,6 @@ export class DatasetCache extends DurableObject {
   }): Promise<{
     results: Array<{
       filename: string;
-      section: string;
       sectionSlug: string;
       snippet: string;
       cleanedSnippet: string;
@@ -383,17 +374,17 @@ export class DatasetCache extends DurableObject {
     const rows = [...this.sql.exec(
       `SELECT
         sections.filename,
-        sections.heading,
+        sections.content,
         sections.section_slug,
         sections.start_line,
         snippet(sections_fts, 2, '', '', '', ?) as snippet,
         bm25(sections_fts) as base_score,
         sections.weight as section_weight,
         files.weight as file_weight,
-        sections.is_frontmatter,
         files.metadata,
-        -- Combined score: BM25 score * section weight * file weight
-        (bm25(sections_fts) * sections.weight * files.weight) as score
+        -- Combined score with logarithmic weight normalization
+        -- BM25 is the primary signal, weights provide minor boosts
+        (bm25(sections_fts) * (1.0 + LOG(sections.weight) * 0.1) * (1.0 + LOG(files.weight) * 0.1)) as score
       FROM sections_fts
       JOIN sections ON sections.filename = sections_fts.filename 
         AND sections.section_slug = sections_fts.section_slug
@@ -421,7 +412,6 @@ export class DatasetCache extends DurableObject {
         const rawSnippet = row.snippet as string;
         fileGroups[filename].push({
           filename,
-          section: row.heading as string,
           sectionSlug: row.section_slug as string,
           snippet: rawSnippet,
           cleanedSnippet: cleanMarkdownContent(rawSnippet),
@@ -465,14 +455,17 @@ export class DatasetCache extends DurableObject {
     // Convert to markdown format with headings and URLs
     const textResult = data.results
       .map((result: any) => {
-        const level = result.section.includes('#') ? result.section.match(/^#+/)?.[0].length || 2 : 2;
+        // Extract heading from snippet if present
+        const headingMatch = result.snippet.match(/^(#{1,6})\s+(.+)$/m);
+        const heading = headingMatch ? headingMatch[2] : '';
+        const level = headingMatch ? headingMatch[1].length : 2;
         const headingPrefix = '#'.repeat(Math.min(level + 1, 6)); // Offset by 1 to show hierarchy
 
-        // Build URL to read specific line, including section slug as hash
+        // Build URL to read specific line
         const baseUrl = `/v1/datasets/${datasetId}/files/${result.filename}`;
-        const lineUrl = result.startLine ? `${baseUrl}?start=${result.startLine}#${result.sectionSlug}` : `${baseUrl}#${result.sectionSlug}`;
+        const lineUrl = result.startLine ? `${baseUrl}?start=${result.startLine}` : baseUrl;
 
-        return `${headingPrefix} ${result.section}\n\n[${result.filename}:${result.startLine || '1'}](${lineUrl})\n\n${result.snippet}\n`;
+        return `${headingPrefix} ${heading}\n\n[${result.filename}:${result.startLine || '1'}](${lineUrl})\n\n${result.snippet}\n`;
       })
       .join('\n---\n\n');
 
@@ -759,6 +752,7 @@ export default {
   fetch: (req: Request, env: Env, ctx: ExecutionContext) =>
     app.handle(req, { state: { env, ctx, orgId: null } }),
 };
+
 
 function formatFileWithLines(
   contents: string,

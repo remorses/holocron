@@ -23,30 +23,35 @@ Here's how to get started.`;
     expect(result.sections).toMatchInlineSnapshot(`
       [
         {
-          "content": "title: My Document
+          "content": "---
+      title: My Document
       author: John Doe
       date: 2024-01-01
-      tags: [test, documentation]",
-          "heading": "",
-          "isFrontmatter": true,
+      tags: [test, documentation]
+      ---",
+          "headingSlug": "frontmatter",
           "level": 0,
           "orderIndex": 0,
           "startLine": 1,
           "weight": 1.3,
         },
         {
-          "content": "This is the intro section.",
-          "heading": "Introduction",
+          "content": "# Introduction
+
+      This is the intro section.",
+          "headingSlug": "introduction",
           "level": 1,
           "orderIndex": 1,
-          "startLine": 9,
+          "startLine": 8,
         },
         {
-          "content": "Here's how to get started.",
-          "heading": "Getting Started",
+          "content": "## Getting Started
+
+      Here's how to get started.",
+          "headingSlug": "getting-started",
           "level": 2,
           "orderIndex": 2,
-          "startLine": 13,
+          "startLine": 12,
         },
       ]
     `);
@@ -80,36 +85,44 @@ Set up your config file.`;
     expect(result.sections).toMatchInlineSnapshot(`
       [
         {
-          "content": "This is the intro section.",
-          "heading": "Introduction",
+          "content": "# Introduction
+
+      This is the intro section.",
+          "headingSlug": "introduction",
           "level": 1,
           "orderIndex": 0,
           "startLine": 1,
         },
         {
-          "content": "Here's how to get started:
+          "content": "## Getting Started
+
+      Here's how to get started:
 
       - Step 1
       - Step 2",
-          "heading": "Getting Started",
+          "headingSlug": "getting-started",
           "level": 2,
           "orderIndex": 1,
           "startLine": 5,
         },
         {
-          "content": "Run the following command:
+          "content": "### Installation
+
+      Run the following command:
 
       \`\`\`bash
       npm install
       \`\`\`",
-          "heading": "Installation",
+          "headingSlug": "installation",
           "level": 3,
           "orderIndex": 2,
           "startLine": 12,
         },
         {
-          "content": "Set up your config file.",
-          "heading": "Configuration",
+          "content": "## Configuration
+
+      Set up your config file.",
+          "headingSlug": "configuration",
           "level": 2,
           "orderIndex": 3,
           "startLine": 20,
@@ -135,7 +148,7 @@ And some **formatting**.`;
       With multiple paragraphs.
 
       And some **formatting**.",
-          "heading": "Introduction",
+          "headingSlug": "introduction",
           "level": 1,
           "orderIndex": 0,
           "startLine": 1,
@@ -178,35 +191,43 @@ All responses are in JSON format.`;
     expect(result.sections).toMatchInlineSnapshot(`
       [
         {
-          "content": "This section covers the API.",
-          "heading": "API Reference",
+          "content": "# API Reference
+
+      This section covers the API.",
+          "headingSlug": "api-reference",
           "level": 1,
           "orderIndex": 0,
           "startLine": 1,
         },
         {
-          "content": "| Method | Path | Description |
-      | --- | --- | --- |
+          "content": "## Endpoints
+
+      | Method | Path | Description |
+      |--------|------|-------------|
       | GET | /users | List users |
       | POST | /users | Create user |",
-          "heading": "Endpoints",
+          "headingSlug": "endpoints",
           "level": 2,
           "orderIndex": 1,
           "startLine": 5,
         },
         {
-          "content": "\`\`\`javascript
+          "content": "### Code Example
+
+      \`\`\`javascript
       const user = await api.getUser(123);
       console.log(user.name);
       \`\`\`",
-          "heading": "Code Example",
+          "headingSlug": "code-example",
           "level": 3,
           "orderIndex": 2,
           "startLine": 12,
         },
         {
-          "content": "All responses are in JSON format.",
-          "heading": "Response Format",
+          "content": "## Response Format
+
+      All responses are in JSON format.",
+          "headingSlug": "response-format",
           "level": 2,
           "orderIndex": 3,
           "startLine": 19,
@@ -265,23 +286,27 @@ Some important information:
     expect(result.sections).toMatchInlineSnapshot(`
       [
         {
-          "content": "Some important information:
+          "content": "# Notes
+
+      Some important information:
 
       > This is a blockquote
-      with multiple lines",
-          "heading": "Notes",
+      > with multiple lines",
+          "headingSlug": "notes",
           "level": 1,
           "orderIndex": 0,
           "startLine": 1,
         },
         {
-          "content": "1. First item
+          "content": "## Todo List
+
+      1. First item
       2. Second item
       3. Third item
 
       - Bullet point 1
       - Bullet point 2",
-          "heading": "Todo List",
+          "headingSlug": "todo-list",
           "level": 2,
           "orderIndex": 1,
           "startLine": 8,
@@ -366,9 +391,10 @@ MDX allows mixing markdown and JSX seamlessly.`;
     expect(result.sections).toMatchInlineSnapshot(`
       [
         {
-          "content": "title: Advanced MDX Example",
-          "heading": "",
-          "isFrontmatter": true,
+          "content": "---
+      title: Advanced MDX Example
+      ---",
+          "headingSlug": "frontmatter",
           "level": 0,
           "orderIndex": 0,
           "startLine": 1,
@@ -377,40 +403,37 @@ MDX allows mixing markdown and JSX seamlessly.`;
         {
           "content": "import { Button, Card } from '@/components/ui'
       import CustomChart from './CustomChart'",
-          "heading": "Introduction",
+          "headingSlug": "introduction",
           "level": 1,
           "orderIndex": 1,
           "startLine": 5,
         },
         {
-          "content": "This MDX file demonstrates how sections are split with JSX content.
+          "content": "# MDX with JSX Components
+
+      This MDX file demonstrates how sections are split with JSX content.
 
       <Card className="mb-4">
         <h2>Interactive Card</h2>
         
-
         <p>Content inside JSX components with newlines.</p>
         
-
         <Button 
           variant="primary"
           onClick={() => console.log('clicked')}
-
-      > 
-
-      \`\`\`
-      Click Me
-      \`\`\`
-
+        >
+          Click Me
         </Button>
       </Card>",
-          "heading": "MDX with JSX Components",
+          "headingSlug": "mdx-with-jsx-components",
           "level": 1,
           "orderIndex": 2,
-          "startLine": 9,
+          "startLine": 8,
         },
         {
-          "content": "Here's a React component within MDX:
+          "content": "## Code Examples
+
+      Here's a React component within MDX:
 
       <CustomChart
         data={[
@@ -418,26 +441,30 @@ MDX allows mixing markdown and JSX seamlessly.`;
           { x: 2, y: 4 },
           { x: 3, y: 6 }
         ]}
-
+        
         options={{
           title: "Sample Chart",
           showGrid: true
         }}
       />",
-          "heading": "Code Examples",
+          "headingSlug": "code-examples",
           "level": 2,
           "orderIndex": 3,
-          "startLine": 26,
+          "startLine": 25,
         },
         {
-          "content": "You can also use inline JSX: <Button size="small">Inline</Button> within text.",
-          "heading": "Inline JSX",
+          "content": "### Inline JSX
+
+      You can also use inline JSX: <Button size="small">Inline</Button> within text.",
+          "headingSlug": "inline-jsx",
           "level": 3,
           "orderIndex": 4,
-          "startLine": 43,
+          "startLine": 42,
         },
         {
-          "content": "Regular markdown content follows:
+          "content": "## Mixed Content
+
+      Regular markdown content follows:
 
       \`\`\`jsx
       // Code block example
@@ -455,26 +482,28 @@ MDX allows mixing markdown and JSX seamlessly.`;
       <Card>
         <p>Another JSX block after code</p>
       </Card>",
-          "heading": "Mixed Content",
+          "headingSlug": "mixed-content",
           "level": 2,
           "orderIndex": 5,
-          "startLine": 47,
+          "startLine": 46,
         },
         {
-          "content": "MDX allows mixing markdown and JSX seamlessly.",
-          "heading": "Conclusion",
+          "content": "## Conclusion
+
+      MDX allows mixing markdown and JSX seamlessly.",
+          "headingSlug": "conclusion",
           "level": 2,
           "orderIndex": 6,
-          "startLine": 68,
+          "startLine": 67,
         },
       ]
     `);
 
-    // Find the actual sections with JSX content
-    const jsxSection = result.sections.find(s => s.heading === "MDX with JSX Components");
-    const codeExamplesSection = result.sections.find(s => s.heading === "Code Examples");
-    const inlineJsxSection = result.sections.find(s => s.heading === "Inline JSX");
-    const mixedContentSection = result.sections.find(s => s.heading === "Mixed Content");
+    // Find the actual sections with JSX content by their slugs
+    const jsxSection = result.sections.find(s => s.headingSlug === "mdx-with-jsx-components");
+    const codeExamplesSection = result.sections.find(s => s.headingSlug === "code-examples");
+    const inlineJsxSection = result.sections.find(s => s.headingSlug === "inline-jsx");
+    const mixedContentSection = result.sections.find(s => s.headingSlug === "mixed-content");
 
     // Verify that JSX is preserved in sections
     expect(jsxSection?.content).toContain('<Card className="mb-4">');
@@ -484,13 +513,13 @@ MDX allows mixing markdown and JSX seamlessly.`;
     expect(mixedContentSection?.content).toContain('<Card>');
 
     // Verify the parser handled frontmatter correctly
-    const frontmatterSection = result.sections.find(s => s.isFrontmatter === true);
+    const frontmatterSection = result.sections.find(s => s.headingSlug === "frontmatter");
     expect(frontmatterSection).toBeDefined();
-    expect(frontmatterSection?.heading).toBe('');
+    expect(frontmatterSection?.content).toContain('title: Advanced MDX Example');
     expect(frontmatterSection?.weight).toBe(1.3);
 
     // Imports become part of the Introduction section
-    const introSection = result.sections.find(s => s.heading === "Introduction");
+    const introSection = result.sections.find(s => s.headingSlug === "introduction");
     expect(introSection?.content).toContain("import { Button, Card }");
   });
 });

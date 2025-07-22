@@ -1,5 +1,19 @@
 # Changelog
 
+## 2025-07-22 15:45
+
+- **Simplified Database Schema and Improved Search Scoring:**
+  - Simplified sections table by removing `heading` and `is_frontmatter` columns
+  - Sections now store full markdown content including heading
+  - Added `headingSlug` field to Section interface for URL generation
+  - Implemented logarithmic weight normalization for better search relevance
+  - BM25 score is now the primary signal with weights providing minor boosts
+  - Formula: `BM25 × (1.0 + LOG(section_weight) × 0.1) × (1.0 + LOG(file_weight) × 0.1)`
+  - This ensures BM25 relevance dominates while weights provide subtle influence
+  - Frontmatter weight reduced from 2.0 to 1.3 for better balance
+  - Removed section hash fragments from search.txt URLs for cleaner output
+  - All tests updated and passing with new schema
+
 ## 2025-07-22 15:30
 
 - **Frontmatter Support and Weight-based Ranking:**

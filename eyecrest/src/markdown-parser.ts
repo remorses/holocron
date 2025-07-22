@@ -1,13 +1,13 @@
 import { marked } from 'marked';
+import Slugger from 'github-slugger';
 
 export interface Section {
-  heading: string;
-  content: string;
+  content: string; // Full markdown content including heading
+  headingSlug: string; // URL-friendly slug of the heading
   level: number;
   orderIndex: number;
   startLine: number;
   weight?: number; // Optional weight for ranking
-  isFrontmatter?: boolean; // Whether this section is frontmatter
 }
 
 export interface ParsedMarkdown {
@@ -17,155 +17,107 @@ export interface ParsedMarkdown {
 
 /**
  * Parse markdown content into sections delimited by headings
- * Each section includes a heading and the content that follows it until the next heading
+ * Each section includes the full markdown content (heading + body) until the next heading
  */
 export function parseMarkdownIntoSections(content: string): ParsedMarkdown {
   const sections: Section[] = [];
   let orderIndex = 0;
+  const slugger = new Slugger();
+  
+  // Split content into lines for processing
+  const lines = content.split('\n');
   
   // Check for frontmatter at the beginning of the file
   const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n/m);
-  let contentWithoutFrontmatter = content;
-  let lineOffset = 0;
+  let currentLineIndex = 0;
   
   if (frontmatterMatch) {
-    const frontmatterContent = frontmatterMatch[1];
-    const frontmatterLines = frontmatterMatch[0].split('\n').length;
-    lineOffset = frontmatterLines;
+    const frontmatterFullText = frontmatterMatch[0];
+    const frontmatterLines = frontmatterFullText.split('\n').length;
     
     // Add frontmatter as a special section with higher weight
     sections.push({
-      heading: '',
-      content: frontmatterContent,
+      content: frontmatterFullText.trim(),
+      headingSlug: 'frontmatter',
       level: 0, // Special level for frontmatter
       orderIndex: orderIndex++,
       startLine: 1,
       weight: 1.3, // Higher weight for frontmatter
-      isFrontmatter: true
     });
     
-    // Remove frontmatter from content for further processing
-    contentWithoutFrontmatter = content.substring(frontmatterMatch[0].length);
+    currentLineIndex = frontmatterLines;
   }
   
-  // Parse markdown to tokens
-  const tokens = marked.lexer(contentWithoutFrontmatter);
+  // Find all heading positions
+  const headingPositions: { line: number; level: number; text: string }[] = [];
   
-  // Track line numbers
-  const lines = content.split('\n');
-  let currentLine = lineOffset + 1;
-  
-  let currentHeading = '';
-  let currentLevel = 1;
-  let currentContent: string[] = [];
-  let currentStartLine = lineOffset + 1;
-
-  // Helper function to save current section
-  const saveCurrentSection = () => {
-    if (currentHeading || currentContent.length > 0) {
-      sections.push({
-        heading: currentHeading || 'Introduction',
-        content: currentContent.join('\n').trim(),
-        level: currentLevel,
-        orderIndex: orderIndex++,
-        startLine: currentStartLine
+  for (let i = currentLineIndex; i < lines.length; i++) {
+    const line = lines[i];
+    const headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
+    if (headingMatch) {
+      headingPositions.push({
+        line: i,
+        level: headingMatch[1].length,
+        text: headingMatch[2]
       });
-      currentContent = [];
     }
-  };
-
-  for (const token of tokens) {
-    if (token.type === 'heading') {
-      // Save previous section
-      saveCurrentSection();
-      
-      // Start new section
-      currentHeading = token.text;
-      currentLevel = token.depth;
-      currentStartLine = currentLine;
-    } else {
-      // Add content to current section
-      // Convert token back to markdown for storage
-      const tokenMarkdown = tokenToMarkdown(token);
-      if (tokenMarkdown.trim()) {
-        currentContent.push(tokenMarkdown);
+  }
+  
+  // If no headings found, treat entire content (minus frontmatter) as one section
+  if (headingPositions.length === 0) {
+    if (currentLineIndex < lines.length) {
+      const remainingContent = lines.slice(currentLineIndex).join('\n').trim();
+      if (remainingContent) {
+        sections.push({
+          content: remainingContent,
+          headingSlug: 'introduction',
+          level: 1,
+          orderIndex: orderIndex++,
+          startLine: currentLineIndex + 1
+        });
+      }
+    }
+  } else {
+    // Process content before first heading if any
+    if (currentLineIndex < headingPositions[0].line) {
+      const introContent = lines.slice(currentLineIndex, headingPositions[0].line).join('\n').trim();
+      if (introContent) {
+        sections.push({
+          content: introContent,
+          headingSlug: 'introduction',
+          level: 1,
+          orderIndex: orderIndex++,
+          startLine: currentLineIndex + 1
+        });
       }
     }
     
-    // Update line count based on token raw content
-    if (token.raw) {
-      // Count newlines in the raw token text
-      const newlines = (token.raw.match(/\n/g) || []).length;
-      currentLine += newlines;
+    // Process each heading and its content
+    for (let i = 0; i < headingPositions.length; i++) {
+      const currentHeading = headingPositions[i];
+      const nextHeading = headingPositions[i + 1];
+      
+      const startLine = currentHeading.line;
+      const endLine = nextHeading ? nextHeading.line : lines.length;
+      
+      const sectionContent = lines.slice(startLine, endLine).join('\n').trim();
+      
+      if (sectionContent) {
+        sections.push({
+          content: sectionContent,
+          headingSlug: slugger.slug(currentHeading.text),
+          level: currentHeading.level,
+          orderIndex: orderIndex++,
+          startLine: startLine + 1 // Convert to 1-based line numbering
+        });
+      }
     }
-  }
-
-  // Save final section
-  saveCurrentSection();
-
-  // If no sections were created (no headings), create a single section
-  if (sections.length === 0 && content.trim()) {
-    sections.push({
-      heading: 'Content',
-      content: content.trim(),
-      level: 1,
-      orderIndex: 0,
-      startLine: 1
-    });
   }
 
   return {
     sections,
     totalSections: sections.length
   };
-}
-
-/**
- * Convert a marked token back to markdown string
- */
-function tokenToMarkdown(token: any): string {
-  switch (token.type) {
-    case 'paragraph':
-      return token.text + '\n';
-    
-    case 'code':
-      return '```' + (token.lang || '') + '\n' + token.text + '\n```\n';
-    
-    case 'blockquote':
-      return '> ' + token.text + '\n';
-    
-    case 'list':
-      return token.items
-        .map((item, index) => {
-          const marker = token.ordered ? `${index + 1}. ` : '- ';
-          return marker + item.text;
-        })
-        .join('\n') + '\n';
-    
-    case 'list_item':
-      return '- ' + token.text + '\n';
-    
-    case 'hr':
-      return '---\n';
-    
-    case 'table':
-      const header = '| ' + token.header.map(cell => cell.text).join(' | ') + ' |';
-      const separator = '| ' + token.header.map(() => '---').join(' | ') + ' |';
-      const rows = token.rows.map(row => 
-        '| ' + row.map(cell => cell.text).join(' | ') + ' |'
-      );
-      return [header, separator, ...rows].join('\n') + '\n';
-    
-    case 'text':
-      return token.text;
-    
-    case 'space':
-      return '\n';
-    
-    default:
-      // For other token types, try to extract text or return raw
-      return (token as any).text || (token as any).raw || '';
-  }
 }
 
 /**

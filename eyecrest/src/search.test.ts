@@ -273,7 +273,6 @@ Each of these phrases represents a specific action in our API.`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
             "score": -1.2962046557325768,
-            "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
             "snippet": "## Mixed Patterns
 
@@ -297,7 +296,6 @@ Each of these phrases represents a specific action in our API.`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
             "score": -1.2564397609790081,
-            "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
             "snippet": "## Mixed Cases
 
@@ -317,7 +315,6 @@ Each of these phrases represents a specific action in our API.`
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
             "filename": "camelCase-test.md",
             "score": -1.1953230058509159,
-            "section": "CamelCase Patterns",
             "sectionSlug": "camelcase-patterns",
             "snippet": "# CamelCase Patterns
 
@@ -342,7 +339,7 @@ Each of these phrases represents a specific action in our API.`
     expect(text).toMatchInlineSnapshot(`
       "### Mixed Patterns
 
-      [kebab-case-test.md:7](/v1/datasets/search-research-1753191000000/files/kebab-case-test.md?start=7#mixed-patterns)
+      [kebab-case-test.md:7](/v1/datasets/search-research-1753192200000/files/kebab-case-test.md?start=7)
 
       ## Mixed Patterns
 
@@ -359,7 +356,7 @@ Each of these phrases represents a specific action in our API.`
 
       ### Mixed Cases
 
-      [camelCase-test.md:7](/v1/datasets/search-research-1753191000000/files/camelCase-test.md?start=7#mixed-cases)
+      [camelCase-test.md:7](/v1/datasets/search-research-1753192200000/files/camelCase-test.md?start=7)
 
       ## Mixed Cases
 
@@ -374,9 +371,9 @@ Each of these phrases represents a specific action in our API.`
 
       ---
 
-      ### CamelCase Patterns
+      ## CamelCase Patterns
 
-      [camelCase-test.md:1](/v1/datasets/search-research-1753191000000/files/camelCase-test.md?start=1#camelcase-patterns)
+      [camelCase-test.md:1](/v1/datasets/search-research-1753192200000/files/camelCase-test.md?start=1)
 
       # CamelCase Patterns
 
@@ -431,7 +428,6 @@ Each of these phrases represents a specific action in our API.`
       Choose the notation that best fits your language and framework conventions.",
             "filename": "dot.notation.test.md",
             "score": -1.3330595727772367,
-            "section": "Mixed Notations",
             "sectionSlug": "mixed-notations",
             "snippet": "## Mixed Notations
 
@@ -451,7 +447,6 @@ Each of these phrases represents a specific action in our API.`
       You can chain property access for nested objects:  object.property  or even deeper nesting like  nested.object.property .",
             "filename": "dot.notation.test.md",
             "score": -0.7283727562597273,
-            "section": "Dot Notation Patterns",
             "sectionSlug": "dot-notation-patterns",
             "snippet": "# Dot Notation Patterns
 
@@ -470,7 +465,6 @@ Each of these phrases represents a specific action in our API.`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
             "score": -1.3095144734761124,
-            "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
             "snippet": "## Mixed Patterns
 
@@ -490,7 +484,6 @@ Each of these phrases represents a specific action in our API.`
       This naming convention uses hyphens to separate words:  kebab-case ,  kebab-case-pattern , and  this-is-kebab-case .",
             "filename": "kebab-case-test.md",
             "score": -0.7283727562597273,
-            "section": "Kebab Case Patterns",
             "sectionSlug": "kebab-case-patterns",
             "snippet": "# Kebab Case Patterns
 
@@ -508,12 +501,10 @@ Each of these phrases represents a specific action in our API.`
       Each of these phrases represents a specific action in our API.",
             "filename": "exact-phrases.md",
             "score": -0.7990198743163188,
-            "section": "Multi-word Phrases",
             "sectionSlug": "multi-word-phrases",
             "snippet": "## Multi-word Phrases
 
       Here are some common multi-word technical phrases:
-
       - To retrieve information: "get user data"
       - For modifications: "update user profile"  
       - For deletions: "delete user account"
@@ -575,7 +566,6 @@ Each of these phrases represents a specific action in our API.`
       "User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
             "filename": "exact-phrases.md",
             "score": -2.4501414924886493,
-            "section": "Common Technical Phrases",
             "sectionSlug": "common-technical-phrases",
             "snippet": "## Common Technical Phrases
 
@@ -598,7 +588,7 @@ Each of these phrases represents a specific action in our API.`
     expect(text).toMatchInlineSnapshot(`
       "### Common Technical Phrases
 
-      [exact-phrases.md:3](/v1/datasets/search-research-1753191000000/files/exact-phrases.md?start=3#common-technical-phrases)
+      [exact-phrases.md:3](/v1/datasets/search-research-1753192200000/files/exact-phrases.md?start=3)
 
       ## Common Technical Phrases
 
@@ -659,7 +649,6 @@ Each of these phrases represents a specific action in our API.`
       Contact information might include email addresses such as  user@example.com  or  admin@test.org .",
             "filename": "special_chars_test.md",
             "score": -0.24303271168465695,
-            "section": "Email Addresses",
             "sectionSlug": "email-addresses",
             "snippet": "## Email Addresses
 
@@ -671,7 +660,6 @@ Each of these phrases represents a specific action in our API.`
       "User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
             "filename": "exact-phrases.md",
             "score": -0.21074190552434838,
-            "section": "Common Technical Phrases",
             "sectionSlug": "common-technical-phrases",
             "snippet": "## Common Technical Phrases
 
@@ -694,7 +682,7 @@ Each of these phrases represents a specific action in our API.`
     expect(text).toMatchInlineSnapshot(`
       "### Mixed Notations
 
-      [dot.notation.test.md:7](/v1/datasets/search-research-1753191000000/files/dot.notation.test.md?start=7#mixed-notations)
+      [dot.notation.test.md:7](/v1/datasets/search-research-1753192200000/files/dot.notation.test.md?start=7)
 
       ## Mixed Notations
 
@@ -709,9 +697,9 @@ Each of these phrases represents a specific action in our API.`
 
       ---
 
-      ### Dot Notation Patterns
+      ## Dot Notation Patterns
 
-      [dot.notation.test.md:1](/v1/datasets/search-research-1753191000000/files/dot.notation.test.md?start=1#dot-notation-patterns)
+      [dot.notation.test.md:1](/v1/datasets/search-research-1753192200000/files/dot.notation.test.md?start=1)
 
       # Dot Notation Patterns
 
@@ -723,7 +711,7 @@ Each of these phrases represents a specific action in our API.`
 
       ### Mixed Patterns
 
-      [kebab-case-test.md:7](/v1/datasets/search-research-1753191000000/files/kebab-case-test.md?start=7#mixed-patterns)
+      [kebab-case-test.md:7](/v1/datasets/search-research-1753192200000/files/kebab-case-test.md?start=7)
 
       ## Mixed Patterns
 
@@ -738,9 +726,9 @@ Each of these phrases represents a specific action in our API.`
 
       ---
 
-      ### Kebab Case Patterns
+      ## Kebab Case Patterns
 
-      [kebab-case-test.md:1](/v1/datasets/search-research-1753191000000/files/kebab-case-test.md?start=1#kebab-case-patterns)
+      [kebab-case-test.md:1](/v1/datasets/search-research-1753192200000/files/kebab-case-test.md?start=1)
 
       # Kebab Case Patterns
 
@@ -752,7 +740,7 @@ Each of these phrases represents a specific action in our API.`
 
       ### Mixed Cases
 
-      [camelCase-test.md:7](/v1/datasets/search-research-1753191000000/files/camelCase-test.md?start=7#mixed-cases)
+      [camelCase-test.md:7](/v1/datasets/search-research-1753192200000/files/camelCase-test.md?start=7)
 
       ## Mixed Cases
 
@@ -769,12 +757,11 @@ Each of these phrases represents a specific action in our API.`
 
       ### Multi-word Phrases
 
-      [exact-phrases.md:11](/v1/datasets/search-research-1753191000000/files/exact-phrases.md?start=11#multi-word-phrases)
+      [exact-phrases.md:11](/v1/datasets/search-research-1753192200000/files/exact-phrases.md?start=11)
 
       ## Multi-word Phrases
 
       Here are some common multi-word technical phrases:
-
       - To retrieve information: "get user data"
       - For modifications: "update user profile"  
       - For deletions: "delete user account"
@@ -808,7 +795,6 @@ Each of these phrases represents a specific action in our API.`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
             "score": -1.4096434188982927,
-            "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
             "snippet": "## Mixed Cases
 
@@ -828,7 +814,6 @@ Each of these phrases represents a specific action in our API.`
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
             "filename": "camelCase-test.md",
             "score": -1.056736472877257,
-            "section": "CamelCase Patterns",
             "sectionSlug": "camelcase-patterns",
             "snippet": "# CamelCase Patterns
 
@@ -845,12 +830,10 @@ Each of these phrases represents a specific action in our API.`
       - Map methods: \`map.get("key")\`",
             "filename": "special_chars_test.md",
             "score": -0.9064805094885211,
-            "section": "Array and Object Access",
             "sectionSlug": "array-and-object-access",
             "snippet": "## Array and Object Access
 
       JavaScript provides multiple ways to access data:
-
       - Array access: \`array[0]\`
       - Object bracket notation: \`object["key"]\`
       - Map methods: \`map.get("key")\`",
@@ -865,12 +848,10 @@ Each of these phrases represents a specific action in our API.`
       Each of these phrases represents a specific action in our API.",
             "filename": "exact-phrases.md",
             "score": -0.7990198743163188,
-            "section": "Multi-word Phrases",
             "sectionSlug": "multi-word-phrases",
             "snippet": "## Multi-word Phrases
 
       Here are some common multi-word technical phrases:
-
       - To retrieve information: "get user data"
       - For modifications: "update user profile"  
       - For deletions: "delete user account"
@@ -888,7 +869,6 @@ Each of these phrases represents a specific action in our API.`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
             "score": -0.7821611585518953,
-            "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
             "snippet": "## Mixed Patterns
 
@@ -1069,7 +1049,6 @@ Each of these phrases represents a specific action in our API.`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
             "score": -2.5924093114651536,
-            "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
             "snippet": "## Mixed Patterns
 
@@ -1093,7 +1072,6 @@ Each of these phrases represents a specific action in our API.`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
             "score": -2.5128795219580162,
-            "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
             "snippet": "## Mixed Cases
 
@@ -1113,7 +1091,6 @@ Each of these phrases represents a specific action in our API.`
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
             "filename": "camelCase-test.md",
             "score": -2.3906460117018318,
-            "section": "CamelCase Patterns",
             "sectionSlug": "camelcase-patterns",
             "snippet": "# CamelCase Patterns
 
@@ -1151,7 +1128,6 @@ Each of these phrases represents a specific action in our API.`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
             "score": -1.8159400322442705,
-            "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
             "snippet": "## Mixed Cases
 
@@ -1173,12 +1149,10 @@ Each of these phrases represents a specific action in our API.`
       - Map methods: \`map.get("key")\`",
             "filename": "special_chars_test.md",
             "score": -1.502227825919204,
-            "section": "Array and Object Access",
             "sectionSlug": "array-and-object-access",
             "snippet": "## Array and Object Access
 
       JavaScript provides multiple ways to access data:
-
       - Array access: \`array[0]\`
       - Object bracket notation: \`object["key"]\`
       - Map methods: \`map.get("key")\`",
@@ -1193,12 +1167,10 @@ Each of these phrases represents a specific action in our API.`
       Each of these phrases represents a specific action in our API.",
             "filename": "exact-phrases.md",
             "score": -1.3241430743367117,
-            "section": "Multi-word Phrases",
             "sectionSlug": "multi-word-phrases",
             "snippet": "## Multi-word Phrases
 
       Here are some common multi-word technical phrases:
-
       - To retrieve information: "get user data"
       - For modifications: "update user profile"  
       - For deletions: "delete user account"
@@ -1254,7 +1226,6 @@ Each of these phrases represents a specific action in our API.`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
             "score": -1.2962046557325768,
-            "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
             "snippet": "## Mixed Patterns
 
@@ -1278,7 +1249,6 @@ Each of these phrases represents a specific action in our API.`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
             "score": -1.2564397609790081,
-            "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
             "snippet": "## Mixed Cases
 
@@ -1298,7 +1268,6 @@ Each of these phrases represents a specific action in our API.`
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
             "filename": "camelCase-test.md",
             "score": -1.1953230058509159,
-            "section": "CamelCase Patterns",
             "sectionSlug": "camelcase-patterns",
             "snippet": "# CamelCase Patterns
 
@@ -1336,7 +1305,6 @@ Each of these phrases represents a specific action in our API.`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
             "score": -1.2962046557325768,
-            "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
             "snippet": "## Mixed Patterns
 
@@ -1360,7 +1328,6 @@ Each of these phrases represents a specific action in our API.`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
             "score": -1.2564397609790081,
-            "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
             "snippet": "## Mixed Cases
 
@@ -1380,7 +1347,6 @@ Each of these phrases represents a specific action in our API.`
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
             "filename": "camelCase-test.md",
             "score": -1.1953230058509159,
-            "section": "CamelCase Patterns",
             "sectionSlug": "camelcase-patterns",
             "snippet": "# CamelCase Patterns
 

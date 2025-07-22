@@ -14,35 +14,33 @@
         "bindings": [
             { "name": "DATASET_CACHE", "class_name": "DatasetCache" },
             { "name": "REPO_CACHE", "class_name": "RepoCache" },
-            { "name": "MCP_OBJECT", "class_name": "MyMCP" },
-        ],
+            { "name": "MCP_OBJECT", "class_name": "MyMCP" }
+        ]
     },
 
     "migrations": [
         {
             "tag": "v1",
-            "new_sqlite_classes": ["RepoCache"], // tells CF this DO uses the built‑in SQLite store
+            "new_sqlite_classes": ["RepoCache"]
         },
         {
             "tag": "v2",
-            "new_sqlite_classes": ["MyMCP"], // tells CF this DO uses the built‑in SQLite store
+            "new_sqlite_classes": ["MyMCP"]
         },
         {
             "tag": "v3",
-            "new_sqlite_classes": ["DatasetCache"] // tells CF this DO uses the built‑in SQLite store
-        },
+            "new_sqlite_classes": ["DatasetCache"]
+        }
     ],
 
     "vars": {
 
     },
 
-
-
     "routes": [
         {
             "pattern": "eyecrest.org",
-            "custom_domain": true,
-        },
-    ],
+            "custom_domain": true
+        }
+    ]
 }
