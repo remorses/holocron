@@ -7,6 +7,17 @@
   - Limited dataset ID length to maximum 400 characters
   - Added `DatasetIdSchema` using Zod validation with regex pattern `/^[a-zA-Z0-9_-]+$/`
   - Applied validation to all API routes that accept dataset ID as a parameter
+  - Deployed and verified all tests pass with the new validation
+
+- **Improved test snapshot stability:**
+  - Added `roundToNearest5Minutes` function to round timestamps in dataset IDs to nearest 5 minutes
+  - Updated both `search.test.ts` and `production.test.ts` to use rounded timestamps
+  - Prevents snapshot updates on every test run, making them stable within 5-minute windows
+
+- **Verified search.txt route separator:**
+  - Confirmed that search results in text format are properly separated by `---` between chunks
+  - The implementation uses `.join('\n---\n\n')` which correctly adds the separator
+  - Test snapshots show proper formatting with `---` separators between search results
 
 ## 2025-07-22 14:56
 

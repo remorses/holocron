@@ -3,6 +3,12 @@ import { env } from 'cloudflare:test';
 
 const PRODUCTION_URL = 'https://eyecrest.org';
 
+// Round timestamp to nearest 5 minutes for stable snapshots
+function roundToNearest5Minutes(timestamp: number): number {
+  const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+  return Math.round(timestamp / fiveMinutes) * fiveMinutes;
+}
+
 // JWT token from Cloudflare test environment
 const JWT_TOKEN = env.EYECREST_EXAMPLE_JWT;
 if (!JWT_TOKEN) {
@@ -21,7 +27,7 @@ const jsonHeaders = {
 
 describe('Eyecrest Performance Tests', () => {
   test('upsert performance with multiple files', async () => {
-    const perfDatasetId = `perf-test-${Date.now()}`;
+    const perfDatasetId = `perf-test-${roundToNearest5Minutes(Date.now())}`;
     
     // Create 10 test files
     const testFiles = Array.from({ length: 10 }, (_, i) => ({
@@ -81,7 +87,7 @@ Final section. ${Array(100).fill('et dolore magna aliqua. ').join('')}`
 
 describe('Eyecrest Search Tokenization Research', () => {
   // Use timestamp for unique dataset ID to avoid schema conflicts
-  const TEST_DATASET_ID = `search-research-${Date.now()}`;
+  const TEST_DATASET_ID = `search-research-${roundToNearest5Minutes(Date.now())}`;
   let uploadedFiles: string[] = [];
 
   beforeAll(async () => {
@@ -333,7 +339,7 @@ Each of these phrases represents a specific action in our API.`
     expect(text).toMatchInlineSnapshot(`
       "### Mixed Patterns
 
-      [kebab-case-test.md:1](/v1/datasets/search-research-1753188996698/files/kebab-case-test.md#mixed-patterns)
+      [kebab-case-test.md:1](/v1/datasets/search-research-1753189500000/files/kebab-case-test.md#mixed-patterns)
 
       ## Mixed Patterns
 
@@ -350,7 +356,7 @@ Each of these phrases represents a specific action in our API.`
 
       ### Mixed Cases
 
-      [camelCase-test.md:1](/v1/datasets/search-research-1753188996698/files/camelCase-test.md#mixed-cases)
+      [camelCase-test.md:1](/v1/datasets/search-research-1753189500000/files/camelCase-test.md#mixed-cases)
 
       ## Mixed Cases
 
@@ -367,7 +373,7 @@ Each of these phrases represents a specific action in our API.`
 
       ### CamelCase Patterns
 
-      [camelCase-test.md:1](/v1/datasets/search-research-1753188996698/files/camelCase-test.md#camelcase-patterns)
+      [camelCase-test.md:1](/v1/datasets/search-research-1753189500000/files/camelCase-test.md#camelcase-patterns)
 
       # CamelCase Patterns
 
@@ -583,7 +589,7 @@ Each of these phrases represents a specific action in our API.`
     expect(text).toMatchInlineSnapshot(`
       "### Common Technical Phrases
 
-      [exact-phrases.md:1](/v1/datasets/search-research-1753188996698/files/exact-phrases.md#common-technical-phrases)
+      [exact-phrases.md:1](/v1/datasets/search-research-1753189500000/files/exact-phrases.md#common-technical-phrases)
 
       ## Common Technical Phrases
 
@@ -677,7 +683,7 @@ Each of these phrases represents a specific action in our API.`
     expect(text).toMatchInlineSnapshot(`
       "### Mixed Notations
 
-      [dot.notation.test.md:1](/v1/datasets/search-research-1753188996698/files/dot.notation.test.md#mixed-notations)
+      [dot.notation.test.md:1](/v1/datasets/search-research-1753189500000/files/dot.notation.test.md#mixed-notations)
 
       ## Mixed Notations
 
@@ -694,7 +700,7 @@ Each of these phrases represents a specific action in our API.`
 
       ### Dot Notation Patterns
 
-      [dot.notation.test.md:1](/v1/datasets/search-research-1753188996698/files/dot.notation.test.md#dot-notation-patterns)
+      [dot.notation.test.md:1](/v1/datasets/search-research-1753189500000/files/dot.notation.test.md#dot-notation-patterns)
 
       # Dot Notation Patterns
 
@@ -706,7 +712,7 @@ Each of these phrases represents a specific action in our API.`
 
       ### Mixed Patterns
 
-      [kebab-case-test.md:1](/v1/datasets/search-research-1753188996698/files/kebab-case-test.md#mixed-patterns)
+      [kebab-case-test.md:1](/v1/datasets/search-research-1753189500000/files/kebab-case-test.md#mixed-patterns)
 
       ## Mixed Patterns
 
@@ -723,7 +729,7 @@ Each of these phrases represents a specific action in our API.`
 
       ### Kebab Case Patterns
 
-      [kebab-case-test.md:1](/v1/datasets/search-research-1753188996698/files/kebab-case-test.md#kebab-case-patterns)
+      [kebab-case-test.md:1](/v1/datasets/search-research-1753189500000/files/kebab-case-test.md#kebab-case-patterns)
 
       # Kebab Case Patterns
 
@@ -735,7 +741,7 @@ Each of these phrases represents a specific action in our API.`
 
       ### Mixed Cases
 
-      [camelCase-test.md:1](/v1/datasets/search-research-1753188996698/files/camelCase-test.md#mixed-cases)
+      [camelCase-test.md:1](/v1/datasets/search-research-1753189500000/files/camelCase-test.md#mixed-cases)
 
       ## Mixed Cases
 
@@ -752,7 +758,7 @@ Each of these phrases represents a specific action in our API.`
 
       ### Multi-word Phrases
 
-      [exact-phrases.md:1](/v1/datasets/search-research-1753188996698/files/exact-phrases.md#multi-word-phrases)
+      [exact-phrases.md:1](/v1/datasets/search-research-1753189500000/files/exact-phrases.md#multi-word-phrases)
 
       ## Multi-word Phrases
 

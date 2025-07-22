@@ -1,10 +1,15 @@
 import { describe, test, expect, afterAll } from 'vitest';
 import { env } from 'cloudflare:test';
 
+// Round timestamp to nearest 5 minutes for stable snapshots
+function roundToNearest5Minutes(timestamp: number): number {
+  const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+  return Math.round(timestamp / fiveMinutes) * fiveMinutes;
+}
 
 const PRODUCTION_URL = 'https://eyecrest.org';
 // Dataset ID must match the orgId in the JWT token
-const TEST_DATASET_ID = 'test-org-123-xx-dataset-' + Date.now(); // Unique dataset ID for this test run
+const TEST_DATASET_ID = 'test-org-123-xx-dataset-' + roundToNearest5Minutes(Date.now()); // Unique dataset ID for this test run
 
 // JWT token from Cloudflare test environment
 const JWT_TOKEN = env.EYECREST_EXAMPLE_JWT;
