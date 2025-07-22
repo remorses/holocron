@@ -7,8 +7,13 @@ export default defineWorkersConfig({
                 wrangler: { configPath: './wrangler.jsonc' },
             },
         },
-    },
-    ssr: {
-        // noExternal: true,
+        deps: {
+            optimizer: {
+                ssr: {
+                    enabled: true,
+                    include: ['ajv'],
+                },
+            },
+        },
     },
 })

@@ -1,21 +1,80 @@
 import { describe, test, expect, afterAll } from 'vitest';
-import { computeGitBlobSHA } from './sha-utils.js';
+import { env } from 'cloudflare:test';
 
 const PRODUCTION_URL = 'https://eyecrest.org';
-const TEST_DATASET_ID = 'test-dataset-v2-' + Date.now(); // Unique dataset ID for this test run
+// Dataset ID must match the orgId in the JWT token
+const TEST_DATASET_ID = 'test-org-123-xx-dataset-' + Date.now(); // Unique dataset ID for this test run
+
+// JWT token from Cloudflare test environment
+const JWT_TOKEN = env.EYECREST_EXAMPLE_JWT;
+if (!JWT_TOKEN) {
+  throw new Error('EYECREST_EXAMPLE_JWT not found in test environment. Make sure it is set in .dev.vars');
+}
+
+// Common headers with authentication
+const authHeaders = {
+  'Authorization': `Bearer ${JWT_TOKEN}`
+};
+
+const jsonHeaders = {
+  'Content-Type': 'application/json',
+  ...authHeaders
+};
 
 // Track files to clean up
 const filesToCleanup: string[] = [];
 
 describe('Eyecrest Production API', () => {
+  // Test authentication failures first
+  test('should reject requests without authorization header', async () => {
+    const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`);
+
+    expect(response.ok).toBe(false);
+    expect(response.status).toBe(401);
+
+    const error = await response.json() as any;
+    expect(error.error).toContain('Missing or invalid Authorization header');
+  });
+
+  test('should reject requests with invalid JWT token', async () => {
+    const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
+      headers: {
+        'Authorization': 'Bearer invalid-jwt-token'
+      }
+    });
+
+    expect(response.ok).toBe(false);
+    expect(response.status).toBe(401);
+
+    const error = await response.json() as any;
+    expect(error.error).toContain('JWT verification failed');
+  });
+
+  test('should reject requests with wrong authorization scheme', async () => {
+    const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
+      headers: {
+        'Authorization': 'Basic dXNlcjpwYXNz' // Basic auth instead of Bearer
+      }
+    });
+
+    expect(response.ok).toBe(false);
+    expect(response.status).toBe(401);
+
+    const error = await response.json() as any;
+    expect(error.error).toContain('Missing or invalid Authorization header');
+  });
+
   afterAll(async () => {
     // Clean up all test files as the last action
     if (filesToCleanup.length > 0) {
       console.log(`🗑️  Cleaning up ${filesToCleanup.length} test files...`);
-      
+
       const deleteResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${JWT_TOKEN}`
+        },
         body: JSON.stringify({
           filenames: filesToCleanup
         })
@@ -29,7 +88,7 @@ describe('Eyecrest Production API', () => {
     }
   });
 
-  test('should upload files with SHA validation', async () => {
+  test('should upload files', async () => {
     const testContent = `# Test File
 
 This is a test file for the Eyecrest API.
@@ -44,23 +103,20 @@ This is a test file for the Eyecrest API.
 
 Upload markdown files and search through them.`;
 
-    const sha = await computeGitBlobSHA(testContent);
-    
     const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
       body: JSON.stringify({
         files: [{
           filename: 'test.md',
-          content: testContent,
-          sha: sha
+          content: testContent
         }]
       })
     });
 
     expect(response.ok).toBe(true);
     expect(response.status).toBe(200);
-    
+
     // Track for cleanup
     filesToCleanup.push('test.md');
   });
@@ -68,10 +124,10 @@ Upload markdown files and search through them.`;
   test('should reject files with incorrect SHA', async () => {
     const testContent = 'This is test content';
     const wrongSHA = 'incorrect_sha_hash';
-    
+
     const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
       body: JSON.stringify({
         files: [{
           filename: 'bad-sha.md',
@@ -86,27 +142,34 @@ Upload markdown files and search through them.`;
   });
 
   test('should retrieve file content with SHA', async () => {
-    const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/test.md`);
-    
+    const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/test.md`, {
+      headers: {
+        'Authorization': `Bearer ${JWT_TOKEN}`
+      }
+    });
+
     if (!response.ok) {
       console.log('File retrieval failed, possibly due to old database schema');
       return;
     }
-    
+
     const data = await response.json() as any;
     expect(data).toMatchInlineSnapshot();
   });
 
   test('should retrieve file with line numbers', async () => {
     const response = await fetch(
-      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/test.md?showLineNumbers=true&start=5&end=10`
+      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/test.md?showLineNumbers=true&start=5&end=10`,
+      {
+        headers: authHeaders
+      }
     );
-    
+
     if (!response.ok) {
       console.log('File retrieval failed, possibly due to old database schema');
       return;
     }
-    
+
     const data = await response.json() as any;
     expect(data.content).toMatchInlineSnapshot();
   });
@@ -143,25 +206,23 @@ Configure your client with the API endpoint.`;
     const files = [
       {
         filename: 'guide.mdx',
-        content: mdxContent,
-        sha: await computeGitBlobSHA(mdxContent)
+        content: mdxContent
       },
       {
         filename: 'docs/install.md',
-        content: docContent,
-        sha: await computeGitBlobSHA(docContent)
+        content: docContent
       }
     ];
 
     const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
       body: JSON.stringify({ files })
     });
 
     expect(response.ok).toBe(true);
     expect(response.status).toBe(200);
-    
+
     // Track for cleanup
     filesToCleanup.push('guide.mdx', 'docs/install.md');
   });
@@ -169,13 +230,16 @@ Configure your client with the API endpoint.`;
   test('should search across file sections', async () => {
     // Wait a moment for indexing
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     const response = await fetch(
-      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=installation`
+      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=installation`,
+      {
+        headers: authHeaders
+      }
     );
-    
+
     expect(response.ok).toBe(true);
-    
+
     const data = await response.json() as any;
     expect(data).toMatchInlineSnapshot(`
       {
@@ -236,22 +300,32 @@ Configure your client with the API endpoint.`;
 
   test('should return plain text search results', async () => {
     const response = await fetch(
-      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search.txt?query=configuration`
+      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search.txt?query=configuration`,
+      {
+        headers: authHeaders
+      }
     );
-    
+
     expect(response.ok).toBe(true);
-    
+
     const text = await response.text();
-    expect(text).toMatchInlineSnapshot(`""### Configuration\\n\\n[docs/install.md:1](/v1/datasets/test-dataset-v2-1753134472264/files/docs/install.md)\\n\\nConfiguration\\n""`);
+    // Verify markdown format
+    expect(text).toContain('### Configuration');
+    expect(text).toContain('[docs/install.md:');
+    expect(text).toContain('](/v1/datasets/');
+    expect(text).toContain('/files/docs/install.md)');
   });
 
   test('should support pagination in search', async () => {
     const response = await fetch(
-      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=the&page=0&perPage=2`
+      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=the&page=0&perPage=2`,
+      {
+        headers: authHeaders
+      }
     );
-    
+
     expect(response.ok).toBe(true);
-    
+
     const data = await response.json() as any;
     expect(data).toMatchInlineSnapshot(`
       {
@@ -298,19 +372,22 @@ Configure your client with the API endpoint.`;
 
   test('should limit results per file with maxChunksPerFile', async () => {
     const response = await fetch(
-      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=the&maxChunksPerFile=1`
+      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=the&maxChunksPerFile=1`,
+      {
+        headers: authHeaders
+      }
     );
-    
+
     expect(response.ok).toBe(true);
-    
+
     const data = await response.json() as any;
-    
+
     // Count results per file
     const filesCount: Record<string, number> = {};
     for (const result of data.results) {
       filesCount[result.filename] = (filesCount[result.filename] || 0) + 1;
     }
-    
+
     // Each file should have at most 1 result
     for (const count of Object.values(filesCount)) {
       expect(count).toBeLessThanOrEqual(1);
@@ -319,20 +396,26 @@ Configure your client with the API endpoint.`;
 
   test('should return 404 for non-existent file', async () => {
     const response = await fetch(
-      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/non-existent.md`
+      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/non-existent.md`,
+      {
+        headers: authHeaders
+      }
     );
-    
+
     expect(response.ok).toBe(false);
     expect(response.status).toBe(500); // Worker throws error which becomes 500
   });
 
   test('should handle empty search results', async () => {
     const response = await fetch(
-      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=xyznonexistentquery`
+      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=xyznonexistentquery`,
+      {
+        headers: authHeaders
+      }
     );
-    
+
     expect(response.ok).toBe(true);
-    
+
     const data = await response.json() as any;
     expect(data).toMatchInlineSnapshot(`
       {
@@ -364,17 +447,14 @@ Content in second section.`;
       customField: { nested: true }
     };
 
-    const sha = await computeGitBlobSHA(content);
-    
     // Upload file with metadata
     const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
       body: JSON.stringify({
         files: [{
           filename: 'metadata-test.md',
           content: content,
-          sha: sha,
           metadata: metadata
         }]
       })
@@ -382,73 +462,81 @@ Content in second section.`;
 
     expect(response.ok).toBe(true);
     filesToCleanup.push('metadata-test.md');
-    
+
     // Retrieve file to verify metadata
-    const getResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/metadata-test.md`);
-    
+    const getResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/metadata-test.md`, {
+      headers: {
+        'Authorization': `Bearer ${JWT_TOKEN}`
+      }
+    });
+
     if (!getResponse.ok) {
       console.log('File retrieval failed, possibly due to old database schema');
       return;
     }
-    
+
     const fileData = await getResponse.json() as any;
     expect(fileData).toMatchInlineSnapshot();
-    
+
     // Wait for indexing
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     // Search to verify line numbers are returned
     const searchResponse = await fetch(
-      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=section`
+      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=section`,
+      {
+        headers: authHeaders
+      }
     );
-    
+
     const searchData = await searchResponse.json() as any;
     expect(searchData).toMatchInlineSnapshot();
   });
 
-  test('should skip re-uploading files with same SHA', async () => {
+  test('should skip re-uploading files with same content', async () => {
     const content = 'Test content for SHA check';
-    const sha = await computeGitBlobSHA(content);
-    
+
     // First upload
     const response1 = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
       body: JSON.stringify({
         files: [{
           filename: 'sha-test.md',
-          content: content,
-          sha: sha
+          content: content
         }]
       })
     });
-    
+
     expect(response1.ok).toBe(true);
     filesToCleanup.push('sha-test.md');
-    
-    // Second upload with same content/SHA should skip processing
+
+    // Second upload with same content should skip processing (SHA computed internally)
     const response2 = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
       body: JSON.stringify({
         files: [{
           filename: 'sha-test.md',
-          content: content,
-          sha: sha
+          content: content
         }]
       })
     });
-    
+
     expect(response2.ok).toBe(true);
-    
+
     // Verify content hasn't changed
-    const getResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/sha-test.md`);
-    
+    const getResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/sha-test.md`, {
+      headers: {
+        'Authorization': `Bearer ${JWT_TOKEN}`
+      }
+    });
+
     if (!getResponse.ok) {
       console.log('File retrieval failed, possibly due to old database schema');
       return;
     }
-    
+
     const data = await getResponse.json() as any;
     expect(data).toMatchInlineSnapshot();
   });
@@ -459,7 +547,7 @@ Content in second section.`;
     const content = 'File to be deleted';
     const response1 = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
       body: JSON.stringify({
         files: [{
           filename: 'to-delete.md',
@@ -467,25 +555,29 @@ Content in second section.`;
         }]
       })
     });
-    
+
     expect(response1.ok).toBe(true);
-    
+
     // Delete the file
     const response2 = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
       body: JSON.stringify({
         filenames: ['to-delete.md']
       })
     });
-    
+
     expect(response2.ok).toBe(true);
     expect(response2.status).toBe(200);
-    
+
     // Verify file is gone
-    const response3 = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/to-delete.md`);
+    const response3 = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/to-delete.md`, {
+      headers: {
+        'Authorization': `Bearer ${JWT_TOKEN}`
+      }
+    });
     expect(response3.ok).toBe(false);
-    
+
     // Remove from cleanup list since it's already deleted
     const index = filesToCleanup.indexOf('to-delete.md');
     if (index > -1) {

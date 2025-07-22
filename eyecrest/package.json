@@ -24,6 +24,8 @@
     "@mjackson/tar-parser": "^0.3.0",
     "@modelcontextprotocol/sdk": "^1.16.0",
     "agents": "^0.0.109",
+    "ajv": "^8.17.1",
+    "jose": "^6.0.12",
     "marked": "^15.0.12",
     "spiceflow": "^1.17.2",
     "zod": "^4.0.5"

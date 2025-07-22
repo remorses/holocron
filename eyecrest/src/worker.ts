@@ -10,6 +10,7 @@ import { openapi } from "spiceflow/openapi";
 import { mcp, addMcpTools } from "spiceflow/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { importSPKI, jwtVerify } from "jose";
 import { parseMarkdownIntoSections, isSupportedMarkdownFile, Section } from "./markdown-parser.js";
 import { computeGitBlobSHA, verifySHA } from "./sha-utils.js";
 
@@ -19,6 +20,7 @@ interface Env {
   DATASET_CACHE: DurableObjectNamespace;
   REPO_CACHE: DurableObjectNamespace;
   ASSETS: Fetcher;
+  EYECREST_PUBLIC_KEY: string; // RSA public key in PEM format
 }
 
 /* ======================================================================
@@ -113,14 +115,36 @@ export class DatasetCache extends DurableObject {
 
       -- Metadata table
       CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, val TEXT);
+      
+      -- Datasets table to track ownership
+      CREATE TABLE IF NOT EXISTS datasets (
+        dataset_id    TEXT PRIMARY KEY,
+        org_id        TEXT NOT NULL,
+        created_at    INTEGER NOT NULL,
+        updated_at    INTEGER NOT NULL
+      );
     `);
 
   }
 
   /* ---------- API Methods ------------- */
 
-  async upsertFiles({ datasetId, files }: { datasetId: string; files: { filename: string; content: string; sha?: string; metadata?: Record<string, any> }[] }): Promise<void> {
+  async upsertFiles({ datasetId, orgId, files }: { datasetId: string; orgId: string; files: { filename: string; content: string; sha?: string; metadata?: Record<string, any> }[] }): Promise<void> {
     this.datasetId = datasetId;
+    
+    // Check if dataset exists and verify ownership
+    const datasetRows = [...this.sql.exec("SELECT org_id FROM datasets WHERE dataset_id = ?", datasetId)];
+    if (datasetRows.length > 0) {
+      const existingOrgId = datasetRows[0].org_id as string;
+      if (existingOrgId !== orgId) {
+        throw new Error("Unauthorized: dataset belongs to a different organization");
+      }
+    } else {
+      // First time creating this dataset - record ownership
+      const now = Date.now();
+      this.sql.exec("INSERT INTO datasets (dataset_id, org_id, created_at, updated_at) VALUES (?, ?, ?, ?)",
+        datasetId, orgId, now, now);
+    }
 
     for (const file of files) {
       const now = Date.now();
@@ -171,8 +195,11 @@ export class DatasetCache extends DurableObject {
     }
   }
 
-  async deleteFiles({ datasetId, filenames }: { datasetId: string; filenames: string[] }): Promise<void> {
+  async deleteFiles({ datasetId, orgId, filenames }: { datasetId: string; orgId: string; filenames: string[] }): Promise<void> {
     this.datasetId = datasetId;
+    
+    // Verify ownership
+    await this.verifyDatasetOwnership(datasetId, orgId);
 
     for (const filename of filenames) {
       // Delete file and its sections (CASCADE will handle sections table)
@@ -183,18 +210,23 @@ export class DatasetCache extends DurableObject {
 
   async getFileContents({
     datasetId,
+    orgId,
     filePath,
     showLineNumbers,
     start,
     end
   }: {
     datasetId: string;
+    orgId: string;
     filePath: string;
     showLineNumbers?: boolean;
     start?: number;
     end?: number;
   }): Promise<{ content: string; sha: string; metadata?: any }> {
     this.datasetId = datasetId;
+    
+    // Verify ownership
+    await this.verifyDatasetOwnership(datasetId, orgId);
 
     const results = [...this.sql.exec("SELECT content, sha, metadata FROM files WHERE filename = ?", filePath)];
     const row = results.length > 0 ? results[0] : null;
@@ -217,12 +249,14 @@ export class DatasetCache extends DurableObject {
 
   async searchSections({
     datasetId,
+    orgId,
     query,
     page = 0,
     perPage = 20,
     maxChunksPerFile = 5
   }: {
     datasetId: string;
+    orgId: string;
     query: string;
     page?: number;
     perPage?: number;
@@ -241,6 +275,9 @@ export class DatasetCache extends DurableObject {
     perPage: number;
   }> {
     this.datasetId = datasetId;
+    
+    // Verify ownership
+    await this.verifyDatasetOwnership(datasetId, orgId);
 
     const offset = page * perPage;
 
@@ -306,18 +343,20 @@ export class DatasetCache extends DurableObject {
 
   async searchSectionsText({
     datasetId,
+    orgId,
     query,
     page = 0,
     perPage = 20,
     maxChunksPerFile = 5
   }: {
     datasetId: string;
+    orgId: string;
     query: string;
     page?: number;
     perPage?: number;
     maxChunksPerFile?: number;
   }): Promise<string> {
-    const data = await this.searchSections({ datasetId, query, page, perPage, maxChunksPerFile });
+    const data = await this.searchSections({ datasetId, orgId, query, page, perPage, maxChunksPerFile });
 
     // Convert to markdown format with headings and URLs
     const textResult = data.results
@@ -335,6 +374,50 @@ export class DatasetCache extends DurableObject {
 
     return textResult;
   }
+  
+  private async verifyDatasetOwnership(datasetId: string, orgId: string): Promise<void> {
+    const datasetRows = [...this.sql.exec("SELECT org_id FROM datasets WHERE dataset_id = ?", datasetId)];
+    if (datasetRows.length === 0) {
+      throw new Error("Dataset not found");
+    }
+    
+    const existingOrgId = datasetRows[0].org_id as string;
+    if (existingOrgId !== orgId) {
+      throw new Error("Unauthorized: dataset belongs to a different organization");
+    }
+  }
+}
+
+/* ======================================================================
+   JWT Verification
+   ==================================================================== */
+
+interface JWTPayload {
+  orgId: string;
+  exp?: number;
+  iat?: number;
+  [key: string]: any;
+}
+
+async function verifyJWT(token: string, publicKey: string): Promise<JWTPayload> {
+  try {
+    // Import the public key
+    const key = await importSPKI(publicKey, 'RS256');
+    
+    // Verify the JWT
+    const { payload } = await jwtVerify(token, key, {
+      algorithms: ['RS256']
+    });
+    
+    // Check if orgId is present
+    if (!payload.orgId || typeof payload.orgId !== 'string') {
+      throw new Error('JWT missing required orgId claim');
+    }
+    
+    return payload as JWTPayload;
+  } catch (error) {
+    throw new Error(`JWT verification failed: ${error.message}`);
+  }
 }
 
 /* ======================================================================
@@ -344,8 +427,40 @@ export class DatasetCache extends DurableObject {
 const app = new Spiceflow()
   .state("env", {} as Env)
   .state("ctx", {} as ExecutionContext)
+  .state("orgId", null as string | null)
   .use(cors())
   .use(openapi({ path: "/openapi.json" }))
+  
+  // JWT Authorization Middleware for API routes
+  .use(async (context) => {
+    // Skip auth for non-API routes
+    const url = new URL(context.request.url);
+    if (!url.pathname.startsWith('/v1/')) {
+      return;
+    }
+    
+    // Extract JWT from Authorization header
+    const authHeader = context.request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Missing or invalid Authorization header' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    
+    try {
+      // Verify JWT and extract orgId
+      const payload = await verifyJWT(token, context.state.env.EYECREST_PUBLIC_KEY);
+      context.state.orgId = payload.orgId;
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+  })
 
   // 1) Batch upsert files (auto-chunk on server based on extension)
   .route({
@@ -356,11 +471,12 @@ const app = new Spiceflow()
     async handler({ request, params, state }) {
       const { files } = await request.json();
       const { datasetId } = params;
+      const orgId = state.orgId!; // Guaranteed by middleware
 
       const id = state.env.DATASET_CACHE.idFromName(datasetId);
       const stub = state.env.DATASET_CACHE.get(id) as any as DatasetCache;
 
-      await stub.upsertFiles({ datasetId, files });
+      await stub.upsertFiles({ datasetId, orgId, files });
     },
     openapi: { operationId: 'upsertFiles' },
   })
@@ -374,11 +490,12 @@ const app = new Spiceflow()
     async handler({ request, params, state }) {
       const { filenames } = await request.json();
       const { datasetId } = params;
+      const orgId = state.orgId!; // Guaranteed by middleware
 
       const id = state.env.DATASET_CACHE.idFromName(datasetId);
       const stub = state.env.DATASET_CACHE.get(id) as any as DatasetCache;
 
-      await stub.deleteFiles({ datasetId, filenames });
+      await stub.deleteFiles({ datasetId, orgId, filenames });
     },
     openapi: { operationId: 'deleteFiles' },
   })
@@ -395,12 +512,14 @@ const app = new Spiceflow()
     async handler({ params, query, state }) {
       const { datasetId, '*': filePath } = params;
       const { showLineNumbers, start, end } = query;
+      const orgId = state.orgId!; // Guaranteed by middleware
 
       const id = state.env.DATASET_CACHE.idFromName(datasetId);
       const stub = state.env.DATASET_CACHE.get(id) as any as DatasetCache;
 
       const result = await stub.getFileContents({
         datasetId,
+        orgId,
         filePath,
         showLineNumbers: showLineNumbers === 'true',
         start,
@@ -421,12 +540,14 @@ const app = new Spiceflow()
     async handler({ params, query, state }) {
       const { datasetId } = params;
       const { query: q, page, perPage, maxChunksPerFile } = query;
+      const orgId = state.orgId!; // Guaranteed by middleware
 
       const id = state.env.DATASET_CACHE.idFromName(datasetId);
       const stub = state.env.DATASET_CACHE.get(id) as any as DatasetCache;
 
       const result = await stub.searchSections({
         datasetId,
+        orgId,
         query: q,
         page,
         perPage,
@@ -447,12 +568,14 @@ const app = new Spiceflow()
     async handler({ params, query, state }) {
       const { datasetId } = params;
       const { query: q, page, perPage, maxChunksPerFile } = query;
+      const orgId = state.orgId!; // Guaranteed by middleware
 
       const id = state.env.DATASET_CACHE.idFromName(datasetId);
       const stub = state.env.DATASET_CACHE.get(id) as any as DatasetCache;
 
       const result = await stub.searchSectionsText({
         datasetId,
+        orgId,
         query: q,
         page,
         perPage,
@@ -519,7 +642,7 @@ export { app };
 
 export default {
   fetch: (req: Request, env: Env, ctx: ExecutionContext) =>
-    app.handle(req, { state: { env, ctx } }),
+    app.handle(req, { state: { env, ctx, orgId: null } }),
 };
 
 function formatFileWithLines(
