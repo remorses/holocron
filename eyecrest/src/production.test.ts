@@ -342,10 +342,10 @@ More content in section two.`;
     expect(response.ok).toBe(true);
 
     const data = await response.json() as any;
-    console.log(`⏱️  Search for 'installation' took ${searchTime}ms and found ${data.count} results`);
+    console.log(`⏱️  Search for 'installation' took ${searchTime}ms and found ${data.results.length} results`);
     expect(data).toMatchInlineSnapshot(`
       {
-        "count": 1,
+        "hasNextPage": false,
         "page": 0,
         "perPage": 20,
         "results": [
@@ -385,10 +385,10 @@ More content in section two.`;
     expect(response.ok).toBe(true);
 
     const data = await response.json() as any;
-    console.log(`⏱️  Paginated search for 'the' took ${searchTime}ms and found ${data.count} total results (showing ${data.results.length} on page ${data.page})`);
+    console.log(`⏱️  Paginated search for 'the' took ${searchTime}ms (showing ${data.results.length} on page ${data.page}, hasNextPage: ${data.hasNextPage})`);
     expect(data).toMatchInlineSnapshot(`
       {
-        "count": 3,
+        "hasNextPage": true,
         "page": 0,
         "perPage": 2,
         "results": [
@@ -477,7 +477,7 @@ More content in section two.`;
     const data = await response.json() as any;
     expect(data).toMatchInlineSnapshot(`
       {
-        "count": 0,
+        "hasNextPage": false,
         "page": 0,
         "perPage": 20,
         "results": [],
@@ -540,10 +540,10 @@ More content in section two.`;
     const searchTime = Date.now() - searchStart;
 
     const searchData = await searchResponse.json() as any;
-    console.log(`⏱️  Search for 'section' took ${searchTime}ms and found ${searchData.count} results`);
+    console.log(`⏱️  Search for 'section' took ${searchTime}ms and found ${searchData.results.length} results`);
     expect(searchData).toMatchInlineSnapshot(`
       {
-        "count": 6,
+        "hasNextPage": false,
         "page": 0,
         "perPage": 20,
         "results": [
@@ -699,7 +699,7 @@ More content in section two.`;
 
     expect(response.ok).toBe(true);
     const data = await response.json() as any;
-    console.log(`⏱️  Search for 'author' took ${searchTime}ms and found ${data.count} results`);
+    console.log(`⏱️  Search for 'author' took ${searchTime}ms and found ${data.results.length} results`);
     
     // The frontmatter section should appear first due to higher weight
     expect(data.results.length).toBeGreaterThan(0);

@@ -74,7 +74,7 @@ const SearchSectionsResponseSchema = z.object({
       metadata: z.any().optional().describe('File metadata if available'),
     })
   ),
-  count: z.number().int().describe('Total matching sections'),
+  hasNextPage: z.boolean().describe('Whether there are more results on the next page'),
   page: z.number().int().describe('Current page'),
   perPage: z.number().int().describe('Results per page'),
 });
@@ -347,7 +347,7 @@ export class DatasetCache extends DurableObject {
       startLine: number;
       metadata?: any;
     }>;
-    count: number;
+    hasNextPage: boolean;
     page: number;
     perPage: number;
   }> {
@@ -361,14 +361,8 @@ export class DatasetCache extends DurableObject {
     // Search in sections using FTS
     const searchQuery = decodeURIComponent(query);
 
-    // Get total count - match only on content
-    const countResults = [...this.sql.exec(
-      `SELECT COUNT(*) as count FROM sections_fts WHERE content MATCH ?`,
-      searchQuery
-    )];
-    const totalCount = countResults[0]?.count as number || 0;
-
     // Get paginated results with section details
+    // Fetch one extra result to determine if there's a next page
     // Join using section_slug for simpler and more performant matching
     // Apply weights to BM25 score for better ranking
     const rows = [...this.sql.exec(
@@ -394,9 +388,17 @@ export class DatasetCache extends DurableObject {
       LIMIT ? OFFSET ?`,
       snippetLength,
       searchQuery,
-      perPage,
+      perPage + 1, // Fetch one extra to check for next page
       offset
     )];
+
+    // Check if there are more results
+    const hasNextPage = rows.length > perPage;
+    
+    // Remove the extra result if present
+    if (hasNextPage) {
+      rows.pop();
+    }
 
     // Group results by filename and limit per file
     const fileGroups: Record<string, any[]> = {};
@@ -427,7 +429,7 @@ export class DatasetCache extends DurableObject {
 
     return {
       results,
-      count: totalCount,
+      hasNextPage,
       page,
       perPage,
     };
@@ -453,7 +455,7 @@ export class DatasetCache extends DurableObject {
     const data = await this.searchSections({ datasetId, orgId, query, page, perPage, maxChunksPerFile, snippetLength });
 
     // Convert to markdown format with headings and URLs
-    const textResult = data.results
+    let textResult = data.results
       .map((result: any) => {
         // Extract heading from snippet if present
         const headingMatch = result.snippet.match(/^(#{1,6})\s+(.+)$/m);
@@ -468,6 +470,11 @@ export class DatasetCache extends DurableObject {
         return `${headingPrefix} ${heading}\n\n[${result.filename}:${result.startLine || '1'}](${lineUrl})\n\n${result.snippet}\n`;
       })
       .join('\n---\n\n');
+
+    // Add pagination info if there's a next page
+    if (data.hasNextPage) {
+      textResult += `\n\n---\n\n*More results available on page ${data.page + 1}*`;
+    }
 
     return textResult;
   }

@@ -1,5 +1,15 @@
 # Changelog
 
+## 2025-07-22 15:53
+
+- **Improved Search Performance by Removing Count Query:**
+  - Removed the separate COUNT query from search operations
+  - Changed search response from `count` field to `hasNextPage` boolean
+  - Now fetches N+1 results to determine if there's a next page
+  - This eliminates one database query per search, improving performance
+  - Updated all test snapshots to use `hasNextPage` instead of `count`
+  - Text search endpoint now shows "More results available on page X" when hasNextPage is true
+
 ## 2025-07-22 15:45
 
 - **Simplified Database Schema and Improved Search Scoring:**
