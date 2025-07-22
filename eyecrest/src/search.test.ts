@@ -20,8 +20,8 @@ const jsonHeaders = {
 };
 
 describe('Eyecrest Search Tokenization Research', () => {
-  // Use unique dataset for each test run
-  const TEST_DATASET_ID = `search-research-${Date.now()}`;
+  // Use git commit SHA for consistent dataset ID
+  const TEST_DATASET_ID = `search-research-${process.env.GITHUB_SHA || '2e26fe2'}`;
   let uploadedFiles: string[] = [];
 
   beforeAll(async () => {
@@ -31,76 +31,123 @@ describe('Eyecrest Search Tokenization Research', () => {
         filename: 'camelCase-test.md',
         content: `# CamelCase Patterns
 
-getUserData getUserInfo setUserName updateUserProfile
+When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
 
-camelCase camelCasePattern thisIsCamelCase
+The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like \`camelCase\`, \`camelCasePattern\`, and \`thisIsCamelCase\` follow this convention.
 
 ## Mixed Cases
 
-getUserData() user.getData user-get-data user_get_data`
+In real-world code, you might encounter different variations:
+
+- Function calls: \`getUserData()\`
+- Method access: \`user.getData\`
+- Alternative styles: \`user-get-data\` (kebab-case)
+- Snake case variant: \`user_get_data\`
+
+Each style has its use cases depending on the context and language conventions.`
       },
       {
         filename: 'kebab-case-test.md',
         content: `# Kebab Case Patterns
 
-user-data user-info set-user-name update-user-profile
+Kebab-case is commonly used in URLs, CSS classes, and CLI commands. Examples include \`user-data\`, \`user-info\`, \`set-user-name\`, and \`update-user-profile\`.
 
-kebab-case kebab-case-pattern this-is-kebab-case
+This naming convention uses hyphens to separate words: \`kebab-case\`, \`kebab-case-pattern\`, and \`this-is-kebab-case\`.
 
 ## Mixed Patterns
 
-user-data getUserData user.data user_data`
+In projects, you often see multiple naming conventions side by side:
+
+- Kebab case: \`user-data\`
+- Camel case: \`getUserData\`  
+- Dot notation: \`user.data\`
+- Snake case: \`user_data\`
+
+Understanding when to use each pattern is important for maintaining consistent code.`
       },
       {
         filename: 'dot.notation.test.md',
         content: `# Dot Notation Patterns
 
-user.data user.info config.settings profile.update
+In JavaScript and many other languages, dot notation is used for property access. Common patterns include \`user.data\`, \`user.info\`, \`config.settings\`, and \`profile.update\`.
 
-object.property nested.object.property
+You can chain property access for nested objects: \`object.property\` or even deeper nesting like \`nested.object.property\`.
 
 ## Mixed Notations
 
-user.data user-data userData user_data`
+The same data can be accessed using different notations:
+
+- Dot notation: \`user.data\`
+- Kebab case: \`user-data\`
+- Camel case: \`userData\`
+- Snake case: \`user_data\`
+
+Choose the notation that best fits your language and framework conventions.`
       },
       {
         filename: 'special_chars_test.md',
         content: `# Special Characters
 
-@cloudflare/workers @typescript/types @babel/core
+## NPM Scoped Packages
 
-user@example.com admin@test.org
+Modern JavaScript packages often use scoped names like \`@cloudflare/workers\`, \`@typescript/types\`, and \`@babel/core\`. These help organize related packages.
 
-${"`"}code block${"`"} ${"`"}inline code${"`"}
+## Email Addresses
 
-$variable ${"{"}template${"}"}
+Contact information might include email addresses such as \`user@example.com\` or \`admin@test.org\`.
 
-array[0] object["key"] map.get("key")
+## Code Examples
 
-/* comment */ // single line
-<!-- html comment -->
+Here's how to use backticks for \`code blocks\` and \`inline code\` in markdown.
 
-http://example.com https://test.org
+Template literals use \`$variable\` or \`\${template}\` syntax.
 
-C:\\Windows\\System32 /usr/local/bin
+## Array and Object Access
 
-function() => { return true; }`
+JavaScript provides multiple ways to access data:
+- Array access: \`array[0]\`
+- Object bracket notation: \`object["key"]\`
+- Map methods: \`map.get("key")\`
+
+## Comments
+
+Different comment styles:
+- Block comments: \`/* comment */\`
+- Single line: \`// single line\`
+- HTML comments: \`<!-- html comment -->\`
+
+## URLs and Paths
+
+Web URLs: \`http://example.com\` and \`https://test.org\`
+
+File paths vary by OS:
+- Windows: \`C:\\Windows\\System32\`
+- Unix: \`/usr/local/bin\`
+
+## Arrow Functions
+
+Modern JavaScript uses arrow functions: \`function() => { return true; }\``
       },
       {
         filename: 'exact-phrases.md',
         content: `# Exact Phrase Testing
 
-"user authentication" is a common phrase
-"database connection" requires configuration
-"error handling" should be robust
+## Common Technical Phrases
 
-The phrase "API endpoint" is important
-We use "REST API" standards
-Returns "JSON response" format
+"User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.
 
-Multi-word: "get user data"
-Another: "update user profile"
-Action: "delete user account"`
+## API Documentation
+
+The phrase "API endpoint" is important when documenting services. We use "REST API" standards throughout our applications. Most endpoints return "JSON response" format for consistency.
+
+## Multi-word Phrases
+
+Here are some common multi-word technical phrases:
+- To retrieve information: "get user data"
+- For modifications: "update user profile"  
+- For deletions: "delete user account"
+
+Each of these phrases represents a specific action in our API.`
       }
     ];
     
@@ -170,29 +217,60 @@ Action: "delete user account"`
         "perPage": 20,
         "results": [
           {
-            "filename": "camelCase-test.md",
-            "metadata": null,
-            "score": -0.5726722510252349,
-            "section": "CamelCase Patterns",
-            "snippet": "getUserData getUserInfo setUserName updateUserProfile
-
-      camelCase camelCasePattern thisIsCamelCase",
-            "startLine": null,
-          },
-          {
-            "filename": "camelCase-test.md",
-            "metadata": null,
-            "score": -0.5496502509840194,
-            "section": "Mixed Cases",
-            "snippet": "getUserData() user.getData user-get-data user_get_data",
-            "startLine": null,
-          },
-          {
+            "cleanedSnippet": "In projects, you often see multiple naming conventions side by side:
+      - Kebab case: \`user-data\`
+      - Camel case: \`getUserData\`
+      - Dot notation: \`user.data\`
+      - Snake case: \`user_data\`
+      Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
             "metadata": null,
-            "score": -0.5609251279272813,
+            "score": -1.2769059546177988,
             "section": "Mixed Patterns",
-            "snippet": "user-data getUserData user.data user_data",
+            "sectionSlug": "mixed-patterns",
+            "snippet": "In projects, you often see multiple naming conventions side by side:
+
+      - Kebab case: \`user-data\`
+      - Camel case: \`getUserData\`  
+      - Dot notation: \`user.data\`
+      - Snake case: \`user_data\`
+
+      Understanding when to use each pattern is important for maintaining consistent code.",
+            "startLine": null,
+          },
+          {
+            "cleanedSnippet": "In real-world code, you might encounter different variations:
+      - Function calls: \`getUserData()\`
+      - Method access: \`user.getData\`
+      - Alternative styles: \`user-get-data\` (kebab-case)
+      - Snake case variant: \`user_get_data\`
+      Each style has its use cases depending on the context and language conventions.",
+            "filename": "camelCase-test.md",
+            "metadata": null,
+            "score": -1.2353847252625032,
+            "section": "Mixed Cases",
+            "sectionSlug": "mixed-cases",
+            "snippet": "In real-world code, you might encounter different variations:
+
+      - Function calls: \`getUserData()\`
+      - Method access: \`user.getData\`
+      - Alternative styles: \`user-get-data\` (kebab-case)
+      - Snake case variant: \`user_get_data\`
+
+      Each style has its use cases depending on the context and language conventions.",
+            "startLine": null,
+          },
+          {
+            "cleanedSnippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
+      The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
+            "filename": "camelCase-test.md",
+            "metadata": null,
+            "score": -1.171874847916563,
+            "section": "CamelCase Patterns",
+            "sectionSlug": "camelcase-patterns",
+            "snippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
+
+      The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like \`camelCase\`, \`camelCasePattern\`, and \`thisIsCamelCase\` follow this convention.",
             "startLine": null,
           },
         ],
@@ -208,7 +286,46 @@ Action: "delete user account"`
 
     expect(response.ok).toBe(true);
     const text = await response.text();
-    expect(text).toMatchInlineSnapshot(`""### CamelCase Patterns\\n\\n[camelCase-test.md:1](/v1/datasets/search-research-1753180779545/files/camelCase-test.md)\\n\\ngetUserData getUserInfo setUserName updateUserProfile\\n\\ncamelCase camelCasePattern thisIsCamelCase\\n\\n---\\n\\n### Mixed Cases\\n\\n[camelCase-test.md:1](/v1/datasets/search-research-1753180779545/files/camelCase-test.md)\\n\\ngetUserData() user.getData user-get-data user_get_data\\n\\n---\\n\\n### Mixed Patterns\\n\\n[kebab-case-test.md:1](/v1/datasets/search-research-1753180779545/files/kebab-case-test.md)\\n\\nuser-data getUserData user.data user_data\\n""`);
+    expect(text).toMatchInlineSnapshot(`
+      "### Mixed Patterns
+
+      [kebab-case-test.md:1](/v1/datasets/search-research-2e26fe2/files/kebab-case-test.md#mixed-patterns)
+
+      In projects, you often see multiple naming conventions side by side:
+
+      - Kebab case: \`user-data\`
+      - Camel case: \`getUserData\`  
+      - Dot notation: \`user.data\`
+      - Snake case: \`user_data\`
+
+      Understanding when to use each pattern is important for maintaining consistent code.
+
+      ---
+
+      ### Mixed Cases
+
+      [camelCase-test.md:1](/v1/datasets/search-research-2e26fe2/files/camelCase-test.md#mixed-cases)
+
+      In real-world code, you might encounter different variations:
+
+      - Function calls: \`getUserData()\`
+      - Method access: \`user.getData\`
+      - Alternative styles: \`user-get-data\` (kebab-case)
+      - Snake case variant: \`user_get_data\`
+
+      Each style has its use cases depending on the context and language conventions.
+
+      ---
+
+      ### CamelCase Patterns
+
+      [camelCase-test.md:1](/v1/datasets/search-research-2e26fe2/files/camelCase-test.md#camelcase-patterns)
+
+      When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
+
+      The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like \`camelCase\`, \`camelCasePattern\`, and \`thisIsCamelCase\` follow this convention.
+      "
+    `);
   });
 
   test('kebab-case tokenization - TXT', async () => {
@@ -280,57 +397,93 @@ Action: "delete user account"`
         "perPage": 20,
         "results": [
           {
-            "filename": "kebab-case-test.md",
-            "metadata": null,
-            "score": -0.000001749397590361446,
-            "section": "Mixed Patterns",
-            "snippet": "user-data getUserData user.data user_data",
-            "startLine": null,
-          },
-          {
-            "filename": "kebab-case-test.md",
-            "metadata": null,
-            "score": -9.79757085020243e-7,
-            "section": "Kebab Case Patterns",
-            "snippet": "user-data user-info set-user-name update-user-profile
-
-      kebab-case kebab-case-pattern this-is-kebab-case",
-            "startLine": null,
-          },
-          {
+            "cleanedSnippet": "The same data can be accessed using different notations:
+      - Dot notation: \`user.data\`
+      - Kebab case: \`user-data\`
+      - Camel case: \`userData\`
+      - Snake case: \`user_data\`
+      Choose the notation that best fits your language and framework conventions.",
             "filename": "dot.notation.test.md",
             "metadata": null,
-            "score": -0.000001749397590361446,
+            "score": -1.323551828046987,
             "section": "Mixed Notations",
-            "snippet": "user.data user-data userData user_data",
+            "sectionSlug": "mixed-notations",
+            "snippet": "The same data can be accessed using different notations:
+
+      - Dot notation: \`user.data\`
+      - Kebab case: \`user-data\`
+      - Camel case: \`userData\`
+      - Snake case: \`user_data\`
+
+      Choose the notation that best fits your language and framework conventions.",
             "startLine": null,
           },
           {
+            "cleanedSnippet": "In JavaScript and many other languages, dot notation is used for property access. Common patterns include  user.data ,  user.info ,  config.settings , and  profile.update .
+      You can chain property access for nested objects:  object.property  or even deeper nesting like  nested.object.property .",
             "filename": "dot.notation.test.md",
             "metadata": null,
-            "score": -0.000001085201793721973,
+            "score": -0.7219841425932825,
             "section": "Dot Notation Patterns",
-            "snippet": "user.data user.info config.settings profile.update
+            "sectionSlug": "dot-notation-patterns",
+            "snippet": "In JavaScript and many other languages, dot notation is used for property access. Common patterns include \`user.data\`, \`user.info\`, \`config.settings\`, and \`profile.update\`.
 
-      object.property nested.object.property",
+      You can chain property access for nested objects: \`object.property\` or even deeper nesting like \`nested.object.property\`.",
             "startLine": null,
           },
           {
+            "cleanedSnippet": "In projects, you often see multiple naming conventions side by side:
+      - Kebab case: \`user-data\`
+      - Camel case: \`getUserData\`
+      - Dot notation: \`user.data\`
+      - Snake case: \`user_data\`
+      Understanding when to use each pattern is important for maintaining consistent code.",
+            "filename": "kebab-case-test.md",
+            "metadata": null,
+            "score": -1.2985616886363094,
+            "section": "Mixed Patterns",
+            "sectionSlug": "mixed-patterns",
+            "snippet": "In projects, you often see multiple naming conventions side by side:
+
+      - Kebab case: \`user-data\`
+      - Camel case: \`getUserData\`  
+      - Dot notation: \`user.data\`
+      - Snake case: \`user_data\`
+
+      Understanding when to use each pattern is important for maintaining consistent code.",
+            "startLine": null,
+          },
+          {
+            "cleanedSnippet": "Kebab-case is commonly used in URLs, CSS classes, and CLI commands. Examples include  user-data ,  user-info ,  set-user-name , and  update-user-profile .
+      This naming convention uses hyphens to separate words:  kebab-case ,  kebab-case-pattern , and  this-is-kebab-case .",
+            "filename": "kebab-case-test.md",
+            "metadata": null,
+            "score": -0.7219841425932825,
+            "section": "Kebab Case Patterns",
+            "sectionSlug": "kebab-case-patterns",
+            "snippet": "Kebab-case is commonly used in URLs, CSS classes, and CLI commands. Examples include \`user-data\`, \`user-info\`, \`set-user-name\`, and \`update-user-profile\`.
+
+      This naming convention uses hyphens to separate words: \`kebab-case\`, \`kebab-case-pattern\`, and \`this-is-kebab-case\`.",
+            "startLine": null,
+          },
+          {
+            "cleanedSnippet": "Here are some common multi-word technical phrases:
+      - To retrieve information: "get user data"
+      - For modifications: "update user profile"
+      - For deletions: "delete user account"
+      Each of these phrases represents a specific action in our API.",
             "filename": "exact-phrases.md",
             "metadata": null,
-            "score": -7.138643067846608e-7,
-            "section": "Exact Phrase Testing",
-            "snippet": ""user authentication" is a common phrase
-      "database connection" requires configuration
-      "error handling" should be robust
+            "score": -0.7973135314512333,
+            "section": "Multi-word Phrases",
+            "sectionSlug": "multi-word-phrases",
+            "snippet": "Here are some common multi-word technical phrases:
 
-      The phrase "API endpoint" is important
-      We use "REST API" standards
-      Returns "JSON response" format
+      - To retrieve information: "get user data"
+      - For modifications: "update user profile"  
+      - For deletions: "delete user account"
 
-      Multi-word: "get user data"
-      Another: "update user profile"
-      Action: "delete user account"",
+      Each of these phrases represents a specific action in our API.",
             "startLine": null,
           },
         ],
@@ -393,21 +546,13 @@ Action: "delete user account"`
         "perPage": 20,
         "results": [
           {
+            "cleanedSnippet": ""User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
             "filename": "exact-phrases.md",
             "metadata": null,
-            "score": -1.1489202796727207,
-            "section": "Exact Phrase Testing",
-            "snippet": ""user authentication" is a common phrase
-      "database connection" requires configuration
-      "error handling" should be robust
-
-      The phrase "API endpoint" is important
-      We use "REST API" standards
-      Returns "JSON response" format
-
-      Multi-word: "get user data"
-      Another: "update user profile"
-      Action: "delete user account"",
+            "score": -2.467474297326108,
+            "section": "Common Technical Phrases",
+            "sectionSlug": "common-technical-phrases",
+            "snippet": ""User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
             "startLine": null,
           },
         ],
@@ -423,7 +568,14 @@ Action: "delete user account"`
 
     expect(response.ok).toBe(true);
     const text = await response.text();
-    expect(text).toMatchInlineSnapshot(`""### Exact Phrase Testing\\n\\n[exact-phrases.md:1](/v1/datasets/search-research-1753180779545/files/exact-phrases.md)\\n\\n\\"user authentication\\" is a common phrase\\n\\"database connection\\" requires configuration\\n\\"error handling\\" should be robust\\n\\nThe phrase \\"API endpoint\\" is important\\nWe use \\"REST API\\" standards\\nReturns \\"JSON response\\" format\\n\\nMulti-word: \\"get user data\\"\\nAnother: \\"update user profile\\"\\nAction: \\"delete user account\\"\\n""`);
+    expect(text).toMatchInlineSnapshot(`
+      "### Common Technical Phrases
+
+      [exact-phrases.md:1](/v1/datasets/search-research-2e26fe2/files/exact-phrases.md#common-technical-phrases)
+
+      "User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.
+      "
+    `);
   });
 
   test('partial phrase with quotes', async () => {
@@ -477,37 +629,36 @@ Action: "delete user account"`
             "results.0.startLine": [
               "undefined",
             ],
+            "results.1.metadata": [
+              "undefined",
+            ],
+            "results.1.startLine": [
+              "undefined",
+            ],
           },
         },
-        "count": 1,
+        "count": 2,
         "page": 0,
         "perPage": 20,
         "results": [
           {
+            "cleanedSnippet": "Contact information might include email addresses such as  user@example.com  or  admin@test.org .",
             "filename": "special_chars_test.md",
             "metadata": null,
-            "score": -6.97406340057637e-7,
-            "section": "Special Characters",
-            "snippet": "@cloudflare/workers @typescript/types @babel/core
-
-      user@example.com admin@test.org
-
-      \`code block\` \`inline code\`
-
-      $variable {template}
-
-      array[0] object["key"] map.get("key")
-
-      /* comment */ // single line
-
-      <!-- html comment -->
-
-
-      http://example.com https://test.org
-
-      C:\\Windows\\System32 /usr/local/bin
-
-      function() => { return true; }",
+            "score": -0.24426339055549692,
+            "section": "Email Addresses",
+            "sectionSlug": "email-addresses",
+            "snippet": "Contact information might include email addresses such as \`user@example.com\` or \`admin@test.org\`.",
+            "startLine": null,
+          },
+          {
+            "cleanedSnippet": ""User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
+            "filename": "exact-phrases.md",
+            "metadata": null,
+            "score": -0.21223273710722873,
+            "section": "Common Technical Phrases",
+            "sectionSlug": "common-technical-phrases",
+            "snippet": ""User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
             "startLine": null,
           },
         ],
@@ -523,7 +674,85 @@ Action: "delete user account"`
 
     expect(response.ok).toBe(true);
     const text = await response.text();
-    expect(text).toMatchInlineSnapshot(`""### Mixed Patterns\\n\\n[kebab-case-test.md:1](/v1/datasets/search-research-1753180779545/files/kebab-case-test.md)\\n\\nuser-data getUserData user.data user_data\\n\\n---\\n\\n### Kebab Case Patterns\\n\\n[kebab-case-test.md:1](/v1/datasets/search-research-1753180779545/files/kebab-case-test.md)\\n\\nuser-data user-info set-user-name update-user-profile\\n\\nkebab-case kebab-case-pattern this-is-kebab-case\\n\\n---\\n\\n### Mixed Notations\\n\\n[dot.notation.test.md:1](/v1/datasets/search-research-1753180779545/files/dot.notation.test.md)\\n\\nuser.data user-data userData user_data\\n\\n---\\n\\n### Dot Notation Patterns\\n\\n[dot.notation.test.md:1](/v1/datasets/search-research-1753180779545/files/dot.notation.test.md)\\n\\nuser.data user.info config.settings profile.update\\n\\nobject.property nested.object.property\\n\\n---\\n\\n### Mixed Cases\\n\\n[camelCase-test.md:1](/v1/datasets/search-research-1753180779545/files/camelCase-test.md)\\n\\ngetUserData() user.getData user-get-data user_get_data\\n\\n---\\n\\n### Exact Phrase Testing\\n\\n[exact-phrases.md:1](/v1/datasets/search-research-1753180779545/files/exact-phrases.md)\\n\\n\\"user authentication\\" is a common phrase\\n\\"database connection\\" requires configuration\\n\\"error handling\\" should be robust\\n\\nThe phrase \\"API endpoint\\" is important\\nWe use \\"REST API\\" standards\\nReturns \\"JSON response\\" format\\n\\nMulti-word: \\"get user data\\"\\nAnother: \\"update user profile\\"\\nAction: \\"delete user account\\"\\n""`);
+    expect(text).toMatchInlineSnapshot(`
+      "### Mixed Notations
+
+      [dot.notation.test.md:1](/v1/datasets/search-research-2e26fe2/files/dot.notation.test.md#mixed-notations)
+
+      The same data can be accessed using different notations:
+
+      - Dot notation: \`user.data\`
+      - Kebab case: \`user-data\`
+      - Camel case: \`userData\`
+      - Snake case: \`user_data\`
+
+      Choose the notation that best fits your language and framework conventions.
+
+      ---
+
+      ### Dot Notation Patterns
+
+      [dot.notation.test.md:1](/v1/datasets/search-research-2e26fe2/files/dot.notation.test.md#dot-notation-patterns)
+
+      In JavaScript and many other languages, dot notation is used for property access. Common patterns include \`user.data\`, \`user.info\`, \`config.settings\`, and \`profile.update\`.
+
+      You can chain property access for nested objects: \`object.property\` or even deeper nesting like \`nested.object.property\`.
+
+      ---
+
+      ### Mixed Patterns
+
+      [kebab-case-test.md:1](/v1/datasets/search-research-2e26fe2/files/kebab-case-test.md#mixed-patterns)
+
+      In projects, you often see multiple naming conventions side by side:
+
+      - Kebab case: \`user-data\`
+      - Camel case: \`getUserData\`  
+      - Dot notation: \`user.data\`
+      - Snake case: \`user_data\`
+
+      Understanding when to use each pattern is important for maintaining consistent code.
+
+      ---
+
+      ### Kebab Case Patterns
+
+      [kebab-case-test.md:1](/v1/datasets/search-research-2e26fe2/files/kebab-case-test.md#kebab-case-patterns)
+
+      Kebab-case is commonly used in URLs, CSS classes, and CLI commands. Examples include \`user-data\`, \`user-info\`, \`set-user-name\`, and \`update-user-profile\`.
+
+      This naming convention uses hyphens to separate words: \`kebab-case\`, \`kebab-case-pattern\`, and \`this-is-kebab-case\`.
+
+      ---
+
+      ### Mixed Cases
+
+      [camelCase-test.md:1](/v1/datasets/search-research-2e26fe2/files/camelCase-test.md#mixed-cases)
+
+      In real-world code, you might encounter different variations:
+
+      - Function calls: \`getUserData()\`
+      - Method access: \`user.getData\`
+      - Alternative styles: \`user-get-data\` (kebab-case)
+      - Snake case variant: \`user_get_data\`
+
+      Each style has its use cases depending on the context and language conventions.
+
+      ---
+
+      ### Multi-word Phrases
+
+      [exact-phrases.md:1](/v1/datasets/search-research-2e26fe2/files/exact-phrases.md#multi-word-phrases)
+
+      Here are some common multi-word technical phrases:
+
+      - To retrieve information: "get user data"
+      - For modifications: "update user profile"  
+      - For deletions: "delete user account"
+
+      Each of these phrases represents a specific action in our API.
+      "
+    `);
   });
 
   test('prefix search with asterisk', async () => {
@@ -575,74 +804,97 @@ Action: "delete user account"`
         "perPage": 20,
         "results": [
           {
+            "cleanedSnippet": "In real-world code, you might encounter different variations:
+      - Function calls: \`getUserData()\`
+      - Method access: \`user.getData\`
+      - Alternative styles: \`user-get-data\` (kebab-case)
+      - Snake case variant: \`user_get_data\`
+      Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
             "metadata": null,
-            "score": -0.000001829867674858223,
+            "score": -1.398563897382732,
             "section": "Mixed Cases",
-            "snippet": "getUserData() user.getData user-get-data user_get_data",
+            "sectionSlug": "mixed-cases",
+            "snippet": "In real-world code, you might encounter different variations:
+
+      - Function calls: \`getUserData()\`
+      - Method access: \`user.getData\`
+      - Alternative styles: \`user-get-data\` (kebab-case)
+      - Snake case variant: \`user_get_data\`
+
+      Each style has its use cases depending on the context and language conventions.",
             "startLine": null,
           },
           {
+            "cleanedSnippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
+      The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
             "filename": "camelCase-test.md",
             "metadata": null,
-            "score": -0.0000016079734219269104,
+            "score": -1.0414712365394965,
             "section": "CamelCase Patterns",
-            "snippet": "getUserData getUserInfo setUserName updateUserProfile
+            "sectionSlug": "camelcase-patterns",
+            "snippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
 
-      camelCase camelCasePattern thisIsCamelCase",
+      The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like \`camelCase\`, \`camelCasePattern\`, and \`thisIsCamelCase\` follow this convention.",
             "startLine": null,
           },
           {
-            "filename": "kebab-case-test.md",
-            "metadata": null,
-            "score": -0.000001241025641025641,
-            "section": "Mixed Patterns",
-            "snippet": "user-data getUserData user.data user_data",
-            "startLine": null,
-          },
-          {
-            "filename": "exact-phrases.md",
-            "metadata": null,
-            "score": -7.138643067846608e-7,
-            "section": "Exact Phrase Testing",
-            "snippet": ""user authentication" is a common phrase
-      "database connection" requires configuration
-      "error handling" should be robust
-
-      The phrase "API endpoint" is important
-      We use "REST API" standards
-      Returns "JSON response" format
-
-      Multi-word: "get user data"
-      Another: "update user profile"
-      Action: "delete user account"",
-            "startLine": null,
-          },
-          {
+            "cleanedSnippet": "JavaScript provides multiple ways to access data:
+      - Array access: \`array[0]\`
+      - Object bracket notation: \`object["key"]\`
+      - Map methods: \`map.get("key")\`",
             "filename": "special_chars_test.md",
             "metadata": null,
-            "score": -6.97406340057637e-7,
-            "section": "Special Characters",
-            "snippet": "@cloudflare/workers @typescript/types @babel/core
+            "score": -0.9261562168328792,
+            "section": "Array and Object Access",
+            "sectionSlug": "array-and-object-access",
+            "snippet": "JavaScript provides multiple ways to access data:
 
-      user@example.com admin@test.org
+      - Array access: \`array[0]\`
+      - Object bracket notation: \`object["key"]\`
+      - Map methods: \`map.get("key")\`",
+            "startLine": null,
+          },
+          {
+            "cleanedSnippet": "Here are some common multi-word technical phrases:
+      - To retrieve information: "get user data"
+      - For modifications: "update user profile"
+      - For deletions: "delete user account"
+      Each of these phrases represents a specific action in our API.",
+            "filename": "exact-phrases.md",
+            "metadata": null,
+            "score": -0.7973135314512333,
+            "section": "Multi-word Phrases",
+            "sectionSlug": "multi-word-phrases",
+            "snippet": "Here are some common multi-word technical phrases:
 
-      \`code block\` \`inline code\`
+      - To retrieve information: "get user data"
+      - For modifications: "update user profile"  
+      - For deletions: "delete user account"
 
-      $variable {template}
+      Each of these phrases represents a specific action in our API.",
+            "startLine": null,
+          },
+          {
+            "cleanedSnippet": "In projects, you often see multiple naming conventions side by side:
+      - Kebab case: \`user-data\`
+      - Camel case: \`getUserData\`
+      - Dot notation: \`user.data\`
+      - Snake case: \`user_data\`
+      Understanding when to use each pattern is important for maintaining consistent code.",
+            "filename": "kebab-case-test.md",
+            "metadata": null,
+            "score": -0.7705158567427064,
+            "section": "Mixed Patterns",
+            "sectionSlug": "mixed-patterns",
+            "snippet": "In projects, you often see multiple naming conventions side by side:
 
-      array[0] object["key"] map.get("key")
+      - Kebab case: \`user-data\`
+      - Camel case: \`getUserData\`  
+      - Dot notation: \`user.data\`
+      - Snake case: \`user_data\`
 
-      /* comment */ // single line
-
-      <!-- html comment -->
-
-
-      http://example.com https://test.org
-
-      C:\\Windows\\System32 /usr/local/bin
-
-      function() => { return true; }",
+      Understanding when to use each pattern is important for maintaining consistent code.",
             "startLine": null,
           },
         ],
@@ -825,29 +1077,60 @@ Action: "delete user account"`
         "perPage": 20,
         "results": [
           {
-            "filename": "camelCase-test.md",
-            "metadata": null,
-            "score": -1.1453445020504698,
-            "section": "CamelCase Patterns",
-            "snippet": "getUserData getUserInfo setUserName updateUserProfile
-
-      camelCase camelCasePattern thisIsCamelCase",
-            "startLine": null,
-          },
-          {
-            "filename": "camelCase-test.md",
-            "metadata": null,
-            "score": -1.0993005019680389,
-            "section": "Mixed Cases",
-            "snippet": "getUserData() user.getData user-get-data user_get_data",
-            "startLine": null,
-          },
-          {
+            "cleanedSnippet": "In projects, you often see multiple naming conventions side by side:
+      - Kebab case: \`user-data\`
+      - Camel case: \`getUserData\`
+      - Dot notation: \`user.data\`
+      - Snake case: \`user_data\`
+      Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
             "metadata": null,
-            "score": -1.1218502558545627,
+            "score": -2.5538119092355975,
             "section": "Mixed Patterns",
-            "snippet": "user-data getUserData user.data user_data",
+            "sectionSlug": "mixed-patterns",
+            "snippet": "In projects, you often see multiple naming conventions side by side:
+
+      - Kebab case: \`user-data\`
+      - Camel case: \`getUserData\`  
+      - Dot notation: \`user.data\`
+      - Snake case: \`user_data\`
+
+      Understanding when to use each pattern is important for maintaining consistent code.",
+            "startLine": null,
+          },
+          {
+            "cleanedSnippet": "In real-world code, you might encounter different variations:
+      - Function calls: \`getUserData()\`
+      - Method access: \`user.getData\`
+      - Alternative styles: \`user-get-data\` (kebab-case)
+      - Snake case variant: \`user_get_data\`
+      Each style has its use cases depending on the context and language conventions.",
+            "filename": "camelCase-test.md",
+            "metadata": null,
+            "score": -2.4707694505250064,
+            "section": "Mixed Cases",
+            "sectionSlug": "mixed-cases",
+            "snippet": "In real-world code, you might encounter different variations:
+
+      - Function calls: \`getUserData()\`
+      - Method access: \`user.getData\`
+      - Alternative styles: \`user-get-data\` (kebab-case)
+      - Snake case variant: \`user_get_data\`
+
+      Each style has its use cases depending on the context and language conventions.",
+            "startLine": null,
+          },
+          {
+            "cleanedSnippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
+      The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
+            "filename": "camelCase-test.md",
+            "metadata": null,
+            "score": -2.343749695833126,
+            "section": "CamelCase Patterns",
+            "sectionSlug": "camelcase-patterns",
+            "snippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
+
+      The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like \`camelCase\`, \`camelCasePattern\`, and \`thisIsCamelCase\` follow this convention.",
             "startLine": null,
           },
         ],
@@ -892,56 +1175,62 @@ Action: "delete user account"`
         "perPage": 20,
         "results": [
           {
+            "cleanedSnippet": "In real-world code, you might encounter different variations:
+      - Function calls: \`getUserData()\`
+      - Method access: \`user.getData\`
+      - Alternative styles: \`user-get-data\` (kebab-case)
+      - Snake case variant: \`user_get_data\`
+      Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
             "metadata": null,
-            "score": -0.7079637536946268,
+            "score": -1.7938463133948674,
             "section": "Mixed Cases",
-            "snippet": "getUserData() user.getData user-get-data user_get_data",
+            "sectionSlug": "mixed-cases",
+            "snippet": "In real-world code, you might encounter different variations:
+
+      - Function calls: \`getUserData()\`
+      - Method access: \`user.getData\`
+      - Alternative styles: \`user-get-data\` (kebab-case)
+      - Snake case variant: \`user_get_data\`
+
+      Each style has its use cases depending on the context and language conventions.",
             "startLine": null,
           },
           {
-            "filename": "exact-phrases.md",
-            "metadata": null,
-            "score": -0.3226560470378167,
-            "section": "Exact Phrase Testing",
-            "snippet": ""user authentication" is a common phrase
-      "database connection" requires configuration
-      "error handling" should be robust
-
-      The phrase "API endpoint" is important
-      We use "REST API" standards
-      Returns "JSON response" format
-
-      Multi-word: "get user data"
-      Another: "update user profile"
-      Action: "delete user account"",
-            "startLine": null,
-          },
-          {
+            "cleanedSnippet": "JavaScript provides multiple ways to access data:
+      - Array access: \`array[0]\`
+      - Object bracket notation: \`object["key"]\`
+      - Map methods: \`map.get("key")\`",
             "filename": "special_chars_test.md",
             "metadata": null,
-            "score": -0.3152172909101437,
-            "section": "Special Characters",
-            "snippet": "@cloudflare/workers @typescript/types @babel/core
+            "score": -1.5348345888423418,
+            "section": "Array and Object Access",
+            "sectionSlug": "array-and-object-access",
+            "snippet": "JavaScript provides multiple ways to access data:
 
-      user@example.com admin@test.org
+      - Array access: \`array[0]\`
+      - Object bracket notation: \`object["key"]\`
+      - Map methods: \`map.get("key")\`",
+            "startLine": null,
+          },
+          {
+            "cleanedSnippet": "Here are some common multi-word technical phrases:
+      - To retrieve information: "get user data"
+      - For modifications: "update user profile"
+      - For deletions: "delete user account"
+      Each of these phrases represents a specific action in our API.",
+            "filename": "exact-phrases.md",
+            "metadata": null,
+            "score": -1.3213153072687398,
+            "section": "Multi-word Phrases",
+            "sectionSlug": "multi-word-phrases",
+            "snippet": "Here are some common multi-word technical phrases:
 
-      \`code block\` \`inline code\`
+      - To retrieve information: "get user data"
+      - For modifications: "update user profile"  
+      - For deletions: "delete user account"
 
-      $variable {template}
-
-      array[0] object["key"] map.get("key")
-
-      /* comment */ // single line
-
-      <!-- html comment -->
-
-
-      http://example.com https://test.org
-
-      C:\\Windows\\System32 /usr/local/bin
-
-      function() => { return true; }",
+      Each of these phrases represents a specific action in our API.",
             "startLine": null,
           },
         ],
@@ -963,6 +1252,203 @@ Action: "delete user account"`
         "page": 0,
         "perPage": 20,
         "results": [],
+      }
+    `);
+  });
+
+  test('configurable snippet length - shorter', async () => {
+    const response = await fetch(
+      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=getUserData&snippetLength=100`,
+      { headers: authHeaders }
+    );
+
+    expect(response.ok).toBe(true);
+    const data = await response.json();
+    // Note: SQLite snippet function may return longer snippets than requested
+    expect(data).toMatchInlineSnapshot(`
+      {
+        "__superjsonMeta": {
+          "values": {
+            "results.0.metadata": [
+              "undefined",
+            ],
+            "results.0.startLine": [
+              "undefined",
+            ],
+            "results.1.metadata": [
+              "undefined",
+            ],
+            "results.1.startLine": [
+              "undefined",
+            ],
+            "results.2.metadata": [
+              "undefined",
+            ],
+            "results.2.startLine": [
+              "undefined",
+            ],
+          },
+        },
+        "count": 3,
+        "page": 0,
+        "perPage": 20,
+        "results": [
+          {
+            "cleanedSnippet": "In projects, you often see multiple naming conventions side by side:
+      - Kebab case: \`user-data\`
+      - Camel case: \`getUserData\`
+      - Dot notation: \`user.data\`
+      - Snake case: \`user_data\`
+      Understanding when to use each pattern is important for maintaining consistent code.",
+            "filename": "kebab-case-test.md",
+            "metadata": null,
+            "score": -1.2769059546177988,
+            "section": "Mixed Patterns",
+            "sectionSlug": "mixed-patterns",
+            "snippet": "In projects, you often see multiple naming conventions side by side:
+
+      - Kebab case: \`user-data\`
+      - Camel case: \`getUserData\`  
+      - Dot notation: \`user.data\`
+      - Snake case: \`user_data\`
+
+      Understanding when to use each pattern is important for maintaining consistent code.",
+            "startLine": null,
+          },
+          {
+            "cleanedSnippet": "In real-world code, you might encounter different variations:
+      - Function calls: \`getUserData()\`
+      - Method access: \`user.getData\`
+      - Alternative styles: \`user-get-data\` (kebab-case)
+      - Snake case variant: \`user_get_data\`
+      Each style has its use cases depending on the context and language conventions.",
+            "filename": "camelCase-test.md",
+            "metadata": null,
+            "score": -1.2353847252625032,
+            "section": "Mixed Cases",
+            "sectionSlug": "mixed-cases",
+            "snippet": "In real-world code, you might encounter different variations:
+
+      - Function calls: \`getUserData()\`
+      - Method access: \`user.getData\`
+      - Alternative styles: \`user-get-data\` (kebab-case)
+      - Snake case variant: \`user_get_data\`
+
+      Each style has its use cases depending on the context and language conventions.",
+            "startLine": null,
+          },
+          {
+            "cleanedSnippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
+      The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
+            "filename": "camelCase-test.md",
+            "metadata": null,
+            "score": -1.171874847916563,
+            "section": "CamelCase Patterns",
+            "sectionSlug": "camelcase-patterns",
+            "snippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
+
+      The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like \`camelCase\`, \`camelCasePattern\`, and \`thisIsCamelCase\` follow this convention.",
+            "startLine": null,
+          },
+        ],
+      }
+    `);
+  });
+
+  test('configurable snippet length - maximum', async () => {
+    const response = await fetch(
+      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=getUserData&snippetLength=500`,
+      { headers: authHeaders }
+    );
+
+    expect(response.ok).toBe(true);
+    const data = await response.json();
+    expect(data).toMatchInlineSnapshot(`
+      {
+        "__superjsonMeta": {
+          "values": {
+            "results.0.metadata": [
+              "undefined",
+            ],
+            "results.0.startLine": [
+              "undefined",
+            ],
+            "results.1.metadata": [
+              "undefined",
+            ],
+            "results.1.startLine": [
+              "undefined",
+            ],
+            "results.2.metadata": [
+              "undefined",
+            ],
+            "results.2.startLine": [
+              "undefined",
+            ],
+          },
+        },
+        "count": 3,
+        "page": 0,
+        "perPage": 20,
+        "results": [
+          {
+            "cleanedSnippet": "In projects, you often see multiple naming conventions side by side:
+      - Kebab case: \`user-data\`
+      - Camel case: \`getUserData\`
+      - Dot notation: \`user.data\`
+      - Snake case: \`user_data\`
+      Understanding when to use each pattern is important for maintaining consistent code.",
+            "filename": "kebab-case-test.md",
+            "metadata": null,
+            "score": -1.2769059546177988,
+            "section": "Mixed Patterns",
+            "sectionSlug": "mixed-patterns",
+            "snippet": "In projects, you often see multiple naming conventions side by side:
+
+      - Kebab case: \`user-data\`
+      - Camel case: \`getUserData\`  
+      - Dot notation: \`user.data\`
+      - Snake case: \`user_data\`
+
+      Understanding when to use each pattern is important for maintaining consistent code.",
+            "startLine": null,
+          },
+          {
+            "cleanedSnippet": "In real-world code, you might encounter different variations:
+      - Function calls: \`getUserData()\`
+      - Method access: \`user.getData\`
+      - Alternative styles: \`user-get-data\` (kebab-case)
+      - Snake case variant: \`user_get_data\`
+      Each style has its use cases depending on the context and language conventions.",
+            "filename": "camelCase-test.md",
+            "metadata": null,
+            "score": -1.2353847252625032,
+            "section": "Mixed Cases",
+            "sectionSlug": "mixed-cases",
+            "snippet": "In real-world code, you might encounter different variations:
+
+      - Function calls: \`getUserData()\`
+      - Method access: \`user.getData\`
+      - Alternative styles: \`user-get-data\` (kebab-case)
+      - Snake case variant: \`user_get_data\`
+
+      Each style has its use cases depending on the context and language conventions.",
+            "startLine": null,
+          },
+          {
+            "cleanedSnippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
+      The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
+            "filename": "camelCase-test.md",
+            "metadata": null,
+            "score": -1.171874847916563,
+            "section": "CamelCase Patterns",
+            "sectionSlug": "camelcase-patterns",
+            "snippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
+
+      The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like \`camelCase\`, \`camelCasePattern\`, and \`thisIsCamelCase\` follow this convention.",
+            "startLine": null,
+          },
+        ],
       }
     `);
   });

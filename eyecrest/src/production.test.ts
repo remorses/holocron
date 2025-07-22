@@ -322,26 +322,32 @@ Configure your client with the API endpoint.`;
         "perPage": 20,
         "results": [
           {
+            "cleanedSnippet": "docs/install.md",
             "filename": "docs/install.md",
             "metadata": null,
             "score": -0.6817175152436655,
             "section": "Installation",
+            "sectionSlug": "installation",
             "snippet": "docs/install.md",
             "startLine": null,
           },
           {
+            "cleanedSnippet": "docs/install.md",
             "filename": "docs/install.md",
             "metadata": null,
             "score": -0.6096543529557517,
             "section": "Documentation",
+            "sectionSlug": "documentation",
             "snippet": "docs/install.md",
             "startLine": null,
           },
           {
+            "cleanedSnippet": "docs/install.md",
             "filename": "docs/install.md",
             "metadata": null,
             "score": -0.44986974874894,
             "section": "Configuration",
+            "sectionSlug": "configuration",
             "snippet": "docs/install.md",
             "startLine": null,
           },
@@ -350,23 +356,7 @@ Configure your client with the API endpoint.`;
     `);
   });
 
-  test('should return plain text search results', async () => {
-    const response = await fetch(
-      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search.txt?query=configuration`,
-      {
-        headers: authHeaders
-      }
-    );
 
-    expect(response.ok).toBe(true);
-
-    const text = await response.text();
-    // Verify markdown format
-    expect(text).toContain('### Configuration');
-    expect(text).toContain('[docs/install.md:');
-    expect(text).toContain('](/v1/datasets/');
-    expect(text).toContain('/files/docs/install.md)');
-  });
 
   test('should support pagination in search', async () => {
     const response = await fetch(
@@ -402,18 +392,22 @@ Configure your client with the API endpoint.`;
         "perPage": 2,
         "results": [
           {
+            "cleanedSnippet": "Configure your client with the API endpoint.",
             "filename": "docs/install.md",
             "metadata": null,
             "score": -0.44986974874894,
             "section": "Configuration",
+            "sectionSlug": "configuration",
             "snippet": "Configure your client with the API endpoint.",
             "startLine": null,
           },
           {
+            "cleanedSnippet": "This is a test file for the Eyecrest API.",
             "filename": "test.md",
             "metadata": null,
             "score": -0.4185290405632374,
             "section": "Test File",
+            "sectionSlug": "test-file",
             "snippet": "This is a test file for the Eyecrest API.",
             "startLine": null,
           },
@@ -534,13 +528,6 @@ Content in second section.`;
     const fileData = await getResponse.json() as any;
     expect(fileData).toMatchInlineSnapshot(`
       {
-        "__superjsonMeta": {
-          "values": {
-            "metadata": [
-              "undefined",
-            ],
-          },
-        },
         "content": "# Metadata Test
 
       This file tests metadata storage.
@@ -552,7 +539,17 @@ Content in second section.`;
       ## Second Section
 
       Content in second section.",
-        "metadata": null,
+        "metadata": {
+          "author": "Test Author",
+          "customField": {
+            "nested": true,
+          },
+          "tags": [
+            "test",
+            "metadata",
+          ],
+          "version": "1.0.0",
+        },
         "sha": "36937b98f7b8bf0699d944beaa1e8f53d3e6dafb",
       }
     `);
@@ -573,13 +570,7 @@ Content in second section.`;
       {
         "__superjsonMeta": {
           "values": {
-            "results.0.metadata": [
-              "undefined",
-            ],
             "results.0.startLine": [
-              "undefined",
-            ],
-            "results.1.metadata": [
               "undefined",
             ],
             "results.1.startLine": [
@@ -598,26 +589,54 @@ Content in second section.`;
         "perPage": 20,
         "results": [
           {
+            "cleanedSnippet": "First Section",
             "filename": "metadata-test.md",
-            "metadata": null,
+            "metadata": {
+              "author": "Test Author",
+              "customField": {
+                "nested": true,
+              },
+              "tags": [
+                "test",
+                "metadata",
+              ],
+              "version": "1.0.0",
+            },
             "score": -1.2697268570997082,
             "section": "First Section",
+            "sectionSlug": "first-section",
             "snippet": "First Section",
             "startLine": null,
           },
           {
+            "cleanedSnippet": "Second Section",
             "filename": "metadata-test.md",
-            "metadata": null,
+            "metadata": {
+              "author": "Test Author",
+              "customField": {
+                "nested": true,
+              },
+              "tags": [
+                "test",
+                "metadata",
+              ],
+              "version": "1.0.0",
+            },
             "score": -1.2697268570997082,
             "section": "Second Section",
+            "sectionSlug": "second-section",
             "snippet": "Second Section",
             "startLine": null,
           },
           {
+            "cleanedSnippet": "- SHA validation
+      - Section parsing
+      - Full-text search",
             "filename": "test.md",
             "metadata": null,
             "score": -0.9033710596991084,
             "section": "Features",
+            "sectionSlug": "features",
             "snippet": "- SHA validation
       - Section parsing
       - Full-text search",

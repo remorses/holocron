@@ -14,6 +14,7 @@ import { importSPKI, jwtVerify } from "jose";
 import Slugger from "github-slugger";
 import { parseMarkdownIntoSections, isSupportedMarkdownFile, Section } from "./markdown-parser.js";
 import { computeGitBlobSHA, verifySHA } from "./sha-utils.js";
+import { cleanMarkdownContent } from "./markdown-cleaner.js";
 
 /* ---------- ENV interface ---------------------------- */
 
@@ -53,6 +54,7 @@ const SearchSectionsQuerySchema = z.object({
   page: z.coerce.number().int().nonnegative().default(0).describe('Zero-based page number'),
   perPage: z.coerce.number().int().positive().default(20).describe('Number of results per page'),
   maxChunksPerFile: z.coerce.number().int().positive().default(5).describe('Maximum sections returned per file'),
+  snippetLength: z.coerce.number().int().positive().max(500).default(300).describe('Maximum length of snippet (max 500)'),
 });
 
 const SearchSectionsResponseSchema = z.object({
@@ -61,7 +63,8 @@ const SearchSectionsResponseSchema = z.object({
       filename: z.string().describe('Source file path'),
       section: z.string().describe('Section heading'),
       sectionSlug: z.string().describe('URL-friendly slug of the section heading'),
-      snippet: z.string().describe('Highlighted excerpt'),
+      snippet: z.string().describe('Raw markdown excerpt'),
+      cleanedSnippet: z.string().describe('Cleaned text excerpt without markdown syntax'),
       score: z.number().describe('Relevance score'),
       startLine: z.number().describe('Line number where section starts'),
       metadata: z.any().optional().describe('File metadata if available'),
@@ -261,7 +264,8 @@ export class DatasetCache extends DurableObject {
     query,
     page = 0,
     perPage = 20,
-    maxChunksPerFile = 5
+    maxChunksPerFile = 5,
+    snippetLength = 300
   }: {
     datasetId: string;
     orgId: string;
@@ -269,12 +273,14 @@ export class DatasetCache extends DurableObject {
     page?: number;
     perPage?: number;
     maxChunksPerFile?: number;
+    snippetLength?: number;
   }): Promise<{
     results: Array<{
       filename: string;
       section: string;
       sectionSlug: string;
       snippet: string;
+      cleanedSnippet: string;
       score: number;
       startLine: number;
       metadata?: any;
@@ -306,7 +312,7 @@ export class DatasetCache extends DurableObject {
         sections.filename,
         sections.heading,
         sections.section_slug,
-        snippet(sections_fts, -1, '<mark>', '</mark>', '...', 64) as snippet,
+        snippet(sections_fts, -1, '', '', '', ?) as snippet,
         bm25(sections_fts) as score,
         files.metadata
       FROM sections_fts
@@ -315,6 +321,7 @@ export class DatasetCache extends DurableObject {
       WHERE sections_fts MATCH ?
       ORDER BY score
       LIMIT ? OFFSET ?`,
+      snippetLength,
       searchQuery,
       perPage,
       offset
@@ -331,11 +338,13 @@ export class DatasetCache extends DurableObject {
 
       if (fileGroups[filename].length < maxChunksPerFile) {
         const metadata = row.metadata ? JSON.parse(row.metadata as string) : undefined;
+        const rawSnippet = row.snippet as string;
         fileGroups[filename].push({
           filename,
           section: row.heading as string,
           sectionSlug: row.section_slug as string,
-          snippet: (row.snippet as string).replace(/<\/?mark>/g, ''), // Remove HTML marks for JSON response
+          snippet: rawSnippet,
+          cleanedSnippet: cleanMarkdownContent(rawSnippet),
           score: row.score as number,
           startLine: row.start_line as number,
           metadata,
@@ -360,7 +369,8 @@ export class DatasetCache extends DurableObject {
     query,
     page = 0,
     perPage = 20,
-    maxChunksPerFile = 5
+    maxChunksPerFile = 5,
+    snippetLength = 300
   }: {
     datasetId: string;
     orgId: string;
@@ -368,8 +378,9 @@ export class DatasetCache extends DurableObject {
     page?: number;
     perPage?: number;
     maxChunksPerFile?: number;
+    snippetLength?: number;
   }): Promise<string> {
-    const data = await this.searchSections({ datasetId, orgId, query, page, perPage, maxChunksPerFile });
+    const data = await this.searchSections({ datasetId, orgId, query, page, perPage, maxChunksPerFile, snippetLength });
 
     // Convert to markdown format with headings and URLs
     const textResult = data.results
@@ -553,7 +564,7 @@ const app = new Spiceflow()
     response: SearchSectionsResponseSchema,
     async handler({ params, query, state }) {
       const { datasetId } = params;
-      const { query: q, page, perPage, maxChunksPerFile } = query;
+      const { query: q, page, perPage, maxChunksPerFile, snippetLength } = query;
       const orgId = state.orgId!; // Guaranteed by middleware
 
       const id = state.env.DATASET_CACHE.idFromName(datasetId);
@@ -566,6 +577,7 @@ const app = new Spiceflow()
         page,
         perPage,
         maxChunksPerFile,
+        snippetLength,
       });
 
       return result;
@@ -581,7 +593,7 @@ const app = new Spiceflow()
     // response: z.string().describe('Plaintext search results'),
     async handler({ params, query, state }) {
       const { datasetId } = params;
-      const { query: q, page, perPage, maxChunksPerFile } = query;
+      const { query: q, page, perPage, maxChunksPerFile, snippetLength } = query;
       const orgId = state.orgId!; // Guaranteed by middleware
 
       const id = state.env.DATASET_CACHE.idFromName(datasetId);
@@ -594,6 +606,7 @@ const app = new Spiceflow()
         page,
         perPage,
         maxChunksPerFile,
+        snippetLength,
       });
 
       return new Response(result, {
