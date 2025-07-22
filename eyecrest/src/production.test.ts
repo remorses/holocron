@@ -1,6 +1,7 @@
 import { describe, test, expect, afterAll } from 'vitest';
 import { env } from 'cloudflare:test';
 
+
 const PRODUCTION_URL = 'https://eyecrest.org';
 // Dataset ID must match the orgId in the JWT token
 const TEST_DATASET_ID = 'test-org-123-xx-dataset-' + Date.now(); // Unique dataset ID for this test run
@@ -149,12 +150,37 @@ Upload markdown files and search through them.`;
     });
 
     if (!response.ok) {
-      console.log('File retrieval failed, possibly due to old database schema');
-      return;
+      const errorText = await response.text();
+      throw new Error(`File retrieval failed with status ${response.status}: ${errorText}`);
     }
 
     const data = await response.json() as any;
-    expect(data).toMatchInlineSnapshot();
+    expect(data).toMatchInlineSnapshot(`
+      {
+        "__superjsonMeta": {
+          "values": {
+            "metadata": [
+              "undefined",
+            ],
+          },
+        },
+        "content": "# Test File
+
+      This is a test file for the Eyecrest API.
+
+      ## Features
+
+      - SHA validation
+      - Section parsing
+      - Full-text search
+
+      ## Usage
+
+      Upload markdown files and search through them.",
+        "metadata": null,
+        "sha": "888714a3a2b2d0f763ddcd537ac56c4d61abe77a",
+      }
+    `);
   });
 
   test('should retrieve file with line numbers', async () => {
@@ -166,12 +192,19 @@ Upload markdown files and search through them.`;
     );
 
     if (!response.ok) {
-      console.log('File retrieval failed, possibly due to old database schema');
-      return;
+      const errorText = await response.text();
+      throw new Error(`File retrieval failed with status ${response.status}: ${errorText}`);
     }
 
     const data = await response.json() as any;
-    expect(data.content).toMatchInlineSnapshot();
+    expect(data.content).toMatchInlineSnapshot(`
+      " 5  ## Features
+       6
+       7  - SHA validation
+       8  - Section parsing
+       9  - Full-text search
+      10  "
+    `);
   });
 
   test('should upload multiple files including MDX', async () => {
@@ -404,6 +437,10 @@ Configure your client with the API endpoint.`;
 
     expect(response.ok).toBe(false);
     expect(response.status).toBe(500); // Worker throws error which becomes 500
+
+    const errorText = await response.text();
+    expect(errorText).toContain('File not found');
+    expect(errorText).toContain('non-existent.md');
   });
 
   test('should handle empty search results', async () => {
@@ -471,12 +508,35 @@ Content in second section.`;
     });
 
     if (!getResponse.ok) {
-      console.log('File retrieval failed, possibly due to old database schema');
-      return;
+      const errorText = await getResponse.text();
+      throw new Error(`File retrieval failed with status ${getResponse.status}: ${errorText}`);
     }
 
     const fileData = await getResponse.json() as any;
-    expect(fileData).toMatchInlineSnapshot();
+    expect(fileData).toMatchInlineSnapshot(`
+      {
+        "__superjsonMeta": {
+          "values": {
+            "metadata": [
+              "undefined",
+            ],
+          },
+        },
+        "content": "# Metadata Test
+
+      This file tests metadata storage.
+
+      ## First Section
+
+      Content in first section.
+
+      ## Second Section
+
+      Content in second section.",
+        "metadata": null,
+        "sha": "36937b98f7b8bf0699d944beaa1e8f53d3e6dafb",
+      }
+    `);
 
     // Wait for indexing
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -490,7 +550,63 @@ Content in second section.`;
     );
 
     const searchData = await searchResponse.json() as any;
-    expect(searchData).toMatchInlineSnapshot();
+    expect(searchData).toMatchInlineSnapshot(`
+      {
+        "__superjsonMeta": {
+          "values": {
+            "results.0.metadata": [
+              "undefined",
+            ],
+            "results.0.startLine": [
+              "undefined",
+            ],
+            "results.1.metadata": [
+              "undefined",
+            ],
+            "results.1.startLine": [
+              "undefined",
+            ],
+            "results.2.metadata": [
+              "undefined",
+            ],
+            "results.2.startLine": [
+              "undefined",
+            ],
+          },
+        },
+        "count": 3,
+        "page": 0,
+        "perPage": 20,
+        "results": [
+          {
+            "filename": "metadata-test.md",
+            "metadata": null,
+            "score": -1.2697268570997082,
+            "section": "First Section",
+            "snippet": "First Section",
+            "startLine": null,
+          },
+          {
+            "filename": "metadata-test.md",
+            "metadata": null,
+            "score": -1.2697268570997082,
+            "section": "Second Section",
+            "snippet": "Second Section",
+            "startLine": null,
+          },
+          {
+            "filename": "test.md",
+            "metadata": null,
+            "score": -0.9033710596991084,
+            "section": "Features",
+            "snippet": "- SHA validation
+      - Section parsing
+      - Full-text search",
+            "startLine": null,
+          },
+        ],
+      }
+    `);
   });
 
   test('should skip re-uploading files with same content', async () => {
@@ -533,12 +649,25 @@ Content in second section.`;
     });
 
     if (!getResponse.ok) {
-      console.log('File retrieval failed, possibly due to old database schema');
-      return;
+      const errorText = await getResponse.text();
+      throw new Error(`File retrieval failed with status ${getResponse.status}: ${errorText}`);
     }
 
     const data = await getResponse.json() as any;
-    expect(data).toMatchInlineSnapshot();
+    expect(data).toMatchInlineSnapshot(`
+      {
+        "__superjsonMeta": {
+          "values": {
+            "metadata": [
+              "undefined",
+            ],
+          },
+        },
+        "content": "Test content for SHA check",
+        "metadata": null,
+        "sha": "1782917c7c9a9c41779b7f69d27db008019f9b92",
+      }
+    `);
   });
 
 

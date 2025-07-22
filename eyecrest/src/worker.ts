@@ -137,7 +137,7 @@ export class DatasetCache extends DurableObject {
     if (datasetRows.length > 0) {
       const existingOrgId = datasetRows[0].org_id as string;
       if (existingOrgId !== orgId) {
-        throw new Error("Unauthorized: dataset belongs to a different organization");
+        throw new Error(`Unauthorized: dataset ${datasetId} belongs to organization ${existingOrgId}, but you are authenticated as ${orgId}`);
       }
     } else {
       // First time creating this dataset - record ownership
@@ -228,16 +228,16 @@ export class DatasetCache extends DurableObject {
     // Verify ownership
     await this.verifyDatasetOwnership(datasetId, orgId);
 
-    const results = [...this.sql.exec("SELECT content, sha, metadata FROM files WHERE filename = ?", filePath)];
+    const results = [...this.sql.exec("SELECT content, sha FROM files WHERE filename = ?", filePath)];
     const row = results.length > 0 ? results[0] : null;
 
     if (!row) {
-      throw new Error("File not found");
+      throw new Error(`File not found: ${filePath} in dataset ${datasetId}`);
     }
 
     let content = row.content as string;
     const sha = row.sha as string;
-    const metadata = row.metadata ? JSON.parse(row.metadata as string) : undefined;
+    const metadata = undefined; // Metadata column doesn't exist in production yet
 
     // Apply line formatting if any formatting options are specified
     if (showLineNumbers || start !== undefined || end !== undefined) {
@@ -378,12 +378,12 @@ export class DatasetCache extends DurableObject {
   private async verifyDatasetOwnership(datasetId: string, orgId: string): Promise<void> {
     const datasetRows = [...this.sql.exec("SELECT org_id FROM datasets WHERE dataset_id = ?", datasetId)];
     if (datasetRows.length === 0) {
-      throw new Error("Dataset not found");
+      throw new Error(`Dataset not found: ${datasetId}. This dataset has never been created or all files have been deleted.`);
     }
     
     const existingOrgId = datasetRows[0].org_id as string;
     if (existingOrgId !== orgId) {
-      throw new Error("Unauthorized: dataset belongs to a different organization");
+      throw new Error(`Unauthorized: dataset ${datasetId} belongs to organization ${existingOrgId}, but you are authenticated as ${orgId}`);
     }
   }
 }
