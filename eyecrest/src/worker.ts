@@ -20,9 +20,9 @@ import { cleanMarkdownContent } from "./markdown-cleaner.js";
 
 interface Env {
   DATASET_CACHE: DurableObjectNamespace;
-  REPO_CACHE: DurableObjectNamespace;
   ASSETS: Fetcher;
   EYECREST_PUBLIC_KEY: string; // RSA public key in PEM format
+  EYECREST_KV: KVNamespace;
 }
 
 /* ======================================================================
@@ -38,6 +38,10 @@ const FileSchema = z.object({
   content: z.string().describe('Raw file content'),
   metadata: z.any().optional().describe('Optional user-provided metadata for the file (JSON object)'),
   weight: z.number().optional().default(1.0).describe('Optional weight for ranking in search results (default: 1.0)'),
+});
+
+const UpsertFilesRequestSchema = z.object({
+  files: z.array(FileSchema).describe('List of files to ingest and auto-chunk')
 });
 
 const DeleteFilesSchema = z.object({
@@ -76,6 +80,7 @@ const SearchSectionsResponseSchema = z.object({
   hasNextPage: z.boolean().describe('Whether there are more results on the next page'),
   page: z.number().int().describe('Current page'),
   perPage: z.number().int().describe('Results per page'),
+  region: z.string().describe('Durable Object region where search was executed'),
 });
 
 // Export types for SDK use
@@ -140,6 +145,7 @@ export class DatasetCache extends DurableObject {
       CREATE TABLE IF NOT EXISTS datasets (
         dataset_id    TEXT PRIMARY KEY,
         org_id        TEXT NOT NULL,
+        primary_region TEXT NOT NULL,
         created_at    INTEGER NOT NULL,
         updated_at    INTEGER NOT NULL
       );
@@ -155,7 +161,7 @@ export class DatasetCache extends DurableObject {
 
     // Check if dataset exists and verify ownership
     const ownershipStart = Date.now();
-    const datasetRows = [...this.sql.exec("SELECT org_id FROM datasets WHERE dataset_id = ?", datasetId)];
+    const datasetRows = [...this.sql.exec("SELECT org_id, primary_region FROM datasets WHERE dataset_id = ?", datasetId)];
     if (datasetRows.length > 0) {
       const existingOrgId = datasetRows[0].org_id as string;
       if (existingOrgId !== orgId) {
@@ -164,8 +170,9 @@ export class DatasetCache extends DurableObject {
     } else {
       // First time creating this dataset - record ownership
       const now = Date.now();
-      this.sql.exec("INSERT INTO datasets (dataset_id, org_id, created_at, updated_at) VALUES (?, ?, ?, ?)",
-        datasetId, orgId, now, now);
+      // Region is managed by KV, just use default here for the table
+      this.sql.exec("INSERT INTO datasets (dataset_id, org_id, primary_region, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+        datasetId, orgId, DEFAULT_REGION, now, now);
     }
     console.log(`[upsert] Ownership check: ${Date.now() - ownershipStart}ms`);
 
@@ -331,7 +338,8 @@ export class DatasetCache extends DurableObject {
     page = 0,
     perPage = 20,
     maxChunksPerFile = 5,
-    snippetLength = 300
+    snippetLength = 300,
+    region
   }: {
     datasetId: string;
     orgId: string;
@@ -340,6 +348,7 @@ export class DatasetCache extends DurableObject {
     perPage?: number;
     maxChunksPerFile?: number;
     snippetLength?: number;
+    region: string;
   }): Promise<{
     results: Array<{
       filename: string;
@@ -353,6 +362,7 @@ export class DatasetCache extends DurableObject {
     hasNextPage: boolean;
     page: number;
     perPage: number;
+    region: string;
   }> {
     this.datasetId = datasetId;
 
@@ -435,6 +445,7 @@ export class DatasetCache extends DurableObject {
       hasNextPage,
       page,
       perPage,
+      region,
     };
   }
 
@@ -445,7 +456,8 @@ export class DatasetCache extends DurableObject {
     page = 0,
     perPage = 20,
     maxChunksPerFile = 5,
-    snippetLength = 300
+    snippetLength = 300,
+    region
   }: {
     datasetId: string;
     orgId: string;
@@ -454,8 +466,9 @@ export class DatasetCache extends DurableObject {
     perPage?: number;
     maxChunksPerFile?: number;
     snippetLength?: number;
+    region: string;
   }): Promise<string> {
-    const data = await this.searchSections({ datasetId, orgId, query, page, perPage, maxChunksPerFile, snippetLength });
+    const data = await this.searchSections({ datasetId, orgId, query, page, perPage, maxChunksPerFile, snippetLength, region });
 
     // Convert to markdown format with headings and URLs
     let textResult = data.results
@@ -474,10 +487,12 @@ export class DatasetCache extends DurableObject {
       })
       .join('\n---\n\n');
 
-    // Add pagination info if there's a next page
+    // Add pagination and region info
     if (data.hasNextPage) {
       textResult += `\n\n---\n\n*More results available on page ${data.page + 1}*`;
     }
+    
+    textResult += `\n\n---\n\n*Search executed in region: ${data.region}*`;
 
     return textResult;
   }
@@ -574,15 +589,26 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
     method: 'PUT',
     path: '/v1/datasets/:datasetId/files',
     params: z.object({ datasetId: DatasetIdSchema }),
-    request: z.object({ files: z.array(FileSchema).describe('List of files to ingest and auto-chunk') }),
+    request: UpsertFilesRequestSchema,
     response: z.void(),
     async handler({ request, params, state }) {
       const { files } = await request.json();
       const { datasetId } = params;
       const orgId = state.orgId!; // Guaranteed by middleware
 
-      const id = state.env.DATASET_CACHE.idFromName(datasetId);
-      const stub = state.env.DATASET_CACHE.get(id) as any as DatasetCache;
+      // Get dataset config (will create if missing)
+      const config = await getDatasetConfig({
+        kv: state.env.EYECREST_KV,
+        datasetId,
+        orgId,
+        request: request as Request
+      });
+      const region = config.primaryRegion;
+
+      // Create DO ID and stub with locationHint
+      const doId = getDurableObjectId({ datasetId, region });
+      const id = state.env.DATASET_CACHE.idFromName(doId);
+      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region as any }) as any as DatasetCache;
 
       await stub.upsertFiles({ datasetId, orgId, files });
     },
@@ -601,8 +627,19 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       const { datasetId } = params;
       const orgId = state.orgId!; // Guaranteed by middleware
 
-      const id = state.env.DATASET_CACHE.idFromName(datasetId);
-      const stub = state.env.DATASET_CACHE.get(id) as any as DatasetCache;
+      // Get dataset config
+      const config = await getDatasetConfig({
+        kv: state.env.EYECREST_KV,
+        datasetId,
+        orgId,
+        request: request as Request
+      });
+      const region = config.primaryRegion;
+
+      // Create DO ID and stub with locationHint
+      const doId = getDurableObjectId({ datasetId, region });
+      const id = state.env.DATASET_CACHE.idFromName(doId);
+      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region as any }) as any as DatasetCache;
 
       await stub.deleteFiles({ datasetId, orgId, filenames });
     },
@@ -620,13 +657,24 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       sha: z.string().describe('SHA-1 hash of the original file content using Git blob format'),
       metadata: z.any().optional().describe('User-provided metadata for the file')
     }),
-    async handler({ params, query, state }) {
+    async handler({ request, params, query, state }) {
       const { datasetId, '*': filePath } = params;
       const { showLineNumbers, start, end } = query;
       const orgId = state.orgId!; // Guaranteed by middleware
 
-      const id = state.env.DATASET_CACHE.idFromName(datasetId);
-      const stub = state.env.DATASET_CACHE.get(id) as any as DatasetCache;
+      // Get dataset config
+      const config = await getDatasetConfig({
+        kv: state.env.EYECREST_KV,
+        datasetId,
+        orgId,
+        request: request as Request
+      });
+      const region = config.primaryRegion;
+
+      // Create DO ID and stub with locationHint
+      const doId = getDurableObjectId({ datasetId, region });
+      const id = state.env.DATASET_CACHE.idFromName(doId);
+      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region as any }) as any as DatasetCache;
 
       const result = await stub.getFileContents({
         datasetId,
@@ -649,13 +697,24 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
     params: z.object({ datasetId: DatasetIdSchema }),
     query: SearchSectionsQuerySchema,
     response: SearchSectionsResponseSchema,
-    async handler({ params, query, state }) {
+    async handler({ request, params, query, state }) {
       const { datasetId } = params;
       const { query: q, page, perPage, maxChunksPerFile, snippetLength } = query;
       const orgId = state.orgId!; // Guaranteed by middleware
 
-      const id = state.env.DATASET_CACHE.idFromName(datasetId);
-      const stub = state.env.DATASET_CACHE.get(id) as any as DatasetCache;
+      // Get dataset config
+      const config = await getDatasetConfig({
+        kv: state.env.EYECREST_KV,
+        datasetId,
+        orgId,
+        request: request as Request
+      });
+      const region = config.primaryRegion;
+
+      // Create DO ID and stub with locationHint
+      const doId = getDurableObjectId({ datasetId, region });
+      const id = state.env.DATASET_CACHE.idFromName(doId);
+      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region as any }) as any as DatasetCache;
 
       const result = await stub.searchSections({
         datasetId,
@@ -665,6 +724,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         perPage,
         maxChunksPerFile,
         snippetLength,
+        region,
       });
 
       return result;
@@ -679,13 +739,24 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
     params: z.object({ datasetId: DatasetIdSchema }),
     query: SearchSectionsQuerySchema,
     // response: z.string().describe('Plaintext search results'),
-    async handler({ params, query, state }) {
+    async handler({ request, params, query, state }) {
       const { datasetId } = params;
       const { query: q, page, perPage, maxChunksPerFile, snippetLength } = query;
       const orgId = state.orgId!; // Guaranteed by middleware
 
-      const id = state.env.DATASET_CACHE.idFromName(datasetId);
-      const stub = state.env.DATASET_CACHE.get(id) as any as DatasetCache;
+      // Get dataset config
+      const config = await getDatasetConfig({
+        kv: state.env.EYECREST_KV,
+        datasetId,
+        orgId,
+        request: request as Request
+      });
+      const region = config.primaryRegion;
+
+      // Create DO ID and stub with locationHint
+      const doId = getDurableObjectId({ datasetId, region });
+      const id = state.env.DATASET_CACHE.idFromName(doId);
+      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region as any }) as any as DatasetCache;
 
       const result = await stub.searchSectionsText({
         datasetId,
@@ -695,6 +766,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         perPage,
         maxChunksPerFile,
         snippetLength,
+        region,
       });
 
       return new Response(result, {
@@ -725,8 +797,6 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 /* ======================================================================
    MCP Integration (keeping for compatibility)
    ==================================================================== */
-// Alias for backward compatibility
-export class RepoCache extends DatasetCache {}
 
 export class MyMCP extends McpAgent {
   server = new McpServer(
@@ -749,6 +819,113 @@ export class MyMCP extends McpAgent {
       ignorePaths: ["/sse", "/sse/message", "/mcp"],
     });
   }
+}
+
+/* ======================================================================
+   Dataset Configuration Types and Helpers
+   ==================================================================== */
+
+const DEFAULT_REGION = 'wnam';
+
+interface DatasetConfig {
+  primaryRegion: string;
+  orgId: string;
+}
+
+interface GeolocationInfo {
+  continent?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+/* ======================================================================
+   Region Hint Calculation
+   ==================================================================== */
+
+function getClosestDurableObjectRegion({ continent, latitude, longitude }: GeolocationInfo): string {
+  const lon = longitude;
+  const lat = latitude;
+  switch (continent) {
+    case "NA": // North America
+      // Western North America (wnam): Pacific coast, Rockies, Alaska
+      // Eastern North America (enam): East of Rockies, down to Florida
+      return lon && lon < -100
+        ? "wnam" /* Western North America */
+        : "enam" /* Eastern North America */;
+
+    case "SA": // South America
+      return "sam" /* South America */;
+
+    case "EU": // Europe
+      // Western Europe (weur): Ireland, UK, France, Spain, Benelux, etc.
+      // Eastern Europe (eeur): Germany eastward, Poland, Balkans, etc.
+      return lon && lon < 25
+        ? "weur" /* Western Europe */
+        : "eeur" /* Eastern Europe */;
+
+    case "AS": // Asia
+      // Middle East (me): roughly longitudes 30°E–60°E & latitudes 10°N–48°N
+      // Asia-Pacific (apac): the rest of Asia (East, South, SE Asia)
+      if (lon && lat && lon >= 30 && lon <= 60 && lat >= 10 && lat <= 48) {
+        return "me" /* Middle East */;
+      } else {
+        return "apac" /* Asia-Pacific */;
+      }
+
+    case "OC": // Oceania (Australia, NZ, Pacific Islands)
+      return "oc" /* Oceania */;
+
+    case "AF": // Africa
+      return "afr" /* Africa */;
+
+    case "AN": // Antarctica (no direct DO region; choose a sensible fallback)
+      return "wnam" /* Fallback to Western North America */;
+
+    default:   // Unknown or unsupported continent
+      return DEFAULT_REGION /* Fallback to default region */;
+  }
+}
+
+/* ======================================================================
+   Dataset Configuration Helpers
+   ==================================================================== */
+
+interface GetDatasetConfigArgs {
+  kv: KVNamespace;
+  datasetId: string;
+  orgId: string;
+  request?: Request;
+}
+
+async function getDatasetConfig({ kv, datasetId, orgId, request }: GetDatasetConfigArgs): Promise<DatasetConfig> {
+  const key = `dataset:${datasetId}`;
+  const configJson = await kv.get(key);
+  
+  if (configJson) {
+    return JSON.parse(configJson);
+  }
+  
+  // Create new config with region based on request location
+  const region = request ? getClosestDurableObjectRegion({
+    continent: request.cf?.continent as string | undefined,
+    latitude: request.cf?.latitude as number | undefined,
+    longitude: request.cf?.longitude as number | undefined
+  }) : DEFAULT_REGION;
+  
+  const config: DatasetConfig = { primaryRegion: region, orgId };
+  await kv.put(key, JSON.stringify(config));
+  
+  return config;
+}
+
+interface GetDurableObjectIdArgs {
+  datasetId: string;
+  region: string;
+  index?: number;
+}
+
+function getDurableObjectId({ datasetId, region, index = 0 }: GetDurableObjectIdArgs): string {
+  return `${region}.${index}.${datasetId}`;
 }
 
 /* ======================================================================

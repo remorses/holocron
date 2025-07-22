@@ -1,5 +1,52 @@
 # Changelog
 
+## 2025-07-22 19:00
+
+- **Improved API Design with Object Arguments:**
+  - Refactored `getDatasetConfig` to use object arguments for better API ergonomics
+  - Created `getDurableObjectId` helper function with object arguments
+  - Added `orgId` to `DatasetConfig` type - now stored in KV alongside primaryRegion
+  - Updated all DO stub creation to pass `locationHint` for optimal regional routing
+  - This ensures Durable Objects are accessed from the preferred region for better performance
+  - All tests passing with the new implementation
+
+## 2025-07-22 18:57
+
+- **Refactored Region Management:**
+  - Removed `primaryRegion` parameter from upsert API - regions are now automatically assigned on first access
+  - Added `DEFAULT_REGION` constant set to 'wnam' for consistent default handling
+  - Updated `getDatasetConfig` to automatically create KV entries with region based on request location
+  - Region assignment is now permanent - once set for a dataset, it cannot be changed via the upsert API
+  - Simplified all API handlers to assume primaryRegion is always defined from config
+  - Removed the exported `UpsertFilesRequest` type as primaryRegion is no longer part of the API
+  - Updated README to reflect automatic region assignment behavior
+
+## 2025-07-22 18:48
+
+- **Improved Regional Distribution Implementation:**
+  - Refactored `getHint` to `getClosestDurableObjectRegion` with object parameter for better API design
+  - Created `DatasetConfig` type and centralized KV access through `getDatasetConfig` method
+  - KV now stores JSON objects `{primaryRegion: string}` instead of plain strings for extensibility
+  - Added protection against overwriting existing dataset regions - only updates KV if not already set
+  - Removed deprecated `RepoCache` class and added migration to delete existing instances
+  - Created EYECREST_KV namespace with ID `9649f14cc86246718a5bc00c1d23233a`
+  - All tests passing with new regional distribution system
+
+## 2025-07-22 18:10
+
+- **Added Regional Distribution for Datasets:**
+  - Datasets are now distributed across Cloudflare's Durable Object regions for optimized performance
+  - Added `getHint` function to automatically determine closest DO region based on request location (continent, latitude, longitude)
+  - Updated datasets table schema to include `primary_region` field
+  - Added EYECREST_KV binding in wrangler.jsonc for storing dataset-to-region mappings
+  - Updated Durable Object ID format to `{region}.{index}.{datasetId}` (e.g., `wnam.0.my-dataset`)
+  - Index field (currently always 0) reserved for future sharding capabilities
+  - Added optional `primaryRegion` parameter to upsert API for explicit region selection
+  - All API operations now use KV to lookup dataset region before accessing Durable Object
+  - Supported regions: wnam, enam (North America), weur, eeur (Europe), apac, me (Asia), sam (South America), oc (Oceania), afr (Africa)
+  - Default fallback region is wnam (Western North America) for unknown locations
+  - Updated README with regional distribution documentation
+
 ## 2025-07-22 18:02
 
 - **Frontmatter section slug changed to empty string:**

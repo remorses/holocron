@@ -13,7 +13,6 @@
     "durable_objects": {
         "bindings": [
             { "name": "DATASET_CACHE", "class_name": "DatasetCache" },
-            { "name": "REPO_CACHE", "class_name": "RepoCache" },
             { "name": "MCP_OBJECT", "class_name": "MyMCP" }
         ]
     },
@@ -30,7 +29,15 @@
         {
             "tag": "v3",
             "new_sqlite_classes": ["DatasetCache"]
+        },
+        {
+            "tag": "v4",
+            "deleted_classes": ["RepoCache"]
         }
+    ],
+
+    "kv_namespaces": [
+        { "binding": "EYECREST_KV", "id": "9649f14cc86246718a5bc00c1d23233a" }
     ],
 
     "vars": {
