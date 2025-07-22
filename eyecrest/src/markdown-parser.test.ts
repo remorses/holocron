@@ -32,7 +32,7 @@ Here's how to get started.`;
           "level": 0,
           "orderIndex": 0,
           "startLine": 1,
-          "weight": 2,
+          "weight": 1.3,
         },
         {
           "content": "This is the intro section.",
@@ -372,7 +372,7 @@ MDX allows mixing markdown and JSX seamlessly.`;
           "level": 0,
           "orderIndex": 0,
           "startLine": 1,
-          "weight": 2,
+          "weight": 1.3,
         },
         {
           "content": "import { Button, Card } from '@/components/ui'
@@ -487,7 +487,7 @@ MDX allows mixing markdown and JSX seamlessly.`;
     const frontmatterSection = result.sections.find(s => s.isFrontmatter === true);
     expect(frontmatterSection).toBeDefined();
     expect(frontmatterSection?.heading).toBe('');
-    expect(frontmatterSection?.weight).toBe(2);
+    expect(frontmatterSection?.weight).toBe(1.3);
 
     // Imports become part of the Introduction section
     const introSection = result.sections.find(s => s.heading === "Introduction");

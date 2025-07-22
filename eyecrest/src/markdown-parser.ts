@@ -40,7 +40,7 @@ export function parseMarkdownIntoSections(content: string): ParsedMarkdown {
       level: 0, // Special level for frontmatter
       orderIndex: orderIndex++,
       startLine: 1,
-      weight: 2.0, // Higher weight for frontmatter
+      weight: 1.3, // Higher weight for frontmatter
       isFrontmatter: true
     });
     
