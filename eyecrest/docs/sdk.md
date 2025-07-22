@@ -13,7 +13,7 @@ pnpm add eyecrest
 ## Usage
 
 ```typescript
-import { EyecrestClient } from 'eyecrest/sdk';
+import { EyecrestClient, type EyecrestFile } from 'eyecrest/sdk';
 
 // Initialize the client
 const client = new EyecrestClient({

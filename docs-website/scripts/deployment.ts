@@ -1,9 +1,20 @@
-import { deployFly, getDopplerEnv, shell } from '@xmorse/deployment-utils'
+import {
+    deployFly,
+    getCurrentStage,
+    getDopplerEnv,
+    shell,
+} from '@xmorse/deployment-utils'
 // import './openapi'
 
 async function main() {
-    // const stage = getCurrentStage()
-    const env = await getDopplerEnv({ stage: 'production', project: 'website' })
+    const stage = getCurrentStage()
+    if (stage !== 'production') {
+        console.warn(
+            `skipping depoyment because not in prod. staging currently not setup still`,
+        )
+        return
+    }
+    const env = await getDopplerEnv({ stage, project: 'website' })
     env.FORCE_COLOR = '1'
     await shell(`pnpm react-router typegen`)
     await Promise.all([

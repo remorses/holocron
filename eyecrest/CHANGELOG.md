@@ -1,5 +1,12 @@
 # Changelog
 
+## 2025-07-22 16:26
+
+- **Renamed File type to EyecrestFile:**
+  - Renamed exported type from `File` to `EyecrestFile` to avoid conflicts with built-in File type
+  - SDK now re-exports `EyecrestFile` and `SearchSectionsResponse` types for convenience
+  - Updated documentation to show type import example
+
 ## 2025-07-22 16:23
 
 - **Fixed weight field type in SDK:**
