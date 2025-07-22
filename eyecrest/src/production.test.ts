@@ -89,7 +89,8 @@ describe('Eyecrest Production API', () => {
     }
   });
 
-  test('should upload files', async () => {
+  test('should upload all test files', async () => {
+    // File 1: Basic test file
     const testContent = `# Test File
 
 This is a test file for the Eyecrest API.
@@ -104,22 +105,100 @@ This is a test file for the Eyecrest API.
 
 Upload markdown files and search through them.`;
 
+    // File 2: MDX file with React components
+    const mdxContent = `# React Component Guide
+
+This is an MDX file with React components.
+
+<CustomComponent />
+
+## Code Example
+
+\`\`\`jsx
+function MyComponent() {
+  return <div>Hello World</div>;
+}
+\`\`\``;
+
+    // File 3: Documentation file
+    const docContent = `# Documentation
+
+## Installation
+
+Run the following command:
+
+\`\`\`bash
+npm install eyecrest-client
+\`\`\`
+
+## Configuration
+
+Configure your client with the API endpoint.`;
+
+    // File 4: Metadata test file
+    const metadataContent = `# Metadata Test
+
+This file tests metadata storage.
+
+## First Section
+
+Content in first section.
+
+## Second Section
+
+Content in second section.`;
+
+    // File 5: SHA test file
+    const shaTestContent = 'Test content for SHA check';
+
+    // Prepare all files
+    const files = [
+      {
+        filename: 'test.md',
+        content: testContent
+      },
+      {
+        filename: 'guide.mdx',
+        content: mdxContent
+      },
+      {
+        filename: 'docs/install.md',
+        content: docContent
+      },
+      {
+        filename: 'metadata-test.md',
+        content: metadataContent,
+        metadata: {
+          author: 'Test Author',
+          version: '1.0.0',
+          tags: ['test', 'metadata'],
+          customField: { nested: true }
+        }
+      },
+      {
+        filename: 'sha-test.md',
+        content: shaTestContent
+      }
+    ];
+
+    // Upload all files at once
+    const startTime = Date.now();
     const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
       method: 'PUT',
       headers: jsonHeaders,
-      body: JSON.stringify({
-        files: [{
-          filename: 'test.md',
-          content: testContent
-        }]
-      })
+      body: JSON.stringify({ files })
     });
+    const uploadTime = Date.now() - startTime;
+    console.log(`⏱️  Upload of ${files.length} files took ${uploadTime}ms (${Math.round(uploadTime / files.length)}ms per file)`);
 
     expect(response.ok).toBe(true);
     expect(response.status).toBe(200);
 
-    // Track for cleanup
-    filesToCleanup.push('test.md');
+    // Track all files for cleanup
+    filesToCleanup.push(...files.map(f => f.filename));
+
+    // Wait a moment for indexing
+    await new Promise(resolve => setTimeout(resolve, 1000));
   });
 
   test('should reject files with incorrect SHA', async () => {
@@ -218,73 +297,22 @@ Upload markdown files and search through them.`;
     expect(data.content).toContain('3  This is a test file');
   });
 
-  test('should upload multiple files including MDX', async () => {
-    const mdxContent = `# React Component Guide
-
-This is an MDX file with React components.
-
-<CustomComponent />
-
-## Code Example
-
-\`\`\`jsx
-function MyComponent() {
-  return <div>Hello World</div>;
-}
-\`\`\``;
-
-    const docContent = `# Documentation
-
-## Installation
-
-Run the following command:
-
-\`\`\`bash
-npm install eyecrest-client
-\`\`\`
-
-## Configuration
-
-Configure your client with the API endpoint.`;
-
-    const files = [
-      {
-        filename: 'guide.mdx',
-        content: mdxContent
-      },
-      {
-        filename: 'docs/install.md',
-        content: docContent
-      }
-    ];
-
-    const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
-      method: 'PUT',
-      headers: jsonHeaders,
-      body: JSON.stringify({ files })
-    });
-
-    expect(response.ok).toBe(true);
-    expect(response.status).toBe(200);
-
-    // Track for cleanup
-    filesToCleanup.push('guide.mdx', 'docs/install.md');
-  });
 
   test('should search across file sections', async () => {
-    // Wait a moment for indexing
-    await new Promise(resolve => setTimeout(resolve, 1000));
 
+    const startTime = Date.now();
     const response = await fetch(
       `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=installation`,
       {
         headers: authHeaders
       }
     );
+    const searchTime = Date.now() - startTime;
 
     expect(response.ok).toBe(true);
 
     const data = await response.json() as any;
+    console.log(`⏱️  Search for 'installation' took ${searchTime}ms and found ${data.count} results`);
     expect(data).toMatchInlineSnapshot(`
       {
         "count": 1,
@@ -296,7 +324,7 @@ Configure your client with the API endpoint.`;
       Run the following command:
       npm install eyecrest-client",
             "filename": "docs/install.md",
-            "score": -2.134158766076999,
+            "score": -2.669456589528529,
             "section": "Installation",
             "sectionSlug": "installation",
             "snippet": "## Installation
@@ -315,16 +343,19 @@ Configure your client with the API endpoint.`;
 
 
   test('should support pagination in search', async () => {
+    const startTime = Date.now();
     const response = await fetch(
       `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=the&page=0&perPage=2`,
       {
         headers: authHeaders
       }
     );
+    const searchTime = Date.now() - startTime;
 
     expect(response.ok).toBe(true);
 
     const data = await response.json() as any;
+    console.log(`⏱️  Paginated search for 'the' took ${searchTime}ms and found ${data.count} total results (showing ${data.results.length} on page ${data.page})`);
     expect(data).toMatchInlineSnapshot(`
       {
         "count": 3,
@@ -335,7 +366,7 @@ Configure your client with the API endpoint.`;
             "cleanedSnippet": "Configuration
       Configure your client with the API endpoint.",
             "filename": "docs/install.md",
-            "score": -0.4576585771791626,
+            "score": -0.9956804118952794,
             "section": "Configuration",
             "sectionSlug": "configuration",
             "snippet": "## Configuration
@@ -347,7 +378,7 @@ Configure your client with the API endpoint.`;
       Run the following command:
       npm install eyecrest-client",
             "filename": "docs/install.md",
-            "score": -0.428942744885568,
+            "score": -0.931881251714508,
             "section": "Installation",
             "sectionSlug": "installation",
             "snippet": "## Installation
@@ -426,41 +457,6 @@ Configure your client with the API endpoint.`;
 
 
   test('should store and return file metadata and line numbers', async () => {
-    const content = `# Metadata Test
-
-This file tests metadata storage.
-
-## First Section
-
-Content in first section.
-
-## Second Section
-
-Content in second section.`;
-
-    const metadata = {
-      author: 'Test Author',
-      version: '1.0.0',
-      tags: ['test', 'metadata'],
-      customField: { nested: true }
-    };
-
-    // Upload file with metadata
-    const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
-      method: 'PUT',
-      headers: jsonHeaders,
-      body: JSON.stringify({
-        files: [{
-          filename: 'metadata-test.md',
-          content: content,
-          metadata: metadata
-        }]
-      })
-    });
-
-    expect(response.ok).toBe(true);
-    filesToCleanup.push('metadata-test.md');
-
     // Retrieve file to verify metadata
     const getResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/metadata-test.md`, {
       headers: {
@@ -502,18 +498,19 @@ Content in second section.`;
       }
     `);
 
-    // Wait for indexing
-    await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Search to verify line numbers are returned
+    const searchStart = Date.now();
     const searchResponse = await fetch(
       `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=section`,
       {
         headers: authHeaders
       }
     );
+    const searchTime = Date.now() - searchStart;
 
     const searchData = await searchResponse.json() as any;
+    console.log(`⏱️  Search for 'section' took ${searchTime}ms and found ${searchData.count} results`);
     expect(searchData).toMatchInlineSnapshot(`
       {
         "count": 3,
@@ -535,7 +532,7 @@ Content in second section.`;
               ],
               "version": "1.0.0",
             },
-            "score": -1.2518076897650152,
+            "score": -1.403337815291314,
             "section": "First Section",
             "sectionSlug": "first-section",
             "snippet": "## First Section
@@ -557,7 +554,7 @@ Content in second section.`;
               ],
               "version": "1.0.0",
             },
-            "score": -1.2518076897650152,
+            "score": -1.403337815291314,
             "section": "Second Section",
             "sectionSlug": "second-section",
             "snippet": "## Second Section
@@ -570,7 +567,7 @@ Content in second section.`;
       - Section parsing
       - Full-text search",
             "filename": "test.md",
-            "score": -0.9213091371797875,
+            "score": -1.0309720050966873,
             "section": "Features",
             "sectionSlug": "features",
             "snippet": "## Features
@@ -587,8 +584,9 @@ Content in second section.`;
   test('should skip re-uploading files with same content', async () => {
     const content = 'Test content for SHA check';
 
-    // First upload
-    const response1 = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
+    // Re-upload the same sha-test.md file to test SHA skipping
+    const startTime = Date.now();
+    const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
       method: 'PUT',
       headers: jsonHeaders,
       body: JSON.stringify({
@@ -598,23 +596,10 @@ Content in second section.`;
         }]
       })
     });
+    const reuploadTime = Date.now() - startTime;
+    console.log(`⏱️  Re-upload of sha-test.md took ${reuploadTime}ms (should be fast due to SHA skipping)`);
 
-    expect(response1.ok).toBe(true);
-    filesToCleanup.push('sha-test.md');
-
-    // Second upload with same content should skip processing (SHA computed internally)
-    const response2 = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
-      method: 'PUT',
-      headers: jsonHeaders,
-      body: JSON.stringify({
-        files: [{
-          filename: 'sha-test.md',
-          content: content
-        }]
-      })
-    });
-
-    expect(response2.ok).toBe(true);
+    expect(response.ok).toBe(true);
 
     // Verify content hasn't changed
     const getResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/sha-test.md`, {
@@ -639,43 +624,28 @@ Content in second section.`;
 
 
   test('should delete specific files', async () => {
-    // Create a file to delete
-    const content = 'File to be deleted';
-    const response1 = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
-      method: 'PUT',
-      headers: jsonHeaders,
-      body: JSON.stringify({
-        files: [{
-          filename: 'to-delete.md',
-          content: content
-        }]
-      })
-    });
-
-    expect(response1.ok).toBe(true);
-
-    // Delete the file
-    const response2 = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
+    // Delete the sha-test.md file
+    const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
       method: 'DELETE',
       headers: jsonHeaders,
       body: JSON.stringify({
-        filenames: ['to-delete.md']
+        filenames: ['sha-test.md']
       })
     });
 
-    expect(response2.ok).toBe(true);
-    expect(response2.status).toBe(200);
+    expect(response.ok).toBe(true);
+    expect(response.status).toBe(200);
 
     // Verify file is gone
-    const response3 = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/to-delete.md`, {
+    const verifyResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/sha-test.md`, {
       headers: {
         'Authorization': `Bearer ${JWT_TOKEN}`
       }
     });
-    expect(response3.ok).toBe(false);
+    expect(verifyResponse.ok).toBe(false);
 
     // Remove from cleanup list since it's already deleted
-    const index = filesToCleanup.indexOf('to-delete.md');
+    const index = filesToCleanup.indexOf('sha-test.md');
     if (index > -1) {
       filesToCleanup.splice(index, 1);
     }

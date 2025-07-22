@@ -1,13 +1,26 @@
 # Changelog
 
-## 2025-07-22 14:45
+## 2025-07-22 15:10
 
-- **Simplified FTS table structure and improved query performance:**
+- **Added dataset ID validation:**
+  - Restricted dataset IDs to only contain alphanumeric characters, hyphens, and underscores
+  - Limited dataset ID length to maximum 400 characters
+  - Added `DatasetIdSchema` using Zod validation with regex pattern `/^[a-zA-Z0-9_-]+$/`
+  - Applied validation to all API routes that accept dataset ID as a parameter
+
+## 2025-07-22 14:56
+
+- **Reorganized tests and improved FTS table structure:**
   - Changed `sections_fts` table to have `filename`, `section_slug`, and `content` columns
   - Combined section heading and content into a single field preserving markdown syntax
   - Search now only matches on content field, not filenames
   - Replaced complex ROWID-based JOIN with simple section_slug matching for better performance
   - Updated snippet function to use column index 2 for content field
+  - Fixed type errors in tests by adding `as any` to `response.json()` calls
+  - Reorganized production tests to do all file uploads in first test
+  - Updated search tests to use unique dataset IDs to avoid schema conflicts
+  - Added timing logs to upload and search operations in tests
+  - Ensured proper cleanup of test files with afterAll hooks
 
 ## 2025-07-22 14:30
 

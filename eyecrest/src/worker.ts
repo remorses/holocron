@@ -29,6 +29,10 @@ interface Env {
    Schemas for API validation
    ==================================================================== */
 
+const DatasetIdSchema = z.string()
+  .regex(/^[a-zA-Z0-9_-]+$/, 'Dataset ID must only contain alphanumeric characters, hyphens, and underscores')
+  .max(400, 'Dataset ID must not exceed 400 characters');
+
 const FileSchema = z.object({
   filename: z.string().describe('Full file path without leading slash, including extension (md or mdx)'),
   content: z.string().describe('Raw file content'),
@@ -549,6 +553,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
   .route({
     method: 'PUT',
     path: '/v1/datasets/:datasetId/files',
+    params: z.object({ datasetId: DatasetIdSchema }),
     request: z.object({ files: z.array(FileSchema).describe('List of files to ingest and auto-chunk') }),
     response: z.void(),
     async handler({ request, params, state }) {
@@ -568,6 +573,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
   .route({
     method: 'DELETE',
     path: '/v1/datasets/:datasetId/files',
+    params: z.object({ datasetId: DatasetIdSchema }),
     request: DeleteFilesSchema,
     response: z.void(),
     async handler({ request, params, state }) {
@@ -587,6 +593,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
   .route({
     method: 'GET',
     path: '/v1/datasets/:datasetId/files/*',
+    params: z.object({ datasetId: DatasetIdSchema, '*': z.string() }),
     query: GetFileContentsQuerySchema,
     response: z.object({
       content: z.string().describe('Full file content or specified line range'),
@@ -619,6 +626,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
   .route({
     method: 'GET',
     path: '/v1/datasets/:datasetId/search',
+    params: z.object({ datasetId: DatasetIdSchema }),
     query: SearchSectionsQuerySchema,
     response: SearchSectionsResponseSchema,
     async handler({ params, query, state }) {
@@ -648,6 +656,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
   .route({
     method: 'GET',
     path: '/v1/datasets/:datasetId/search.txt',
+    params: z.object({ datasetId: DatasetIdSchema }),
     query: SearchSectionsQuerySchema,
     // response: z.string().describe('Plaintext search results'),
     async handler({ params, query, state }) {

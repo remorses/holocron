@@ -80,8 +80,8 @@ Final section. ${Array(100).fill('et dolore magna aliqua. ').join('')}`
 });
 
 describe('Eyecrest Search Tokenization Research', () => {
-  // Use git commit SHA for consistent dataset ID
-  const TEST_DATASET_ID = `search-research-${process.env.GITHUB_SHA || '2e26fe2'}`;
+  // Use timestamp for unique dataset ID to avoid schema conflicts
+  const TEST_DATASET_ID = `search-research-${Date.now()}`;
   let uploadedFiles: string[] = [];
 
   beforeAll(async () => {
@@ -241,13 +241,16 @@ Each of these phrases represents a specific action in our API.`
   });
 
   test('camelCase tokenization - JSON', async () => {
+    const searchStart = Date.now();
     const response = await fetch(
       `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=getUserData`,
       { headers: authHeaders }
     );
+    const searchTime = Date.now() - searchStart;
 
     expect(response.ok).toBe(true);
-    const data = await response.json();
+    const data = await response.json() as any;
+    console.log(`⏱️  Search for 'getUserData' took ${searchTime}ms and found ${data.count} results`);
     expect(data).toMatchInlineSnapshot(`
       {
         "count": 3,
@@ -255,17 +258,20 @@ Each of these phrases represents a specific action in our API.`
         "perPage": 20,
         "results": [
           {
-            "cleanedSnippet": "In projects, you often see multiple naming conventions side by side:
+            "cleanedSnippet": "Mixed Patterns
+      In projects, you often see multiple naming conventions side by side:
       - Kebab case: \`user-data\`
       - Camel case: \`getUserData\`
       - Dot notation: \`user.data\`
       - Snake case: \`user_data\`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
-            "score": -1.2769059546177988,
+            "score": -1.2962046557325768,
             "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
-            "snippet": "In projects, you often see multiple naming conventions side by side:
+            "snippet": "## Mixed Patterns
+
+      In projects, you often see multiple naming conventions side by side:
 
       - Kebab case: \`user-data\`
       - Camel case: \`getUserData\`  
@@ -275,17 +281,20 @@ Each of these phrases represents a specific action in our API.`
       Understanding when to use each pattern is important for maintaining consistent code.",
           },
           {
-            "cleanedSnippet": "In real-world code, you might encounter different variations:
+            "cleanedSnippet": "Mixed Cases
+      In real-world code, you might encounter different variations:
       - Function calls: \`getUserData()\`
       - Method access: \`user.getData\`
       - Alternative styles: \`user-get-data\` (kebab-case)
       - Snake case variant: \`user_get_data\`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
-            "score": -1.2353847252625032,
+            "score": -1.2564397609790081,
             "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
-            "snippet": "In real-world code, you might encounter different variations:
+            "snippet": "## Mixed Cases
+
+      In real-world code, you might encounter different variations:
 
       - Function calls: \`getUserData()\`
       - Method access: \`user.getData\`
@@ -295,13 +304,16 @@ Each of these phrases represents a specific action in our API.`
       Each style has its use cases depending on the context and language conventions.",
           },
           {
-            "cleanedSnippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
+            "cleanedSnippet": "CamelCase Patterns
+      When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
             "filename": "camelCase-test.md",
-            "score": -1.171874847916563,
+            "score": -1.1953230058509159,
             "section": "CamelCase Patterns",
             "sectionSlug": "camelcase-patterns",
-            "snippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
+            "snippet": "# CamelCase Patterns
+
+      When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
 
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like \`camelCase\`, \`camelCasePattern\`, and \`thisIsCamelCase\` follow this convention.",
           },
@@ -321,7 +333,9 @@ Each of these phrases represents a specific action in our API.`
     expect(text).toMatchInlineSnapshot(`
       "### Mixed Patterns
 
-      [kebab-case-test.md:1](/v1/datasets/search-research-2e26fe2/files/kebab-case-test.md#mixed-patterns)
+      [kebab-case-test.md:1](/v1/datasets/search-research-1753188996698/files/kebab-case-test.md#mixed-patterns)
+
+      ## Mixed Patterns
 
       In projects, you often see multiple naming conventions side by side:
 
@@ -336,7 +350,9 @@ Each of these phrases represents a specific action in our API.`
 
       ### Mixed Cases
 
-      [camelCase-test.md:1](/v1/datasets/search-research-2e26fe2/files/camelCase-test.md#mixed-cases)
+      [camelCase-test.md:1](/v1/datasets/search-research-1753188996698/files/camelCase-test.md#mixed-cases)
+
+      ## Mixed Cases
 
       In real-world code, you might encounter different variations:
 
@@ -351,7 +367,9 @@ Each of these phrases represents a specific action in our API.`
 
       ### CamelCase Patterns
 
-      [camelCase-test.md:1](/v1/datasets/search-research-2e26fe2/files/camelCase-test.md#camelcase-patterns)
+      [camelCase-test.md:1](/v1/datasets/search-research-1753188996698/files/camelCase-test.md#camelcase-patterns)
+
+      # CamelCase Patterns
 
       When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
 
@@ -395,17 +413,20 @@ Each of these phrases represents a specific action in our API.`
         "perPage": 20,
         "results": [
           {
-            "cleanedSnippet": "The same data can be accessed using different notations:
+            "cleanedSnippet": "Mixed Notations
+      The same data can be accessed using different notations:
       - Dot notation: \`user.data\`
       - Kebab case: \`user-data\`
       - Camel case: \`userData\`
       - Snake case: \`user_data\`
       Choose the notation that best fits your language and framework conventions.",
             "filename": "dot.notation.test.md",
-            "score": -1.323551828046987,
+            "score": -1.3330595727772367,
             "section": "Mixed Notations",
             "sectionSlug": "mixed-notations",
-            "snippet": "The same data can be accessed using different notations:
+            "snippet": "## Mixed Notations
+
+      The same data can be accessed using different notations:
 
       - Dot notation: \`user.data\`
       - Kebab case: \`user-data\`
@@ -415,28 +436,34 @@ Each of these phrases represents a specific action in our API.`
       Choose the notation that best fits your language and framework conventions.",
           },
           {
-            "cleanedSnippet": "In JavaScript and many other languages, dot notation is used for property access. Common patterns include  user.data ,  user.info ,  config.settings , and  profile.update .
+            "cleanedSnippet": "Dot Notation Patterns
+      In JavaScript and many other languages, dot notation is used for property access. Common patterns include  user.data ,  user.info ,  config.settings , and  profile.update .
       You can chain property access for nested objects:  object.property  or even deeper nesting like  nested.object.property .",
             "filename": "dot.notation.test.md",
-            "score": -0.7219841425932825,
+            "score": -0.7283727562597273,
             "section": "Dot Notation Patterns",
             "sectionSlug": "dot-notation-patterns",
-            "snippet": "In JavaScript and many other languages, dot notation is used for property access. Common patterns include \`user.data\`, \`user.info\`, \`config.settings\`, and \`profile.update\`.
+            "snippet": "# Dot Notation Patterns
+
+      In JavaScript and many other languages, dot notation is used for property access. Common patterns include \`user.data\`, \`user.info\`, \`config.settings\`, and \`profile.update\`.
 
       You can chain property access for nested objects: \`object.property\` or even deeper nesting like \`nested.object.property\`.",
           },
           {
-            "cleanedSnippet": "In projects, you often see multiple naming conventions side by side:
+            "cleanedSnippet": "Mixed Patterns
+      In projects, you often see multiple naming conventions side by side:
       - Kebab case: \`user-data\`
       - Camel case: \`getUserData\`
       - Dot notation: \`user.data\`
       - Snake case: \`user_data\`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
-            "score": -1.2985616886363094,
+            "score": -1.3095144734761124,
             "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
-            "snippet": "In projects, you often see multiple naming conventions side by side:
+            "snippet": "## Mixed Patterns
+
+      In projects, you often see multiple naming conventions side by side:
 
       - Kebab case: \`user-data\`
       - Camel case: \`getUserData\`  
@@ -446,27 +473,33 @@ Each of these phrases represents a specific action in our API.`
       Understanding when to use each pattern is important for maintaining consistent code.",
           },
           {
-            "cleanedSnippet": "Kebab-case is commonly used in URLs, CSS classes, and CLI commands. Examples include  user-data ,  user-info ,  set-user-name , and  update-user-profile .
+            "cleanedSnippet": "Kebab Case Patterns
+      Kebab-case is commonly used in URLs, CSS classes, and CLI commands. Examples include  user-data ,  user-info ,  set-user-name , and  update-user-profile .
       This naming convention uses hyphens to separate words:  kebab-case ,  kebab-case-pattern , and  this-is-kebab-case .",
             "filename": "kebab-case-test.md",
-            "score": -0.7219841425932825,
+            "score": -0.7283727562597273,
             "section": "Kebab Case Patterns",
             "sectionSlug": "kebab-case-patterns",
-            "snippet": "Kebab-case is commonly used in URLs, CSS classes, and CLI commands. Examples include \`user-data\`, \`user-info\`, \`set-user-name\`, and \`update-user-profile\`.
+            "snippet": "# Kebab Case Patterns
+
+      Kebab-case is commonly used in URLs, CSS classes, and CLI commands. Examples include \`user-data\`, \`user-info\`, \`set-user-name\`, and \`update-user-profile\`.
 
       This naming convention uses hyphens to separate words: \`kebab-case\`, \`kebab-case-pattern\`, and \`this-is-kebab-case\`.",
           },
           {
-            "cleanedSnippet": "Here are some common multi-word technical phrases:
+            "cleanedSnippet": "Multi-word Phrases
+      Here are some common multi-word technical phrases:
       - To retrieve information: "get user data"
       - For modifications: "update user profile"
       - For deletions: "delete user account"
       Each of these phrases represents a specific action in our API.",
             "filename": "exact-phrases.md",
-            "score": -0.7973135314512333,
+            "score": -0.7990198743163188,
             "section": "Multi-word Phrases",
             "sectionSlug": "multi-word-phrases",
-            "snippet": "Here are some common multi-word technical phrases:
+            "snippet": "## Multi-word Phrases
+
+      Here are some common multi-word technical phrases:
 
       - To retrieve information: "get user data"
       - For modifications: "update user profile"  
@@ -524,12 +557,15 @@ Each of these phrases represents a specific action in our API.`
         "perPage": 20,
         "results": [
           {
-            "cleanedSnippet": ""User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
+            "cleanedSnippet": "Common Technical Phrases
+      "User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
             "filename": "exact-phrases.md",
-            "score": -2.467474297326108,
+            "score": -2.4501414924886493,
             "section": "Common Technical Phrases",
             "sectionSlug": "common-technical-phrases",
-            "snippet": ""User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
+            "snippet": "## Common Technical Phrases
+
+      "User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
           },
         ],
       }
@@ -547,7 +583,9 @@ Each of these phrases represents a specific action in our API.`
     expect(text).toMatchInlineSnapshot(`
       "### Common Technical Phrases
 
-      [exact-phrases.md:1](/v1/datasets/search-research-2e26fe2/files/exact-phrases.md#common-technical-phrases)
+      [exact-phrases.md:1](/v1/datasets/search-research-1753188996698/files/exact-phrases.md#common-technical-phrases)
+
+      ## Common Technical Phrases
 
       "User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.
       "
@@ -602,20 +640,26 @@ Each of these phrases represents a specific action in our API.`
         "perPage": 20,
         "results": [
           {
-            "cleanedSnippet": "Contact information might include email addresses such as  user@example.com  or  admin@test.org .",
+            "cleanedSnippet": "Email Addresses
+      Contact information might include email addresses such as  user@example.com  or  admin@test.org .",
             "filename": "special_chars_test.md",
-            "score": -0.24426339055549692,
+            "score": -0.24303271168465695,
             "section": "Email Addresses",
             "sectionSlug": "email-addresses",
-            "snippet": "Contact information might include email addresses such as \`user@example.com\` or \`admin@test.org\`.",
+            "snippet": "## Email Addresses
+
+      Contact information might include email addresses such as \`user@example.com\` or \`admin@test.org\`.",
           },
           {
-            "cleanedSnippet": ""User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
+            "cleanedSnippet": "Common Technical Phrases
+      "User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
             "filename": "exact-phrases.md",
-            "score": -0.21223273710722873,
+            "score": -0.21074190552434838,
             "section": "Common Technical Phrases",
             "sectionSlug": "common-technical-phrases",
-            "snippet": ""User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
+            "snippet": "## Common Technical Phrases
+
+      "User authentication" is a common phrase in security documentation. Similarly, "database connection" requires configuration in most applications. Proper "error handling" should be robust and comprehensive.",
           },
         ],
       }
@@ -633,7 +677,9 @@ Each of these phrases represents a specific action in our API.`
     expect(text).toMatchInlineSnapshot(`
       "### Mixed Notations
 
-      [dot.notation.test.md:1](/v1/datasets/search-research-2e26fe2/files/dot.notation.test.md#mixed-notations)
+      [dot.notation.test.md:1](/v1/datasets/search-research-1753188996698/files/dot.notation.test.md#mixed-notations)
+
+      ## Mixed Notations
 
       The same data can be accessed using different notations:
 
@@ -648,7 +694,9 @@ Each of these phrases represents a specific action in our API.`
 
       ### Dot Notation Patterns
 
-      [dot.notation.test.md:1](/v1/datasets/search-research-2e26fe2/files/dot.notation.test.md#dot-notation-patterns)
+      [dot.notation.test.md:1](/v1/datasets/search-research-1753188996698/files/dot.notation.test.md#dot-notation-patterns)
+
+      # Dot Notation Patterns
 
       In JavaScript and many other languages, dot notation is used for property access. Common patterns include \`user.data\`, \`user.info\`, \`config.settings\`, and \`profile.update\`.
 
@@ -658,7 +706,9 @@ Each of these phrases represents a specific action in our API.`
 
       ### Mixed Patterns
 
-      [kebab-case-test.md:1](/v1/datasets/search-research-2e26fe2/files/kebab-case-test.md#mixed-patterns)
+      [kebab-case-test.md:1](/v1/datasets/search-research-1753188996698/files/kebab-case-test.md#mixed-patterns)
+
+      ## Mixed Patterns
 
       In projects, you often see multiple naming conventions side by side:
 
@@ -673,7 +723,9 @@ Each of these phrases represents a specific action in our API.`
 
       ### Kebab Case Patterns
 
-      [kebab-case-test.md:1](/v1/datasets/search-research-2e26fe2/files/kebab-case-test.md#kebab-case-patterns)
+      [kebab-case-test.md:1](/v1/datasets/search-research-1753188996698/files/kebab-case-test.md#kebab-case-patterns)
+
+      # Kebab Case Patterns
 
       Kebab-case is commonly used in URLs, CSS classes, and CLI commands. Examples include \`user-data\`, \`user-info\`, \`set-user-name\`, and \`update-user-profile\`.
 
@@ -683,7 +735,9 @@ Each of these phrases represents a specific action in our API.`
 
       ### Mixed Cases
 
-      [camelCase-test.md:1](/v1/datasets/search-research-2e26fe2/files/camelCase-test.md#mixed-cases)
+      [camelCase-test.md:1](/v1/datasets/search-research-1753188996698/files/camelCase-test.md#mixed-cases)
+
+      ## Mixed Cases
 
       In real-world code, you might encounter different variations:
 
@@ -698,7 +752,9 @@ Each of these phrases represents a specific action in our API.`
 
       ### Multi-word Phrases
 
-      [exact-phrases.md:1](/v1/datasets/search-research-2e26fe2/files/exact-phrases.md#multi-word-phrases)
+      [exact-phrases.md:1](/v1/datasets/search-research-1753188996698/files/exact-phrases.md#multi-word-phrases)
+
+      ## Multi-word Phrases
 
       Here are some common multi-word technical phrases:
 
@@ -726,17 +782,20 @@ Each of these phrases represents a specific action in our API.`
         "perPage": 20,
         "results": [
           {
-            "cleanedSnippet": "In real-world code, you might encounter different variations:
+            "cleanedSnippet": "Mixed Cases
+      In real-world code, you might encounter different variations:
       - Function calls: \`getUserData()\`
       - Method access: \`user.getData\`
       - Alternative styles: \`user-get-data\` (kebab-case)
       - Snake case variant: \`user_get_data\`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
-            "score": -1.398563897382732,
+            "score": -1.4096434188982927,
             "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
-            "snippet": "In real-world code, you might encounter different variations:
+            "snippet": "## Mixed Cases
+
+      In real-world code, you might encounter different variations:
 
       - Function calls: \`getUserData()\`
       - Method access: \`user.getData\`
@@ -746,42 +805,51 @@ Each of these phrases represents a specific action in our API.`
       Each style has its use cases depending on the context and language conventions.",
           },
           {
-            "cleanedSnippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
+            "cleanedSnippet": "CamelCase Patterns
+      When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
             "filename": "camelCase-test.md",
-            "score": -1.0414712365394965,
+            "score": -1.056736472877257,
             "section": "CamelCase Patterns",
             "sectionSlug": "camelcase-patterns",
-            "snippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
+            "snippet": "# CamelCase Patterns
+
+      When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
 
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like \`camelCase\`, \`camelCasePattern\`, and \`thisIsCamelCase\` follow this convention.",
           },
           {
-            "cleanedSnippet": "JavaScript provides multiple ways to access data:
+            "cleanedSnippet": "Array and Object Access
+      JavaScript provides multiple ways to access data:
       - Array access: \`array[0]\`
       - Object bracket notation: \`object["key"]\`
       - Map methods: \`map.get("key")\`",
             "filename": "special_chars_test.md",
-            "score": -0.9261562168328792,
+            "score": -0.9064805094885211,
             "section": "Array and Object Access",
             "sectionSlug": "array-and-object-access",
-            "snippet": "JavaScript provides multiple ways to access data:
+            "snippet": "## Array and Object Access
+
+      JavaScript provides multiple ways to access data:
 
       - Array access: \`array[0]\`
       - Object bracket notation: \`object["key"]\`
       - Map methods: \`map.get("key")\`",
           },
           {
-            "cleanedSnippet": "Here are some common multi-word technical phrases:
+            "cleanedSnippet": "Multi-word Phrases
+      Here are some common multi-word technical phrases:
       - To retrieve information: "get user data"
       - For modifications: "update user profile"
       - For deletions: "delete user account"
       Each of these phrases represents a specific action in our API.",
             "filename": "exact-phrases.md",
-            "score": -0.7973135314512333,
+            "score": -0.7990198743163188,
             "section": "Multi-word Phrases",
             "sectionSlug": "multi-word-phrases",
-            "snippet": "Here are some common multi-word technical phrases:
+            "snippet": "## Multi-word Phrases
+
+      Here are some common multi-word technical phrases:
 
       - To retrieve information: "get user data"
       - For modifications: "update user profile"  
@@ -790,17 +858,20 @@ Each of these phrases represents a specific action in our API.`
       Each of these phrases represents a specific action in our API.",
           },
           {
-            "cleanedSnippet": "In projects, you often see multiple naming conventions side by side:
+            "cleanedSnippet": "Mixed Patterns
+      In projects, you often see multiple naming conventions side by side:
       - Kebab case: \`user-data\`
       - Camel case: \`getUserData\`
       - Dot notation: \`user.data\`
       - Snake case: \`user_data\`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
-            "score": -0.7705158567427064,
+            "score": -0.7821611585518953,
             "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
-            "snippet": "In projects, you often see multiple naming conventions side by side:
+            "snippet": "## Mixed Patterns
+
+      In projects, you often see multiple naming conventions side by side:
 
       - Kebab case: \`user-data\`
       - Camel case: \`getUserData\`  
@@ -967,17 +1038,20 @@ Each of these phrases represents a specific action in our API.`
         "perPage": 20,
         "results": [
           {
-            "cleanedSnippet": "In projects, you often see multiple naming conventions side by side:
+            "cleanedSnippet": "Mixed Patterns
+      In projects, you often see multiple naming conventions side by side:
       - Kebab case: \`user-data\`
       - Camel case: \`getUserData\`
       - Dot notation: \`user.data\`
       - Snake case: \`user_data\`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
-            "score": -2.5538119092355975,
+            "score": -2.5924093114651536,
             "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
-            "snippet": "In projects, you often see multiple naming conventions side by side:
+            "snippet": "## Mixed Patterns
+
+      In projects, you often see multiple naming conventions side by side:
 
       - Kebab case: \`user-data\`
       - Camel case: \`getUserData\`  
@@ -987,17 +1061,20 @@ Each of these phrases represents a specific action in our API.`
       Understanding when to use each pattern is important for maintaining consistent code.",
           },
           {
-            "cleanedSnippet": "In real-world code, you might encounter different variations:
+            "cleanedSnippet": "Mixed Cases
+      In real-world code, you might encounter different variations:
       - Function calls: \`getUserData()\`
       - Method access: \`user.getData\`
       - Alternative styles: \`user-get-data\` (kebab-case)
       - Snake case variant: \`user_get_data\`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
-            "score": -2.4707694505250064,
+            "score": -2.5128795219580162,
             "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
-            "snippet": "In real-world code, you might encounter different variations:
+            "snippet": "## Mixed Cases
+
+      In real-world code, you might encounter different variations:
 
       - Function calls: \`getUserData()\`
       - Method access: \`user.getData\`
@@ -1007,13 +1084,16 @@ Each of these phrases represents a specific action in our API.`
       Each style has its use cases depending on the context and language conventions.",
           },
           {
-            "cleanedSnippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
+            "cleanedSnippet": "CamelCase Patterns
+      When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
             "filename": "camelCase-test.md",
-            "score": -2.343749695833126,
+            "score": -2.3906460117018318,
             "section": "CamelCase Patterns",
             "sectionSlug": "camelcase-patterns",
-            "snippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
+            "snippet": "# CamelCase Patterns
+
+      When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
 
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like \`camelCase\`, \`camelCasePattern\`, and \`thisIsCamelCase\` follow this convention.",
           },
@@ -1037,17 +1117,20 @@ Each of these phrases represents a specific action in our API.`
         "perPage": 20,
         "results": [
           {
-            "cleanedSnippet": "In real-world code, you might encounter different variations:
+            "cleanedSnippet": "Mixed Cases
+      In real-world code, you might encounter different variations:
       - Function calls: \`getUserData()\`
       - Method access: \`user.getData\`
       - Alternative styles: \`user-get-data\` (kebab-case)
       - Snake case variant: \`user_get_data\`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
-            "score": -1.7938463133948674,
+            "score": -1.8159400322442705,
             "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
-            "snippet": "In real-world code, you might encounter different variations:
+            "snippet": "## Mixed Cases
+
+      In real-world code, you might encounter different variations:
 
       - Function calls: \`getUserData()\`
       - Method access: \`user.getData\`
@@ -1057,31 +1140,37 @@ Each of these phrases represents a specific action in our API.`
       Each style has its use cases depending on the context and language conventions.",
           },
           {
-            "cleanedSnippet": "JavaScript provides multiple ways to access data:
+            "cleanedSnippet": "Array and Object Access
+      JavaScript provides multiple ways to access data:
       - Array access: \`array[0]\`
       - Object bracket notation: \`object["key"]\`
       - Map methods: \`map.get("key")\`",
             "filename": "special_chars_test.md",
-            "score": -1.5348345888423418,
+            "score": -1.502227825919204,
             "section": "Array and Object Access",
             "sectionSlug": "array-and-object-access",
-            "snippet": "JavaScript provides multiple ways to access data:
+            "snippet": "## Array and Object Access
+
+      JavaScript provides multiple ways to access data:
 
       - Array access: \`array[0]\`
       - Object bracket notation: \`object["key"]\`
       - Map methods: \`map.get("key")\`",
           },
           {
-            "cleanedSnippet": "Here are some common multi-word technical phrases:
+            "cleanedSnippet": "Multi-word Phrases
+      Here are some common multi-word technical phrases:
       - To retrieve information: "get user data"
       - For modifications: "update user profile"
       - For deletions: "delete user account"
       Each of these phrases represents a specific action in our API.",
             "filename": "exact-phrases.md",
-            "score": -1.3213153072687398,
+            "score": -1.3241430743367117,
             "section": "Multi-word Phrases",
             "sectionSlug": "multi-word-phrases",
-            "snippet": "Here are some common multi-word technical phrases:
+            "snippet": "## Multi-word Phrases
+
+      Here are some common multi-word technical phrases:
 
       - To retrieve information: "get user data"
       - For modifications: "update user profile"  
@@ -1128,17 +1217,20 @@ Each of these phrases represents a specific action in our API.`
         "perPage": 20,
         "results": [
           {
-            "cleanedSnippet": "In projects, you often see multiple naming conventions side by side:
+            "cleanedSnippet": "Mixed Patterns
+      In projects, you often see multiple naming conventions side by side:
       - Kebab case: \`user-data\`
       - Camel case: \`getUserData\`
       - Dot notation: \`user.data\`
       - Snake case: \`user_data\`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
-            "score": -1.2769059546177988,
+            "score": -1.2962046557325768,
             "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
-            "snippet": "In projects, you often see multiple naming conventions side by side:
+            "snippet": "## Mixed Patterns
+
+      In projects, you often see multiple naming conventions side by side:
 
       - Kebab case: \`user-data\`
       - Camel case: \`getUserData\`  
@@ -1148,17 +1240,20 @@ Each of these phrases represents a specific action in our API.`
       Understanding when to use each pattern is important for maintaining consistent code.",
           },
           {
-            "cleanedSnippet": "In real-world code, you might encounter different variations:
+            "cleanedSnippet": "Mixed Cases
+      In real-world code, you might encounter different variations:
       - Function calls: \`getUserData()\`
       - Method access: \`user.getData\`
       - Alternative styles: \`user-get-data\` (kebab-case)
       - Snake case variant: \`user_get_data\`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
-            "score": -1.2353847252625032,
+            "score": -1.2564397609790081,
             "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
-            "snippet": "In real-world code, you might encounter different variations:
+            "snippet": "## Mixed Cases
+
+      In real-world code, you might encounter different variations:
 
       - Function calls: \`getUserData()\`
       - Method access: \`user.getData\`
@@ -1168,13 +1263,16 @@ Each of these phrases represents a specific action in our API.`
       Each style has its use cases depending on the context and language conventions.",
           },
           {
-            "cleanedSnippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
+            "cleanedSnippet": "CamelCase Patterns
+      When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
             "filename": "camelCase-test.md",
-            "score": -1.171874847916563,
+            "score": -1.1953230058509159,
             "section": "CamelCase Patterns",
             "sectionSlug": "camelcase-patterns",
-            "snippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
+            "snippet": "# CamelCase Patterns
+
+      When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
 
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like \`camelCase\`, \`camelCasePattern\`, and \`thisIsCamelCase\` follow this convention.",
           },
@@ -1198,17 +1296,20 @@ Each of these phrases represents a specific action in our API.`
         "perPage": 20,
         "results": [
           {
-            "cleanedSnippet": "In projects, you often see multiple naming conventions side by side:
+            "cleanedSnippet": "Mixed Patterns
+      In projects, you often see multiple naming conventions side by side:
       - Kebab case: \`user-data\`
       - Camel case: \`getUserData\`
       - Dot notation: \`user.data\`
       - Snake case: \`user_data\`
       Understanding when to use each pattern is important for maintaining consistent code.",
             "filename": "kebab-case-test.md",
-            "score": -1.2769059546177988,
+            "score": -1.2962046557325768,
             "section": "Mixed Patterns",
             "sectionSlug": "mixed-patterns",
-            "snippet": "In projects, you often see multiple naming conventions side by side:
+            "snippet": "## Mixed Patterns
+
+      In projects, you often see multiple naming conventions side by side:
 
       - Kebab case: \`user-data\`
       - Camel case: \`getUserData\`  
@@ -1218,17 +1319,20 @@ Each of these phrases represents a specific action in our API.`
       Understanding when to use each pattern is important for maintaining consistent code.",
           },
           {
-            "cleanedSnippet": "In real-world code, you might encounter different variations:
+            "cleanedSnippet": "Mixed Cases
+      In real-world code, you might encounter different variations:
       - Function calls: \`getUserData()\`
       - Method access: \`user.getData\`
       - Alternative styles: \`user-get-data\` (kebab-case)
       - Snake case variant: \`user_get_data\`
       Each style has its use cases depending on the context and language conventions.",
             "filename": "camelCase-test.md",
-            "score": -1.2353847252625032,
+            "score": -1.2564397609790081,
             "section": "Mixed Cases",
             "sectionSlug": "mixed-cases",
-            "snippet": "In real-world code, you might encounter different variations:
+            "snippet": "## Mixed Cases
+
+      In real-world code, you might encounter different variations:
 
       - Function calls: \`getUserData()\`
       - Method access: \`user.getData\`
@@ -1238,13 +1342,16 @@ Each of these phrases represents a specific action in our API.`
       Each style has its use cases depending on the context and language conventions.",
           },
           {
-            "cleanedSnippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
+            "cleanedSnippet": "CamelCase Patterns
+      When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like  getUserData  and  getUserInfo  are common patterns. Other examples include  setUserName  and  updateUserProfile .
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like  camelCase ,  camelCasePattern , and  thisIsCamelCase  follow this convention.",
             "filename": "camelCase-test.md",
-            "score": -1.171874847916563,
+            "score": -1.1953230058509159,
             "section": "CamelCase Patterns",
             "sectionSlug": "camelcase-patterns",
-            "snippet": "When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
+            "snippet": "# CamelCase Patterns
+
+      When working with JavaScript and TypeScript, we often use camelCase naming conventions. For example, functions like \`getUserData\` and \`getUserInfo\` are common patterns. Other examples include \`setUserName\` and \`updateUserProfile\`.
 
       The camelCase pattern is widely adopted in the JavaScript ecosystem. Variables like \`camelCase\`, \`camelCasePattern\`, and \`thisIsCamelCase\` follow this convention.",
           },
