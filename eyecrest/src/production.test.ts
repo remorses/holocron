@@ -231,24 +231,38 @@ More content in section two.`;
     await new Promise(resolve => setTimeout(resolve, 1000));
   });
 
-  test('should reject files with incorrect SHA', async () => {
+  test('should ignore user-provided SHA and compute it server-side', async () => {
     const testContent = 'This is test content';
     const wrongSHA = 'incorrect_sha_hash';
+    const filename = 'ignore-sha-test.md';
 
+    // Upload file with incorrect SHA - should succeed since SHA is ignored
     const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
       method: 'PUT',
       headers: jsonHeaders,
       body: JSON.stringify({
         files: [{
-          filename: 'bad-sha.md',
+          filename,
           content: testContent,
           sha: wrongSHA
         }]
       })
     });
 
-    expect(response.ok).toBe(false);
-    expect(response.status).toBe(500); // Worker throws error for SHA mismatch
+    expect(response.ok).toBe(true);
+    expect(response.status).toBe(200);
+
+    // Retrieve file to verify correct SHA was computed
+    const getResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files/${filename}`, {
+      headers: authHeaders
+    });
+
+    const data = await getResponse.json() as any;
+    expect(data.sha).not.toBe(wrongSHA); // SHA should not be the user-provided one
+    expect(data.sha).toBe('417be07f3a69bd909b3a8455d5ca90ad7ed47360'); // Correct computed SHA
+
+    // Clean up
+    filesToCleanup.push(filename);
   });
 
   test('should retrieve file content with SHA', async () => {
@@ -354,7 +368,7 @@ More content in section two.`;
       Run the following command:
       npm install eyecrest-client",
             "filename": "docs/install.md",
-            "score": -3.1295619879170515,
+            "score": -3.191744709084836,
             "sectionSlug": "installation",
             "snippet": "## Installation
 
@@ -396,7 +410,7 @@ More content in section two.`;
             "cleanedSnippet": "Configuration
       Configure your client with the API endpoint.",
             "filename": "docs/install.md",
-            "score": -1.3858796934759985,
+            "score": -1.446387253169038,
             "sectionSlug": "configuration",
             "snippet": "## Configuration
 
@@ -408,7 +422,7 @@ More content in section two.`;
       Run the following command:
       npm install eyecrest-client",
             "filename": "docs/install.md",
-            "score": -1.300613008639193,
+            "score": -1.3562641622568563,
             "sectionSlug": "installation",
             "snippet": "## Installation
 
@@ -551,7 +565,7 @@ More content in section two.`;
             "cleanedSnippet": "Section One
       Some content in section one.",
             "filename": "frontmatter-test.md",
-            "score": -0.695240701845541,
+            "score": -0.8221412936324344,
             "sectionSlug": "section-one",
             "snippet": "## Section One
 
@@ -562,7 +576,7 @@ More content in section two.`;
             "cleanedSnippet": "Section Two
       More content in section two.",
             "filename": "frontmatter-test.md",
-            "score": -0.695240701845541,
+            "score": -0.8221412936324344,
             "sectionSlug": "section-two",
             "snippet": "## Section Two
 
@@ -573,7 +587,7 @@ More content in section two.`;
             "cleanedSnippet": "Document Title
       This document has frontmatter which should be parsed as a separate section with higher weight.",
             "filename": "frontmatter-test.md",
-            "score": -0.38397358494692446,
+            "score": -0.451273155062302,
             "sectionSlug": "document-title",
             "snippet": "# Document Title
 
@@ -595,7 +609,7 @@ More content in section two.`;
               ],
               "version": "1.0.0",
             },
-            "score": -0.6867358602892863,
+            "score": -0.8123893062227998,
             "sectionSlug": "first-section",
             "snippet": "## First Section
 
@@ -617,7 +631,7 @@ More content in section two.`;
               ],
               "version": "1.0.0",
             },
-            "score": -0.6867358602892863,
+            "score": -0.8123893062227998,
             "sectionSlug": "second-section",
             "snippet": "## Second Section
 
@@ -630,7 +644,7 @@ More content in section two.`;
       - Section parsing
       - Full-text search",
             "filename": "test.md",
-            "score": -0.5090314408051558,
+            "score": -0.6005330653142935,
             "sectionSlug": "features",
             "snippet": "## Features
 
@@ -704,7 +718,7 @@ More content in section two.`;
     // The frontmatter section should appear first due to higher weight
     expect(data.results.length).toBeGreaterThan(0);
     const firstResult = data.results[0];
-    expect(firstResult.sectionSlug).toBe('frontmatter'); // Frontmatter has special slug
+    expect(firstResult.sectionSlug).toBe(''); // Frontmatter has empty slug
     expect(firstResult.filename).toBe('frontmatter-test.md');
     
     // Verify the content includes our frontmatter

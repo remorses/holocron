@@ -38,7 +38,7 @@ export function parseMarkdownIntoSections(content: string): ParsedMarkdown {
     // Add frontmatter as a special section with higher weight
     sections.push({
       content: frontmatterFullText.trim(),
-      headingSlug: 'frontmatter',
+      headingSlug: '',
       level: 0, // Special level for frontmatter
       orderIndex: orderIndex++,
       startLine: 1,

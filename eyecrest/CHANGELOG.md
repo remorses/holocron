@@ -1,5 +1,23 @@
 # Changelog
 
+## 2025-07-22 18:02
+
+- **Frontmatter section slug changed to empty string:**
+  - Changed frontmatter sections to have `sectionSlug: ''` instead of `'frontmatter'`
+  - This ensures frontmatter sections are stored with empty slug in the database
+  - Updated all tests to expect empty string for frontmatter section slugs
+  - No changes to search functionality - frontmatter still has higher weight (1.3)
+
+## 2025-07-22 17:45
+
+- **Security enhancement - Removed user-provided SHA field:**
+  - Completely removed SHA field from FileSchema (breaking change)
+  - SHA is now always computed server-side and never exposed in upload API
+  - Removed SHA validation logic that compared user SHA with computed SHA
+  - SHA is still computed and stored internally, returned in getFile responses
+  - This prevents any potential SHA spoofing attacks
+  - Updated tests to reflect that user cannot provide SHA values
+
 ## 2025-07-22 16:26
 
 - **Renamed File type to EyecrestFile:**

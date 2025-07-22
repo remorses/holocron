@@ -29,7 +29,7 @@ Here's how to get started.`;
       date: 2024-01-01
       tags: [test, documentation]
       ---",
-          "headingSlug": "frontmatter",
+          "headingSlug": "",
           "level": 0,
           "orderIndex": 0,
           "startLine": 1,
@@ -394,7 +394,7 @@ MDX allows mixing markdown and JSX seamlessly.`;
           "content": "---
       title: Advanced MDX Example
       ---",
-          "headingSlug": "frontmatter",
+          "headingSlug": "",
           "level": 0,
           "orderIndex": 0,
           "startLine": 1,
@@ -513,7 +513,7 @@ MDX allows mixing markdown and JSX seamlessly.`;
     expect(mixedContentSection?.content).toContain('<Card>');
 
     // Verify the parser handled frontmatter correctly
-    const frontmatterSection = result.sections.find(s => s.headingSlug === "frontmatter");
+    const frontmatterSection = result.sections.find(s => s.headingSlug === "");
     expect(frontmatterSection).toBeDefined();
     expect(frontmatterSection?.content).toContain('title: Advanced MDX Example');
     expect(frontmatterSection?.weight).toBe(1.3);

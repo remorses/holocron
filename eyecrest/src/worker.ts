@@ -36,7 +36,6 @@ const DatasetIdSchema = z.string()
 const FileSchema = z.object({
   filename: z.string().describe('Full file path without leading slash, including extension (md or mdx)'),
   content: z.string().describe('Raw file content'),
-  sha: z.string().optional().describe('Optional SHA-1 hash of the file content using Git blob format. If provided, will be validated against computed SHA.'),
   metadata: z.any().optional().describe('Optional user-provided metadata for the file (JSON object)'),
   weight: z.number().optional().default(1.0).describe('Optional weight for ranking in search results (default: 1.0)'),
 });
@@ -199,10 +198,7 @@ export class DatasetCache extends DurableObject {
     for (const { file, computedSHA } of shaComputations) {
       const now = Date.now();
 
-      // If SHA was provided, validate it matches
-      if (file.sha && file.sha !== computedSHA) {
-        throw new Error(`SHA mismatch for file ${file.filename}. Expected: ${file.sha}, Computed: ${computedSHA}`);
-      }
+      // Ignore user-provided SHA - always use computed SHA
 
       // Check if file exists and needs update based on SHA
       const existingSHA = existingMap.get(file.filename);

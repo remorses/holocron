@@ -4,8 +4,8 @@
   "description": "",
   "type": "module",
   "exports": {
-    ".": "./src/worker.js",
-    "./sdk": "./src/sdk.js"
+    ".": "./src/worker.ts",
+    "./sdk": "./src/sdk.ts"
   },
   "scripts": {
     "deployment": "tsc && pnpm wrangler deploy",
