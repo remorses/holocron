@@ -113,6 +113,7 @@ describe('EyecrestClient', () => {
         "hasNextPage": false,
         "page": 0,
         "perPage": 5,
+        "region": "weur",
         "results": [
           {
             "cleanedSnippet": "SDK Test
@@ -200,7 +201,7 @@ describe('EyecrestClient', () => {
     expect(text).toMatchInlineSnapshot(`
       "### Features
 
-      [sdk-test.md:5](/v1/datasets/sdk-test-dataset-1753203600000/files/sdk-test.md?start=5)
+      [sdk-test.md:5](/v1/datasets/sdk-test-dataset-1753206300000/files/sdk-test.md?start=5)
 
       ## Features
 

@@ -1,5 +1,57 @@
 # Changelog
 
+## 2025-07-22 19:45
+
+- **Fixed Region Reporting in Search:**
+  - Removed fallback to DEFAULT_REGION in search response
+  - Region is now always the actual region passed from handlers
+  - Made region parameter required in all DO methods for type safety
+  - This ensures search responses accurately report the region where the query was executed
+
+## 2025-07-22 19:40
+
+- **Removed Region Info from Text Search:**
+  - Removed "Search executed in region" line from search.txt responses
+  - Text search results now only show content and pagination info
+  - Region information still available in JSON search responses
+  - Test snapshots updated to reflect the cleaner text output
+
+## 2025-07-22 19:11
+
+- **Fixed Region Detection in Durable Objects:**
+  - Removed incorrect code that tried to parse DO ID as string with split()
+  - Region is now passed from handlers to DO methods and stored in `doRegion` field
+  - All DO methods now accept optional region parameter and store it
+  - This ensures the DO knows its actual region for accurate reporting in search responses
+  - Test snapshots updated to show correct region (weur) in all responses
+
+## 2025-07-22 19:08
+
+- **Simplified Region Reporting in Search:**
+  - Search methods now use the DO's stored `doRegion` field instead of extracting from ID
+  - Removed region parameter from `searchSections` and `searchSectionsText` methods
+  - Handlers no longer need to pass region to DO methods
+  - More reliable region detection using the same source as dataset creation
+  - Test snapshots updated to reflect region changes (weur → wnam in test environment)
+
+## 2025-07-22 19:05
+
+- **Improved Region Detection in Durable Objects:**
+  - Durable Objects now extract their actual region from their ID (format: region.index.datasetId)
+  - When creating a new dataset in SQL storage, DO uses its actual region instead of DEFAULT_REGION
+  - This ensures consistency between the DO's location and the stored region metadata
+  - The DO parses its ID string to extract the region prefix for accurate region tracking
+
+## 2025-07-22 19:03
+
+- **Added Region Information to Search Responses:**
+  - Added `region` field to search response schema to show which DO region executed the search
+  - JSON search responses now include `"region": "weur"` (or appropriate region)
+  - Text search responses show `*Search executed in region: weur*` at the bottom
+  - Helpful for debugging regional distribution and verifying correct routing
+  - All test snapshots updated to include region information
+  - Region is passed through from handlers to DO methods for accurate reporting
+
 ## 2025-07-22 19:00
 
 - **Improved API Design with Object Arguments:**

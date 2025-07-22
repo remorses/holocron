@@ -362,6 +362,7 @@ More content in section two.`;
         "hasNextPage": false,
         "page": 0,
         "perPage": 20,
+        "region": "weur",
         "results": [
           {
             "cleanedSnippet": "Installation
@@ -405,6 +406,7 @@ More content in section two.`;
         "hasNextPage": true,
         "page": 0,
         "perPage": 2,
+        "region": "weur",
         "results": [
           {
             "cleanedSnippet": "Configuration
@@ -494,6 +496,7 @@ More content in section two.`;
         "hasNextPage": false,
         "page": 0,
         "perPage": 20,
+        "region": "weur",
         "results": [],
       }
     `);
@@ -560,6 +563,7 @@ More content in section two.`;
         "hasNextPage": false,
         "page": 0,
         "perPage": 20,
+        "region": "weur",
         "results": [
           {
             "cleanedSnippet": "Section One

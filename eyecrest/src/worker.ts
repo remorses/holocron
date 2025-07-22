@@ -96,6 +96,7 @@ export type SearchSectionsResponse = z.infer<typeof SearchSectionsResponseSchema
 export class DatasetCache extends DurableObject {
   private sql: SqlStorage;
   private datasetId?: string;
+  private doRegion?: string;
 
   constructor(state: DurableObjectState, env: Env) {
     super(state, env);
@@ -150,13 +151,15 @@ export class DatasetCache extends DurableObject {
         updated_at    INTEGER NOT NULL
       );
     `);
-
   }
 
   /* ---------- API Methods ------------- */
 
-  async upsertFiles({ datasetId, orgId, files }: { datasetId: string; orgId: string; files: { filename: string; content: string; sha?: string; metadata?: Record<string, any>; weight?: number }[] }): Promise<void> {
+  async upsertFiles({ datasetId, orgId, files, region }: { datasetId: string; orgId: string; files: { filename: string; content: string; sha?: string; metadata?: Record<string, any>; weight?: number }[]; region?: string }): Promise<void> {
     this.datasetId = datasetId;
+    if (region) {
+      this.doRegion = region;
+    }
     const startTime = Date.now();
 
     // Check if dataset exists and verify ownership
@@ -170,9 +173,10 @@ export class DatasetCache extends DurableObject {
     } else {
       // First time creating this dataset - record ownership
       const now = Date.now();
-      // Region is managed by KV, just use default here for the table
+      // Use the region passed in (from KV config) or DEFAULT_REGION
+      const regionToStore = this.doRegion || DEFAULT_REGION;
       this.sql.exec("INSERT INTO datasets (dataset_id, org_id, primary_region, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-        datasetId, orgId, DEFAULT_REGION, now, now);
+        datasetId, orgId, regionToStore, now, now);
     }
     console.log(`[upsert] Ownership check: ${Date.now() - ownershipStart}ms`);
 
@@ -191,7 +195,7 @@ export class DatasetCache extends DurableObject {
     const filenames = files.map(f => f.filename);
     const placeholders = filenames.map(() => '?').join(',');
     const existingFiles = [...this.sql.exec(
-      `SELECT filename, sha FROM files WHERE filename IN (${placeholders})`, 
+      `SELECT filename, sha FROM files WHERE filename IN (${placeholders})`,
       ...filenames
     )];
     const existingMap = new Map(existingFiles.map(row => [row.filename as string, row.sha as string]));
@@ -245,11 +249,11 @@ export class DatasetCache extends DurableObject {
           // Prepare values for batch insert
           const sectionValues: any[] = [];
           const ftsValues: any[] = [];
-          
+
           for (const section of parsed.sections) {
             // Use section weight if defined, otherwise inherit file weight
             const sectionWeight = section.weight ?? fileWeight;
-            
+
             sectionValues.push(file.filename, section.content, section.level, section.orderIndex, section.headingSlug, section.startLine, sectionWeight);
             ftsValues.push(file.filename, section.headingSlug, section.content);
           }
@@ -268,19 +272,22 @@ export class DatasetCache extends DurableObject {
             ...ftsValues
           );
         }
-        
+
         if (parsed.sections.length > 10) {
           console.log(`[upsert] Parsed ${file.filename} (${parsed.sections.length} sections): ${Date.now() - parseStart}ms`);
         }
       }
     }
-    
+
     console.log(`[upsert] Processing files (${processedCount} processed, ${skippedCount} skipped): ${Date.now() - processingStart}ms`);
     console.log(`[upsert] Total time: ${Date.now() - startTime}ms`);
   }
 
-  async deleteFiles({ datasetId, orgId, filenames }: { datasetId: string; orgId: string; filenames: string[] }): Promise<void> {
+  async deleteFiles({ datasetId, orgId, filenames, region }: { datasetId: string; orgId: string; filenames: string[]; region?: string }): Promise<void> {
     this.datasetId = datasetId;
+    if (region) {
+      this.doRegion = region;
+    }
 
     // Verify ownership
     await this.verifyDatasetOwnership(datasetId, orgId);
@@ -298,7 +305,8 @@ export class DatasetCache extends DurableObject {
     filePath,
     showLineNumbers,
     start,
-    end
+    end,
+    region
   }: {
     datasetId: string;
     orgId: string;
@@ -306,8 +314,12 @@ export class DatasetCache extends DurableObject {
     showLineNumbers?: boolean;
     start?: number;
     end?: number;
+    region: string;
   }): Promise<{ content: string; sha: string; metadata?: any }> {
     this.datasetId = datasetId;
+    if (region) {
+      this.doRegion = region;
+    }
 
     // Verify ownership
     await this.verifyDatasetOwnership(datasetId, orgId);
@@ -365,6 +377,9 @@ export class DatasetCache extends DurableObject {
     region: string;
   }> {
     this.datasetId = datasetId;
+    if (region) {
+      this.doRegion = region;
+    }
 
     // Verify ownership
     await this.verifyDatasetOwnership(datasetId, orgId);
@@ -393,7 +408,7 @@ export class DatasetCache extends DurableObject {
         -- BM25 is the primary signal, weights provide minor boosts
         (bm25(sections_fts) * (1.0 + LOG(sections.weight) * 0.1) * (1.0 + LOG(files.weight) * 0.1)) as score
       FROM sections_fts
-      JOIN sections ON sections.filename = sections_fts.filename 
+      JOIN sections ON sections.filename = sections_fts.filename
         AND sections.section_slug = sections_fts.section_slug
       JOIN files ON sections.filename = files.filename
       WHERE sections_fts.content MATCH ?
@@ -407,7 +422,7 @@ export class DatasetCache extends DurableObject {
 
     // Check if there are more results
     const hasNextPage = rows.length > perPage;
-    
+
     // Remove the extra result if present
     if (hasNextPage) {
       rows.pop();
@@ -487,12 +502,10 @@ export class DatasetCache extends DurableObject {
       })
       .join('\n---\n\n');
 
-    // Add pagination and region info
+    // Add pagination info if there's a next page
     if (data.hasNextPage) {
       textResult += `\n\n---\n\n*More results available on page ${data.page + 1}*`;
     }
-    
-    textResult += `\n\n---\n\n*Search executed in region: ${data.region}*`;
 
     return textResult;
   }
@@ -610,7 +623,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       const id = state.env.DATASET_CACHE.idFromName(doId);
       const stub = state.env.DATASET_CACHE.get(id, { locationHint: region as any }) as any as DatasetCache;
 
-      await stub.upsertFiles({ datasetId, orgId, files });
+      await stub.upsertFiles({ datasetId, orgId, files, region });
     },
     openapi: { operationId: 'upsertFiles' },
   })
@@ -641,7 +654,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       const id = state.env.DATASET_CACHE.idFromName(doId);
       const stub = state.env.DATASET_CACHE.get(id, { locationHint: region as any }) as any as DatasetCache;
 
-      await stub.deleteFiles({ datasetId, orgId, filenames });
+      await stub.deleteFiles({ datasetId, orgId, filenames, region });
     },
     openapi: { operationId: 'deleteFiles' },
   })
@@ -683,6 +696,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         showLineNumbers: showLineNumbers === 'true' || showLineNumbers === '',
         start,
         end,
+        region,
       });
 
       return result;
@@ -894,27 +908,27 @@ interface GetDatasetConfigArgs {
   kv: KVNamespace;
   datasetId: string;
   orgId: string;
-  request?: Request;
+  request: Request;
 }
 
 async function getDatasetConfig({ kv, datasetId, orgId, request }: GetDatasetConfigArgs): Promise<DatasetConfig> {
   const key = `dataset:${datasetId}`;
   const configJson = await kv.get(key);
-  
+
   if (configJson) {
     return JSON.parse(configJson);
   }
-  
+
   // Create new config with region based on request location
-  const region = request ? getClosestDurableObjectRegion({
+  const region = getClosestDurableObjectRegion({
     continent: request.cf?.continent as string | undefined,
     latitude: request.cf?.latitude as number | undefined,
     longitude: request.cf?.longitude as number | undefined
-  }) : DEFAULT_REGION;
-  
+  })
+
   const config: DatasetConfig = { primaryRegion: region, orgId };
   await kv.put(key, JSON.stringify(config));
-  
+
   return config;
 }
 
