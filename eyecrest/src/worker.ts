@@ -1,7 +1,7 @@
 /* -----------------------------------------------------------------------
    Cloudflare Worker + Durable Object (SQLite) - Generic File API
    -------------------------------------------------------------------- */
-
+import {Response} from "spiceflow";
 import { McpAgent } from "agents/mcp";
 import { DurableObject } from "cloudflare:workers";
 import { Spiceflow } from "spiceflow";
@@ -120,7 +120,7 @@ export class DatasetCache extends DurableObject {
 
       -- Metadata table
       CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, val TEXT);
-      
+
       -- Datasets table to track ownership
       CREATE TABLE IF NOT EXISTS datasets (
         dataset_id    TEXT PRIMARY KEY,
@@ -136,7 +136,7 @@ export class DatasetCache extends DurableObject {
 
   async upsertFiles({ datasetId, orgId, files }: { datasetId: string; orgId: string; files: { filename: string; content: string; sha?: string; metadata?: Record<string, any> }[] }): Promise<void> {
     this.datasetId = datasetId;
-    
+
     // Check if dataset exists and verify ownership
     const datasetRows = [...this.sql.exec("SELECT org_id FROM datasets WHERE dataset_id = ?", datasetId)];
     if (datasetRows.length > 0) {
@@ -205,7 +205,7 @@ export class DatasetCache extends DurableObject {
 
   async deleteFiles({ datasetId, orgId, filenames }: { datasetId: string; orgId: string; filenames: string[] }): Promise<void> {
     this.datasetId = datasetId;
-    
+
     // Verify ownership
     await this.verifyDatasetOwnership(datasetId, orgId);
 
@@ -232,7 +232,7 @@ export class DatasetCache extends DurableObject {
     end?: number;
   }): Promise<{ content: string; sha: string; metadata?: any }> {
     this.datasetId = datasetId;
-    
+
     // Verify ownership
     await this.verifyDatasetOwnership(datasetId, orgId);
 
@@ -284,7 +284,7 @@ export class DatasetCache extends DurableObject {
     perPage: number;
   }> {
     this.datasetId = datasetId;
-    
+
     // Verify ownership
     await this.verifyDatasetOwnership(datasetId, orgId);
 
@@ -376,24 +376,24 @@ export class DatasetCache extends DurableObject {
       .map((result: any) => {
         const level = result.section.includes('#') ? result.section.match(/^#+/)?.[0].length || 2 : 2;
         const headingPrefix = '#'.repeat(Math.min(level + 1, 6)); // Offset by 1 to show hierarchy
-        
+
         // Build URL to read specific line, including section slug as hash
         const baseUrl = `/v1/datasets/${datasetId}/files/${result.filename}`;
         const lineUrl = result.startLine ? `${baseUrl}?start=${result.startLine}#${result.sectionSlug}` : `${baseUrl}#${result.sectionSlug}`;
-        
+
         return `${headingPrefix} ${result.section}\n\n[${result.filename}:${result.startLine || '1'}](${lineUrl})\n\n${result.snippet}\n`;
       })
       .join('\n---\n\n');
 
     return textResult;
   }
-  
+
   private async verifyDatasetOwnership(datasetId: string, orgId: string): Promise<void> {
     const datasetRows = [...this.sql.exec("SELECT org_id FROM datasets WHERE dataset_id = ?", datasetId)];
     if (datasetRows.length === 0) {
       throw new Error(`Dataset not found: ${datasetId}. This dataset has never been created or all files have been deleted.`);
     }
-    
+
     const existingOrgId = datasetRows[0].org_id as string;
     if (existingOrgId !== orgId) {
       throw new Error(`Unauthorized: dataset ${datasetId} belongs to organization ${existingOrgId}, but you are authenticated as ${orgId}`);
@@ -416,17 +416,17 @@ async function verifyJWT(token: string, publicKey: string): Promise<JWTPayload> 
   try {
     // Import the public key
     const key = await importSPKI(publicKey, 'RS256');
-    
+
     // Verify the JWT
     const { payload } = await jwtVerify(token, key, {
       algorithms: ['RS256']
     });
-    
+
     // Check if orgId is present
     if (!payload.orgId || typeof payload.orgId !== 'string') {
       throw new Error('JWT missing required orgId claim');
     }
-    
+
     return payload as JWTPayload;
   } catch (error) {
     throw new Error(`JWT verification failed: ${error.message}`);
@@ -443,7 +443,7 @@ const app = new Spiceflow()
   .state("orgId", null as string | null)
   .use(cors())
   .use(openapi({ path: "/openapi.json" }))
-  
+
   // JWT Authorization Middleware for API routes
   .use(async (context) => {
     // Skip auth for non-API routes
@@ -451,7 +451,7 @@ const app = new Spiceflow()
     if (!url.pathname.startsWith('/v1/')) {
       return;
     }
-    
+
     // Extract JWT from Authorization header
     const authHeader = context.request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -460,9 +460,9 @@ const app = new Spiceflow()
         headers: { 'Content-Type': 'application/json' }
       });
     }
-    
+
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    
+
     try {
       // Verify JWT and extract orgId
       const payload = await verifyJWT(token, context.state.env.EYECREST_PUBLIC_KEY);
@@ -518,7 +518,7 @@ const app = new Spiceflow()
     method: 'GET',
     path: '/v1/datasets/:datasetId/files/*',
     query: GetFileContentsQuerySchema,
-    response: z.object({ 
+    response: z.object({
       content: z.string().describe('Full file content or specified line range'),
       sha: z.string().describe('SHA-1 hash of the original file content using Git blob format'),
       metadata: z.any().optional().describe('User-provided metadata for the file')
@@ -578,7 +578,7 @@ const app = new Spiceflow()
     method: 'GET',
     path: '/v1/datasets/:datasetId/search.txt',
     query: SearchSectionsQuerySchema,
-    response: z.string().describe('Plaintext search results'),
+    // response: z.string().describe('Plaintext search results'),
     async handler({ params, query, state }) {
       const { datasetId } = params;
       const { query: q, page, perPage, maxChunksPerFile } = query;
@@ -596,7 +596,10 @@ const app = new Spiceflow()
         maxChunksPerFile,
       });
 
-      return result;
+      return new Response(result, {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+      });
     },
     openapi: { operationId: 'searchSectionsText' },
   })

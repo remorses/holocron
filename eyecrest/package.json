@@ -28,7 +28,7 @@
     "github-slugger": "^2.0.0",
     "jose": "^6.0.12",
     "marked": "^15.0.12",
-    "spiceflow": "^1.17.2",
+    "spiceflow": "^1.17.4",
     "zod": "^4.0.5"
   }
 }

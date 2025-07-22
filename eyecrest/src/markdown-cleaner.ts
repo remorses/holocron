@@ -15,7 +15,7 @@ export function cleanMarkdownContent(content: string): string {
   const tokens = marked.lexer(cleaned);
 
   // Walk through the token tree and extract only text content
-  const walkTokens = (token: Token): string => {
+  const walkTokens = (token: Token, depth: number = 0): string => {
     switch (token.type) {
       case 'text':
       case 'codespan':
@@ -26,7 +26,7 @@ export function cleanMarkdownContent(content: string): string {
       case 'del':
       case 'link':
         if ('tokens' in token && token.tokens) {
-          return token.tokens.map(walkTokens).join('');
+          return token.tokens.map(t => walkTokens(t, depth)).join('');
         }
         return token.text || '';
 
@@ -45,26 +45,42 @@ export function cleanMarkdownContent(content: string): string {
       case 'escape':
       case 'def':
         return '';
-
-      default:
-        // For any token with nested tokens, recurse
-        if ('tokens' in token && Array.isArray(token.tokens)) {
-          return token.tokens.map(walkTokens).join(' ');
-        }
-        // For any token with items (lists)
+        
+      case 'list':
         if ('items' in token && Array.isArray(token.items)) {
-          return token.items.map((item: any) => {
+          return token.items.map((item: any, index: number) => {
+            // Process item content, handling nested lists
+            let itemText = '';
+            let nestedList = '';
+            
             if (item.tokens) {
-              return item.tokens.map(walkTokens).join(' ');
+              for (const t of item.tokens) {
+                if (t.type === 'list') {
+                  // Handle nested list separately
+                  nestedList = '\n' + walkTokens(t, depth + 1);
+                } else {
+                  itemText += walkTokens(t, depth);
+                }
+              }
+            } else {
+              itemText = item.text || '';
             }
-            return item.text || '';
-          }).join(' ');
+            
+            // Add proper indentation
+            const indent = '  '.repeat(depth);
+            
+            // Preserve list markers with indentation
+            const marker = token.ordered ? `${index + 1}.` : '-';
+            return `${indent}${marker} ${itemText.trim()}${nestedList}`;
+          }).join('\n');
         }
-        // For tables
-        if (token.type === 'table' && 'header' in token) {
+        return '';
+        
+      case 'table':
+        if ('header' in token) {
           const headerText = token.header.map((cell: any) => {
             if (cell.tokens) {
-              return cell.tokens.map(walkTokens).join(' ');
+              return cell.tokens.map((t: any) => walkTokens(t, depth)).join(' ');
             }
             return cell.text || '';
           }).join(' ');
@@ -72,24 +88,51 @@ export function cleanMarkdownContent(content: string): string {
           const rowsText = token.rows?.map((row: any) =>
             row.map((cell: any) => {
               if (cell.tokens) {
-                return cell.tokens.map(walkTokens).join(' ');
+                return cell.tokens.map((t: any) => walkTokens(t, depth)).join(' ');
               }
               return cell.text || '';
             }).join(' ')
-          ).join(' ') || '';
+          ).join('\n') || '';
 
-          return `${headerText} ${rowsText}`;
+          return `${headerText}\n${rowsText}`;
+        }
+        return '';
+
+      default:
+        // For any token with nested tokens, recurse
+        if ('tokens' in token && Array.isArray(token.tokens)) {
+          return token.tokens.map(t => walkTokens(t, depth)).join(' ');
         }
         return '';
     }
   };
 
-  // Process all tokens
-  const textParts = tokens.map(walkTokens).filter(text => text.trim());
-
-  // Join and normalize whitespace
-  return textParts
-    .join(' ')
-    .replace(/\s+/g, ' ')
+  // Process all tokens and preserve structure
+  const processedTokens: string[] = [];
+  
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    const text = walkTokens(token);
+    
+    if (text.trim()) {
+      processedTokens.push(text);
+      
+      // Add newline after block-level elements
+      if (token.type === 'heading' || 
+          token.type === 'paragraph' || 
+          token.type === 'code' || 
+          token.type === 'blockquote' ||
+          token.type === 'list' ||
+          token.type === 'table' ||
+          token.type === 'hr') {
+        processedTokens.push('\n');
+      }
+    }
+  }
+  
+  // Join and clean up excessive newlines
+  return processedTokens
+    .join('')
+    .replace(/\n{3,}/g, '\n\n') // Collapse multiple newlines to double
     .trim();
 }
