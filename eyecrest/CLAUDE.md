@@ -9,3 +9,5 @@
 - to deploy to cloudflare use `pnpm run deployment` (not pnpm deploy)
 
 - do not use `pnpm changesets` for this package. instead add sections to a `CHANGELOG.md` file directly, using a bullet list. use the current time to separates changelog entries.
+
+- before running the tests with `pnpm test` make sure to run `pnpm deployment` first to make sure the tests are using the deployed version of the worker.

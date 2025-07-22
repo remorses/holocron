@@ -287,33 +287,25 @@ Configure your client with the API endpoint.`;
     const data = await response.json() as any;
     expect(data).toMatchInlineSnapshot(`
       {
-        "count": 3,
+        "count": 1,
         "page": 0,
         "perPage": 20,
         "results": [
           {
-            "cleanedSnippet": "docs/install.md",
+            "cleanedSnippet": "Installation
+      Run the following command:
+      npm install eyecrest-client",
             "filename": "docs/install.md",
-            "score": -0.6817175152436655,
+            "score": -2.134158766076999,
             "section": "Installation",
             "sectionSlug": "installation",
-            "snippet": "docs/install.md",
-          },
-          {
-            "cleanedSnippet": "docs/install.md",
-            "filename": "docs/install.md",
-            "score": -0.6096543529557517,
-            "section": "Documentation",
-            "sectionSlug": "documentation",
-            "snippet": "docs/install.md",
-          },
-          {
-            "cleanedSnippet": "docs/install.md",
-            "filename": "docs/install.md",
-            "score": -0.44986974874894,
-            "section": "Configuration",
-            "sectionSlug": "configuration",
-            "snippet": "docs/install.md",
+            "snippet": "## Installation
+
+      Run the following command:
+
+      \`\`\`bash
+      npm install eyecrest-client
+      \`\`\`",
           },
         ],
       }
@@ -340,20 +332,31 @@ Configure your client with the API endpoint.`;
         "perPage": 2,
         "results": [
           {
-            "cleanedSnippet": "Configure your client with the API endpoint.",
+            "cleanedSnippet": "Configuration
+      Configure your client with the API endpoint.",
             "filename": "docs/install.md",
-            "score": -0.44986974874894,
+            "score": -0.4576585771791626,
             "section": "Configuration",
             "sectionSlug": "configuration",
-            "snippet": "Configure your client with the API endpoint.",
+            "snippet": "## Configuration
+
+      Configure your client with the API endpoint.",
           },
           {
-            "cleanedSnippet": "This is a test file for the Eyecrest API.",
-            "filename": "test.md",
-            "score": -0.4185290405632374,
-            "section": "Test File",
-            "sectionSlug": "test-file",
-            "snippet": "This is a test file for the Eyecrest API.",
+            "cleanedSnippet": "Installation
+      Run the following command:
+      npm install eyecrest-client",
+            "filename": "docs/install.md",
+            "score": -0.428942744885568,
+            "section": "Installation",
+            "sectionSlug": "installation",
+            "snippet": "## Installation
+
+      Run the following command:
+
+      \`\`\`bash
+      npm install eyecrest-client
+      \`\`\`",
           },
         ],
       }
@@ -420,6 +423,7 @@ Configure your client with the API endpoint.`;
       }
     `);
   });
+
 
   test('should store and return file metadata and line numbers', async () => {
     const content = `# Metadata Test
@@ -517,7 +521,8 @@ Content in second section.`;
         "perPage": 20,
         "results": [
           {
-            "cleanedSnippet": "First Section",
+            "cleanedSnippet": "First Section
+      Content in first section.",
             "filename": "metadata-test.md",
             "metadata": {
               "author": "Test Author",
@@ -530,13 +535,16 @@ Content in second section.`;
               ],
               "version": "1.0.0",
             },
-            "score": -1.2697268570997082,
+            "score": -1.2518076897650152,
             "section": "First Section",
             "sectionSlug": "first-section",
-            "snippet": "First Section",
+            "snippet": "## First Section
+
+      Content in first section.",
           },
           {
-            "cleanedSnippet": "Second Section",
+            "cleanedSnippet": "Second Section
+      Content in second section.",
             "filename": "metadata-test.md",
             "metadata": {
               "author": "Test Author",
@@ -549,20 +557,25 @@ Content in second section.`;
               ],
               "version": "1.0.0",
             },
-            "score": -1.2697268570997082,
+            "score": -1.2518076897650152,
             "section": "Second Section",
             "sectionSlug": "second-section",
-            "snippet": "Second Section",
+            "snippet": "## Second Section
+
+      Content in second section.",
           },
           {
-            "cleanedSnippet": "- SHA validation
+            "cleanedSnippet": "Features
+      - SHA validation
       - Section parsing
       - Full-text search",
             "filename": "test.md",
-            "score": -0.9033710596991084,
+            "score": -0.9213091371797875,
             "section": "Features",
             "sectionSlug": "features",
-            "snippet": "- SHA validation
+            "snippet": "## Features
+
+      - SHA validation
       - Section parsing
       - Full-text search",
           },

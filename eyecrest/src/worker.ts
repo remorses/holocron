@@ -119,7 +119,7 @@ export class DatasetCache extends DurableObject {
       -- 4. Performance: More efficient than trigram tokenizer for typical search queries
       -- 5. MDX/JSX friendly: Treats JSX tags and code snippets as regular tokens, indexing their content
       CREATE VIRTUAL TABLE IF NOT EXISTS sections_fts
-        USING fts5(filename, heading, content, tokenize = 'porter');
+        USING fts5(filename, section_slug, content, tokenize = 'porter');
 
       -- Metadata table
       CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, val TEXT);
@@ -231,8 +231,11 @@ export class DatasetCache extends DurableObject {
           
           for (const section of parsed.sections) {
             const sectionSlug = slugger.slug(section.heading);
+            // Combine heading and content for FTS, preserving markdown syntax
+            const headingMarkdown = '#'.repeat(section.level) + ' ' + section.heading;
+            const fullContent = headingMarkdown + '\n\n' + section.content;
             sectionValues.push(file.filename, section.heading, section.content, section.level, section.orderIndex, sectionSlug);
-            ftsValues.push(file.filename, section.heading, section.content);
+            ftsValues.push(file.filename, sectionSlug, fullContent);
           }
 
           // Batch insert into sections table
@@ -245,7 +248,7 @@ export class DatasetCache extends DurableObject {
           // Batch insert into FTS table
           const ftsPlaceholders = parsed.sections.map(() => '(?, ?, ?)').join(', ');
           this.sql.exec(
-            `INSERT INTO sections_fts (filename, heading, content) VALUES ${ftsPlaceholders}`,
+            `INSERT INTO sections_fts (filename, section_slug, content) VALUES ${ftsPlaceholders}`,
             ...ftsValues
           );
         }
@@ -353,26 +356,28 @@ export class DatasetCache extends DurableObject {
     // Search in sections using FTS
     const searchQuery = decodeURIComponent(query);
 
-    // Get total count
+    // Get total count - match only on content
     const countResults = [...this.sql.exec(
-      `SELECT COUNT(*) as count FROM sections_fts WHERE sections_fts MATCH ?`,
+      `SELECT COUNT(*) as count FROM sections_fts WHERE content MATCH ?`,
       searchQuery
     )];
     const totalCount = countResults[0]?.count as number || 0;
 
     // Get paginated results with section details
+    // Join using section_slug for simpler and more performant matching
     const rows = [...this.sql.exec(
       `SELECT
         sections.filename,
         sections.heading,
         sections.section_slug,
-        snippet(sections_fts, -1, '', '', '', ?) as snippet,
+        snippet(sections_fts, 2, '', '', '', ?) as snippet,
         bm25(sections_fts) as score,
         files.metadata
       FROM sections_fts
-      JOIN sections ON sections.filename = sections_fts.filename AND sections.heading = sections_fts.heading
+      JOIN sections ON sections.filename = sections_fts.filename 
+        AND sections.section_slug = sections_fts.section_slug
       JOIN files ON sections.filename = files.filename
-      WHERE sections_fts MATCH ?
+      WHERE sections_fts.content MATCH ?
       ORDER BY score
       LIMIT ? OFFSET ?`,
       snippetLength,
