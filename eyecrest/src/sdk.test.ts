@@ -91,8 +91,7 @@ describe('EyecrestClient', () => {
         {
           filename: 'sdk-docs.md',
           content: '# SDK Documentation\n\n## Installation\n\nInstall the SDK using npm or pnpm.\n\n## Usage\n\nImport and create a client.',
-          metadata: { version: '1.0.0' },
-          weight: 1.0
+          metadata: { version: '1.0.0' }
         }
       ]
     });
@@ -201,7 +200,7 @@ describe('EyecrestClient', () => {
     expect(text).toMatchInlineSnapshot(`
       "### Features
 
-      [sdk-test.md:5](/v1/datasets/sdk-test-dataset-1753194000000/files/sdk-test.md?start=5)
+      [sdk-test.md:5](/v1/datasets/sdk-test-dataset-1753194300000/files/sdk-test.md?start=5)
 
       ## Features
 

@@ -80,7 +80,7 @@ const SearchSectionsResponseSchema = z.object({
 });
 
 // Export types for SDK use
-export type File = z.infer<typeof FileSchema>;
+export type EyecrestFile = z.input<typeof FileSchema>;
 export type DeleteFilesRequest = z.infer<typeof DeleteFilesSchema>;
 export type GetFileContentsQuery = z.infer<typeof GetFileContentsQuerySchema>;
 export type SearchSectionsQuery = z.infer<typeof SearchSectionsQuerySchema>;

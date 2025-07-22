@@ -1,10 +1,13 @@
 import type { 
-  File,
+  EyecrestFile,
   DeleteFilesRequest,
   GetFileContentsQuery,
   SearchSectionsQuery,
   SearchSectionsResponse 
 } from './worker.js';
+
+// Re-export types for convenience
+export type { EyecrestFile, SearchSectionsResponse };
 
 export class EyecrestClient {
   private readonly baseUrl: string;
@@ -33,7 +36,7 @@ export class EyecrestClient {
     return response;
   }
 
-  async upsertFiles({ datasetId, files }: { datasetId: string; files: File[] }): Promise<void> {
+  async upsertFiles({ datasetId, files }: { datasetId: string; files: EyecrestFile[] }): Promise<void> {
     await this.request(`/v1/datasets/${datasetId}/files`, {
       method: 'PUT',
       headers: {

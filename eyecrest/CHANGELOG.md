@@ -1,5 +1,12 @@
 # Changelog
 
+## 2025-07-22 16:23
+
+- **Fixed weight field type in SDK:**
+  - Changed File type export to use `z.input` instead of `z.infer` to properly handle optional fields with defaults
+  - Weight field is now correctly optional in TypeScript types when uploading files
+  - Updated tests to verify weight field is optional
+
 ## 2025-07-22 16:20
 
 - **Updated SDK Client:**
