@@ -1,5 +1,14 @@
 # Changelog
 
+## 2025-07-23 13:10
+
+- **Updated Test Documentation:**
+  - Added CLAUDE.md note explaining test files must be run atomically
+  - Cannot use -t flag for individual test isolation in certain files
+  - production.test.ts and sdk.test.ts have interdependent tests
+  - Tests within these files are designed to run sequentially
+  - Later tests depend on data uploaded by earlier tests
+
 ## 2025-07-23 13:00
 
 - **Removed getDurableObjectIdForDO Function:**

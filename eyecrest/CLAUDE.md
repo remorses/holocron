@@ -39,3 +39,8 @@ I am an engineer so be concise and clear in your answers without worrying about 
 - tests MUST delete the dataset and not the singular files
 
 - for fire and forget operations in ALWAYS use `this.state.waitUntil` (remember to set `this.state = state` in constructor), do not call the promise without await. use waitUntil instead.
+
+- IMPORTANT: some test files must be run atomically (the entire file) and not with the -t flag for individual tests. Some tests depend on data uploaded in previous tests within the same file. Specifically:
+  - `production.test.ts` - tests like "should search across file sections" depend on files uploaded in "should upload all test files including frontmatter and weights"
+  - `sdk.test.ts` - tests like "should get file with line numbers" depend on files uploaded in "should upload and search files"
+  - These test files are designed to run sequentially with tests building on each other
