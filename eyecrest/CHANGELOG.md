@@ -2,12 +2,14 @@
 
 ## 2025-07-22 19:50
 
-- **Added File Upload Limit:**
+- **Added File Upload Limit and Filename Validation:**
   - Limited the number of files that can be uploaded in a single request to 100
   - Added `.max(100)` validation to the Zod schema for the files array
-  - Added validation checks in both the worker handler and DO upsertFiles method
-  - Returns 500 error with message "Too many files. Maximum 100 files per request" when limit exceeded
-  - This prevents overwhelming the DO with large batches and ensures predictable performance
+  - Added filename validation: only alphanumeric, hyphens, underscores, forward slashes, and dots allowed
+  - Filenames limited to 500 characters maximum
+  - Validation regex: `/^[a-zA-Z0-9_\-\/\.]+$/` (more restrictive than POSIX for safety)
+  - Returns 422 error with detailed validation message when validation fails
+  - Returns 500 error when file count exceeds 100 (happens in DO)
 
 ## 2025-07-22 19:45
 

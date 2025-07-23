@@ -5,6 +5,8 @@
 
 - to run tests use `pnpm test`. all new tests should be made of match(result).toMatchInlineSnapshot(). prefer inline snapshots over custom expects. instead add comments with what the snapshot should contain if it is important or add sparingly some expect() if it is really important to check something specific.
 
+- ALWAYS USE INLINE SNAPSHOTS. NEVER USE .toBe() or .toContain() or similar assertions for testing response data. ALWAYS use .toMatchInlineSnapshot() for ALL test assertions on response data. This is non-negotiable.
+
 - never update inline snapshots yourself. run `pnpm test -u` instead
 
 - if a snapshot is too long use `toMatchSnapshot()` instead of `toMatchInlineSnapshot()`. use `toMatchFileSnapshot()` if very large and if it makes sense to keep the extension to have them syntax highlighted in the editor.

@@ -34,7 +34,10 @@ const DatasetIdSchema = z.string()
   .max(400, 'Dataset ID must not exceed 400 characters');
 
 const FileSchema = z.object({
-  filename: z.string().describe('Full file path without leading slash, including extension (md or mdx)'),
+  filename: z.string()
+    .regex(/^[a-zA-Z0-9_\-\/\.]+$/, 'Filename must only contain alphanumeric characters, hyphens, underscores, forward slashes, and dots')
+    .max(500, 'Filename must not exceed 500 characters')
+    .describe('Full file path without leading slash, including extension (md or mdx)'),
   content: z.string().describe('Raw file content'),
   metadata: z.any().optional().describe('Optional user-provided metadata for the file (JSON object)'),
   weight: z.number().optional().default(1.0).describe('Optional weight for ranking in search results (default: 1.0)'),
@@ -160,12 +163,12 @@ export class DatasetCache extends DurableObject {
     if (region) {
       this.doRegion = region;
     }
-    
+
     // Validate file count limit
     if (files.length > 100) {
       throw new Error(`Too many files: ${files.length}. Maximum 100 files allowed per request.`);
     }
-    
+
     const startTime = Date.now();
 
     // Check if dataset exists and verify ownership
@@ -847,6 +850,7 @@ export class MyMCP extends McpAgent {
 
 const DEFAULT_REGION = 'wnam';
 
+// DatasetConfig is eventually consistent. stored in KV. it must only be used for things that are immutable. never updated.
 interface DatasetConfig {
   primaryRegion: string;
   orgId: string;
