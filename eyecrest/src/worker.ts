@@ -16,6 +16,50 @@ import { parseMarkdownIntoSections, isSupportedMarkdownFile, Section } from "./m
 import { computeGitBlobSHA, verifySHA } from "./sha-utils.js";
 import { cleanMarkdownContent } from "./markdown-cleaner.js";
 
+/* ---------- SQLite Table Types ---------------------------- */
+
+type FileRow = {
+  filename: string;
+  content: string;
+  sha: string;
+  metadata: string | null;
+  weight: number;
+  created_at: number;
+  updated_at: number;
+}
+
+type SectionRow = {
+  id: number;
+  filename: string;
+  content: string;
+  level: number;
+  order_index: number;
+  section_slug: string;
+  start_line: number;
+  weight: number;
+}
+
+type DatasetRow = {
+  dataset_id: string;
+  org_id: string;
+  primary_region: string;
+  created_at: number;
+  updated_at: number;
+}
+
+type SearchResultRow = {
+  filename: string;
+  content: string;
+  section_slug: string;
+  start_line: number;
+  snippet: string;
+  base_score: number;
+  section_weight: number;
+  file_weight: number;
+  metadata: string | null;
+  score: number;
+}
+
 /* ---------- ENV interface ---------------------------- */
 
 interface Env {
@@ -35,7 +79,7 @@ const DatasetIdSchema = z.string()
 
 const FileSchema = z.object({
   filename: z.string()
-    .regex(/^[a-zA-Z0-9_\-\/\.]+$/, 'Filename must only contain alphanumeric characters, hyphens, underscores, forward slashes, and dots')
+    .regex(/^[a-zA-Z0-9!_.*'()\-\/]+$/, 'Filename must only contain alphanumeric characters and safe special characters (!_.*\'()-/)')
     .max(500, 'Filename must not exceed 500 characters')
     .describe('Full file path without leading slash, including extension (md or mdx)'),
   content: z.string().describe('Raw file content'),
@@ -173,9 +217,9 @@ export class DatasetCache extends DurableObject {
 
     // Check if dataset exists and verify ownership
     const ownershipStart = Date.now();
-    const datasetRows = [...this.sql.exec("SELECT org_id, primary_region FROM datasets WHERE dataset_id = ?", datasetId)];
+    const datasetRows = [...this.sql.exec("SELECT org_id, primary_region FROM datasets WHERE dataset_id = ?", datasetId)] as Pick<DatasetRow, 'org_id' | 'primary_region'>[];
     if (datasetRows.length > 0) {
-      const existingOrgId = datasetRows[0].org_id as string;
+      const existingOrgId = datasetRows[0].org_id;
       if (existingOrgId !== orgId) {
         throw new Error(`Unauthorized: dataset ${datasetId} belongs to organization ${existingOrgId}, but you are authenticated as ${orgId}`);
       }
@@ -206,8 +250,8 @@ export class DatasetCache extends DurableObject {
     const existingFiles = [...this.sql.exec(
       `SELECT filename, sha FROM files WHERE filename IN (${placeholders})`,
       ...filenames
-    )];
-    const existingMap = new Map(existingFiles.map(row => [row.filename as string, row.sha as string]));
+    )] as Pick<FileRow, 'filename' | 'sha'>[];
+    const existingMap = new Map(existingFiles.map(row => [row.filename, row.sha]));
     console.log(`[upsert] Existing files check: ${Date.now() - existingCheckStart}ms`);
 
     // Process each file
@@ -333,16 +377,16 @@ export class DatasetCache extends DurableObject {
     // Verify ownership
     await this.verifyDatasetOwnership(datasetId, orgId);
 
-    const results = [...this.sql.exec("SELECT content, sha, metadata FROM files WHERE filename = ?", filePath)];
+    const results = [...this.sql.exec<Pick<FileRow, 'content' | 'sha' | 'metadata'>>("SELECT content, sha, metadata FROM files WHERE filename = ?", filePath)];
     const row = results.length > 0 ? results[0] : null;
 
     if (!row) {
       throw new Error(`File not found: ${filePath} in dataset ${datasetId}`);
     }
 
-    let content = row.content as string;
-    const sha = row.sha as string;
-    const metadata = row.metadata ? JSON.parse(row.metadata as string) : undefined;
+    let content = row.content;
+    const sha = row.sha;
+    const metadata = row.metadata ? JSON.parse(row.metadata) : undefined;
 
     // Apply line formatting if any formatting options are specified
     if (showLineNumbers || start !== undefined || end !== undefined) {
@@ -402,7 +446,7 @@ export class DatasetCache extends DurableObject {
     // Fetch one extra result to determine if there's a next page
     // Join using section_slug for simpler and more performant matching
     // Apply weights to BM25 score for better ranking
-    const rows = [...this.sql.exec(
+    const rows = [...this.sql.exec<SearchResultRow>(
       `SELECT
         sections.filename,
         sections.content,
@@ -441,21 +485,21 @@ export class DatasetCache extends DurableObject {
     const fileGroups: Record<string, any[]> = {};
 
     for (const row of rows) {
-      const filename = row.filename as string;
+      const filename = row.filename;
       if (!fileGroups[filename]) {
         fileGroups[filename] = [];
       }
 
       if (fileGroups[filename].length < maxChunksPerFile) {
-        const metadata = row.metadata ? JSON.parse(row.metadata as string) : undefined;
-        const rawSnippet = row.snippet as string;
+        const metadata = row.metadata ? JSON.parse(row.metadata) : undefined;
+        const rawSnippet = row.snippet;
         fileGroups[filename].push({
           filename,
-          sectionSlug: row.section_slug as string,
+          sectionSlug: row.section_slug,
           snippet: rawSnippet,
           cleanedSnippet: cleanMarkdownContent(rawSnippet),
-          score: row.score as number,
-          startLine: row.start_line as number,
+          score: row.score,
+          startLine: row.start_line,
           metadata,
         });
       }
@@ -496,7 +540,7 @@ export class DatasetCache extends DurableObject {
 
     // Convert to markdown format with headings and URLs
     let textResult = data.results
-      .map((result: any) => {
+      .map((result) => {
         // Extract heading from snippet if present
         const headingMatch = result.snippet.match(/^(#{1,6})\s+(.+)$/m);
         const heading = headingMatch ? headingMatch[2] : '';
@@ -520,12 +564,12 @@ export class DatasetCache extends DurableObject {
   }
 
   private async verifyDatasetOwnership(datasetId: string, orgId: string): Promise<void> {
-    const datasetRows = [...this.sql.exec("SELECT org_id FROM datasets WHERE dataset_id = ?", datasetId)];
+    const datasetRows = [...this.sql.exec<Pick<DatasetRow, 'org_id'>>("SELECT org_id FROM datasets WHERE dataset_id = ?", datasetId)];
     if (datasetRows.length === 0) {
       throw new Error(`Dataset not found: ${datasetId}. This dataset has never been created or all files have been deleted.`);
     }
 
-    const existingOrgId = datasetRows[0].org_id as string;
+    const existingOrgId = datasetRows[0].org_id;
     if (existingOrgId !== orgId) {
       throw new Error(`Unauthorized: dataset ${datasetId} belongs to organization ${existingOrgId}, but you are authenticated as ${orgId}`);
     }

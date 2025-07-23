@@ -30,3 +30,5 @@
 - after your changes deploy and run the tests with update snapshots enabled. then read again the test files diff and make sure the snapshots are what you expect
 
 - if you want to create documentation markdown files put them in the `docs/` folder. do not use upper case names.
+
+- tests that upsert to the production worker MUST delete the upserted data in an `afterAll` block to not accumulate garbage in the production sqlite databases.

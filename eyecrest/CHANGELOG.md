@@ -5,11 +5,19 @@
 - **Added File Upload Limit and Filename Validation:**
   - Limited the number of files that can be uploaded in a single request to 100
   - Added `.max(100)` validation to the Zod schema for the files array
-  - Added filename validation: only alphanumeric, hyphens, underscores, forward slashes, and dots allowed
+  - Added filename validation compatible with S3 object key safe characters
+  - Allowed characters: alphanumeric, `!`, `_`, `.`, `*`, `'`, `(`, `)`, `-`, `/`
   - Filenames limited to 500 characters maximum
-  - Validation regex: `/^[a-zA-Z0-9_\-\/\.]+$/` (more restrictive than POSIX for safety)
+  - Validation regex: `/^[a-zA-Z0-9!_.*'()\-\/]+$/` (S3-compatible safe character set)
   - Returns 422 error with detailed validation message when validation fails
   - Returns 500 error when file count exceeds 100 (happens in DO)
+
+- **Added TypeScript Types for SQLite Tables:**
+  - Created proper TypeScript interfaces for all SQLite tables: `FileRow`, `SectionRow`, `DatasetRow`, `SearchResultRow`
+  - Replaced all `as any` and `as string` type assertions with proper typed SQL queries
+  - All `sql.exec` calls now use generic type parameter to specify return type
+  - Improved type safety throughout the codebase, eliminating runtime type assumptions
+  - Added cleanup to filename validation tests with `afterAll` block to prevent data accumulation
 
 ## 2025-07-22 19:45
 

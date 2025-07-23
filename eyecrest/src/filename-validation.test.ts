@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, afterAll } from 'vitest';
 import { env } from 'cloudflare:test';
 
 const PRODUCTION_URL = 'https://eyecrest.org';
@@ -16,7 +16,30 @@ const jsonHeaders = {
 
 const TEST_DATASET_ID = 'filename-validation-test-' + Date.now();
 
+// Track files created during tests for cleanup
+const createdFiles: string[] = [];
+
 describe('Filename Validation Tests', () => {
+  afterAll(async () => {
+    // Clean up all test files
+    if (createdFiles.length > 0) {
+      console.log(`🗑️  Cleaning up ${createdFiles.length} test files from filename validation tests...`);
+      
+      const deleteResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
+        method: 'DELETE',
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          filenames: createdFiles
+        })
+      });
+      
+      if (deleteResponse.ok) {
+        console.log('✅ Filename validation test files cleaned up successfully');
+      } else {
+        console.error('❌ Failed to clean up filename validation test files:', await deleteResponse.text());
+      }
+    }
+  });
   test('should accept valid filenames', async () => {
     const validFilenames = [
       'test.md',
@@ -27,7 +50,18 @@ describe('Filename Validation Tests', () => {
       'test_file.md',
       'nested/deep/path/file.md',
       '123.md',
-      'a1b2c3.md'
+      'a1b2c3.md',
+      // S3-safe special characters
+      'file!name.md',
+      'file_name.md',
+      'file.name.md',
+      'file*name.md',
+      "file'name.md",
+      'file(name).md',
+      'file(1)_backup.md',
+      'important!.md',
+      'version*.md',
+      "user's_file.md"
     ];
 
     for (const filename of validFilenames) {
@@ -44,6 +78,11 @@ describe('Filename Validation Tests', () => {
 
       expect(response.ok).toBe(true);
       expect(response.status).toBe(200);
+      
+      // Track created file for cleanup
+      if (response.ok) {
+        createdFiles.push(filename);
+      }
     }
   });
 
@@ -55,8 +94,6 @@ describe('Filename Validation Tests', () => {
       'test$file.md', // $
       'test%file.md', // %
       'test&file.md', // &
-      'test*file.md', // *
-      'test(file).md', // parentheses
       'test[file].md', // brackets
       'test{file}.md', // braces
       'test|file.md', // pipe
@@ -64,12 +101,9 @@ describe('Filename Validation Tests', () => {
       'test:file.md', // colon
       'test;file.md', // semicolon
       'test"file.md', // quote
-      'test\'file.md', // single quote
       'test<file>.md', // angle brackets
       'test?file.md', // question mark
-      'test!file.md', // exclamation
       'test,file.md', // comma
-      'test file.md', // space
       'тест.md', // non-ASCII
       '文件.md', // Chinese characters
       '😀.md' // emoji
@@ -94,7 +128,7 @@ describe('Filename Validation Tests', () => {
       expect(error).toMatchInlineSnapshot(`
         {
           "code": "VALIDATION",
-          "message": "files.0.filename: Filename must only contain alphanumeric characters, hyphens, underscores, forward slashes, and dots",
+          "message": "files.0.filename: Filename must only contain alphanumeric characters and safe special characters (!_.*'()-/)",
           "status": 422,
         }
       `);
@@ -144,5 +178,10 @@ describe('Filename Validation Tests', () => {
 
     expect(response.ok).toBe(true);
     expect(response.status).toBe(200);
+    
+    // Track created file for cleanup
+    if (response.ok) {
+      createdFiles.push(maxFilename);
+    }
   });
 });

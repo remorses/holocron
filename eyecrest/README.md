@@ -8,42 +8,20 @@
     <br/>
 </div>
 
-## Regional Distribution
+# Future Roadmap
 
-Eyecrest now supports regional distribution of datasets across Cloudflare's Durable Object regions for optimized performance. Each dataset is assigned to a primary region based on either:
+## Replication.
 
-1. **Automatic region selection** - Based on the request's geographic location (continent, latitude, longitude)
-2. **Explicit region selection** - By providing a `primaryRegion` parameter when upserting files
+To under replication, each write will be sent to the primary region DurableObject. This primary region will then forward these writes to the other regions durable object replicas. For the reads, instead, the API worker will simply get the closest DurableObject. This means that each DurableObject needs some additional state, specifically, to know if the DurableObject is the primary region, and to know what are the other available regions from the other replicas.
 
-### Durable Object ID Format
+## Sharding
 
-The Durable Object ID format is: `{region}.{index}.{datasetId}`
+Sharding will be implemented by using the filename as the sharding key using a jump ashing table. This way, when the number of shards changes, the rows that need to be moved will be minimized. Each durable object key will include the shard number in it. When the sharding will be in progress, each durable object will need to do double writes and double reads to the new shard key. When resharding stars I will notify what is the new count of shards to all sqlite durable objects. Then, for each old shards, I will spawn another durable object job, with the goal of moving the rows from the old shards to the new shards. These job will need to have persistent state for keeping track of
 
-- `region`: The Cloudflare DO region code (e.g., `wnam`, `enam`, `weur`, `apac`)
-- `index`: Shard index for future scaling (currently always `0`)
-- `datasetId`: Your unique dataset identifier
+- row ids moved
+- last row id before sharding started
+- owned shard number
 
-Example: `wnam.0.my-docs-dataset`
+I use many jobs instead of one to make resharding faster. The bottleneck will be the shard where the rows are being moved from, so I can parallelize the work by having multiple jobs working on different shards.
 
-### Available Regions
-
-- **North America**
-  - `wnam` - Western North America (Pacific coast, Rockies, Alaska)
-  - `enam` - Eastern North America (East of Rockies, down to Florida)
-- **South America**
-  - `sam` - South America
-- **Europe**
-  - `weur` - Western Europe (Ireland, UK, France, Spain, Benelux)
-  - `eeur` - Eastern Europe (Germany eastward, Poland, Balkans)
-- **Asia**
-  - `me` - Middle East (30°E-60°E & 10°N-48°N)
-  - `apac` - Asia-Pacific (East, South, SE Asia)
-- **Other**
-  - `oc` - Oceania (Australia, NZ, Pacific Islands)
-  - `afr` - Africa
-
-### API Usage
-
-When you first upload files to a dataset, the region is automatically determined based on the request's geographic location. This region assignment is permanent for the dataset and stored in Cloudflare KV, ensuring all subsequent operations are routed to the same regional Durable Object.
-
-The region assignment happens automatically on first access - you don't need to specify it in the API calls.
+This durable object will start fetching all the rows from the old shards up until the last row that needs to be sharded. This can be done by sorting the rows by a field like the creation date and keeping track of what is the last row. The job will then know when the sharding is complete when it finds the batch with this last row. This job will fetch all the rows in batches and recompute the new sharding key for each row. If the sharding key, which is the shard number, changes, the row needs to be moved to the new shard. With move I need copied. To do this, each durable object with SQLite needs to have a method to read and write rows. When the job encounters the last row, it can start deleting the rows that have been moved from the old shard. To do this, it needs to keep track of the id's of the rows that have been moved. After the job completes, it can notify the old shard. So that this durable object can stop doing double writes and double reads. Thw sqlite durable object needs some state to know when shard is in progress and the new and old count of shards.
