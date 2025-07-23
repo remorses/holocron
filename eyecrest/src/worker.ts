@@ -121,6 +121,10 @@ const UpsertDatasetRequestSchema = z.object({
   replicaRegions: z.array(z.enum(VALID_REGIONS))
     .optional()
     .describe('Additional regions where the dataset should be replicated'),
+  waitForReplication: z.boolean()
+    .optional()
+    .default(true)
+    .describe('Whether to wait for data sync to complete when adding new replicas (default: true)'),
 });
 
 const GetFileContentsQuerySchema = z.object({
@@ -283,12 +287,13 @@ export class DatasetCache extends DurableObject {
 
   /* ---------- API Methods ------------- */
 
-  async upsertDataset({ datasetId, orgId, region, isPrimary, replicaRegions }: { 
+  async upsertDataset({ datasetId, orgId, region, isPrimary, replicaRegions, waitForReplication = true }: { 
     datasetId: string; 
     orgId: string; 
     region: string;
     isPrimary: boolean;
     replicaRegions?: DurableObjectRegion[];
+    waitForReplication?: boolean;
   }): Promise<void> {
     // Set the DO region if not already set
     if (!this.doRegion) {
@@ -298,14 +303,14 @@ export class DatasetCache extends DurableObject {
     }
     
     this.datasetId = datasetId;
-    if (replicaRegions) {
-      this.replicaRegions = replicaRegions;
-    }
 
     // Check if dataset already exists in SQL
-    const datasetRows = [...this.sql.exec("SELECT org_id, primary_region FROM datasets WHERE dataset_id = ?", datasetId)] as Pick<DatasetRow, 'org_id' | 'primary_region'>[];
+    const datasetRows = [...this.sql.exec("SELECT org_id, primary_region, replica_regions FROM datasets WHERE dataset_id = ?", datasetId)] as Pick<DatasetRow, 'org_id' | 'primary_region' | 'replica_regions'>[];
 
-    if (datasetRows.length > 0) {
+    const isExistingDataset = datasetRows.length > 0;
+    let existingReplicaRegions: DurableObjectRegion[] = [];
+
+    if (isExistingDataset) {
       const existingOrgId = datasetRows[0].org_id;
       const existingRegion = datasetRows[0].primary_region;
       
@@ -318,49 +323,89 @@ export class DatasetCache extends DurableObject {
       if (existingRegion !== region) {
         throw new Error(`Internal error: Region mismatch for dataset ${datasetId}. SQL: ${existingRegion}, expected: ${region}`);
       }
-      
-      // Dataset already exists in SQL, this is fine (idempotent)
-      return;
+
+      // Parse existing replica regions
+      if (datasetRows[0].replica_regions) {
+        existingReplicaRegions = JSON.parse(datasetRows[0].replica_regions);
+      }
     }
 
-    // Create new dataset in SQL
-    const now = Date.now();
-    const replicaRegionsJson = replicaRegions ? JSON.stringify(replicaRegions) : null;
-    const primaryRegion = isPrimary ? this.doRegion : region; // If we're primary, we are the primary region
-    
-    this.sql.exec(
-      "INSERT INTO datasets (dataset_id, org_id, primary_region, do_region, replica_regions, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      datasetId, orgId, primaryRegion, this.doRegion, replicaRegionsJson, now, now
-    );
+    // Update replica regions
+    if (replicaRegions) {
+      this.replicaRegions = replicaRegions;
+    }
+
+    if (!isExistingDataset) {
+      // Create new dataset in SQL
+      const now = Date.now();
+      const replicaRegionsJson = replicaRegions ? JSON.stringify(replicaRegions) : null;
+      const primaryRegion = isPrimary ? this.doRegion : region; // If we're primary, we are the primary region
+      
+      this.sql.exec(
+        "INSERT INTO datasets (dataset_id, org_id, primary_region, do_region, replica_regions, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        datasetId, orgId, primaryRegion, this.doRegion, replicaRegionsJson, now, now
+      );
+    } else if (replicaRegions && isPrimary) {
+      // Update replica regions if they've changed
+      const now = Date.now();
+      const replicaRegionsJson = JSON.stringify(replicaRegions);
+      this.sql.exec(
+        "UPDATE datasets SET replica_regions = ?, updated_at = ? WHERE dataset_id = ?",
+        replicaRegionsJson, now, datasetId
+      );
+    }
     
     // If this is the primary and we have replica regions, create/update replica DOs
     if (isPrimary && replicaRegions && replicaRegions.length > 0) {
-      // Create replicas asynchronously using waitUntil
-      this.state.waitUntil(
-        Promise.all(
-          replicaRegions
-            .filter(replicaRegion => replicaRegion !== this.doRegion)
-            .map(async replicaRegion => {
-              try {
-                const replicaDoId = getDurableObjectId({ datasetId, region: replicaRegion });
-                const replicaId = this.env.DATASET_CACHE.idFromName(replicaDoId);
-                const replicaStub = this.env.DATASET_CACHE.get(replicaId, { locationHint: replicaRegion }) as any as DatasetCache;
-                
-                await replicaStub.upsertDataset({ 
-                  datasetId, 
-                  orgId, 
-                  region: replicaRegion,
-                  isPrimary: false,
-                  replicaRegions: [] // Replicas don't need to know about other replicas
-                });
-              } catch (error) {
-                console.error(`Failed to create replica in ${replicaRegion}:`, error);
-              }
-            })
-        ).catch(error => {
-          console.error('Failed to create replicas:', error);
-        })
+      // Determine which replicas are new (not in existingReplicaRegions)
+      const newReplicas = replicaRegions.filter(
+        replicaRegion => replicaRegion !== this.doRegion && !existingReplicaRegions.includes(replicaRegion)
       );
+
+      // Check if we have any existing data that needs to be synced
+      const fileCount = isExistingDataset ? [...this.sql.exec<{count: number}>("SELECT COUNT(*) as count FROM files")][0]?.count || 0 : 0;
+      const hasData = fileCount > 0;
+
+      // Create/update replicas
+      const replicaPromise = Promise.all(
+        replicaRegions
+          .filter(replicaRegion => replicaRegion !== this.doRegion)
+          .map(async replicaRegion => {
+            try {
+              const replicaDoId = getDurableObjectId({ datasetId, region: replicaRegion });
+              const replicaId = this.env.DATASET_CACHE.idFromName(replicaDoId);
+              const replicaStub = this.env.DATASET_CACHE.get(replicaId, { locationHint: replicaRegion }) as any as DatasetCache;
+              
+              // Create the replica DO
+              await replicaStub.upsertDataset({ 
+                datasetId, 
+                orgId, 
+                region: replicaRegion,
+                isPrimary: false,
+                replicaRegions: [] // Replicas don't need to know about other replicas
+              });
+
+              // If this is a new replica and we have existing data, sync it
+              if (newReplicas.includes(replicaRegion) && hasData) {
+                console.log(`[upsert-dataset] Syncing existing data to new replica in ${replicaRegion}`);
+                // Pass the primary region so replica can create the stub
+                await replicaStub.syncFromPrimary({ datasetId, orgId, primaryRegion: this.doRegion! });
+              }
+            } catch (error) {
+              console.error(`Failed to create/sync replica in ${replicaRegion}:`, error);
+            }
+          })
+      ).catch(error => {
+        console.error('Failed to create/sync replicas:', error);
+      });
+
+      // If waitForReplication is false, use waitUntil for fire-and-forget
+      // If true, await the promise to ensure sync completes before returning
+      if (waitForReplication) {
+        await replicaPromise;
+      } else {
+        this.state.waitUntil(replicaPromise);
+      }
     }
   }
 
@@ -892,6 +937,74 @@ export class DatasetCache extends DurableObject {
       }
     }
   }
+
+  async getAllData({ datasetId, orgId }: { datasetId: string; orgId: string }): Promise<FileSchema[]> {
+    // Load dataset info if not already loaded
+    if (!this.datasetId || this.datasetId !== datasetId) {
+      await this.loadDatasetInfo(datasetId);
+    }
+    
+    // Validate we have required fields
+    if (!this.doRegion || !this.datasetId) {
+      throw new Error('DO region and datasetId must be set');
+    }
+
+    // Verify ownership
+    await this.verifyDatasetOwnership(datasetId, orgId);
+
+    // Get all files with their content and metadata
+    const files = [...this.sql.exec<FileRow>(
+      "SELECT filename, content, sha, metadata, weight FROM files ORDER BY filename"
+    )];
+
+    // Convert to FileSchema format
+    return files.map(file => ({
+      filename: file.filename,
+      content: file.content,
+      metadata: file.metadata ? JSON.parse(file.metadata) : undefined,
+      weight: file.weight
+    }));
+  }
+
+  async syncFromPrimary({ datasetId, orgId, primaryRegion }: { 
+    datasetId: string; 
+    orgId: string; 
+    primaryRegion: DurableObjectRegion;
+  }): Promise<void> {
+    // This method is called on a replica to sync data from the primary
+    console.log(`[sync-from-primary] Starting sync for dataset ${datasetId} in region ${this.doRegion}`);
+
+    try {
+      // Create primary stub from ID
+      const primaryDoId = getDurableObjectId({ datasetId, region: primaryRegion });
+      const primaryId = this.env.DATASET_CACHE.idFromName(primaryDoId);
+      const primaryStub = this.env.DATASET_CACHE.get(primaryId, { locationHint: primaryRegion }) as any as DatasetCache;
+
+      // Get all data from primary
+      const files = await primaryStub.getAllData({ datasetId, orgId });
+      console.log(`[sync-from-primary] Received ${files.length} files from primary`);
+
+      if (files.length === 0) {
+        console.log(`[sync-from-primary] No files to sync`);
+        return;
+      }
+
+      // Use upsertFiles to import all data
+      // This will handle all the parsing, sectioning, and indexing
+      await this.upsertFiles({ 
+        datasetId, 
+        orgId, 
+        files, 
+        region: this.doRegion,
+        waitForReplication: false // Don't replicate from replica
+      });
+
+      console.log(`[sync-from-primary] Successfully synced ${files.length} files`);
+    } catch (error) {
+      console.error(`[sync-from-primary] Failed to sync data:`, error);
+      throw new Error(`Failed to sync data from primary: ${error.message}`);
+    }
+  }
 }
 
 /* ======================================================================
@@ -976,7 +1089,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
     request: UpsertDatasetRequestSchema,
     response: z.void(),
     async handler({ request, params, state }) {
-      const { primaryRegion, replicaRegions } = await request.json();
+      const { primaryRegion, replicaRegions, waitForReplication = true } = await request.json();
       const { datasetId } = params;
       const orgId = state.orgId!; // Guaranteed by middleware
 
@@ -1000,7 +1113,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       const config: DatasetConfig = {
         primaryRegion: region,
         orgId,
-        replicaRegions
+        replicaRegions: replicaRegions || existingConfig?.replicaRegions
       };
       
       // Save config to KV
@@ -1021,7 +1134,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         orgId, 
         region,
         isPrimary: true,
-        replicaRegions
+        replicaRegions,
+        waitForReplication
       });
     },
     openapi: { operationId: 'upsertDataset' },

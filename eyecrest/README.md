@@ -18,7 +18,20 @@ each write to the primary durable object will need to be forwarded to other repl
 
 ## Sharding
 
-Sharding will be implemented by using the filename as the sharding key using a jump ashing table. This way, when the number of shards changes, the rows that need to be moved will be minimized. Each durable object key will include the shard number in it. When the sharding will be in progress, each durable object will need to do double writes and double reads to the new shard key. When resharding stars I will notify what is the new count of shards to all sqlite durable objects. Then, for each old shards, I will spawn another durable object job, with the goal of moving the rows from the old shards to the new shards. These job will need to have persistent state for keeping track of
+sharding mean splitting the data inside the durable object sqlite database into multiple sqlite databases. the sharding key will be filename, using a jump hash algo to get a shard number from the filename string.
+
+The API worker will always communicate with the main shard, shard 0. The shard 0 will then
+- redirect upsert operations to the correct shard based on the filename
+- search all shards for search operations
+- read from the correct shard for file read operations
+
+this way the only state needed by the API layer can be eventually consistent because
+- primary region is immutable
+- replica regions are eventually consistent
+
+the shards will also be replicated in each region if region replicas are enabled.
+
+Sharding will be implemented by using the filename as the sharding key using a jump ashing. This way, when the number of shards changes, the rows that need to be moved will be minimized. Each durable object key will include the shard number in it. When the sharding will be in progress, each durable object will need to do double writes and double reads to the new shard and old shard. When resharding starts I will notify what is the new count of shards to all sqlite existing shards. Then, for each old shards, I will spawn another durable object job, with the goal of moving the rows from the old shards to the new shards. These job will need to have persistent state for keeping track of:
 
 - row ids moved
 - last row id before sharding started

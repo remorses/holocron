@@ -1,5 +1,17 @@
 # Changelog
 
+## 2025-07-23 15:20
+
+- **Added Data Synchronization for New Replica Regions:**
+  - When adding replica regions to an existing dataset, all existing data is now automatically synced
+  - Added `getAllData` method to export all files from primary DO
+  - Added `syncFromPrimary` method to import data into replica DOs
+  - Fixed serialization issue by passing region ID instead of stub object
+  - Added `waitForReplication` parameter to dataset upsert (default: true)
+  - When true, waits for sync to complete before returning
+  - When false, sync happens asynchronously using waitUntil
+  - Added comprehensive tests for replica synchronization scenarios
+
 ## 2025-07-23 13:10
 
 - **Updated Test Documentation:**
