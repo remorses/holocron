@@ -1,5 +1,12 @@
 # Changelog
 
+## 2025-01-24 16:26
+
+- Added FTS5 vocabulary table (`sections_fts_vocab`) to track all indexed tokens
+- Added `getTokens` method to retrieve all unique tokens from a dataset  
+- Added GET `/v1/datasets/:datasetId/tokens` endpoint to expose token vocabulary
+- Returns sorted array of tokens with count for search index analysis
+
 ## 2025-07-23 15:37
 
 - **Renamed Durable Object from DatasetCache to Datasets:**

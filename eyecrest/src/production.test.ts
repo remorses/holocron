@@ -387,6 +387,48 @@ More content in section two.`;
 
 
 
+  test('should get all tokens from the dataset', async () => {
+    const startTime = Date.now();
+    const response = await fetch(
+      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/tokens`,
+      {
+        headers: authHeaders
+      }
+    );
+    const fetchTime = Date.now() - startTime;
+
+    expect(response.ok).toBe(true);
+
+    const data = await response.json() as any;
+    console.log(`⏱️  Getting tokens took ${fetchTime}ms (found ${data.count} unique tokens)`);
+    
+    // Verify the response structure
+    expect(data).toHaveProperty('tokens');
+    expect(data).toHaveProperty('count');
+    expect(Array.isArray(data.tokens)).toBe(true);
+    expect(data.count).toBe(data.tokens.length);
+    
+    // Check that tokens are sorted and contain expected terms
+    expect(data.tokens).toEqual([...data.tokens].sort());
+    
+    // Sample a few tokens to verify they look correct
+    const sampleTokens = data.tokens.slice(0, 10);
+    expect(sampleTokens).toMatchInlineSnapshot(`
+      [
+        "01",
+        "2025",
+        "a",
+        "an",
+        "and",
+        "api",
+        "as",
+        "author",
+        "bash",
+        "be",
+      ]
+    `);
+  });
+
   test('should support pagination in search', async () => {
     const startTime = Date.now();
     const response = await fetch(

@@ -231,6 +231,12 @@ export class Datasets extends DurableObject {
       CREATE VIRTUAL TABLE IF NOT EXISTS sections_fts
         USING fts5(filename, section_slug, content, tokenize = 'porter');
 
+      -- FTS5 vocabulary table to access all indexed tokens
+      -- This provides access to the internal tokenizer output and term statistics
+      -- 'row' type gives us one row per unique token across all documents
+      CREATE VIRTUAL TABLE IF NOT EXISTS sections_fts_vocab
+        USING fts5vocab(sections_fts, 'row');
+
       -- Metadata table
       CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, val TEXT);
 
@@ -1006,6 +1012,31 @@ export class Datasets extends DurableObject {
       throw new Error(`Failed to sync data from primary: ${error.message}`);
     }
   }
+
+  async getTokens({ datasetId, orgId }: { datasetId: string; orgId: string }): Promise<string[]> {
+    // Load dataset info if not already loaded
+    if (!this.datasetId || this.datasetId !== datasetId) {
+      await this.loadDatasetInfo(datasetId);
+    }
+    
+    // Validate we have required fields
+    if (!this.doRegion || !this.datasetId) {
+      throw new Error('DO region and datasetId must be set');
+    }
+
+    // Verify ownership
+    await this.verifyDatasetOwnership(datasetId, orgId);
+
+    // Query the vocab table to get all unique tokens
+    // The vocab table returns: term, doc (count of documents), cnt (total occurrences)
+    // We only need the 'term' column for the list of tokens
+    const tokens = [...this.sql.exec<{ term: string }>(
+      "SELECT term FROM sections_fts_vocab ORDER BY term"
+    )];
+
+    // Extract just the token strings
+    return tokens.map(row => row.term);
+  }
 }
 
 /* ======================================================================
@@ -1403,6 +1434,52 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       });
     },
     openapi: { operationId: 'searchSectionsText' },
+  })
+
+  // 7) Get all tokens (vocabulary) from the dataset
+  .route({
+    method: 'GET',
+    path: '/v1/datasets/:datasetId/tokens',
+    params: z.object({ datasetId: DatasetIdSchema }),
+    response: z.object({
+      tokens: z.array(z.string()).describe('All unique tokens from the full-text search index'),
+      count: z.number().describe('Total number of unique tokens')
+    }),
+    async handler({ request, params, state }) {
+      const { datasetId } = params;
+      const orgId = state.orgId!; // Guaranteed by middleware
+
+      // Get dataset config (must exist)
+      const config = await getDatasetConfig({
+        kv: state.env.EYECREST_KV,
+        datasetId
+      });
+      
+      if (!config) {
+        throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
+      }
+      
+      // Use closest available region for read operation
+      const region = getClosestAvailableRegion({
+        request: request as Request,
+        primaryRegion: config.primaryRegion,
+        replicaRegions: config.replicaRegions,
+        isReadOperation: true
+      });
+
+      // Create DO ID and stub with locationHint
+      const doId = getDurableObjectId({ datasetId, region });
+      const id = state.env.DATASETS.idFromName(doId);
+      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
+
+      const tokens = await stub.getTokens({ datasetId, orgId });
+
+      return {
+        tokens,
+        count: tokens.length
+      };
+    },
+    openapi: { operationId: 'getTokens' },
   })
 
   // Legacy routes for MCP integration
