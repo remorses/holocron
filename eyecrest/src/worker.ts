@@ -160,6 +160,12 @@ export class DatasetCache extends DurableObject {
     if (region) {
       this.doRegion = region;
     }
+    
+    // Validate file count limit
+    if (files.length > 100) {
+      throw new Error(`Too many files: ${files.length}. Maximum 100 files allowed per request.`);
+    }
+    
     const startTime = Date.now();
 
     // Check if dataset exists and verify ownership

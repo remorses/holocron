@@ -1,5 +1,14 @@
 # Changelog
 
+## 2025-07-22 19:50
+
+- **Added File Upload Limit:**
+  - Limited the number of files that can be uploaded in a single request to 100
+  - Added `.max(100)` validation to the Zod schema for the files array
+  - Added validation checks in both the worker handler and DO upsertFiles method
+  - Returns 500 error with message "Too many files. Maximum 100 files per request" when limit exceeded
+  - This prevents overwhelming the DO with large batches and ensures predictable performance
+
 ## 2025-07-22 19:45
 
 - **Fixed Region Reporting in Search:**
