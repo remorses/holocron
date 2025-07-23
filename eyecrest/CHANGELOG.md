@@ -1,5 +1,33 @@
 # Changelog
 
+## 2025-01-24 19:40
+
+- Successfully created search-benchmark-github.ts using tinybench for performance testing
+- Configured benchmark to limit iterations (20 per test) to avoid excessive API calls
+- Benchmark imports from GitHub repositories and measures search latency
+- Average search latency: ~54-63ms per query with ~16-18 ops/s throughput
+- Replaced tinybench with simple console timing for benchmarks
+- Uses performance.now() for precise millisecond timing
+- Displays results in a clean table format with average calculation
+- Updated benchmark to run each search 5 times for more accurate measurements
+- Changed test repository from sindresorhus/awesome to freeCodeCamp/freeCodeCamp
+- Refactored to use parameterized search queries with double for loop
+- Added min/max times to summary table for better performance insights
+- Added detailed logging to upsertFiles method to track file uploads during tar parsing
+- Logs now show dataset ID, file names, batch sizes, and total progress
+- Improved tar import logging to show file counts and sizes in KB/MB
+
+## 2025-01-24 19:30
+
+- Fixed SQLite "too many SQL variables" error when importing files with many sections
+- Replaced all batch inserts with json_each approach to completely avoid variable limit issues:
+  - Existing files check: `SELECT ... WHERE filename IN (SELECT value FROM json_each(?))`
+  - Sections insert: `INSERT INTO sections SELECT json_extract(value, ...) FROM json_each(?)`
+  - FTS insert: `INSERT INTO sections_fts SELECT json_extract(value, ...) FROM json_each(?)`
+- This approach uses only 1 SQL variable (the JSON string) regardless of data size
+- Fixes allow importing large documentation files with hundreds of sections without errors
+- Fixed GitHub import URL to use codeload.github.com directly to avoid redirect issues in Cloudflare Workers
+
 ## 2025-01-24 19:00
 
 - Improved tar import error handling and reliability:

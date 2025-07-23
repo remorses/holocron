@@ -195,7 +195,7 @@ export class Datasets extends DurableObject {
     this.sql = state.storage.sql;
     this.env = env;
     this.state = state;
-    
+
     // DO region and datasetId will be set via loadDatasetInfo or upsertDataset
     // We don't try to extract from state.id as it's a random string
 
@@ -266,7 +266,7 @@ export class Datasets extends DurableObject {
       const row = rows[0];
       this.datasetId = row.dataset_id;
       this.doRegion = row.do_region as DurableObjectRegion;
-      
+
       if (row.replica_regions) {
         this.replicaRegions = JSON.parse(row.replica_regions);
       }
@@ -274,7 +274,7 @@ export class Datasets extends DurableObject {
       throw new Error(`Dataset ${datasetId} not found in database`);
     }
   }
-  
+
   private isPrimary(): boolean {
     if (!this.doRegion || !this.datasetId) {
       throw new Error('DO region and datasetId must be set before checking primary status');
@@ -299,9 +299,9 @@ export class Datasets extends DurableObject {
 
   /* ---------- API Methods ------------- */
 
-  async upsertDataset({ datasetId, orgId, region, isPrimary, replicaRegions, waitForReplication = true }: { 
-    datasetId: string; 
-    orgId: string; 
+  async upsertDataset({ datasetId, orgId, region, isPrimary, replicaRegions, waitForReplication = true }: {
+    datasetId: string;
+    orgId: string;
     region: string;
     isPrimary: boolean;
     replicaRegions?: DurableObjectRegion[];
@@ -313,7 +313,7 @@ export class Datasets extends DurableObject {
     } else if (this.doRegion !== region) {
       throw new Error(`Region mismatch: DO is in ${this.doRegion} but request says ${region}`);
     }
-    
+
     this.datasetId = datasetId;
 
     // Check if dataset already exists in SQL
@@ -325,12 +325,12 @@ export class Datasets extends DurableObject {
     if (isExistingDataset) {
       const existingOrgId = datasetRows[0].org_id;
       const existingRegion = datasetRows[0].primary_region;
-      
+
       // Verify ownership
       if (existingOrgId !== orgId) {
         throw new Error(`Dataset ${datasetId} already exists and belongs to organization ${existingOrgId}`);
       }
-      
+
       // Verify region hasn't changed (should match what's in KV)
       if (existingRegion !== region) {
         throw new Error(`Internal error: Region mismatch for dataset ${datasetId}. SQL: ${existingRegion}, expected: ${region}`);
@@ -352,7 +352,7 @@ export class Datasets extends DurableObject {
       const now = Date.now();
       const replicaRegionsJson = replicaRegions ? JSON.stringify(replicaRegions) : null;
       const primaryRegion = isPrimary ? this.doRegion : region; // If we're primary, we are the primary region
-      
+
       this.sql.exec(
         "INSERT INTO datasets (dataset_id, org_id, primary_region, do_region, replica_regions, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
         datasetId, orgId, primaryRegion, this.doRegion, replicaRegionsJson, now, now
@@ -366,7 +366,7 @@ export class Datasets extends DurableObject {
         replicaRegionsJson, now, datasetId
       );
     }
-    
+
     // If this is the primary and we have replica regions, create/update replica DOs
     if (isPrimary && replicaRegions && replicaRegions.length > 0) {
       // Determine which replicas are new (not in existingReplicaRegions)
@@ -387,11 +387,11 @@ export class Datasets extends DurableObject {
               const replicaDoId = getDurableObjectId({ datasetId, region: replicaRegion });
               const replicaId = this.env.DATASETS.idFromName(replicaDoId);
               const replicaStub = this.env.DATASETS.get(replicaId, { locationHint: replicaRegion }) as any as Datasets;
-              
+
               // Create the replica DO
-              await replicaStub.upsertDataset({ 
-                datasetId, 
-                orgId, 
+              await replicaStub.upsertDataset({
+                datasetId,
+                orgId,
                 region: replicaRegion,
                 isPrimary: false,
                 replicaRegions: [] // Replicas don't need to know about other replicas
@@ -425,7 +425,7 @@ export class Datasets extends DurableObject {
     this.replicaRegions = replicaRegions;
     const replicaRegionsJson = JSON.stringify(replicaRegions);
     const now = Date.now();
-    
+
     this.sql.exec(
       "UPDATE datasets SET replica_regions = ?, updated_at = ? WHERE dataset_id = ?",
       replicaRegionsJson, now, datasetId
@@ -433,16 +433,17 @@ export class Datasets extends DurableObject {
   }
 
   async upsertFiles({ datasetId, orgId, files, region, waitForReplication = true }: { datasetId: string; orgId: string; files: FileSchema[]; region?: string; waitForReplication?: boolean }): Promise<void> {
+    console.log(`[upsert] Starting upsertFiles for dataset ${datasetId} with ${files.length} files`);
     // Load dataset info if not already loaded
     if (!this.datasetId || this.datasetId !== datasetId) {
       await this.loadDatasetInfo(datasetId);
     }
-    
+
     // Verify region matches if provided
     if (region && region !== this.doRegion) {
       throw new Error(`Region mismatch: DO is in ${this.doRegion} but request says ${region}`);
     }
-    
+
     // Validate we have required fields
     if (!this.doRegion || !this.datasetId) {
       throw new Error('DO region and datasetId must be set');
@@ -463,6 +464,9 @@ export class Datasets extends DurableObject {
     }
     console.log(`[upsert] Ownership check: ${Date.now() - ownershipStart}ms`);
 
+    // Log file names being upserted
+    console.log(`[upsert] Files to upsert: ${files.map(f => f.filename).join(', ')}`);
+
     // Parallelize SHA computations
     const shaStart = Date.now();
     const shaComputations = await Promise.all(
@@ -473,16 +477,21 @@ export class Datasets extends DurableObject {
     );
     console.log(`[upsert] SHA computations (${files.length} files): ${Date.now() - shaStart}ms`);
 
-    // Get all existing files in one query
+    // Get all existing files using json_each to avoid SQLite variable limit
     const existingCheckStart = Date.now();
     const filenames = files.map(f => f.filename);
-    const placeholders = filenames.map(() => '?').join(',');
+    const filenamesJson = JSON.stringify(filenames);
+
+    let existingMap: Map<string, string>;
+
     const existingFiles = [...this.sql.exec(
-      `SELECT filename, sha FROM files WHERE filename IN (${placeholders})`,
-      ...filenames
+      `SELECT filename, sha FROM files WHERE filename IN (SELECT value FROM json_each(?))`,
+      filenamesJson
     )] as Pick<FileRow, 'filename' | 'sha'>[];
-    const existingMap = new Map(existingFiles.map(row => [row.filename, row.sha]));
-    console.log(`[upsert] Existing files check: ${Date.now() - existingCheckStart}ms`);
+
+    existingMap = new Map(existingFiles.map(row => [row.filename, row.sha]));
+
+    console.log(`[upsert] Existing files check (${filenames.length} files): ${Date.now() - existingCheckStart}ms`);
 
     // Process each file
     let processedCount = 0;
@@ -527,33 +536,63 @@ export class Datasets extends DurableObject {
         const parsed = parseMarkdownIntoSections(file.content);
         const slugger = new Slugger();
 
+        // Log files with many sections
+        if (parsed.sections.length > 50) {
+          console.log(`[upsert] File ${file.filename} has ${parsed.sections.length} sections`);
+        }
+
         // Batch insert sections for better performance
         if (parsed.sections.length > 0) {
-          // Prepare values for batch insert
-          const sectionValues: any[] = [];
-          const ftsValues: any[] = [];
+          // Insert all sections using json_each to avoid SQLite variable limit
+          const sectionsData: any[] = [];
+          const ftsData: any[] = [];
 
           for (const section of parsed.sections) {
             // Use section weight if defined, otherwise inherit file weight
             const sectionWeight = section.weight ?? fileWeight;
 
-            sectionValues.push(file.filename, section.content, section.level, section.orderIndex, section.headingSlug, section.startLine, sectionWeight);
-            ftsValues.push(file.filename, section.headingSlug, section.content);
+            sectionsData.push({
+              filename: file.filename,
+              content: section.content,
+              level: section.level,
+              order_index: section.orderIndex,
+              section_slug: section.headingSlug,
+              start_line: section.startLine,
+              weight: sectionWeight
+            });
+
+            ftsData.push({
+              filename: file.filename,
+              section_slug: section.headingSlug,
+              content: section.content
+            });
           }
 
-          // Batch insert into sections table
-          const sectionPlaceholders = parsed.sections.map(() => '(?, ?, ?, ?, ?, ?, ?)').join(', ');
-          this.sql.exec(
-            `INSERT INTO sections (filename, content, level, order_index, section_slug, start_line, weight) VALUES ${sectionPlaceholders}`,
-            ...sectionValues
-          );
+          // Insert sections using json_each
+          const sectionsJson = JSON.stringify(sectionsData);
+          this.sql.exec(`
+            INSERT INTO sections (filename, content, level, order_index, section_slug, start_line, weight)
+            SELECT
+              json_extract(value, '$.filename'),
+              json_extract(value, '$.content'),
+              json_extract(value, '$.level'),
+              json_extract(value, '$.order_index'),
+              json_extract(value, '$.section_slug'),
+              json_extract(value, '$.start_line'),
+              json_extract(value, '$.weight')
+            FROM json_each(?)
+          `, sectionsJson);
 
-          // Batch insert into FTS table
-          const ftsPlaceholders = parsed.sections.map(() => '(?, ?, ?)').join(', ');
-          this.sql.exec(
-            `INSERT INTO sections_fts (filename, section_slug, content) VALUES ${ftsPlaceholders}`,
-            ...ftsValues
-          );
+          // Insert FTS data using json_each
+          const ftsJson = JSON.stringify(ftsData);
+          this.sql.exec(`
+            INSERT INTO sections_fts (filename, section_slug, content)
+            SELECT
+              json_extract(value, '$.filename'),
+              json_extract(value, '$.section_slug'),
+              json_extract(value, '$.content')
+            FROM json_each(?)
+          `, ftsJson);
         }
 
         if (parsed.sections.length > 10) {
@@ -564,13 +603,14 @@ export class Datasets extends DurableObject {
 
     console.log(`[upsert] Processing files (${processedCount} processed, ${skippedCount} skipped): ${Date.now() - processingStart}ms`);
     console.log(`[upsert] Total time: ${Date.now() - startTime}ms`);
+    console.log(`[upsert] Completed upsertFiles for dataset ${datasetId}`);
 
     // Forward writes to replicas if this is the primary
     if (this.isPrimary() && processedCount > 0) {
       const replicas = this.getReplicaStubs(datasetId);
       if (replicas.length > 0) {
         console.log(`[upsert] Forwarding to ${replicas.length} replicas`);
-        
+
         const replicationPromise = Promise.all(
           replicas.map(async ({ region, stub }) => {
             try {
@@ -581,7 +621,7 @@ export class Datasets extends DurableObject {
             }
           })
         );
-        
+
         if (waitForReplication) {
           // Wait for replication to complete
           await replicationPromise.catch(error => {
@@ -604,17 +644,17 @@ export class Datasets extends DurableObject {
     if (!this.datasetId || this.datasetId !== datasetId) {
       await this.loadDatasetInfo(datasetId);
     }
-    
+
     // Verify region matches if provided
     if (region && region !== this.doRegion) {
       throw new Error(`Region mismatch: DO is in ${this.doRegion} but request says ${region}`);
     }
-    
+
     // Validate we have required fields
     if (!this.doRegion || !this.datasetId) {
       throw new Error('DO region and datasetId must be set');
     }
-    
+
 
     // Verify ownership
     await this.verifyDatasetOwnership(datasetId, orgId);
@@ -630,7 +670,7 @@ export class Datasets extends DurableObject {
       const replicas = this.getReplicaStubs(datasetId);
       if (replicas.length > 0) {
         console.log(`[delete] Forwarding to ${replicas.length} replicas`);
-        
+
         const replicationPromise = Promise.all(
           replicas.map(async ({ region, stub }) => {
             try {
@@ -641,7 +681,7 @@ export class Datasets extends DurableObject {
             }
           })
         );
-        
+
         if (waitForReplication) {
           // Wait for replication to complete
           await replicationPromise.catch(error => {
@@ -680,12 +720,12 @@ export class Datasets extends DurableObject {
     if (!this.datasetId || this.datasetId !== datasetId) {
       await this.loadDatasetInfo(datasetId);
     }
-    
+
     // Verify region matches if provided
     if (region && region !== this.doRegion) {
       throw new Error(`Region mismatch: DO is in ${this.doRegion} but request says ${region}`);
     }
-    
+
     // Validate we have required fields
     if (!this.doRegion || !this.datasetId) {
       throw new Error('DO region and datasetId must be set');
@@ -750,12 +790,12 @@ export class Datasets extends DurableObject {
     if (!this.datasetId || this.datasetId !== datasetId) {
       await this.loadDatasetInfo(datasetId);
     }
-    
+
     // Verify region matches if provided
     if (region && region !== this.doRegion) {
       throw new Error(`Region mismatch: DO is in ${this.doRegion} but request says ${region}`);
     }
-    
+
     // Validate we have required fields
     if (!this.doRegion || !this.datasetId) {
       throw new Error('DO region and datasetId must be set');
@@ -907,7 +947,7 @@ export class Datasets extends DurableObject {
     if (!this.datasetId || this.datasetId !== datasetId) {
       await this.loadDatasetInfo(datasetId);
     }
-    
+
     // Validate we have required fields
     if (!this.doRegion || !this.datasetId) {
       throw new Error('DO region and datasetId must be set');
@@ -926,7 +966,7 @@ export class Datasets extends DurableObject {
       const replicas = this.getReplicaStubs(datasetId);
       if (replicas.length > 0) {
         console.log(`[delete-dataset] Notifying ${replicas.length} replicas to delete`);
-        
+
         // Use waitUntil for fire-and-forget deletion of replicas
         this.state.waitUntil(
           Promise.all(
@@ -950,7 +990,7 @@ export class Datasets extends DurableObject {
     if (!this.datasetId || this.datasetId !== datasetId) {
       await this.loadDatasetInfo(datasetId);
     }
-    
+
     // Validate we have required fields
     if (!this.doRegion || !this.datasetId) {
       throw new Error('DO region and datasetId must be set');
@@ -973,9 +1013,9 @@ export class Datasets extends DurableObject {
     }));
   }
 
-  async syncFromPrimary({ datasetId, orgId, primaryRegion }: { 
-    datasetId: string; 
-    orgId: string; 
+  async syncFromPrimary({ datasetId, orgId, primaryRegion }: {
+    datasetId: string;
+    orgId: string;
     primaryRegion: DurableObjectRegion;
   }): Promise<void> {
     // This method is called on a replica to sync data from the primary
@@ -998,10 +1038,10 @@ export class Datasets extends DurableObject {
 
       // Use upsertFiles to import all data
       // This will handle all the parsing, sectioning, and indexing
-      await this.upsertFiles({ 
-        datasetId, 
-        orgId, 
-        files, 
+      await this.upsertFiles({
+        datasetId,
+        orgId,
+        files,
         region: this.doRegion,
         waitForReplication: false // Don't replicate from replica
       });
@@ -1018,7 +1058,7 @@ export class Datasets extends DurableObject {
     if (!this.datasetId || this.datasetId !== datasetId) {
       await this.loadDatasetInfo(datasetId);
     }
-    
+
     // Validate we have required fields
     if (!this.doRegion || !this.datasetId) {
       throw new Error('DO region and datasetId must be set');
@@ -1053,7 +1093,7 @@ export class Datasets extends DurableObject {
     if (!this.datasetId || this.datasetId !== datasetId) {
       await this.loadDatasetInfo(datasetId);
     }
-    
+
     // Validate we have required fields
     if (!this.doRegion || !this.datasetId) {
       throw new Error('DO region and datasetId must be set');
@@ -1107,16 +1147,16 @@ export class Datasets extends DurableObject {
     };
   }
 
-  async importFromTarUrl({ 
-    datasetId, 
-    orgId, 
+  async importFromTarUrl({
+    datasetId,
+    orgId,
     url,
     path,
     metadata,
-    waitForReplication = true 
-  }: { 
-    datasetId: string; 
-    orgId: string; 
+    waitForReplication = true
+  }: {
+    datasetId: string;
+    orgId: string;
     url: string;
     path?: string;
     metadata?: any;
@@ -1126,7 +1166,7 @@ export class Datasets extends DurableObject {
     if (!this.datasetId || this.datasetId !== datasetId) {
       await this.loadDatasetInfo(datasetId);
     }
-    
+
     // Validate we have required fields
     if (!this.doRegion || !this.datasetId) {
       throw new Error('DO region and datasetId must be set');
@@ -1141,7 +1181,7 @@ export class Datasets extends DurableObject {
 
     try {
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         const errorBody = await response.text().catch(() => 'No error body');
         throw new Error(
@@ -1167,13 +1207,13 @@ export class Datasets extends DurableObject {
 
       // Decompress and parse tar archive
       const gz = response.body.pipeThrough(new DecompressionStream("gzip"));
-      
+
       await parseTar(gz, async (entry) => {
         if (entry.header.type !== "file") return;
 
         // Extract relative path (remove first directory component which is the repo name)
         const relativePath = entry.name.split("/").slice(1).join("/");
-        
+
         // Skip if path filter is specified and doesn't match
         if (path && !relativePath.startsWith(path)) return;
 
@@ -1193,7 +1233,7 @@ export class Datasets extends DurableObject {
           }).decode(buffer);
 
           // Remove path prefix if specified
-          const filename = path && relativePath.startsWith(path) 
+          const filename = path && relativePath.startsWith(path)
             ? relativePath.slice(path.length).replace(/^\//, '')
             : relativePath;
 
@@ -1212,15 +1252,15 @@ export class Datasets extends DurableObject {
 
           // Process batch when it reaches the size limit
           if (currentBatch.length >= BATCH_SIZE) {
-            await this.upsertFiles({ 
-              datasetId, 
-              orgId, 
-              files: currentBatch, 
+            await this.upsertFiles({
+              datasetId,
+              orgId,
+              files: currentBatch,
               region: this.doRegion,
               waitForReplication: false // Don't wait for each batch
             });
             filesImported += currentBatch.length;
-            console.log(`[import-tar] Processed batch of ${currentBatch.length} files (total: ${filesImported})`);
+            console.log(`[import-tar] Processed batch of ${currentBatch.length} files (total: ${filesImported}, batch size: ${(totalSizeBytes / 1024).toFixed(2)}KB)`);
             currentBatch = [];
           }
         } catch (error) {
@@ -1231,15 +1271,15 @@ export class Datasets extends DurableObject {
 
       // Process any remaining files in the last batch
       if (currentBatch.length > 0) {
-        await this.upsertFiles({ 
-          datasetId, 
-          orgId, 
-          files: currentBatch, 
+        await this.upsertFiles({
+          datasetId,
+          orgId,
+          files: currentBatch,
           region: this.doRegion,
           waitForReplication: false
         });
         filesImported += currentBatch.length;
-        console.log(`[import-tar] Processed final batch of ${currentBatch.length} files (total: ${filesImported})`);
+        console.log(`[import-tar] Processed final batch of ${currentBatch.length} files (total: ${filesImported}, total size: ${(totalSizeBytes / 1024 / 1024).toFixed(2)}MB)`);
       }
 
       // Now handle replication if needed
@@ -1264,7 +1304,7 @@ export class Datasets extends DurableObject {
       const endTime = Date.now();
       const durationSeconds = (endTime - startTime) / 1000;
       console.error(`[import-tar] Failed after ${durationSeconds} seconds:`, error);
-      
+
       // Re-throw with more context
       if (error.message?.includes('Invalid tar header')) {
         throw new Error(`TarParseError: ${error.message}`);
@@ -1276,32 +1316,32 @@ export class Datasets extends DurableObject {
     const durationSeconds = (endTime - startTime) / 1000;
     console.log(`[import-tar] Imported ${filesImported} files from tar archive in ${durationSeconds} seconds`);
 
-    return { 
-      filesImported, 
-      totalSizeBytes 
+    return {
+      filesImported,
+      totalSizeBytes
     };
   }
 
-  async importFromGitHub({ 
-    datasetId, 
-    orgId, 
-    owner, 
-    repo, 
+  async importFromGitHub({
+    datasetId,
+    orgId,
+    owner,
+    repo,
     branch = 'main',
     path,
-    waitForReplication = true 
-  }: { 
-    datasetId: string; 
-    orgId: string; 
+    waitForReplication = true
+  }: {
+    datasetId: string;
+    orgId: string;
     owner: string;
     repo: string;
     branch?: string;
     path?: string;
     waitForReplication?: boolean;
   }): Promise<{ filesImported: number; totalSizeBytes: number }> {
-    // Build GitHub archive URL
-    const url = `https://github.com/${owner}/${repo}/archive/${branch}.tar.gz`;
-    
+    // Build GitHub archive URL using codeload subdomain to avoid redirect
+    const url = `https://codeload.github.com/${owner}/${repo}/tar.gz/refs/heads/${branch}`;
+
     // Use importFromTarUrl with GitHub-specific metadata
     return this.importFromTarUrl({
       datasetId,
@@ -1410,7 +1450,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         kv: state.env.EYECREST_KV,
         datasetId
       });
-      
+
       if (existingConfig && primaryRegion && existingConfig.primaryRegion !== primaryRegion) {
         throw new Error(`Cannot change primary region from ${existingConfig.primaryRegion} to ${primaryRegion}. Primary region is immutable.`);
       }
@@ -1421,13 +1461,13 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         latitude: request.cf?.latitude as number | undefined,
         longitude: request.cf?.longitude as number | undefined
       });
-      
+
       const config: DatasetConfig = {
         primaryRegion: region,
         orgId,
         replicaRegions: replicaRegions || existingConfig?.replicaRegions
       };
-      
+
       // Save config to KV
       await setDatasetConfig({
         kv: state.env.EYECREST_KV,
@@ -1441,9 +1481,9 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
 
       // Upsert dataset in primary DO (it will handle creating replicas)
-      await stub.upsertDataset({ 
-        datasetId, 
-        orgId, 
+      await stub.upsertDataset({
+        datasetId,
+        orgId,
         region,
         isPrimary: true,
         replicaRegions,
@@ -1470,11 +1510,11 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         kv: state.env.EYECREST_KV,
         datasetId
       });
-      
+
       if (!config) {
         throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
       }
-      
+
       const region = config.primaryRegion;
 
       // Create DO ID and stub with locationHint
@@ -1504,11 +1544,11 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         kv: state.env.EYECREST_KV,
         datasetId
       });
-      
+
       if (!config) {
         throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
       }
-      
+
       const region = config.primaryRegion;
 
       // Create DO ID and stub with locationHint
@@ -1536,11 +1576,11 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         kv: state.env.EYECREST_KV,
         datasetId
       });
-      
+
       if (!config) {
         throw new Error(`Dataset ${datasetId} not found`);
       }
-      
+
       const region = config.primaryRegion;
 
       // Create DO ID and stub with locationHint
@@ -1550,7 +1590,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Delete from DO (which will cascade to replicas)
       await stub.deleteDataset({ datasetId, orgId });
-      
+
       // Delete from KV
       await state.env.EYECREST_KV.delete(`dataset:${datasetId}`);
     },
@@ -1578,11 +1618,11 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         kv: state.env.EYECREST_KV,
         datasetId
       });
-      
+
       if (!config) {
         throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
       }
-      
+
       // Use closest available region for read operation
       const region = getClosestAvailableRegion({
         request: request as Request,
@@ -1628,11 +1668,11 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         kv: state.env.EYECREST_KV,
         datasetId
       });
-      
+
       if (!config) {
         throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
       }
-      
+
       // Use closest available region for read operation
       const region = getClosestAvailableRegion({
         request: request as Request,
@@ -1679,11 +1719,11 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         kv: state.env.EYECREST_KV,
         datasetId
       });
-      
+
       if (!config) {
         throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
       }
-      
+
       // Use closest available region for read operation
       const region = getClosestAvailableRegion({
         request: request as Request,
@@ -1734,11 +1774,11 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         kv: state.env.EYECREST_KV,
         datasetId
       });
-      
+
       if (!config) {
         throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
       }
-      
+
       // Use closest available region for read operation
       const region = getClosestAvailableRegion({
         request: request as Request,
@@ -1787,11 +1827,11 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         kv: state.env.EYECREST_KV,
         datasetId
       });
-      
+
       if (!config) {
         throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
       }
-      
+
       // Use closest available region for read operation
       const region = getClosestAvailableRegion({
         request: request as Request,
@@ -1835,11 +1875,11 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         kv: state.env.EYECREST_KV,
         datasetId
       });
-      
+
       if (!config) {
         throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
       }
-      
+
       const region = config.primaryRegion;
 
       // Create DO ID and stub with locationHint
@@ -1878,11 +1918,11 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         kv: state.env.EYECREST_KV,
         datasetId
       });
-      
+
       if (!config) {
         throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
       }
-      
+
       const region = config.primaryRegion;
 
       // Create DO ID and stub with locationHint
@@ -2054,21 +2094,21 @@ function getClosestAvailableRegion({ request, primaryRegion, replicaRegions, isR
   if (forceRegion && VALID_REGIONS.includes(forceRegion as DurableObjectRegion)) {
     const forcedRegion = forceRegion as DurableObjectRegion;
     const allRegions = [primaryRegion, ...(replicaRegions || [])];
-    
+
     // Only allow forcing to regions that actually have the dataset
     if (allRegions.includes(forcedRegion)) {
       return forcedRegion;
     }
-    
+
     // If forced region doesn't have the dataset, throw error
     throw new Error(`Cannot force region ${forcedRegion}: dataset not available in that region. Available regions: ${allRegions.join(', ')}`);
   }
-  
+
   // For write operations, always use primary
   if (!isReadOperation) {
     return primaryRegion;
   }
-  
+
   // For read operations, use the closest region (primary or replica)
   const allRegions = [primaryRegion, ...(replicaRegions || [])];
   const requestRegion = getClosestDurableObjectRegion({
@@ -2076,12 +2116,12 @@ function getClosestAvailableRegion({ request, primaryRegion, replicaRegions, isR
     latitude: request.cf?.latitude as number | undefined,
     longitude: request.cf?.longitude as number | undefined
   });
-  
+
   // If the request's closest region is in our available regions, use it
   if (allRegions.includes(requestRegion)) {
     return requestRegion;
   }
-  
+
   // Otherwise use primary
   return primaryRegion;
 }
