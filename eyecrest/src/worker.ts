@@ -15,11 +15,16 @@ import Slugger from "github-slugger";
 import { parseMarkdownIntoSections, isSupportedMarkdownFile, Section } from "./markdown-parser.js";
 import { computeGitBlobSHA, verifySHA } from "./sha-utils.js";
 import { cleanMarkdownContent } from "./markdown-cleaner.js";
+import { parseTar } from "@mjackson/tar-parser";
 
 
 // Valid Cloudflare Durable Object regions
 const VALID_REGIONS = ['wnam', 'enam', 'weur', 'eeur', 'apac', 'me', 'sam', 'oc', 'afr'] as const;
 type DurableObjectRegion = typeof VALID_REGIONS[number];
+
+// Supported file extensions for import
+const SUPPORTED_EXTENSIONS = ['.md', '.mdx'] as const;
+type SupportedExtension = typeof SUPPORTED_EXTENSIONS[number];
 
 // DatasetConfig is eventually consistent. stored in KV. it must only be used for things that are immutable. never updated.
 interface DatasetConfig {
@@ -441,11 +446,6 @@ export class Datasets extends DurableObject {
     // Validate we have required fields
     if (!this.doRegion || !this.datasetId) {
       throw new Error('DO region and datasetId must be set');
-    }
-
-    // Validate file count limit
-    if (files.length > 100) {
-      throw new Error(`Too many files: ${files.length}. Maximum 100 files allowed per request.`);
     }
 
     const startTime = Date.now();
@@ -1040,6 +1040,7 @@ export class Datasets extends DurableObject {
 
   async getDatasetSize({ datasetId, orgId }: { datasetId: string; orgId: string }): Promise<{
     totalSizeBytes: number;
+    uploadedContentSizeBytes: number;
     fileCount: number;
     sectionCount: number;
     breakdown: {
@@ -1095,6 +1096,7 @@ export class Datasets extends DurableObject {
 
     return {
       totalSizeBytes,
+      uploadedContentSizeBytes: contentSizeBytes, // This is the actual user-uploaded text data
       fileCount,
       sectionCount,
       breakdown: {
@@ -1103,6 +1105,217 @@ export class Datasets extends DurableObject {
         metadataSizeBytes
       }
     };
+  }
+
+  async importFromTarUrl({ 
+    datasetId, 
+    orgId, 
+    url,
+    path,
+    metadata,
+    waitForReplication = true 
+  }: { 
+    datasetId: string; 
+    orgId: string; 
+    url: string;
+    path?: string;
+    metadata?: any;
+    waitForReplication?: boolean;
+  }): Promise<{ filesImported: number; totalSizeBytes: number }> {
+    // Load dataset info if not already loaded
+    if (!this.datasetId || this.datasetId !== datasetId) {
+      await this.loadDatasetInfo(datasetId);
+    }
+    
+    // Validate we have required fields
+    if (!this.doRegion || !this.datasetId) {
+      throw new Error('DO region and datasetId must be set');
+    }
+
+    // Verify ownership
+    await this.verifyDatasetOwnership(datasetId, orgId);
+
+    const startTime = Date.now();
+    let filesImported = 0;
+    let totalSizeBytes = 0;
+
+    try {
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => 'No error body');
+        throw new Error(
+          `Tar archive fetch failed (${response.status} ${response.statusText}). URL: ${url}. Error: ${errorBody}`,
+        );
+      }
+
+      // Check content type
+      const contentType = response.headers.get('content-type');
+      if (contentType && !contentType.includes('gzip') && !contentType.includes('tar') && !contentType.includes('octet-stream')) {
+        throw new Error(
+          `Invalid content type: ${contentType}. Expected tar.gz archive. URL: ${url}`,
+        );
+      }
+
+      if (!response.body) {
+        throw new Error('Response body is null');
+      }
+
+      // Process files in batches to avoid memory issues
+      const BATCH_SIZE = 50;
+      let currentBatch: FileSchema[] = [];
+
+      // Decompress and parse tar archive
+      const gz = response.body.pipeThrough(new DecompressionStream("gzip"));
+      
+      await parseTar(gz, async (entry) => {
+        if (entry.header.type !== "file") return;
+
+        // Extract relative path (remove first directory component which is the repo name)
+        const relativePath = entry.name.split("/").slice(1).join("/");
+        
+        // Skip if path filter is specified and doesn't match
+        if (path && !relativePath.startsWith(path)) return;
+
+        // Check if file has supported extension
+        const hasSuportedExtension = SUPPORTED_EXTENSIONS.some(ext => relativePath.endsWith(ext));
+        if (!hasSuportedExtension) return;
+
+        const buffer = await entry.arrayBuffer();
+
+        // Only store files under 1MB
+        if (buffer.byteLength >= 1_000_000) return;
+
+        try {
+          const content = new TextDecoder("utf-8", {
+            fatal: true,
+            ignoreBOM: false,
+          }).decode(buffer);
+
+          // Remove path prefix if specified
+          const filename = path && relativePath.startsWith(path) 
+            ? relativePath.slice(path.length).replace(/^\//, '')
+            : relativePath;
+
+          currentBatch.push({
+            filename,
+            content,
+            metadata: {
+              ...metadata,
+              importedAt: new Date().toISOString(),
+              originalPath: relativePath
+            },
+            weight: 1.0
+          });
+
+          totalSizeBytes += buffer.byteLength;
+
+          // Process batch when it reaches the size limit
+          if (currentBatch.length >= BATCH_SIZE) {
+            await this.upsertFiles({ 
+              datasetId, 
+              orgId, 
+              files: currentBatch, 
+              region: this.doRegion,
+              waitForReplication: false // Don't wait for each batch
+            });
+            filesImported += currentBatch.length;
+            console.log(`[import-tar] Processed batch of ${currentBatch.length} files (total: ${filesImported})`);
+            currentBatch = [];
+          }
+        } catch (error) {
+          // Skip files that can't be decoded as UTF-8
+          console.warn(`[import-tar] Skipping file ${relativePath}: ${error.message}`);
+        }
+      });
+
+      // Process any remaining files in the last batch
+      if (currentBatch.length > 0) {
+        await this.upsertFiles({ 
+          datasetId, 
+          orgId, 
+          files: currentBatch, 
+          region: this.doRegion,
+          waitForReplication: false
+        });
+        filesImported += currentBatch.length;
+        console.log(`[import-tar] Processed final batch of ${currentBatch.length} files (total: ${filesImported})`);
+      }
+
+      // Now handle replication if needed
+      if (waitForReplication && this.isPrimary() && filesImported > 0) {
+        const replicas = this.getReplicaStubs(datasetId);
+        if (replicas.length > 0) {
+          console.log(`[import-tar] Waiting for replication to ${replicas.length} replicas`);
+          await Promise.all(
+            replicas.map(async ({ region, stub }) => {
+              try {
+                // Trigger a sync from primary for the imported data
+                await stub.syncFromPrimary({ datasetId, orgId, primaryRegion: this.doRegion! });
+              } catch (error) {
+                console.error(`[import-tar] Failed to sync to replica ${region}:`, error);
+              }
+            })
+          );
+        }
+      }
+
+    } catch (error) {
+      const endTime = Date.now();
+      const durationSeconds = (endTime - startTime) / 1000;
+      console.error(`[import-tar] Failed after ${durationSeconds} seconds:`, error);
+      
+      // Re-throw with more context
+      if (error.message?.includes('Invalid tar header')) {
+        throw new Error(`TarParseError: ${error.message}`);
+      }
+      throw error;
+    }
+
+    const endTime = Date.now();
+    const durationSeconds = (endTime - startTime) / 1000;
+    console.log(`[import-tar] Imported ${filesImported} files from tar archive in ${durationSeconds} seconds`);
+
+    return { 
+      filesImported, 
+      totalSizeBytes 
+    };
+  }
+
+  async importFromGitHub({ 
+    datasetId, 
+    orgId, 
+    owner, 
+    repo, 
+    branch = 'main',
+    path,
+    waitForReplication = true 
+  }: { 
+    datasetId: string; 
+    orgId: string; 
+    owner: string;
+    repo: string;
+    branch?: string;
+    path?: string;
+    waitForReplication?: boolean;
+  }): Promise<{ filesImported: number; totalSizeBytes: number }> {
+    // Build GitHub archive URL
+    const url = `https://github.com/${owner}/${repo}/archive/${branch}.tar.gz`;
+    
+    // Use importFromTarUrl with GitHub-specific metadata
+    return this.importFromTarUrl({
+      datasetId,
+      orgId,
+      url,
+      path,
+      metadata: {
+        source: 'github',
+        owner,
+        repo,
+        branch
+      },
+      waitForReplication
+    });
   }
 }
 
@@ -1556,6 +1769,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
     params: z.object({ datasetId: DatasetIdSchema }),
     response: z.object({
       totalSizeBytes: z.number().describe('Total size of stored data in bytes (content + metadata + sections)'),
+      uploadedContentSizeBytes: z.number().describe('Total size of user-uploaded file content in bytes (excluding duplicated sections)'),
       fileCount: z.number().describe('Number of files in the dataset'),
       sectionCount: z.number().describe('Number of sections/chunks in the dataset'),
       breakdown: z.object({
@@ -1594,6 +1808,91 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       return await stub.getDatasetSize({ datasetId, orgId });
     },
     openapi: { operationId: 'getDatasetSize' },
+  })
+
+  // 9) Import files from tar.gz URL
+  .route({
+    method: 'POST',
+    path: '/v1/datasets/:datasetId/import/tar',
+    params: z.object({ datasetId: DatasetIdSchema }),
+    request: z.object({
+      url: z.string().url().describe('URL to tar.gz archive'),
+      path: z.string().optional().describe('Optional path within archive to filter files'),
+      metadata: z.any().optional().describe('Optional metadata to attach to imported files'),
+      waitForReplication: z.boolean().optional().default(true).describe('Whether to wait for replication to complete (default: true)')
+    }),
+    response: z.object({
+      filesImported: z.number().describe('Number of files imported'),
+      totalSizeBytes: z.number().describe('Total size of imported files in bytes')
+    }),
+    async handler({ request, params, state }) {
+      const { datasetId } = params;
+      const { url, path, metadata, waitForReplication = true } = await request.json();
+      const orgId = state.orgId!; // Guaranteed by middleware
+
+      // Get dataset config (must exist)
+      const config = await getDatasetConfig({
+        kv: state.env.EYECREST_KV,
+        datasetId
+      });
+      
+      if (!config) {
+        throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
+      }
+      
+      const region = config.primaryRegion;
+
+      // Create DO ID and stub with locationHint
+      const doId = getDurableObjectId({ datasetId, region });
+      const id = state.env.DATASETS.idFromName(doId);
+      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
+
+      return await stub.importFromTarUrl({ datasetId, orgId, url, path, metadata, waitForReplication });
+    },
+    openapi: { operationId: 'importFromTarUrl' },
+  })
+
+  // 10) Import files from GitHub repository
+  .route({
+    method: 'POST',
+    path: '/v1/datasets/:datasetId/import/github',
+    params: z.object({ datasetId: DatasetIdSchema }),
+    request: z.object({
+      owner: z.string().describe('GitHub repository owner/organization'),
+      repo: z.string().describe('GitHub repository name'),
+      branch: z.string().default('main').describe('Git branch to import from'),
+      path: z.string().optional().describe('Optional path within repository to filter files'),
+      waitForReplication: z.boolean().optional().default(true).describe('Whether to wait for replication to complete (default: true)')
+    }),
+    response: z.object({
+      filesImported: z.number().describe('Number of files imported'),
+      totalSizeBytes: z.number().describe('Total size of imported files in bytes')
+    }),
+    async handler({ request, params, state }) {
+      const { datasetId } = params;
+      const { owner, repo, branch, path, waitForReplication = true } = await request.json();
+      const orgId = state.orgId!; // Guaranteed by middleware
+
+      // Get dataset config (must exist)
+      const config = await getDatasetConfig({
+        kv: state.env.EYECREST_KV,
+        datasetId
+      });
+      
+      if (!config) {
+        throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
+      }
+      
+      const region = config.primaryRegion;
+
+      // Create DO ID and stub with locationHint
+      const doId = getDurableObjectId({ datasetId, region });
+      const id = state.env.DATASETS.idFromName(doId);
+      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
+
+      return await stub.importFromGitHub({ datasetId, orgId, owner, repo, branch, path, waitForReplication });
+    },
+    openapi: { operationId: 'importFromGitHub' },
   })
 
   // Legacy routes for MCP integration

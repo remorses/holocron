@@ -1,16 +1,43 @@
 # Changelog
 
-## 2025-01-24 16:35
+## 2025-01-24 19:00
+
+- Improved tar import error handling and reliability:
+  - Added detailed error messages for HTTP failures including status codes and response body
+  - Added content-type validation to ensure response is a tar.gz archive
+  - Enhanced error context for tar parsing failures
+- Removed 100-file limit from upsertFiles method
+- Implemented streaming file processing in importFromTarUrl:
+  - Files are now processed in batches of 50 to reduce memory usage
+  - Each batch is upserted immediately instead of waiting to collect all files
+  - Replication is handled after all batches complete
+  - Better support for large repositories with hundreds of files
+
+## 2025-01-24 18:00
+
+- Added search benchmark file (`search.bench.ts`) using vitest benchmarking
+- Discovered GitHub tar import limitations:
+  - Large repositories (>100MB) exceed Cloudflare Workers 128MB memory limit
+  - Benchmark now uses manual test data for reliable testing
+- Added result count logging to benchmark output
+
+## 2025-01-24 17:00
 
 - Added FTS5 vocabulary table (`sections_fts_vocab`) to track all indexed tokens
 - Added `getTokens` method to retrieve all unique tokens from a dataset  
 - Added GET `/v1/datasets/:datasetId/tokens` endpoint to expose token vocabulary
 - Returns sorted array of tokens with count for search index analysis
-- Added `getDatasetSize` method to calculate dataset storage usage
+- Updated `getDatasetSize` to include `uploadedContentSizeBytes` field for actual user data size
 - Added GET `/v1/datasets/:datasetId/size` endpoint for dataset size information
 - Returns file count, section count, and content size breakdown
 - Note: Uses content-based calculations since PRAGMA is restricted in Cloudflare SQLite
-- Added both methods to SDK client for easy integration
+- Added `importFromTarUrl` method to import files from any tar.gz archive URL
+- Added `importFromGitHub` method that builds GitHub archive URLs automatically
+- Added POST `/v1/datasets/:datasetId/import/tar` endpoint for generic tar imports
+- Added POST `/v1/datasets/:datasetId/import/github` endpoint for GitHub repository imports
+- Both import methods support path filtering and only import .md and .mdx files under 1MB
+- Added `SUPPORTED_EXTENSIONS` constant for future extension support
+- All new methods added to SDK client for easy integration
 
 ## 2025-07-23 15:37
 

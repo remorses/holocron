@@ -50,25 +50,25 @@ export class EyecrestClient {
     });
   }
 
-  async upsertFiles(params: { datasetId: string; files: EyecrestFile[] }): Promise<void> {
-    const { datasetId, files } = params;
+  async upsertFiles(params: { datasetId: string; files: EyecrestFile[]; waitForReplication?: boolean }): Promise<void> {
+    const { datasetId, files, waitForReplication } = params;
     await this.request(`/v1/datasets/${datasetId}/files`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ files }),
+      body: JSON.stringify({ files, waitForReplication }),
     });
   }
 
-  async deleteFiles(params: { datasetId: string; filenames: string[] }): Promise<void> {
-    const { datasetId, filenames } = params;
+  async deleteFiles(params: { datasetId: string; filenames: string[]; waitForReplication?: boolean }): Promise<void> {
+    const { datasetId, filenames, waitForReplication } = params;
     await this.request(`/v1/datasets/${datasetId}/files`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ filenames }),
+      body: JSON.stringify({ filenames, waitForReplication }),
     });
   }
 
@@ -163,6 +163,7 @@ export class EyecrestClient {
 
   async getDatasetSize(params: { datasetId: string }): Promise<{
     totalSizeBytes: number;
+    uploadedContentSizeBytes: number;
     fileCount: number;
     sectionCount: number;
     breakdown: {
@@ -173,6 +174,43 @@ export class EyecrestClient {
   }> {
     const { datasetId } = params;
     const response = await this.request(`/v1/datasets/${datasetId}/size`);
+    return response.json();
+  }
+
+  async importFromTarUrl(params: {
+    datasetId: string;
+    url: string;
+    path?: string;
+    metadata?: any;
+    waitForReplication?: boolean;
+  }): Promise<{ filesImported: number; totalSizeBytes: number }> {
+    const { datasetId, url, path, metadata, waitForReplication = true } = params;
+    const response = await this.request(`/v1/datasets/${datasetId}/import/tar`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url, path, metadata, waitForReplication }),
+    });
+    return response.json();
+  }
+
+  async importFromGitHub(params: {
+    datasetId: string;
+    owner: string;
+    repo: string;
+    branch?: string;
+    path?: string;
+    waitForReplication?: boolean;
+  }): Promise<{ filesImported: number; totalSizeBytes: number }> {
+    const { datasetId, owner, repo, branch = 'main', path, waitForReplication = true } = params;
+    const response = await this.request(`/v1/datasets/${datasetId}/import/github`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ owner, repo, branch, path, waitForReplication }),
+    });
     return response.json();
   }
 }
