@@ -87,6 +87,8 @@ const FileSchema = z.object({
   weight: z.number().optional().default(1.0).describe('Optional weight for ranking in search results (default: 1.0)'),
 });
 
+type FileSchema = z.infer<typeof FileSchema>;
+
 const UpsertFilesRequestSchema = z.object({
   files: z.array(FileSchema).describe('List of files to ingest and auto-chunk')
 });
@@ -202,7 +204,7 @@ export class DatasetCache extends DurableObject {
 
   /* ---------- API Methods ------------- */
 
-  async upsertFiles({ datasetId, orgId, files, region }: { datasetId: string; orgId: string; files: { filename: string; content: string; sha?: string; metadata?: Record<string, any>; weight?: number }[]; region?: string }): Promise<void> {
+  async upsertFiles({ datasetId, orgId, files, region }: { datasetId: string; orgId: string; files: FileSchema[]; region?: string }): Promise<void> {
     this.datasetId = datasetId;
     if (region) {
       this.doRegion = region;
@@ -674,7 +676,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
       const id = state.env.DATASET_CACHE.idFromName(doId);
-      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region as any }) as any as DatasetCache;
+      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region }) as any as DatasetCache;
 
       await stub.upsertFiles({ datasetId, orgId, files, region });
     },
@@ -705,7 +707,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
       const id = state.env.DATASET_CACHE.idFromName(doId);
-      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region as any }) as any as DatasetCache;
+      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region }) as any as DatasetCache;
 
       await stub.deleteFiles({ datasetId, orgId, filenames, region });
     },
@@ -740,7 +742,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
       const id = state.env.DATASET_CACHE.idFromName(doId);
-      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region as any }) as any as DatasetCache;
+      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region }) as any as DatasetCache;
 
       const result = await stub.getFileContents({
         datasetId,
@@ -892,11 +894,11 @@ export class MyMCP extends McpAgent {
    Dataset Configuration Types and Helpers
    ==================================================================== */
 
-const DEFAULT_REGION = 'wnam';
+const DEFAULT_REGION = 'wnam' as const;
 
 // DatasetConfig is eventually consistent. stored in KV. it must only be used for things that are immutable. never updated.
 interface DatasetConfig {
-  primaryRegion: string;
+  primaryRegion: DurableObjectLocationHint;
   orgId: string;
 }
 
@@ -910,7 +912,7 @@ interface GeolocationInfo {
    Region Hint Calculation
    ==================================================================== */
 
-function getClosestDurableObjectRegion({ continent, latitude, longitude }: GeolocationInfo): string {
+function getClosestDurableObjectRegion({ continent, latitude, longitude }: GeolocationInfo): DurableObjectLocationHint {
   const lon = longitude;
   const lat = latitude;
   switch (continent) {
@@ -988,12 +990,12 @@ async function getDatasetConfig({ kv, datasetId, orgId, request }: GetDatasetCon
 
 interface GetDurableObjectIdArgs {
   datasetId: string;
-  region: string;
-  index?: number;
+  region: DurableObjectLocationHint;
+  shard?: number;
 }
 
-function getDurableObjectId({ datasetId, region, index = 0 }: GetDurableObjectIdArgs): string {
-  return `${region}.${index}.${datasetId}`;
+function getDurableObjectId({ datasetId, region, shard = 0 }: GetDurableObjectIdArgs): string {
+  return `${region}.${shard}.${datasetId}`;
 }
 
 /* ======================================================================

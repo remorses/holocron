@@ -14,6 +14,8 @@
 
 To under replication, each write will be sent to the primary region DurableObject. This primary region will then forward these writes to the other regions durable object replicas. For the reads, instead, the API worker will simply get the closest DurableObject. This means that each DurableObject needs some additional state, specifically, to know if the DurableObject is the primary region, and to know what are the other available regions from the other replicas.
 
+each write to the primary durable object will need to be forwarded to other replicas. This can be done by the the durable object getting stubs of other replicas in the constructor and calling methods on them.
+
 ## Sharding
 
 Sharding will be implemented by using the filename as the sharding key using a jump ashing table. This way, when the number of shards changes, the rows that need to be moved will be minimized. Each durable object key will include the shard number in it. When the sharding will be in progress, each durable object will need to do double writes and double reads to the new shard key. When resharding stars I will notify what is the new count of shards to all sqlite durable objects. Then, for each old shards, I will spawn another durable object job, with the goal of moving the rows from the old shards to the new shards. These job will need to have persistent state for keeping track of
