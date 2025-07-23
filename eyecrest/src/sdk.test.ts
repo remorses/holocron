@@ -1,33 +1,55 @@
-import { describe, test, expect, afterAll } from 'vitest';
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 import { env } from 'cloudflare:test';
 import { EyecrestClient } from './sdk.js';
 
-// Round timestamp to nearest 5 minutes for stable snapshots
-function roundToNearest5Minutes(timestamp: number): number {
-  const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
-  return Math.round(timestamp / fiveMinutes) * fiveMinutes;
+// Round timestamp to nearest 2 minutes for stable snapshots
+function roundToNearest2Minutes(timestamp: number): number {
+  const twoMinutes = 2 * 60 * 1000; // 2 minutes in milliseconds
+  return Math.round(timestamp / twoMinutes) * twoMinutes;
 }
 
 const PRODUCTION_URL = 'https://eyecrest.org';
-const TEST_DATASET_ID = 'sdk-test-dataset-' + roundToNearest5Minutes(Date.now());
+const TEST_DATASET_ID = 'sdk-test-dataset-' + roundToNearest2Minutes(Date.now());
 const JWT_TOKEN = env.EYECREST_EXAMPLE_JWT;
 
 if (!JWT_TOKEN) {
   throw new Error('EYECREST_EXAMPLE_JWT not found in test environment');
 }
 
-// Track files for cleanup
-const filesToCleanup: string[] = [];
+// No need to track files - we'll delete entire dataset
 
 describe('EyecrestClient', () => {
+  // Create dataset before running tests that need it
+  beforeAll(async () => {
+    const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${JWT_TOKEN}`
+      },
+      body: JSON.stringify({})
+    });
+    
+    if (!response.ok) {
+      console.error(`Failed to create test dataset: ${await response.text()}`);
+      // Dataset might already exist, continue anyway
+    }
+  });
   afterAll(async () => {
-    // Clean up test files
-    if (filesToCleanup.length > 0) {
-      const client = new EyecrestClient({ token: JWT_TOKEN, baseUrl: PRODUCTION_URL });
-      await client.deleteFiles({
-        datasetId: TEST_DATASET_ID,
-        filenames: filesToCleanup
-      });
+    // Delete entire test dataset
+    console.log(`🗑️  Deleting test dataset ${TEST_DATASET_ID}...`);
+
+    const deleteResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${JWT_TOKEN}`
+      }
+    });
+
+    if (deleteResponse.ok) {
+      console.log('✅ Test dataset deleted successfully');
+    } else {
+      console.error('❌ Failed to delete test dataset:', await deleteResponse.text());
     }
   });
 
@@ -96,7 +118,7 @@ describe('EyecrestClient', () => {
       ]
     });
 
-    filesToCleanup.push('sdk-test.md', 'sdk-docs.md');
+    // No need to track files - dataset will be deleted at the end
 
     // Wait for indexing
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -201,7 +223,7 @@ describe('EyecrestClient', () => {
     expect(text).toMatchInlineSnapshot(`
       "### Features
 
-      [sdk-test.md:5](/v1/datasets/sdk-test-dataset-1753206600000/files/sdk-test.md?start=5)
+      [sdk-test.md:5](/v1/datasets/sdk-test-dataset-1753266300000/files/sdk-test.md?start=5)
 
       ## Features
 

@@ -1,5 +1,137 @@
 # Changelog
 
+## 2025-07-23 13:00
+
+- **Removed getDurableObjectIdForDO Function:**
+  - Consolidated to use only `getDurableObjectId` for consistency
+  - Removed duplicate helper function that was doing the same thing
+  - All DO ID generation now uses the same function
+
+- **Changed Timestamp Rounding from 5 to 2 Minutes:**
+  - Test dataset IDs now round to nearest 2 minutes instead of 5
+  - Provides more granular test isolation
+  - Reduces chance of test conflicts when running frequently
+
+- **Updated Tests to Use waitForReplication Parameter:**
+  - Replaced manual sleep/setTimeout with `waitForReplication` parameter
+  - Tests now explicitly control whether to wait for replication
+  - More reliable and faster test execution
+  - Clear intent in tests about replication behavior
+
+## 2025-07-23 12:00
+
+- **Fixed Replication Region Forwarding Bug:**
+  - Fixed critical bug where primary was passing its own region instead of replica's region
+  - When forwarding upsertFiles/deleteFiles to replicas, now correctly passes the replica's region
+  - This was causing region mismatch errors and preventing replication from working
+  - All replication tests now pass successfully
+  - Data written to primary region is correctly replicated to all configured replicas
+
+## 2025-07-23 11:45
+
+- **Fixed Fire-and-Forget Operations to Use waitUntil:**
+  - All async operations in Durable Objects now properly use `this.state.waitUntil`
+  - Added `state` property to DO class and set it in constructor
+  - Replica creation in `upsertDataset` now uses waitUntil
+  - Replication forwarding with `waitForReplication: false` uses waitUntil
+  - This ensures async operations complete even if the DO request finishes
+  - Prevents dropped operations and ensures data consistency
+
+- **Added DELETE /v1/datasets/:datasetId Route:**
+  - New route to delete entire datasets including all files and metadata
+  - Deletes from primary DO, which cascades deletion to all replicas
+  - Also removes dataset configuration from KV storage
+  - Verifies ownership before deletion
+  - Replicas are deleted asynchronously using waitUntil
+
+- **Updated All Tests to Delete Datasets Instead of Individual Files:**
+  - Tests now use the new DELETE dataset route in afterAll blocks
+  - Removed file tracking arrays and individual file deletions
+  - Cleaner test cleanup that ensures complete removal of test data
+  - More efficient than deleting files one by one
+
+## 2025-07-23 11:30
+
+- **Removed DO ID Parsing and Enforced Strict Region Handling:**
+  - Removed all code that tried to extract region from Durable Object ID
+  - DO IDs are random strings and should not be parsed for information
+  - `doRegion` is now only set in constructor (from SQLite) or in `upsertDataset`
+  - All methods now throw errors if `doRegion` or `datasetId` is null
+  - Removed DEFAULT_REGION fallbacks - operations fail fast if region not properly set
+  - This ensures data integrity and prevents silent failures
+
+- **Added waitForReplication Parameter to Write Operations:**
+  - Added `waitForReplication` boolean parameter to upsertFiles and deleteFiles APIs
+  - Defaults to `true` for backward compatibility
+  - When `true`, primary DO waits for replication to complete before returning
+  - When `false`, replication happens asynchronously (fire-and-forget)
+  - Useful for high-throughput scenarios where eventual consistency is acceptable
+  - Replica operations always use `waitForReplication: false` to prevent cascading waits
+
+- **Added x-force-region Header for Testing:**
+  - New `x-force-region` header allows forcing requests to specific DO regions
+  - Only works for regions that actually have the dataset (primary or replicas)
+  - Returns error if trying to force a region without the dataset
+  - Essential for testing replication and verifying data availability
+  - Works with all read operations: getFile, search, searchText
+
+- **Created Comprehensive Replication Tests:**
+  - New test file `replication.test.ts` dedicated to replication scenarios
+  - Tests writing to primary and reading from replicas
+  - Verifies x-force-region header functionality
+  - Tests async replication with waitForReplication=false
+  - Confirms delete operations propagate to all replicas
+  - Ensures data consistency across regions
+
+## 2025-07-23 11:00
+
+- **Replaced is_primary Flag with DO Region Validation:**
+  - Removed `is_primary` column from datasets table, replaced with `do_region`
+  - Each DO now extracts its region from its ID and stores it in the database
+  - Primary status is determined by comparing DO region with primary_region in database
+  - Added validation to throw errors if DO region cannot be determined
+  - All region mismatches now throw descriptive errors
+  - Ensures data integrity by validating DO location matches expected region
+
+- **Async Replica Operations:**
+  - All replica forwarding operations now run asynchronously without blocking
+  - Primary DO no longer waits for replica writes to complete
+  - Replica operations are fire-and-forget with error logging
+  - Improves write latency as clients don't wait for replication
+  - Errors in replica operations are logged but don't fail the primary write
+  - Note: waitUntil cannot be used in DOs when calling methods via stubs
+
+## 2025-07-23 10:40
+
+- **Implemented Smart Regional Read Routing:**
+  - Added `getClosestAvailableRegion` helper to determine the best region for requests
+  - Read operations (getFileContents, searchSections) now use the closest available region
+  - If request originates from a region with a replica, it uses that replica for reads
+  - Write operations continue to always use the primary region
+  - This improves read latency by serving data from the nearest Durable Object
+  - Fully implements the replication architecture where writes go to primary and reads use closest region
+
+## 2025-07-23 10:35
+
+- **Fixed Test Suite to Handle Explicit Dataset Creation:**
+  - Added `beforeAll` blocks to create test datasets before running file operations
+  - Fixed import statements to include `beforeAll` from vitest
+  - Removed env parameter from DO methods to fix serialization errors
+  - All tests now passing with the new requirement for explicit dataset creation
+
+## 2025-07-23 10:30
+
+- **Simplified Dataset Management and Replication Architecture:**
+  - Renamed `regions` to `replicaRegions` throughout codebase for clarity
+  - Added `VALID_REGIONS` constant and `DurableObjectRegion` type to avoid string duplication
+  - Created explicit `setDatasetConfig` function - config is no longer auto-created
+  - Removed auto-creation of datasets on file upload - datasets must be explicitly created first
+  - Moved replica DO creation from worker to primary DO's `upsertDataset` method
+  - Primary DO now handles all replica creation, making the system more resilient
+  - Worker no longer needs to manage replica creation logic
+  - Simplified error handling - all routes now throw if dataset doesn't exist
+  - Primary region detection now uses typed `DurableObjectRegion` instead of generic strings
+
 ## 2025-07-22 20:00
 
 - **Added Explicit Dataset Creation Route:**

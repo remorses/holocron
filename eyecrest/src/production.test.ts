@@ -1,15 +1,15 @@
-import { describe, test, expect, afterAll } from 'vitest';
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 import { env } from 'cloudflare:test';
 
-// Round timestamp to nearest 5 minutes for stable snapshots
-function roundToNearest5Minutes(timestamp: number): number {
-  const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
-  return Math.round(timestamp / fiveMinutes) * fiveMinutes;
+// Round timestamp to nearest 2 minutes for stable snapshots
+function roundToNearest2Minutes(timestamp: number): number {
+  const twoMinutes = 2 * 60 * 1000; // 2 minutes in milliseconds
+  return Math.round(timestamp / twoMinutes) * twoMinutes;
 }
 
 const PRODUCTION_URL = 'https://eyecrest.org';
 // Dataset ID must match the orgId in the JWT token
-const TEST_DATASET_ID = 'test-org-123-xx-dataset-' + roundToNearest5Minutes(Date.now()); // Unique dataset ID for this test run
+const TEST_DATASET_ID = 'test-org-123-xx-dataset-' + roundToNearest2Minutes(Date.now()); // Unique dataset ID for this test run
 
 // JWT token from Cloudflare test environment
 const JWT_TOKEN = env.EYECREST_EXAMPLE_JWT;
@@ -27,8 +27,7 @@ const jsonHeaders = {
   ...authHeaders
 };
 
-// Track files to clean up
-const filesToCleanup: string[] = [];
+// No need to track files - we'll delete entire dataset
 
 describe('Eyecrest Production API', () => {
   // Test authentication failures first
@@ -71,26 +70,32 @@ describe('Eyecrest Production API', () => {
   });
 
   afterAll(async () => {
-    // Clean up all test files as the last action
-    if (filesToCleanup.length > 0) {
-      console.log(`🗑️  Cleaning up ${filesToCleanup.length} test files...`);
+    // Delete entire test dataset
+    console.log(`🗑️  Deleting test dataset ${TEST_DATASET_ID}...`);
 
-      const deleteResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${JWT_TOKEN}`
-        },
-        body: JSON.stringify({
-          filenames: filesToCleanup
-        })
-      });
+    const deleteResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}`, {
+      method: 'DELETE',
+      headers: authHeaders
+    });
 
-      if (deleteResponse.ok) {
-        console.log('✅ Test files cleaned up successfully');
-      } else {
-        console.error('❌ Failed to clean up test files:', await deleteResponse.text());
-      }
+    if (deleteResponse.ok) {
+      console.log('✅ Test dataset deleted successfully');
+    } else {
+      console.error('❌ Failed to delete test dataset:', await deleteResponse.text());
+    }
+  });
+
+  // Create dataset before running file tests
+  beforeAll(async () => {
+    const createResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}`, {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({})
+    });
+    
+    if (!createResponse.ok) {
+      console.error(`Failed to create test dataset: ${await createResponse.text()}`);
+      // Dataset might already exist, continue anyway
     }
   });
 
@@ -224,8 +229,7 @@ More content in section two.`;
     expect(response.ok).toBe(true);
     expect(response.status).toBe(200);
 
-    // Track all files for cleanup
-    filesToCleanup.push(...files.map(f => f.filename));
+    // No need to track files - dataset will be deleted at the end
 
     // Wait a moment for indexing
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -261,8 +265,7 @@ More content in section two.`;
     expect(data.sha).not.toBe(wrongSHA); // SHA should not be the user-provided one
     expect(data.sha).toBe('417be07f3a69bd909b3a8455d5ca90ad7ed47360'); // Correct computed SHA
 
-    // Clean up
-    filesToCleanup.push(filename);
+    // No need to track - dataset will be deleted at the end
   });
 
   test('should retrieve file content with SHA', async () => {
@@ -750,10 +753,6 @@ More content in section two.`;
     });
     expect(verifyResponse.ok).toBe(false);
 
-    // Remove from cleanup list since it's already deleted
-    const index = filesToCleanup.indexOf('sha-test.md');
-    if (index > -1) {
-      filesToCleanup.splice(index, 1);
-    }
+    // File is deleted, no cleanup needed
   });
 });

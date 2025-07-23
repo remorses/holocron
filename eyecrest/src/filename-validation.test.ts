@@ -1,4 +1,4 @@
-import { describe, test, expect, afterAll } from 'vitest';
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 import { env } from 'cloudflare:test';
 
 const PRODUCTION_URL = 'https://eyecrest.org';
@@ -20,6 +20,18 @@ const TEST_DATASET_ID = 'filename-validation-test-' + Date.now();
 const createdFiles: string[] = [];
 
 describe('Filename Validation Tests', () => {
+  // Create dataset before running tests
+  beforeAll(async () => {
+    const createResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}`, {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({})
+    });
+    
+    if (!createResponse.ok) {
+      throw new Error(`Failed to create test dataset: ${await createResponse.text()}`);
+    }
+  });
   afterAll(async () => {
     // Clean up all test files
     if (createdFiles.length > 0) {

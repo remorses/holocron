@@ -3,10 +3,10 @@ import { env } from 'cloudflare:test';
 
 const PRODUCTION_URL = 'https://eyecrest.org';
 
-// Round timestamp to nearest 5 minutes for stable snapshots
-function roundToNearest5Minutes(timestamp: number): number {
-  const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
-  return Math.round(timestamp / fiveMinutes) * fiveMinutes;
+// Round timestamp to nearest 2 minutes for stable snapshots
+function roundToNearest2Minutes(timestamp: number): number {
+  const twoMinutes = 2 * 60 * 1000; // 2 minutes in milliseconds
+  return Math.round(timestamp / twoMinutes) * twoMinutes;
 }
 
 // JWT token from Cloudflare test environment
@@ -27,7 +27,18 @@ const jsonHeaders = {
 
 describe('Eyecrest Performance Tests', () => {
   test('upsert performance with multiple files', async () => {
-    const perfDatasetId = `perf-test-${roundToNearest5Minutes(Date.now())}`;
+    const perfDatasetId = `perf-test-${roundToNearest2Minutes(Date.now())}`;
+    
+    // Create dataset first
+    const createResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${perfDatasetId}`, {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({})
+    });
+    
+    if (!createResponse.ok) {
+      console.error(`Failed to create test dataset: ${await createResponse.text()}`);
+    }
     
     // Create 10 test files
     const testFiles = Array.from({ length: 10 }, (_, i) => ({
@@ -87,10 +98,21 @@ Final section. ${Array(100).fill('et dolore magna aliqua. ').join('')}`
 
 describe('Eyecrest Search Tokenization Research', () => {
   // Use timestamp for unique dataset ID to avoid schema conflicts
-  const TEST_DATASET_ID = `search-research-${roundToNearest5Minutes(Date.now())}`;
+  const TEST_DATASET_ID = `search-research-${roundToNearest2Minutes(Date.now())}`;
   let uploadedFiles: string[] = [];
 
   beforeAll(async () => {
+    // Create dataset first
+    const createResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}`, {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({})
+    });
+    
+    if (!createResponse.ok) {
+      console.error(`Failed to create test dataset: ${await createResponse.text()}`);
+      // Dataset might already exist, continue anyway
+    }
     // Create some test content with various patterns
     const filesToUpload = [
       {
@@ -340,7 +362,7 @@ Each of these phrases represents a specific action in our API.`
     expect(text).toMatchInlineSnapshot(`
       "### Mixed Patterns
 
-      [kebab-case-test.md:7](/v1/datasets/search-research-1753206600000/files/kebab-case-test.md?start=7)
+      [kebab-case-test.md:7](/v1/datasets/search-research-1753266300000/files/kebab-case-test.md?start=7)
 
       ## Mixed Patterns
 
@@ -357,7 +379,7 @@ Each of these phrases represents a specific action in our API.`
 
       ### Mixed Cases
 
-      [camelCase-test.md:7](/v1/datasets/search-research-1753206600000/files/camelCase-test.md?start=7)
+      [camelCase-test.md:7](/v1/datasets/search-research-1753266300000/files/camelCase-test.md?start=7)
 
       ## Mixed Cases
 
@@ -374,7 +396,7 @@ Each of these phrases represents a specific action in our API.`
 
       ## CamelCase Patterns
 
-      [camelCase-test.md:1](/v1/datasets/search-research-1753206600000/files/camelCase-test.md?start=1)
+      [camelCase-test.md:1](/v1/datasets/search-research-1753266300000/files/camelCase-test.md?start=1)
 
       # CamelCase Patterns
 
@@ -591,7 +613,7 @@ Each of these phrases represents a specific action in our API.`
     expect(text).toMatchInlineSnapshot(`
       "### Common Technical Phrases
 
-      [exact-phrases.md:3](/v1/datasets/search-research-1753206600000/files/exact-phrases.md?start=3)
+      [exact-phrases.md:3](/v1/datasets/search-research-1753266300000/files/exact-phrases.md?start=3)
 
       ## Common Technical Phrases
 
@@ -687,7 +709,7 @@ Each of these phrases represents a specific action in our API.`
     expect(text).toMatchInlineSnapshot(`
       "### Mixed Notations
 
-      [dot.notation.test.md:7](/v1/datasets/search-research-1753206600000/files/dot.notation.test.md?start=7)
+      [dot.notation.test.md:7](/v1/datasets/search-research-1753266300000/files/dot.notation.test.md?start=7)
 
       ## Mixed Notations
 
@@ -704,7 +726,7 @@ Each of these phrases represents a specific action in our API.`
 
       ## Dot Notation Patterns
 
-      [dot.notation.test.md:1](/v1/datasets/search-research-1753206600000/files/dot.notation.test.md?start=1)
+      [dot.notation.test.md:1](/v1/datasets/search-research-1753266300000/files/dot.notation.test.md?start=1)
 
       # Dot Notation Patterns
 
@@ -716,7 +738,7 @@ Each of these phrases represents a specific action in our API.`
 
       ### Mixed Patterns
 
-      [kebab-case-test.md:7](/v1/datasets/search-research-1753206600000/files/kebab-case-test.md?start=7)
+      [kebab-case-test.md:7](/v1/datasets/search-research-1753266300000/files/kebab-case-test.md?start=7)
 
       ## Mixed Patterns
 
@@ -733,7 +755,7 @@ Each of these phrases represents a specific action in our API.`
 
       ## Kebab Case Patterns
 
-      [kebab-case-test.md:1](/v1/datasets/search-research-1753206600000/files/kebab-case-test.md?start=1)
+      [kebab-case-test.md:1](/v1/datasets/search-research-1753266300000/files/kebab-case-test.md?start=1)
 
       # Kebab Case Patterns
 
@@ -745,7 +767,7 @@ Each of these phrases represents a specific action in our API.`
 
       ### Mixed Cases
 
-      [camelCase-test.md:7](/v1/datasets/search-research-1753206600000/files/camelCase-test.md?start=7)
+      [camelCase-test.md:7](/v1/datasets/search-research-1753266300000/files/camelCase-test.md?start=7)
 
       ## Mixed Cases
 
@@ -762,7 +784,7 @@ Each of these phrases represents a specific action in our API.`
 
       ### Multi-word Phrases
 
-      [exact-phrases.md:11](/v1/datasets/search-research-1753206600000/files/exact-phrases.md?start=11)
+      [exact-phrases.md:11](/v1/datasets/search-research-1753266300000/files/exact-phrases.md?start=11)
 
       ## Multi-word Phrases
 
