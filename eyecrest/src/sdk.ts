@@ -154,4 +154,25 @@ export class EyecrestClient {
     const response = await this.request(endpoint);
     return returnAsText ? response.text() : response.json();
   }
+
+  async getTokens(params: { datasetId: string }): Promise<{ tokens: string[]; count: number }> {
+    const { datasetId } = params;
+    const response = await this.request(`/v1/datasets/${datasetId}/tokens`);
+    return response.json();
+  }
+
+  async getDatasetSize(params: { datasetId: string }): Promise<{
+    totalSizeBytes: number;
+    fileCount: number;
+    sectionCount: number;
+    breakdown: {
+      databaseSizeBytes: number;
+      contentSizeBytes: number;
+      metadataSizeBytes: number;
+    };
+  }> {
+    const { datasetId } = params;
+    const response = await this.request(`/v1/datasets/${datasetId}/size`);
+    return response.json();
+  }
 }

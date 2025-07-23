@@ -1037,6 +1037,73 @@ export class Datasets extends DurableObject {
     // Extract just the token strings
     return tokens.map(row => row.term);
   }
+
+  async getDatasetSize({ datasetId, orgId }: { datasetId: string; orgId: string }): Promise<{
+    totalSizeBytes: number;
+    fileCount: number;
+    sectionCount: number;
+    breakdown: {
+      databaseSizeBytes: number;
+      contentSizeBytes: number;
+      metadataSizeBytes: number;
+    };
+  }> {
+    // Load dataset info if not already loaded
+    if (!this.datasetId || this.datasetId !== datasetId) {
+      await this.loadDatasetInfo(datasetId);
+    }
+    
+    // Validate we have required fields
+    if (!this.doRegion || !this.datasetId) {
+      throw new Error('DO region and datasetId must be set');
+    }
+
+    // Verify ownership
+    await this.verifyDatasetOwnership(datasetId, orgId);
+
+    // Note: PRAGMA commands are not allowed in Cloudflare Durable Objects due to SQLITE_AUTH restrictions
+    // We'll calculate content-based sizes instead
+
+    // Get file and section counts
+    const fileCountResult = [...this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM files")];
+    const sectionCountResult = [...this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM sections")];
+    const fileCount = fileCountResult[0]?.count || 0;
+    const sectionCount = sectionCountResult[0]?.count || 0;
+
+    // Calculate content size (sum of all file contents)
+    // Using LENGTH with CAST to BLOB ensures we get byte count, not character count
+    const contentSizeResult = [...this.sql.exec<{ total_size: number }>(
+      "SELECT COALESCE(SUM(LENGTH(CAST(content AS BLOB))), 0) as total_size FROM files"
+    )];
+    const contentSizeBytes = contentSizeResult[0]?.total_size || 0;
+
+    // Calculate metadata size
+    const metadataSizeResult = [...this.sql.exec<{ total_size: number }>(
+      "SELECT COALESCE(SUM(LENGTH(CAST(metadata AS BLOB))), 0) as total_size FROM files WHERE metadata IS NOT NULL"
+    )];
+    const metadataSizeBytes = metadataSizeResult[0]?.total_size || 0;
+
+    // Calculate section content size
+    const sectionSizeResult = [...this.sql.exec<{ total_size: number }>(
+      "SELECT COALESCE(SUM(LENGTH(CAST(content AS BLOB))), 0) as total_size FROM sections"
+    )];
+    const sectionSizeBytes = sectionSizeResult[0]?.total_size || 0;
+
+    // Calculate total size (content + metadata + sections)
+    // This is an approximation since we can't access the actual database file size
+    const totalSizeBytes = contentSizeBytes + metadataSizeBytes + sectionSizeBytes;
+
+    return {
+      totalSizeBytes,
+      fileCount,
+      sectionCount,
+      breakdown: {
+        databaseSizeBytes: totalSizeBytes, // Using total as approximation
+        contentSizeBytes,
+        metadataSizeBytes
+      }
+    };
+  }
 }
 
 /* ======================================================================
@@ -1480,6 +1547,53 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       };
     },
     openapi: { operationId: 'getTokens' },
+  })
+
+  // 8) Get dataset size and statistics
+  .route({
+    method: 'GET',
+    path: '/v1/datasets/:datasetId/size',
+    params: z.object({ datasetId: DatasetIdSchema }),
+    response: z.object({
+      totalSizeBytes: z.number().describe('Total size of stored data in bytes (content + metadata + sections)'),
+      fileCount: z.number().describe('Number of files in the dataset'),
+      sectionCount: z.number().describe('Number of sections/chunks in the dataset'),
+      breakdown: z.object({
+        databaseSizeBytes: z.number().describe('Estimated total size in bytes (same as totalSizeBytes)'),
+        contentSizeBytes: z.number().describe('Total size of file contents in bytes'),
+        metadataSizeBytes: z.number().describe('Total size of metadata in bytes')
+      }).describe('Detailed breakdown of storage usage')
+    }),
+    async handler({ request, params, state }) {
+      const { datasetId } = params;
+      const orgId = state.orgId!; // Guaranteed by middleware
+
+      // Get dataset config (must exist)
+      const config = await getDatasetConfig({
+        kv: state.env.EYECREST_KV,
+        datasetId
+      });
+      
+      if (!config) {
+        throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
+      }
+      
+      // Use closest available region for read operation
+      const region = getClosestAvailableRegion({
+        request: request as Request,
+        primaryRegion: config.primaryRegion,
+        replicaRegions: config.replicaRegions,
+        isReadOperation: true
+      });
+
+      // Create DO ID and stub with locationHint
+      const doId = getDurableObjectId({ datasetId, region });
+      const id = state.env.DATASETS.idFromName(doId);
+      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
+
+      return await stub.getDatasetSize({ datasetId, orgId });
+    },
+    openapi: { operationId: 'getDatasetSize' },
   })
 
   // Legacy routes for MCP integration

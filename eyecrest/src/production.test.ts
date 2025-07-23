@@ -387,6 +387,41 @@ More content in section two.`;
 
 
 
+  test('should get dataset size information', async () => {
+    const startTime = Date.now();
+    const response = await fetch(
+      `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/size`,
+      {
+        headers: authHeaders
+      }
+    );
+    const fetchTime = Date.now() - startTime;
+
+    if (!response.ok) {
+      console.error(`Failed to get dataset size: ${response.status} ${await response.text()}`);
+    }
+    expect(response.ok).toBe(true);
+
+    const data = await response.json() as any;
+    console.log(`⏱️  Getting dataset size took ${fetchTime}ms`);
+    console.log(`📊 Dataset stats: ${data.fileCount} files, ${data.sectionCount} sections, ${data.totalSizeBytes} bytes total`);
+    
+    // Verify the response structure
+    expect(data).toHaveProperty('totalSizeBytes');
+    expect(data).toHaveProperty('fileCount');
+    expect(data).toHaveProperty('sectionCount');
+    expect(data).toHaveProperty('breakdown');
+    expect(data.breakdown).toHaveProperty('databaseSizeBytes');
+    expect(data.breakdown).toHaveProperty('contentSizeBytes');
+    expect(data.breakdown).toHaveProperty('metadataSizeBytes');
+    
+    // Verify counts match our test data
+    expect(data.fileCount).toBeGreaterThanOrEqual(6); // We upload at least 6 test files
+    expect(data.sectionCount).toBeGreaterThan(0);
+    expect(data.totalSizeBytes).toBeGreaterThan(0);
+    expect(data.breakdown.contentSizeBytes).toBeGreaterThan(0);
+  });
+
   test('should get all tokens from the dataset', async () => {
     const startTime = Date.now();
     const response = await fetch(

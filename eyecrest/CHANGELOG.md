@@ -1,11 +1,16 @@
 # Changelog
 
-## 2025-01-24 16:26
+## 2025-01-24 16:35
 
 - Added FTS5 vocabulary table (`sections_fts_vocab`) to track all indexed tokens
 - Added `getTokens` method to retrieve all unique tokens from a dataset  
 - Added GET `/v1/datasets/:datasetId/tokens` endpoint to expose token vocabulary
 - Returns sorted array of tokens with count for search index analysis
+- Added `getDatasetSize` method to calculate dataset storage usage
+- Added GET `/v1/datasets/:datasetId/size` endpoint for dataset size information
+- Returns file count, section count, and content size breakdown
+- Note: Uses content-based calculations since PRAGMA is restricted in Cloudflare SQLite
+- Added both methods to SDK client for easy integration
 
 ## 2025-07-23 15:37
 
