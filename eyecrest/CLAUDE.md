@@ -1,5 +1,6 @@
-- object args are always preferred over positional args. for classes always
+I am an engineer so be concise and clear in your answers without worrying about sensibility and feelings.
 
+- object args are always preferred over positional args. for classes constructors always even if there is only 1 positional arg
 
 - this is a cloudflare worker and durable objects that exposes an api to upsert and search on markdown files. it also automatically chunks them into sections. search is powered by FT5 and sqlite in durable objects sqlite storage
 
@@ -27,8 +28,6 @@
 
 - make sure that each files only do upserts once in one dataset only. to simplify the overall tests. the first test should do the upsert of the files, following tests can assume the files have been inserted already. add an afterAll that deletes the files. tests run serially in a file so you have assume order. if there are multiple upserts in a single test merge them into the first test instead
 
-
-
 - after your changes deploy and run the tests with update snapshots enabled. then read again the test files diff and make sure the snapshots are what you expect
 
 - if you want to create documentation markdown files put them in the `docs/` folder. do not use upper case names.
@@ -39,4 +38,4 @@
 
 - tests MUST delete the dataset and not the singular files
 
-- for fire and forget operations in durable objects ALWAYS use `this.state.waitUntil` (remember to set `this.state = state` in constructor), do not call the promise without await. USE waitUntil instead.
+- for fire and forget operations in ALWAYS use `this.state.waitUntil` (remember to set `this.state = state` in constructor), do not call the promise without await. use waitUntil instead.

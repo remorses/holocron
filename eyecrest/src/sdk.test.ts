@@ -120,9 +120,6 @@ describe('EyecrestClient', () => {
 
     // No need to track files - dataset will be deleted at the end
 
-    // Wait for indexing
-    await new Promise(resolve => setTimeout(resolve, 500));
-
     // Search for content
     const results = await client.search({
       datasetId: TEST_DATASET_ID,
@@ -223,7 +220,7 @@ describe('EyecrestClient', () => {
     expect(text).toMatchInlineSnapshot(`
       "### Features
 
-      [sdk-test.md:5](/v1/datasets/sdk-test-dataset-1753266300000/files/sdk-test.md?start=5)
+      [sdk-test.md:5](/v1/datasets/sdk-test-dataset-1753272360000/files/sdk-test.md?start=5)
 
       ## Features
 

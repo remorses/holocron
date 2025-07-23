@@ -225,8 +225,7 @@ More content for testing replication.`;
       console.log(`Immediate search found ${data.results.length} results`);
     }
 
-    // Wait a bit then search again - should definitely find it
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    // Search again - replication should have completed by now
     
     const delayedSearchResponse = await fetch(
       `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/search?query=async`,

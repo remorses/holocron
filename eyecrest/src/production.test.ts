@@ -30,6 +30,36 @@ const jsonHeaders = {
 // No need to track files - we'll delete entire dataset
 
 describe('Eyecrest Production API', () => {
+  // Create dataset before running file tests
+  beforeAll(async () => {
+    const createResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}`, {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({})
+    });
+    
+    if (!createResponse.ok) {
+      console.error(`Failed to create test dataset: ${await createResponse.text()}`);
+      // Dataset might already exist, continue anyway
+    }
+  });
+
+  afterAll(async () => {
+    // Delete entire test dataset
+    console.log(`🗑️  Deleting test dataset ${TEST_DATASET_ID}...`);
+
+    const deleteResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}`, {
+      method: 'DELETE',
+      headers: authHeaders
+    });
+
+    if (deleteResponse.ok) {
+      console.log('✅ Test dataset deleted successfully');
+    } else {
+      console.error('❌ Failed to delete test dataset:', await deleteResponse.text());
+    }
+  });
+
   // Test authentication failures first
   test('should reject requests without authorization header', async () => {
     const response = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/files`);
@@ -67,36 +97,6 @@ describe('Eyecrest Production API', () => {
 
     const error = await response.json() as any;
     expect(error.error).toContain('Missing or invalid Authorization header');
-  });
-
-  afterAll(async () => {
-    // Delete entire test dataset
-    console.log(`🗑️  Deleting test dataset ${TEST_DATASET_ID}...`);
-
-    const deleteResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}`, {
-      method: 'DELETE',
-      headers: authHeaders
-    });
-
-    if (deleteResponse.ok) {
-      console.log('✅ Test dataset deleted successfully');
-    } else {
-      console.error('❌ Failed to delete test dataset:', await deleteResponse.text());
-    }
-  });
-
-  // Create dataset before running file tests
-  beforeAll(async () => {
-    const createResponse = await fetch(`${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}`, {
-      method: 'POST',
-      headers: jsonHeaders,
-      body: JSON.stringify({})
-    });
-    
-    if (!createResponse.ok) {
-      console.error(`Failed to create test dataset: ${await createResponse.text()}`);
-      // Dataset might already exist, continue anyway
-    }
   });
 
   test('should upload all test files including frontmatter and weights', async () => {
@@ -230,9 +230,6 @@ More content in section two.`;
     expect(response.status).toBe(200);
 
     // No need to track files - dataset will be deleted at the end
-
-    // Wait a moment for indexing
-    await new Promise(resolve => setTimeout(resolve, 1000));
   });
 
   test('should ignore user-provided SHA and compute it server-side', async () => {
