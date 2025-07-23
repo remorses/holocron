@@ -16,6 +16,16 @@
 - Added detailed logging to upsertFiles method to track file uploads during tar parsing
 - Logs now show dataset ID, file names, batch sizes, and total progress
 - Improved tar import logging to show file counts and sizes in KB/MB
+- Fixed Durable Object timeouts for large tar imports by moving parsing to worker
+- Moved tar parsing from Durable Object to worker to avoid CPU limit issues
+- Worker now streams and parses tar files directly, calling DO in batches
+- Each batch of 50 files gets its own DO method call with fresh CPU limits
+- This approach works because each upsertFiles call gets a new execution context
+- Fixed memory issue where tar import was collecting all files in memory before processing
+- Now processes files in batches during streaming to avoid worker memory limits
+- Fixed parseTar async handler issue by making callback synchronous
+- Use promise chaining to ensure sequential processing of tar entries
+- Avoids memory issues by processing entries one at a time in streaming fashion
 
 ## 2025-01-24 19:30
 

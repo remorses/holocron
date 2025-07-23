@@ -34,8 +34,8 @@ const importStartTime = Date.now();
 
 const importResult = await client.importFromGitHub({
   datasetId,
-  owner: 'freeCodeCamp',
-  repo: 'freeCodeCamp',
+  owner: 'vuejs',
+  repo: 'vitepress',
   branch: 'main',
   path: '',
   waitForReplication: true
@@ -54,8 +54,8 @@ console.log(`⏱️  Total setup time: ${((Date.now() - upsertStartTime) / 1000)
 
 // Define search queries to benchmark
 const searchQueries = [
-  { query: 'javascript', description: 'Programming language' },
   { query: 'react', description: 'UI framework' },
+  { query: 'javascript', description: 'Programming language' },
   { query: 'certification', description: 'Course content' },
   { query: 'algorithm', description: 'Computer science' },
   { query: 'responsive', description: 'Web design' }
@@ -97,7 +97,7 @@ const results: Array<{ query: string; times: number[]; avg: number }> = [];
 for (const { query, description } of searchQueries) {
   console.log(`Benchmarking "${query}" (${description}):`);
   const times: number[] = [];
-  
+
   for (let i = 0; i < ITERATIONS; i++) {
     const startTime = performance.now();
     await client.search({
@@ -109,7 +109,7 @@ for (const { query, description } of searchQueries) {
     times.push(elapsed);
     console.log(`  Run ${i + 1}: ${elapsed.toFixed(2)}ms`);
   }
-  
+
   const avg = times.reduce((sum, t) => sum + t, 0) / times.length;
   results.push({ query, times, avg });
   console.log(`  Average: ${avg.toFixed(2)}ms\n`);

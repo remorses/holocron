@@ -1147,216 +1147,7 @@ export class Datasets extends DurableObject {
     };
   }
 
-  async importFromTarUrl({
-    datasetId,
-    orgId,
-    url,
-    path,
-    metadata,
-    waitForReplication = true
-  }: {
-    datasetId: string;
-    orgId: string;
-    url: string;
-    path?: string;
-    metadata?: any;
-    waitForReplication?: boolean;
-  }): Promise<{ filesImported: number; totalSizeBytes: number }> {
-    // Load dataset info if not already loaded
-    if (!this.datasetId || this.datasetId !== datasetId) {
-      await this.loadDatasetInfo(datasetId);
-    }
 
-    // Validate we have required fields
-    if (!this.doRegion || !this.datasetId) {
-      throw new Error('DO region and datasetId must be set');
-    }
-
-    // Verify ownership
-    await this.verifyDatasetOwnership(datasetId, orgId);
-
-    const startTime = Date.now();
-    let filesImported = 0;
-    let totalSizeBytes = 0;
-
-    try {
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        const errorBody = await response.text().catch(() => 'No error body');
-        throw new Error(
-          `Tar archive fetch failed (${response.status} ${response.statusText}). URL: ${url}. Error: ${errorBody}`,
-        );
-      }
-
-      // Check content type
-      const contentType = response.headers.get('content-type');
-      if (contentType && !contentType.includes('gzip') && !contentType.includes('tar') && !contentType.includes('octet-stream')) {
-        throw new Error(
-          `Invalid content type: ${contentType}. Expected tar.gz archive. URL: ${url}`,
-        );
-      }
-
-      if (!response.body) {
-        throw new Error('Response body is null');
-      }
-
-      // Process files in batches to avoid memory issues
-      const BATCH_SIZE = 50;
-      let currentBatch: FileSchema[] = [];
-
-      // Decompress and parse tar archive
-      const gz = response.body.pipeThrough(new DecompressionStream("gzip"));
-
-      await parseTar(gz, async (entry) => {
-        if (entry.header.type !== "file") return;
-
-        // Extract relative path (remove first directory component which is the repo name)
-        const relativePath = entry.name.split("/").slice(1).join("/");
-
-        // Skip if path filter is specified and doesn't match
-        if (path && !relativePath.startsWith(path)) return;
-
-        // Check if file has supported extension
-        const hasSuportedExtension = SUPPORTED_EXTENSIONS.some(ext => relativePath.endsWith(ext));
-        if (!hasSuportedExtension) return;
-
-        const buffer = await entry.arrayBuffer();
-
-        // Only store files under 1MB
-        if (buffer.byteLength >= 1_000_000) return;
-
-        try {
-          const content = new TextDecoder("utf-8", {
-            fatal: true,
-            ignoreBOM: false,
-          }).decode(buffer);
-
-          // Remove path prefix if specified
-          const filename = path && relativePath.startsWith(path)
-            ? relativePath.slice(path.length).replace(/^\//, '')
-            : relativePath;
-
-          currentBatch.push({
-            filename,
-            content,
-            metadata: {
-              ...metadata,
-              importedAt: new Date().toISOString(),
-              originalPath: relativePath
-            },
-            weight: 1.0
-          });
-
-          totalSizeBytes += buffer.byteLength;
-
-          // Process batch when it reaches the size limit
-          if (currentBatch.length >= BATCH_SIZE) {
-            await this.upsertFiles({
-              datasetId,
-              orgId,
-              files: currentBatch,
-              region: this.doRegion,
-              waitForReplication: false // Don't wait for each batch
-            });
-            filesImported += currentBatch.length;
-            console.log(`[import-tar] Processed batch of ${currentBatch.length} files (total: ${filesImported}, batch size: ${(totalSizeBytes / 1024).toFixed(2)}KB)`);
-            currentBatch = [];
-          }
-        } catch (error) {
-          // Skip files that can't be decoded as UTF-8
-          console.warn(`[import-tar] Skipping file ${relativePath}: ${error.message}`);
-        }
-      });
-
-      // Process any remaining files in the last batch
-      if (currentBatch.length > 0) {
-        await this.upsertFiles({
-          datasetId,
-          orgId,
-          files: currentBatch,
-          region: this.doRegion,
-          waitForReplication: false
-        });
-        filesImported += currentBatch.length;
-        console.log(`[import-tar] Processed final batch of ${currentBatch.length} files (total: ${filesImported}, total size: ${(totalSizeBytes / 1024 / 1024).toFixed(2)}MB)`);
-      }
-
-      // Now handle replication if needed
-      if (waitForReplication && this.isPrimary() && filesImported > 0) {
-        const replicas = this.getReplicaStubs(datasetId);
-        if (replicas.length > 0) {
-          console.log(`[import-tar] Waiting for replication to ${replicas.length} replicas`);
-          await Promise.all(
-            replicas.map(async ({ region, stub }) => {
-              try {
-                // Trigger a sync from primary for the imported data
-                await stub.syncFromPrimary({ datasetId, orgId, primaryRegion: this.doRegion! });
-              } catch (error) {
-                console.error(`[import-tar] Failed to sync to replica ${region}:`, error);
-              }
-            })
-          );
-        }
-      }
-
-    } catch (error) {
-      const endTime = Date.now();
-      const durationSeconds = (endTime - startTime) / 1000;
-      console.error(`[import-tar] Failed after ${durationSeconds} seconds:`, error);
-
-      // Re-throw with more context
-      if (error.message?.includes('Invalid tar header')) {
-        throw new Error(`TarParseError: ${error.message}`);
-      }
-      throw error;
-    }
-
-    const endTime = Date.now();
-    const durationSeconds = (endTime - startTime) / 1000;
-    console.log(`[import-tar] Imported ${filesImported} files from tar archive in ${durationSeconds} seconds`);
-
-    return {
-      filesImported,
-      totalSizeBytes
-    };
-  }
-
-  async importFromGitHub({
-    datasetId,
-    orgId,
-    owner,
-    repo,
-    branch = 'main',
-    path,
-    waitForReplication = true
-  }: {
-    datasetId: string;
-    orgId: string;
-    owner: string;
-    repo: string;
-    branch?: string;
-    path?: string;
-    waitForReplication?: boolean;
-  }): Promise<{ filesImported: number; totalSizeBytes: number }> {
-    // Build GitHub archive URL using codeload subdomain to avoid redirect
-    const url = `https://codeload.github.com/${owner}/${repo}/tar.gz/refs/heads/${branch}`;
-
-    // Use importFromTarUrl with GitHub-specific metadata
-    return this.importFromTarUrl({
-      datasetId,
-      orgId,
-      url,
-      path,
-      metadata: {
-        source: 'github',
-        owner,
-        repo,
-        branch
-      },
-      waitForReplication
-    });
-  }
 }
 
 /* ======================================================================
@@ -1887,7 +1678,25 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       const id = state.env.DATASETS.idFromName(doId);
       const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
 
-      return await stub.importFromTarUrl({ datasetId, orgId, url, path, metadata, waitForReplication });
+      // Process the tar archive
+      const result = await processTarArchive({
+        url,
+        datasetId,
+        orgId,
+        path,
+        metadata,
+        region,
+        stub,
+        ctx: state.ctx
+      });
+
+      // Handle replication if needed
+      if (waitForReplication && config.replicaRegions && config.replicaRegions.length > 0) {
+        console.log(`[import-tar-worker] Triggering replication to ${config.replicaRegions.length} replicas`);
+        // The primary DO will handle replication through its normal upsertFiles flow
+      }
+
+      return result;
     },
     openapi: { operationId: 'importFromTarUrl' },
   })
@@ -1902,6 +1711,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       repo: z.string().describe('GitHub repository name'),
       branch: z.string().default('main').describe('Git branch to import from'),
       path: z.string().optional().describe('Optional path within repository to filter files'),
+      metadata: z.any().optional().describe('Optional metadata to attach to imported files'),
       waitForReplication: z.boolean().optional().default(true).describe('Whether to wait for replication to complete (default: true)')
     }),
     response: z.object({
@@ -1910,7 +1720,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
     }),
     async handler({ request, params, state }) {
       const { datasetId } = params;
-      const { owner, repo, branch, path, waitForReplication = true } = await request.json();
+      const { owner, repo, branch, path, metadata, waitForReplication = true } = await request.json();
       const orgId = state.orgId!; // Guaranteed by middleware
 
       // Get dataset config (must exist)
@@ -1930,7 +1740,34 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       const id = state.env.DATASETS.idFromName(doId);
       const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
 
-      return await stub.importFromGitHub({ datasetId, orgId, owner, repo, branch, path, waitForReplication });
+      // Build GitHub archive URL using codeload subdomain to avoid redirect
+      const url = `https://codeload.github.com/${owner}/${repo}/tar.gz/refs/heads/${branch}`;
+
+      // Process the tar archive with GitHub-specific metadata
+      const result = await processTarArchive({
+        url,
+        datasetId,
+        orgId,
+        path,
+        metadata: {
+          source: 'github',
+          owner,
+          repo,
+          branch,
+          ...metadata
+        },
+        region,
+        stub,
+        ctx: state.ctx
+      });
+
+      // Handle replication if needed
+      if (waitForReplication && config.replicaRegions && config.replicaRegions.length > 0) {
+        console.log(`[import-github-worker] Triggering replication to ${config.replicaRegions.length} replicas`);
+        // The primary DO will handle replication through its normal upsertFiles flow
+      }
+
+      return result;
     },
     openapi: { operationId: 'importFromGitHub' },
   })
@@ -2129,6 +1966,196 @@ function getClosestAvailableRegion({ request, primaryRegion, replicaRegions, isR
 /* ======================================================================
    Export and Utility Functions
    ==================================================================== */
+
+async function processTarArchive({
+  url,
+  datasetId,
+  orgId,
+  path,
+  metadata,
+  region,
+  stub,
+  ctx
+}: {
+  url: string;
+  datasetId: string;
+  orgId: string;
+  path?: string;
+  metadata?: any;
+  region: DurableObjectRegion;
+  stub: any;
+  ctx: ExecutionContext;
+}): Promise<{ filesImported: number; totalSizeBytes: number }> {
+  const startTime = Date.now();
+  let filesImported = 0;
+  let totalSizeBytes = 0;
+
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => 'No error body');
+      throw new Error(
+        `Tar archive fetch failed (${response.status} ${response.statusText}). URL: ${url}. Error: ${errorBody}`,
+      );
+    }
+
+    // Check content type
+    const contentType = response.headers.get('content-type');
+    if (contentType && !contentType.includes('gzip') && !contentType.includes('tar') && !contentType.includes('octet-stream')) {
+      throw new Error(
+        `Invalid content type: ${contentType}. Expected tar.gz archive. URL: ${url}`,
+      );
+    }
+    console.log(`[import-tar-worker] Fetching tar archive from ${url} ${contentType ? `(type: ${contentType})` : ''}`);
+
+    if (!response.body) {
+      throw new Error('Response body is null');
+    }
+
+    // Process files in batches to avoid memory issues
+    const BATCH_SIZE = 50;
+    let currentBatch: FileSchema[] = [];
+    let batchNumber = 0;
+
+    // Helper function to process current batch
+    const processBatch = async () => {
+      if (currentBatch.length === 0) return;
+      
+      batchNumber++;
+      console.log(`[import-tar-worker] Upserting batch ${batchNumber} (${currentBatch.length} files)...`);
+      const batchStartTime = Date.now();
+      
+      try {
+        await stub.upsertFiles({
+          datasetId,
+          orgId,
+          files: currentBatch,
+          region,
+          waitForReplication: false
+        });
+        
+        const batchDuration = (Date.now() - batchStartTime) / 1000;
+        filesImported += currentBatch.length;
+        console.log(`[import-tar-worker] Batch ${batchNumber} completed in ${batchDuration.toFixed(2)}s (total files: ${filesImported})`);
+        
+        // Clear the batch
+        currentBatch = [];
+      } catch (batchError) {
+        console.error(`[import-tar-worker] Batch ${batchNumber} failed:`, batchError);
+        throw batchError;
+      }
+    };
+
+    // Decompress and parse tar archive
+    const gz = response.body.pipeThrough(new DecompressionStream("gzip"));
+
+    let entriesProcessed = 0;
+    console.log(`[import-tar-worker] Starting to parse tar archive...`);
+
+    // Process tar entries in streaming fashion
+    let processingPromise = Promise.resolve();
+    let isParsingComplete = false;
+    
+    const parsePromise = parseTar(gz, (entry) => {
+      entriesProcessed++;
+      if (entriesProcessed % 100 === 0) {
+        console.log(`[import-tar-worker] Processed ${entriesProcessed} tar entries so far...`);
+      }
+      
+      if (entry.header.type !== "file") return;
+
+      // Extract relative path (remove first directory component which is the repo name)
+      const relativePath = entry.name.split("/").slice(1).join("/");
+
+      // Skip if path filter is specified and doesn't match
+      if (path && !relativePath.startsWith(path)) return;
+
+      // Check if file has supported extension
+      const hasSuportedExtension = SUPPORTED_EXTENSIONS.some(ext => relativePath.endsWith(ext));
+      if (!hasSuportedExtension) return;
+
+      // Chain processing to ensure sequential execution
+      processingPromise = processingPromise.then(async () => {
+        try {
+          const buffer = await entry.arrayBuffer();
+
+          // Only store files under 1MB
+          if (buffer.byteLength >= 1_000_000) {
+            console.log(`[import-tar-worker] Skipping large file (${(buffer.byteLength / 1024 / 1024).toFixed(2)}MB): ${relativePath}`);
+            return;
+          }
+
+          const content = new TextDecoder("utf-8", {
+            fatal: true,
+            ignoreBOM: false,
+          }).decode(buffer);
+
+          // Remove path prefix if specified
+          const filename = path && relativePath.startsWith(path)
+            ? relativePath.slice(path.length).replace(/^\//, '')
+            : relativePath;
+
+          currentBatch.push({
+            filename,
+            content,
+            metadata: {
+              ...metadata,
+              importedAt: new Date().toISOString(),
+              originalPath: relativePath
+            },
+            weight: 1.0
+          });
+
+          totalSizeBytes += buffer.byteLength;
+          
+          // Process batch when it reaches BATCH_SIZE
+          if (currentBatch.length >= BATCH_SIZE) {
+            await processBatch();
+          }
+        } catch (error) {
+          // Skip files that can't be decoded as UTF-8
+          console.warn(`[import-tar-worker] Skipping file ${relativePath}: ${error.message}`);
+        }
+      });
+    });
+    
+    // Wait for parsing to complete
+    await parsePromise;
+    isParsingComplete = true;
+    
+    // Wait for all processing to complete
+    await processingPromise;
+
+    // Process any remaining files in the last batch
+    if (currentBatch.length > 0) {
+      console.log(`[import-tar-worker] Processing final batch with ${currentBatch.length} files`);
+      await processBatch();
+    }
+
+    console.log(`[import-tar-worker] Finished parsing tar archive. Total entries: ${entriesProcessed}, Files imported: ${filesImported}`);
+
+  } catch (error) {
+    const endTime = Date.now();
+    const durationSeconds = (endTime - startTime) / 1000;
+    console.error(`[import-tar-worker] Failed after ${durationSeconds} seconds:`, error);
+
+    // Re-throw with more context
+    if (error.message?.includes('Invalid tar header')) {
+      throw new Error(`TarParseError: ${error.message}`);
+    }
+    throw error;
+  }
+
+  const endTime = Date.now();
+  const durationSeconds = (endTime - startTime) / 1000;
+  console.log(`[import-tar-worker] Imported ${filesImported} files from tar archive in ${durationSeconds} seconds`);
+
+  return {
+    filesImported,
+    totalSizeBytes
+  };
+}
 
 // Export the app for client generation
 export { app };
