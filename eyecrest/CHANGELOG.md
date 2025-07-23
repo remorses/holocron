@@ -1,5 +1,16 @@
 # Changelog
 
+## 2025-07-22 20:00
+
+- **Added Explicit Dataset Creation Route:**
+  - New `POST /v1/datasets/:datasetId` route to create datasets with explicit region
+  - Request body accepts `primaryRegion` to specify the Durable Object region
+  - Primary region is immutable - attempts to change it will fail with an error
+  - Route is idempotent - safe to call multiple times with the same parameters
+  - All KV operations moved to the worker's `getDatasetConfig` function
+  - DO's `upsertDataset` method only handles SQL operations
+  - If region not provided, uses closest region based on request geolocation
+
 ## 2025-07-22 19:50
 
 - **Added File Upload Limit and Filename Validation:**

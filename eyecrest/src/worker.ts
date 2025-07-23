@@ -16,6 +16,15 @@ import { parseMarkdownIntoSections, isSupportedMarkdownFile, Section } from "./m
 import { computeGitBlobSHA, verifySHA } from "./sha-utils.js";
 import { cleanMarkdownContent } from "./markdown-cleaner.js";
 
+
+// DatasetConfig is eventually consistent. stored in KV. it must only be used for things that are immutable. never updated.
+interface DatasetConfig {
+  primaryRegion: DurableObjectLocationHint;
+  orgId: string;
+  regions?: DurableObjectLocationHint[];
+}
+
+
 /* ---------- SQLite Table Types ---------------------------- */
 
 type FileRow = {
@@ -97,6 +106,11 @@ const DeleteFilesSchema = z.object({
   filenames: z.array(z.string()).describe('List of full file paths to delete'),
 });
 
+const UpsertDatasetRequestSchema = z.object({
+  primaryRegion: z.enum(['wnam', 'enam', 'weur', 'eeur', 'apac', 'oc', 'me', 'afr', 'sam'] as const)
+    .describe('Durable Object region where the dataset will be created or verified (immutable after creation)'),
+});
+
 const GetFileContentsQuerySchema = z.object({
   showLineNumbers: z.string()
     .optional()
@@ -146,10 +160,12 @@ export class DatasetCache extends DurableObject {
   private sql: SqlStorage;
   private datasetId?: string;
   private doRegion?: string;
+  protected env: Env;
 
   constructor(state: DurableObjectState, env: Env) {
     super(state, env);
     this.sql = state.storage.sql;
+    this.env = env;
 
     /* database schema */
     this.sql.exec(`
@@ -203,6 +219,39 @@ export class DatasetCache extends DurableObject {
   }
 
   /* ---------- API Methods ------------- */
+
+  async upsertDataset({ datasetId, orgId, region }: { datasetId: string; orgId: string; region: string }): Promise<void> {
+    this.datasetId = datasetId;
+    this.doRegion = region;
+
+    // Check if dataset already exists in SQL
+    const datasetRows = [...this.sql.exec("SELECT org_id, primary_region FROM datasets WHERE dataset_id = ?", datasetId)] as Pick<DatasetRow, 'org_id' | 'primary_region'>[];
+
+    if (datasetRows.length > 0) {
+      const existingOrgId = datasetRows[0].org_id;
+      const existingRegion = datasetRows[0].primary_region;
+      
+      // Verify ownership
+      if (existingOrgId !== orgId) {
+        throw new Error(`Dataset ${datasetId} already exists and belongs to organization ${existingOrgId}`);
+      }
+      
+      // Verify region hasn't changed (should match what's in KV)
+      if (existingRegion !== region) {
+        throw new Error(`Internal error: Region mismatch for dataset ${datasetId}. SQL: ${existingRegion}, expected: ${region}`);
+      }
+      
+      // Dataset already exists in SQL, this is fine (idempotent)
+      return;
+    }
+
+    // Create new dataset in SQL
+    const now = Date.now();
+    this.sql.exec(
+      "INSERT INTO datasets (dataset_id, org_id, primary_region, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+      datasetId, orgId, region, now, now
+    );
+  }
 
   async upsertFiles({ datasetId, orgId, files, region }: { datasetId: string; orgId: string; files: FileSchema[]; region?: string }): Promise<void> {
     this.datasetId = datasetId;
@@ -652,7 +701,40 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
     }
   })
 
-  // 1) Batch upsert files (auto-chunk on server based on extension)
+  // 1) Create or verify a dataset with explicit region (upsert)
+  .route({
+    method: 'POST',
+    path: '/v1/datasets/:datasetId',
+    params: z.object({ datasetId: DatasetIdSchema }),
+    request: UpsertDatasetRequestSchema,
+    response: z.void(),
+    async handler({ request, params, state }) {
+      const { primaryRegion } = await request.json();
+      const { datasetId } = params;
+      const orgId = state.orgId!; // Guaranteed by middleware
+
+      // Get dataset config (will use provided region as default if creating new)
+      const config = await getDatasetConfig({
+        kv: state.env.EYECREST_KV,
+        datasetId,
+        orgId,
+        request: request as Request,
+        defaultRegion: primaryRegion
+      });
+      const region = config.primaryRegion;
+
+      // Create DO ID and stub with locationHint
+      const doId = getDurableObjectId({ datasetId, region });
+      const id = state.env.DATASET_CACHE.idFromName(doId);
+      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region }) as any as DatasetCache;
+
+      // Upsert dataset in DO (handles all validation and KV operations)
+      await stub.upsertDataset({ datasetId, orgId, region });
+    },
+    openapi: { operationId: 'upsertDataset' },
+  })
+
+  // 2) Batch upsert files (auto-chunk on server based on extension)
   .route({
     method: 'PUT',
     path: '/v1/datasets/:datasetId/files',
@@ -683,7 +765,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
     openapi: { operationId: 'upsertFiles' },
   })
 
-  // 2) Delete specific files
+  // 3) Delete specific files
   .route({
     method: 'DELETE',
     path: '/v1/datasets/:datasetId/files',
@@ -714,7 +796,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
     openapi: { operationId: 'deleteFiles' },
   })
 
-  // 3) Get file contents with optional slicing
+  // 4) Get file contents with optional slicing
   .route({
     method: 'GET',
     path: '/v1/datasets/:datasetId/files/*',
@@ -759,7 +841,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
     openapi: { operationId: 'getFileContents' },
   })
 
-  // 4) Search within a dataset (returns section hits as JSON)
+  // 5) Search within a dataset (returns section hits as JSON)
   .route({
     method: 'GET',
     path: '/v1/datasets/:datasetId/search',
@@ -801,7 +883,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
     openapi: { operationId: 'searchSections' },
   })
 
-  // 5) Search within a dataset (returns section hits as plain text)
+  // 6) Search within a dataset (returns section hits as plain text)
   .route({
     method: 'GET',
     path: '/v1/datasets/:datasetId/search.txt',
@@ -896,11 +978,6 @@ export class MyMCP extends McpAgent {
 
 const DEFAULT_REGION = 'wnam' as const;
 
-// DatasetConfig is eventually consistent. stored in KV. it must only be used for things that are immutable. never updated.
-interface DatasetConfig {
-  primaryRegion: DurableObjectLocationHint;
-  orgId: string;
-}
 
 interface GeolocationInfo {
   continent?: string;
@@ -965,9 +1042,10 @@ interface GetDatasetConfigArgs {
   datasetId: string;
   orgId: string;
   request: Request;
+  defaultRegion?: DurableObjectLocationHint;
 }
 
-async function getDatasetConfig({ kv, datasetId, orgId, request }: GetDatasetConfigArgs): Promise<DatasetConfig> {
+async function getDatasetConfig({ kv, datasetId, orgId, request, defaultRegion }: GetDatasetConfigArgs): Promise<DatasetConfig> {
   const key = `dataset:${datasetId}`;
   const configJson = await kv.get(key);
 
@@ -975,8 +1053,8 @@ async function getDatasetConfig({ kv, datasetId, orgId, request }: GetDatasetCon
     return JSON.parse(configJson);
   }
 
-  // Create new config with region based on request location
-  const region = getClosestDurableObjectRegion({
+  // Create new config with provided region or detect from request location
+  const region = defaultRegion || getClosestDurableObjectRegion({
     continent: request.cf?.continent as string | undefined,
     latitude: request.cf?.latitude as number | undefined,
     longitude: request.cf?.longitude as number | undefined
