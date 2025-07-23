@@ -12,7 +12,7 @@
 
     "durable_objects": {
         "bindings": [
-            { "name": "DATASET_CACHE", "class_name": "DatasetCache" },
+            { "name": "DATASETS", "class_name": "Datasets" },
             { "name": "MCP_OBJECT", "class_name": "MyMCP" }
         ]
     },
@@ -33,6 +33,10 @@
         {
             "tag": "v4",
             "deleted_classes": ["RepoCache"]
+        },
+        {
+            "tag": "v5",
+            "renamed_classes": [{"from": "DatasetCache", "to": "Datasets"}]
         }
     ],
 

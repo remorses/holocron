@@ -13,12 +13,20 @@ pnpm add eyecrest
 ## Usage
 
 ```typescript
-import { EyecrestClient, type EyecrestFile } from 'eyecrest/sdk';
+import { EyecrestClient, type EyecrestFile, type UpsertDatasetRequest } from 'eyecrest/sdk';
 
 // Initialize the client
 const client = new EyecrestClient({
   token: 'your-jwt-token',
   baseUrl: 'https://eyecrest.org' // optional, defaults to https://eyecrest.org
+});
+
+// Create a dataset
+await client.upsertDataset({
+  datasetId: 'my-dataset-123',
+  primaryRegion: 'wnam', // optional, defaults to closest region
+  replicaRegions: ['enam', 'weur'], // optional
+  waitForReplication: true // optional, default true
 });
 
 // Upload markdown files
@@ -93,25 +101,34 @@ Creates a new client instance.
 - `token`: JWT authentication token (required)
 - `baseUrl`: API base URL (optional, defaults to `https://eyecrest.org`)
 
-### `upsertFiles({ datasetId, files })`
-Upload or update markdown files. Files are automatically parsed into sections for search.
-- `datasetId`: Unique identifier for your dataset
-- `files`: Array of file objects with:
-  - `filename`: File path (e.g., 'docs/readme.md')
-  - `content`: Markdown content
-  - `sha`: Optional SHA-1 hash for validation
-  - `metadata`: Optional metadata object
-  - `weight`: Optional weight for search ranking (default: 1.0)
+### `upsertDataset(params)`
+Create or update a dataset with regional distribution.
+- `params`: Object containing:
+  - `datasetId`: Unique identifier for your dataset
+  - `primaryRegion`: Optional primary DO region (default: closest to request)
+  - `replicaRegions`: Optional array of replica regions
+  - `waitForReplication`: Optional, wait for replicas to sync (default: true)
 
-### `search({ datasetId, query, page?, perPage?, maxChunksPerFile?, snippetLength?, returnAsText? })`
+### `upsertFiles(params)`
+Upload or update markdown files. Files are automatically parsed into sections for search.
+- `params`: Object containing:
+  - `datasetId`: Unique identifier for your dataset
+  - `files`: Array of file objects with:
+    - `filename`: File path (e.g., 'docs/readme.md')
+    - `content`: Markdown content
+    - `metadata`: Optional metadata object
+    - `weight`: Optional weight for search ranking (default: 1.0)
+
+### `search(params)`
 Search within markdown sections.
-- `datasetId`: Dataset to search in
-- `query`: Full-text search query
-- `page`: Page number (default: 0)
-- `perPage`: Results per page (default: 20)
-- `maxChunksPerFile`: Max sections per file (default: 5)
-- `snippetLength`: Snippet length (default: 300, max: 500)
-- `returnAsText`: Return formatted text instead of JSON (default: false)
+- `params`: Object containing:
+  - `datasetId`: Dataset to search in
+  - `query`: Full-text search query
+  - `page`: Page number (default: 0)
+  - `perPage`: Results per page (default: 20)
+  - `maxChunksPerFile`: Max sections per file (default: 5)
+  - `snippetLength`: Snippet length (default: 300, max: 500)
+  - `returnAsText`: Return formatted text instead of JSON (default: false)
 
 Returns (when `returnAsText` is false or omitted):
 ```typescript
@@ -134,13 +151,14 @@ Returns (when `returnAsText` is false or omitted):
 Returns (when `returnAsText` is true):
 Formatted markdown text with search results.
 
-### `getFile({ datasetId, filePath, showLineNumbers?, start?, end? })`
+### `getFile(params)`
 Retrieve a file's content.
-- `datasetId`: Dataset containing the file
-- `filePath`: Path to the file
-- `showLineNumbers`: Add line numbers (default: false)
-- `start`: Start line (1-based)
-- `end`: End line (inclusive)
+- `params`: Object containing:
+  - `datasetId`: Dataset containing the file
+  - `filePath`: Path to the file
+  - `showLineNumbers`: Add line numbers (default: false)
+  - `start`: Start line (1-based)
+  - `end`: End line (inclusive)
 
 Returns:
 ```typescript
@@ -151,10 +169,11 @@ Returns:
 }
 ```
 
-### `deleteFiles({ datasetId, filenames })`
+### `deleteFiles(params)`
 Delete files from a dataset.
-- `datasetId`: Dataset to delete from
-- `filenames`: Array of file paths to delete
+- `params`: Object containing:
+  - `datasetId`: Dataset to delete from
+  - `filenames`: Array of file paths to delete
 
 ## Error Handling
 

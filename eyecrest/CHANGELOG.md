@@ -1,5 +1,25 @@
 # Changelog
 
+## 2025-07-23 15:37
+
+- **Renamed Durable Object from DatasetCache to Datasets:**
+  - Renamed binding from `DATASET_CACHE` to `DATASETS` for better clarity
+  - Renamed class from `DatasetCache` to `Datasets` to better reflect its purpose
+  - Updated all references in worker.ts to use new names
+  - Added migration v5 in wrangler.jsonc to rename the Durable Object class
+  - This change better reflects that the DO manages datasets, not a cache
+  - All tests passing with the new naming convention
+
+## 2025-07-23 15:32
+
+- **Refactored SDK API to Use Single Object Parameters:**
+  - All SDK methods now use a single object parameter that includes datasetId
+  - `upsertDataset` now takes `{ datasetId, ...options }` instead of `(datasetId, options)`
+  - Consistent API design across all methods for better ergonomics
+  - Updated documentation to reflect new object parameter pattern
+  - Added `upsertDataset` method to SDK for dataset creation with regional options
+  - All method signatures now follow the same pattern for consistency
+
 ## 2025-07-23 15:20
 
 - **Added Data Synchronization for New Replica Regions:**

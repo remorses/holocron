@@ -78,7 +78,7 @@ type SearchResultRow = {
 /* ---------- ENV interface ---------------------------- */
 
 interface Env {
-  DATASET_CACHE: DurableObjectNamespace;
+  DATASETS: DurableObjectNamespace;
   ASSETS: Fetcher;
   EYECREST_PUBLIC_KEY: string; // RSA public key in PEM format
   EYECREST_KV: KVNamespace;
@@ -165,6 +165,7 @@ const SearchSectionsResponseSchema = z.object({
 // Export types for SDK use
 export type EyecrestFile = z.input<typeof FileSchema>;
 export type DeleteFilesRequest = z.infer<typeof DeleteFilesSchema>;
+export type UpsertDatasetRequest = z.infer<typeof UpsertDatasetRequestSchema>;
 export type GetFileContentsQuery = z.infer<typeof GetFileContentsQuerySchema>;
 export type SearchSectionsQuery = z.infer<typeof SearchSectionsQuerySchema>;
 export type SearchSectionsResponse = z.infer<typeof SearchSectionsResponseSchema>;
@@ -176,7 +177,7 @@ export type SearchSectionsResponse = z.infer<typeof SearchSectionsResponseSchema
 /* ======================================================================
    Durable Object: per‑dataset file storage
    ==================================================================== */
-export class DatasetCache extends DurableObject {
+export class Datasets extends DurableObject {
   private sql: SqlStorage;
   private datasetId?: string;
   private doRegion?: DurableObjectRegion;
@@ -279,8 +280,8 @@ export class DatasetCache extends DurableObject {
 
     return this.replicaRegions.map(region => {
       const doId = getDurableObjectId({ datasetId, region });
-      const id = this.env.DATASET_CACHE.idFromName(doId);
-      const stub = this.env.DATASET_CACHE.get(id, { locationHint: region });
+      const id = this.env.DATASETS.idFromName(doId);
+      const stub = this.env.DATASETS.get(id, { locationHint: region });
       return { region, stub };
     });
   }
@@ -373,8 +374,8 @@ export class DatasetCache extends DurableObject {
           .map(async replicaRegion => {
             try {
               const replicaDoId = getDurableObjectId({ datasetId, region: replicaRegion });
-              const replicaId = this.env.DATASET_CACHE.idFromName(replicaDoId);
-              const replicaStub = this.env.DATASET_CACHE.get(replicaId, { locationHint: replicaRegion }) as any as DatasetCache;
+              const replicaId = this.env.DATASETS.idFromName(replicaDoId);
+              const replicaStub = this.env.DATASETS.get(replicaId, { locationHint: replicaRegion }) as any as Datasets;
               
               // Create the replica DO
               await replicaStub.upsertDataset({ 
@@ -977,8 +978,8 @@ export class DatasetCache extends DurableObject {
     try {
       // Create primary stub from ID
       const primaryDoId = getDurableObjectId({ datasetId, region: primaryRegion });
-      const primaryId = this.env.DATASET_CACHE.idFromName(primaryDoId);
-      const primaryStub = this.env.DATASET_CACHE.get(primaryId, { locationHint: primaryRegion }) as any as DatasetCache;
+      const primaryId = this.env.DATASETS.idFromName(primaryDoId);
+      const primaryStub = this.env.DATASETS.get(primaryId, { locationHint: primaryRegion }) as any as Datasets;
 
       // Get all data from primary
       const files = await primaryStub.getAllData({ datasetId, orgId });
@@ -1125,8 +1126,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Create DO ID and stub with locationHint for primary
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASET_CACHE.idFromName(doId);
-      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region }) as any as DatasetCache;
+      const id = state.env.DATASETS.idFromName(doId);
+      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
 
       // Upsert dataset in primary DO (it will handle creating replicas)
       await stub.upsertDataset({ 
@@ -1167,8 +1168,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASET_CACHE.idFromName(doId);
-      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region }) as any as DatasetCache;
+      const id = state.env.DATASETS.idFromName(doId);
+      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
 
       await stub.upsertFiles({ datasetId, orgId, files, region, waitForReplication });
     },
@@ -1201,8 +1202,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASET_CACHE.idFromName(doId);
-      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region }) as any as DatasetCache;
+      const id = state.env.DATASETS.idFromName(doId);
+      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
 
       await stub.deleteFiles({ datasetId, orgId, filenames, region, waitForReplication });
     },
@@ -1233,8 +1234,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASET_CACHE.idFromName(doId);
-      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region }) as any as DatasetCache;
+      const id = state.env.DATASETS.idFromName(doId);
+      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
 
       // Delete from DO (which will cascade to replicas)
       await stub.deleteDataset({ datasetId, orgId });
@@ -1281,8 +1282,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASET_CACHE.idFromName(doId);
-      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region }) as any as DatasetCache;
+      const id = state.env.DATASETS.idFromName(doId);
+      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
 
       const result = await stub.getFileContents({
         datasetId,
@@ -1331,8 +1332,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASET_CACHE.idFromName(doId);
-      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region as any }) as any as DatasetCache;
+      const id = state.env.DATASETS.idFromName(doId);
+      const stub = state.env.DATASETS.get(id, { locationHint: region as any }) as any as Datasets;
 
       const result = await stub.searchSections({
         datasetId,
@@ -1382,8 +1383,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASET_CACHE.idFromName(doId);
-      const stub = state.env.DATASET_CACHE.get(id, { locationHint: region as any }) as any as DatasetCache;
+      const id = state.env.DATASETS.idFromName(doId);
+      const stub = state.env.DATASETS.get(id, { locationHint: region as any }) as any as Datasets;
 
       const result = await stub.searchSectionsText({
         datasetId,

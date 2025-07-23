@@ -92,6 +92,7 @@ describe('EyecrestClient', () => {
   test('should have all required methods', () => {
     const client = new EyecrestClient({ token: 'test-token' });
     
+    expect(typeof client.upsertDataset).toMatchInlineSnapshot(`"function"`);
     expect(typeof client.upsertFiles).toMatchInlineSnapshot(`"function"`);
     expect(typeof client.deleteFiles).toMatchInlineSnapshot(`"function"`);
     expect(typeof client.getFile).toMatchInlineSnapshot(`"function"`);
@@ -220,7 +221,7 @@ describe('EyecrestClient', () => {
     expect(text).toMatchInlineSnapshot(`
       "### Features
 
-      [sdk-test.md:5](/v1/datasets/sdk-test-dataset-1753272360000/files/sdk-test.md?start=5)
+      [sdk-test.md:5](/v1/datasets/sdk-test-dataset-1753277760000/files/sdk-test.md?start=5)
 
       ## Features
 

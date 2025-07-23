@@ -1,13 +1,14 @@
 import type { 
   EyecrestFile,
   DeleteFilesRequest,
+  UpsertDatasetRequest,
   GetFileContentsQuery,
   SearchSectionsQuery,
   SearchSectionsResponse 
 } from './worker.js';
 
 // Re-export types for convenience
-export type { EyecrestFile, SearchSectionsResponse };
+export type { EyecrestFile, SearchSectionsResponse, UpsertDatasetRequest };
 
 export class EyecrestClient {
   private readonly baseUrl: string;
@@ -36,7 +37,21 @@ export class EyecrestClient {
     return response;
   }
 
-  async upsertFiles({ datasetId, files }: { datasetId: string; files: EyecrestFile[] }): Promise<void> {
+  async upsertDataset(
+    params: { datasetId: string } & UpsertDatasetRequest
+  ): Promise<void> {
+    const { datasetId, ...options } = params;
+    await this.request(`/v1/datasets/${datasetId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(options),
+    });
+  }
+
+  async upsertFiles(params: { datasetId: string; files: EyecrestFile[] }): Promise<void> {
+    const { datasetId, files } = params;
     await this.request(`/v1/datasets/${datasetId}/files`, {
       method: 'PUT',
       headers: {
@@ -46,7 +61,8 @@ export class EyecrestClient {
     });
   }
 
-  async deleteFiles({ datasetId, filenames }: { datasetId: string; filenames: string[] }): Promise<void> {
+  async deleteFiles(params: { datasetId: string; filenames: string[] }): Promise<void> {
+    const { datasetId, filenames } = params;
     await this.request(`/v1/datasets/${datasetId}/files`, {
       method: 'DELETE',
       headers: {
@@ -56,31 +72,26 @@ export class EyecrestClient {
     });
   }
 
-  async getFile({ 
-    datasetId, 
-    filePath, 
-    showLineNumbers, 
-    start, 
-    end 
-  }: { 
+  async getFile(params: { 
     datasetId: string; 
     filePath: string; 
     showLineNumbers?: boolean;
     start?: number;
     end?: number;
   }): Promise<{ content: string; sha: string; metadata?: any }> {
-    const params = new URLSearchParams();
+    const { datasetId, filePath, showLineNumbers, start, end } = params;
+    const queryParams = new URLSearchParams();
     if (showLineNumbers !== undefined) {
-      params.set('showLineNumbers', showLineNumbers ? 'true' : 'false');
+      queryParams.set('showLineNumbers', showLineNumbers ? 'true' : 'false');
     }
     if (start !== undefined) {
-      params.set('start', start.toString());
+      queryParams.set('start', start.toString());
     }
     if (end !== undefined) {
-      params.set('end', end.toString());
+      queryParams.set('end', end.toString());
     }
 
-    const queryString = params.toString();
+    const queryString = queryParams.toString();
     const path = `/v1/datasets/${datasetId}/files/${filePath}${queryString ? `?${queryString}` : ''}`;
     
     const response = await this.request(path);
@@ -110,15 +121,7 @@ export class EyecrestClient {
   }): Promise<string>;
   
   // Implementation
-  async search({ 
-    datasetId, 
-    query, 
-    page = 0, 
-    perPage = 20, 
-    maxChunksPerFile = 5,
-    snippetLength = 300,
-    returnAsText = false
-  }: { 
+  async search(params: { 
     datasetId: string; 
     query: string;
     page?: number;
@@ -127,7 +130,16 @@ export class EyecrestClient {
     snippetLength?: number;
     returnAsText?: boolean;
   }): Promise<SearchSectionsResponse | string> {
-    const params = new URLSearchParams({
+    const { 
+      datasetId, 
+      query, 
+      page = 0, 
+      perPage = 20, 
+      maxChunksPerFile = 5,
+      snippetLength = 300,
+      returnAsText = false
+    } = params;
+    const queryParams = new URLSearchParams({
       query,
       page: page.toString(),
       perPage: perPage.toString(),
@@ -136,8 +148,8 @@ export class EyecrestClient {
     });
 
     const endpoint = returnAsText 
-      ? `/v1/datasets/${datasetId}/search.txt?${params}`
-      : `/v1/datasets/${datasetId}/search?${params}`;
+      ? `/v1/datasets/${datasetId}/search.txt?${queryParams}`
+      : `/v1/datasets/${datasetId}/search?${queryParams}`;
     
     const response = await this.request(endpoint);
     return returnAsText ? response.text() : response.json();
