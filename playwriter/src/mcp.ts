@@ -263,27 +263,76 @@ server.tool(
         const context = page.context()
 
         try {
-            // Create a function that has page and context in scope
+            // Collect console logs during execution
+            const consoleLogs: Array<{ method: string; args: any[] }> = []
+
+            // Create a custom console object that collects logs
+            const customConsole = {
+                log: (...args: any[]) => {
+                    consoleLogs.push({ method: 'log', args })
+                },
+                info: (...args: any[]) => {
+                    consoleLogs.push({ method: 'info', args })
+                },
+                warn: (...args: any[]) => {
+                    consoleLogs.push({ method: 'warn', args })
+                },
+                error: (...args: any[]) => {
+                    consoleLogs.push({ method: 'error', args })
+                },
+                debug: (...args: any[]) => {
+                    consoleLogs.push({ method: 'debug', args })
+                },
+            }
+
+            // Create a function that has page, context, and console in scope
             const executeCode = new Function(
                 'page',
                 'context',
+                'console',
                 `
                 return (async () => {
                     ${code}
-                })()
+                })();
             `,
             )
 
-            // Execute the code with page and context
-            const result = await executeCode(page, context)
+            // Execute the code with page, context, and custom console
+            const result = await executeCode(page, context, customConsole)
+
+            // Format the response with both console output and return value
+            let responseText = ''
+            
+            // Add console logs if any
+            if (consoleLogs.length > 0) {
+                responseText += 'Console output:\n'
+                consoleLogs.forEach(({ method, args }) => {
+                    const formattedArgs = args
+                        .map(arg => {
+                            if (typeof arg === 'object') {
+                                return JSON.stringify(arg, null, 2)
+                            }
+                            return String(arg)
+                        })
+                        .join(' ')
+                    responseText += `[${method}] ${formattedArgs}\n`
+                })
+                responseText += '\n'
+            }
+
+            // Add return value if any
+            if (result !== undefined) {
+                responseText += 'Return value:\n'
+                responseText += JSON.stringify(result, null, 2)
+            } else if (consoleLogs.length === 0) {
+                responseText += 'Code executed successfully (no output)'
+            }
 
             return {
                 content: [
                     {
                         type: 'text',
-                        text: result !== undefined
-                            ? JSON.stringify(result, null, 2)
-                            : 'Code executed successfully',
+                        text: responseText.trim(),
                     },
                 ],
             }
