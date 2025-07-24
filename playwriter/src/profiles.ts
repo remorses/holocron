@@ -76,7 +76,12 @@ export function getAllProfiles(): Array<{
     displayName: string
 }> {
     const root = getChromeUserDataDir()
-    const profiles = []
+    const profiles: Array<{
+        folder: string
+        email: string
+        path: string
+        displayName: string
+    }> = []
     
     for (const [folder, email] of getProfileEmailMap()) {
         profiles.push({

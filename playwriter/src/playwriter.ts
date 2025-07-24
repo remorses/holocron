@@ -5,7 +5,7 @@ import os from 'node:os'
 import fs from 'node:fs'
 import path from 'node:path'
 import prompts from 'prompts'
-import { getAllProfiles } from './profiles'
+import { getAllProfiles } from './profiles.js'
 
 // Find Chrome executable path based on OS
 function findChromeExecutablePath(): string {
@@ -60,14 +60,20 @@ export async function startPlaywriter() {
 
         // Get available Chrome profiles
         const profiles = getAllProfiles()
-        let selectedProfilePath: string | undefined
-        
+        let selectedProfilePath: string
+
         if (profiles.length === 0) {
-            console.warn('No Chrome profiles found. Starting with default profile.')
+            // Create a temporary profile directory for automation
+            const tempDir = path.join(os.tmpdir(), 'playwriter-automation-profile')
+            if (!fs.existsSync(tempDir)) {
+                fs.mkdirSync(tempDir, { recursive: true })
+            }
+            selectedProfilePath = tempDir
+            console.warn(`No Chrome profiles found. Using temporary profile at: ${tempDir}`)
         } else {
             console.log('\n⚠️  Please select a Chrome profile WITHOUT sensitive data:')
             console.log('(Use a test profile or create a new one for automation)\n')
-            
+
             const response = await prompts({
                 type: 'select',
                 name: 'profile',
@@ -78,39 +84,48 @@ export async function startPlaywriter() {
                     description: profile.path,
                 })),
             })
-            
+
             if (!response.profile) {
                 console.log('No profile selected. Exiting.')
                 process.exit(0)
             }
-            
+
             selectedProfilePath = response.profile
             console.log(`\nUsing profile: ${selectedProfilePath}`)
         }
-        
+
         // Start browser with CDP enabled
         console.log(`Starting Chrome with CDP on port ${cdpPort}...`)
+
+        // Get the Chrome user data directory and profile folder
+        const chromeUserDataDir = path.dirname(selectedProfilePath)
+        const profileFolder = path.basename(selectedProfilePath)
         
-        let browser
-        let context
-        if (selectedProfilePath) {
-            // Use launchPersistentContext when user data dir is specified
-            context = await chromium.launchPersistentContext(selectedProfilePath, {
-                executablePath,
-                args: [`--remote-debugging-port=${cdpPort}`],
-                headless: false,
-            })
-            browser = context
-        } else {
-            // Use regular launch when no profile is selected
-            browser = await chromium.launch({
-                executablePath,
-                args: [`--remote-debugging-port=${cdpPort}`],
-                headless: false,
-            })
+        // Common args for hiding the window and keeping pages active
+        const commonArgs = [
+            `--remote-debugging-port=${cdpPort}`,
+            '--window-position=-32000,-32000',
+            '--window-size=1280,720',
+            '--disable-backgrounding-occluded-windows', // Prevents Chrome from throttling/suspending hidden tabs
+            '--disable-gpu', // Disable GPU acceleration for better compatibility
+            `--user-data-dir=${chromeUserDataDir}`, // Point to Chrome's main user data directory
+        ]
+        
+        // Add profile-directory for non-default profiles
+        if (profileFolder !== 'Default') {
+            commonArgs.push(`--profile-directory=${profileFolder}`)
         }
 
-        console.log(`Chrome started with CDP on port ${cdpPort}`)
+        // Use regular launch with native Chrome profile loading
+        // This ensures all cookies, extensions, and settings are loaded
+        const browser = await chromium.launch({
+            executablePath,
+            args: commonArgs,
+            headless: false,
+        })
+
+        console.log(`Chrome started with CDP on port ${cdpPort} (window is hidden off-screen)`)
+
 
         // Resolve @playwright/mcp package.json path
         const require = createRequire(import.meta.url)
@@ -140,14 +155,10 @@ export async function startPlaywriter() {
         const cleanup = async () => {
             console.log('Shutting down...')
             mcpProcess.kill()
-            if (context) {
-                await context.close()
-            } else {
-                await browser.close()
-            }
+            await browser.close()
             process.exit(0)
         }
-        
+
         process.on('SIGINT', cleanup)
         process.on('SIGTERM', cleanup)
 

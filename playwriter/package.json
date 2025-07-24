@@ -23,6 +23,7 @@
     "dependencies": {
         "@playwright/mcp": "latest",
         "playwright": "1.55.0-alpha-1752701791000",
-        "prompts": "^2.4.2"
+        "prompts": "^2.4.2",
+        "rebrowser-playwright": "^1.52.0"
     }
 }
