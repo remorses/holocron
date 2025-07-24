@@ -481,7 +481,7 @@ export default function Chat({
             generateMessages={submitMessages}
             initialValue={initialChatState}
         >
-            <div className='flex grow min-h-0 flex-col gap-3 px-6 h-full justify-center'>
+            <div className='flex grow flex-col gap-3 px-6 min-h-full  max-h-none justify-center'>
                 <Messages ref={ref} />
                 <WelcomeMessage />
                 <Footer />
@@ -543,7 +543,7 @@ function Messages({ ref }) {
     return (
         <div
             ref={ref}
-            className='relative text-sm h-full flex flex-col grow mt-6 gap-6'
+            className='relative text-sm flex flex-col grow mt-6 gap-6'
         >
             {messages.map((message) => {
                 return (
@@ -869,10 +869,9 @@ function Footer() {
                                     view pr
                                 </a>
                             )}
-                            <div className='justify-end flex grow'>
-                                <PrButton />
-                                <SaveChangesButton />
-                            </div>
+
+                            <PrButton />
+                            <SaveChangesButton />
                         </div>
 
                         <div className='relative rounded-[20px] border bg-popover'>

@@ -198,7 +198,7 @@ export function ChatLeftSidebar({
         <Sidebar
             variant='inset'
             {...props}
-            className='dark flex  bg-black h-full flex-col grow scheme-only-dark py-4 px-0'
+            className='dark flex   bg-black h-full flex-col grow scheme-only-dark py-4 px-0'
         >
             <div
                 className='grid grow bg-black min-h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
@@ -214,7 +214,7 @@ export function ChatLeftSidebar({
                     </div>
                 </div>
 
-                <div className='p-0 grow relative h-full overflow-y-auto row-span-23 flex flex-col '>
+                <div className='p-0 grow relative overflow-y-auto row-span-23 flex flex-col '>
                     <Chat />
                 </div>
             </div>
