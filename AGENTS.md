@@ -458,3 +458,5 @@ Changeset files are structured like this:
 markdown describing the changes you made, in present tense, like "add support for X" or "fix bug with Y". Be detailed but concise, and never use bullet points or lists. Always show example code snippets if applicable, and use proper markdown formatting.
 
 ```
+
+the website package has a dependency on docs-website. instead of duplicating code that is needed both in website and docs-website keep a file in docs-website instead and import from there for the website package.
