@@ -7,9 +7,19 @@ import type { Route } from './+types/org.$orgId'
 export type { Route }
 
 export async function loader({ request, params: { orgId } }: Route.LoaderArgs) {
+    // Check if request is aborted early
+    if (request.signal.aborted) {
+        throw new Error('Request aborted')
+    }
+
     const { userId, redirectTo } = await getSession({ request })
     if (redirectTo) {
         throw redirect(redirectTo)
+    }
+
+    // Check signal before database query
+    if (request.signal.aborted) {
+        throw new Error('Request aborted')
     }
 
     // Check if user has access to this org
@@ -24,6 +34,11 @@ export async function loader({ request, params: { orgId } }: Route.LoaderArgs) {
 
     if (!orgUser) {
         throw redirect(href('/org/:orgId/onboarding', { orgId }))
+    }
+
+    // Check signal before fetching user sites
+    if (request.signal.aborted) {
+        throw new Error('Request aborted')
     }
 
     // Fetch user sites for sidebar

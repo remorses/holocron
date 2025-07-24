@@ -10,8 +10,18 @@ export async function loader({
     request,
     params: { orgId, siteId },
 }: Route.LoaderArgs) {
+    // Check if request is aborted early
+    if (request.signal.aborted) {
+        throw new Error('Request aborted')
+    }
+
     // We need userId for the queries, get it from session
     const { userId } = await getSession({ request })
+
+    // Check signal before database queries
+    if (request.signal.aborted) {
+        throw new Error('Request aborted')
+    }
 
     // TODO change params to be branchId instead of siteId! then get the branch here
     const [site, chatHistory, siteBranches] = await Promise.all([

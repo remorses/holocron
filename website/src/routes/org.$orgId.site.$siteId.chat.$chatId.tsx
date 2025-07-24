@@ -52,12 +52,23 @@ export async function loader({
     request,
     params: { orgId, siteId, chatId },
 }: Route.LoaderArgs) {
+    // Check if request is aborted early
+    if (request.signal.aborted) {
+        throw new Error('Request aborted')
+    }
+
     const { userId } = await getSession({ request })
 
     const url = new URL(request.url)
 
     if (url.searchParams.get('installGithubApp')) {
         const githubAccountLogin = url.searchParams.get('githubAccountLogin')
+        
+        // Check signal before database query
+        if (request.signal.aborted) {
+            throw new Error('Request aborted')
+        }
+        
         const githubInstallation = await prisma.githubInstallation.findFirst({
             where: {
                 orgs: {
@@ -75,6 +86,12 @@ export async function loader({
                 `GitHub installation not found for ${githubAccountLogin}`,
             )
         }
+        
+        // Check signal before upsert
+        if (request.signal.aborted) {
+            throw new Error('Request aborted')
+        }
+        
         await prisma.siteGithubInstallation.upsert({
             where: {
                 installationId_appId_siteId: {
@@ -98,6 +115,11 @@ export async function loader({
                 Location: pathname,
             },
         })
+    }
+
+    // Check signal before main database queries
+    if (request.signal.aborted) {
+        throw new Error('Request aborted')
     }
 
     // Fetch chat and site info separately
@@ -172,6 +194,11 @@ export async function loader({
     const fileNames: string[] = await (async () => {
         const branchId = chat.branchId
         if (!branchId) return []
+
+        // Check signal before getting files
+        if (request.signal.aborted) {
+            throw new Error('Request aborted')
+        }
 
         const allFiles = await getTabFilesWithoutContents({ branchId })
         return allFiles.map((file) => `@${file.githubPath}`).sort()
