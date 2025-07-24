@@ -19,7 +19,10 @@ import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import { getFilesForSource } from 'docs-website/src/lib/source.server'
 import { getFumadocsSource } from 'docs-website/src/lib/source'
 import { getOpenapiDocument } from 'docs-website/src/lib/openapi.server'
-import { ClientLayout, ClientApp } from 'docs-website/src/routes/_catchall-client'
+import {
+    ClientLayout,
+    ClientApp,
+} from 'docs-website/src/routes/_catchall-client'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -52,6 +55,11 @@ export async function loader({ request }: Route.LoaderArgs) {
     const timerId = `root-loader-${Math.random().toString(36).substr(2, 9)}`
     console.time(`${timerId} - total root loader time`)
 
+    // Check if request is aborted early
+    if (request.signal.aborted) {
+        throw new Error('Request aborted')
+    }
+
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
 
@@ -72,6 +80,11 @@ export async function loader({ request }: Route.LoaderArgs) {
                 'Set-Cookie': cookieValue,
             },
         })
+    }
+
+    // Check signal before database queries
+    if (request.signal.aborted) {
+        throw new Error('Request aborted')
     }
 
     console.time(`${timerId} - find site branch from database`)
@@ -102,6 +115,11 @@ export async function loader({ request }: Route.LoaderArgs) {
             status: 404,
             headers: { 'Content-Type': 'application/json' },
         })
+    }
+
+    // Check signal before next database operation
+    if (request.signal.aborted) {
+        throw new Error('Request aborted')
     }
 
     console.time(`${timerId} - get files for source`)
@@ -142,6 +160,11 @@ export async function loader({ request }: Route.LoaderArgs) {
         return siteBranch.docsJson as any
     })()
 
+    // Check signal before processing banner
+    if (request.signal.aborted) {
+        throw new Error('Request aborted')
+    }
+
     console.time(`${timerId} - process banner markdown`)
     let bannerAst = await (async () => {
         if (docsJson?.banner?.content) {
@@ -163,8 +186,12 @@ export async function loader({ request }: Route.LoaderArgs) {
     // Check for preview websocket ID in cookies
     const cookies = parseCookies(request.headers.get('Cookie'))
     const previewWebsocketId = cookies['__websocket_preview'] || null
-    const trieveReadApiKey = siteBranch.trieveReadApiKey
-    const trieveDatasetId = siteBranch.trieveDatasetId
+    // Trieve fields removed - now using Eyecrest with branchId
+
+    // Check signal before openapi processing
+    if (request.signal.aborted) {
+        throw new Error('Request aborted')
+    }
 
     console.time(`${timerId} - get openapi document`)
     const {
@@ -189,10 +216,12 @@ export async function loader({ request }: Route.LoaderArgs) {
     })()
 
     // Check for editor preview mode query parameter
-    const editorPreviewMode = url.searchParams.get('editorPreviewMode') === 'true'
+    const editorPreviewMode =
+        url.searchParams.get('editorPreviewMode') === 'true'
 
     console.timeEnd(`${timerId} - total root loader time`)
-
+    const trieveReadApiKey = siteBranch.trieveReadApiKey
+    const trieveDatasetId = siteBranch.trieveDatasetId
     return {
         openapiUrl,
         openapiRenderer,
