@@ -137,19 +137,19 @@ export async function startPlaywriter() {
         })
 
         // Handle cleanup
-        process.on('SIGINT', async () => {
+        const cleanup = async () => {
             console.log('Shutting down...')
             mcpProcess.kill()
-            await browser.close()
+            if (context) {
+                await context.close()
+            } else {
+                await browser.close()
+            }
             process.exit(0)
-        })
-
-        process.on('SIGTERM', async () => {
-            console.log('Shutting down...')
-            mcpProcess.kill()
-            await browser.close()
-            process.exit(0)
-        })
+        }
+        
+        process.on('SIGINT', cleanup)
+        process.on('SIGTERM', cleanup)
 
         return { browser, mcpProcess }
     } catch (error) {
