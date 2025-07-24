@@ -1,4 +1,4 @@
-import { chromium } from 'playwright'
+// Removed Playwright import - launching Chrome directly
 import { spawn } from 'child_process'
 import { createRequire } from 'module'
 import os from 'node:os'
@@ -100,29 +100,36 @@ export async function startPlaywriter() {
         // Get the Chrome user data directory and profile folder
         const chromeUserDataDir = path.dirname(selectedProfilePath)
         const profileFolder = path.basename(selectedProfilePath)
-        
-        // Common args for hiding the window and keeping pages active
-        const commonArgs = [
+
+        // Build Chrome arguments
+        const chromeArgs = [
             `--remote-debugging-port=${cdpPort}`,
             '--window-position=-32000,-32000',
             '--window-size=1280,720',
             '--disable-backgrounding-occluded-windows', // Prevents Chrome from throttling/suspending hidden tabs
             '--disable-gpu', // Disable GPU acceleration for better compatibility
-            `--user-data-dir=${chromeUserDataDir}`, // Point to Chrome's main user data directory
+            `--user-data-dir=${chromeUserDataDir}`, // Chrome's main user data directory
         ]
-        
+
         // Add profile-directory for non-default profiles
         if (profileFolder !== 'Default') {
-            commonArgs.push(`--profile-directory=${profileFolder}`)
+            chromeArgs.push(`--profile-directory=${profileFolder}`)
         }
 
-        // Use regular launch with native Chrome profile loading
-        // This ensures all cookies, extensions, and settings are loaded
-        const browser = await chromium.launch({
-            executablePath,
-            args: commonArgs,
-            headless: false,
+        // Launch Chrome directly as a subprocess
+        console.log('Launching Chrome with args:', chromeArgs)
+        const chromeProcess = spawn(executablePath, chromeArgs, {
+            detached: false,
+            stdio: 'ignore', // Ignore Chrome's output to avoid noise
         })
+
+        chromeProcess.on('error', (error) => {
+            console.error('Failed to start Chrome:', error)
+            throw error
+        })
+
+        // Give Chrome a moment to start up and open the debugging port
+        await new Promise(resolve => setTimeout(resolve, 2000))
 
         console.log(`Chrome started with CDP on port ${cdpPort} (window is hidden off-screen)`)
 
@@ -155,14 +162,14 @@ export async function startPlaywriter() {
         const cleanup = async () => {
             console.log('Shutting down...')
             mcpProcess.kill()
-            await browser.close()
+            chromeProcess.kill()
             process.exit(0)
         }
 
         process.on('SIGINT', cleanup)
         process.on('SIGTERM', cleanup)
 
-        return { browser, mcpProcess }
+        return { chromeProcess, mcpProcess }
     } catch (error) {
         console.error('Failed to start Playwriter:', error)
         throw error
