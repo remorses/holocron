@@ -39,9 +39,9 @@ const importStartTime = Date.now();
 
 const importResult = await client.importFromGitHub({
   datasetId,
-  owner: 'vuejs',
-  repo: 'vitepress',
-  branch: 'main',
+  owner: 'vercel',
+  repo: 'next.js',
+  branch: 'canary',
   path: '',
   waitForReplication: true
 });

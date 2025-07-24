@@ -15,7 +15,7 @@ import Slugger from "github-slugger";
 import { parseMarkdownIntoSections, isSupportedMarkdownFile, Section } from "./markdown-parser.js";
 import { computeGitBlobSHA, verifySHA } from "./sha-utils.js";
 import { cleanMarkdownContent } from "./markdown-cleaner.js";
-import { parseTar } from "@mjackson/tar-parser";
+import { parseTar } from "@xmorse/tar-parser";
 
 
 // Valid Cloudflare Durable Object regions
@@ -835,7 +835,7 @@ export class Datasets extends DurableObject {
         -- BM25 is the primary signal, weights provide minor boosts
         (bm25(sections_fts) * (1.0 + LOG(sections.weight) * 0.1) * (1.0 + LOG(files.weight) * 0.1)) as score
       FROM matched_sections
-      JOIN sections_fts ON sections_fts.filename = matched_sections.filename 
+      JOIN sections_fts ON sections_fts.filename = matched_sections.filename
         AND sections_fts.section_slug = matched_sections.section_slug
       JOIN sections ON sections.filename = matched_sections.filename
         AND sections.section_slug = matched_sections.section_slug
@@ -2031,11 +2031,11 @@ async function processTarArchive({
     // Helper function to process current batch
     const processBatch = async () => {
       if (currentBatch.length === 0) return;
-      
+
       batchNumber++;
       console.log(`[import-tar-worker] Upserting batch ${batchNumber} (${currentBatch.length} files)...`);
       const batchStartTime = Date.now();
-      
+
       try {
         await stub.upsertFiles({
           datasetId,
@@ -2044,11 +2044,11 @@ async function processTarArchive({
           region,
           waitForReplication: false
         });
-        
+
         const batchDuration = (Date.now() - batchStartTime) / 1000;
         filesImported += currentBatch.length;
         console.log(`[import-tar-worker] Batch ${batchNumber} completed in ${batchDuration.toFixed(2)}s (total files: ${filesImported})`);
-        
+
         // Clear the batch
         currentBatch = [];
       } catch (batchError) {
@@ -2066,13 +2066,13 @@ async function processTarArchive({
     // Process tar entries in streaming fashion
     let processingPromise = Promise.resolve();
     let isParsingComplete = false;
-    
+
     const parsePromise = parseTar(gz, (entry) => {
       entriesProcessed++;
       if (entriesProcessed % 100 === 0) {
         console.log(`[import-tar-worker] Processed ${entriesProcessed} tar entries so far...`);
       }
-      
+
       if (entry.header.type !== "file") return;
 
       // Extract relative path (remove first directory component which is the repo name)
@@ -2118,7 +2118,7 @@ async function processTarArchive({
           });
 
           totalSizeBytes += buffer.byteLength;
-          
+
           // Process batch when it reaches BATCH_SIZE
           if (currentBatch.length >= BATCH_SIZE) {
             await processBatch();
@@ -2129,11 +2129,11 @@ async function processTarArchive({
         }
       });
     });
-    
+
     // Wait for parsing to complete
     await parsePromise;
     isParsingComplete = true;
-    
+
     // Wait for all processing to complete
     await processingPromise;
 

@@ -727,12 +727,12 @@ importers:
       '@cloudflare/vite-plugin':
         specifier: ^1.9.4
         version: 1.9.4(rollup@4.43.0)(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0))(workerd@1.20250712.0)(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))
-      '@mjackson/tar-parser':
-        specifier: ^0.3.0
-        version: 0.3.0
       '@modelcontextprotocol/sdk':
         specifier: ^1.16.0
         version: 1.16.0
+      '@xmorse/tar-parser':
+        specifier: ^0.3.0
+        version: 0.3.0
       agents:
         specifier: ^0.0.109
         version: 0.0.109(@cloudflare/workers-types@4.20250712.0)(react@19.1.0)
@@ -745,6 +745,9 @@ importers:
       jose:
         specifier: ^6.0.12
         version: 6.0.12
+      jump-gouache:
+        specifier: ^2.1.1
+        version: 2.1.1
       marked:
         specifier: ^15.0.12
         version: 15.0.12
@@ -764,6 +767,9 @@ importers:
       '@types/marked':
         specifier: ^6.0.0
         version: 6.0.0
+      tsx:
+        specifier: ^4.20.3
+        version: 4.20.3
       undici:
         specifier: ^7.11.0
         version: 7.11.0
@@ -4142,9 +4148,6 @@ packages:
   '@mjackson/node-fetch-server@0.6.1':
     resolution: {integrity: sha512-9ZJnk/DJjt805uv5PPv11haJIW+HHf3YEEyVXv+8iLQxLD/iXA68FH220XoiTPBC4gCg5q+IMadDw8qPqlA5wg==}
 
-  '@mjackson/tar-parser@0.3.0':
-    resolution: {integrity: sha512-bzkfhCCZML0ERUmc/qKzc6gKplNkLuY1sMhQl771PtXb1g6SjjkUD/NHiIonTjbTRiRmOUo1OS/vkBMQf29jkw==}
-
   '@modelcontextprotocol/sdk@1.16.0':
     resolution: {integrity: sha512-8ofX7gkZcLj9H9rSd50mCgm3SSF8C7XoclxJuLoV0Cz3rEQ1tv9MZRYYvJtm9n1BiEQQMzSmE/w2AEkNacLYfg==}
     engines: {node: '>=18'}
@@ -7413,6 +7416,9 @@ packages:
   '@xmorse/markdown-rs@0.0.3':
     resolution: {integrity: sha512-MHMiNpOvb/1yScy/m98ec9SME3CE5uy2l9IuM/4VhNshNR+kSshO5GFLe7JyjJK5VLOcWdDofuPGGLTiznjPaQ==}
 
+  '@xmorse/tar-parser@0.3.0':
+    resolution: {integrity: sha512-nRnEhX3fi187SovTamyIy3KC77z5PGCy7ZZ2mzycLdmr9hxZ0fBo9/nTzjbk1xdg3xizq16Y6+WUGNZkY9Uhog==}
+
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
 
@@ -7711,6 +7717,9 @@ packages:
   better-path-resolve@1.0.0:
     resolution: {integrity: sha512-pbnl5XzGBdrFU/wT4jqmJVPn2B6UHPBOhzMQkY/SPUPB6QtUXtmBHBIwCbXJol93mOpGMnQyP/+BB19q04xj7g==}
     engines: {node: '>=4'}
+
+  bignumber.js@9.3.1:
+    resolution: {integrity: sha512-Ko0uX15oIUS7wJ3Rb30Fs6SkVbLmPBAKdlm7q9+ak9bbIeFf0MwuBsQV6z7+X768/cHsfg+WlysDWJcmthjsjQ==}
 
   bin-links@5.0.0:
     resolution: {integrity: sha512-sdleLVfCjBtgO5cNjA2HVRvWBJAHs4zwenaCPMNJAJU0yNxpzj80IpjOIimkpkr+mhlA+how5poQtt53PygbHA==}
@@ -9130,6 +9139,9 @@ packages:
   fn.name@1.1.0:
     resolution: {integrity: sha512-GRnmB5gPyJpAhTQdSZTSp9uaPSvl09KoYcMQtsB9rQoOmzs9dH6ffeccH+Z+cv6P68Hu5bC6JjRh4Ah/mHSNRw==}
 
+  fnv-plus@1.3.1:
+    resolution: {integrity: sha512-Gz1EvfOneuFfk4yG458dJ3TLJ7gV19q3OM/vVvvHf7eT02Hm1DleB4edsia6ahbKgAYxO9gvyQ1ioWZR+a00Yw==}
+
   focus-trap@7.6.5:
     resolution: {integrity: sha512-7Ke1jyybbbPZyZXFxEftUtxFGLMpE2n6A+z//m4CRDlj0hW+o3iYSmh8nFlYMurOiJVDmJRilUQtJr08KfIxlg==}
 
@@ -9182,6 +9194,20 @@ packages:
 
   framer-motion@12.23.6:
     resolution: {integrity: sha512-dsJ389QImVE3lQvM8Mnk99/j8tiZDM/7706PCqvkQ8sSCnpmWxsgX+g0lj7r5OBVL0U36pIecCTBoIWcM2RuKw==}
+    peerDependencies:
+      '@emotion/is-prop-valid': '*'
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@emotion/is-prop-valid':
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
+
+  framer-motion@12.23.9:
+    resolution: {integrity: sha512-TqEHXj8LWfQSKqfdr5Y4mYltYLw96deu6/K9kGDd+ysqRJPNwF9nb5mZcrLmybHbU7gcJ+HQar41U3UTGanbbQ==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
       react: ^18.0.0 || ^19.0.0
@@ -10085,6 +10111,10 @@ packages:
     resolution: {integrity: sha512-ZZow9HBI5O6EPgSJLUb8n2NKgmVWTwCvHGwFuJlMjvLFqlGG6pjirPhtdsseaLZjSibD8eegzmYpUZwoIlj2cQ==}
     engines: {node: '>=4.0'}
 
+  jump-gouache@2.1.1:
+    resolution: {integrity: sha512-VFtzkL6KOu94sg+OHq7Jyyzq/AtZiQ8NdOLpGff+8B3QHfNL/pGO4pa7D4Nzn0mR7CnkLkHufm+pqMkiDYe7wg==}
+    engines: {node: '>= 0.10.0'}
+
   junk@4.0.1:
     resolution: {integrity: sha512-Qush0uP+G8ZScpGMZvHUiRfI0YBWuB3gVBYlI0v0vvOJt5FLicco+IkP0a50LqTTQhmts/m6tP5SWE+USyIvcQ==}
     engines: {node: '>=12.20'}
@@ -10304,6 +10334,9 @@ packages:
   logform@2.7.0:
     resolution: {integrity: sha512-TFYA4jnP7PVbmlBIfhlSe+WKxs9dklXMTEGcBCIvLhE/Tn3H6Gk1norupVW7m5Cnd4bLcr08AytbyV/xj7f/kQ==}
     engines: {node: '>= 12.0.0'}
+
+  long@5.3.2:
+    resolution: {integrity: sha512-mNAgZ1GmyNhD7AuqnTG3/VQ26o760+ZYBPKjPvugO8+nLbYfX6TVpJPseBvopbdY+qpZ/lKUnmEc1LeZYS3QAA==}
 
   longest-streak@3.1.0:
     resolution: {integrity: sha512-9Ri+o0JYgehTaVBBDoMqIl8GXtbWg711O3srftcHhZ0dqnETqLaoIK0x17fUw9rFSlK/0NlsKe0Ahhyl5pXE2g==}
@@ -10714,6 +10747,9 @@ packages:
   motion-dom@12.23.6:
     resolution: {integrity: sha512-G2w6Nw7ZOVSzcQmsdLc0doMe64O/Sbuc2bVAbgMz6oP/6/pRStKRiVRV4bQfHp5AHYAKEGhEdVHTM+R3FDgi5w==}
 
+  motion-dom@12.23.9:
+    resolution: {integrity: sha512-6Sv++iWS8XMFCgU1qwKj9l4xuC47Hp4+2jvPfyTXkqDg2tTzSgX6nWKD4kNFXk0k7llO59LZTPuJigza4A2K1A==}
+
   motion-utils@12.23.6:
     resolution: {integrity: sha512-eAWoPgr4eFEOFfg2WjIsMoqJTW6Z8MTUCgn/GZ3VRpClWBdnbjryiA3ZSNLyxCTmCQx4RmYX6jX1iWHbenUPNQ==}
 
@@ -10730,6 +10766,10 @@ packages:
 
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
+
+  murmurhash3js@3.0.1:
+    resolution: {integrity: sha512-KL8QYUaxq7kUbcl0Yto51rMcYt7E/4N4BG3/c96Iqw1PQrTRspu8Cpx4TZ4Nunib1d4bEkIH3gjCYlP2RLBdow==}
+    engines: {node: '>=0.10.0'}
 
   mustache@4.2.0:
     resolution: {integrity: sha512-71ippSywq5Yb7/tVYyGbkBggbU8H3u5Rz56fH60jGFgr8uHwxs+aSKeqmluIVzM0m0kB7xQjKS6qPfd0b2ZoqQ==}
@@ -15940,8 +15980,6 @@ snapshots:
 
   '@mjackson/node-fetch-server@0.6.1': {}
 
-  '@mjackson/tar-parser@0.3.0': {}
-
   '@modelcontextprotocol/sdk@1.16.0':
     dependencies:
       ajv: 6.12.6
@@ -20660,6 +20698,8 @@ snapshots:
       '@xmorse/markdown-rs-binding-linux-x64-musl': 0.0.3
       '@xmorse/markdown-rs-binding-wasm32-wasi': 0.0.3
 
+  '@xmorse/tar-parser@0.3.0': {}
+
   '@xtuc/ieee754@1.2.0': {}
 
   '@xtuc/long@4.2.2': {}
@@ -21030,6 +21070,8 @@ snapshots:
   better-path-resolve@1.0.0:
     dependencies:
       is-windows: 1.0.2
+
+  bignumber.js@9.3.1: {}
 
   bin-links@5.0.0:
     dependencies:
@@ -22904,6 +22946,8 @@ snapshots:
 
   fn.name@1.1.0: {}
 
+  fnv-plus@1.3.1: {}
+
   focus-trap@7.6.5:
     dependencies:
       tabbable: 6.2.0
@@ -22951,6 +22995,15 @@ snapshots:
   framer-motion@12.23.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       motion-dom: 12.23.6
+      motion-utils: 12.23.6
+      tslib: 2.8.1
+    optionalDependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+
+  framer-motion@12.23.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      motion-dom: 12.23.9
       motion-utils: 12.23.6
       tslib: 2.8.1
     optionalDependencies:
@@ -24031,6 +24084,13 @@ snapshots:
       object.assign: 4.1.7
       object.values: 1.2.1
 
+  jump-gouache@2.1.1:
+    dependencies:
+      bignumber.js: 9.3.1
+      fnv-plus: 1.3.1
+      long: 5.3.2
+      murmurhash3js: 3.0.1
+
   junk@4.0.1: {}
 
   just-clone@6.2.0: {}
@@ -24223,6 +24283,8 @@ snapshots:
       ms: 2.1.3
       safe-stable-stringify: 2.5.0
       triple-beam: 1.4.1
+
+  long@5.3.2: {}
 
   longest-streak@3.1.0: {}
 
@@ -24961,6 +25023,10 @@ snapshots:
     dependencies:
       motion-utils: 12.23.6
 
+  motion-dom@12.23.9:
+    dependencies:
+      motion-utils: 12.23.6
+
   motion-utils@12.23.6: {}
 
   mri@1.2.0: {}
@@ -24970,6 +25036,8 @@ snapshots:
   ms@2.0.0: {}
 
   ms@2.1.3: {}
+
+  murmurhash3js@3.0.1: {}
 
   mustache@4.2.0: {}
 
@@ -27760,7 +27828,7 @@ snapshots:
       picocolors: 1.1.1
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
-      real-framer-motion: framer-motion@12.23.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      real-framer-motion: framer-motion@12.23.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       spiceflow: 1.17.3(@modelcontextprotocol/sdk@1.16.0)
       string-dedent: 3.0.1
       undici: 7.11.0
