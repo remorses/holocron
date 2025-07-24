@@ -104,11 +104,19 @@ export async function startPlaywriter() {
         // Build Chrome arguments
         const chromeArgs = [
             `--remote-debugging-port=${cdpPort}`,
-            '--window-position=-32000,-32000',
+            '--window-position=-32000,-32000', // Position window off-screen
             '--window-size=1280,720',
             '--disable-backgrounding-occluded-windows', // Prevents Chrome from throttling/suspending hidden tabs
             '--disable-gpu', // Disable GPU acceleration for better compatibility
             `--user-data-dir=${chromeUserDataDir}`, // Chrome's main user data directory
+            '--no-first-run', // Skip first-run dialogs
+            '--disable-default-apps', // Disable default app installation
+            '--disable-translate', // Disable translate prompts
+            '--disable-features=TranslateUI', // Disable translate UI
+            '--no-default-browser-check', // Don't check if Chrome is default browser
+            '--disable-session-crashed-bubble', // Disable session restore bubble
+            '--disable-infobars', // Disable info bars
+            '--automation', // Enable automation mode
         ]
 
         // Add profile-directory for non-default profiles
@@ -130,6 +138,19 @@ export async function startPlaywriter() {
 
         // Give Chrome a moment to start up and open the debugging port
         await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        // On macOS, use osascript to minimize Chrome window to prevent focus stealing
+        if (os.platform() === 'darwin') {
+            try {
+                spawn('osascript', [
+                    '-e', 'tell application "System Events"',
+                    '-e', 'set visible of every process whose name contains "Chrome" to false',
+                    '-e', 'end tell'
+                ])
+            } catch (e) {
+                // Ignore errors, this is best-effort
+            }
+        }
 
         console.log(`Chrome started with CDP on port ${cdpPort} (window is hidden off-screen)`)
 
