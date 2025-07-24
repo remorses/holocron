@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-01-24 19:50
+
+- Added `deleteDataset` method to the SDK client for deleting entire datasets
+- Method takes a single parameter object with `datasetId` property
+- Calls DELETE /v1/datasets/:datasetId endpoint without any request body
+
 ## 2025-01-24 19:40
 
 - Successfully created search-benchmark-github.ts using tinybench for performance testing

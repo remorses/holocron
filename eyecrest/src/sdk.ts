@@ -72,6 +72,13 @@ export class EyecrestClient {
     });
   }
 
+  async deleteDataset(params: { datasetId: string }): Promise<void> {
+    const { datasetId } = params;
+    await this.request(`/v1/datasets/${datasetId}`, {
+      method: 'DELETE',
+    });
+  }
+
   async getFile(params: { 
     datasetId: string; 
     filePath: string; 

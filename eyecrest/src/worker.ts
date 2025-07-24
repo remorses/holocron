@@ -814,7 +814,14 @@ export class Datasets extends DurableObject {
     // Join using section_slug for simpler and more performant matching
     // Apply weights to BM25 score for better ranking
     const rows = [...this.sql.exec<SearchResultRow>(
-      `SELECT
+      `WITH matched_sections AS (
+        SELECT filename, section_slug
+        FROM sections_fts
+        WHERE sections_fts.content MATCH ?
+        ORDER BY bm25(sections_fts)
+        LIMIT 300
+      )
+      SELECT
         sections.filename,
         sections.content,
         sections.section_slug,
@@ -827,13 +834,16 @@ export class Datasets extends DurableObject {
         -- Combined score with logarithmic weight normalization
         -- BM25 is the primary signal, weights provide minor boosts
         (bm25(sections_fts) * (1.0 + LOG(sections.weight) * 0.1) * (1.0 + LOG(files.weight) * 0.1)) as score
-      FROM sections_fts
-      JOIN sections ON sections.filename = sections_fts.filename
-        AND sections.section_slug = sections_fts.section_slug
+      FROM matched_sections
+      JOIN sections_fts ON sections_fts.filename = matched_sections.filename 
+        AND sections_fts.section_slug = matched_sections.section_slug
+      JOIN sections ON sections.filename = matched_sections.filename
+        AND sections.section_slug = matched_sections.section_slug
       JOIN files ON sections.filename = files.filename
       WHERE sections_fts.content MATCH ?
       ORDER BY score
       LIMIT ? OFFSET ?`,
+      searchQuery,
       snippetLength,
       searchQuery,
       perPage + 1, // Fetch one extra to check for next page

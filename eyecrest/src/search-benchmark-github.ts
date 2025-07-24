@@ -7,7 +7,7 @@ if (!JWT_TOKEN) {
 }
 
 // Use a unique dataset ID for each test run
-const datasetId = `test-org-123-xx-benchmark-${Date.now()}`;
+const datasetId = `test-org-123-xx-benchmark`;
 
 const client = new EyecrestClient({
   token: JWT_TOKEN,
@@ -19,11 +19,16 @@ console.log(`\n📊 Starting benchmark with dataset: ${datasetId}`);
 console.log('🔧 Creating dataset with primary region: weur');
 const upsertStartTime = Date.now();
 
+await client.deleteDataset({
+  datasetId,
+
+}).catch(() => null);
 await client.upsertDataset({
   datasetId,
   primaryRegion: 'weur',
   waitForReplication: false
 });
+
 
 const upsertTime = (Date.now() - upsertStartTime) / 1000;
 console.log(`✅ Dataset created in ${upsertTime.toFixed(2)} seconds`);
@@ -45,6 +50,11 @@ const importTime = (Date.now() - importStartTime) / 1000;
 console.log(`✅ Import completed in ${importTime.toFixed(2)} seconds`);
 console.log(`📁 Files imported: ${importResult.filesImported}`);
 console.log(`💾 Total size: ${(importResult.totalSizeBytes / 1024 / 1024).toFixed(2)} MB`);
+const size = await client.getDatasetSize({
+  datasetId,
+
+});
+console.log(size)
 
 // Get dataset statistics
 const stats = await client.getDatasetSize({ datasetId });
