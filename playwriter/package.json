@@ -7,7 +7,7 @@
     "scripts": {
         "build": "tsc ",
         "watch": "tsc -w",
-        "start": "vite-node src/playwriter.ts"
+        "start": "vite-node src/mcp.ts"
     },
     "files": [
         "dist",

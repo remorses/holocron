@@ -4,7 +4,6 @@ import { createRequire } from 'module'
 import os from 'node:os'
 import fs from 'node:fs'
 import path from 'node:path'
-import prompts from 'prompts'
 import { getAllProfiles } from './profiles.js'
 
 // Find Chrome executable path based on OS
@@ -50,7 +49,7 @@ function findChromeExecutablePath(): string {
     throw new Error('Could not find Chrome executable. Please install Google Chrome.')
 }
 
-export async function startPlaywriter() {
+export async function startPlaywriter(emailProfile?: string) {
     const cdpPort = 9922
 
     try {
@@ -62,36 +61,29 @@ export async function startPlaywriter() {
         const profiles = getAllProfiles()
         let selectedProfilePath: string
 
-        if (profiles.length === 0) {
-            // Create a temporary profile directory for automation
-            const tempDir = path.join(os.tmpdir(), 'playwriter-automation-profile')
-            if (!fs.existsSync(tempDir)) {
-                fs.mkdirSync(tempDir, { recursive: true })
+        // If no emailProfile provided, we can't proceed
+        if (!emailProfile) {
+            throw new Error('Email profile is required to start Chrome')
+        }
+
+        // Find the profile matching the email
+        const matchingProfile = profiles.find(p => p.email === emailProfile)
+        
+        if (!matchingProfile) {
+            if (profiles.length === 0) {
+                // Create a temporary profile directory for automation
+                const tempDir = path.join(os.tmpdir(), 'playwriter-automation-profile')
+                if (!fs.existsSync(tempDir)) {
+                    fs.mkdirSync(tempDir, { recursive: true })
+                }
+                selectedProfilePath = tempDir
+                console.warn(`No Chrome profiles found. Using temporary profile at: ${tempDir}`)
+            } else {
+                throw new Error(`No Chrome profile found for email: ${emailProfile}. Available emails: ${profiles.map(p => p.email).join(', ')}`)
             }
-            selectedProfilePath = tempDir
-            console.warn(`No Chrome profiles found. Using temporary profile at: ${tempDir}`)
         } else {
-            console.log('\n⚠️  Please select a Chrome profile WITHOUT sensitive data:')
-            console.log('(Use a test profile or create a new one for automation)\n')
-
-            const response = await prompts({
-                type: 'select',
-                name: 'profile',
-                message: 'Select Chrome profile',
-                choices: profiles.map(profile => ({
-                    title: profile.displayName,
-                    value: profile.path,
-                    description: profile.path,
-                })),
-            })
-
-            if (!response.profile) {
-                console.log('No profile selected. Exiting.')
-                process.exit(0)
-            }
-
-            selectedProfilePath = response.profile
-            console.log(`\nUsing profile: ${selectedProfilePath}`)
+            selectedProfilePath = matchingProfile.path
+            console.log(`Using profile for ${emailProfile}: ${selectedProfilePath}`)
         }
 
         // Start browser with CDP enabled
@@ -138,7 +130,7 @@ export async function startPlaywriter() {
 
         // Give Chrome a moment to start up and open the debugging port
         await new Promise(resolve => setTimeout(resolve, 2000))
-        
+
         // On macOS, minimize only this Chrome window using its PID
         if (os.platform() === 'darwin' && chromeProcess.pid) {
             try {
@@ -153,7 +145,7 @@ export async function startPlaywriter() {
                     '-e', `end tell`,
                     '-e', `end tell`
                 ])
-                
+
                 minimizeScript.on('error', () => {
                     // Silently ignore - window might already be hidden
                 })
@@ -163,48 +155,47 @@ export async function startPlaywriter() {
         }
 
         console.log(`Chrome started with CDP on port ${cdpPort} (window is hidden off-screen)`)
+        return {cdpPort, chromeProcess}
 
 
-        // Resolve @playwright/mcp package.json path
-        const require = createRequire(import.meta.url)
-        const mcpPackageJsonPath = require.resolve('@playwright/mcp/package.json')
-        const mcpCliPath = path.resolve(mcpPackageJsonPath, '..', 'cli.js')
-        console.log(`Found MCP CLI at: ${mcpCliPath}`)
+        // // Resolve @playwright/mcp package.json path
+        // const require = createRequire(import.meta.url)
+        // const mcpPackageJsonPath = require.resolve('@playwright/mcp/package.json')
+        // const mcpCliPath = path.resolve(mcpPackageJsonPath, '..', 'cli.js')
+        // console.log(`Found MCP CLI at: ${mcpCliPath}`)
 
-        // Start MCP CLI process
-        console.log('Starting MCP CLI...')
-        const mcpProcess = spawn('node', [
-            mcpCliPath,
-            '--cdp-endpoint',
-            `http://localhost:${cdpPort}`
-        ], {
-            stdio: 'inherit', // Forward all logs
-        })
+        // // Start MCP CLI process
+        // console.log('Starting MCP CLI...')
+        // const mcpProcess = spawn('node', [
+        //     mcpCliPath,
+        //     '--cdp-endpoint',
+        //     `http://localhost:${cdpPort}`
+        // ], {
+        //     stdio: 'inherit', // Forward all logs
+        // })
 
-        mcpProcess.on('error', (error) => {
-            console.error('Failed to start MCP CLI:', error)
-        })
+        // mcpProcess.on('error', (error) => {
+        //     console.error('Failed to start MCP CLI:', error)
+        // })
 
-        mcpProcess.on('exit', (code, signal) => {
-            console.log(`MCP CLI exited with code ${code} and signal ${signal}`)
-        })
+        // mcpProcess.on('exit', (code, signal) => {
+        //     console.log(`MCP CLI exited with code ${code} and signal ${signal}`)
+        // })
 
-        // Handle cleanup
-        const cleanup = async () => {
-            console.log('Shutting down...')
-            mcpProcess.kill()
-            chromeProcess.kill()
-            process.exit(0)
-        }
+        // // Handle cleanup
+        // const cleanup = async () => {
+        //     console.log('Shutting down...')
+        //     mcpProcess.kill()
+        //     chromeProcess.kill()
+        //     process.exit(0)
+        // }
 
-        process.on('SIGINT', cleanup)
-        process.on('SIGTERM', cleanup)
+        // process.on('SIGINT', cleanup)
+        // process.on('SIGTERM', cleanup)
 
-        return { chromeProcess, mcpProcess }
+        // return { chromeProcess, mcpProcess }
     } catch (error) {
         console.error('Failed to start Playwriter:', error)
         throw error
     }
 }
-
-startPlaywriter().catch(console.error)

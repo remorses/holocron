@@ -1,6 +1,20 @@
-# Playwright Automation Guide
+You have access to a `page` object where you can call playwright methods on it to accomplish actions on the page.
 
-This guide provides JavaScript code snippets for browser automation using Playwright. Each section covers a specific automation task with examples.
+You can also use `console.log` to examine the results of your actions.
+
+You only have access to `page`, `context` and node.js globals. Do not try to import anything or setup handlers.
+
+Your code should be stateless and do not depend on any state.
+
+If you really want to attach listeners you should also detach them using a try finally block, to prevent memory leaks.
+
+You can also create a new page via `context.newPage()` if you need to start fresh. You can then find that page by iteration over `context.pages()`:
+
+```javascript
+const page = context
+  .pages()
+  .find(p => p.url().includes('/some/path'));
+```
 
 ## Getting Results from Code Execution
 
@@ -548,28 +562,12 @@ const viewport = page.viewportSize()
 console.log(`Width: ${viewport.width}, Height: ${viewport.height}`)
 ```
 
-### Close Browser
-
-```javascript
-// Close current page
-await page.close()
-
-// Close browser context (all pages)
-await context.close()
-
-// Close browser
-await browser.close()
-```
 
 ## Advanced Patterns
 
 ### Handle Dynamic Content
 
 ```javascript
-// Wait for AJAX content
-await page.waitForResponse(
-    (response) => response.url().includes('/api/data') && response.ok(),
-)
 
 // Wait for specific text
 await page.waitForFunction(
@@ -577,11 +575,6 @@ await page.waitForFunction(
     'Ready',
 )
 
-// Retry actions
-await page
-    .getByRole('button', { name: 'Submit' })
-    .click()
-    .catch(() => page.getByRole('button', { name: 'Submit' }).click())
 ```
 
 ### Work with Frames
@@ -600,38 +593,9 @@ await frame.getByText('In Frame').click()
 const frames = page.frames()
 ```
 
-### Handle Popups
-
-```javascript
-// By default, Playwright will handle popups/new windows
-// If a link opens in a new tab/window, you can:
-
-// 1. Remove the target="_blank" attribute to open in same tab
-await page.evaluate(() => {
-    document.querySelectorAll('a[target="_blank"]').forEach((link) => {
-        link.removeAttribute('target')
-    })
-})
-await page.getByText('Open Link').click()
-
-// 2. Or get the href and navigate directly
-const href = await page.getByText('Open Link').getAttribute('href')
-await page.goto(href)
-```
-
 ## Best Practices
 
-### Error Handling
 
-```javascript
-try {
-    await page.getByRole('button', { name: 'Submit' }).click()
-} catch (error) {
-    console.error('Failed to click submit button:', error)
-    // Take screenshot for debugging
-    await page.screenshot({ path: 'error.png' })
-}
-```
 
 ### Reliable Selectors
 
@@ -657,95 +621,9 @@ await page.getByTestId('complex-component')
 await page.getByRole('button', { name: 'Submit' }).waitFor()
 await page.getByRole('button', { name: 'Submit' }).click()
 
-// Wait for animations to complete
-await page.waitForTimeout(500) // Only when necessary
+// NEVER THIS
+await page.waitForTimeout(500)
 
 // Wait for network
 await page.waitForLoadState('networkidle')
-```
-
-## Additional Tool Requirements
-
-Based on the MCP implementation, these capabilities would require separate tools due to their nature:
-
-### 1. Console Log Collection Tool
-
-```typescript
-interface ConsoleLogsToolInput {
-    // Number of recent console messages to retrieve
-    limit?: number
-    // Filter by console message type
-    type?: 'log' | 'info' | 'warning' | 'error' | 'debug'
-    // Start from this index (for pagination)
-    offset?: number
-}
-
-interface ConsoleMessage {
-    type: string
-    text: string
-    timestamp: number
-    location?: {
-        url: string
-        lineNumber: number
-        columnNumber: number
-    }
-    args?: any[]
-}
-```
-
-### 2. Network History Tool
-
-```typescript
-interface NetworkHistoryToolInput {
-    // Number of recent requests to retrieve
-    limit?: number
-    // Filter by URL pattern
-    urlPattern?: string
-    // Filter by request method
-    method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
-    // Filter by status code range
-    statusCode?: {
-        min?: number
-        max?: number
-    }
-    // Include request/response bodies
-    includeBody?: boolean
-}
-
-interface NetworkRequest {
-    url: string
-    method: string
-    status: number
-    headers: Record<string, string>
-    timestamp: number
-    duration: number
-    size: number
-    requestBody?: any
-    responseBody?: any
-    error?: string
-}
-```
-
-These additional tools would handle operations that:
-
-- Need to maintain state across multiple evaluations (console logs, network history)
-
-Note: For concurrent execution, use `Promise.all()` in your JavaScript code:
-
-```javascript
-// Example: Execute multiple actions concurrently
-const results = await page.evaluate(() => {
-    return Promise.all([
-        fetch('/api/data1').then((r) => r.json()),
-        fetch('/api/data2').then((r) => r.json()),
-        document.querySelector('.button').click(),
-    ])
-})
-```
-
-For page snapshots, use the accessibility snapshot method shown earlier:
-
-```javascript
-const snapshot = await page.accessibility.snapshot()
-console.log(JSON.stringify(snapshot, null, 2))
 ```

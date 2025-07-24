@@ -1,14 +1,19 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
-import { Page } from 'playwright'
+import { Page, Browser, BrowserContext, chromium } from 'playwright'
 import fs from 'node:fs'
 import path from 'node:path'
+import { startPlaywriter } from './playwriter.js'
+import { getAllProfiles } from './profiles.js'
+import type { ChildProcess } from 'child_process'
 
 // Store for maintaining state across tool calls
 interface ToolState {
     isConnected: boolean
     page: Page | null
+    browser: Browser | null
+    chromeProcess: ChildProcess | null
     consoleLogs: ConsoleMessage[]
     networkRequests: NetworkRequest[]
 }
@@ -16,6 +21,8 @@ interface ToolState {
 const state: ToolState = {
     isConnected: false,
     page: null,
+    browser: null,
+    chromeProcess: null,
     consoleLogs: [],
     networkRequests: [],
 }
@@ -59,62 +66,147 @@ function ensureConnected(): Page {
     return state.page
 }
 
+
 // Tool 1: Connect - Must be called first
 server.tool(
     'connect',
     'Connect to a Playwright page and set up event listeners',
-    {},
-    async ({}) => {
-        // In real implementation, get the page from your context
-        const page = getActivePage() // This would come from your context
+    {
+        emailProfile: z
+            .string()
+            .optional()
+            .describe(
+                'The email associated with the Chrome profile to use. If not provided, returns available profiles. Ask your user/owner which profile to use and ensure they choose one without personal data or sensitive website access.',
+            ),
+    },
+    async ({ emailProfile }) => {
+        try {
+            // If no email profile provided, return available profiles
+            if (!emailProfile) {
+                const profiles = getAllProfiles()
 
-        // Set up event listeners
-        page.on('console', (msg) => {
-            state.consoleLogs.push({
-                type: msg.type(),
-                text: msg.text(),
-                timestamp: Date.now(),
-                location: msg.location(),
-            })
-        })
+                if (profiles.length === 0) {
+                    return {
+                        content: [
+                            {
+                                type: 'text',
+                                text: 'No Chrome profiles found. A temporary profile will be created when connecting. Please call connect again with any email value (e.g., "temp@example.com").',
+                            },
+                        ],
+                    }
+                }
 
-        page.on('request', (request) => {
-            const startTime = Date.now()
-            const entry: Partial<NetworkRequest> = {
-                url: request.url(),
-                method: request.method(),
-                headers: request.headers(),
-                timestamp: startTime,
+                const profileList = profiles
+                    .map(p => `• ${p.displayName} (${p.email || 'no email'}) - ${p.folder}`)
+                    .join('\n')
+
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: `Available Chrome profiles to pass to emailProfile parameter:
+${profileList}
+
+⚠️  IMPORTANT: Ask your user/owner to select a profile that:
+- Has NO personal information or sensitive data
+- Does NOT have access to sensitive websites (banking, work accounts, etc.)
+- Is specifically created for automation/testing purposes
+
+Your user can store the selected email in AGENTS.md or CLAUDE.md to avoid repeated selection.
+
+After getting the email from your user, call this tool again with the email value`,
+                        },
+                    ],
+                }
             }
 
-            request
-                .response()
-                .then((response) => {
-                    if (response) {
-                        entry.status = response.status()
-                        entry.duration = Date.now() - startTime
-                        entry.size = response.headers()['content-length']
-                            ? parseInt(response.headers()['content-length'])
-                            : 0
+            // Start Chrome using startPlaywriter
+            const { cdpPort, chromeProcess } = await startPlaywriter(emailProfile)
 
-                        state.networkRequests.push(entry as NetworkRequest)
-                    }
+            // Connect to Chrome via CDP
+            const browser = await chromium.connectOverCDP(`http://localhost:${cdpPort}`)
+
+            // Get the default context (or create one if needed)
+            const contexts = browser.contexts()
+            let context: BrowserContext
+
+            if (contexts.length > 0) {
+                context = contexts[0]
+            } else {
+                context = await browser.newContext()
+            }
+
+            // Get existing pages or create a new one
+            const pages = context.pages()
+            let page: Page
+
+            if (pages.length > 0) {
+                page = pages[0]
+            } else {
+                page = await context.newPage()
+            }
+
+            // Set up event listeners
+            page.on('console', (msg) => {
+                state.consoleLogs.push({
+                    type: msg.type(),
+                    text: msg.text(),
+                    timestamp: Date.now(),
+                    location: msg.location(),
                 })
-                .catch(() => {
-                    // Handle response errors silently
-                })
-        })
+            })
 
-        state.page = page
-        state.isConnected = true
+            page.on('request', (request) => {
+                const startTime = Date.now()
+                const entry: Partial<NetworkRequest> = {
+                    url: request.url(),
+                    method: request.method(),
+                    headers: request.headers(),
+                    timestamp: startTime,
+                }
 
-        return {
-            content: [
-                {
-                    type: 'text',
-                    text: 'Connected to Playwright page. Event listeners configured for console and network monitoring.',
-                },
-            ],
+                request
+                    .response()
+                    .then((response) => {
+                        if (response) {
+                            entry.status = response.status()
+                            entry.duration = Date.now() - startTime
+                            entry.size = response.headers()['content-length']
+                                ? parseInt(response.headers()['content-length'])
+                                : 0
+
+                            state.networkRequests.push(entry as NetworkRequest)
+                        }
+                    })
+                    .catch(() => {
+                        // Handle response errors silently
+                    })
+            })
+
+            // Store references
+            state.page = page
+            state.browser = browser
+            state.chromeProcess = chromeProcess
+            state.isConnected = true
+
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: `Connected to Chrome via CDP on port ${cdpPort}. Page URL: ${page.url()}. Event listeners configured for console and network monitoring.`,
+                    },
+                ],
+            }
+        } catch (error: any) {
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: `Failed to connect: ${error.message}`,
+                    },
+                ],
+                isError: true,
+            }
         }
     },
 )
@@ -302,7 +394,7 @@ server.tool(
 
             // Format the response with both console output and return value
             let responseText = ''
-            
+
             // Add console logs if any
             if (consoleLogs.length > 0) {
                 responseText += 'Console output:\n'
@@ -357,11 +449,41 @@ async function main() {
     console.error('Playwright MCP server running on stdio')
 }
 
-main().catch(console.error)
+// Cleanup function
+async function cleanup() {
+    console.error('Shutting down MCP server...')
 
-// Helper function - in real implementation this would get the active page
-function getActivePage(): Page {
-    // This would be implemented based on your architecture
-    // For example, it might come from a browser context manager
-    throw new Error('Implement based on your page management strategy')
+    if (state.browser) {
+        try {
+            await state.browser.close()
+        } catch (e) {
+            // Ignore errors during browser close
+        }
+    }
+
+    if (state.chromeProcess) {
+        try {
+            state.chromeProcess.kill()
+        } catch (e) {
+            // Ignore errors during process kill
+        }
+    }
+
+    process.exit(0)
 }
+
+// Handle process termination
+process.on('SIGINT', cleanup)
+process.on('SIGTERM', cleanup)
+process.on('exit', () => {
+    // Synchronous cleanup on exit
+    if (state.chromeProcess) {
+        try {
+            state.chromeProcess.kill()
+        } catch (e) {
+            // Ignore
+        }
+    }
+})
+
+main().catch(console.error)
