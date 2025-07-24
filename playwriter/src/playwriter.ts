@@ -139,14 +139,24 @@ export async function startPlaywriter() {
         // Give Chrome a moment to start up and open the debugging port
         await new Promise(resolve => setTimeout(resolve, 2000))
         
-        // On macOS, use osascript to minimize Chrome window to prevent focus stealing
-        if (os.platform() === 'darwin') {
+        // On macOS, minimize only this Chrome window using its PID
+        if (os.platform() === 'darwin' && chromeProcess.pid) {
             try {
-                spawn('osascript', [
-                    '-e', 'tell application "System Events"',
-                    '-e', 'set visible of every process whose name contains "Chrome" to false',
-                    '-e', 'end tell'
+                // Minimize the specific Chrome window using its process ID
+                // This keeps it running but out of the way
+                const minimizeScript = spawn('osascript', [
+                    '-e', `tell application "System Events"`,
+                    '-e', `tell (first process whose unix id is ${chromeProcess.pid})`,
+                    '-e', `try`,
+                    '-e', `set value of attribute "AXMinimized" of window 1 to true`,
+                    '-e', `end try`,
+                    '-e', `end tell`,
+                    '-e', `end tell`
                 ])
+                
+                minimizeScript.on('error', () => {
+                    // Silently ignore - window might already be hidden
+                })
             } catch (e) {
                 // Ignore errors, this is best-effort
             }
