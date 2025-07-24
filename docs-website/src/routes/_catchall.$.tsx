@@ -174,6 +174,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     const timerId = `loader-${Math.random().toString(36).substr(2, 9)}`
     console.time(`${timerId} - total loader time`)
 
+    // Check if request is aborted early
+    if (request.signal.aborted) {
+        throw new Error('Request aborted')
+    }
+
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
 
@@ -184,6 +189,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     const cookieHeader = request.headers.get('Cookie') || ''
     const cookies = parseCookies(cookieHeader)
     const chatId = chatIdFromQuery || cookies.chatId || null
+
+    // Check signal before database queries
+    if (request.signal.aborted) {
+        throw new Error('Request aborted')
+    }
 
     console.time(`${timerId} - find site branch from database`)
     const siteBranch = await prisma.siteBranch.findFirst({
@@ -220,6 +230,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     // Fetch chat filesInDraft if chatId cookie exists
     let chatFilesInDraft: Record<string, { content: string }> = {}
     if (chatId) {
+        // Check signal before chat query
+        if (request.signal.aborted) {
+            throw new Error('Request aborted')
+        }
+
         console.time(`${timerId} - fetch chat for draft files`)
         const chat = await prisma.chat.findFirst({
             where: {
@@ -237,6 +252,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         }
     }
     const languages = site.locales.map((x) => x.locale)
+
+    // Check signal before getting files
+    if (request.signal.aborted) {
+        throw new Error('Request aborted')
+    }
 
     console.time(`${timerId} - get files for source`)
     const files = await getFilesForSource({
@@ -313,6 +333,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
     const slug = fumadocsPage?.url || '/' + slugs.join('/')
 
+    // Check signal before page queries
+    if (request.signal.aborted) {
+        throw new Error('Request aborted')
+    }
+
     console.time(`${timerId} - find markdown page in database`)
     let [page] = await Promise.all([
         prisma.markdownPage.findFirst({
@@ -331,6 +356,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         }),
     ])
     console.timeEnd(`${timerId} - find markdown page in database`)
+
+    // Check signal before openapi processing
+    if (request.signal.aborted) {
+        throw new Error('Request aborted')
+    }
 
     console.time(`${timerId} - get openapi document`)
     const { openapiUrl, renderer, ...rest } = await getOpenapiDocument({
@@ -447,6 +477,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     }
 
     if (!page && slug === '/') {
+        // Check signal before additional queries
+        if (request.signal.aborted) {
+            throw new Error('Request aborted')
+        }
+
         // try to find index page if no page found
         let [indexPage, anotherPage] = await Promise.all([
             prisma.markdownPage.findFirst({
@@ -511,6 +546,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             if (draftPage) {
                 const extension = draftGithubPath.endsWith('.mdx') ? 'mdx' : 'md'
                 try {
+                    // Check signal before processing draft
+                    if (request.signal.aborted) {
+                        throw new Error('Request aborted')
+                    }
+
                     const f = await getProcessor({ extension }).process(draft.content)
                     const data = f.data as ProcessorData
                     
@@ -545,6 +585,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         console.time(`${timerId} - process mdx content`)
         // Determine the file extension from the githubPath
         const extension = githubPath?.split('.').pop() || 'mdx'
+
+        // Check signal before processing markdown
+        if (request.signal.aborted) {
+            throw new Error('Request aborted')
+        }
 
         const { data: markdownData } = await processMdxInServer({
             extension: extension,
