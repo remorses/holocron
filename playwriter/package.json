@@ -1,0 +1,28 @@
+{
+    "name": "playwriter",
+    "private": true,
+    "description": "",
+    "type": "module",
+    "repository": "https://github.com/remorses/",
+    "scripts": {
+        "build": "tsc ",
+        "watch": "tsc -w",
+        "start": "vite-node src/playwriter.ts"
+    },
+    "files": [
+        "dist",
+        "src",
+        "esm"
+    ],
+    "keywords": [],
+    "author": "Tommaso De Rossi, morse <beats.by.morse@gmail.com>",
+    "license": "",
+    "devDependencies": {
+        "vite-node": "^3.2.4"
+    },
+    "dependencies": {
+        "@playwright/mcp": "latest",
+        "playwright": "1.55.0-alpha-1752701791000",
+        "prompts": "^2.4.2"
+    }
+}
