@@ -12,6 +12,11 @@ If you really want to attach listeners you should also detach them using a try f
 
 You can also create a new page via `context.newPage()` if you need to start fresh. You can then find that page by iteration over `context.pages()`:
 
+
+## important rules
+
+- NEVER call `page.waitForTimeout`, instead use `page.waitForSelector` or use a while loop that waits for a condition to be true.
+
 ```javascript
 const page = context
   .pages()
@@ -40,15 +45,8 @@ console.log('Page ready state:', pageInfo.readyState)
 
 ## Finding Elements on the Page
 
-### Using Accessibility Snapshot
+you can use the tool accessibility_snapshot to get the page accessibility snapshot, which provides a structured view of the page's elements, including their roles and names. This is useful for understanding the page structure and finding elements to interact with.
 
-The most reliable way to find elements is to first get an accessibility snapshot of the page. This provides a structured view of all interactive elements with their roles, names, and relationships.
-
-```javascript
-// Get accessibility snapshot
-const snapshot = await page.accessibility.snapshot()
-console.log(JSON.stringify(snapshot, null, 2))
-```
 
 Example accessibility snapshot result:
 
@@ -542,9 +540,6 @@ await page.waitForFunction(
 // Wait for navigation
 await page.waitForURL('**/success')
 
-// Wait for specific time
-await page.waitForTimeout(2000) // 2 seconds
-
 // Wait for page load
 await page.waitForLoadState('networkidle')
 ```
@@ -623,8 +618,7 @@ await page.getByTestId('complex-component')
 await page.getByRole('button', { name: 'Submit' }).waitFor()
 await page.getByRole('button', { name: 'Submit' }).click()
 
-// NEVER THIS
-await page.waitForTimeout(500)
+
 
 // Wait for network
 await page.waitForLoadState('networkidle')

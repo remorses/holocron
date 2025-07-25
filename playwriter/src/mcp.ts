@@ -505,8 +505,12 @@ server.tool(
             .describe(
                 'JavaScript code to execute with page and context in scope. Should be one line, using ; to execute multiple statements. To execute complex actions call execute multiple times. ',
             ),
+        timeout: z
+            .number()
+            .default(3000)
+            .describe('Timeout in milliseconds for code execution (default: 3000ms)'),
     },
-    async ({ code }) => {
+    async ({ code, timeout }) => {
         const { page } = await ensureConnection()
         const context = page.context()
         console.error('Executing code:', code)
@@ -545,8 +549,13 @@ server.tool(
             `,
             )
 
-            // Execute the code with page, context, and custom console
-            const result = await executeCode(page, context, customConsole)
+            // Execute the code with page, context, and custom console with timeout
+            const result = await Promise.race([
+                executeCode(page, context, customConsole),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error(`Code execution timed out after ${timeout}ms`)), timeout)
+                )
+            ])
 
             // Format the response with both console output and return value
             let responseText = ''
