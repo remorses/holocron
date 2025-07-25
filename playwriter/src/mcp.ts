@@ -148,7 +148,7 @@ server.tool(
                     '--disable-translate',
                 ],
             })
-            
+
             const browser = context.browser()!
             const page = context.pages()[0] || (await context.newPage())
 
@@ -393,7 +393,7 @@ server.tool(
         code: z
             .string()
             .describe(
-                'JavaScript code to execute with page and context in scope. The code should use the Playwright API to accomplish browser automation tasks.',
+                'JavaScript code to execute with page and context in scope. Should be one line, using ; to execute multiple statements. To execute complex actions call execute multiple times. ',
             ),
     },
     async ({ code }) => {
