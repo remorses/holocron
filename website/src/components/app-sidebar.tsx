@@ -201,8 +201,12 @@ export function ChatLeftSidebar({
             {...props}
             style={{
                 width: hideBrowser ? '100%' : '600px',
+                ...(hideBrowser && {
+                  paddingLeft: '2px',
+                  paddingRight: '2px',
+                }),
             }}
-            className='dark mx-auto bg-black h-full flex-col scheme-only-dark py-4 px-0 grid max-w-full min-h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
+            className='dark mx-auto bg-black h-full  flex-col scheme-only-dark py-4 px-0 grid max-w-full min-h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
         >
             <div className='justify-between max-w-[900px] w-full mx-auto row-span-1 z-10 gap-2 flex px-6'>
                 <TeamSwitcher className='grow ' sites={userSites} />
@@ -213,7 +217,7 @@ export function ChatLeftSidebar({
                 </div>
             </div>
 
-            <div className='p-0 grow relative overflow-y-auto items-center overflow-x-hidden w-full row-span-23 flex flex-col '>
+            <div className='p-0 grow relative overflow-y-auto  items-center overflow-x-hidden w-full row-span-23 flex flex-col '>
                 <Chat />
             </div>
         </div>
