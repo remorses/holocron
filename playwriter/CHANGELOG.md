@@ -1,5 +1,12 @@
 # Changelog
 
+## 2025-07-24 22:00
+
+- Simplified email validation by checking profiles directly in MCP connect tool
+- Connect tool validates email against available profiles before starting Chrome
+- Returns helpful message with available profiles when email doesn't match
+- startPlaywriter now simply throws an error for invalid emails
+
 ## 2025-07-24 21:45
 
 - Added test infrastructure with vitest for MCP server testing

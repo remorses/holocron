@@ -121,20 +121,20 @@ After getting the email from your user, call this tool again with the email valu
                 }
             }
 
-            // Start Chrome using startPlaywriter
-            const result = await startPlaywriter(emailProfile)
+            // Validate the email profile exists
+            const profiles = getAllProfiles()
+            const validProfile = profiles.find(p => p.email === emailProfile)
             
-            // Check if profile selection is needed
-            if ('needsProfile' in result && result.needsProfile) {
-                const profileList = result.profiles
-                    .map((p: any) => `• ${p.displayName} (${p.email || 'no email'}) - ${p.folder || ''}`)
+            if (!validProfile && profiles.length > 0) {
+                const profileList = profiles
+                    .map(p => `• ${p.displayName} (${p.email || 'no email'}) - ${p.folder}`)
                     .join('\n')
                 
                 return {
                     content: [
                         {
                             type: 'text',
-                            text: `${result.message}
+                            text: `No Chrome profile found for email: ${emailProfile}
 
 Available Chrome profiles to pass to emailProfile parameter:
 ${profileList}
@@ -152,8 +152,8 @@ Please call this tool again with a valid email from the list above.`,
                 }
             }
             
-            // Extract cdpPort and chromeProcess from result
-            const { cdpPort, chromeProcess } = result as { cdpPort: number; chromeProcess: any }
+            // Start Chrome using startPlaywriter
+            const { cdpPort, chromeProcess } = await startPlaywriter(emailProfile)
 
             // Connect to Chrome via CDP
             const browser = await chromium.connectOverCDP(`http://127.0.0.1:${cdpPort}`)
