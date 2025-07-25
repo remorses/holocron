@@ -27,7 +27,7 @@ export async function createTransport(args: string[]): Promise<{
             DEBUG_HIDE_DATE: '1',
         },
     })
-    
+
     return {
         transport,
         stderr: transport.stderr!,
@@ -39,32 +39,32 @@ export async function createMCPClient(options?: CreateTransportOptions): Promise
     stderr: string
     cleanup: () => Promise<void>
 }> {
-    const client = new Client({ 
-        name: options?.clientName ?? 'test', 
-        version: '1.0.0' 
+    const client = new Client({
+        name: options?.clientName ?? 'test',
+        version: '1.0.0'
     })
-    
+
     const { transport, stderr } = await createTransport([])
-    
+
     let stderrBuffer = ''
     stderr?.on('data', (data) => {
-        if (process.env.PLAYWRITER_DEBUG) {
-            process.stderr.write(data)
-        }
+        process.stderr.write(data)
+
         stderrBuffer += data.toString()
     })
-    
+
     await client.connect(transport)
     await client.ping()
-    
+
     const cleanup = async () => {
         try {
             await client.close()
         } catch (e) {
+          console.error('Error during MCP client cleanup:', e)
             // Ignore errors during cleanup
         }
     }
-    
+
     return {
         client,
         stderr: stderrBuffer,

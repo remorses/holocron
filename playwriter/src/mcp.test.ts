@@ -29,10 +29,7 @@ describe('MCP Server Tests', () => {
         expect(connectResult.content).toMatchInlineSnapshot(`
           [
             {
-              "text": "Failed to connect: browserType.connectOverCDP: connect ECONNREFUSED 127.0.0.1:9922
-          Call log:
-          [2m  - <ws preparing> retrieving websocket url from http://127.0.0.1:9922[22m
-          ",
+              "text": "Connected to Chrome via CDP on port 9922. Page URL: https://news.ycombinator.com/. Event listeners configured for console and network monitoring.",
               "type": "text",
             },
           ]
@@ -43,7 +40,7 @@ describe('MCP Server Tests', () => {
             name: 'execute',
             arguments: {
                 code: `
-                    await page.goto('https://example.com');
+                    await page.goto('https://news.ycombinator.com');
                     await page.evaluate(() => {
                         console.log('Test log message');
                         console.error('Test error message');
@@ -55,7 +52,7 @@ describe('MCP Server Tests', () => {
         expect(result.content).toMatchInlineSnapshot(`
           [
             {
-              "text": "Not connected. Please call the 'connect' tool first with a Playwright page instance.",
+              "text": "Code executed successfully (no output)",
               "type": "text",
             },
           ]
@@ -73,7 +70,32 @@ describe('MCP Server Tests', () => {
         expect(logsResult.content).toMatchInlineSnapshot(`
           [
             {
-              "text": "Failed to get console logs: Not connected. Please call the 'connect' tool first with a Playwright page instance.",
+              "text": "{
+            "total": 2,
+            "offset": 0,
+            "logs": [
+              {
+                "type": "log",
+                "text": "Test log message",
+                "timestamp": 1753421461856,
+                "location": {
+                  "url": "",
+                  "lineNumber": 1,
+                  "columnNumber": 32
+                }
+              },
+              {
+                "type": "error",
+                "text": "Test error message",
+                "timestamp": 1753421461856,
+                "location": {
+                  "url": "",
+                  "lineNumber": 2,
+                  "columnNumber": 32
+                }
+              }
+            ]
+          }",
               "type": "text",
             },
           ]

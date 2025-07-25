@@ -46,7 +46,9 @@ function findChromeExecutablePath(): string {
         }
     }
 
-    throw new Error('Could not find Chrome executable. Please install Google Chrome.')
+    throw new Error(
+        'Could not find Chrome executable. Please install Google Chrome.',
+    )
 }
 
 export async function startPlaywriter(emailProfile?: string) {
@@ -55,7 +57,7 @@ export async function startPlaywriter(emailProfile?: string) {
     try {
         // Find Chrome executable
         const executablePath = findChromeExecutablePath()
-        console.log(`Found Chrome at: ${executablePath}`)
+        console.error(`Found Chrome at: ${executablePath}`)
 
         // Get available Chrome profiles
         const profiles = getAllProfiles()
@@ -67,32 +69,42 @@ export async function startPlaywriter(emailProfile?: string) {
         }
 
         // Find the profile matching the email
-        const matchingProfile = profiles.find(p => p.email === emailProfile)
-        
+        const matchingProfile = profiles.find((p) => p.email === emailProfile)
+
         if (!matchingProfile) {
             if (profiles.length === 0) {
                 // Create a temporary profile directory for automation
-                const tempDir = path.join(os.tmpdir(), 'playwriter-automation-profile')
+                const tempDir = path.join(
+                    os.tmpdir(),
+                    'playwriter-automation-profile',
+                )
                 if (!fs.existsSync(tempDir)) {
                     fs.mkdirSync(tempDir, { recursive: true })
                 }
                 selectedProfilePath = tempDir
-                console.warn(`No Chrome profiles found. Using temporary profile at: ${tempDir}`)
+                console.warn(
+                    `No Chrome profiles found. Using temporary profile at: ${tempDir}`,
+                )
             } else {
-                throw new Error(`No Chrome profile found for email: ${emailProfile}. Available emails: ${profiles.map(p => p.email).join(', ')}`)
+                throw new Error(
+                    `No Chrome profile found for email: ${emailProfile}. Available emails: ${profiles.map((p) => p.email).join(', ')}`,
+                )
             }
         } else {
             selectedProfilePath = matchingProfile.path
-            console.log(`Using profile for ${emailProfile}: ${selectedProfilePath}`)
+            console.error(
+                `Using profile for ${emailProfile}: ${selectedProfilePath}`,
+            )
         }
 
         // Start browser with CDP enabled
-        console.log(`Starting Chrome with CDP on port ${cdpPort}...`)
+        console.error(`Starting Chrome with CDP on port ${cdpPort}...`)
 
         // Get the Chrome user data directory and profile folder
         const chromeUserDataDir = path.dirname(selectedProfilePath)
         const profileFolder = path.basename(selectedProfilePath)
 
+        console.error({ chromeUserDataDir })
         // Build Chrome arguments
         const chromeArgs = [
             `--remote-debugging-port=${cdpPort}`,
@@ -100,7 +112,8 @@ export async function startPlaywriter(emailProfile?: string) {
             '--window-size=1280,720',
             '--disable-backgrounding-occluded-windows', // Prevents Chrome from throttling/suspending hidden tabs
             '--disable-gpu', // Disable GPU acceleration for better compatibility
-            `--user-data-dir=${chromeUserDataDir}`, // Chrome's main user data directory
+            // `--user-data-dir`, // Chrome's main user data directory
+            // chromeUserDataDir,
             '--no-first-run', // Skip first-run dialogs
             '--disable-default-apps', // Disable default app installation
             '--disable-translate', // Disable translate prompts
@@ -109,18 +122,18 @@ export async function startPlaywriter(emailProfile?: string) {
             '--disable-session-crashed-bubble', // Disable session restore bubble
             '--disable-infobars', // Disable info bars
             '--automation', // Enable automation mode
+            '--disable-features=DevToolsDebuggingRestrictions',
         ]
 
-        // Add profile-directory for non-default profiles
         if (profileFolder !== 'Default') {
             chromeArgs.push(`--profile-directory=${profileFolder}`)
         }
 
         // Launch Chrome directly as a subprocess
-        console.log('Launching Chrome with args:', chromeArgs)
+        console.error('Launching Chrome with args:', chromeArgs)
         const chromeProcess = spawn(executablePath, chromeArgs, {
             detached: false,
-            stdio: 'ignore', // Ignore Chrome's output to avoid noise
+            stdio: 'inherit', // Print Chrome logs to console
         })
 
         chromeProcess.on('error', (error) => {
@@ -129,7 +142,7 @@ export async function startPlaywriter(emailProfile?: string) {
         })
 
         // Give Chrome a moment to start up and open the debugging port
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        await new Promise((resolve) => setTimeout(resolve, 2000))
 
         // On macOS, minimize only this Chrome window using its PID
         if (os.platform() === 'darwin' && chromeProcess.pid) {
@@ -137,13 +150,20 @@ export async function startPlaywriter(emailProfile?: string) {
                 // Minimize the specific Chrome window using its process ID
                 // This keeps it running but out of the way
                 const minimizeScript = spawn('osascript', [
-                    '-e', `tell application "System Events"`,
-                    '-e', `tell (first process whose unix id is ${chromeProcess.pid})`,
-                    '-e', `try`,
-                    '-e', `set value of attribute "AXMinimized" of window 1 to true`,
-                    '-e', `end try`,
-                    '-e', `end tell`,
-                    '-e', `end tell`
+                    '-e',
+                    `tell application "System Events"`,
+                    '-e',
+                    `tell (first process whose unix id is ${chromeProcess.pid})`,
+                    '-e',
+                    `try`,
+                    '-e',
+                    `set value of attribute "AXMinimized" of window 1 to true`,
+                    '-e',
+                    `end try`,
+                    '-e',
+                    `end tell`,
+                    '-e',
+                    `end tell`,
                 ])
 
                 minimizeScript.on('error', () => {
@@ -154,9 +174,10 @@ export async function startPlaywriter(emailProfile?: string) {
             }
         }
 
-        console.log(`Chrome started with CDP on port ${cdpPort} (window is hidden off-screen)`)
-        return {cdpPort, chromeProcess}
-
+        console.error(
+            `Chrome started with CDP on port ${cdpPort} (window is hidden off-screen)`,
+        )
+        return { cdpPort, chromeProcess }
 
         // // Resolve @playwright/mcp package.json path
         // const require = createRequire(import.meta.url)

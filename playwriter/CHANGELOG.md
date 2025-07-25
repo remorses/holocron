@@ -1,5 +1,10 @@
 # Changelog
 
+## 2025-07-24 22:15
+
+- Changed Chrome process stdio from 'ignore' to 'inherit' to print Chrome logs
+- Helps with debugging CDP connection issues
+
 ## 2025-07-24 22:00
 
 - Simplified email validation by checking profiles directly in MCP connect tool

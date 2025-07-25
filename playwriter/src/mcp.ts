@@ -124,12 +124,12 @@ After getting the email from your user, call this tool again with the email valu
             // Validate the email profile exists
             const profiles = getAllProfiles()
             const validProfile = profiles.find(p => p.email === emailProfile)
-            
+
             if (!validProfile && profiles.length > 0) {
                 const profileList = profiles
                     .map(p => `• ${p.displayName} (${p.email || 'no email'}) - ${p.folder}`)
                     .join('\n')
-                
+
                 return {
                     content: [
                         {
@@ -151,7 +151,7 @@ Please call this tool again with a valid email from the list above.`,
                     ],
                 }
             }
-            
+
             // Start Chrome using startPlaywriter
             const { cdpPort, chromeProcess } = await startPlaywriter(emailProfile)
 
@@ -409,7 +409,7 @@ server.tool(
     async ({ code }) => {
         const page = ensureConnected()
         const context = page.context()
-
+        console.error('Executing code:', code)
         try {
             // Collect console logs during execution
             const consoleLogs: Array<{ method: string; args: any[] }> = []
