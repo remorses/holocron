@@ -100,7 +100,9 @@ const CDP_PORT = 9922
 // Check if CDP is available on the specified port
 async function isCDPAvailable(): Promise<boolean> {
     try {
-        const response = await fetch(`http://127.0.0.1:${CDP_PORT}/json/version`)
+        const response = await fetch(
+            `http://127.0.0.1:${CDP_PORT}/json/version`,
+        )
         return response.ok
     } catch {
         return false
@@ -115,7 +117,7 @@ async function launchChromeWithCDP(): Promise<ChildProcess> {
     }
 
     const executablePath = findChromeExecutablePath()
-    
+
     const chromeArgs = [
         `--remote-debugging-port=${CDP_PORT}`,
         `--user-data-dir=${userDataDir}`,
@@ -136,20 +138,20 @@ async function launchChromeWithCDP(): Promise<ChildProcess> {
     })
 
     // Give Chrome time to start up
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+
     return chromeProcess
 }
 
 // Ensure connection to Chrome via CDP
-async function ensureConnection(): Promise<{ browser: Browser, page: Page }> {
+async function ensureConnection(): Promise<{ browser: Browser; page: Page }> {
     if (state.isConnected && state.browser && state.page) {
         return { browser: state.browser, page: state.page }
     }
 
     // Check if CDP is already available
     const cdpAvailable = await isCDPAvailable()
-    
+
     if (!cdpAvailable) {
         // Launch Chrome with CDP
         const chromeProcess = await launchChromeWithCDP()
@@ -157,12 +159,14 @@ async function ensureConnection(): Promise<{ browser: Browser, page: Page }> {
     }
 
     // Connect to Chrome via CDP
-    const browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`)
-    
+    const browser = await chromium.connectOverCDP(
+        `http://127.0.0.1:${CDP_PORT}`,
+    )
+
     // Get the default context
     const contexts = browser.contexts()
     let context: BrowserContext
-    
+
     if (contexts.length > 0) {
         context = contexts[0]
     } else {
@@ -175,25 +179,25 @@ async function ensureConnection(): Promise<{ browser: Browser, page: Page }> {
         platform: 'MacIntel',
         deviceCategory: 'desktop',
     })
-    
+
     // Get or create page
     const pages = context.pages()
     let page: Page
-    
+
     if (pages.length > 0) {
         page = pages[0]
         // Set user agent on existing page
         await page.setExtraHTTPHeaders({
-            'User-Agent': userAgent.toString()
+            'User-Agent': userAgent.toString(),
         })
     } else {
         page = await context.newPage()
         // Set user agent on new page
         await page.setExtraHTTPHeaders({
-            'User-Agent': userAgent.toString()
+            'User-Agent': userAgent.toString(),
         })
     }
-    
+
     // Set up event listeners if not already set
     if (!state.isConnected) {
         page.on('console', (msg) => {
@@ -236,7 +240,7 @@ async function ensureConnection(): Promise<{ browser: Browser, page: Page }> {
     state.browser = browser
     state.page = page
     state.isConnected = true
-    
+
     return { browser, page }
 }
 
@@ -250,9 +254,7 @@ const server = new McpServer({
 // Helper to ensure connection (deprecated - methods now auto-connect)
 function ensureConnected(): Page {
     if (!state.isConnected || !state.page) {
-        throw new Error(
-            "Not connected. Please call the 'connect' tool first.",
-        )
+        throw new Error("Not connected. Please call the 'connect' tool first.")
     }
     return state.page
 }
@@ -452,7 +454,43 @@ server.tool(
     },
 )
 
-// Tool 4: Execute - Run arbitrary JavaScript code with page and context in scope
+// Tool 4: Accessibility Snapshot - Get page accessibility tree as JSON
+server.tool(
+    'accessibility_snapshot',
+    'Get the accessibility snapshot of the current page as JSON',
+    {},
+    async ({}) => {
+        try {
+            const { page } = await ensureConnection()
+
+            const snapshot = await page.accessibility.snapshot({
+                interestingOnly: true,
+                root: undefined,
+            })
+
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify(snapshot, null, 2),
+                    },
+                ],
+            }
+        } catch (error: any) {
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: `Failed to get accessibility snapshot: ${error.message}`,
+                    },
+                ],
+                isError: true,
+            }
+        }
+    },
+)
+
+// Tool 5: Execute - Run arbitrary JavaScript code with page and context in scope
 const promptContent = fs.readFileSync(
     path.join(path.dirname(new URL(import.meta.url).pathname), 'prompt.md'),
     'utf-8',
