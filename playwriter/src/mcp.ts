@@ -59,8 +59,8 @@ interface ToolState {
     page: Page | null
     browser: Browser | null
     chromeProcess: ChildProcess | null
-    consoleLogs: ConsoleMessage[]
-    networkRequests: NetworkRequest[]
+    consoleLogs: Map<Page, ConsoleMessage[]>
+    networkRequests: Map<Page, NetworkRequest[]>
 }
 
 const state: ToolState = {
@@ -68,8 +68,8 @@ const state: ToolState = {
     page: null,
     browser: null,
     chromeProcess: null,
-    consoleLogs: [],
-    networkRequests: [],
+    consoleLogs: new Map(),
+    networkRequests: new Map(),
 }
 
 interface ConsoleMessage {
@@ -204,12 +204,31 @@ async function ensureConnection(): Promise<{ browser: Browser; page: Page }> {
     // Set up event listeners if not already set
     if (!state.isConnected) {
         page.on('console', (msg) => {
-            state.consoleLogs.push({
+            // Get or create logs array for this page
+            let pageLogs = state.consoleLogs.get(page)
+            if (!pageLogs) {
+                pageLogs = []
+                state.consoleLogs.set(page, pageLogs)
+            }
+            
+            // Add new log
+            pageLogs.push({
                 type: msg.type(),
                 text: msg.text(),
                 timestamp: Date.now(),
                 location: msg.location(),
             })
+            
+            // Keep only last 1000 logs
+            if (pageLogs.length > 1000) {
+                pageLogs.shift()
+            }
+        })
+        
+        // Clean up logs and network requests when page is closed
+        page.on('close', () => {
+            state.consoleLogs.delete(page)
+            state.networkRequests.delete(page)
         })
 
         page.on('request', (request) => {
@@ -231,7 +250,20 @@ async function ensureConnection(): Promise<{ browser: Browser; page: Page }> {
                             ? parseInt(response.headers()['content-length'])
                             : 0
 
-                        state.networkRequests.push(entry as NetworkRequest)
+                        // Get or create requests array for this page
+                        let pageRequests = state.networkRequests.get(page)
+                        if (!pageRequests) {
+                            pageRequests = []
+                            state.networkRequests.set(page, pageRequests)
+                        }
+                        
+                        // Add new request
+                        pageRequests.push(entry as NetworkRequest)
+                        
+                        // Keep only last 1000 requests
+                        if (pageRequests.length > 1000) {
+                            pageRequests.shift()
+                        }
                     }
                 })
                 .catch(() => {
@@ -283,12 +315,31 @@ server.tool(
 
             // Set up event listeners on the new page
             newPage.on('console', (msg) => {
-                state.consoleLogs.push({
+                // Get or create logs array for this page
+                let pageLogs = state.consoleLogs.get(newPage)
+                if (!pageLogs) {
+                    pageLogs = []
+                    state.consoleLogs.set(newPage, pageLogs)
+                }
+                
+                // Add new log
+                pageLogs.push({
                     type: msg.type(),
                     text: msg.text(),
                     timestamp: Date.now(),
                     location: msg.location(),
                 })
+                
+                // Keep only last 1000 logs
+                if (pageLogs.length > 1000) {
+                    pageLogs.shift()
+                }
+            })
+            
+            // Clean up logs and network requests when page is closed
+            newPage.on('close', () => {
+                state.consoleLogs.delete(newPage)
+                state.networkRequests.delete(newPage)
             })
 
             newPage.on('request', (request) => {
@@ -310,7 +361,20 @@ server.tool(
                                 ? parseInt(response.headers()['content-length'])
                                 : 0
 
-                            state.networkRequests.push(entry as NetworkRequest)
+                            // Get or create requests array for this page
+                            let pageRequests = state.networkRequests.get(newPage)
+                            if (!pageRequests) {
+                                pageRequests = []
+                                state.networkRequests.set(newPage, pageRequests)
+                            }
+                            
+                            // Add new request
+                            pageRequests.push(entry as NetworkRequest)
+                            
+                            // Keep only last 1000 requests
+                            if (pageRequests.length > 1000) {
+                                pageRequests.shift()
+                            }
                         }
                     })
                     .catch(() => {
@@ -357,10 +421,13 @@ server.tool(
     },
     async ({ limit, type, offset }) => {
         try {
-            await ensureConnection() // Ensure we're connected first
+            const { page } = await ensureConnection() // Ensure we're connected first
 
+            // Get logs for current page
+            const pageLogs = state.consoleLogs.get(page) || []
+            
             // Filter and paginate logs
-            let logs = [...state.consoleLogs]
+            let logs = [...pageLogs]
             if (type) {
                 logs = logs.filter((log) => log.type === type)
             }
@@ -443,16 +510,19 @@ server.tool(
     },
     async ({ limit, urlPattern, method, statusCode, includeBody }) => {
         try {
-            await ensureConnection()
+            const { page } = await ensureConnection()
+
+            // Get requests for current page
+            const pageRequests = state.networkRequests.get(page) || []
 
             // If includeBody is requested, we need to fetch bodies for existing requests
-            if (includeBody && state.networkRequests.length > 0) {
+            if (includeBody && pageRequests.length > 0) {
                 // Note: In a real implementation, you'd store bodies during capture
                 console.warn('Body capture not implemented in this example')
             }
 
             // Filter requests
-            let requests = [...state.networkRequests]
+            let requests = [...pageRequests]
 
             if (urlPattern) {
                 const pattern = new RegExp(urlPattern.replace(/\*/g, '.*'))

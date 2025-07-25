@@ -263,8 +263,8 @@ export default function Chat({
     const loaderData = useLoaderData() as Route.ComponentProps['loaderData']
     const { chat, siteId, branchId } = loaderData
 
-    const initialChatState = useMemo<Partial<ChatState>>(
-        () => ({
+    const initialChatState = useMemo<Partial<ChatState>>(() => {
+        const state = {
             messages: chat.messages.map((msg) => {
                 const message: UIMessage = {
                     ...msg,
@@ -281,10 +281,11 @@ export default function Chat({
                 return message
             }),
             isGenerating: false,
-        }),
-        [loaderData],
-    )
-    const hideBrowser = useShouldHideBrowser()
+        }
+        console.log('Using new initial chat state', state)
+        return state
+    }, [loaderData])
+
 
     const revalidator = useRevalidator()
     const submitMessages = async ({
@@ -481,7 +482,7 @@ export default function Chat({
             generateMessages={submitMessages}
             initialValue={initialChatState}
         >
-            <div className='flex grow flex-col gap-3 px-6 min-h-full  max-h-none justify-center'>
+            <div className='flex grow flex-col gap-3 px-6 justify-center'>
                 <Messages ref={ref} />
                 <WelcomeMessage />
                 <Footer />
@@ -541,10 +542,7 @@ function Messages({ ref }) {
 
     if (!messages.length) return null
     return (
-        <div
-            ref={ref}
-            className='relative text-sm flex flex-col grow mt-6 gap-6'
-        >
+        <div ref={ref} className='text-sm flex flex-col grow mt-6 gap-6'>
             {messages.map((message) => {
                 return (
                     <MessageRenderer

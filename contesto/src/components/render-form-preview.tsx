@@ -307,7 +307,7 @@ export function RenderFormPreview({
     message: UIMessage
     showSubmitButton?: boolean
 }) {
-    const { handleSubmit } = useFormContext()
+
     const { messages, isGenerating } = useChatContext()
 
     const disabled = messages[messages.length - 1]?.id !== message.id

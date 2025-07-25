@@ -21,6 +21,7 @@
     "license": "",
     "devDependencies": {
         "@types/mdast": "^4.0.4",
+        "react-hook-form": "*",
         "@types/react": "^19.1.8",
         "@types/react-dom": "^19.1.6",
         "mdast-util-to-markdown": "^2.1.2",
@@ -58,7 +59,6 @@
         "radix-ui": "^1.4.2",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
-        "react-hook-form": "^7.60.0",
         "react-sound-visualizer": "^1.4.0",
         "react-tracked": "^2.0.1",
         "remark": "^15.0.1",
@@ -79,6 +79,7 @@
     },
     "peerDependencies": {
         "react": "^18.2.0",
+        "react-hook-form": "*",
         "react-dom": "^18.2.0"
     }
 }

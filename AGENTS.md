@@ -1,5 +1,7 @@
 when summarizing changes at the end of the message be super short, a few words and in bullet points, use bold text to highlight important keywords. use markdown.
 
+Please ask questions and confirm assumptions before generating complex architecture code.
+
 # package manager: pnpm with workspace
 
 This project uses pnpm workspaces to manage dependencies. Important scripts are in the root package.json or various packages package.json
@@ -489,3 +491,10 @@ use present tense, like "add support for X" or "fix bug with Y". Be detailed but
 ```
 
 the website package has a dependency on docs-website. instead of duplicating code that is needed both in website and docs-website keep a file in docs-website instead and import from there for the website package.
+
+
+## playwriter
+
+you can run control the browser using the playwriter mcp tools. these tools let you control the browser to get information or accomplish actions
+
+if i ask you to test something in the browser, know that the website dev server is already running at http://localhost:7664 for website and :7777 for docs-website (but docs-website need to use the website domain specifically, for example name-hash.localhost:7777)

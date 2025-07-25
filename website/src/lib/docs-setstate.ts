@@ -113,7 +113,7 @@ export function createIframeRpcClient({
 
 export let docsRpcClient = {
     async setDocsState(state: Partial<IframeRpcMessage>): Promise<any> {
-        console.error(new Error(`docs rpc client still not initialized`))
+        console.warn(new Error(`docs rpc client still not initialized`))
     },
     cleanup() {},
 }

@@ -1,0 +1,5 @@
+- open dev server url
+- go to dashboard
+- if there is already a website, create a new one, clicking the switcher for the website and selecting new website
+- a chat interface will appear. here you can describe the website to create to an agent that can write markdown files and customize the website
+- describe a docs website of your choice, for example a website for a library or a product
