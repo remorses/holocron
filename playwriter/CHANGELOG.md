@@ -1,5 +1,13 @@
 # Changelog
 
+## 2025-07-24 21:45
+
+- Added test infrastructure with vitest for MCP server testing
+- Created mcp-client.ts with MCP client setup using vite-node
+- Added comprehensive tests for Chrome CDP connection and console log capture
+- Fixed callTool signatures to match MCP SDK API
+- Added proper TypeScript types for CallToolResult
+
 ## 2025-07-24 21:30
 
 - Moved profile listing functionality into connect tool when emailProfile is not provided

@@ -70,16 +70,17 @@ export async function startPlaywriter(emailProfile?: string) {
         const matchingProfile = profiles.find(p => p.email === emailProfile)
         
         if (!matchingProfile) {
-            if (profiles.length === 0) {
-                // Create a temporary profile directory for automation
-                const tempDir = path.join(os.tmpdir(), 'playwriter-automation-profile')
-                if (!fs.existsSync(tempDir)) {
-                    fs.mkdirSync(tempDir, { recursive: true })
-                }
-                selectedProfilePath = tempDir
-                console.warn(`No Chrome profiles found. Using temporary profile at: ${tempDir}`)
-            } else {
-                throw new Error(`No Chrome profile found for email: ${emailProfile}. Available emails: ${profiles.map(p => p.email).join(', ')}`)
+            // Always return available profiles if email doesn't match
+            return {
+                needsProfile: true,
+                profiles: profiles.map(p => ({
+                    displayName: p.displayName,
+                    path: p.path,
+                    email: p.email
+                })),
+                message: profiles.length === 0 
+                    ? 'No Chrome profiles found. Please create a Chrome profile first.'
+                    : `No Chrome profile found for email: ${emailProfile}`
             }
         } else {
             selectedProfilePath = matchingProfile.path

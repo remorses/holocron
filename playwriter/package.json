@@ -8,7 +8,9 @@
         "build": "tsc ",
         "watch": "tsc -w",
         "typecheck": "tsc --noEmit",
-        "mcp": "vite-node src/mcp.ts"
+        "mcp": "vite-node src/mcp.ts",
+        "test": "vitest run",
+        "test:watch": "vitest"
     },
     "files": [
         "dist",
@@ -19,7 +21,9 @@
     "author": "Tommaso De Rossi, morse <beats.by.morse@gmail.com>",
     "license": "",
     "devDependencies": {
-        "vite-node": "^3.2.4"
+        "@vitest/ui": "^3.2.4",
+        "vite-node": "^3.2.4",
+        "vitest": "^3.2.4"
     },
     "dependencies": {
         "@modelcontextprotocol/sdk": "^1.17.0",

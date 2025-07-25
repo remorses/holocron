@@ -122,7 +122,38 @@ After getting the email from your user, call this tool again with the email valu
             }
 
             // Start Chrome using startPlaywriter
-            const { cdpPort, chromeProcess } = await startPlaywriter(emailProfile)
+            const result = await startPlaywriter(emailProfile)
+            
+            // Check if profile selection is needed
+            if ('needsProfile' in result && result.needsProfile) {
+                const profileList = result.profiles
+                    .map((p: any) => `• ${p.displayName} (${p.email || 'no email'}) - ${p.folder || ''}`)
+                    .join('\n')
+                
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: `${result.message}
+
+Available Chrome profiles to pass to emailProfile parameter:
+${profileList}
+
+⚠️  IMPORTANT: Ask your user/owner to select a profile that:
+- Has NO personal information or sensitive data
+- Does NOT have access to sensitive websites (banking, work accounts, etc.)
+- Is specifically created for automation/testing purposes
+
+Your user can store the selected email in AGENTS.md or CLAUDE.md to avoid repeated selection.
+
+Please call this tool again with a valid email from the list above.`,
+                        },
+                    ],
+                }
+            }
+            
+            // Extract cdpPort and chromeProcess from result
+            const { cdpPort, chromeProcess } = result as { cdpPort: number; chromeProcess: any }
 
             // Connect to Chrome via CDP
             const browser = await chromium.connectOverCDP(`http://127.0.0.1:${cdpPort}`)
