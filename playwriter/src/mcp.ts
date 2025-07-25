@@ -52,7 +52,8 @@ interface NetworkRequest {
 
 // Initialize MCP server
 const server = new McpServer({
-    name: 'playwright-tools',
+    name: 'playwriter',
+    title: 'Playwright MCP Server',
     version: '1.0.0',
 })
 
@@ -124,7 +125,7 @@ After getting the email from your user, call this tool again with the email valu
             const { cdpPort, chromeProcess } = await startPlaywriter(emailProfile)
 
             // Connect to Chrome via CDP
-            const browser = await chromium.connectOverCDP(`http://localhost:${cdpPort}`)
+            const browser = await chromium.connectOverCDP(`http://127.0.0.1:${cdpPort}`)
 
             // Get the default context (or create one if needed)
             const contexts = browser.contexts()
@@ -227,31 +228,43 @@ server.tool(
         offset: z.number().default(0).describe('Start from this index'),
     },
     async ({ limit, type, offset }) => {
-        ensureConnected() // Ensure we're connected first
+        try {
+            ensureConnected() // Ensure we're connected first
 
-        // Filter and paginate logs
-        let logs = [...state.consoleLogs]
-        if (type) {
-            logs = logs.filter((log) => log.type === type)
-        }
+            // Filter and paginate logs
+            let logs = [...state.consoleLogs]
+            if (type) {
+                logs = logs.filter((log) => log.type === type)
+            }
 
-        const paginatedLogs = logs.slice(offset, offset + limit)
+            const paginatedLogs = logs.slice(offset, offset + limit)
 
-        return {
-            content: [
-                {
-                    type: 'text',
-                    text: JSON.stringify(
-                        {
-                            total: logs.length,
-                            offset: offset,
-                            logs: paginatedLogs,
-                        },
-                        null,
-                        2,
-                    ),
-                },
-            ],
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify(
+                            {
+                                total: logs.length,
+                                offset: offset,
+                                logs: paginatedLogs,
+                            },
+                            null,
+                            2,
+                        ),
+                    },
+                ],
+            }
+        } catch (error: any) {
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: `Failed to get console logs: ${error.message}`,
+                    },
+                ],
+                isError: true,
+            }
         }
     },
 )
@@ -286,50 +299,62 @@ server.tool(
             .describe('Include request/response bodies'),
     },
     async ({ limit, urlPattern, method, statusCode, includeBody }) => {
-        const page = ensureConnected()
+        try {
+            const page = ensureConnected()
 
-        // If includeBody is requested, we need to fetch bodies for existing requests
-        if (includeBody && state.networkRequests.length > 0) {
-            // Note: In a real implementation, you'd store bodies during capture
-            console.warn('Body capture not implemented in this example')
-        }
+            // If includeBody is requested, we need to fetch bodies for existing requests
+            if (includeBody && state.networkRequests.length > 0) {
+                // Note: In a real implementation, you'd store bodies during capture
+                console.warn('Body capture not implemented in this example')
+            }
 
-        // Filter requests
-        let requests = [...state.networkRequests]
+            // Filter requests
+            let requests = [...state.networkRequests]
 
-        if (urlPattern) {
-            const pattern = new RegExp(urlPattern.replace(/\*/g, '.*'))
-            requests = requests.filter((req) => pattern.test(req.url))
-        }
+            if (urlPattern) {
+                const pattern = new RegExp(urlPattern.replace(/\*/g, '.*'))
+                requests = requests.filter((req) => pattern.test(req.url))
+            }
 
-        if (method) {
-            requests = requests.filter((req) => req.method === method)
-        }
+            if (method) {
+                requests = requests.filter((req) => req.method === method)
+            }
 
-        if (statusCode) {
-            requests = requests.filter((req) => {
-                if (statusCode.min && req.status < statusCode.min) return false
-                if (statusCode.max && req.status > statusCode.max) return false
-                return true
-            })
-        }
+            if (statusCode) {
+                requests = requests.filter((req) => {
+                    if (statusCode.min && req.status < statusCode.min) return false
+                    if (statusCode.max && req.status > statusCode.max) return false
+                    return true
+                })
+            }
 
-        const limitedRequests = requests.slice(-limit)
+            const limitedRequests = requests.slice(-limit)
 
-        return {
-            content: [
-                {
-                    type: 'text',
-                    text: JSON.stringify(
-                        {
-                            total: requests.length,
-                            requests: limitedRequests,
-                        },
-                        null,
-                        2,
-                    ),
-                },
-            ],
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify(
+                            {
+                                total: requests.length,
+                                requests: limitedRequests,
+                            },
+                            null,
+                            2,
+                        ),
+                    },
+                ],
+            }
+        } catch (error: any) {
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: `Failed to get network history: ${error.message}`,
+                    },
+                ],
+                isError: true,
+            }
         }
     },
 )

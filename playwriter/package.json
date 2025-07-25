@@ -7,7 +7,8 @@
     "scripts": {
         "build": "tsc ",
         "watch": "tsc -w",
-        "start": "vite-node src/mcp.ts"
+        "typecheck": "tsc --noEmit",
+        "mcp": "vite-node src/mcp.ts"
     },
     "files": [
         "dist",
@@ -26,6 +27,6 @@
         "playwright": "1.55.0-alpha-1752701791000",
         "prompts": "^2.4.2",
         "rebrowser-playwright": "^1.52.0",
-        "zod": "^4.0.9"
+        "zod": "^3.25.76"
     }
 }

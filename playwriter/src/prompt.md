@@ -1,3 +1,5 @@
+Executes code in the server to control playwright.
+
 You have access to a `page` object where you can call playwright methods on it to accomplish actions on the page.
 
 You can also use `console.log` to examine the results of your actions.
