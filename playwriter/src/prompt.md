@@ -544,6 +544,39 @@ await page.waitForURL('**/success')
 await page.waitForLoadState('networkidle')
 ```
 
+### Wait for Text to Appear or Disappear
+
+```javascript
+// Wait for specific text to appear on the page
+await page.getByText('Loading complete').first().waitFor({ state: 'visible' })
+console.log('Loading complete text is now visible')
+
+// Wait for text to disappear from the page
+await page.getByText('Loading...').first().waitFor({ state: 'hidden' })
+console.log('Loading text has disappeared')
+
+// Wait for multiple conditions sequentially
+// First wait for loading to disappear, then wait for success message
+await page.getByText('Processing...').first().waitFor({ state: 'hidden' })
+await page.getByText('Success!').first().waitFor({ state: 'visible' })
+console.log('Processing finished and success message appeared')
+
+// Example: Wait for error message to disappear before proceeding
+await page.getByText('Error: Please try again').first().waitFor({ state: 'hidden' })
+await page.getByRole('button', { name: 'Submit' }).click()
+
+// Example: Wait for confirmation text after form submission
+await page.getByRole('button', { name: 'Save' }).click()
+await page.getByText('Your changes have been saved').first().waitFor({ state: 'visible' })
+console.log('Save confirmed')
+
+// Example: Wait for dynamic content to load
+await page.getByRole('button', { name: 'Load More' }).click()
+await page.getByText('Loading more items...').first().waitFor({ state: 'visible' })
+await page.getByText('Loading more items...').first().waitFor({ state: 'hidden' })
+console.log('Additional items loaded')
+```
+
 ## Tab Management
 
 ## Browser Management
