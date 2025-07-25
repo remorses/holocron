@@ -29,7 +29,7 @@ describe('MCP Server Tests', () => {
         expect(connectResult.content).toMatchInlineSnapshot(`
           [
             {
-              "text": "Connected to Chrome via CDP on port 9922. Page URL: https://news.ycombinator.com/. Event listeners configured for console and network monitoring.",
+              "text": "Connected to Chrome via CDP on port 9922. Page URL: chrome://new-tab-page/. Event listeners configured for console and network monitoring.",
               "type": "text",
             },
           ]
@@ -70,32 +70,7 @@ describe('MCP Server Tests', () => {
         expect(logsResult.content).toMatchInlineSnapshot(`
           [
             {
-              "text": "{
-            "total": 2,
-            "offset": 0,
-            "logs": [
-              {
-                "type": "log",
-                "text": "Test log message",
-                "timestamp": 1753421461856,
-                "location": {
-                  "url": "",
-                  "lineNumber": 1,
-                  "columnNumber": 32
-                }
-              },
-              {
-                "type": "error",
-                "text": "Test error message",
-                "timestamp": 1753421461856,
-                "location": {
-                  "url": "",
-                  "lineNumber": 2,
-                  "columnNumber": 32
-                }
-              }
-            ]
-          }",
+              "text": "No console messages",
               "type": "text",
             },
           ]

@@ -108,20 +108,13 @@ export async function startPlaywriter(emailProfile?: string) {
         // Build Chrome arguments
         const chromeArgs = [
             `--remote-debugging-port=${cdpPort}`,
-            '--window-position=-32000,-32000', // Position window off-screen
-            '--window-size=1280,720',
-            '--disable-backgrounding-occluded-windows', // Prevents Chrome from throttling/suspending hidden tabs
-            '--disable-gpu', // Disable GPU acceleration for better compatibility
+            // '--window-position=-32000,-32000', // Position window off-screen
+            // '--window-size=1280,720',
             // `--user-data-dir`, // Chrome's main user data directory
             // chromeUserDataDir,
             '--no-first-run', // Skip first-run dialogs
-            '--disable-default-apps', // Disable default app installation
-            '--disable-translate', // Disable translate prompts
-            '--disable-features=TranslateUI', // Disable translate UI
             '--no-default-browser-check', // Don't check if Chrome is default browser
             '--disable-session-crashed-bubble', // Disable session restore bubble
-            '--disable-infobars', // Disable info bars
-            '--automation', // Enable automation mode
             '--disable-features=DevToolsDebuggingRestrictions',
         ]
 

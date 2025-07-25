@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
-import { Page, Browser, BrowserContext, chromium } from 'playwright'
+import { Page, Browser, BrowserContext, chromium } from 'rebrowser-playwright'
 import fs from 'node:fs'
 import path from 'node:path'
 import { startPlaywriter } from './playwriter.js'
@@ -270,19 +270,32 @@ server.tool(
 
             const paginatedLogs = logs.slice(offset, offset + limit)
 
+            // Format logs to look like Chrome console output
+            let consoleOutput = ''
+
+            if (paginatedLogs.length === 0) {
+                consoleOutput = 'No console messages'
+            } else {
+                consoleOutput = paginatedLogs
+                    .map((log) => {
+                        const timestamp = new Date(log.timestamp).toLocaleTimeString()
+                        const location = log.location
+                            ? ` ${log.location.url}:${log.location.lineNumber}:${log.location.columnNumber}`
+                            : ''
+                        return `[${log.type}]: ${log.text}${location}`
+                    })
+                    .join('\n')
+
+                if (logs.length > paginatedLogs.length) {
+                    consoleOutput += `\n\n(Showing ${paginatedLogs.length} of ${logs.length} total messages)`
+                }
+            }
+
             return {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify(
-                            {
-                                total: logs.length,
-                                offset: offset,
-                                logs: paginatedLogs,
-                            },
-                            null,
-                            2,
-                        ),
+                        text: consoleOutput,
                     },
                 ],
             }
