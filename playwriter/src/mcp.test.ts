@@ -2,7 +2,7 @@ import { createMCPClient } from './mcp-client.js'
 import { describe, it, expect, afterEach } from 'vitest'
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 
-let emailProfile = 'daer.tommy@gmail.com'
+// No longer need email profile - always uses ~/.playwriter
 
 describe('MCP Server Tests', () => {
     let cleanup: (() => Promise<void>) | null = null
@@ -21,15 +21,13 @@ describe('MCP Server Tests', () => {
         // Connect first
         const connectResult = await client.callTool({
             name: 'connect',
-            arguments: {
-                emailProfile,
-            },
+            arguments: {},
         })
         expect(connectResult.content).toBeDefined()
         expect(connectResult.content).toMatchInlineSnapshot(`
           [
             {
-              "text": "Connected to Chrome via CDP on port 9922. Page URL: chrome://new-tab-page/. Event listeners configured for console and network monitoring.",
+              "text": "Connected to Chrome using Playwright. Page URL: about:blank. Event listeners configured for console and network monitoring.",
               "type": "text",
             },
           ]

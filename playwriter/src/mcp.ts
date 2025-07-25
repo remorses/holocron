@@ -4,16 +4,58 @@ import { z } from 'zod'
 import { Page, Browser, BrowserContext, chromium } from 'rebrowser-playwright'
 import fs from 'node:fs'
 import path from 'node:path'
-import { startPlaywriter } from './playwriter.js'
-import { getAllProfiles } from './profiles.js'
-import type { ChildProcess } from 'child_process'
+import os from 'node:os'
+
+// Find Chrome executable path based on OS (from playwriter.ts)
+function findChromeExecutablePath(): string {
+    const osPlatform = os.platform()
+
+    const paths: string[] = (() => {
+        if (osPlatform === 'darwin') {
+            return [
+                '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+                '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary',
+                '~/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+            ]
+        }
+        if (osPlatform === 'win32') {
+            return [
+                'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+                'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+                `${process.env.LOCALAPPDATA}\\Google\\Chrome\\Application\\chrome.exe`,
+                `${process.env.PROGRAMFILES}\\Google\\Chrome\\Application\\chrome.exe`,
+                `${process.env['PROGRAMFILES(X86)']}\\Google\\Chrome\\Application\\chrome.exe`,
+            ].filter(Boolean)
+        }
+        // Linux
+        return [
+            '/usr/bin/google-chrome',
+            '/usr/bin/google-chrome-stable',
+            '/usr/bin/chromium',
+            '/usr/bin/chromium-browser',
+            '/snap/bin/chromium',
+        ]
+    })()
+
+    for (const path of paths) {
+        const resolvedPath = path.startsWith('~')
+            ? path.replace('~', process.env.HOME || '')
+            : path
+        if (fs.existsSync(resolvedPath)) {
+            return resolvedPath
+        }
+    }
+
+    throw new Error(
+        'Could not find Chrome executable. Please install Google Chrome.',
+    )
+}
 
 // Store for maintaining state across tool calls
 interface ToolState {
     isConnected: boolean
     page: Page | null
     browser: Browser | null
-    chromeProcess: ChildProcess | null
     consoleLogs: ConsoleMessage[]
     networkRequests: NetworkRequest[]
 }
@@ -22,7 +64,6 @@ const state: ToolState = {
     isConnected: false,
     page: null,
     browser: null,
-    chromeProcess: null,
     consoleLogs: [],
     networkRequests: [],
 }
@@ -67,116 +108,49 @@ function ensureConnected(): Page {
     return state.page
 }
 
-
 // Tool 1: Connect - Must be called first
 server.tool(
     'connect',
-    'Connect to a Playwright page and set up event listeners',
-    {
-        emailProfile: z
-            .string()
-            .optional()
-            .describe(
-                'The email associated with the Chrome profile to use. If not provided, returns available profiles. Ask your user/owner which profile to use and ensure they choose one without personal data or sensitive website access.',
-            ),
-    },
-    async ({ emailProfile }) => {
+    'Connect to Chrome using Playwright and set up event listeners',
+    {},
+    async () => {
         try {
-            // If no email profile provided, return available profiles
-            if (!emailProfile) {
-                const profiles = getAllProfiles()
-
-                if (profiles.length === 0) {
-                    return {
-                        content: [
-                            {
-                                type: 'text',
-                                text: 'No Chrome profiles found. A temporary profile will be created when connecting. Please call connect again with any email value (e.g., "temp@example.com").',
-                            },
-                        ],
-                    }
-                }
-
-                const profileList = profiles
-                    .map(p => `• ${p.displayName} (${p.email || 'no email'}) - ${p.folder}`)
-                    .join('\n')
-
-                return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Available Chrome profiles to pass to emailProfile parameter:
-${profileList}
-
-⚠️  IMPORTANT: Ask your user/owner to select a profile that:
-- Has NO personal information or sensitive data
-- Does NOT have access to sensitive websites (banking, work accounts, etc.)
-- Is specifically created for automation/testing purposes
-
-Your user can store the selected email in AGENTS.md or CLAUDE.md to avoid repeated selection.
-
-After getting the email from your user, call this tool again with the email value`,
-                        },
-                    ],
-                }
+            // Use ~/.playwriter as the user data directory
+            const userDataDir = path.join(os.homedir(), '.playwriter')
+            if (!fs.existsSync(userDataDir)) {
+                fs.mkdirSync(userDataDir, { recursive: true })
             }
 
-            // Validate the email profile exists
-            const profiles = getAllProfiles()
-            const validProfile = profiles.find(p => p.email === emailProfile)
+            // Find the system Chrome executable
+            const executablePath = findChromeExecutablePath()
 
-            if (!validProfile && profiles.length > 0) {
-                const profileList = profiles
-                    .map(p => `• ${p.displayName} (${p.email || 'no email'}) - ${p.folder}`)
-                    .join('\n')
+            // Generate user agent
+            const ua = require('user-agents')
+            const userAgent = new ua({
+                platform: 'MacIntel',
+                deviceCategory: 'desktop',
+            })
 
-                return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `No Chrome profile found for email: ${emailProfile}
-
-Available Chrome profiles to pass to emailProfile parameter:
-${profileList}
-
-⚠️  IMPORTANT: Ask your user/owner to select a profile that:
-- Has NO personal information or sensitive data
-- Does NOT have access to sensitive websites (banking, work accounts, etc.)
-- Is specifically created for automation/testing purposes
-
-Your user can store the selected email in AGENTS.md or CLAUDE.md to avoid repeated selection.
-
-Please call this tool again with a valid email from the list above.`,
-                        },
-                    ],
-                }
-            }
-
-            // Start Chrome using startPlaywriter
-            const { cdpPort, chromeProcess } = await startPlaywriter(emailProfile)
-
-            // Connect to Chrome via CDP
-            const browser = await chromium.connectOverCDP(`http://127.0.0.1:${cdpPort}`)
-
-            // Get the default context (or create one if needed)
-            const contexts = browser.contexts()
-            let context: BrowserContext
-
-            if (contexts.length > 0) {
-                context = contexts[0]
-            } else {
-                context = await browser.newContext()
-            }
-
-            // Get existing pages or create a new one
-            const pages = context.pages()
-            let page: Page
-
-            if (pages.length > 0) {
-                page = pages[0]
-            } else {
-                page = await context.newPage()
-            }
+            // Launch Chrome with persistent context using ~/.playwriter
+            const context = await chromium.launchPersistentContext(userDataDir, {
+                headless: false,
+                executablePath,
+                userAgent: userAgent.toString(),
+                args: [
+                    '--no-first-run',
+                    '--no-default-browser-check',
+                    '--disable-session-crashed-bubble',
+                    '--disable-features=DevToolsDebuggingRestrictions',
+                    '--disable-blink-features=AutomationControlled',
+                    '--no-sandbox',
+                    '--disable-web-security',
+                    '--disable-infobars',
+                    '--disable-translate',
+                ],
+            })
+            
+            const browser = context.browser()!
+            const page = context.pages()[0] || (await context.newPage())
 
             // Set up event listeners
             page.on('console', (msg) => {
@@ -218,14 +192,13 @@ Please call this tool again with a valid email from the list above.`,
             // Store references
             state.page = page
             state.browser = browser
-            state.chromeProcess = chromeProcess
             state.isConnected = true
 
             return {
                 content: [
                     {
                         type: 'text',
-                        text: `Connected to Chrome via CDP on port ${cdpPort}. Page URL: ${page.url()}. Event listeners configured for console and network monitoring.`,
+                        text: `Connected to Chrome using Playwright. Page URL: ${page.url()}. Event listeners configured for console and network monitoring.`,
                     },
                 ],
             }
@@ -278,7 +251,9 @@ server.tool(
             } else {
                 consoleOutput = paginatedLogs
                     .map((log) => {
-                        const timestamp = new Date(log.timestamp).toLocaleTimeString()
+                        const timestamp = new Date(
+                            log.timestamp,
+                        ).toLocaleTimeString()
                         const location = log.location
                             ? ` ${log.location.url}:${log.location.lineNumber}:${log.location.columnNumber}`
                             : ''
@@ -366,8 +341,10 @@ server.tool(
 
             if (statusCode) {
                 requests = requests.filter((req) => {
-                    if (statusCode.min && req.status < statusCode.min) return false
-                    if (statusCode.max && req.status > statusCode.max) return false
+                    if (statusCode.min && req.status < statusCode.min)
+                        return false
+                    if (statusCode.max && req.status > statusCode.max)
+                        return false
                     return true
                 })
             }
@@ -469,7 +446,7 @@ server.tool(
                 responseText += 'Console output:\n'
                 consoleLogs.forEach(({ method, args }) => {
                     const formattedArgs = args
-                        .map(arg => {
+                        .map((arg) => {
                             if (typeof arg === 'object') {
                                 return JSON.stringify(arg, null, 2)
                             }
@@ -530,14 +507,6 @@ async function cleanup() {
         }
     }
 
-    if (state.chromeProcess) {
-        try {
-            state.chromeProcess.kill()
-        } catch (e) {
-            // Ignore errors during process kill
-        }
-    }
-
     process.exit(0)
 }
 
@@ -545,14 +514,7 @@ async function cleanup() {
 process.on('SIGINT', cleanup)
 process.on('SIGTERM', cleanup)
 process.on('exit', () => {
-    // Synchronous cleanup on exit
-    if (state.chromeProcess) {
-        try {
-            state.chromeProcess.kill()
-        } catch (e) {
-            // Ignore
-        }
-    }
+    // Browser cleanup is handled by the async cleanup function
 })
 
 main().catch(console.error)

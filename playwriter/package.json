@@ -28,9 +28,9 @@
     "dependencies": {
         "@modelcontextprotocol/sdk": "^1.17.0",
         "@playwright/mcp": "latest",
-        "playwright": "1.55.0-alpha-1752701791000",
         "prompts": "^2.4.2",
         "rebrowser-playwright": "^1.52.0",
+        "user-agents": "^1.1.610",
         "zod": "^3.25.76"
     }
 }
