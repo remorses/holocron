@@ -7,51 +7,9 @@ import path from 'node:path'
 import os from 'node:os'
 import { spawn } from 'child_process'
 import type { ChildProcess } from 'child_process'
+import { getBrowserExecutablePath } from './browser-config.js'
 
-// Find Chrome executable path based on OS (from playwriter.ts)
-function findChromeExecutablePath(): string {
-    const osPlatform = os.platform()
-
-    const paths: string[] = (() => {
-        if (osPlatform === 'darwin') {
-            return [
-                '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-                '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary',
-                '~/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-            ]
-        }
-        if (osPlatform === 'win32') {
-            return [
-                'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-                'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-                `${process.env.LOCALAPPDATA}\\Google\\Chrome\\Application\\chrome.exe`,
-                `${process.env.PROGRAMFILES}\\Google\\Chrome\\Application\\chrome.exe`,
-                `${process.env['PROGRAMFILES(X86)']}\\Google\\Chrome\\Application\\chrome.exe`,
-            ].filter(Boolean)
-        }
-        // Linux
-        return [
-            '/usr/bin/google-chrome',
-            '/usr/bin/google-chrome-stable',
-            '/usr/bin/chromium',
-            '/usr/bin/chromium-browser',
-            '/snap/bin/chromium',
-        ]
-    })()
-
-    for (const path of paths) {
-        const resolvedPath = path.startsWith('~')
-            ? path.replace('~', process.env.HOME || '')
-            : path
-        if (fs.existsSync(resolvedPath)) {
-            return resolvedPath
-        }
-    }
-
-    throw new Error(
-        'Could not find Chrome executable. Please install Google Chrome.',
-    )
-}
+// Chrome executable finding logic moved to browser-config.ts
 
 // Store for maintaining state across tool calls
 interface ToolState {
@@ -116,7 +74,7 @@ async function launchChromeWithCDP(): Promise<ChildProcess> {
         fs.mkdirSync(userDataDir, { recursive: true })
     }
 
-    const executablePath = findChromeExecutablePath()
+    const executablePath = getBrowserExecutablePath()
 
     const chromeArgs = [
         `--remote-debugging-port=${CDP_PORT}`,

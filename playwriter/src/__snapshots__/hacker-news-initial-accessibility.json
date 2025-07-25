@@ -1,0 +1,358 @@
+{
+  "role": "WebArea",
+  "name": "Y Combinator | Hacker News",
+  "children": [
+    {
+      "role": "link",
+      "name": ""
+    },
+    {
+      "role": "link",
+      "name": "Hacker News"
+    },
+    {
+      "role": "link",
+      "name": "new"
+    },
+    {
+      "role": "text",
+      "name": " | "
+    },
+    {
+      "role": "link",
+      "name": "past"
+    },
+    {
+      "role": "text",
+      "name": " | "
+    },
+    {
+      "role": "link",
+      "name": "comments"
+    },
+    {
+      "role": "text",
+      "name": " | "
+    },
+    {
+      "role": "link",
+      "name": "ask"
+    },
+    {
+      "role": "text",
+      "name": " | "
+    },
+    {
+      "role": "link",
+      "name": "show"
+    },
+    {
+      "role": "text",
+      "name": " | "
+    },
+    {
+      "role": "link",
+      "name": "jobs"
+    },
+    {
+      "role": "text",
+      "name": " | "
+    },
+    {
+      "role": "link",
+      "name": "submit"
+    },
+    {
+      "role": "link",
+      "name": "login"
+    },
+    {
+      "role": "link",
+      "name": ""
+    },
+    {
+      "role": "link",
+      "name": "Y Combinator"
+    },
+    {
+      "role": "text",
+      "name": " ("
+    },
+    {
+      "role": "link",
+      "name": "ycombinator.com"
+    },
+    {
+      "role": "text",
+      "name": ")"
+    },
+    {
+      "role": "text",
+      "name": "57 points"
+    },
+    {
+      "role": "text",
+      "name": " by "
+    },
+    {
+      "role": "link",
+      "name": "pg"
+    },
+    {
+      "role": "text",
+      "name": " "
+    },
+    {
+      "role": "link",
+      "name": "on Oct 9, 2006"
+    },
+    {
+      "role": "text",
+      "name": " "
+    },
+    {
+      "role": "text",
+      "name": "| "
+    },
+    {
+      "role": "link",
+      "name": "hide"
+    },
+    {
+      "role": "text",
+      "name": " | "
+    },
+    {
+      "role": "link",
+      "name": "past"
+    },
+    {
+      "role": "text",
+      "name": " | "
+    },
+    {
+      "role": "link",
+      "name": "favorite"
+    },
+    {
+      "role": "text",
+      "name": " | "
+    },
+    {
+      "role": "link",
+      "name": "3 comments"
+    },
+    {
+      "role": "LineBreak",
+      "name": "\n"
+    },
+    {
+      "role": "link",
+      "name": ""
+    },
+    {
+      "role": "link",
+      "name": "sama"
+    },
+    {
+      "role": "text",
+      "name": " "
+    },
+    {
+      "role": "link",
+      "name": "on Oct 9, 2006"
+    },
+    {
+      "role": "link",
+      "name": "[–]"
+    },
+    {
+      "role": "LineBreak",
+      "name": "\n"
+    },
+    {
+      "role": "text",
+      "name": "\"the rising star of venture capital\" -unknown VC eating lunch on SHR"
+    },
+    {
+      "role": "link",
+      "name": ""
+    },
+    {
+      "role": "link",
+      "name": "pg"
+    },
+    {
+      "role": "text",
+      "name": " "
+    },
+    {
+      "role": "link",
+      "name": "on Oct 9, 2006"
+    },
+    {
+      "role": "text",
+      "name": " "
+    },
+    {
+      "role": "text",
+      "name": "| "
+    },
+    {
+      "role": "text",
+      "name": " "
+    },
+    {
+      "role": "link",
+      "name": "[–]"
+    },
+    {
+      "role": "LineBreak",
+      "name": "\n"
+    },
+    {
+      "role": "text",
+      "name": "Is there anywhere to eat on Sandhill Road?"
+    },
+    {
+      "role": "link",
+      "name": ""
+    },
+    {
+      "role": "link",
+      "name": "dmon"
+    },
+    {
+      "role": "text",
+      "name": " "
+    },
+    {
+      "role": "link",
+      "name": "on Feb 25, 2007"
+    },
+    {
+      "role": "text",
+      "name": " "
+    },
+    {
+      "role": "text",
+      "name": "| "
+    },
+    {
+      "role": "text",
+      "name": " | "
+    },
+    {
+      "role": "text",
+      "name": " "
+    },
+    {
+      "role": "link",
+      "name": "[–]"
+    },
+    {
+      "role": "LineBreak",
+      "name": "\n"
+    },
+    {
+      "role": "text",
+      "name": "sure"
+    },
+    {
+      "role": "LineBreak",
+      "name": "\n"
+    },
+    {
+      "role": "LineBreak",
+      "name": "\n"
+    },
+    {
+      "role": "LineBreak",
+      "name": "\n"
+    },
+    {
+      "role": "link",
+      "name": "Consider applying for YC's Fall 2025 batch! Applications are open till Aug 4"
+    },
+    {
+      "role": "LineBreak",
+      "name": "\n"
+    },
+    {
+      "role": "link",
+      "name": "Guidelines"
+    },
+    {
+      "role": "text",
+      "name": " | "
+    },
+    {
+      "role": "link",
+      "name": "FAQ"
+    },
+    {
+      "role": "text",
+      "name": " | "
+    },
+    {
+      "role": "link",
+      "name": "Lists"
+    },
+    {
+      "role": "text",
+      "name": " | "
+    },
+    {
+      "role": "link",
+      "name": "API"
+    },
+    {
+      "role": "text",
+      "name": " | "
+    },
+    {
+      "role": "link",
+      "name": "Security"
+    },
+    {
+      "role": "text",
+      "name": " | "
+    },
+    {
+      "role": "link",
+      "name": "Legal"
+    },
+    {
+      "role": "text",
+      "name": " | "
+    },
+    {
+      "role": "link",
+      "name": "Apply to YC"
+    },
+    {
+      "role": "text",
+      "name": " | "
+    },
+    {
+      "role": "link",
+      "name": "Contact"
+    },
+    {
+      "role": "LineBreak",
+      "name": "\n"
+    },
+    {
+      "role": "LineBreak",
+      "name": "\n"
+    },
+    {
+      "role": "text",
+      "name": "Search: "
+    },
+    {
+      "role": "textbox",
+      "name": ""
+    }
+  ]
+}
