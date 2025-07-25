@@ -21,6 +21,8 @@ Built-in detection prevention mechanisms allow automation on websites with bot p
 ### 🌐 Shared Chrome Instance
 - Single Chrome instance shared between all agents
 - Each agent operates in its own tab
+- Can reuse existing pages/tabs via `context.pages()` in the execute tool
+- Find and switch between pages by URL or other criteria
 - Efficient resource usage
 - Better performance for multi-agent workflows
 

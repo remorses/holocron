@@ -133,9 +133,12 @@ async function launchChromeWithCDP(): Promise<ChildProcess> {
     ]
 
     const chromeProcess = spawn(executablePath, chromeArgs, {
-        detached: false,
+        detached: true,
         stdio: 'ignore',
     })
+
+    // Unref the process so it doesn't keep the parent process alive
+    chromeProcess.unref()
 
     // Give Chrome time to start up
     await new Promise((resolve) => setTimeout(resolve, 2000))
@@ -667,19 +670,18 @@ async function cleanup() {
 
     if (state.browser) {
         try {
+            // Close the browser connection but not the Chrome process
+            // Since we're using CDP, closing the browser object just closes
+            // the connection, not the actual Chrome instance
             await state.browser.close()
         } catch (e) {
             // Ignore errors during browser close
         }
     }
 
-    if (state.chromeProcess) {
-        try {
-            state.chromeProcess.kill()
-        } catch (e) {
-            // Ignore errors during process kill
-        }
-    }
+    // Don't kill the Chrome process - let it continue running
+    // The process was started with detached: true and unref() 
+    // so it will persist after this process exits
 
     process.exit(0)
 }
