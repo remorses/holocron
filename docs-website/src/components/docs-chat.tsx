@@ -118,7 +118,8 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                 let path = x.githubPath.startsWith('/')
                     ? x.githubPath
                     : '/' + x.githubPath
-                const res = await fetch(path)
+                const url = new URL(path, env.PUBLIC_URL).toString()
+                const res = await fetch(url)
                 if (!res.ok) {
                     throw new Error(
                         `Failed to fetch page content for ${path}: ${res.statusText}`,
