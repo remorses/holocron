@@ -115,10 +115,11 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
             if (error) throw error
 
             async function getPageContent(x: GetPageContentArgs) {
+                if (typeof window === 'undefined') return ''
                 let path = x.githubPath.startsWith('/')
                     ? x.githubPath
                     : '/' + x.githubPath
-                const url = new URL(path, env.PUBLIC_URL).toString()
+                const url = new URL(path, window.location.origin).toString()
                 const res = await fetch(url)
                 if (!res.ok) {
                     throw new Error(
