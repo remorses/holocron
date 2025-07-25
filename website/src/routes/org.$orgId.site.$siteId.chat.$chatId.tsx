@@ -209,29 +209,17 @@ export default function Page({
 function ChatContent() {
     const hideBrowser = useShouldHideBrowser()
 
-    return hideBrowser ? (
-        <div className='max-h-full h-full flex flex-col overflow-y-auto w-full p-12'>
-            <div className='flex flex-col  grow mx-auto w-3xl gap-4'>
-                <Chat />
-            </div>
-        </div>
-    ) : (
-        <SidebarProvider
-            className='dark:bg-black'
-            style={
-                {
-                    '--sidebar-width': '480px',
-                    '--sidebar-width-mobile': '20rem',
-                } as any
-            }
-        >
+
+    return (
+        <div className='dark:bg-black flex h-full '>
             <ChatLeftSidebar />
-            <SidebarInset>
+
+            {!hideBrowser && (
                 <div className='flex grow h-full flex-col gap-4 p-2'>
                     <RightSide />
                 </div>
-            </SidebarInset>
-        </SidebarProvider>
+            )}
+        </div>
     )
 }
 
@@ -555,15 +543,15 @@ function InstallGithubAppToolbar() {
     ) as Route.ComponentProps['loaderData'] | undefined
 
     const githubOwner = siteData.site.githubOwner
-    
+
     // Create install URL with next parameter pointing to connect-github
     const nextPath = href('/github/:orgId/:siteId/connect-github', {
         orgId: orgId!,
-        siteId: siteId!
+        siteId: siteId!,
     })
     const installUrl = new URL(href('/api/github/install'), env.PUBLIC_URL)
     installUrl.searchParams.set('next', nextPath)
-    
+
     const hideBrowser = useShouldHideBrowser()
     if (hideBrowser) {
         return null

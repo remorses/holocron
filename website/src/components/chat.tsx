@@ -482,7 +482,7 @@ export default function Chat({
             generateMessages={submitMessages}
             initialValue={initialChatState}
         >
-            <div className='flex grow flex-col gap-3 px-6 justify-center'>
+            <div className='flex grow w-full max-w-[900px] flex-col gap-3 px-6 justify-center'>
                 <Messages ref={ref} />
                 <WelcomeMessage />
                 <Footer />

@@ -37,6 +37,7 @@ import type { Route as OrgRoute } from 'website/src/routes/org.$orgId'
 import type { Route as ChatRoute } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId'
 import { apiClient } from 'website/src/lib/spiceflow-client'
 import { useStickToBottom } from 'use-stick-to-bottom'
+import { useShouldHideBrowser } from '../lib/hooks'
 
 function ChatCombobox({ chatId }: { chatId?: string }) {
     const siteData = useRouteLoaderData(
@@ -186,6 +187,7 @@ function NewChatButton() {
 export function ChatLeftSidebar({
     ...props
 }: React.ComponentProps<typeof Sidebar>) {
+    const hideBrowser = useShouldHideBrowser()
     const orgData = useRouteLoaderData(
         'routes/org.$orgId',
     ) as OrgRoute.ComponentProps['loaderData']
@@ -195,29 +197,25 @@ export function ChatLeftSidebar({
     const { userSites } = orgData
 
     return (
-        <Sidebar
-            variant='inset'
+        <div
             {...props}
-            className='dark flex   bg-black h-full flex-col grow scheme-only-dark py-4 px-0'
+            style={{
+                width: hideBrowser ? '100%' : '600px',
+            }}
+            className='dark mx-auto bg-black h-full flex-col scheme-only-dark py-4 px-0 grid max-w-full min-h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
         >
-            <div
-                className='grid grow bg-black min-h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
-                // style={{ height: 'var(--sidebar-header-height, 64px)' }}
-            >
-                <div className='justify-between w-full row-span-1 z-10 gap-2 flex px-6'>
-                    <TeamSwitcher className='grow ' sites={userSites} />
+            <div className='justify-between max-w-[900px] w-full mx-auto row-span-1 z-10 gap-2 flex px-6'>
+                <TeamSwitcher className='grow ' sites={userSites} />
 
-                    <div className='flex items-start gap-2'>
-                        <ChatCombobox chatId={chatId} />
-
-                        <NewChatButton />
-                    </div>
-                </div>
-
-                <div className='p-0 grow relative overflow-y-auto row-span-23 flex flex-col '>
-                    <Chat />
+                <div className='flex items-start gap-2'>
+                    <ChatCombobox chatId={chatId} />
+                    <NewChatButton />
                 </div>
             </div>
-        </Sidebar>
+
+            <div className='p-0 grow relative overflow-y-auto items-center overflow-x-hidden w-full row-span-23 flex flex-col '>
+                <Chat />
+            </div>
+        </div>
     )
 }
