@@ -48,10 +48,14 @@ import { getFumadocsSource } from 'docs-website/src/lib/source'
 import Handlebars from 'handlebars'
 import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
 import agentPrompt from '../prompts/agent.md?raw'
+import createSitePrompt from '../prompts/create-site.md?raw'
 import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
+function onboardSpecificPrompt() {
+    return createSitePrompt
+}
 
 const deletePagesSchema = z.object({
     filePaths: z
@@ -487,9 +491,19 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             messages: [
                 {
                     role: 'system',
-                    content: agentPromptTemplate({
-                        docsJsonSchema: JSON.stringify(docsJsonSchema, null, 2),
-                    }),
+                    content: [
+                        agentPromptTemplate({
+                            docsJsonSchema: JSON.stringify(
+                                docsJsonSchema,
+                                null,
+                                2,
+                            ),
+                        }),
+                        isOnboardingChat && '## Onboarding Instructions',
+                        isOnboardingChat && onboardSpecificPrompt(),
+                    ]
+                        .filter(Boolean)
+                        .join('\n\n'),
                 },
                 ...convertToModelMessages(
                     messages.filter((x) => x.role !== 'system'),

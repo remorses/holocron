@@ -11,15 +11,16 @@ import {
 } from 'react-router'
 import {
     checkGitHubIsInstalled,
-    GithubLoginRequestData,
 } from 'website/src/lib/github.server'
 import { isTruthy } from 'website/src/lib/utils'
 
 import { env } from '../lib/env'
 import { getSession } from '../lib/better-auth'
 import { Button } from '../components/ui/button'
-import { GithubState } from '../lib/types'
+import { GithubState, GithubLoginRequestData } from '../lib/types'
 import { SelectNative } from '../components/ui/select-native'
+import * as cookie from 'cookie'
+import { GITHUB_LOGIN_DATA_COOKIE } from './api.github.webhooks'
 
 enum FormNames {
     chooseAnother = '_chooseAnother',
@@ -180,9 +181,26 @@ export async function loader({ request }: LoaderFunctionArgs) {
     if (installations.some((x) => x.accountLogin === chosenOrg)) {
         let url = new URL(afterInstall, env.PUBLIC_URL)
         let data: GithubLoginRequestData = { githubAccountLogin: chosenOrg }
-        url.searchParams.set('data', JSON.stringify(data))
-        url.searchParams.set('githubAccountLogin', chosenOrg)
-        return redirect(url.toString(), { headers })
+        
+        // Set cookie with GitHub login data
+        const githubDataCookie = cookie.serialize(
+            GITHUB_LOGIN_DATA_COOKIE,
+            encodeURIComponent(JSON.stringify(data)),
+            {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 60 * 5, // 5 minutes
+                path: '/',
+            }
+        )
+        
+        return redirect(url.toString(), { 
+            headers: {
+                ...headers,
+                'Set-Cookie': githubDataCookie,
+            }
+        })
     }
 
     if (chosenOrg !== FormNames.chooseAnother && installations.length) {

@@ -7,11 +7,6 @@ import { env } from './env'
 
 type OctokitRest = Octokit['rest']
 
-// data passed back to framer after login, to tell it what org to use
-export type GithubLoginRequestData = {
-    githubAccountLogin: string
-}
-
 const installationsCache = new Map<
     number,
     { octokit: Octokit; timestamp: number }

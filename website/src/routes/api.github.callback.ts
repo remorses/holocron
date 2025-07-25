@@ -2,19 +2,19 @@ import { redirect, type LoaderFunctionArgs } from 'react-router'
 import {
     getGithubApp,
     getOctokit,
-    GithubLoginRequestData,
 } from 'website/src/lib/github.server'
 import { App, OAuthApp } from 'octokit'
+import * as cookie from 'cookie'
 
 import { env } from 'website/src/lib/env'
 import { safeJsoncParse } from 'website/src/lib/utils'
 
 import { GithubAccountType, Prisma, prisma } from 'db'
 import { getSession } from '../lib/better-auth'
+import { GithubState, GithubLoginRequestData } from '../lib/types'
+import { GITHUB_LOGIN_DATA_COOKIE } from './api.github.webhooks'
 
-export type GithubState = {
-    next?: string
-}
+
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const url = new URL(request.url)
@@ -143,11 +143,26 @@ export async function loader({ request }: LoaderFunctionArgs) {
         //     }),
     ])
 
-    let redirectUrl = new URL(afterInstallUrl, env.PUBLIC_URL)
-    let data: GithubLoginRequestData = {
+    // Set cookie with GitHub login data
+    const data: GithubLoginRequestData = {
         githubAccountLogin: accountLogin,
     }
-    redirectUrl.searchParams.set('data', JSON.stringify(data))
-    redirectUrl.searchParams.set('githubAccountLogin', accountLogin)
-    return redirect(redirectUrl.toString())
+    const githubDataCookie = cookie.serialize(
+        GITHUB_LOGIN_DATA_COOKIE,
+        encodeURIComponent(JSON.stringify(data)),
+        {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 5, // 5 minutes
+            path: '/',
+        }
+    )
+    
+    // Redirect to the next URL from state
+    let redirectUrl = new URL(afterInstallUrl, env.PUBLIC_URL)
+    
+    const response = redirect(redirectUrl.toString())
+    response.headers.set('Set-Cookie', githubDataCookie)
+    return response
 }

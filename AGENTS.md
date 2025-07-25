@@ -38,6 +38,8 @@ instead of adding packages directly in package.json use `pnpm install package` i
 
 - use || over in: avoid 'x' in obj checks. prefer doing `obj?.x || ''` over doing `'x' in obj ? obj.x : ''`. only use the in operator if that field causes problems in typescript checks because typescript thinks the field is missing, as a last resort.
 
+- for node built ins imports never import singular names, instead do `import fs from 'node:fs'`, same for path, os, etc.
+
 - NEVER start the development server with pnpm dev yourself. there is not reason to do so, even with &
 
 ```ts
@@ -152,6 +154,13 @@ export function Component() {
 the loader data from parent layouts will NOT be present in the children routes `Route.componentProps['loaderData']` type. Instead you have to use the `useRouteLoaderData('/prefix-path')` instead. Always add the type to this calls getting the `Route` type from the parent layout
 
 > layout routes should ALWAYS export their own Route namespace types so that child route can use it to type `useRouteLoaderData`!
+
+## cookies
+
+never use react-router or remix `createCookieSessionStorage`, instead just use the npm cookie package to serialize and parse cookies. keep it simple.
+
+if you want to store json data in cookies remember to use encodeURIComponent to encode the data before storing it in the cookie, and decodeURIComponent to decode it when reading it back. This is because cookies can only store string values.
+
 
 ## website, react-routes
 
@@ -442,20 +451,40 @@ notice that if you add a route in the spiceflow server you will need to run `pnp
 
 always use kebab case for new filenames. never use uppercase letters in filenames
 
-## changesets
+## changelog
 
-after you make a change that is noteworthy, add a changeset. these will be used later on to create a changelog for the package. use `pnpm changeset add --empty` to create a changeset file in `.changeset` folder, then write there the changes you made in a single concise paragraph. never run other changeset commands, like `pnpm changeset version` or `pnpm changeset publish`. Notice that sometimes the cwd is missing `.changeset` folder, in that case check the parents directories.
+after you make a change that is noteworthy, add an entry in the CHANGELOG.md file in the root of the package. there are 2 kinds of packages, public and private packages. private packages have a private: true field in package.json, public packages do not and instead have a version field in package.json. public packages are the ones that are published to npm.
 
-Only add changesets for packages that are not marked as `private` in their `package.json` and have a `version` in the package.json.
-
-Changeset files are structured like this:
+to write a changelog.md file for a public package, use the following format, add a heading with the new version and a bullet list of your changes, like this:
 
 ```md
----
-'package-name': patch # can also be `minor` or `major`, never use major
----
+## 0.1.3
 
-markdown describing the changes you made, in present tense, like "add support for X" or "fix bug with Y". Be detailed but concise, and never use bullet points or lists. Always show example code snippets if applicable, and use proper markdown formatting.
+### Patch Changes
+
+- bug fixes
+
+## 0.1.2
+
+### Patch Changes
+
+- add support for githubPath
+```
+
+For private packages, which do not have versions, you must instead use the current date and time, for example:
+
+```md
+# Changelog
+
+## 2025-01-24 19:50
+
+- Added a feature to improve user experience
+- Fixed a bug that caused the app to crash on startup
+```
+
+these are just exasmples, be clear and consies in your changelog entries.
+
+use present tense, like "add support for X" or "fix bug with Y". Be detailed but concise, do not use nested bullet points. Always show example code snippets if applicable, and use proper markdown formatting.
 
 ```
 

@@ -59,64 +59,6 @@ export async function loader({
 
     const { userId } = await getSession({ request })
 
-    const url = new URL(request.url)
-
-    if (url.searchParams.get('installGithubApp')) {
-        const githubAccountLogin = url.searchParams.get('githubAccountLogin')
-        
-        // Check signal before database query
-        if (request.signal.aborted) {
-            throw new Error('Request aborted')
-        }
-        
-        const githubInstallation = await prisma.githubInstallation.findFirst({
-            where: {
-                orgs: {
-                    some: {
-                        orgId,
-                        appId: env.GITHUB_APP_ID,
-                    },
-                },
-                accountLogin: githubAccountLogin || '',
-            },
-        })
-
-        if (!githubInstallation) {
-            throw new Error(
-                `GitHub installation not found for ${githubAccountLogin}`,
-            )
-        }
-        
-        // Check signal before upsert
-        if (request.signal.aborted) {
-            throw new Error('Request aborted')
-        }
-        
-        await prisma.siteGithubInstallation.upsert({
-            where: {
-                installationId_appId_siteId: {
-                    installationId: githubInstallation.installationId,
-                    appId: env.GITHUB_APP_ID!,
-                    siteId,
-                },
-            },
-            create: {
-                installationId: githubInstallation.installationId,
-                appId: env.GITHUB_APP_ID!,
-                siteId,
-            },
-            update: {},
-        })
-        // Redirect to the same route but remove search params
-        const pathname = url.pathname
-        throw new Response(null, {
-            status: 302,
-            headers: {
-                Location: pathname,
-            },
-        })
-    }
-
     // Check signal before main database queries
     if (request.signal.aborted) {
         throw new Error('Request aborted')
@@ -604,7 +546,7 @@ function GitHubSyncButton() {
 }
 
 function InstallGithubAppToolbar() {
-    const { orgId } = useParams()
+    const { orgId, siteId } = useParams()
     const siteData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
@@ -613,19 +555,15 @@ function InstallGithubAppToolbar() {
     ) as Route.ComponentProps['loaderData'] | undefined
 
     const githubOwner = siteData.site.githubOwner
-    const handleInstallGithub = () => {
-        const nextUrl = new URL(window.location.href)
-        nextUrl.searchParams.set('installGithubApp', 'true')
-        const setupUrl = href('/api/github/install')
-
-        const url = new URL(setupUrl, window.location.origin)
-        if (githubOwner) {
-            url.searchParams.set('chosenOrg', githubOwner)
-        }
-        url.searchParams.set('next', nextUrl.toString())
-        const setupUrlWithNext = url.toString()
-        window.location.href = setupUrlWithNext
-    }
+    
+    // Create install URL with next parameter pointing to connect-github
+    const nextPath = href('/github/:orgId/:siteId/connect-github', {
+        orgId: orgId!,
+        siteId: siteId!
+    })
+    const installUrl = new URL(href('/api/github/install'), env.PUBLIC_URL)
+    installUrl.searchParams.set('next', nextPath)
+    
     const hideBrowser = useShouldHideBrowser()
     if (hideBrowser) {
         return null
@@ -637,17 +575,18 @@ function InstallGithubAppToolbar() {
     return (
         <Tooltip>
             <TooltipTrigger asChild>
-                <Button
-                    variant='default'
-                    onClick={handleInstallGithub}
-                    size={'sm'}
-                    className='bg-purple-600 hover:bg-purple-700 text-white'
-                >
-                    <div className='flex items-center gap-2'>
-                        <GithubIcon className='size-4' />
-                        Connect GitHub
-                    </div>
-                </Button>
+                <Link to={installUrl.pathname + installUrl.search}>
+                    <Button
+                        variant='default'
+                        size={'sm'}
+                        className='bg-purple-600 hover:bg-purple-700 text-white'
+                    >
+                        <div className='flex items-center gap-2'>
+                            <GithubIcon className='size-4' />
+                            Connect GitHub
+                        </div>
+                    </Button>
+                </Link>
             </TooltipTrigger>
             <TooltipContent>Connect GitHub to create PRs</TooltipContent>
         </Tooltip>

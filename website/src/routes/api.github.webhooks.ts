@@ -11,6 +11,9 @@ import { qstash } from '../lib/qstash'
 
 const logger = console
 
+// Cookie name for GitHub login data
+export const GITHUB_LOGIN_DATA_COOKIE = 'github_login_data'
+
 
 
 function getWebhooks() {
