@@ -12,18 +12,32 @@ If you really want to attach listeners you should also detach them using a try f
 
 You can also create a new page via `context.newPage()` if you need to start fresh. You can then find that page by iteration over `context.pages()`:
 
-
-## important rules
-
-- NEVER call `page.waitForTimeout`, instead use `page.waitForSelector` or use a while loop that waits for a condition to be true.
-
 ```javascript
 const page = context
   .pages()
   .find(p => p.url().includes('/some/path'));
 ```
 
-## Getting Results from Code Execution
+## important rules
+
+- NEVER call `page.waitForTimeout`, instead use `page.waitForSelector` or use a while loop that waits for a condition to be true.
+- always call `new_page` at the start of a conversation. later this page will be passed to the `execute` tool.
+- In some rare cases you can also skip `new_page` tool, if the user asks you to instead use an existing page in the browser. You can set a page as default using `state.page = page`,  `execute` calls will be passed this page in the scope later on.
+- if running in localhost and some elements are difficult to target with locators you can update the source code to add `data-testid` attributes to elements you want to target. This will make running tests much easier later on. Also update the source markdown documents your are following if you do so.
+- after every action call the tool `accessibility_snapshot` to get the page structure and understand what elements are available on the page
+- after form submissions use `page.waitForLoadState('networkidle')` to ensure the page is fully loaded before proceeding
+- sometimes when in localhost and using Vite you can encounter issues in the first page load, where a module is not found, because of updated optimization of the node_modules. In these cases you can try reloading the page 2 times and see if the issue resolves itself.
+- for Google and GitHub login always use the Google account you have access to, already signed in
+- if you are following a markdown document describing the steps to follow to test the website, update this document if you encounter unexpected behavior or if you can add information that would make the test faster, for example telling how to wait for actions that trigger loading states or to use a different timeout for specific actions.
+
+
+## getting outputs of code execution
+
+You can use `console.log` to print values you want to see in the tool call result
+
+## using page.evaluate
+
+you can execute client side JavaScript code using `page.evaluate()`
 
 When executing code with `page.evaluate()`, return values directly from the evaluate function. Use `console.log()` outside of evaluate to display results:
 
@@ -140,18 +154,11 @@ console.log('Heading text:', headingText)
 ### Complete Example: Find and Click Elements
 
 ```javascript
-// Step 1: Get snapshot to see what's on the page
-const snapshot = await page.accessibility.snapshot()
-console.log('Available elements:', JSON.stringify(snapshot, null, 2))
 
-// Step 2: Find button in snapshot output
-// Snapshot might show: { "role": "button", "name": "Submit Form" }
-
-// Step 3: Click the button using the role and name
 await page.getByRole('button', { name: 'Submit Form' }).click()
 console.log('Clicked submit button')
 
-// Step 4: Verify the action completed
+
 await page.waitForLoadState('networkidle')
 console.log('Form submitted successfully')
 ```
@@ -234,27 +241,6 @@ await page.setViewportSize({ width: 1280, height: 720 })
 await page.screenshot({ path: 'custom-size.png' })
 ```
 
-## Page Snapshot
-
-### Get Page Content and Structure
-
-```javascript
-// Get page title
-const title = await page.title()
-
-// Get page URL
-const url = page.url()
-
-// Get all text content
-const textContent = await page.textContent('body')
-
-// Get page HTML
-const html = await page.content()
-
-// Get accessibility tree (useful for understanding page structure)
-const snapshot = await page.accessibility.snapshot()
-```
-
 ## Mouse Interactions
 
 ### Click Elements
@@ -286,18 +272,6 @@ await page.getByText('Hover me').hover()
 await page.mouse.move(100, 200)
 ```
 
-### Drag and Drop
-
-```javascript
-// Drag from one element to another
-await page.dragAndDrop('#source', '#target')
-
-// Drag with mouse coordinates
-await page.mouse.move(100, 100)
-await page.mouse.down()
-await page.mouse.move(200, 200)
-await page.mouse.up()
-```
 
 ## Keyboard Input
 
@@ -411,25 +385,6 @@ await page.getByRole('button').evaluate((el) => {
 await page.getByText('Section').evaluate((el) => el.scrollIntoView())
 ```
 
-## Dialogs
-
-### Handle Alerts, Confirms, and Prompts
-
-```javascript
-// By default, Playwright auto-dismisses all dialogs (alerts, confirms, prompts)
-// This means you can click buttons that trigger dialogs without any special handling
-
-// Example: Click button that shows alert (auto-dismissed)
-await page.getByRole('button', { name: 'Show Alert' }).click()
-
-// If you need to accept a confirm dialog or provide input to a prompt,
-// you must handle it in your MCP implementation with proper event listeners
-// set up during the connect phase
-
-// For stateless execution, if you need the dialog message:
-// You would need to capture it through the console logs tool
-// since browsers often log dialog messages to the console
-```
 
 ## File Handling
 
@@ -452,23 +407,7 @@ await page.getByLabel('Upload file').setInputFiles([])
 await page.locator('input[type="file"]').setInputFiles('/path/to/file.pdf')
 ```
 
-### File Download
 
-```javascript
-// For downloads in MCP context, trigger the download and check if it started
-// Note: Actually saving files would require the separate file handling tool
-
-// Click download button
-await page.getByText('Download').click()
-
-// Check if download started by monitoring network
-const downloadStarted = await page.evaluate(() => {
-    // Check if any anchor has download attribute or if navigation occurred
-    return document.querySelector('a[download]') !== null
-})
-
-console.log('Download triggered:', downloadStarted)
-```
 
 ## Network Monitoring
 
@@ -531,6 +470,9 @@ await page.waitForSelector('.success-message')
 // Wait for element to disappear
 await page.waitForSelector('.loading', { state: 'hidden' })
 
+await page.waitForURL(/github\.com.*\/pull/)
+await page.waitForURL(/\/new-org/)
+
 // Wait for text to appear
 await page.waitForFunction(
     (text) => document.body.textContent.includes(text),
@@ -542,6 +484,12 @@ await page.waitForURL('**/success')
 
 // Wait for page load
 await page.waitForLoadState('networkidle')
+
+// Wait for specific condition
+await page.waitForFunction(
+    (text) => document.querySelector('.status')?.textContent === text,
+    'Ready',
+)
 ```
 
 ### Wait for Text to Appear or Disappear
@@ -577,35 +525,6 @@ await page.getByText('Loading more items...').first().waitFor({ state: 'hidden' 
 console.log('Additional items loaded')
 ```
 
-## Tab Management
-
-## Browser Management
-
-### Resize Browser Window
-
-```javascript
-// Set viewport size
-await page.setViewportSize({ width: 1920, height: 1080 })
-
-// Get viewport size
-const viewport = page.viewportSize()
-console.log(`Width: ${viewport.width}, Height: ${viewport.height}`)
-```
-
-
-## Advanced Patterns
-
-### Handle Dynamic Content
-
-```javascript
-
-// Wait for specific text
-await page.waitForFunction(
-    (text) => document.querySelector('.status')?.textContent === text,
-    'Ready',
-)
-
-```
 
 ### Work with Frames
 
@@ -625,8 +544,6 @@ const frames = page.frames()
 
 ## Best Practices
 
-
-
 ### Reliable Selectors
 
 ```javascript
@@ -642,17 +559,4 @@ await page.getByTestId('complex-component')
 // Avoid brittle selectors
 // Bad: await page.locator('.btn-3842');
 // Good: await page.getByRole('button', { name: 'Submit' });
-```
-
-### Wait Strategies
-
-```javascript
-// Wait for element before interacting
-await page.getByRole('button', { name: 'Submit' }).waitFor()
-await page.getByRole('button', { name: 'Submit' }).click()
-
-
-
-// Wait for network
-await page.waitForLoadState('networkidle')
 ```

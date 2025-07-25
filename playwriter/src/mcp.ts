@@ -251,28 +251,75 @@ const server = new McpServer({
     version: '1.0.0',
 })
 
-// Helper to ensure connection (deprecated - methods now auto-connect)
-function ensureConnected(): Page {
-    if (!state.isConnected || !state.page) {
-        throw new Error("Not connected. Please call the 'connect' tool first.")
-    }
-    return state.page
-}
 
-// Tool 1: Connect - Must be called first
+// Tool 1: New Page - Creates a new browser page
 server.tool(
-    'connect',
-    'Connect to Chrome via CDP and set up event listeners',
+    'new_page',
+    'Create a new browser page in the shared Chrome instance',
     {},
     async () => {
         try {
             const { browser, page } = await ensureConnection()
 
+            // Always create a new page
+            const context = browser.contexts()[0] || await browser.newContext()
+            const newPage = await context.newPage()
+
+            // Set user agent on new page
+            const ua = require('user-agents')
+            const userAgent = new ua({
+                platform: 'MacIntel',
+                deviceCategory: 'desktop',
+            })
+            await newPage.setExtraHTTPHeaders({
+                'User-Agent': userAgent.toString()
+            })
+
+            // Update state to use the new page
+            state.page = newPage
+
+            // Set up event listeners on the new page
+            newPage.on('console', (msg) => {
+                state.consoleLogs.push({
+                    type: msg.type(),
+                    text: msg.text(),
+                    timestamp: Date.now(),
+                    location: msg.location(),
+                })
+            })
+
+            newPage.on('request', (request) => {
+                const startTime = Date.now()
+                const entry: Partial<NetworkRequest> = {
+                    url: request.url(),
+                    method: request.method(),
+                    headers: request.headers(),
+                    timestamp: startTime,
+                }
+
+                request
+                    .response()
+                    .then((response) => {
+                        if (response) {
+                            entry.status = response.status()
+                            entry.duration = Date.now() - startTime
+                            entry.size = response.headers()['content-length']
+                                ? parseInt(response.headers()['content-length'])
+                                : 0
+
+                            state.networkRequests.push(entry as NetworkRequest)
+                        }
+                    })
+                    .catch(() => {
+                        // Handle response errors silently
+                    })
+            })
+
             return {
                 content: [
                     {
                         type: 'text',
-                        text: `Connected to Chrome via CDP on port ${CDP_PORT}. Page URL: ${page.url()}. Event listeners configured for console and network monitoring.`,
+                        text: `Created new page. URL: ${newPage.url()}. Total pages: ${context.pages().length}`,
                     },
                 ],
             }
@@ -281,7 +328,7 @@ server.tool(
                 content: [
                     {
                         type: 'text',
-                        text: `Failed to connect: ${error.message}`,
+                        text: `Failed to create new page: ${error.message}`,
                     },
                 ],
                 isError: true,
@@ -552,7 +599,7 @@ server.tool(
             // Execute the code with page, context, and custom console with timeout
             const result = await Promise.race([
                 executeCode(page, context, customConsole),
-                new Promise((_, reject) => 
+                new Promise((_, reject) =>
                     setTimeout(() => reject(new Error(`Code execution timed out after ${timeout}ms`)), timeout)
                 )
             ])

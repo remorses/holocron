@@ -20,14 +20,14 @@ describe('MCP Server Tests', () => {
 
         // Connect first
         const connectResult = await client.callTool({
-            name: 'connect',
+            name: 'new_page',
             arguments: {},
         })
         expect(connectResult.content).toBeDefined()
         expect(connectResult.content).toMatchInlineSnapshot(`
           [
             {
-              "text": "Connected to Chrome via CDP on port 9922. Page URL: chrome://new-tab-page/. Event listeners configured for console and network monitoring.",
+              "text": "Created new page. URL: about:blank. Total pages: 6",
               "type": "text",
             },
           ]
