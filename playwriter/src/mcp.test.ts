@@ -27,7 +27,7 @@ describe('MCP Server Tests', () => {
         expect(connectResult.content).toMatchInlineSnapshot(`
           [
             {
-              "text": "Connected to Chrome using Playwright. Page URL: about:blank. Event listeners configured for console and network monitoring.",
+              "text": "Connected to Chrome via CDP on port 9922. Page URL: chrome://new-tab-page/. Event listeners configured for console and network monitoring.",
               "type": "text",
             },
           ]

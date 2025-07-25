@@ -5,6 +5,8 @@ import { Page, Browser, BrowserContext, chromium } from 'rebrowser-playwright'
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
+import { spawn } from 'child_process'
+import type { ChildProcess } from 'child_process'
 
 // Find Chrome executable path based on OS (from playwriter.ts)
 function findChromeExecutablePath(): string {
@@ -56,6 +58,7 @@ interface ToolState {
     isConnected: boolean
     page: Page | null
     browser: Browser | null
+    chromeProcess: ChildProcess | null
     consoleLogs: ConsoleMessage[]
     networkRequests: NetworkRequest[]
 }
@@ -64,6 +67,7 @@ const state: ToolState = {
     isConnected: false,
     page: null,
     browser: null,
+    chromeProcess: null,
     consoleLogs: [],
     networkRequests: [],
 }
@@ -91,6 +95,151 @@ interface NetworkRequest {
     responseBody?: any
 }
 
+const CDP_PORT = 9922
+
+// Check if CDP is available on the specified port
+async function isCDPAvailable(): Promise<boolean> {
+    try {
+        const response = await fetch(`http://127.0.0.1:${CDP_PORT}/json/version`)
+        return response.ok
+    } catch {
+        return false
+    }
+}
+
+// Launch Chrome with CDP enabled
+async function launchChromeWithCDP(): Promise<ChildProcess> {
+    const userDataDir = path.join(os.homedir(), '.playwriter')
+    if (!fs.existsSync(userDataDir)) {
+        fs.mkdirSync(userDataDir, { recursive: true })
+    }
+
+    const executablePath = findChromeExecutablePath()
+    
+    const chromeArgs = [
+        `--remote-debugging-port=${CDP_PORT}`,
+        `--user-data-dir=${userDataDir}`,
+        '--no-first-run',
+        '--no-default-browser-check',
+        '--disable-session-crashed-bubble',
+        '--disable-features=DevToolsDebuggingRestrictions',
+        '--disable-blink-features=AutomationControlled',
+        '--no-sandbox',
+        '--disable-web-security',
+        '--disable-infobars',
+        '--disable-translate',
+    ]
+
+    const chromeProcess = spawn(executablePath, chromeArgs, {
+        detached: false,
+        stdio: 'ignore',
+    })
+
+    // Give Chrome time to start up
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    return chromeProcess
+}
+
+// Ensure connection to Chrome via CDP
+async function ensureConnection(): Promise<{ browser: Browser, page: Page }> {
+    if (state.isConnected && state.browser && state.page) {
+        return { browser: state.browser, page: state.page }
+    }
+
+    // Check if CDP is already available
+    const cdpAvailable = await isCDPAvailable()
+    
+    if (!cdpAvailable) {
+        // Launch Chrome with CDP
+        const chromeProcess = await launchChromeWithCDP()
+        state.chromeProcess = chromeProcess
+    }
+
+    // Connect to Chrome via CDP
+    const browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`)
+    
+    // Get the default context
+    const contexts = browser.contexts()
+    let context: BrowserContext
+    
+    if (contexts.length > 0) {
+        context = contexts[0]
+    } else {
+        context = await browser.newContext()
+    }
+
+    // Generate user agent and set it on context
+    const ua = require('user-agents')
+    const userAgent = new ua({
+        platform: 'MacIntel',
+        deviceCategory: 'desktop',
+    })
+    
+    // Get or create page
+    const pages = context.pages()
+    let page: Page
+    
+    if (pages.length > 0) {
+        page = pages[0]
+        // Set user agent on existing page
+        await page.setExtraHTTPHeaders({
+            'User-Agent': userAgent.toString()
+        })
+    } else {
+        page = await context.newPage()
+        // Set user agent on new page
+        await page.setExtraHTTPHeaders({
+            'User-Agent': userAgent.toString()
+        })
+    }
+    
+    // Set up event listeners if not already set
+    if (!state.isConnected) {
+        page.on('console', (msg) => {
+            state.consoleLogs.push({
+                type: msg.type(),
+                text: msg.text(),
+                timestamp: Date.now(),
+                location: msg.location(),
+            })
+        })
+
+        page.on('request', (request) => {
+            const startTime = Date.now()
+            const entry: Partial<NetworkRequest> = {
+                url: request.url(),
+                method: request.method(),
+                headers: request.headers(),
+                timestamp: startTime,
+            }
+
+            request
+                .response()
+                .then((response) => {
+                    if (response) {
+                        entry.status = response.status()
+                        entry.duration = Date.now() - startTime
+                        entry.size = response.headers()['content-length']
+                            ? parseInt(response.headers()['content-length'])
+                            : 0
+
+                        state.networkRequests.push(entry as NetworkRequest)
+                    }
+                })
+                .catch(() => {
+                    // Handle response errors silently
+                })
+        })
+    }
+
+    state.browser = browser
+    state.page = page
+    state.isConnected = true
+    
+    return { browser, page }
+}
+
 // Initialize MCP server
 const server = new McpServer({
     name: 'playwriter',
@@ -98,11 +247,11 @@ const server = new McpServer({
     version: '1.0.0',
 })
 
-// Helper to ensure connection
+// Helper to ensure connection (deprecated - methods now auto-connect)
 function ensureConnected(): Page {
     if (!state.isConnected || !state.page) {
         throw new Error(
-            "Not connected. Please call the 'connect' tool first with a Playwright page instance.",
+            "Not connected. Please call the 'connect' tool first.",
         )
     }
     return state.page
@@ -111,94 +260,17 @@ function ensureConnected(): Page {
 // Tool 1: Connect - Must be called first
 server.tool(
     'connect',
-    'Connect to Chrome using Playwright and set up event listeners',
+    'Connect to Chrome via CDP and set up event listeners',
     {},
     async () => {
         try {
-            // Use ~/.playwriter as the user data directory
-            const userDataDir = path.join(os.homedir(), '.playwriter')
-            if (!fs.existsSync(userDataDir)) {
-                fs.mkdirSync(userDataDir, { recursive: true })
-            }
-
-            // Find the system Chrome executable
-            const executablePath = findChromeExecutablePath()
-
-            // Generate user agent
-            const ua = require('user-agents')
-            const userAgent = new ua({
-                platform: 'MacIntel',
-                deviceCategory: 'desktop',
-            })
-
-            // Launch Chrome with persistent context using ~/.playwriter
-            const context = await chromium.launchPersistentContext(userDataDir, {
-                headless: false,
-                executablePath,
-                userAgent: userAgent.toString(),
-                args: [
-                    '--no-first-run',
-                    '--no-default-browser-check',
-                    '--disable-session-crashed-bubble',
-                    '--disable-features=DevToolsDebuggingRestrictions',
-                    '--disable-blink-features=AutomationControlled',
-                    '--no-sandbox',
-                    '--disable-web-security',
-                    '--disable-infobars',
-                    '--disable-translate',
-                ],
-            })
-
-            const browser = context.browser()!
-            const page = context.pages()[0] || (await context.newPage())
-
-            // Set up event listeners
-            page.on('console', (msg) => {
-                state.consoleLogs.push({
-                    type: msg.type(),
-                    text: msg.text(),
-                    timestamp: Date.now(),
-                    location: msg.location(),
-                })
-            })
-
-            page.on('request', (request) => {
-                const startTime = Date.now()
-                const entry: Partial<NetworkRequest> = {
-                    url: request.url(),
-                    method: request.method(),
-                    headers: request.headers(),
-                    timestamp: startTime,
-                }
-
-                request
-                    .response()
-                    .then((response) => {
-                        if (response) {
-                            entry.status = response.status()
-                            entry.duration = Date.now() - startTime
-                            entry.size = response.headers()['content-length']
-                                ? parseInt(response.headers()['content-length'])
-                                : 0
-
-                            state.networkRequests.push(entry as NetworkRequest)
-                        }
-                    })
-                    .catch(() => {
-                        // Handle response errors silently
-                    })
-            })
-
-            // Store references
-            state.page = page
-            state.browser = browser
-            state.isConnected = true
+            const { browser, page } = await ensureConnection()
 
             return {
                 content: [
                     {
                         type: 'text',
-                        text: `Connected to Chrome using Playwright. Page URL: ${page.url()}. Event listeners configured for console and network monitoring.`,
+                        text: `Connected to Chrome via CDP on port ${CDP_PORT}. Page URL: ${page.url()}. Event listeners configured for console and network monitoring.`,
                     },
                 ],
             }
@@ -233,7 +305,7 @@ server.tool(
     },
     async ({ limit, type, offset }) => {
         try {
-            ensureConnected() // Ensure we're connected first
+            await ensureConnection() // Ensure we're connected first
 
             // Filter and paginate logs
             let logs = [...state.consoleLogs]
@@ -319,7 +391,7 @@ server.tool(
     },
     async ({ limit, urlPattern, method, statusCode, includeBody }) => {
         try {
-            const page = ensureConnected()
+            await ensureConnection()
 
             // If includeBody is requested, we need to fetch bodies for existing requests
             if (includeBody && state.networkRequests.length > 0) {
@@ -397,7 +469,7 @@ server.tool(
             ),
     },
     async ({ code }) => {
-        const page = ensureConnected()
+        const { page } = await ensureConnection()
         const context = page.context()
         console.error('Executing code:', code)
         try {
@@ -504,6 +576,14 @@ async function cleanup() {
             await state.browser.close()
         } catch (e) {
             // Ignore errors during browser close
+        }
+    }
+
+    if (state.chromeProcess) {
+        try {
+            state.chromeProcess.kill()
+        } catch (e) {
+            // Ignore errors during process kill
         }
     }
 
