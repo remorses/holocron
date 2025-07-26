@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
-import { Page, Browser, BrowserContext, chromium } from 'playwright-core'
+import { Page, Browser, BrowserContext, chromium } from 'patchright-core'
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'

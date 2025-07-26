@@ -101,15 +101,9 @@ console.log('Clicked on Components link')
 
 This approach is the preferred way to find elements on the page, as it allows you to use the structured information from the accessibility snapshot to interact with elements reliably.
 
-### Using Snapshot Information to Interact with Elements
-
-After analyzing the accessibility snapshot, use the role and name information to interact with elements:
+You can also find `getByRole` to get elements on the page.
 
 ```javascript
-// First, get the snapshot to understand the page structure
-const snapshot = await page.accessibility.snapshot()
-console.log('Page structure:', JSON.stringify(snapshot, null, 2))
-
 // Then use the information from the snapshot to click elements
 // For example, if snapshot shows: { "role": "button", "name": "Sign In" }
 await page.getByRole('button', { name: 'Sign In' }).click()
