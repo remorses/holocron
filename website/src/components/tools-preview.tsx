@@ -144,7 +144,7 @@ export function ToolPreviewContainer({
 }: {
     children: React.ReactNode
 }) {
-    return <div className='py-8 space-y-2'>{children}</div>
+    return <div className='py-1 space-y-2'>{children}</div>
 }
 
 export function addIndentation(spaces: number, text: string): string {

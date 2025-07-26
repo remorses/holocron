@@ -1,5 +1,23 @@
 # Changelog
 
+## 2025-01-26 19:00
+
+- Refactored file operations to use a new FileSystemEmulator class
+- Created FileSystemEmulator class with batch operations support for read, write, delete, and move operations
+- Updated createEditTool to accept FileSystemEmulator instead of individual parameters
+- Integrated FileSystemEmulator in website and docs-website components with global and preview instances
+- Simplified renameFile and deletePages tools to use FileSystemEmulator methods
+- Removed createGlobalFileSystemEmulator and createDocsGlobalFileSystemEmulator functions in favor of creating FileSystemEmulator instances directly
+- Updated to use in-scope filesInDraft variable in chat.tsx and docs-chat.tsx
+
+## 2025-01-26 18:35
+
+- Added renameFile tool to spiceflow-generate-message.tsx for renaming or moving files within the website
+- Added renameFile type definition to WebsiteTools interface
+- The rename tool preserves file content while updating the path and properly manages filesInDraft state
+- Supports renaming both existing database files and draft files
+- Updates filesInDraft by creating a new entry for the new path and marking the old path as deleted
+
 ## 2025-01-26 14:30
 
 - Fixed ToolPreviewContainer usage in tools-preview.tsx by properly passing toolName and inputString props

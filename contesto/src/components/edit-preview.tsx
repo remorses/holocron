@@ -126,7 +126,9 @@ const Text = ({
 
     // Use Tailwind's default color tokens
     if (color === 'error') style.color = 'var(--color-red-500)'
-    if (color === 'secondaryText') style.color = 'var(--color-neutral-500)'
+    if (color === 'secondaryText') style.color = 'var(--color-neutral-300)'
+    if (color === 'addedLight') style.color = 'var(--color-green-100)'
+    if (color === 'removedLight') style.color = 'var(--color-red-100)'
 
     if (backgroundColor) {
         // Use Tailwind color tokens with opacity via oklch
@@ -238,7 +240,7 @@ const StructuredDiff = ({ patch }: { patch: Hunk }) => {
 
                 // Create word-level diff display for added line
                 const addedContent = (
-                    <Text backgroundColor='addedLight'>
+                    <Text color='addedLight'>
                         <Text>+</Text>
                         {wordDiff.map((part, idx) => {
                             if (part.added) {
@@ -266,7 +268,7 @@ const StructuredDiff = ({ patch }: { patch: Hunk }) => {
                 const content =
                     type === 'add' || type === 'remove' ? (
                         <Text
-                            backgroundColor={
+                            color={
                                 type === 'add' ? 'addedLight' : 'removedLight'
                             }
                         >

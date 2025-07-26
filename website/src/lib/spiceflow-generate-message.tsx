@@ -25,6 +25,7 @@ import {
     fileUpdateSchema,
     type FileUpdate,
 } from 'docs-website/src/lib/edit-tool'
+import { FileSystemEmulator } from './file-system-emulator'
 import { notifyError } from './errors'
 import { createRenderFormTool, RenderFormParameters } from 'contesto'
 import { mdxRegex } from './utils'
@@ -61,6 +62,15 @@ const deletePagesSchema = z.object({
     filePaths: z
         .array(z.string())
         .describe('Array of file paths to delete from the website'),
+})
+
+const renameFileSchema = z.object({
+    oldPath: z
+        .string()
+        .describe('The current file path to rename. Must include the file extension.'),
+    newPath: z
+        .string()
+        .describe('The new file path. Must include the file extension. The parent directory must exist or be created first.'),
 })
 
 // Website-specific fetchUrl schema that requires absolute URLs
@@ -120,6 +130,15 @@ export type WebsiteTools = {
             slug: string
             startLine?: number
             endLine?: number
+            error?: string
+        }
+    }
+    renameFile: {
+        input: z.infer<typeof renameFileSchema>
+        output: {
+            oldPath: string
+            newPath: string
+            success: boolean
             error?: string
         }
     }
@@ -209,19 +228,14 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 )
             }
         }
-        const docsJsonRenderFormTool = createRenderFormTool({
-            jsonSchema: docsJsonSchema as any,
-            replaceOptionalsWithNulls: model.provider.startsWith('openai'),
-        })
-        // model = anthropic('claude-3-5-haiku-latest')
-        const strReplaceEditor = createEditTool({
-            model: { provider: model.provider },
+        // Create FileSystemEmulator instance
+        const fileSystem = new FileSystemEmulator({
             filesInDraft,
-            async getPageContent({ githubPath }) {
+            getPageContent: async (githubPath) => {
                 const content = await getPageContent({ githubPath, branchId })
                 return content
             },
-            async onNewFile() {
+            onFilesDraftChange: async () => {
                 // Update the chat with current filesInDraft state
                 await prisma.chat.update({
                     where: { chatId, userId },
@@ -230,6 +244,16 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     },
                 })
             },
+        })
+        
+        const docsJsonRenderFormTool = createRenderFormTool({
+            jsonSchema: docsJsonSchema as any,
+            replaceOptionalsWithNulls: model.provider.startsWith('openai'),
+        })
+        // model = anthropic('claude-3-5-haiku-latest')
+        const strReplaceEditor = createEditTool({
+            fileSystem,
+            model: { provider: model.provider },
             async validateNewContent(x) {
                 if (mdxRegex.test(x.githubPath)) {
                     try {
@@ -358,7 +382,8 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     
                     // Add files from filesInDraft that are not already in the list
                     const existingPaths = new Set(filePaths.map(f => f.path))
-                    for (const [draftPath, fileUpdate] of Object.entries(filesInDraft)) {
+                    const draftFiles = fileSystem.getFilesInDraft()
+                    for (const [draftPath, fileUpdate] of Object.entries(draftFiles)) {
                         if (!existingPaths.has(draftPath) && fileUpdate.content !== null) {
                             filePaths.push({
                                 path: draftPath,
@@ -386,34 +411,15 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     'Delete pages from the website. paths should never start with /. Paths should include the extension.',
                 inputSchema: deletePagesSchema,
                 execute: async ({ filePaths }) => {
-                    const deletedFiles: string[] = []
-
-                    for (const filePath of filePaths) {
-                        const content = await getPageContent({
-                            githubPath: filePath,
-                            branchId,
-                        }).catch(() => null)
-                        const lineCount =
-                            typeof content === 'string'
-                                ? content.split('\n').length
-                                : 1
-                        filesInDraft[filePath] = {
-                            content: null,
-                            githubPath: filePath,
-                            deletedLines: lineCount,
+                    try {
+                        await fileSystem.deleteBatch(filePaths)
+                        return { deletedFiles: filePaths }
+                    } catch (error) {
+                        return {
+                            deletedFiles: [],
+                            error: error.message
                         }
-                        deletedFiles.push(filePath)
                     }
-
-                    // Update the chat with current filesInDraft state after deletion
-                    await prisma.chat.update({
-                        where: { chatId, userId },
-                        data: {
-                            filesInDraft: (filesInDraft as any) || {},
-                        },
-                    })
-
-                    return { deletedFiles }
                 },
             }),
 
@@ -557,6 +563,29 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                         startLine,
                         endLine,
                         message: `Selected text on ${page.url} from line ${startLine} to ${endLine}`,
+                    }
+                },
+            }),
+
+            renameFile: tool({
+                description:
+                    'Rename or move a file within the website. This updates the file path while preserving its content. Ensure the parent directory exists before moving a file to a new location.',
+                inputSchema: renameFileSchema,
+                execute: async ({ oldPath, newPath }) => {
+                    try {
+                        await fileSystem.move(oldPath, newPath)
+                        return {
+                            oldPath,
+                            newPath,
+                            success: true,
+                        }
+                    } catch (error) {
+                        return {
+                            oldPath,
+                            newPath,
+                            success: false,
+                            error: error.message,
+                        }
                     }
                 },
             }),

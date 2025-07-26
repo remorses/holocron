@@ -40,6 +40,7 @@ import {
     fileUpdateSchema,
     type FileUpdate,
 } from './edit-tool'
+import { FileSystemEmulator } from 'website/src/lib/file-system-emulator'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
@@ -118,12 +119,10 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                 })
                 .join('\n')
 
-            const editTool = createEditTool({
-                model: { provider: model.provider },
-                filesInDraft: filesInDraft,
-                async getPageContent({
-                    githubPath: githubPathWrong,
-                }) {
+            // Create FileSystemEmulator instance
+            const fileSystem = new FileSystemEmulator({
+                filesInDraft,
+                getPageContent: async (githubPathWrong) => {
                     const slug = cleanSlug(githubPathWrong)
                     const sourcePage = source.getPage(
                         slug.split('/').filter(Boolean),
@@ -140,14 +139,6 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                         throw new Error(
                             `the canonical path of ${githubPathWrong} is ${githubPath}, please call again the tool using ${githubPath} instead`,
                         )
-                    }
-
-                    const fileInDraft = filesInDraft[githubPath]
-                    if (
-                        fileInDraft &&
-                        fileInDraft.content !== null
-                    ) {
-                        return fileInDraft.content
                     }
 
                     // Otherwise, try to get content from database
@@ -189,7 +180,13 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                 },
             })
 
+            const editTool = createEditTool({
+                fileSystem,
+                model: { provider: model.provider },
+            })
+
             const tools: Record<string, any> = {
+              strReplaceEditor: editTool,
                 searchDocs: tool({
                     inputSchema: searchDocsInputSchema,
                     execute: async ({ terms, searchType = 'fulltext' }) => {
@@ -208,11 +205,12 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                 }),
                 goToPage: tool({
                     inputSchema: goToPageInputSchema,
-                    execute: async ({ slug }) => {
-                        const slugParts = slug.split('/').filter(Boolean)
+                    execute: async ({ slug: _slug }) => {
+                        const cleanedSlug = cleanSlug(_slug)
+                        const slugParts = cleanedSlug.split('/').filter(Boolean)
                         const page = source.getPage(slugParts)
                         if (!page) {
-                            return { error: `page ${slug} not found` }
+                            return { error: `page ${cleanedSlug} not found` }
                         }
                         return {
                             slug: page.url,
@@ -308,8 +306,8 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
                 }),
             }
 
-            // Add edit tool 
-            tools.strReplaceEditor = editTool
+            // Add edit tool
+
 
             const result = streamText({
                 model,

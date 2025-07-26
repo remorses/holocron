@@ -62,6 +62,7 @@ import {
     GetPageContentArgs,
     isStrReplaceParameterComplete,
 } from 'docs-website/src/lib/edit-tool'
+import { FileSystemEmulator } from '../lib/file-system-emulator'
 import {
     escapeMdxSyntax,
     generateSlugFromPath,
@@ -301,19 +302,29 @@ export default function Chat({
                 )
             if (error) throw error
             console.log(generator)
-            async function getPageContent(x: GetPageContentArgs) {
+            async function getPageContent(githubPath: string) {
                 const { data, error } = await apiClient.api.getPageContent.post(
                     {
                         branchId,
-                        githubPath: x.githubPath,
+                        githubPath: githubPath,
                     },
                 )
                 if (error) return ''
                 return data?.content
             }
-            const execute = createEditExecute({
-                filesInDraft: filesInDraft,
+            // Create global FileSystemEmulator for tool execution
+            const globalFileSystem = new FileSystemEmulator({
+                filesInDraft,
                 getPageContent,
+                onFilesDraftChange: async () => {
+                    // Update the global state whenever files change
+                    // useWebsiteState.setState({
+                    //     filesInDraft: filesInDraft,
+                    // })
+                },
+            })
+            const execute = createEditExecute({
+                fileSystem: globalFileSystem,
             })
 
             let isPostMessageBusy = false
@@ -410,10 +421,15 @@ export default function Chat({
                         )
 
                         if (isPostMessageBusy) return
+                        // Create a temporary FileSystemEmulator for preview
                         let updatedPagesCopy = { ...filesInDraft }
-                        const localExecute = createEditExecute({
+                        const previewFileSystem = new FileSystemEmulator({
                             filesInDraft: updatedPagesCopy,
                             getPageContent,
+                            // No onFilesDraftChange callback for preview
+                        })
+                        const localExecute = createEditExecute({
+                            fileSystem: previewFileSystem,
                         })
                         await localExecute(args as any)
                         isPostMessageBusy = true
@@ -789,7 +805,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                         const toolName = part.type.replace('tool-', '')
                         const callArg =
                             'input' in part
-                                ? truncateText(JSON.stringify(part.input))
+                                ? truncateText(stringifyArgs(part.input))
                                 : ''
                         let error = ''
                         if (
@@ -810,6 +826,16 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
             </ChatAssistantMessage>
         </ChatForm>
     )
+}
+
+function stringifyArgs(obj: any): string {
+    if (!obj || typeof obj !== 'object') return JSON.stringify(obj)
+    return Object.entries(obj)
+        .map(([key, value]) => {
+            // For null/undefined/primitive types, JSON.stringify handles all cases
+            return `${key}=${JSON.stringify(value)}`
+        })
+        .join(', ')
 }
 
 function spaceCase(str: string): string {

@@ -70,6 +70,7 @@ import {
     ValidateNewContentArgs,
     GetPageContentArgs,
 } from '../lib/edit-tool'
+import { FileSystemEmulator } from 'website/src/lib/file-system-emulator'
 
 export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
     const chatId = usePersistentDocsState((x) => x.chatId)
@@ -114,11 +115,11 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                 )
             if (error) throw error
 
-            async function getPageContent(x: GetPageContentArgs) {
+            async function getPageContent(githubPath: string) {
                 if (typeof window === 'undefined') return ''
-                let path = x.githubPath.startsWith('/')
-                    ? x.githubPath
-                    : '/' + x.githubPath
+                let path = githubPath.startsWith('/')
+                    ? githubPath
+                    : '/' + githubPath
                 const url = new URL(path, window.location.origin).toString()
                 const res = await fetch(url)
                 if (!res.ok) {
@@ -129,6 +130,8 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                 const text = await res.text()
                 return text
             }
+
+
 
             const onToolOutput = async (
                 toolPart: ToolPartOutputAvailable<DocsUIMessage>,
@@ -205,10 +208,15 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                             drawerState: 'minimized',
                         })
 
+                        // Create a temporary FileSystemEmulator for preview
                         let updatedPagesCopy = { ...filesInDraft }
-                        const execute = createEditExecute({
+                        const previewFileSystem = new FileSystemEmulator({
                             filesInDraft: updatedPagesCopy,
                             getPageContent,
+                            // No onFilesDraftChange callback for preview
+                        })
+                        const execute = createEditExecute({
+                            fileSystem: previewFileSystem,
                         })
 
                         await execute(args as any)
@@ -217,9 +225,9 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                             toolPart,
                         )
 
-                        // Update docs state with new filesInDraft
+                        // Update docs state with new filesInDraft from the preview file system
                         useDocsState.setState({
-                            filesInDraft: { ...updatedPagesCopy },
+                            filesInDraft: { ...previewFileSystem.getFilesInDraft() },
                         })
                     }
                 },

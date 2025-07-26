@@ -5,6 +5,7 @@ import { createZustandContext } from 'docs-website/src/lib/zustand-context'
 import { create } from 'zustand'
 import { useDeferredValue, useMemo } from 'react'
 import { FileUpdate } from 'docs-website/src/lib/edit-tool'
+import { FileSystemEmulator } from './file-system-emulator'
 
 export type State = {
     currentSlug: string

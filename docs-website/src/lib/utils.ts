@@ -181,7 +181,7 @@ export function escapeMdxSyntax(text: string): string {
  * @returns The truncated text with ellipsis if it was truncated
  */
 export function truncateText(text: string, maxLength: number = 500): string {
-    if (text.length <= maxLength) {
+    if (!text?.length || text?.length <= maxLength) {
         return text
     }
     return text.slice(0, maxLength).trimEnd() + '...'

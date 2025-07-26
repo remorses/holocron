@@ -3,6 +3,7 @@ import { diffLines, createPatch } from 'diff'
 import { tool } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
 import { optionalToNullable } from 'contesto'
+import { FileSystemEmulator } from 'website/src/lib/file-system-emulator'
 
 export function calculateLineChanges(
     oldContent: string,
@@ -73,28 +74,14 @@ export type ValidateNewContentArgs = { githubPath: string; content: string }
 export type GetPageContentArgs = { githubPath: string }
 
 export function createEditExecute({
-    filesInDraft,
-    getPageContent: _getPageContent,
+    fileSystem,
     validateNewContent,
-    onNewFile: onFilesDraftStructureChange,
 }: {
     validateNewContent?: (x: ValidateNewContentArgs) => any
-    filesInDraft: Record<string, FileUpdate>
-    getPageContent: (x: GetPageContentArgs) => Promise<string | undefined | void>
-    onNewFile?: () => void | Promise<void>
+    fileSystem: FileSystemEmulator
 }) {
     const previousEdits = [] as FileUpdate[]
-    const originalContent = new Map<string, string>()
-
-    async function getOriginalContent(path: string): Promise<string> {
-        if (originalContent.has(path)) {
-            return originalContent.get(path)!
-        }
-        const content = await _getPageContent({ githubPath: path })
-        const contentStr = content || ''
-        originalContent.set(path, contentStr)
-        return contentStr
-    }
+    const filesInDraft = fileSystem.getFilesInDraft()
 
     return async function execute(params: EditToolParamSchema) {
         const {
@@ -111,31 +98,21 @@ export function createEditExecute({
 
         switch (command) {
             case 'view': {
-                const override = filesInDraft[path]
                 let content: string | null = null
-
-                if (override && override.content !== null) {
-                    content = override.content
-                } else {
-                    try {
-                        const fetchedContent = await getOriginalContent(path)
-                        content = fetchedContent || ''
-                        filesInDraft[path] = {
-                            githubPath: path,
-                            content: content,
-                            addedLines: 0,
-                            deletedLines: 0,
-                        }
-                    } catch (e) {
+                
+                try {
+                    content = await fileSystem.read(path)
+                    if (content === null) {
                         return {
                             success: false,
-                            error: e.message,
+                            error: `File not found: ${path}`,
                         }
                     }
-                }
-
-                if (!content) {
-                    return content
+                } catch (e) {
+                    return {
+                        success: false,
+                        error: e.message,
+                    }
                 }
 
                 const lines = content.split('\n')
@@ -194,46 +171,29 @@ export function createEditExecute({
                         }
                     }
                 }
-                const lineCount = file_text.split('\n').length
-                filesInDraft[path] = {
-                    githubPath: path,
-                    content: file_text,
-                    addedLines: lineCount,
-                    deletedLines: 0,
-                }
-                if (onFilesDraftStructureChange) {
-                    await onFilesDraftStructureChange()
-                }
+                
+                await fileSystem.write(path, file_text)
                 return file_text
             }
             case 'str_replace': {
-                let override = filesInDraft[path]
-                if (!override || override.content === null) {
-                    const content = await getOriginalContent(path)
-                    if (typeof content !== 'string') {
-                        return {
-                            success: false,
-                            error: `Page not found for path: ${path}`,
-                        }
-                    }
-                    override = {
-                        githubPath: path,
-                        content: content,
-                        addedLines: 0,
-                        deletedLines: 0,
+                const currentContent = await fileSystem.read(path)
+                if (currentContent === null) {
+                    return {
+                        success: false,
+                        error: `Page not found for path: ${path}`,
                     }
                 }
 
-                // Ensure we have the original content for comparison
-                const original = await getOriginalContent(path)
-
                 // Store current state before editing
-                previousEdits.push({
-                    githubPath: path,
-                    content: override.content,
-                    addedLines: override.addedLines || 0,
-                    deletedLines: override.deletedLines || 0,
-                })
+                const currentFileUpdate = filesInDraft[path]
+                if (currentFileUpdate) {
+                    previousEdits.push({
+                        githubPath: path,
+                        content: currentFileUpdate.content,
+                        addedLines: currentFileUpdate.addedLines || 0,
+                        deletedLines: currentFileUpdate.deletedLines || 0,
+                    })
+                }
                 if (typeof old_str !== 'string' || old_str.length === 0) {
                     return {
                         success: false,
@@ -246,7 +206,7 @@ export function createEditExecute({
                         error: '`new_str` is required for str_replace command.',
                     }
                 }
-                const occurrences = override.content!.split(old_str).length - 1
+                const occurrences = currentContent.split(old_str).length - 1
                 if (occurrences === 0) {
                     return {
                         success: false,
@@ -259,7 +219,7 @@ export function createEditExecute({
                 //         error: `Old string "${old_str}" found more than once in the document.`,
                 //     }
                 // }
-                const replacedContent = override.content!.replace(
+                const replacedContent = currentContent.replace(
                     old_str,
                     new_str,
                 )
@@ -282,20 +242,11 @@ export function createEditExecute({
                         }
                     }
                 }
-                const { addedLines, deletedLines } = calculateLineChanges(
-                    original,
-                    replacedContent,
-                )
-                filesInDraft[path] = {
-                    githubPath: path,
-                    content: replacedContent,
-                    addedLines,
-                    deletedLines,
-                }
+                await fileSystem.write(path, replacedContent)
 
                 const patch = createPatch(
                     path,
-                    override.content!,
+                    currentContent,
                     replacedContent,
                     '',
                     '',
@@ -312,33 +263,24 @@ export function createEditExecute({
                 return result
             }
             case 'insert': {
-                let override = filesInDraft[path]
-                if (!override || override.content === null) {
-                    const content = await getOriginalContent(path)
-                    if (typeof content !== 'string') {
-                        return {
-                            success: false,
-                            error: `Page not found for path: ${path}`,
-                        }
-                    }
-                    override = {
-                        githubPath: path,
-                        content: content,
-                        addedLines: 0,
-                        deletedLines: 0,
+                const currentContent = await fileSystem.read(path)
+                if (currentContent === null) {
+                    return {
+                        success: false,
+                        error: `Page not found for path: ${path}`,
                     }
                 }
 
-                // Ensure we have the original content for comparison
-                const original = await getOriginalContent(path)
-
                 // Store current state before editing
-                previousEdits.push({
-                    githubPath: path,
-                    content: override.content,
-                    addedLines: override.addedLines || 0,
-                    deletedLines: override.deletedLines || 0,
-                })
+                const currentFileUpdate = filesInDraft[path]
+                if (currentFileUpdate) {
+                    previousEdits.push({
+                        githubPath: path,
+                        content: currentFileUpdate.content,
+                        addedLines: currentFileUpdate.addedLines || 0,
+                        deletedLines: currentFileUpdate.deletedLines || 0,
+                    })
+                }
                 if (typeof insert_line !== 'number' || insert_line < 1) {
                     return {
                         success: false,
@@ -351,7 +293,7 @@ export function createEditExecute({
                         error: '`new_str` is required for insert command.',
                     }
                 }
-                const lines = override.content!.split('\n')
+                const lines = currentContent.split('\n')
                 // insert_line is 1-based, insert after the specified line
                 const insertAt = Math.min(insert_line, lines.length)
                 lines.splice(insertAt, 0, new_str)
@@ -375,20 +317,11 @@ export function createEditExecute({
                         }
                     }
                 }
-                const { addedLines, deletedLines } = calculateLineChanges(
-                    original,
-                    newContent,
-                )
-                filesInDraft[path] = {
-                    githubPath: path,
-                    content: newContent,
-                    addedLines,
-                    deletedLines,
-                }
+                await fileSystem.write(path, newContent)
 
                 const patch = createPatch(
                     path,
-                    override.content!,
+                    currentContent,
                     newContent,
                     '',
                     '',
@@ -409,11 +342,11 @@ export function createEditExecute({
                 }
 
                 // Restore the previous content and recalculate line changes against original
-                if (validateNewContent) {
+                if (validateNewContent && previous.content !== null) {
                     try {
                         const result = await validateNewContent({
                             githubPath: path,
-                            content: previous.content!,
+                            content: previous.content,
                         })
                         if (result && result.error) {
                             return {
@@ -429,17 +362,10 @@ export function createEditExecute({
                     }
                 }
 
-                const original = await getOriginalContent(path)
-                const { addedLines, deletedLines } = calculateLineChanges(
-                    original,
-                    previous.content!,
-                )
-
-                filesInDraft[path] = {
-                    githubPath: path,
-                    content: previous.content,
-                    addedLines,
-                    deletedLines,
+                if (previous.content === null) {
+                    await fileSystem.delete(path)
+                } else {
+                    await fileSystem.write(path, previous.content)
                 }
 
                 return {
@@ -459,23 +385,17 @@ export function createEditExecute({
 }
 
 export function createEditTool({
-    filesInDraft,
-    getPageContent,
+    fileSystem,
     validateNewContent,
-    onNewFile,
     model,
 }: {
+    fileSystem: FileSystemEmulator
     validateNewContent?: (x: ValidateNewContentArgs) => any
-    filesInDraft: Record<string, FileUpdate>
-    getPageContent: (x: GetPageContentArgs) => Promise<string | undefined | void>
-    onNewFile?: () => void | Promise<void>
     model?: { provider?: string }
 }) {
     const execute = createEditExecute({
-        filesInDraft,
-        getPageContent,
+        fileSystem,
         validateNewContent,
-        onNewFile,
     })
 
     // Use Anthropic's native text editor for Claude models that support it
