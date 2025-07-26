@@ -1,14 +1,12 @@
-import { memo } from 'react'
 
-import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
-import { cn } from 'website/src/lib/utils'
+import { useChatContext } from 'contesto/src/chat/chat-provider'
+import { MarkdownRuntimeChat as Markdown } from 'docs-website/src/lib/markdown-runtime-chat'
 import { escapeMdxSyntax, truncateText } from 'docs-website/src/lib/utils'
 import { WebsiteToolPart } from 'website/src/lib/types'
-import { useWebsiteState } from '../lib/state'
-import { EditToolParamSchema } from 'docs-website/src/lib/edit-tool'
-import { RenderFormPreview } from 'contesto'
-import { useChatContext } from 'contesto/src/chat/chat-provider'
-import { ChatPartTool } from 'db'
+import { cn } from 'website/src/lib/utils'
+
+
+
 
 export function EditorToolPreview({
     input: args,
@@ -54,7 +52,7 @@ export function EditorToolPreview({
         let markdown = ''
         markdown += `Creating \`${args?.path}\`\n`
         markdown +=
-            '````mdx' + ` title=" ${args?.path || ''}" \n` + code + '\n````'
+            '````mdx lineNumbers' + ` title=" ${args?.path || ''}" \n` + code + '\n````'
         return (
             <ToolPreviewContainer>
                 <Markdown isStreaming={isChatGenerating} markdown={markdown} />
@@ -81,7 +79,7 @@ export function EditorToolPreview({
             .map((line) => '+ ' + line)
             .join('\n')
         markdown +=
-            '````diff' +
+            '````diff lineNumbers' +
             ` title=" ${args?.path || ''}:${args?.insert_line || 0}" \n` +
             codeWithPrefix +
             '\n````'
@@ -100,14 +98,14 @@ export function EditorToolPreview({
             diff = result?.error || JSON.stringify(result, null, 2)
         }
         markdown +=
-            '````diff' + ` title=" ${args?.path || ''}" \n` + diff + '\n````'
+            '````diff lineNumbers' + ` title=" ${args?.path || ''}" \n` + diff + '\n````'
         return (
             <ToolPreviewContainer className='py-0'>
                 <Markdown isStreaming={isChatGenerating} markdown={markdown} />
             </ToolPreviewContainer>
         )
     }
-    markdown += '````mdx' + ` title=" ${args?.path || ''}" \n` + code + '\n````'
+    markdown += '````mdx lineNumbers' + ` title=" ${args?.path || ''}" \n` + code + '\n````'
     return (
         <ToolPreviewContainer className='py-0'>
             <Markdown isStreaming={isChatGenerating} markdown={markdown} />
@@ -123,7 +121,7 @@ export function FilesTreePreview({
     if (!code) return null
     let markdown = ''
     markdown += 'Reading project structure\n'
-    markdown += '```sh' + ` \n` + code + '\n```'
+    markdown += '```sh lineNumbers' + ` \n` + code + '\n```'
     return (
         <ToolPreviewContainer className='py-0'>
             <Markdown isStreaming={isChatGenerating} markdown={markdown} />
@@ -134,7 +132,7 @@ export function FilesTreePreview({
 export function ToolPreviewContainer({ className = '', children, ...props }) {
     return (
         <div
-            className={cn('text-sm w-full [&_pre]:text-[12px]', className)}
+            className={cn('w-full', className)}
             {...props}
         >
             {children}

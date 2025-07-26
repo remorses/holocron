@@ -79,9 +79,9 @@ export const parseMarkdownIncremental = async ({
         /* ② miss → parse ---------------------------------------------- */
         const rest = text.slice(offset)
 
-        const file = processorWithAst(
+        const file = await processorWithAst(
             processor
-        ).processSync(rest)
+        ).process(rest)
         const ast = file.data.ast as Root
         if (!ast) {
             console.warn(`file has no ast`, file)

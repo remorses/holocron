@@ -28,15 +28,12 @@ export async function processMdxInServer({
     if (!processor) {
         processor = getProcessor({
             extension,
-            highlighter,
-            onMissingLanguage: (_h, lang) => {
-                // throw new Error(`Language ${lang} for shiki not found`)
-            },
+
         })
         processorCache.set(extension, processor)
     }
     try {
-        const file = processor.processSync(markdown)
+        const file = await processor.process(markdown)
         const data = file.data as ProcessorData
 
         return {

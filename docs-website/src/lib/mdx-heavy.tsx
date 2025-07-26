@@ -1,4 +1,6 @@
 import remarkFrontmatter from 'remark-frontmatter'
+import { toHtml } from 'hast-util-to-html'
+
 import { VFile } from 'vfile'
 
 import { Parser } from 'acorn'
@@ -36,7 +38,7 @@ import { Heading, Root } from 'mdast'
 import { remark } from 'remark'
 import remarkGfm from 'remark-gfm'
 import remarkMdx from 'remark-mdx'
-import { Highlighter } from 'shiki'
+import { codeToHast, codeToHtml, createHighlighter, Highlighter } from 'shiki'
 
 import { visit } from 'unist-util-visit'
 import { remarkGitHubBlockquotes } from './github-blockquotes'
@@ -48,84 +50,88 @@ export type { DocumentRecord, StructuredData }
 
 export type OnMissingLanguage = (h: Highlighter, lang: string) => any
 
-const remarkCodeToHtml =
-    ({
-        highlighter,
-        onMissingLanguage,
-    }: {
-        highlighter?: Highlighter
-        onMissingLanguage?: OnMissingLanguage
-    }) =>
-    () => {
-        return (tree: Root) => {
-            visit(tree, 'code', (node) => {
-                const language = node.lang || 'text'
+const remarkCodeToHtml = () => async (tree: Root, file) => {
+    const promises: Promise<void>[] = []
+    visit(tree, 'code', (node) => {
+        const p = (async () => {
+            const language = node.lang || 'text'
 
-                if (!highlighter) {
-                    return
-                }
-                if (!onMissingLanguage) {
-                    return
-                }
+            // if (!trySync(() => highlighter.getLanguage(language))?.data) {
+            //     onMissingLanguage(highlighter, language)
+            // }
 
-                if (!trySync(() => highlighter.getLanguage(language))?.data) {
-                    onMissingLanguage(highlighter, language)
-                }
+            node.data ||= {}
+            node.data.hProperties ||= {}
+            const meta = parseMetaString(node.meta)
+            node.data.hProperties = {
+                ...node.data.hProperties,
+                ...meta,
+            }
 
-                let html = '\n'
-                try {
-                    html = highlighter.codeToHtml(node.value, {
-                        lang: language,
+            let html = '\n'
+            try {
+                const hast = await codeToHast(node.value, {
+                    lang: language,
+                    // theme: 'github-dark',
+                    themes: {
+                        light: 'github-light',
+                        dark: 'github-dark',
+                    },
+                    // experimentalJSEngine: false,
+                    defaultColor: false,
+                    transformers: [
+                        transformerNotationHighlight({
+                            matchAlgorithm: 'v3',
+                        }),
+                        transformerNotationWordHighlight({
+                            matchAlgorithm: 'v3',
+                        }),
+                        transformerNotationDiff({
+                            matchAlgorithm: 'v3',
+                        }),
+                        // transformerNotationFocus({
+                        //     matchAlgorithm: 'v3',
+                        // }),
+                    ],
+                })
 
-                        // theme: 'github-dark',
-
-                        themes: {
-                            light: 'github-light',
-                            dark: 'github-dark',
+                console.log(node.data.hProperties)
+                console.log(hast)
+                // Apply node.data.hProperties to all <pre> elements in the hast tree
+                if (hast && node.data && node.data.hProperties) {
+                    visit(
+                        hast,
+                        (el: any) =>
+                            typeof el === 'object' &&
+                            el !== null &&
+                            el.type === 'element' &&
+                            el.tagName === 'pre',
+                        (preNode: any) => {
+                            preNode.properties = {
+                                ...(preNode.properties || {}),
+                                ...node.data!.hProperties,
+                            }
                         },
-
-                        // experimentalJSEngine: false,
-                        defaultColor: false,
-                        transformers: [
-                            transformerNotationHighlight({
-                                matchAlgorithm: 'v3',
-                            }),
-                            transformerNotationWordHighlight({
-                                matchAlgorithm: 'v3',
-                            }),
-                            transformerNotationDiff({
-                                matchAlgorithm: 'v3',
-                            }),
-                            // transformerNotationFocus({
-                            //     matchAlgorithm: 'v3',
-                            // }),
-                        ],
-                    })
-                } catch (e: any) {
-                    if (
-                        e.messages?.includes(
-                            `not found, you may need to load it first`,
-                        )
-                    ) {
-                        onMissingLanguage(highlighter, language)
-                    }
-                    html = highlighter.codeToHtml(node.value, {
-                        lang: 'plaintext',
-                        themes: {
-                            light: 'github-light',
-                            dark: 'github-dark',
-                        },
-                        defaultColor: false,
-                    })
+                    )
                 }
+                html = toHtml(hast, {})
+            } catch (e: any) {
+                html = await codeToHtml(node.value, {
+                    lang: 'plaintext',
+                    themes: {
+                        light: 'github-light',
+                        dark: 'github-dark',
+                    },
+                    defaultColor: false,
+                })
+            }
 
-                node.data ||= {}
-                node.data.html = html
-            })
-
-            return tree
-        }
-    }
+            node.data.html = html
+        })()
+        promises.push(p)
+    })
+    await Promise.all(promises)
+}
 
 declare module 'mdast' {
     interface CodeData {
@@ -211,14 +217,45 @@ function looseAcorn() {
     return tolerantAcorn
 }
 
+export function parseMetaString(
+    meta: string | null | undefined,
+): Record<string, string> {
+    if (!meta) {
+        return {}
+    }
+
+    const map: Record<string, string> = {}
+
+    // If there is no '=', treat the whole meta as a trimmed title
+    if (!meta.includes('=')) {
+        map['title'] = meta.trim()
+        return map
+    }
+
+    // Match: key="value", key='value', key=value (no quotes), key (standalone)
+    // We'll use a robust regex that matches all patterns
+    const metaRegex = /(\w+)(?:=(?:"([^"]*)"|'([^']*)'|([^\s"']+)))?/g
+    let match: RegExpExecArray | null
+
+    while ((match = metaRegex.exec(meta)) !== null) {
+        const name = match[1]
+        const value = match[2] ?? match[3] ?? match[4]
+        // If key is alone (no value at all), treat as boolean true string
+        map[name] = value !== undefined ? value : 'true'
+    }
+
+    if (map.lineNumbers !== undefined) {
+        map['data-line-numbers'] = map['lineNumbers']
+        delete map['lineNumbers']
+    }
+
+    return map
+}
+
 export const getProcessor = function getProcessor({
     extension,
-    onMissingLanguage,
-    highlighter,
 }: {
     extension: string | undefined
-    highlighter?: Highlighter
-    onMissingLanguage?: OnMissingLanguage
 }) {
     const structureOptions: StructureOptions = {
         types(node) {
@@ -244,7 +281,7 @@ export const getProcessor = function getProcessor({
             .use(remarkGfm)
             .use(remarkCodeTab)
             .use(remarkHeading)
-            .use(remarkCodeToHtml({ highlighter, onMissingLanguage }))
+            .use(remarkCodeToHtml)
             .use(remarkExtractFirstHeading)
             .use(injectData)
             .use(remarkStringify)
@@ -263,7 +300,7 @@ export const getProcessor = function getProcessor({
                 .use(remarkSteps)
                 .use(remarkInstall)
                 .use(remarkMarkAndUnravel)
-                .use(remarkCodeToHtml({ highlighter, onMissingLanguage }))
+                .use(remarkCodeToHtml)
                 .use(remarkExtractFirstHeading)
                 .use(injectData)
                 .use(remarkCodeGroup)

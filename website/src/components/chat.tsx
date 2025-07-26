@@ -1,122 +1,108 @@
 'use client'
-import { flushSync } from 'react-dom'
+import dedent from 'string-dedent'
 
 import { createIdGenerator, UIMessage } from 'ai'
 import {
-    ChatAssistantMessage,
-    ChatErrorMessage,
-    ChatUserMessage,
+  ChatAssistantMessage,
+  ChatErrorMessage,
+  ChatUserMessage,
 } from 'contesto/src/chat/chat-message'
 import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
-import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
+import { MarkdownRuntimeChat as Markdown } from 'docs-website/src/lib/markdown-runtime-chat'
 import memoize from 'micro-memoize'
 import {
-    memo,
-    startTransition,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
+  memo,
+  startTransition,
+  useEffect,
+  useMemo,
+  useState
 } from 'react'
 
 import {
-    EditorToolPreview,
-    FilesTreePreview,
-    ToolPreviewContainer,
+  EditorToolPreview,
+  FilesTreePreview,
+  ToolPreviewContainer,
 } from 'website/src/components/tools-preview'
 
 import { Button } from 'website/src/components/ui/button'
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from 'website/src/components/ui/popover'
-import { ScrollArea } from 'website/src/components/ui/scroll-area'
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
 } from 'website/src/components/ui/tooltip'
 
-import { useStickToBottom } from 'use-stick-to-bottom'
 
 import {
-    uiStreamToUIMessages,
-    ToolPartOutputAvailable,
-    ToolPartInputStreaming,
+  ToolPartInputStreaming,
+  ToolPartOutputAvailable,
+  uiStreamToUIMessages,
 } from 'contesto/src/lib/process-chat'
 import { useShouldHideBrowser, useTemporaryState } from '../lib/hooks'
 import {
-    apiClient,
-    apiClientWithDurableFetch,
-    durableFetchClient,
+  apiClient,
+  apiClientWithDurableFetch,
+  durableFetchClient,
 } from '../lib/spiceflow-client'
 import {
-    doFilesInDraftNeedPush,
-    State,
-    useWebsiteState,
-    WebsiteStateProvider,
+  doFilesInDraftNeedPush,
+  useWebsiteState
 } from '../lib/state'
 
+import { RenderFormPreview } from 'contesto'
 import {
-    ChatProvider,
-    ChatState,
-    useChatContext,
+  ChatProvider,
+  ChatState,
+  useChatContext,
 } from 'contesto/src/chat/chat-provider'
 import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
 import { ChatSuggestionButton } from 'contesto/src/chat/chat-suggestion'
 import { ChatUploadButton } from 'contesto/src/chat/chat-upload-button'
-import { FilesInDraft } from 'docs-website/src/lib/docs-state'
-import { generateSlugFromPath } from 'docs-website/src/lib/utils'
 import {
-    AlertCircle,
-    FilePlus2Icon,
-    GitBranch,
-    ImageIcon,
-    ListTreeIcon,
-    PaletteIcon,
-    Save,
-    X,
+  calculateLineChanges,
+  createEditExecute,
+  EditToolParamSchema,
+  FileUpdate,
+  GetPageContentArgs,
+  isStrReplaceParameterComplete
+} from 'docs-website/src/lib/edit-tool'
+import { escapeMdxSyntax, generateSlugFromPath, throttle, truncateText } from 'docs-website/src/lib/utils'
+import {
+  AlertCircle,
+  FilePlus2Icon,
+  GitBranch,
+  ImageIcon,
+  ListTreeIcon,
+  PaletteIcon,
+  Save,
+  X,
 } from 'lucide-react'
 import React from 'react'
+import { FormProvider, useForm } from 'react-hook-form'
 import {
-    href,
-    useLoaderData,
-    useParams,
-    useRevalidator,
-    useRouteLoaderData,
+  useLoaderData,
+  useParams,
+  useRevalidator,
+  useRouteLoaderData
 } from 'react-router'
 import { AnimatePresence, motion } from 'unframer'
 import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
 } from 'website/src/components/ui/command'
 import { docsRpcClient } from '../lib/docs-setstate'
-import {
-    calculateLineChanges,
-    createEditExecute,
-    EditToolParamSchema,
-    FileUpdate,
-    isStrReplaceParameterComplete,
-    ValidateNewContentArgs,
-    GetPageContentArgs,
-} from 'docs-website/src/lib/edit-tool'
-import {
-    escapeMdxSyntax,
-    truncateText,
-    throttle,
-} from 'docs-website/src/lib/utils'
 import { WebsiteUIMessage } from '../lib/types'
 import { safeJsoncParse, slugKebabCaseKeepExtension } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
-import type { Route as ChatRoute } from '../routes/org.$orgId.site.$siteId.chat.$chatId'
-import { RenderFormPreview } from 'contesto'
-import { FormProvider, useForm } from 'react-hook-form'
 
 function keyForDocsJson({ chatId }) {
     return `fumabase.jsonc-${chatId}`
@@ -285,7 +271,6 @@ export default function Chat({
         console.log('Using new initial chat state', state)
         return state
     }, [loaderData])
-
 
     const revalidator = useRevalidator()
     const submitMessages = async ({
@@ -484,7 +469,7 @@ export default function Chat({
         >
             <div className='flex grow w-full max-w-[900px] flex-col gap-3 px-6 justify-center'>
                 <Messages ref={ref} />
-                <WelcomeMessage />
+                <MonoSpaceTest />
                 <Footer />
             </div>
         </ChatProvider>
@@ -508,6 +493,119 @@ function WelcomeMessage() {
                 className='prose-sm'
             />
             <div className='grid -mx-2 grid-cols-2 gap-3 mt-3'>
+                <ChatSuggestionButton
+                    icon={<PaletteIcon />}
+                    userMessage='Change primary color'
+                >
+                    Change primary color
+                </ChatSuggestionButton>
+                <ChatSuggestionButton
+                    icon={<ImageIcon />}
+                    userMessage='Update site logo'
+                >
+                    Update site logo
+                </ChatSuggestionButton>
+                <ChatSuggestionButton
+                    icon={<FilePlus2Icon />}
+                    userMessage='Add a new doc page'
+                >
+                    Add a new doc page
+                </ChatSuggestionButton>
+                <ChatSuggestionButton
+                    icon={<ListTreeIcon />}
+                    userMessage='Edit navbar links'
+                >
+                    Edit navbar link
+                </ChatSuggestionButton>
+            </div>
+        </ChatAssistantMessage>
+    )
+}
+
+function MonoSpaceTest() {
+    const { messages } = useChatContext()
+    if (messages.length) return null
+    return (
+        <ChatAssistantMessage
+            className='font-mono '
+            message={{
+                role: 'assistant',
+                id: '',
+                parts: [],
+            }}
+        >
+            <div className='prose-sm'>
+                <div>
+                    <span>
+                        &#8226;{' '}
+                        <span className='text-blue-200 font-semibold'>
+                            Good progress!
+                        </span>{' '}
+                        Now just one test is failing. Let me update that
+                        snapshot:
+                    </span>
+                </div>
+                <div className='mt-4'>
+                    <span>
+                        &#8226;{' '}
+                        <span className='text-purple-200 font-semibold'>
+                            Bash
+                        </span>
+                        (pnpm test -u --run)
+                    </span>
+                    <pre className='ml-5 mb-0 mt-1 text-xs bg-transparent'>
+                        ⎿ &gt; playwriter@ test
+                        /Users/morse/Documents/GitHub/fumabase/playwriter &gt;
+                        vitest run -u --run … +34 lines (ctrl+r to expand)
+                    </pre>
+                </div>
+                <div className='mt-2'>
+                    <span>
+                        &#8226;{' '}
+                        <span className='text-green-200 font-semibold'>
+                            Read
+                        </span>
+                        (src/mcp.test.ts)
+                    </span>
+                    <pre className='ml-5 mb-0 mt-1 text-xs bg-transparent'>
+                        ⎿ Read 10 lines (ctrl+r to expand)
+                    </pre>
+                </div>
+            </div>
+            <Markdown
+                markdown={dedent(`
+\`\`\`diff lineNumbers=true
+-  expect(received).toMatchSnapshot()
++  expect(received).toMatchInlineSnapshot()
+
+-  Some failing snapshot output removed...
++  Snapshot updated to reflect latest test run!
+
+-  // Old configuration
+-  export const PRIMARY_COLOR = '#3265c1';
++  // New configuration
++  export const PRIMARY_COLOR = '#c1323c';
+
+-  Logo: docs/assets/logo-old.svg
++  Logo: docs/assets/logo-new.svg
+
+-  ## Getting Started
+-  Welcome to the documentation!
++  ## Getting Started
++  Welcome to your updated documentation! 🚀
+
+-  "footerLinks": []
++  "footerLinks": [
++    { "label": "Docs", "href": "/docs" },
++    { "label": "Contact", "href": "/contact" }
++  ]
+\`\`\`
+
+**Updated 3 lines in \`mcp.test.ts\` and 2 config files.**
+The snapshots now pass. You can run \`pnpm test\` to verify.
+                `)}
+            />
+            <div className='grid  -mx-2 grid-cols-2 gap-3 mt-3'>
                 <ChatSuggestionButton
                     icon={<PaletteIcon />}
                     userMessage='Change primary color'
@@ -588,7 +686,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
         <ChatForm>
             <ChatAssistantMessage
                 style={{ minHeight }}
-                className=''
+                className='font-mono'
                 message={message}
             >
                 {message.parts.map((part, index) => {
@@ -872,7 +970,7 @@ function Footer() {
                             <SaveChangesButton />
                         </div>
 
-                        <div className='relative rounded-[20px] border bg-popover'>
+                        <div className='relative rounded-[20px] bg-popover'>
                             <div className='flex'>
                                 <ContextButton
                                     textareaRef={textareaRef}

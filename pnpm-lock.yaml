@@ -498,6 +498,9 @@ importers:
       handlebars:
         specifier: ^4.7.8
         version: 4.7.8
+      hast-util-to-html:
+        specifier: ^9.0.5
+        version: 9.0.5
       hono:
         specifier: ^4.8.1
         version: 4.8.1

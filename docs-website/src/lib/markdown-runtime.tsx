@@ -2,15 +2,11 @@
 
 import { Markdown } from 'contesto/src/lib/markdown'
 import { diffWordsWithSpace } from 'diff'
-import { markAddedNodes } from './diff'
-import { mdxComponents } from '../components/mdx-components'
-import { getProcessor } from './mdx-heavy'
-import { renderNode } from './mdx-code-block'
 import { useMemo } from 'react'
-import {
-    useAddedHighlighter,
-    useScrollToFirstAddedIfAtTop,
-} from './diff-highlight'
+import { mdxComponents } from '../components/mdx-components'
+import { markAddedNodes } from './diff'
+import { renderNode } from './mdx-code-block'
+import { getProcessor } from './mdx-heavy'
 
 export function MarkdownRuntime({
     extension = 'mdx',

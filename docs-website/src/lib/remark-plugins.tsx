@@ -1,8 +1,9 @@
 import type { Code, Root } from 'mdast'
 import type { Expression, Program } from 'estree'
-import { parseMetaString } from './mdx-code-block'
+
 import type { Transformer } from 'unified'
 import { visit } from 'unist-util-visit'
+import { parseMetaString } from './mdx-heavy'
 
 export type RemarkInstallOptions = Partial<{
     Tabs: string

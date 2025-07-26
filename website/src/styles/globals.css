@@ -1,15 +1,32 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import 'fumadocs-ui/css/preset.css';
 @import 'fumadocs-ui/css/shadcn.css';
+@import 'fumadocs-ui/css/shadcn.css';
+@import 'fumadocs-ui/css/preset.css';
+
+
+
 @source "../../../docs-website/src";
 @source "../../../contesto/src";
+@plugin "@tailwindcss/typography";
 
-@source "fumadocs-ui";
+
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+    font-family: 'Consolas';
+    src: url('https://cdn.jsdelivr.net/gh/your-org/fonts/consolas/Consolas-Regular.woff2')
+        format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
 
+@theme {
+    --font-mono:
+        'Consolas', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+}
 
 :root {
     --background: oklch(1 0 0);
@@ -155,7 +172,6 @@
     }
 }
 
-
 @keyframes assistant-spinner-spin {
     0%,
     29.4% {
@@ -178,7 +194,6 @@
         transform: rotate(405deg);
     }
 }
-
 
 /* Custom scrollbar styles: shadcn-inspired */
 ::-webkit-scrollbar {
