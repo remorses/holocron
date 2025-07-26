@@ -50,7 +50,7 @@ describe('MCP Server Tests', () => {
         expect(connectResult.content).toMatchInlineSnapshot(`
           [
             {
-              "text": "Created new page. URL: about:blank. Total pages: 6",
+              "text": "Created new page. URL: about:blank. Total pages: 10",
               "type": "text",
             },
           ]

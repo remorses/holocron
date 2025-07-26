@@ -552,10 +552,25 @@ server.tool(
         try {
             const { page } = await ensureConnection()
 
-            const snapshot = await page.accessibility.snapshot({
-                interestingOnly: true,
-                root: undefined,
-            })
+            // Check if the method exists
+            if (typeof (page as any)._snapshotForAI !== 'function') {
+                // Fall back to regular accessibility snapshot
+                const snapshot = await page.accessibility.snapshot({
+                    interestingOnly: true,
+                    root: undefined,
+                })
+                
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify(snapshot, null, 2),
+                        },
+                    ],
+                }
+            }
+
+            const snapshot = await (page as any)._snapshotForAI()
 
             return {
                 content: [
@@ -566,6 +581,7 @@ server.tool(
                 ],
             }
         } catch (error: any) {
+            console.error('Accessibility snapshot error:', error)
             return {
                 content: [
                     {
