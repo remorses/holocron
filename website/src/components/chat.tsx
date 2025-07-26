@@ -675,13 +675,13 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
     const isLastMessage = messages[messages.length - 1]?.id === message.id
     if (message.role === 'user') {
         return (
-            <ChatUserMessage message={message}>
+            <ChatUserMessage className='my-8' message={message}>
                 {message.parts.map((part, index) => {
                     if (part.type === 'text') {
                         return (
                             <Markdown
                                 key={index}
-                                className='[&_p]:m-0 prose-sm'
+                                className='[&_p]:m-0 prose text-[16px]'
                                 isStreaming={isChatGenerating}
                                 markdown={part.text}
                             />

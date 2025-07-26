@@ -234,9 +234,11 @@ const EditingUserMessage = memo(function EditingUserMessage({
 export function ChatUserMessage({
     children,
     message,
+    className,
 }: {
     children: React.ReactNode
     message: UIMessage
+    className?: string
 }) {
     const editingMessageId = useChatState((x) => x.editingMessageId)
     const messageId = message.id
@@ -272,7 +274,10 @@ export function ChatUserMessage({
         <article
             ref={messageRef}
             data-message-id={message.id}
-            className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end'
+            className={cn(
+                'flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end',
+                className,
+            )}
             style={scrollStyle}
         >
             <div className='max-w-full relative group/message bg-muted px-4 py-2 rounded-xl'>

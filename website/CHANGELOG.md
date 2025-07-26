@@ -7,7 +7,7 @@
 - Added pulse animation using Tailwind animate-pulse class when tool is in progress
 - Updated directory-tree to show tree connectors (├──) for top-level paths
 - Added directory collapsing for parent folders with single child folders (e.g., `parent1/parent2/xx`)
-- Added test cases for directory collapsing feature including root-level collapsing
+- Added test cases for directory collapsing including single root with nested single-child directories
 - Updated all test snapshots to reflect the new tree structure
 
 ## 2025-01-26 19:00
