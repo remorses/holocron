@@ -12,10 +12,14 @@
         "test": "vitest run",
         "test:watch": "vitest"
     },
+    "bin": {
+        "playwriter-mcp": "./bin.js"
+    },
     "files": [
         "dist",
         "src",
-        "esm"
+        "esm",
+        "bin.js"
     ],
     "keywords": [],
     "author": "Tommaso De Rossi, morse <beats.by.morse@gmail.com>",
