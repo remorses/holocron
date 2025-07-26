@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
-import { Page, Browser, BrowserContext, chromium } from 'rebrowser-playwright'
+import { Page, Browser, BrowserContext, chromium } from 'patchright'
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
@@ -88,6 +88,7 @@ async function launchChromeWithCDP(): Promise<ChildProcess> {
         '--disable-web-security',
         '--disable-infobars',
         '--disable-translate',
+        '--disable-features=AutomationControlled', // disables --enable-automation
     ]
 
     const chromeProcess = spawn(executablePath, chromeArgs, {
@@ -168,7 +169,7 @@ async function ensureConnection(): Promise<{ browser: Browser; page: Page }> {
                 pageLogs = []
                 state.consoleLogs.set(page, pageLogs)
             }
-            
+
             // Add new log
             pageLogs.push({
                 type: msg.type(),
@@ -176,13 +177,13 @@ async function ensureConnection(): Promise<{ browser: Browser; page: Page }> {
                 timestamp: Date.now(),
                 location: msg.location(),
             })
-            
+
             // Keep only last 1000 logs
             if (pageLogs.length > 1000) {
                 pageLogs.shift()
             }
         })
-        
+
         // Clean up logs and network requests when page is closed
         page.on('close', () => {
             state.consoleLogs.delete(page)
@@ -214,10 +215,10 @@ async function ensureConnection(): Promise<{ browser: Browser; page: Page }> {
                             pageRequests = []
                             state.networkRequests.set(page, pageRequests)
                         }
-                        
+
                         // Add new request
                         pageRequests.push(entry as NetworkRequest)
-                        
+
                         // Keep only last 1000 requests
                         if (pageRequests.length > 1000) {
                             pageRequests.shift()
@@ -279,7 +280,7 @@ server.tool(
                     pageLogs = []
                     state.consoleLogs.set(newPage, pageLogs)
                 }
-                
+
                 // Add new log
                 pageLogs.push({
                     type: msg.type(),
@@ -287,13 +288,13 @@ server.tool(
                     timestamp: Date.now(),
                     location: msg.location(),
                 })
-                
+
                 // Keep only last 1000 logs
                 if (pageLogs.length > 1000) {
                     pageLogs.shift()
                 }
             })
-            
+
             // Clean up logs and network requests when page is closed
             newPage.on('close', () => {
                 state.consoleLogs.delete(newPage)
@@ -325,10 +326,10 @@ server.tool(
                                 pageRequests = []
                                 state.networkRequests.set(newPage, pageRequests)
                             }
-                            
+
                             // Add new request
                             pageRequests.push(entry as NetworkRequest)
-                            
+
                             // Keep only last 1000 requests
                             if (pageRequests.length > 1000) {
                                 pageRequests.shift()
@@ -383,7 +384,7 @@ server.tool(
 
             // Get logs for current page
             const pageLogs = state.consoleLogs.get(page) || []
-            
+
             // Filter and paginate logs
             let logs = [...pageLogs]
             if (type) {
@@ -708,7 +709,7 @@ async function cleanup() {
     }
 
     // Don't kill the Chrome process - let it continue running
-    // The process was started with detached: true and unref() 
+    // The process was started with detached: true and unref()
     // so it will persist after this process exits
 
     process.exit(0)

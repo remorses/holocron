@@ -411,7 +411,7 @@ export default function Chat({
             // and doesn't delay beyond the throttle period, which could cause it to override
             // the output-available call that comes later
             const onToolInputStreaming = throttle(
-                300,
+                100,
                 async (toolPart: ToolPartInputStreaming<WebsiteUIMessage>) => {
                     if (toolPart.type === 'tool-strReplaceEditor') {
                         const args: Partial<EditToolParamSchema> =

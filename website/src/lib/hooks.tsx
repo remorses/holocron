@@ -124,15 +124,15 @@ export function useShouldHideBrowser() {
         'routes/org.$orgId.site.$siteId.chat.$chatId',
     ) as ChatRoute.ComponentProps['loaderData'] | undefined
     const { mentionOptions = [] } = chatData || {}
-    let hideBrowser = !mentionOptions.length
+    let hasNoFilesInLoader = !mentionOptions.length
     const filesInDraft = useWebsiteState((x) => x.filesInDraft || {})
     // console.log('filesInDraft', filesInDraft)
     const hasDraftFiles = Object.values(filesInDraft)?.some((x) => {
         if (x.githubPath.endsWith('fumabase.jsonc')) {
             return false
         }
-        return x.content
+        return !!x.content
     })
-    // return true
-    return hideBrowser && !hasDraftFiles
+    if (hasDraftFiles) return false
+    return hasNoFilesInLoader
 }
