@@ -1,31 +1,6 @@
 import { createMCPClient } from './mcp-client.js'
 import { describe, it, expect, afterEach } from 'vitest'
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
-import fs from 'node:fs'
-import path from 'node:path'
-
-// No longer need email profile - always uses ~/.playwriter
-
-// Helper function to save/compare snapshots
-function compareSnapshot(name: string, content: any) {
-    const snapshotsDir = path.join(__dirname, '__snapshots__')
-    const snapshotPath = path.join(snapshotsDir, `${name}.json`)
-    
-    // Ensure snapshots directory exists
-    if (!fs.existsSync(snapshotsDir)) {
-        fs.mkdirSync(snapshotsDir, { recursive: true })
-    }
-    
-    // Parse the content if it's in the MCP format
-    const data = typeof content === 'object' && content.content?.[0]?.text 
-        ? JSON.parse(content.content[0].text)
-        : content
-    
-    // Write the snapshot
-    fs.writeFileSync(snapshotPath, JSON.stringify(data, null, 2))
-    
-    return data
-}
 
 describe('MCP Server Tests', () => {
     let cleanup: (() => Promise<void>) | null = null
@@ -50,7 +25,7 @@ describe('MCP Server Tests', () => {
         expect(connectResult.content).toMatchInlineSnapshot(`
           [
             {
-              "text": "Created new page. URL: about:blank. Total pages: 10",
+              "text": "Created new page. URL: about:blank. Total pages: 20",
               "type": "text",
             },
           ]
@@ -91,7 +66,8 @@ describe('MCP Server Tests', () => {
         expect(logsResult.content).toMatchInlineSnapshot(`
           [
             {
-              "text": "No console messages",
+              "text": "[log]: Test log message :1:32
+          [error]: Test error message :2:32",
               "type": "text",
             },
           ]
@@ -122,11 +98,15 @@ describe('MCP Server Tests', () => {
             arguments: {},
         })
         expect(initialSnapshot.content).toBeDefined()
-        
+
         // Save initial snapshot
-        const initialData = compareSnapshot('hacker-news-initial-accessibility', initialSnapshot)
-        expect(initialData.role).toBe('WebArea')
-        expect(initialData.name).toBe('Y Combinator | Hacker News')
+        const initialData =
+            typeof initialSnapshot === 'object' && initialSnapshot.content?.[0]?.text
+                ? tryJsonParse(initialSnapshot.content[0].text)
+                : initialSnapshot
+        expect(initialData).toMatchFileSnapshot('snapshots/hacker-news-initial-accessibility.md')
+        expect(initialData).toContain('table')
+        expect(initialData).toContain('Hacker News')
 
         // Focus on first link on the page
         await client.callTool({
@@ -150,14 +130,17 @@ describe('MCP Server Tests', () => {
             arguments: {},
         })
         expect(focusedSnapshot.content).toBeDefined()
-        
+
         // Save focused snapshot
-        const focusedData = compareSnapshot('hacker-news-focused-accessibility', focusedSnapshot)
-        
-        // Check that the first link now has focus
-        const focusedLink = focusedData.children.find((child: any) => child.focused === true)
-        expect(focusedLink).toBeDefined()
-        expect(focusedLink.role).toBe('link')
+        const focusedData =
+            typeof focusedSnapshot === 'object' && focusedSnapshot.content?.[0]?.text
+                ? tryJsonParse(focusedSnapshot.content[0].text)
+                : focusedSnapshot
+        expect(focusedData).toMatchFileSnapshot('snapshots/hacker-news-focused-accessibility.md')
+
+        // Verify the snapshot contains expected content
+        expect(focusedData).toBeDefined()
+        expect(focusedData).toContain('link')
 
         // Press Tab to go to next item
         await client.callTool({
@@ -176,13 +159,57 @@ describe('MCP Server Tests', () => {
             arguments: {},
         })
         expect(tabbedSnapshot.content).toBeDefined()
-        
+
         // Save tabbed snapshot
-        const tabbedData = compareSnapshot('hacker-news-tabbed-accessibility', tabbedSnapshot)
-        
-        // Check that a different element now has focus
-        const tabbedFocusedLink = tabbedData.children.find((child: any) => child.focused === true)
-        expect(tabbedFocusedLink).toBeDefined()
-        expect(tabbedFocusedLink.name).toBe('Hacker News') // Should be the "Hacker News" link
+        const tabbedData =
+            typeof tabbedSnapshot === 'object' && tabbedSnapshot.content?.[0]?.text
+                ? tryJsonParse(tabbedSnapshot.content[0].text)
+                : tabbedSnapshot
+        expect(tabbedData).toMatchFileSnapshot('snapshots/hacker-news-tabbed-accessibility.md')
+
+        // Verify the snapshot is different
+        expect(tabbedData).toBeDefined()
+        expect(tabbedData).toContain('Hacker News')
+    }, 30000)
+
+    it('should capture accessibility snapshot of shadcn UI', async () => {
+        const { client, cleanup: cleanupFn } = await createMCPClient()
+        cleanup = cleanupFn
+
+        // Create new page
+        await client.callTool({
+            name: 'new_page',
+            arguments: {},
+        })
+
+        // Navigate to shadcn UI
+        await client.callTool({
+            name: 'execute',
+            arguments: {
+                code: `await page.goto('https://ui.shadcn.com/', { waitUntil: 'networkidle' })`,
+            },
+        })
+
+        // Get accessibility snapshot
+        const snapshot = await client.callTool({
+            name: 'accessibility_snapshot',
+            arguments: {},
+        })
+        expect(snapshot.content).toBeDefined()
+
+        // Save snapshot
+        const data =
+            typeof snapshot === 'object' && snapshot.content?.[0]?.text
+                ? tryJsonParse(snapshot.content[0].text)
+                : snapshot
+        expect(data).toMatchFileSnapshot('snapshots/shadcn-ui-accessibility.md')
+        expect(data).toContain('shadcn')
     }, 30000)
 })
+function tryJsonParse(str: string) {
+    try {
+        return JSON.parse(str)
+    } catch {
+        return str
+    }
+}

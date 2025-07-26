@@ -99,6 +99,8 @@ To understand how the code you are writing works you should add inline snapshots
 > Always call `pnpm vitest` or `pnpm test` with `--run` or they will hang forever waiting for changes!
 > ALWAYS read back the test if you use the `-u` option, to make sure the inline snapshot are as you expect.
 
+- for very long snapshots you should use `toMatchFileSnapshot(filename)` instead of `toMatchInlineSnapshot()`. Put the snapshots files in a snapshots/ directory and use the appropriate extension for the file based on the content
+
 Never test client React components. Only server code that runs on the server.
 
 Most tests should be simple calls to functions with some expect calls, no mocks. Test files should be called same as the file where the tested function is being exported from.

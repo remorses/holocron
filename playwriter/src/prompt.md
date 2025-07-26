@@ -13,23 +13,20 @@ If you really want to attach listeners you should also detach them using a try f
 You can also create a new page via `context.newPage()` if you need to start fresh. You can then find that page by iteration over `context.pages()`:
 
 ```javascript
-const page = context
-  .pages()
-  .find(p => p.url().includes('/some/path'));
+const page = context.pages().find((p) => p.url().includes('/some/path'))
 ```
 
 ## important rules
 
 - NEVER call `page.waitForTimeout`, instead use `page.waitForSelector` or use a while loop that waits for a condition to be true.
 - always call `new_page` at the start of a conversation. later this page will be passed to the `execute` tool.
-- In some rare cases you can also skip `new_page` tool, if the user asks you to instead use an existing page in the browser. You can set a page as default using `state.page = page`,  `execute` calls will be passed this page in the scope later on.
+- In some rare cases you can also skip `new_page` tool, if the user asks you to instead use an existing page in the browser. You can set a page as default using `state.page = page`, `execute` calls will be passed this page in the scope later on.
 - if running in localhost and some elements are difficult to target with locators you can update the source code to add `data-testid` attributes to elements you want to target. This will make running tests much easier later on. Also update the source markdown documents your are following if you do so.
 - after every action call the tool `accessibility_snapshot` to get the page structure and understand what elements are available on the page
 - after form submissions use `page.waitForLoadState('networkidle')` to ensure the page is fully loaded before proceeding
 - sometimes when in localhost and using Vite you can encounter issues in the first page load, where a module is not found, because of updated optimization of the node_modules. In these cases you can try reloading the page 2 times and see if the issue resolves itself.
 - for Google and GitHub login always use the Google account you have access to, already signed in
 - if you are following a markdown document describing the steps to follow to test the website, update this document if you encounter unexpected behavior or if you can add information that would make the test faster, for example telling how to wait for actions that trigger loading states or to use a different timeout for specific actions.
-
 
 ## getting outputs of code execution
 
@@ -59,71 +56,50 @@ console.log('Page ready state:', pageInfo.readyState)
 
 ## Finding Elements on the Page
 
-you can use the tool accessibility_snapshot to get the page accessibility snapshot, which provides a structured view of the page's elements, including their roles and names. This is useful for understanding the page structure and finding elements to interact with.
-
+you can use the tool accessibility_snapshot to get the page accessibility snapshot tree, which provides a structured view of the page's elements, including their roles and names. This is useful for understanding the page structure and finding elements to interact with.
 
 Example accessibility snapshot result:
 
-```json
-{
-    "role": "WebArea",
-    "name": "Example Page",
-    "children": [
-        {
-            "role": "heading",
-            "name": "Welcome to Example.com",
-            "level": 1
-        },
-        {
-            "role": "navigation",
-            "name": "Main navigation",
-            "children": [
-                {
-                    "role": "link",
-                    "name": "Home"
-                },
-                {
-                    "role": "link",
-                    "name": "About"
-                },
-                {
-                    "role": "link",
-                    "name": "Contact"
-                }
-            ]
-        },
-        {
-            "role": "main",
-            "children": [
-                {
-                    "role": "form",
-                    "name": "Login Form",
-                    "children": [
-                        {
-                            "role": "textbox",
-                            "name": "Email",
-                            "value": "",
-                            "required": true
-                        },
-                        {
-                            "role": "textbox",
-                            "name": "Password",
-                            "value": "",
-                            "required": true,
-                            "password": true
-                        },
-                        {
-                            "role": "button",
-                            "name": "Sign In",
-                            "disabled": false
-                        }
-                    ]
-                }
-            ]
-        }
-    ]
-}
+```md
+- generic [active] [ref=e1]:
+    - generic [ref=e2]:
+        - banner [ref=e3]:
+            - generic [ref=e5]:
+                - link "shadcn/ui" [ref=e6] [cursor=pointer]:
+                    - /url: /
+                    - img
+                    - generic [ref=e11] [cursor=pointer]: shadcn/ui
+                - navigation [ref=e12]:
+                    - link "Docs" [ref=e13] [cursor=pointer]:
+                        - /url: /docs/installation
+                    - link "Components" [ref=e14] [cursor=pointer]:
+                        - /url: /docs/components
+                    - link "Blocks" [ref=e15] [cursor=pointer]:
+                        - /url: /blocks
+                    - link "Charts" [ref=e16] [cursor=pointer]:
+                        - /url: /charts/area
+                    - link "Themes" [ref=e17] [cursor=pointer]:
+                        - /url: /themes
+                    - link "Colors" [ref=e18] [cursor=pointer]:
+                        - /url: /colors
 ```
+
+Then you can use `page.locator(`aria-ref=${ref}`).describe(element);` to get an element with a specific `ref` and interact with it.
+
+For example:
+
+```javascript
+const componentsLink = page
+    // Exact target element reference from the page snapshot
+    .locator('aria-ref=e14')
+    // Human-readable element description used to obtain permission to interact with the element
+    .describe('Components link')
+
+componentsLink.click()
+console.log('Clicked on Components link')
+```
+
+This approach is the preferred way to find elements on the page, as it allows you to use the structured information from the accessibility snapshot to interact with elements reliably.
 
 ### Using Snapshot Information to Interact with Elements
 
@@ -154,10 +130,8 @@ console.log('Heading text:', headingText)
 ### Complete Example: Find and Click Elements
 
 ```javascript
-
 await page.getByRole('button', { name: 'Submit Form' }).click()
 console.log('Clicked submit button')
-
 
 await page.waitForLoadState('networkidle')
 console.log('Form submitted successfully')
@@ -272,7 +246,6 @@ await page.getByText('Hover me').hover()
 await page.mouse.move(100, 200)
 ```
 
-
 ## Keyboard Input
 
 ### Type Text
@@ -385,7 +358,6 @@ await page.getByRole('button').evaluate((el) => {
 await page.getByText('Section').evaluate((el) => el.scrollIntoView())
 ```
 
-
 ## File Handling
 
 ### File Upload
@@ -406,8 +378,6 @@ await page.getByLabel('Upload file').setInputFiles([])
 // Find the file input element (often hidden)
 await page.locator('input[type="file"]').setInputFiles('/path/to/file.pdf')
 ```
-
-
 
 ## Network Monitoring
 
@@ -510,21 +480,32 @@ await page.getByText('Success!').first().waitFor({ state: 'visible' })
 console.log('Processing finished and success message appeared')
 
 // Example: Wait for error message to disappear before proceeding
-await page.getByText('Error: Please try again').first().waitFor({ state: 'hidden' })
+await page
+    .getByText('Error: Please try again')
+    .first()
+    .waitFor({ state: 'hidden' })
 await page.getByRole('button', { name: 'Submit' }).click()
 
 // Example: Wait for confirmation text after form submission
 await page.getByRole('button', { name: 'Save' }).click()
-await page.getByText('Your changes have been saved').first().waitFor({ state: 'visible' })
+await page
+    .getByText('Your changes have been saved')
+    .first()
+    .waitFor({ state: 'visible' })
 console.log('Save confirmed')
 
 // Example: Wait for dynamic content to load
 await page.getByRole('button', { name: 'Load More' }).click()
-await page.getByText('Loading more items...').first().waitFor({ state: 'visible' })
-await page.getByText('Loading more items...').first().waitFor({ state: 'hidden' })
+await page
+    .getByText('Loading more items...')
+    .first()
+    .waitFor({ state: 'visible' })
+await page
+    .getByText('Loading more items...')
+    .first()
+    .waitFor({ state: 'hidden' })
 console.log('Additional items loaded')
 ```
-
 
 ### Work with Frames
 

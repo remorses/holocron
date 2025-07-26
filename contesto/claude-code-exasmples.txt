@@ -1,0 +1,75 @@
+⏺ The API seems to be the same. Let me check if there are any other differences:
+
+⏺ Update Todos
+  ⎿ ☒ Replace patchright imports with playwright-core
+     ☒ Update browser connection to use playwright-core API
+     ☐ Run tests to verify everything works
+     ☐ Remove patchright from dependencies
+
+⏺ Bash(pnpm typecheck)
+  ⎿ > playwriter@ typecheck /Users/morse/Documents/GitHub/fumabase/playwriter
+     > tsc --noEmit
+
+⏺ Bash(pnpm test --run)
+  ⎿ Error: Playwright MCP server running on stdio
+     Playwright MCP server running on stdio
+     Executing code: await page.goto('https://news.ycombinator.com/item?id=1', { waitUntil: 'networkidle' })
+
+     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+      FAIL  src/mcp.test.ts > MCP Server Tests > should capture console logs
+     Error: Snapshot `MCP Server Tests > should capture console logs 1` mismatched
+
+     - Expected
+     … +60 lines (ctrl+r to see all)
+
+⏺ The tests are failing. Let me check what's happening with the accessibility snapshot:
+
+⏺ Read(src/__snapshots__/hacker-news-initial-accessibility.json)
+  ⎿ Read 1 line (ctrl+r to expand)
+  ⎿ Interrupted by user
+
+> no, just update the snapshots intead
+
+⏺ Good progress! Now just one test is failing. Let me update that snapshot:
+
+⏺ Bash(pnpm test -u --run)
+  ⎿ > playwriter@ test /Users/morse/Documents/GitHub/fumabase/playwriter
+     > vitest run -u --run
+     … +34 lines (ctrl+r to expand)
+
+⏺ Read(src/mcp.test.ts)
+  ⎿ Read 10 lines (ctrl+r to expand)
+
+
+
+⏺ I'll update the test file to put the snapshots in a snapshots directory as specified in the CLAUDE.md file.
+
+⏺ Update(src/mcp.test.ts)
+  ⎿  Updated src/mcp.test.ts with 3 additions and 3 removals
+       104                typeof initialSnapshot === 'object' && initialSnapshot.content?.[0]?.text
+       105                    ? tryJsonParse(initialSnapshot.content[0].text)
+       106                    : initialSnapshot
+       107 -          expect(initialData).toMatchFileSnapshot('hacker-news-initial-accessibility.md')
+       107 +          expect(initialData).toMatchFileSnapshot('snapshots/hacker-news-initial-accessibility.md')
+       108            expect(initialData).toContain('table')
+       109            expect(initialData).toContain('Hacker News')
+       110
+     ...
+       136                typeof focusedSnapshot === 'object' && focusedSnapshot.content?.[0]?.text
+       137                    ? tryJsonParse(focusedSnapshot.content[0].text)
+       138                    : focusedSnapshot
+       139 -          expect(focusedData).toMatchFileSnapshot('hacker-news-focused-accessibility.md')
+       139 +          expect(focusedData).toMatchFileSnapshot('snapshots/hacker-news-focused-accessibility.md')
+       140
+       141            // Verify the snapshot contains expected content
+       142            expect(focusedData).toBeDefined()
+     ...
+       165                typeof tabbedSnapshot === 'object' && tabbedSnapshot.content?.[0]?.text
+       166                    ? tryJsonParse(tabbedSnapshot.content[0].text)
+       167                    : tabbedSnapshot
+       168 -          expect(tabbedData).toMatchFileSnapshot('hacker-news-tabbed-accessibility.md')
+       168 +          expect(tabbedData).toMatchFileSnapshot('snapshots/hacker-news-tabbed-accessibility.md')
+       169
+       170            // Verify the snapshot is different
+       171            expect(tabbedData).toBeDefined()

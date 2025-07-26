@@ -1440,7 +1440,7 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1
       react-hook-form:
-        specifier: ^7.61.1
+        specifier: ^7.59.0
         version: 7.61.1(react@19.1.0)
       remark:
         specifier: ^15.0.1
@@ -1824,10 +1824,13 @@ importers:
         version: 1.17.0
       '@playwright/mcp':
         specifier: latest
-        version: 0.0.31(zod@3.25.76)
+        version: 0.0.32(zod@3.25.76)
       patchright:
         specifier: ^1.52.5
         version: 1.52.5
+      playwright-core:
+        specifier: ^1.54.1
+        version: 1.54.1
       prompts:
         specifier: ^2.4.2
         version: 2.4.2
@@ -5022,8 +5025,8 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@playwright/mcp@0.0.31':
-    resolution: {integrity: sha512-5W025RAL23sybYT4tBA0YVJBTordsr3MlSRcMrKEWwc72hrtXA719vqT6r/Z0QZF+bRecJhgks+0+3410YnKhQ==}
+  '@playwright/mcp@0.0.32':
+    resolution: {integrity: sha512-1pEULH5zF+NuUCBGRDEei7+Qv1pbkscaR0z3fKjAp7CsrS1DAgu62DHwCSbkTulXkd5nY1TdCCr4oK+shCB7Eg==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -8737,6 +8740,10 @@ packages:
     resolution: {integrity: sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg==}
     engines: {node: '>=12'}
 
+  dotenv@17.2.1:
+    resolution: {integrity: sha512-kQhDYKZecqnM0fCnzI5eIv5L4cAe/iRI+HqMbO/hbRdTAeXDG+M9FjipUxNfbARuEg4iHIbhnhs78BCHNbSxEQ==}
+    engines: {node: '>=12'}
+
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
@@ -11436,6 +11443,11 @@ packages:
 
   pkg-types@2.1.0:
     resolution: {integrity: sha512-wmJwA+8ihJixSoHKxZJRBQG1oY8Yr9pGLzRmSsNms0iNWyHHAlZCa7mmKiFR10YPZuz/2k169JiS/inOjBCZ2A==}
+
+  playwright-core@1.54.1:
+    resolution: {integrity: sha512-Nbjs2zjj0htNhzgiy5wu+3w09YetDx5pkrpI/kZotDlDUaYk0HVA5xrBVPdow4SAUIlhgKcJeJg4GRKW6xHusA==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   playwright-core@1.55.0-alpha-1752701791000:
     resolution: {integrity: sha512-mQhzhjJMiqnGNnYZv7M4yk1OcNTt1E72jrTLO7EqZuoeat4+qpcU0/mbK+RcTEass5a9YheoVFh6OIhruFMGVg==}
@@ -17022,11 +17034,12 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@playwright/mcp@0.0.31(zod@3.25.76)':
+  '@playwright/mcp@0.0.32(zod@3.25.76)':
     dependencies:
       '@modelcontextprotocol/sdk': 1.17.0
       commander: 13.1.0
       debug: 4.4.1
+      dotenv: 17.2.1
       mime: 4.0.7
       playwright: 1.55.0-alpha-1752701791000
       playwright-core: 1.55.0-alpha-1752701791000
@@ -22340,6 +22353,8 @@ snapshots:
 
   dotenv@16.5.0: {}
 
+  dotenv@17.2.1: {}
+
   dunder-proto@1.0.1:
     dependencies:
       call-bind-apply-helpers: 1.0.2
@@ -25933,6 +25948,8 @@ snapshots:
       confbox: 0.2.2
       exsolve: 1.0.7
       pathe: 2.0.3
+
+  playwright-core@1.54.1: {}
 
   playwright-core@1.55.0-alpha-1752701791000: {}
 
