@@ -1,5 +1,16 @@
 # Changelog
 
+## 2025-01-26 14:30
+
+- Fixed ToolPreviewContainer usage in tools-preview.tsx by properly passing toolName and inputString props
+- Replaced markdown diff views with FileEditPreview component from contesto for better diff visualization in replace command
+- Added parsePatch import from diff package to parse hunks for FileEditPreview
+- Updated all ToolPreviewContainer calls in chat.tsx to pass required props
+- Deduplicated create and insert commands into single code path using Markdown with code snippets
+- Removed Markdown component usage for view and error commands in favor of plain HTML
+- Fixed diff parsing from string results using parsePatch instead of expecting result.hunks
+- Kept Markdown component for create/insert commands to show code snippets with syntax highlighting
+
 ## 2025-01-24 20:45
 
 - Removed clientLoader from connect-github route as it cannot use Prisma on the client side

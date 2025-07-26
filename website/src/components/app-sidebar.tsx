@@ -206,7 +206,7 @@ export function ChatLeftSidebar({
                   paddingRight: '2px',
                 }),
             }}
-            className='dark mx-auto bg-black h-full  flex-col scheme-only-dark py-4 px-0 grid max-w-full min-h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
+            className='dark mx-auto bg-black h-full flex-col scheme-only-dark px-0 grid max-w-full min-h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
         >
             <div className='justify-between max-w-[900px] w-full mx-auto row-span-1 z-10 gap-2 flex px-6'>
                 <TeamSwitcher className='grow ' sites={userSites} />

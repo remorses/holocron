@@ -96,6 +96,7 @@ export async function* yieldTasksInParallel<T>(
 export function groupByN<T>(arr: T[], n: number): T[][] {
     if (n <= 0) throw new Error('n must be greater than 0')
     const result: T[][] = []
+    if (!arr?.length) return []
     for (let i = 0; i < arr.length; i += n) {
         result.push(arr.slice(i, i + n))
     }
@@ -159,4 +160,3 @@ export async function* processGeneratorConcurrentlyInOrder<T, R>(
         yield await nextPromise
     }
 }
-

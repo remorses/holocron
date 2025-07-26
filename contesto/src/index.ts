@@ -1,3 +1,5 @@
+import { jsxDedent } from './lib/jsx-dedent.js'
+
 // Chat components
 export * from './chat/chat-provider.js'
 export * from './chat/chat-message.js'
@@ -20,3 +22,6 @@ export * from './lib/render-form-tool.js'
 export * from './components/render-form-preview.js'
 export * from './lib/schema-path-utils.js'
 export * from './lib/zod.js'
+export * from './components/edit-preview.js'
+
+export { jsxDedent }

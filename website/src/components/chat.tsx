@@ -3,100 +3,97 @@ import dedent from 'string-dedent'
 
 import { createIdGenerator, UIMessage } from 'ai'
 import {
-  ChatAssistantMessage,
-  ChatErrorMessage,
-  ChatUserMessage,
+    ChatAssistantMessage,
+    ChatErrorMessage,
+    ChatUserMessage,
 } from 'contesto/src/chat/chat-message'
 import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
 import { MarkdownRuntimeChat as Markdown } from 'docs-website/src/lib/markdown-runtime-chat'
 import memoize from 'micro-memoize'
-import {
-  memo,
-  startTransition,
-  useEffect,
-  useMemo,
-  useState
-} from 'react'
+import { memo, startTransition, useEffect, useMemo, useState } from 'react'
 
 import {
-  EditorToolPreview,
-  FilesTreePreview,
-  ToolPreviewContainer,
+    Dot,
+    EditorToolPreview,
+    ErrorPreview,
+    FilesTreePreview,
+    ToolPreviewContainer,
 } from 'website/src/components/tools-preview'
 
 import { Button } from 'website/src/components/ui/button'
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from 'website/src/components/ui/popover'
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
 } from 'website/src/components/ui/tooltip'
 
-
 import {
-  ToolPartInputStreaming,
-  ToolPartOutputAvailable,
-  uiStreamToUIMessages,
+    ToolPartInputStreaming,
+    ToolPartOutputAvailable,
+    uiStreamToUIMessages,
 } from 'contesto/src/lib/process-chat'
 import { useShouldHideBrowser, useTemporaryState } from '../lib/hooks'
 import {
-  apiClient,
-  apiClientWithDurableFetch,
-  durableFetchClient,
+    apiClient,
+    apiClientWithDurableFetch,
+    durableFetchClient,
 } from '../lib/spiceflow-client'
-import {
-  doFilesInDraftNeedPush,
-  useWebsiteState
-} from '../lib/state'
+import { doFilesInDraftNeedPush, useWebsiteState } from '../lib/state'
 
 import { RenderFormPreview } from 'contesto'
 import {
-  ChatProvider,
-  ChatState,
-  useChatContext,
+    ChatProvider,
+    ChatState,
+    useChatContext,
 } from 'contesto/src/chat/chat-provider'
 import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
 import { ChatSuggestionButton } from 'contesto/src/chat/chat-suggestion'
 import { ChatUploadButton } from 'contesto/src/chat/chat-upload-button'
 import {
-  calculateLineChanges,
-  createEditExecute,
-  EditToolParamSchema,
-  FileUpdate,
-  GetPageContentArgs,
-  isStrReplaceParameterComplete
+    calculateLineChanges,
+    createEditExecute,
+    EditToolParamSchema,
+    FileUpdate,
+    GetPageContentArgs,
+    isStrReplaceParameterComplete,
 } from 'docs-website/src/lib/edit-tool'
-import { escapeMdxSyntax, generateSlugFromPath, throttle, truncateText } from 'docs-website/src/lib/utils'
 import {
-  AlertCircle,
-  FilePlus2Icon,
-  GitBranch,
-  ImageIcon,
-  ListTreeIcon,
-  PaletteIcon,
-  Save,
-  X,
+    escapeMdxSyntax,
+    generateSlugFromPath,
+    throttle,
+    truncateText,
+} from 'docs-website/src/lib/utils'
+import {
+    AlertCircle,
+    FilePlus2Icon,
+    GitBranch,
+    ImageIcon,
+    ListTreeIcon,
+    PaletteIcon,
+    Save,
+    X,
 } from 'lucide-react'
 import React from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import {
-  useLoaderData,
-  useParams,
-  useRevalidator,
-  useRouteLoaderData
+    useLoaderData,
+    useParams,
+    useRevalidator,
+    useRouteLoaderData,
 } from 'react-router'
 import { AnimatePresence, motion } from 'unframer'
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
 } from 'website/src/components/ui/command'
 import { docsRpcClient } from '../lib/docs-setstate'
 import { WebsiteUIMessage } from '../lib/types'
@@ -469,7 +466,7 @@ export default function Chat({
         >
             <div className='flex grow w-full max-w-[900px] flex-col gap-3 px-6 justify-center'>
                 <Messages ref={ref} />
-                <MonoSpaceTest />
+                <WelcomeMessage />
                 <Footer />
             </div>
         </ChatProvider>
@@ -481,7 +478,7 @@ function WelcomeMessage() {
     if (messages.length) return null
     return (
         <ChatAssistantMessage
-            className='-mt-[160px]'
+            className='text-sm -mt-[160px]'
             message={{
                 role: 'assistant',
                 id: '',
@@ -527,7 +524,7 @@ function MonoSpaceTest() {
     if (messages.length) return null
     return (
         <ChatAssistantMessage
-            className='font-mono '
+            className='font-mono text-sm'
             message={{
                 role: 'assistant',
                 id: '',
@@ -686,43 +683,43 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
         <ChatForm>
             <ChatAssistantMessage
                 style={{ minHeight }}
-                className='font-mono'
+                className='font-mono text-sm whitespace-pre-wrap'
                 message={message}
             >
                 {message.parts.map((part, index) => {
                     if (part.type === 'text') {
                         return (
-                            <Markdown
-                                isStreaming={isChatGenerating}
-                                key={index}
-                                className='prose-sm '
-                                markdown={part.text}
-                            />
+                            <div className='flex flex-row tracking-wide gap-[1ch]'>
+                                <Dot />
+                                <Markdown
+                                    isStreaming={isChatGenerating}
+                                    key={index}
+                                    className='prose-sm'
+                                    markdown={part.text}
+                                />
+                            </div>
                         )
                     }
 
                     if (part.type === 'reasoning') {
                         return (
-                            <Markdown
-                                key={index}
-                                className='prose-sm'
-                                isStreaming={isChatGenerating}
-                                markdown={'thinking:' + part.text}
-                            />
+                            <div className='flex flex-row opacity-70 tracking-wide gap-[1ch]'>
+                                <Dot />
+                                <Markdown
+                                    isStreaming={isChatGenerating}
+                                    key={index}
+                                    className='prose-sm'
+                                    markdown={part.text}
+                                />
+                            </div>
                         )
                     }
                     if (part && 'errorText' in part && part.errorText) {
-                        const escapedError = escapeMdxSyntax(
-                            String(part.errorText),
-                        )
-                        const truncatedError = truncateText(escapedError, 300)
                         return (
-                            <Markdown
-                                key={index}
-                                className='prose-sm text-red-600'
-                                isStreaming={isChatGenerating}
-                                markdown={`[${part.type}] ${truncatedError}`}
-                            />
+                            <>
+                                <Dot /> {part.type}
+                                <ErrorPreview error={part.errorText} />
+                            </>
                         )
                     }
                     if (part.type === 'tool-strReplaceEditor') {
@@ -731,7 +728,10 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                     if (part.type === 'tool-getProjectFiles') {
                         return <FilesTreePreview key={index} {...part} />
                     }
-                    if (part.type === 'tool-renderForm') {
+                    if (
+                        part.type === 'tool-renderForm' &&
+                        part.state === 'output-available'
+                    ) {
                         return (
                             <RenderFormPreview
                                 key={index}
@@ -754,46 +754,55 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                     if (part.type === 'tool-deletePages') {
                         const filePaths = part.input?.filePaths || []
                         return (
-                            <ToolPreviewContainer key={index} {...part}>
-                                <Markdown
-                                    markdown={`**🗑️ Deleting Pages:**\n\n${filePaths.map((path) => `- \`${path || ''}\``).join('\n')}`}
-                                    isStreaming={isChatGenerating}
-                                    className='prose-sm'
-                                />
+                            <ToolPreviewContainer key={index}>
+                                <Dot /> Deleting Pages:{' '}
+                                {filePaths.map((path) => (
+                                    <span key={path}>
+                                        <code>{path || ''},</code>
+                                    </span>
+                                ))}{' '}
                             </ToolPreviewContainer>
                         )
                     }
                     if (part.type === 'tool-selectText') {
                         if (!part.input) return null
                         return (
-                            <ToolPreviewContainer key={index} {...part}>
-                                <Markdown
-                                    isStreaming={isChatGenerating}
-                                    markdown={`🔎 Selecting lines ${part.input?.slug}:${part.input?.startLine || 0}-${part.input?.endLine || ''}`}
-                                    className='prose-sm'
-                                />
+                            <ToolPreviewContainer key={index}>
+                                <Dot /> Selecting lines ${part.input?.slug}:$
+                                {part.input?.startLine || 0}-$
+                                {part.input?.endLine || ''}
                             </ToolPreviewContainer>
                         )
                     }
-                    if (
-                        part.type.startsWith('tool-') &&
-                        process.env.NODE_ENV === 'development'
-                    ) {
-                        return (
-                            <pre key={index}>
-                                {JSON.stringify(part, null, 2)}
-                            </pre>
-                        )
-                    }
+                    // if (
+                    //     part.type.startsWith('tool-') &&
+                    //     process.env.NODE_ENV === 'development'
+                    // ) {
+                    //     return (
+                    //         <pre key={index}>
+                    //             {JSON.stringify(part, null, 2)}
+                    //         </pre>
+                    //     )
+                    // }
 
                     if (part.type.startsWith('tool-')) {
+                        const toolName = part.type.replace('tool-', '')
+                        const callArg =
+                            'input' in part
+                                ? truncateText(JSON.stringify(part.input))
+                                : ''
+                        let error = ''
+                        if (
+                            typeof part === 'object' &&
+                            'error' in part &&
+                            part.error
+                        ) {
+                            error = part.error as any
+                        }
                         return (
-                            <ToolPreviewContainer key={index} {...part}>
-                                <Markdown
-                                    markdown={`🔨 calling ${spaceCase(part.type.replace('tool-', ''))}`}
-                                    isStreaming={isChatGenerating}
-                                    className='prose-sm'
-                                />
+                            <ToolPreviewContainer key={index}>
+                                <Dot /> {spaceCase(toolName)}({callArg})
+                                {error && <ErrorPreview error={error} />}
                             </ToolPreviewContainer>
                         )
                     }

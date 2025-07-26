@@ -4,9 +4,11 @@ import * as React from 'react'
 export const FileEditPreviewTitle = ({
     filePath,
     hunks,
+    className,
 }: {
     filePath: string
     hunks: Hunk[]
+    className?: string
 }) => {
     const numAdditions = hunks.reduce(
         (count, hunk) =>
@@ -20,7 +22,7 @@ export const FileEditPreviewTitle = ({
     )
 
     return (
-        <Text>
+        <Text className={className}>
             Updated <Text bold>{filePath}</Text>
             {numAdditions > 0 || numRemovals > 0 ? ' with ' : ''}
             {numAdditions > 0 ? (
@@ -43,12 +45,14 @@ export const FileEditPreviewTitle = ({
 export const FileEditPreview = ({
     hunks,
     paddingLeft = 0,
+    className,
 }: {
     hunks: Hunk[]
     paddingLeft?: number
+    className?: string
 }) => {
     return (
-        <Box flexDirection='column'>
+        <Box flexDirection='column' className={className}>
             {hunks.flatMap((patch, i) => {
                 const elements = [
                     <Box
@@ -77,7 +81,14 @@ const Box = ({
     children,
     flexDirection = 'row' as 'row' | 'column',
     paddingLeft = 0,
+    className,
     ...props
+}: {
+    children?: React.ReactNode
+    flexDirection?: 'row' | 'column'
+    paddingLeft?: number
+    className?: string
+    [key: string]: any
 }) => {
     return (
         <div
@@ -86,6 +97,7 @@ const Box = ({
                 flexDirection,
                 paddingLeft: `${paddingLeft * 0.5}rem`,
             }}
+            className={className}
             {...props}
         >
             {children}
@@ -99,6 +111,7 @@ const Text = ({
     backgroundColor,
     bold,
     type,
+    className,
     ...props
 }: {
     children?: React.ReactNode
@@ -106,6 +119,7 @@ const Text = ({
     backgroundColor?: string
     bold?: boolean
     type?: string
+    className?: string
     [key: string]: any
 }) => {
     const style: React.CSSProperties = {}
@@ -128,7 +142,7 @@ const Text = ({
     if (bold) style.fontWeight = 'bold'
 
     return (
-        <span style={style} {...props}>
+        <span style={style} className={className} {...props}>
             {children}
         </span>
     )

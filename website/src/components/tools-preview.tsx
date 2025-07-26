@@ -1,12 +1,25 @@
-
+import { FileEditPreview, jsxDedent } from 'contesto'
 import { useChatContext } from 'contesto/src/chat/chat-provider'
 import { MarkdownRuntimeChat as Markdown } from 'docs-website/src/lib/markdown-runtime-chat'
 import { escapeMdxSyntax, truncateText } from 'docs-website/src/lib/utils'
 import { WebsiteToolPart } from 'website/src/lib/types'
 import { cn } from 'website/src/lib/utils'
+import { parsePatch } from 'diff'
+import { ReactNode } from 'react'
 
+function Highlight({ children }: { children: ReactNode }) {
+    return <span className=" dark:text-purple-300">{children}</span>
+}
 
-
+export function ErrorPreview({ error }) {
+    const truncatedError = truncateText(String(error), 300)
+    return (
+        <>
+            <br />⎿ Error:{' '}
+            <span className='text-destructive'>{truncatedError}</span>
+        </>
+    )
+}
 
 export function EditorToolPreview({
     input: args,
@@ -20,17 +33,9 @@ export function EditorToolPreview({
         code = code?.['error'] || JSON.stringify(code, null, 2)
     }
     const command = args?.command
+    let error = ''
     if (typeof result === 'object' && 'error' in result && result.error) {
-        const escapedError = escapeMdxSyntax(String(result.error))
-        const truncatedError = truncateText(escapedError, 300)
-        return (
-            <ToolPreviewContainer>
-                <Markdown
-                    isStreaming={isChatGenerating}
-                    markdown={`❌ Error: ${truncatedError}`}
-                />
-            </ToolPreviewContainer>
-        )
+        error = result.error
     }
     if (command === 'view') {
         let linesText = ''
@@ -41,21 +46,33 @@ export function EditorToolPreview({
 
         return (
             <ToolPreviewContainer>
-                <Markdown
-                    isStreaming={isChatGenerating}
-                    markdown={`Reading \`${args?.path}${linesText}\` `}
-                />
+                <Dot/> Reading <Highlight>{args?.path}</Highlight>
+                {linesText}
+                {error && <ErrorPreview error={error} />}
             </ToolPreviewContainer>
         )
     }
-    if (command === 'create') {
+    if (command === 'create' || command === 'insert') {
         let markdown = ''
-        markdown += `Creating \`${args?.path}\`\n`
         markdown +=
-            '````mdx lineNumbers' + ` title=" ${args?.path || ''}" \n` + code + '\n````'
+            '````mdx lineNumbers' +
+            ` title=" ${args?.path || ''}" \n` +
+            code +
+            '\n````'
+
         return (
             <ToolPreviewContainer>
-                <Markdown isStreaming={isChatGenerating} markdown={markdown} />
+                <Dot/> {command} <Highlight>{args?.path}</Highlight>
+                {command === 'insert' ? `:${args?.insert_line || 0}` : ''}
+                {error ? (
+                    <ErrorPreview error={result.error} />
+                ) : (
+                    <Markdown
+                        className='block  pt-[1em]'
+                        isStreaming={isChatGenerating}
+                        markdown={markdown}
+                    />
+                )}
             </ToolPreviewContainer>
         )
     }
@@ -63,52 +80,40 @@ export function EditorToolPreview({
     if (command === 'undo_edit') {
         return (
             <ToolPreviewContainer>
-                <div>
-                    <strong>Undo last edit in:</strong> {args?.path}
-                </div>
+                <Dot/> Undo last edit in <Highlight>{args?.path}</Highlight>
+                {error && <ErrorPreview error={error} />}
             </ToolPreviewContainer>
         )
     }
 
-    if (command === 'insert') {
-        let markdown = ''
-        markdown += `Inserting content into \`${args?.path}:${args?.insert_line || 0}\`\n`
-        // Prefix each line of code content with '+ '
-        const codeWithPrefix = code
-            .split('\n')
-            .map((line) => '+ ' + line)
-            .join('\n')
-        markdown +=
-            '````diff lineNumbers' +
-            ` title=" ${args?.path || ''}:${args?.insert_line || 0}" \n` +
-            codeWithPrefix +
-            '\n````'
-        return (
-            <ToolPreviewContainer className='py-0'>
-                <Markdown isStreaming={isChatGenerating} markdown={markdown} />
-            </ToolPreviewContainer>
-        )
-    }
-    let markdown = ''
-    markdown += `Replacing content into \`${args?.path}\`\n`
-    if (state === 'output-available') {
-        let diff = result || ''
-
-        if (result && typeof result === 'object') {
-            diff = result?.error || JSON.stringify(result, null, 2)
+    // For replace command
+    if (state === 'output-available' && result && typeof result === 'string') {
+        // Parse the diff patch from the result string
+        const patches = parsePatch(result)
+        if (patches.length > 0 && patches[0].hunks) {
+            return (
+                <ToolPreviewContainer>
+                    <Dot/> Replaced content in <Highlight>{args?.path}</Highlight>
+                    {error ? (
+                        <ErrorPreview error={error} />
+                    ) : (
+                        <div className='overflow-x-auto py-2 max-w-full'>
+                            <FileEditPreview
+                                hunks={patches[0].hunks}
+                                className={'pt-[1em]  min-w-max w-full'}
+                                paddingLeft={0}
+                            />
+                        </div>
+                    )}
+                </ToolPreviewContainer>
+            )
         }
-        markdown +=
-            '````diff lineNumbers' + ` title=" ${args?.path || ''}" \n` + diff + '\n````'
-        return (
-            <ToolPreviewContainer className='py-0'>
-                <Markdown isStreaming={isChatGenerating} markdown={markdown} />
-            </ToolPreviewContainer>
-        )
     }
-    markdown += '````mdx lineNumbers' + ` title=" ${args?.path || ''}" \n` + code + '\n````'
+
     return (
-        <ToolPreviewContainer className='py-0'>
-            <Markdown isStreaming={isChatGenerating} markdown={markdown} />
+        <ToolPreviewContainer>
+            <Dot/> Replacing content in <Highlight>{args?.path}</Highlight>
+            {error && <ErrorPreview error={error} />}
         </ToolPreviewContainer>
     )
 }
@@ -118,24 +123,39 @@ export function FilesTreePreview({
 }: Extract<WebsiteToolPart, { type: 'tool-getProjectFiles' }>) {
     const { isGenerating: isChatGenerating } = useChatContext()
     const code = output || '\n'
+
     if (!code) return null
-    let markdown = ''
-    markdown += 'Reading project structure\n'
-    markdown += '```sh lineNumbers' + ` \n` + code + '\n```'
+
     return (
-        <ToolPreviewContainer className='py-0'>
-            <Markdown isStreaming={isChatGenerating} markdown={markdown} />
+        <ToolPreviewContainer>
+            <Dot/> getting file structure
+            <br />
+            <Markdown
+                isStreaming={isChatGenerating}
+                className='pt-[1em] block'
+                markdown={`\n\`\`\`sh lineNumbers=true\n${code}\n\`\`\`\n`}
+            />
         </ToolPreviewContainer>
     )
 }
 
-export function ToolPreviewContainer({ className = '', children, ...props }) {
-    return (
-        <div
-            className={cn('w-full', className)}
-            {...props}
-        >
-            {children}
-        </div>
-    )
+export function ToolPreviewContainer({
+    children,
+}: {
+    children: React.ReactNode
+}) {
+    return <div className='py-8 space-y-2'>{children}</div>
+}
+
+export function addIndentation(spaces: number, text: string): string {
+    const indent = ' '.repeat(spaces)
+    return text
+        .split('\n')
+        .filter((line) => line.trim() !== '')
+        .map((line) => indent + line)
+        .join('\n')
+}
+
+export function Dot() {
+    return '•'
 }

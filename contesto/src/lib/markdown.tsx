@@ -36,7 +36,7 @@ export const Markdown = function MarkdownRender(props: MarkdownRendererProps) {
     return (
         <div
             className={cn(
-                'contents select-text prose dark:prose-invert',
+                'select-text prose-sm dark:prose-invert',
                 props.className,
             )}
         >

@@ -280,6 +280,18 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                         }
                         return { path, title }
                     })
+                    
+                    // Add files from filesInDraft that are not already in the list
+                    const existingPaths = new Set(filePaths.map(f => f.path))
+                    for (const [draftPath, fileUpdate] of Object.entries(filesInDraft)) {
+                        if (!existingPaths.has(draftPath) && fileUpdate.content !== null) {
+                            filePaths.push({
+                                path: draftPath,
+                                title: '(draft)',
+                            })
+                        }
+                    }
+                    
                     filePaths.push({
                         path: path.posix.join(
                             branch.site.githubFolder || '.',

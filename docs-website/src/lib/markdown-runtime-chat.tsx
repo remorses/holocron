@@ -30,12 +30,19 @@ export function MarkdownRuntimeChat({
             markdown={markdown}
             processor={processor}
             components={mdxComponents}
-            className={cn('text-[14px]', className)}
+            className={cn('block max-w-full text-sm prose-sm ', className)}
         />
     )
 }
 
 const renderNode: RenderNode = (node, transform) => {
+    if (node.type === 'strong') {
+        return (
+            <span className='dark:text-blue-200'>
+                {node.children?.map((child) => transform(child))}
+            </span>
+        )
+    }
     if (node.type === 'code') {
         const language = node.lang || ''
 
@@ -49,17 +56,13 @@ const renderNode: RenderNode = (node, transform) => {
 
         return (
             <div
-
-                className='not-prose py-6 -ml-2 leading-7 fd-codeblock'
+                className='not-prose -ml-2 max-w-full leading-relaxed'
                 {...props}
             >
-                <Pre>
-                    {html ? (
-                        <div dangerouslySetInnerHTML={{ __html: html }}></div>
-                    ) : (
-                        node.value
-                    )}
-                </Pre>
+                <div
+                    dangerouslySetInnerHTML={{ __html: html ?? node.value }}
+                    className='overflow-x-auto hide-scrollbar overflow-y-hidden max-w-full whitespace-pre-wrap'
+                ></div>
             </div>
         )
     }

@@ -4,13 +4,9 @@
 @import 'fumadocs-ui/css/shadcn.css';
 @import 'fumadocs-ui/css/preset.css';
 
-
-
 @source "../../../docs-website/src";
 @source "../../../contesto/src";
 @plugin "@tailwindcss/typography";
-
-
 
 @custom-variant dark (&:is(.dark *));
 
@@ -26,6 +22,9 @@
 @theme {
     --font-mono:
         'Consolas', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    --font-sans:
+        ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
 :root {
@@ -99,10 +98,7 @@
 }
 
 @theme inline {
-    --font-sans:
-        var(--font-sans), ui-sans-serif, system-ui, sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-        'Noto Color Emoji';
+
 
     --color-border: var(--border);
     --color-input: var(--input);
@@ -211,4 +207,14 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--color-muted-foreground);
+}
+
+.hide-scrollbar {
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    /* Hide scrollbar for IE, Edge and Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
 }

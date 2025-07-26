@@ -209,13 +209,12 @@ export default function Page({
 function ChatContent() {
     const hideBrowser = useShouldHideBrowser()
 
-
     return (
-        <div className='dark:bg-black flex h-full '>
+        <div className='dark:bg-black flex h-full p-4'>
             <ChatLeftSidebar />
 
             {!hideBrowser && (
-                <div className='flex grow h-full flex-col gap-4 p-2'>
+                <div className='flex grow h-full flex-col gap-4'>
                     <RightSide />
                 </div>
             )}
@@ -293,64 +292,57 @@ function RightSide() {
     )
 
     return (
-        <div className='flex flex-col h-full gap-3'>
-            <Tabs
-                value={activeTab}
-                onValueChange={handleTabChange}
-                className='flex flex-col gap-4 h-full'
-            >
-                <div className='flex gap-2'>
-                    <TabsList>
-                        <TabsTrigger value='preview'>
-                            Browser Preview
-                        </TabsTrigger>
-                        <TabsTrigger value='editor'>Editor</TabsTrigger>
-                        {/* <TabsTrigger value='errors'>Errors</TabsTrigger> */}
-                    </TabsList>
-                    <div className='grow'></div>
-                    <GithubRepoButton />
-                    <GitHubSyncStatus />
-                    <GitHubSyncButton />
-                    <InstallGithubAppToolbar />
-                </div>
+        <Tabs
+            value={activeTab}
+            onValueChange={handleTabChange}
+            className='flex flex-col gap-4 h-full'
+        >
+            <div className='flex gap-2'>
+                <TabsList className=''>
+                    <TabsTrigger value='preview'>Browser Preview</TabsTrigger>
+                    <TabsTrigger value='editor'>Editor</TabsTrigger>
+                    {/* <TabsTrigger value='errors'>Errors</TabsTrigger> */}
+                </TabsList>
+                <div className='grow'></div>
+                <GithubRepoButton />
+                <GitHubSyncStatus />
+                <GitHubSyncButton />
+                <InstallGithubAppToolbar />
+            </div>
 
-                <div className='flex grow flex-col'>
-                    <BrowserWindow
-                        url={iframeUrl}
-                        onSearchBarClick={() => {
-                            const iframe = iframeRef.current
-                            window.open(iframe?.src, '_blank')
-                        }}
-                        onRefresh={() => {
-                            const iframe = iframeRef.current
-                            if (iframe) {
-                                iframe.src += ''
-                            }
-                        }}
-                        className={cn(
-                            'text-sm shrink-0 shadow rounded-xl justify-stretch',
-                            'items-stretch h-full flex-col flex-1 border',
-                            ' lg:flex bg-background',
-                        )}
-                    >
-                        <iframe
-                            ref={iframeRefCallback}
-                            key={chat.chatId}
-                            style={scaleDownElement(0.9)}
-                            className={cn(
-                                ' inset-0 bg-transparent',
-                                'absolute',
-                            )}
-                            frameBorder={0}
-                            allowTransparency={true}
-                            name='preview' // tell iframe preview props is enabled
-                            title='preview'
-                            src={iframeUrl.toString()}
-                        ></iframe>
-                    </BrowserWindow>
-                </div>
-            </Tabs>
-        </div>
+            <div className='flex grow flex-col'>
+                <BrowserWindow
+                    url={iframeUrl}
+                    onSearchBarClick={() => {
+                        const iframe = iframeRef.current
+                        window.open(iframe?.src, '_blank')
+                    }}
+                    onRefresh={() => {
+                        const iframe = iframeRef.current
+                        if (iframe) {
+                            iframe.src += ''
+                        }
+                    }}
+                    className={cn(
+                        'text-sm shrink-0 shadow rounded-xl justify-stretch',
+                        'items-stretch h-full flex-col flex-1 border',
+                        ' lg:flex bg-background',
+                    )}
+                >
+                    <iframe
+                        ref={iframeRefCallback}
+                        key={chat.chatId}
+                        style={scaleDownElement(0.9)}
+                        className={cn(' inset-0 bg-transparent', 'absolute')}
+                        frameBorder={0}
+                        allowTransparency={true}
+                        name='preview' // tell iframe preview props is enabled
+                        title='preview'
+                        src={iframeUrl.toString()}
+                    ></iframe>
+                </BrowserWindow>
+            </div>
+        </Tabs>
     )
 }
 

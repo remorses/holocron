@@ -1,8 +1,17 @@
 import React, { ReactNode } from 'react'
 
-export function jsxDedent(strings: TemplateStringsArray, ...values: any[]) {
+export function jsxDedent(strings: any, ...values: any[]) {
+    // Remove initial and end space for first and last strings
+    if (strings.length) {
+        strings = [
+            strings[0].replace(/^\s+/, ''),
+            ...strings.slice(1, -1),
+            strings[strings.length - 1].replace(/\s+$/, ''),
+        ]
+    }
     // ── 1. compute common left indent ─────────────────────────
     const minIndent = strings.reduce((min, chunk) => {
+        if (!chunk.trim()) return min
         for (const line of chunk.split('\n')) {
             if (!line.trim()) continue
             min = Math.min(min, line?.match(/^ */)?.[0].length || 0)

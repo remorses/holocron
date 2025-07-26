@@ -19,6 +19,11 @@ export interface EditorToolPart extends DocsToolPart {
     input?: any
 }
 
+export function Dot() {
+    return '•'
+}
+
+
 export function EditorToolPreview({
     input: args,
     state,
@@ -35,10 +40,7 @@ export function EditorToolPreview({
         const truncatedError = truncateText(escapedError, 300)
         return (
             <ToolPreviewContainer>
-                <Markdown
-                    isStreaming={false}
-                    markdown={`❌ Error: ${truncatedError}`}
-                />
+                <Dot/> Error: {truncatedError}
             </ToolPreviewContainer>
         )
     }

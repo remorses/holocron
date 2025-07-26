@@ -63,7 +63,7 @@ export function printDirectoryTree({
     ): string {
         const lines: string[] = []
         const name = getName(node)
-        const titleSuffix = node.title ? ` # "${node.title}"` : ''
+        const titleSuffix = node.title ? ` # ${node.title}` : ''
 
         if (isRoot) {
             // Root level - no prefix

@@ -59,6 +59,7 @@ function RenderField({ field, disabled, messageId }: RenderFieldProps) {
                         placeholder={field.placeholder || ''}
                         {...(name && register(name, {}))}
                         disabled={disabled}
+                        className='bg-muted'
                     />
                 </div>
             )
@@ -70,6 +71,7 @@ function RenderField({ field, disabled, messageId }: RenderFieldProps) {
                     placeholder={field.placeholder || ''}
                     {...(name && register(name))}
                     disabled={disabled}
+                    className='bg-muted'
                 />
             )
         case 'number':
@@ -81,6 +83,7 @@ function RenderField({ field, disabled, messageId }: RenderFieldProps) {
                     {...(!disabled &&
                         register(field.name, { valueAsNumber: true }))}
                     disabled={disabled}
+                    className='bg-muted'
                 />
             )
         case 'textarea':
@@ -90,6 +93,7 @@ function RenderField({ field, disabled, messageId }: RenderFieldProps) {
                     placeholder={field.placeholder || ''}
                     {...(name && register(name))}
                     disabled={disabled}
+                    className='bg-muted'
                 />
             )
         case 'select':
@@ -99,6 +103,7 @@ function RenderField({ field, disabled, messageId }: RenderFieldProps) {
                     {...(name && register(name))}
                     defaultValue={field.placeholder ? '' : undefined}
                     disabled={disabled}
+                    className='bg-muted'
                 >
                     {field.placeholder && (
                         <option value='' disabled>
@@ -244,6 +249,7 @@ function RenderField({ field, disabled, messageId }: RenderFieldProps) {
                     type='date'
                     {...(name && register(name))}
                     disabled={disabled}
+                    className='bg-muted'
                 />
             )
         case 'image_upload':
@@ -357,7 +363,7 @@ export function RenderFormPreview({
     return (
         <div
             className={cn(
-                'flex p-3 rounded-lg flex-col gap-3 animate-in border fade-in',
+                'flex not-prose font-sans rounded-lg flex-col gap-6 animate-in fade-in',
                 disabled && 'opacity-50 pointer-events-none',
             )}
         >
@@ -366,16 +372,16 @@ export function RenderFormPreview({
                     return (
                         <div
                             key={`group-${groupIndex}`}
-                            className='flex flex-col gap-3'
+                            className='flex flex-col gap-6'
                         >
                             <h3 className='font-medium text-sm text-muted-foreground'>
                                 {group.title}
                             </h3>
-                            <div className='flex flex-col gap-3 pl-3 border-l-2 border-border'>
+                            <div className='flex flex-col gap-6 bg-background p-6 rounded border-r-2 border-border'>
                                 {group.fields.map((f) => (
                                     <div
                                         key={f.name}
-                                        className='flex flex-col gap-3'
+                                        className='flex flex-col gap-6'
                                     >
                                         {f.type !== 'button' &&
                                             f.type !== 'color_picker' && (
@@ -406,7 +412,7 @@ export function RenderFormPreview({
                     )
                 } else {
                     return group.fields.map((f) => (
-                        <div key={f.name} className='flex flex-col gap-3'>
+                        <div key={f.name} className='flex flex-col gap-6'>
                             {f.type !== 'button' &&
                                 f.type !== 'color_picker' && (
                                     <label className='font-medium text-sm'>
