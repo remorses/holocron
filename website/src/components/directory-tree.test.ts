@@ -21,21 +21,21 @@ describe('printDirectoryTree', () => {
             filePaths,
         })
         expect(tree).toMatchInlineSnapshot(`
-          "file1.mdx # "file1"
-          dirA
-          ├── file2.mdx # "file2"
-          └── meta.json # "meta"
-          file3.mdx # "file3"
-          docs
-          ├── page.mdx # "page"
-          └── meta.json # "meta"
-          tutorial
-          ├── step1.mdx # "step1"
-          ├── step2.mdx # "step2"
-          ├── steps
-          │   └── meta.json # "meta"
-          └── nested
-              └── another.mdx # "another""
+          "├── file1.mdx # file1
+          ├── dirA
+          │   ├── file2.mdx # file2
+          │   └── meta.json # meta
+          ├── file3.mdx # file3
+          ├── docs
+          │   ├── page.mdx # page
+          │   └── meta.json # meta
+          └── tutorial
+              ├── step1.mdx # step1
+              ├── step2.mdx # step2
+              ├── steps
+              │   └── meta.json # meta
+              └── nested
+                  └── another.mdx # another"
         `)
     })
 
@@ -50,7 +50,7 @@ describe('printDirectoryTree', () => {
         const tree = printDirectoryTree({
             filePaths: [{ path: 'single.txt', title: 'single' }],
         })
-        expect(tree).toMatchInlineSnapshot(`"single.txt # "single""`)
+        expect(tree).toMatchInlineSnapshot(`"└── single.txt # single"`)
     })
 
     it('handles single directory with one file', () => {
@@ -58,8 +58,8 @@ describe('printDirectoryTree', () => {
             filePaths: [{ path: 'folder/file.txt', title: 'file' }],
         })
         expect(tree).toMatchInlineSnapshot(`
-          "folder
-          └── file.txt # "file""
+          "└── folder
+              └── file.txt # file"
         `)
     })
 
@@ -72,9 +72,9 @@ describe('printDirectoryTree', () => {
             ],
         })
         expect(tree).toMatchInlineSnapshot(`
-          "file1.txt # "file1"
-          file2.txt # "file2"
-          file3.txt # "file3""
+          "├── file1.txt # file1
+          ├── file2.txt # file2
+          └── file3.txt # file3"
         `)
     })
 
@@ -88,15 +88,14 @@ describe('printDirectoryTree', () => {
             ],
         })
         expect(tree).toMatchInlineSnapshot(`
-          "a
-          ├── b
-          │   ├── c
-          │   │   ├── d
-          │   │   │   └── e
-          │   │   │       └── deep.txt # "deep"
-          │   │   └── other.txt # "other"
-          │   └── sibling.txt # "sibling"
-          └── another.txt # "another""
+          "└── a
+              ├── b
+              │   ├── c
+              │   │   ├── d/e
+              │   │   │   └── deep.txt # deep
+              │   │   └── other.txt # other
+              │   └── sibling.txt # sibling
+              └── another.txt # another"
         `)
     })
 
@@ -122,11 +121,11 @@ describe('printDirectoryTree', () => {
             ],
         })
         expect(tree).toMatchInlineSnapshot(`
-          "special chars
-          ├── file with spaces.txt # "file with spaces"
-          ├── file-with-dashes.txt # "file-with-dashes"
-          ├── file_with_underscores.txt # "file_with_underscores"
-          └── file.with.dots.txt # "file.with.dots""
+          "└── special chars
+              ├── file with spaces.txt # file with spaces
+              ├── file-with-dashes.txt # file-with-dashes
+              ├── file_with_underscores.txt # file_with_underscores
+              └── file.with.dots.txt # file.with.dots"
         `)
     })
 
@@ -142,15 +141,14 @@ describe('printDirectoryTree', () => {
             ],
         })
         expect(tree).toMatchInlineSnapshot(`
-          "root-file1.txt # "root-file1"
-          folder1
-          ├── file1.txt # "file1"
-          └── file2.txt # "file2"
-          root-file2.txt # "root-file2"
-          folder2
-          └── subfolder
-              └── nested.txt # "nested"
-          root-file3.txt # "root-file3""
+          "├── root-file1.txt # root-file1
+          ├── folder1
+          │   ├── file1.txt # file1
+          │   └── file2.txt # file2
+          ├── root-file2.txt # root-file2
+          ├── folder2/subfolder
+          │   └── nested.txt # nested
+          └── root-file3.txt # root-file3"
         `)
     })
 
@@ -163,14 +161,87 @@ describe('printDirectoryTree', () => {
             ],
         })
         expect(tree).toMatchInlineSnapshot(`
-          "docs
-          ├── docs
-          │   └── readme.md # "readme"
-          └── api
-              └── docs.md # "docs"
-          test
-          └── test
-              └── test.js # "test""
+          "├── docs
+          │   ├── docs
+          │   │   └── readme.md # readme
+          │   └── api
+          │       └── docs.md # docs
+          └── test/test
+              └── test.js # test"
+        `)
+    })
+
+    it('collapses single-child directories', () => {
+        const tree = printDirectoryTree({
+            filePaths: [
+                { path: 'src/components/ui/button/index.tsx', title: 'button' },
+                { path: 'src/components/ui/button/button.test.tsx', title: 'button test' },
+                { path: 'src/components/layout/header.tsx', title: 'header' },
+                { path: 'src/utils/helpers.ts', title: 'helpers' },
+                { path: 'docs/api/v1/endpoints/users.md', title: 'users' },
+                { path: 'docs/api/v1/endpoints/posts.md', title: 'posts' },
+                { path: 'config/env/production/database.js', title: 'database' },
+                { path: 'config/env/development/database.js', title: 'database' },
+            ],
+        })
+        expect(tree).toMatchInlineSnapshot(`
+          "├── src
+          │   ├── components
+          │   │   ├── ui/button
+          │   │   │   ├── index.tsx # button
+          │   │   │   └── button.test.tsx # button test
+          │   │   └── layout
+          │   │       └── header.tsx # header
+          │   └── utils
+          │       └── helpers.ts # helpers
+          ├── docs/api/v1/endpoints
+          │   ├── users.md # users
+          │   └── posts.md # posts
+          └── config/env
+              ├── production
+              │   └── database.js # database
+              └── development
+                  └── database.js # database"
+        `)
+    })
+
+    it('collapses root-level single-child directories', () => {
+        const tree = printDirectoryTree({
+            filePaths: [
+                { path: 'a/b/c/file1.txt', title: 'file1' },
+                { path: 'a/b/c/file2.txt', title: 'file2' },
+                { path: 'x/y/z/data.json', title: 'data' },
+                { path: 'x/y/z/config.json', title: 'config' },
+                { path: 'foo/bar/baz/index.js', title: 'index' },
+                { path: 'foo/bar/baz/test.js', title: 'test' },
+            ],
+        })
+        expect(tree).toMatchInlineSnapshot(`
+          "├── a/b/c
+          │   ├── file1.txt # file1
+          │   └── file2.txt # file2
+          ├── x/y/z
+          │   ├── data.json # data
+          │   └── config.json # config
+          └── foo/bar/baz
+              ├── index.js # index
+              └── test.js # test"
+        `)
+    })
+
+    it('collapses single root with nested single-child directories', () => {
+        const tree = printDirectoryTree({
+            filePaths: [
+                { path: 'root/child1/child2/child3/file1.txt', title: 'file1' },
+                { path: 'root/child1/child2/child3/file2.txt', title: 'file2' },
+                { path: 'root/child1/child2/child3/file3.txt', title: 'file3' },
+            ],
+        })
+        expect(tree).toMatchInlineSnapshot(`
+          "└── root/child1/child2/child3
+              ├── file1.txt # file1
+              ├── file2.txt # file2
+              └── file3.txt # file3"
         `)
     })
 })

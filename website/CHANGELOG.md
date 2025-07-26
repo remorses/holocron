@@ -5,6 +5,10 @@
 - Added toolCallId prop to Dot component for showing pulse animation on pending tool calls
 - Implemented logic to check if tool call is the last one and still processing
 - Added pulse animation using Tailwind animate-pulse class when tool is in progress
+- Updated directory-tree to show tree connectors (├──) for top-level paths
+- Added directory collapsing for parent folders with single child folders (e.g., `parent1/parent2/xx`)
+- Added test cases for directory collapsing feature including root-level collapsing
+- Updated all test snapshots to reflect the new tree structure
 
 ## 2025-01-26 19:00
 

@@ -55,6 +55,27 @@ export function printDirectoryTree({
         return parts[parts.length - 1] || node.path
     }
 
+    function collapseNode(node: TreeNode): { path: string; collapsed: boolean; children: TreeNode[] } {
+        // Collapse directories that only contain a single subdirectory (no files)
+        let currentNode = node
+        let collapsedPath = getName(currentNode)
+        
+        while (
+            currentNode.children.length === 1 && 
+            !currentNode.children[0].title && 
+            currentNode.children[0].children.length > 0
+        ) {
+            currentNode = currentNode.children[0]
+            collapsedPath = collapsedPath + '/' + getName(currentNode)
+        }
+        
+        return {
+            path: collapsedPath,
+            collapsed: collapsedPath !== getName(node),
+            children: currentNode.children
+        }
+    }
+
     function printNode(
         node: TreeNode,
         prefix: string,
@@ -62,27 +83,25 @@ export function printDirectoryTree({
         isRoot: boolean = false
     ): string {
         const lines: string[] = []
-        const name = getName(node)
         const titleSuffix = node.title ? ` # ${node.title}` : ''
 
-        if (isRoot) {
-            // Root level - no prefix
-            lines.push(`${name}${titleSuffix}`)
-        } else {
-            // Child level - add tree connector
-            const connector = isLast ? '└── ' : '├── '
-            lines.push(prefix + connector + name + titleSuffix)
-        }
+        // Check if we should collapse this node
+        const collapsed = collapseNode(node)
+        const displayName = collapsed.path
+        
+        // Always add tree connector, even for root level
+        const connector = isLast ? '└── ' : '├── '
+        lines.push(prefix + connector + displayName + titleSuffix)
 
         // Process children
-        if (node.children.length > 0) {
-            node.children.forEach((child, idx) => {
-                const childIsLast = idx === node.children.length - 1
+        if (collapsed.children.length > 0) {
+            collapsed.children.forEach((child, idx) => {
+                const childIsLast = idx === collapsed.children.length - 1
                 let nextPrefix = ''
 
                 if (isRoot) {
-                    // Direct children of root get no prefix for their connectors
-                    nextPrefix = ''
+                    // Direct children of root get prefix based on parent's position
+                    nextPrefix = isLast ? '    ' : '│   '
                 } else {
                     // Nested children get extended prefix
                     nextPrefix = prefix + (isLast ? '    ' : '│   ')
