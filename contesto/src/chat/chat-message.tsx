@@ -19,6 +19,7 @@ import { cn } from '../lib/cn.js'
 
 import { Button } from '../components/ui/button.js'
 import { useChatState } from './chat-provider.js'
+import { motion } from 'framer-motion'
 
 function ChatLoadingSpinner() {
     // This will animate the dots: . .. ... . .. ... etc.
@@ -194,8 +195,17 @@ const EditingUserMessage = memo(function EditingUserMessage({
             data-message-id={message.id}
             className='flex items-start max-w-full w-full gap-4 min-w-0 leading-relaxed justify-end'
         >
-            <div className='max-w-full relative group/message grow bg-muted px-4 py-3 rounded-xl'>
-                <div className='prose  w-full max-w-full dark:prose-invert'>
+            <div className='max-w-full relative group/message  grow px-4 py-3 rounded-xl'>
+                <motion.div
+                    className='inset-0 bg-muted absolute rounded-xl'
+                    layout
+                    layoutId={message.id}
+                />
+                <motion.div
+                    layout='position'
+                    layoutId={`content-${message.id}`}
+                    className='prose isolate w-full max-w-full dark:prose-invert'
+                >
                     <div ref={editingBox} className='space-y-2 w-full'>
                         <textarea
                             value={editText}
@@ -225,7 +235,7 @@ const EditingUserMessage = memo(function EditingUserMessage({
                             </Button>
                         </div>
                     </div>
-                </div>
+                </motion.div>
             </div>
         </article>
     )
@@ -280,7 +290,12 @@ export function ChatUserMessage({
             )}
             style={scrollStyle}
         >
-            <div className='max-w-full relative group/message bg-muted px-4 py-2 rounded-xl'>
+            <div className='max-w-full relative group/message  px-4 py-2 rounded-xl'>
+                <motion.div
+                    className='inset-0 bg-muted absolute rounded-xl'
+                    layout
+                    layoutId={message.id}
+                />
                 <div className='absolute hidden group-hover/message:block -top-2 -right-2'>
                     <Tooltip>
                         <TooltipTrigger asChild>
@@ -301,7 +316,13 @@ export function ChatUserMessage({
                         </TooltipContent>
                     </Tooltip>
                 </div>
-                <div className='full max-w-full'>{children}</div>
+                <motion.div
+                    layoutId={`content-${message.id}`}
+                    layout='position'
+                    className='full isolate max-w-full'
+                >
+                    {children}
+                </motion.div>
             </div>
         </article>
     )
