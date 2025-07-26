@@ -89,6 +89,16 @@ async function launchChromeWithCDP(): Promise<ChildProcess> {
         '--disable-infobars',
         '--disable-translate',
         '--disable-features=AutomationControlled', // disables --enable-automation
+        '--disable-background-timer-throttling',
+        '--disable-popup-blocking',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding',
+        '--disable-window-activation',
+        '--disable-focus-on-load',
+        '--no-startup-window',
+        '--window-position=0,0',
+        '--disable-site-isolation-trials',
+        '--disable-features=IsolateOrigins,site-per-process',
     ]
 
     const chromeProcess = spawn(executablePath, chromeArgs, {
