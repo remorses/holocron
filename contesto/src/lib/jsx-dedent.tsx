@@ -2,12 +2,11 @@ import React, { ReactNode } from 'react'
 
 export function jsxDedent(strings: any, ...values: any[]) {
     // Remove initial and end space for first and last strings
+    // duplicate the strings first, using ...
+    strings = [...strings]
     if (strings.length) {
-        strings = [
-            strings[0].replace(/^\s+/, ''),
-            ...strings.slice(1, -1),
-            strings[strings.length - 1].replace(/\s+$/, ''),
-        ]
+        strings[0] = strings[0].replace(/^\s+/, '')
+        strings[strings.length - 1] = strings[strings.length - 1].replace(/\s+$/, '')
     }
     // ── 1. compute common left indent ─────────────────────────
     const minIndent = strings.reduce((min, chunk) => {

@@ -45,7 +45,7 @@ import {
 } from '../lib/spiceflow-client'
 import { doFilesInDraftNeedPush, useWebsiteState } from '../lib/state'
 
-import { RenderFormPreview } from 'contesto'
+import { jsxDedent, RenderFormPreview } from 'contesto'
 import {
     ChatProvider,
     ChatState,
@@ -98,9 +98,10 @@ import {
 } from 'website/src/components/ui/command'
 import { docsRpcClient } from '../lib/docs-setstate'
 import { WebsiteUIMessage } from '../lib/types'
-import { safeJsoncParse, slugKebabCaseKeepExtension } from '../lib/utils'
+import { cn, safeJsoncParse, slugKebabCaseKeepExtension } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
+import { flushSync } from 'react-dom'
 
 function keyForDocsJson({ chatId }) {
     return `fumabase.jsonc-${chatId}`
@@ -489,49 +490,75 @@ export default function Chat({
     )
 }
 
+function TodoItem({
+    children: userMessage,
+    className = '',
+    isFirst = false,
+    ...props
+}: {
+    children: string
+    className?: string
+    isFirst?: boolean
+    onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
+}) {
+    const { setDraftText } = useChatContext()
+    return (
+        <button
+            className={`ml-4 ${className} hover:text-blue-300 cursor-pointer group`}
+            onClick={(e) => {
+                if (props.onClick) props.onClick(e)
+                if (userMessage) {
+                    const generateId = createIdGenerator()
+                    const id = generateId()
+
+                    flushSync(() => {
+                        setDraftText(userMessage)
+                    })
+                    window.dispatchEvent(new CustomEvent('chatRegenerate'))
+                }
+            }}
+        >
+            <span className='inline-block group-hover:text-purple-400 text-purple-200'>
+                <span className={cn('inline group-hover:hidden ')}>
+                    {isFirst ? '⎿ [ ] ' : '   [ ] '}
+                </span>
+                <span className={cn('hidden group-hover:inline ')}>
+                    {isFirst ? '⎿ [x] ' : '   [x] '}
+                </span>
+            </span>
+            {userMessage}
+        </button>
+    )
+}
+
+function TodosActions() {
+    return (
+        <div className='leading-8 text-[14px] whitespace-pre-wrap gap-[0.1em] flex flex-col items-start tracking-wide'>
+            <div>
+                <Dot /> Hi! I am Fumabase, your AI docs assistant
+            </div>
+            <div>
+                <Dot /> Things you can do with Fumabase:
+            </div>
+            <div className='flex flex-col items-start'>
+                <TodoItem isFirst>
+                    Create a docs website for my company
+                </TodoItem>
+                <TodoItem>Add a custom domain for the docs site</TodoItem>
+                <TodoItem>Add a new page about the company mission</TodoItem>
+                <TodoItem>Customize the colors of the website</TodoItem>
+            </div>
+        </div>
+    )
+}
+
 function WelcomeMessage() {
     const { messages } = useChatContext()
     if (messages.length) return null
     return (
-        <ChatAssistantMessage
-            className='text-sm max-w-2xl mx-auto -mt-[160px]'
-            message={{
-                role: 'assistant',
-                id: '',
-                parts: [],
-            }}
-        >
-            <Markdown
-                markdown='Hi, I am fumabase, I can help you with customizing your docs website or add new content. Here are some example things you can do:'
-                className='prose-sm'
-            />
-            <div className='grid -mx-2 grid-cols-2 gap-3 mt-3'>
-                <ChatSuggestionButton
-                    icon={<PaletteIcon />}
-                    userMessage='Change primary color'
-                >
-                    Change primary color
-                </ChatSuggestionButton>
-                <ChatSuggestionButton
-                    icon={<ImageIcon />}
-                    userMessage='Update site logo'
-                >
-                    Update site logo
-                </ChatSuggestionButton>
-                <ChatSuggestionButton
-                    icon={<FilePlus2Icon />}
-                    userMessage='Add a new doc page'
-                >
-                    Add a new doc page
-                </ChatSuggestionButton>
-                <ChatSuggestionButton
-                    icon={<ListTreeIcon />}
-                    userMessage='Edit navbar links'
-                >
-                    Edit navbar link
-                </ChatSuggestionButton>
-            </div>
-        </ChatAssistantMessage>
+        <div className='text-sm font-mono  w-auto items-center flex flex-col -ml-6 -mt-[160px]'>
+            <TodosActions />
+        </div>
     )
 }
 
