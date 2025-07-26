@@ -5,7 +5,7 @@ import { escapeMdxSyntax, truncateText } from 'docs-website/src/lib/utils'
 import { WebsiteToolPart } from 'website/src/lib/types'
 import { cn } from 'website/src/lib/utils'
 import { parsePatch } from 'diff'
-import { ReactNode } from 'react'
+import { ReactNode, useMemo } from 'react'
 
 function Highlight({ children }: { children: ReactNode }) {
     return <span className=" dark:text-purple-300">{children}</span>
@@ -46,7 +46,7 @@ export function EditorToolPreview({
 
         return (
             <ToolPreviewContainer>
-                <Dot/> Reading <Highlight>{args?.path}</Highlight>
+                <Dot toolCallId={toolCallId}/> Reading <Highlight>{args?.path}</Highlight>
                 {linesText}
                 {error && <ErrorPreview error={error} />}
             </ToolPreviewContainer>
@@ -62,7 +62,7 @@ export function EditorToolPreview({
 
         return (
             <ToolPreviewContainer>
-                <Dot/> {command} <Highlight>{args?.path}</Highlight>
+                <Dot toolCallId={toolCallId}/> {command} <Highlight>{args?.path}</Highlight>
                 {command === 'insert' ? `:${args?.insert_line || 0}` : ''}
                 {error ? (
                     <ErrorPreview error={result.error} />
@@ -80,7 +80,7 @@ export function EditorToolPreview({
     if (command === 'undo_edit') {
         return (
             <ToolPreviewContainer>
-                <Dot/> Undo last edit in <Highlight>{args?.path}</Highlight>
+                <Dot toolCallId={toolCallId}/> Undo last edit in <Highlight>{args?.path}</Highlight>
                 {error && <ErrorPreview error={error} />}
             </ToolPreviewContainer>
         )
@@ -93,7 +93,7 @@ export function EditorToolPreview({
         if (patches.length > 0 && patches[0].hunks) {
             return (
                 <ToolPreviewContainer>
-                    <Dot/> Replaced content in <Highlight>{args?.path}</Highlight>
+                    <Dot toolCallId={toolCallId}/> Replaced content in <Highlight>{args?.path}</Highlight>
                     {error ? (
                         <ErrorPreview error={error} />
                     ) : (
@@ -112,7 +112,7 @@ export function EditorToolPreview({
 
     return (
         <ToolPreviewContainer>
-            <Dot/> Replacing content in <Highlight>{args?.path}</Highlight>
+            <Dot toolCallId={toolCallId}/> Replacing content in <Highlight>{args?.path}</Highlight>
             {error && <ErrorPreview error={error} />}
         </ToolPreviewContainer>
     )
@@ -120,6 +120,7 @@ export function EditorToolPreview({
 
 export function FilesTreePreview({
     output,
+    toolCallId,
 }: Extract<WebsiteToolPart, { type: 'tool-getProjectFiles' }>) {
     const { isGenerating: isChatGenerating } = useChatContext()
     const code = output || '\n'
@@ -128,7 +129,7 @@ export function FilesTreePreview({
 
     return (
         <ToolPreviewContainer>
-            <Dot/> getting file structure
+            <Dot toolCallId={toolCallId}/> getting file structure
             <br />
             <Markdown
                 isStreaming={isChatGenerating}
@@ -156,6 +157,38 @@ export function addIndentation(spaces: number, text: string): string {
         .join('\n')
 }
 
-export function Dot() {
-    return '•'
+export function Dot({ toolCallId }: { toolCallId?: string }) {
+    const { messages } = useChatContext()
+    
+    const isLastPendingCall = useMemo(() => {
+        if (!toolCallId) return false
+        
+        // Find all tool calls across all messages
+        const allToolCalls: Array<{ id: string; state?: string }> = []
+        messages.forEach((message) => {
+            if (message.parts) {
+                message.parts.forEach((part) => {
+                    if (part.type?.startsWith('tool-') && 'toolCallId' in part) {
+                        allToolCalls.push({
+                            id: part.toolCallId,
+                            state: part.state
+                        })
+                    }
+                })
+            }
+        })
+        
+        // Check if this is the last tool call
+        const lastToolCall = allToolCalls[allToolCalls.length - 1]
+        if (!lastToolCall || lastToolCall.id !== toolCallId) return false
+        
+        // Check if it's still processing (not output-available or error)
+        return lastToolCall.state !== 'output-available' && lastToolCall.state !== 'error'
+    }, [toolCallId, messages])
+    
+    return (
+        <span className={cn(isLastPendingCall && 'animate-pulse')}>
+            •
+        </span>
+    )
 }

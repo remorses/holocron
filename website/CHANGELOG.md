@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-01-26 20:30
+
+- Added toolCallId prop to Dot component for showing pulse animation on pending tool calls
+- Implemented logic to check if tool call is the last one and still processing
+- Added pulse animation using Tailwind animate-pulse class when tool is in progress
+
 ## 2025-01-26 19:00
 
 - Refactored file operations to use a new FileSystemEmulator class
