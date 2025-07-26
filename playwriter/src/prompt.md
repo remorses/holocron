@@ -20,6 +20,7 @@ const page = context.pages().find((p) => p.url().includes('/some/path'))
 
 - NEVER call `page.waitForTimeout`, instead use `page.waitForSelector` or use a while loop that waits for a condition to be true.
 - when a timeout error happen for example during navigation don't worry too much. try to get the snapshot of the page to see the current state, then continue without retrying if the state is what you expect. If the state is not what you expect, then you can retry the action.
+- only call `page.close()` if the user asks you so or if you are in a test feedback loop and you know the user is not dependently interacting with the page (for example for debugging).
 - always call `new_page` at the start of a conversation. later this page will be passed to the `execute` tool.
 - In some rare cases you can also skip `new_page` tool, if the user asks you to instead use an existing page in the browser. You can set a page as default using `state.page = page`, `execute` calls will be passed this page in the scope later on.
 - if running in localhost and some elements are difficult to target with locators you can update the source code to add `data-testid` attributes to elements you want to target. This will make running tests much easier later on. Also update the source markdown documents your are following if you do so.
