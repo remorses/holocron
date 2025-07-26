@@ -12,9 +12,7 @@
         "test": "vitest run",
         "test:watch": "vitest"
     },
-    "bin": {
-        "playwriter-mcp": "./bin.js"
-    },
+    "bin": "./bin.js",
     "files": [
         "dist",
         "src",
