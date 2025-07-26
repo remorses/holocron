@@ -132,12 +132,16 @@ const Text = ({
         // Use Tailwind color tokens with opacity via oklch
         const bgColors = {
             added: 'oklch(from var(--color-green-500) l c h / 40%)',
-            addedLight: 'oklch(from var(--color-green-400) l c h / 26%)',
+            // removedLight: 'oklch(from var(--color-red-400) l c h / 20%)',
+            addedLight: 'oklch(from var(--color-green-400) l c h / 20%)',
             removed: 'oklch(from var(--color-red-500) l c h / 40%)',
-            removedLight: 'oklch(from var(--color-red-400) l c h / 26%)',
         }
         style.backgroundColor = bgColors[backgroundColor]
     }
+
+    // Text colors for word diffs
+    if (type === 'added') style.color = 'var(--color-green-300)'
+    if (type === 'removed') style.color = 'var(--color-red-300)'
 
     if (bold) style.fontWeight = 'bold'
 
@@ -215,27 +219,13 @@ const StructuredDiff = ({ patch }: { patch: Hunk }) => {
                 const addedText = processedLines[pair.add].code
                 const wordDiff = getWordDiff(removedText, addedText)
 
-                // Create word-level diff display for removed line
+                // Create simple removed line display
                 const removedContent = (
                     <Text backgroundColor='removedLight'>
                         <Text>-</Text>
-                        {wordDiff.map((part, idx) => {
-                            if (part.removed) {
-                                return (
-                                    <Text
-                                        key={`removed-${i}-${idx}`}
-                                        backgroundColor='removed'
-                                    >
-                                        {part.value}
-                                    </Text>
-                                )
-                            }
-                            return (
-                                <Text key={`unchanged-${i}-${idx}`}>
-                                    {part.value}
-                                </Text>
-                            )
-                        })}
+                        <Text type='removed'>
+                            {removedText}
+                        </Text>
                     </Text>
                 )
 
@@ -255,7 +245,7 @@ const StructuredDiff = ({ patch }: { patch: Hunk }) => {
                                 return (
                                     <Text
                                         key={`added-${i}-${idx}`}
-                                        backgroundColor='added'
+                                        type='added'
                                     >
                                         {part.value}
                                     </Text>
@@ -284,7 +274,7 @@ const StructuredDiff = ({ patch }: { patch: Hunk }) => {
                             {code}
                         </Text>
                     ) : (
-                        <> {code}</>
+                      <Text className="text-muted-foreground"> {code}</Text>
                     )
 
                 result.push({ code: content, type, lineNumber })

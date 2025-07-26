@@ -478,7 +478,7 @@ function WelcomeMessage() {
     if (messages.length) return null
     return (
         <ChatAssistantMessage
-            className='text-sm -mt-[160px]'
+            className='text-sm max-w-2xl mx-auto -mt-[160px]'
             message={{
                 role: 'assistant',
                 id: '',

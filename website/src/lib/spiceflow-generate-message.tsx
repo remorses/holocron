@@ -232,17 +232,92 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             },
             async validateNewContent(x) {
                 if (mdxRegex.test(x.githubPath)) {
-                    await processMdxInServer({
-                        markdown: x.content,
-                        githubPath: x.githubPath,
-                        extension: path.extname(x.githubPath),
-                    })
+                    try {
+                        await processMdxInServer({
+                            markdown: x.content,
+                            githubPath: x.githubPath,
+                            extension: path.extname(x.githubPath),
+                        })
+                    } catch (error: any) {
+                        // Extract error details
+                        const errorLine = error.line || error.position?.start?.line || 1
+                        const errorColumn = error.column || error.position?.start?.column || 1
+                        const errorMessage = error.reason || error.message || 'Unknown MDX error'
+                        
+                        // Split markdown into lines
+                        const lines = x.content.split('\n')
+                        
+                        // Calculate line range to show (5 lines before and after the error)
+                        const contextRange = 5
+                        const startLine = Math.max(1, errorLine - contextRange)
+                        const endLine = Math.min(lines.length, errorLine + contextRange)
+                        
+                        // Build context message
+                        let contextMessage = `MDX Compilation Error at line ${errorLine}, column ${errorColumn}:\n${errorMessage}\n\n`
+                        contextMessage += 'Error Context:\n'
+                        
+                        for (let i = startLine - 1; i < endLine; i++) {
+                            const lineNumber = i + 1
+                            const isErrorLine = lineNumber === errorLine
+                            const line = lines[i] || ''
+                            
+                            // Add line with line number
+                            contextMessage += `${lineNumber.toString().padStart(3, ' ')} | ${line}\n`
+                            
+                            // Add error indicator for the error line
+                            if (isErrorLine && errorColumn) {
+                                const padding = ' '.repeat(5 + errorColumn)
+                                contextMessage += `${padding}^\n`
+                            }
+                        }
+                        
+                        contextMessage += '\nPlease fix the MDX syntax error and submit the tool call again.'
+                        
+                        throw new Error(contextMessage)
+                    }
                 }
                 if (x.githubPath.endsWith('.json')) {
                     try {
                         JSON.parse(x.content)
-                    } catch (e) {
-                        throw new Error('Invalid JSON in file content')
+                    } catch (e: any) {
+                        // Get line and column for JSON errors
+                        let line = 1
+                        let column = 1
+                        
+                        // Try to extract position from error message
+                        const posMatch = e.message.match(/position (\d+)/)
+                        if (posMatch) {
+                            const position = parseInt(posMatch[1])
+                            const lines = x.content.substring(0, position).split('\n')
+                            line = lines.length
+                            column = lines[lines.length - 1].length + 1
+                        }
+                        
+                        // Build context for JSON error
+                        const lines = x.content.split('\n')
+                        const contextRange = 5
+                        const startLine = Math.max(1, line - contextRange)
+                        const endLine = Math.min(lines.length, line + contextRange)
+                        
+                        let contextMessage = `JSON Parse Error at line ${line}:\n${e.message}\n\n`
+                        contextMessage += 'Error Context:\n'
+                        
+                        for (let i = startLine - 1; i < endLine; i++) {
+                            const lineNumber = i + 1
+                            const isErrorLine = lineNumber === line
+                            const lineContent = lines[i] || ''
+                            
+                            contextMessage += `${lineNumber.toString().padStart(3, ' ')} | ${lineContent}\n`
+                            
+                            if (isErrorLine && column) {
+                                const padding = ' '.repeat(5 + column - 1)
+                                contextMessage += `${padding}^\n`
+                            }
+                        }
+                        
+                        contextMessage += '\nPlease fix the JSON syntax error and submit the tool call again.'
+                        
+                        throw new Error(contextMessage)
                     }
                 }
             },
