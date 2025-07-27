@@ -267,6 +267,7 @@ export default function Chat({
             }),
             isGenerating: false,
         }
+
         console.log('Using new initial chat state', state)
         return state
     }, [loaderData])
@@ -1036,7 +1037,7 @@ function Footer() {
                             )}
 
                             <PrButton />
-                            <SaveChangesButton />
+                            <SaveChangesButton className='ml-auto' />
                         </div>
 
                         <div className='relative rounded-[20px] bg-popover'>
@@ -1319,7 +1320,7 @@ function PrButton({}) {
     )
 }
 
-function SaveChangesButton({}) {
+function SaveChangesButton({ className = '' }) {
     const [isLoading, setIsLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
     const [buttonText, setButtonText] = useTemporaryState('', 2000)
@@ -1419,7 +1420,7 @@ function SaveChangesButton({}) {
     if (!messages?.length) return null
 
     return (
-        <div className='flex items-center gap-2'>
+        <div className={cn('flex items-center gap-2', className)}>
             <Popover
                 onOpenChange={(x) => {
                     if (!x) setErrorMessage('')
@@ -1431,11 +1432,11 @@ function SaveChangesButton({}) {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button
-                                    variant='default'
+                                    // variant='secondary'
                                     onClick={handleSaveChanges}
                                     disabled={isButtonDisabled}
                                     size={'sm'}
-                                    className='bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50'
+                                    className='disabled:opacity-50'
                                 >
                                     <div className='flex items-center gap-2'>
                                         <Save className='size-4' />

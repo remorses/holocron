@@ -4,7 +4,7 @@ import frontMatter from 'front-matter'
 import { parse as parseCookies, serialize as serializeCookie } from 'cookie'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
-import { isRouteErrorResponse, data } from 'react-router'
+import { isRouteErrorResponse, data, redirect } from 'react-router'
 
 import type { Route as RootRoute } from './_catchall'
 import type { Route } from './+types/_catchall.$'
@@ -21,17 +21,12 @@ import {
 import { getFumadocsSource } from '../lib/source'
 
 import { getOpenapiDocument } from '../lib/openapi.server'
-import { getFilesForSource } from '../lib/source.server'
+import { getFilesForSource, removeGithubFolder } from '../lib/source.server'
 import { ClientPage, ClientErrorBoundary } from './_catchall-$-client'
 import { getCacheTagForPage } from 'docs-website/src/lib/cache-tags'
+import { FilesInDraft } from '../lib/docs-state'
+import { getDocsJson } from '../lib/utils'
 const openapiPath = `/api-reference`
-
-function removeGithubFolder(path: string, githubFolder: string): string {
-    if (githubFolder && path.startsWith(githubFolder)) {
-        return path.slice(githubFolder.length + 1)
-    }
-    return path
-}
 
 type MediaAssetProp = PageMediaAsset & { asset?: MediaAsset }
 
@@ -181,14 +176,22 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
     const url = new URL(request.url)
     const domain = url.hostname.split(':')[0]
+    let headers = {} as Record<string, string>
 
-    // Check for chatId in query params and set as cookie if present
     const chatIdFromQuery = url.searchParams.get('chatId')
-    
+    if (chatIdFromQuery) {
+        console.log('chatId from query:', chatIdFromQuery)
+        headers['Set-Cookie'] = serializeCookie('chatId', chatIdFromQuery, {
+            httpOnly: false,
+            path: '/',
+            sameSite: 'none',
+        })
+    }
+
     // Check for chatId cookie to fetch draft files
     const cookieHeader = request.headers.get('Cookie') || ''
     const cookies = parseCookies(cookieHeader)
-    const chatId = chatIdFromQuery || cookies.chatId || null
+    const chatId = cookies.chatId || chatIdFromQuery
 
     // Check signal before database queries
     if (request.signal.aborted) {
@@ -228,13 +231,8 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     }
 
     // Fetch chat filesInDraft if chatId cookie exists
-    let chatFilesInDraft: Record<string, { content: string }> = {}
+    let filesInDraft: FilesInDraft = {}
     if (chatId) {
-        // Check signal before chat query
-        if (request.signal.aborted) {
-            throw new Error('Request aborted')
-        }
-
         console.time(`${timerId} - fetch chat for draft files`)
         const chat = await prisma.chat.findFirst({
             where: {
@@ -246,9 +244,9 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             },
         })
         console.timeEnd(`${timerId} - fetch chat for draft files`)
-        
+
         if (chat && chat.filesInDraft) {
-            chatFilesInDraft = chat.filesInDraft as Record<string, { content: string }>
+            filesInDraft = chat.filesInDraft as any
         }
     }
     const languages = site.locales.map((x) => x.locale)
@@ -261,45 +259,18 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     console.time(`${timerId} - get files for source`)
     const files = await getFilesForSource({
         branchId: siteBranch.branchId,
-
+        filesInDraft: filesInDraft,
         githubFolder: siteBranch.site?.githubFolder || '',
     })
     console.timeEnd(`${timerId} - get files for source`)
 
     // Add draft files to the files array for navigation tree
-    const allFiles = [...files]
-    if (Object.keys(chatFilesInDraft).length > 0) {
-        const githubFolder = site?.githubFolder || ''
-
-        for (const [githubPath, draft] of Object.entries(chatFilesInDraft)) {
-            if (!draft?.content) continue
-            
-            const normalizedPath = removeGithubFolder(githubPath, githubFolder)
-            // Check if this file already exists in the files array
-            const existingFileIndex = allFiles.findIndex(f => f.path === normalizedPath)
-            
-            if (existingFileIndex >= 0) {
-                // Update existing file with draft content
-                allFiles[existingFileIndex] = {
-                    ...allFiles[existingFileIndex],
-                    // Note: we don't override the data here as it's used for meta information
-                }
-            } else {
-                // Add new draft file
-                allFiles.push({
-                    path: normalizedPath,
-                    data: {},
-                    type: 'page',
-                })
-            }
-        }
-    }
 
     console.time(`${timerId} - create fumadocs source`)
     const source = getFumadocsSource({
         defaultLanguage: site.defaultLocale,
         languages: languages,
-        files: allFiles,
+        files,
     })
     console.timeEnd(`${timerId} - create fumadocs source`)
 
@@ -311,23 +282,10 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         slugs = slugs.slice(1)
     }
 
-    let docsJson: DocsJsonType = siteBranch.docsJson as any
-
-    // Check for draft docsJson file
-    if (Object.keys(chatFilesInDraft).length > 0) {
-        const draftDocsJsonFile = Object.entries(chatFilesInDraft).find(([path]) => 
-            path.endsWith('fumabase.jsonc')
-        )
-        
-        if (draftDocsJsonFile && draftDocsJsonFile[1]?.content) {
-            try {
-                const parsedDraftDocsJson = JSONC.parse(draftDocsJsonFile[1].content)
-                docsJson = parsedDraftDocsJson as DocsJsonType
-            } catch (e) {
-                console.warn('Failed to parse draft fumabase.jsonc:', e)
-            }
-        }
-    }
+    const docsJson = getDocsJson({
+        filesInDraft,
+        docsJson: siteBranch.docsJson,
+    })
 
     const fumadocsPage = source.getPage(slugs, locale)
 
@@ -378,17 +336,10 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                 locale,
             })
 
-            const headers: Record<string, string> = {
+            headers = {
+                ...headers,
                 'Cache-Control': 'public, max-age=300, s-maxage=300',
                 'Cache-Tag': cacheTag,
-            }
-            
-            if (chatIdFromQuery) {
-                headers['Set-Cookie'] = serializeCookie('chatId', chatIdFromQuery, {
-                    httpOnly: false, // Make it readable from JS
-                    path: '/',
-                    sameSite: 'lax',
-                })
             }
 
             return data(
@@ -422,17 +373,10 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                 locale,
             })
 
-            const headers: Record<string, string> = {
+            headers = {
+                ...headers,
                 'Cache-Control': 'public, max-age=300, s-maxage=300',
                 'Cache-Tag': cacheTag,
-            }
-            
-            if (chatIdFromQuery) {
-                headers['Set-Cookie'] = serializeCookie('chatId', chatIdFromQuery, {
-                    httpOnly: false, // Make it readable from JS
-                    path: '/',
-                    sameSite: 'lax',
-                })
             }
 
             return data(
@@ -470,6 +414,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             throw new Response(null, {
                 status,
                 headers: {
+                    ...headers,
                     Location: redirect.destination,
                 },
             })
@@ -526,11 +471,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     let githubPath = page?.githubPath || ''
 
     // Override with draft content if available
-    if (Object.keys(chatFilesInDraft).length > 0) {
+    if (Object.keys(filesInDraft).length > 0) {
         const githubFolder = site?.githubFolder || ''
 
         // Look for draft files that could serve this slug
-        for (const [draftGithubPath, draft] of Object.entries(chatFilesInDraft)) {
+        for (const [draftGithubPath, draft] of Object.entries(filesInDraft)) {
             if (!draft?.content) continue
 
             const source = getFumadocsSource({
@@ -544,16 +489,20 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             })
             const draftPage = source.getPage(slugs)
             if (draftPage) {
-                const extension = draftGithubPath.endsWith('.mdx') ? 'mdx' : 'md'
+                const extension = draftGithubPath.endsWith('.mdx')
+                    ? 'mdx'
+                    : 'md'
                 try {
                     // Check signal before processing draft
                     if (request.signal.aborted) {
                         throw new Error('Request aborted')
                     }
 
-                    const f = await getProcessor({ extension }).process(draft.content)
+                    const f = await getProcessor({ extension }).process(
+                        draft.content,
+                    )
                     const data = f.data as ProcessorData
-                    
+
                     markdown = draft.content
                     frontmatter = (data.frontmatter as any) || {}
                     ast = data.ast
@@ -561,7 +510,10 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                     githubPath = draftGithubPath
                     break
                 } catch (e) {
-                    console.warn(`Failed to process draft content for ${draftGithubPath}:`, e)
+                    console.warn(
+                        `Failed to process draft content for ${draftGithubPath}:`,
+                        e,
+                    )
                 }
             }
         }
@@ -599,7 +551,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         console.timeEnd(`${timerId} - process mdx content`)
         ast = markdownData.ast
     }
-    
+
     console.time(`${timerId} - get toc from mdast`)
     if (!toc) {
         toc = getTocFromMdast(ast)
@@ -612,17 +564,10 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         locale,
     })
 
-    const headers: Record<string, string> = {
+    headers = {
+        ...headers,
         'Cache-Control': 'public, max-age=300, s-maxage=300',
         'Cache-Tag': cacheTag,
-    }
-    
-    if (chatIdFromQuery) {
-        headers['Set-Cookie'] = serializeCookie('chatId', chatIdFromQuery, {
-            httpOnly: false, // Make it readable from JS
-            path: '/',
-            sameSite: 'lax',
-        })
     }
 
     return data(
@@ -653,8 +598,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 export default function Page(props: Route.ComponentProps): any {
     return <ClientPage {...props} />
 }
-
-
 
 export function ErrorBoundary({
     error,

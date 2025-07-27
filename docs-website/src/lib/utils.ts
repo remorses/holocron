@@ -1,4 +1,6 @@
+import JSONC from 'tiny-jsonc';
 import { cn } from './cn'
+import { DocsJsonType } from './docs-json';
 
 export { cn }
 
@@ -196,4 +198,20 @@ export type DeepPartial<T> = {
             ? T[P]
             : DeepPartial<T[P]>
         : T[P]
+}
+
+
+
+export function getDocsJson({ filesInDraft, docsJson }): DocsJsonType {
+    const key = Object.keys(filesInDraft || {}).find((k) =>
+        k.endsWith('fumabase.jsonc'),
+    )
+    if (!key) {
+        return docsJson
+    }
+    try {
+        return JSONC.parse(filesInDraft?.[key]?.content) || docsJson
+    } catch {
+        return docsJson
+    }
 }

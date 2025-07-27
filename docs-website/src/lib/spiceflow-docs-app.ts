@@ -99,6 +99,7 @@ export const docsApp = new Spiceflow({ basePath: '/api' })
             const languages = site?.locales?.map((x) => x.locale) || []
             const files = await getFilesForSource({
                 branchId: siteBranch.branchId,
+                filesInDraft,
                 githubFolder: siteBranch.site?.githubFolder || '',
             })
             const source = getFumadocsSource({

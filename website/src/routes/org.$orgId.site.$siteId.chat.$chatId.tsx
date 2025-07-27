@@ -169,6 +169,8 @@ export async function loader({
         iframeUrl.port = '7777'
     }
 
+    iframeUrl.searchParams.set('chatId', chat.chatId)
+
     const branchId = chat.branchId
     const githubFolder = site.githubFolder
     return {

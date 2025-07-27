@@ -4,8 +4,17 @@ import { getIconJsx } from './icons.server'
 import { I18nConfig } from 'fumadocs-core/i18n'
 import { StructuredData } from './mdx-heavy'
 import { deduplicateBy } from './utils'
+import { FilesInDraft } from './docs-state'
 
-export async function getFilesForSource({ branchId, githubFolder }) {
+export async function getFilesForSource({
+    branchId,
+    githubFolder,
+    filesInDraft,
+}: {
+    branchId: string
+    githubFolder: string
+    filesInDraft: FilesInDraft
+}) {
     const [allPages, metaFiles] = await Promise.all([
         prisma.markdownPage.findMany({
             where: {
@@ -52,6 +61,33 @@ export async function getFilesForSource({ branchId, githubFolder }) {
             }),
         )
 
+    const allFiles = [...files]
+    if (Object.keys(filesInDraft).length > 0) {
+        for (const [githubPath, draft] of Object.entries(filesInDraft)) {
+            if (!draft?.content) continue
+
+            const normalizedPath = removeGithubFolder(githubPath, githubFolder)
+            // Check if this file already exists in the files array
+            const existingFileIndex = allFiles.findIndex(
+                (f) => f.path === normalizedPath,
+            )
+
+            if (existingFileIndex >= 0) {
+                // Update existing file with draft content
+                allFiles[existingFileIndex] = {
+                    ...allFiles[existingFileIndex],
+                    // Note: we don't override the data here as it's used for meta information
+                }
+            } else {
+                // Add new draft file
+                allFiles.push({
+                    path: normalizedPath,
+                    data: {},
+                    type: 'page',
+                })
+            }
+        }
+    }
     return deduplicateBy(files, (file) => file.path)
 }
 
@@ -63,6 +99,13 @@ export async function getFilesForSource({ branchId, githubFolder }) {
 export function removeFrontSlash(path: string): string {
     if (path.startsWith('/')) {
         return path.slice(1)
+    }
+    return path
+}
+
+export function removeGithubFolder(path: string, githubFolder: string): string {
+    if (githubFolder && path.startsWith(githubFolder)) {
+        return path.slice(githubFolder.length + 1)
     }
     return path
 }

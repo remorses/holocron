@@ -216,6 +216,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
         // Create source for page navigation
         const files = await getFilesForSource({
             branchId,
+            filesInDraft,
             githubFolder: branch.site?.githubFolder || '',
         })
         const source = getFumadocsSource({
@@ -658,7 +659,9 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 openai: {
                     reasoningSummary: 'detailed',
                     strictJsonSchema: true,
-
+                    include: ['reasoning.encrypted_content'],
+                    store: false,
+                    parallelToolCalls: true,
                 } satisfies OpenAIResponsesProviderOptions,
             },
         })
@@ -796,12 +799,14 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                             )
                         } else if (part.type === 'reasoning') {
                             // ChatMessagePart: { type: 'reasoning', text: string }
+
                             operations.push(
                                 prisma.chatPartReasoning.create({
                                     data: {
                                         messageId: msg.id,
                                         type: 'reasoning',
                                         text: part.text,
+                                        providerMetadata: part.providerMetadata,
                                         index,
                                     },
                                 }),
@@ -866,7 +871,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                                         sourceId: part.sourceId,
                                         url: part.url,
                                         title: part.title,
-
+                                        providerMetadata: part.providerMetadata,
                                     },
                                 }),
                             )

@@ -1,4 +1,6 @@
 import React from 'react'
+import { parse as parseCookies, serialize as serializeCookie } from 'cookie'
+
 import { loader as fumadocsLoader } from 'fumadocs-core/source'
 import { prisma } from 'db'
 import {
@@ -23,6 +25,8 @@ import {
     ClientLayout,
     ClientApp,
 } from 'docs-website/src/routes/_catchall-client'
+import { FilesInDraft } from '../lib/docs-state'
+import { getDocsJson } from '../lib/utils'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -37,30 +41,17 @@ export const links: Route.LinksFunction = () => [
     },
 ]
 
-// Helper function to parse cookies from header
-function parseCookies(cookieHeader: string | null): Record<string, string> {
-    const cookies: Record<string, string> = {}
-    if (!cookieHeader) return cookies
-
-    cookieHeader.split(';').forEach((cookie) => {
-        const [name, ...rest] = cookie.trim().split('=')
-        if (name && rest.length > 0) {
-            cookies[name] = decodeURIComponent(rest.join('='))
-        }
-    })
-    return cookies
-}
-
 export async function loader({ request }: Route.LoaderArgs) {
+    const url = new URL(request.url)
     const timerId = `root-loader-${Math.random().toString(36).substr(2, 9)}`
     console.time(`${timerId} - total root loader time`)
 
-    // Check if request is aborted early
-    if (request.signal.aborted) {
-        throw new Error('Request aborted')
-    }
+    const cookieHeader = request.headers.get('Cookie') || ''
+    const cookies = parseCookies(cookieHeader)
+    const chatId = cookies.chatId || url.searchParams.get('chatId')
+    console.log(`${timerId} - cookies:`, { chatId })
 
-    const url = new URL(request.url)
+
     const domain = url.hostname.split(':')[0]
 
     // Handle websocketId in search params - set plain cookie and redirect
@@ -117,14 +108,32 @@ export async function loader({ request }: Route.LoaderArgs) {
         })
     }
 
-    // Check signal before next database operation
     if (request.signal.aborted) {
         throw new Error('Request aborted')
+    }
+    let filesInDraft: FilesInDraft = {}
+    if (chatId) {
+        console.time(`${timerId} - fetch chat for draft files`)
+        const chat = await prisma.chat.findFirst({
+            where: {
+                chatId,
+                branchId: siteBranch.branchId,
+            },
+            select: {
+                filesInDraft: true,
+            },
+        })
+        console.timeEnd(`${timerId} - fetch chat for draft files`)
+
+        if (chat && chat.filesInDraft) {
+            filesInDraft = chat.filesInDraft as any
+        }
     }
 
     console.time(`${timerId} - get files for source`)
     const files = await getFilesForSource({
         branchId: siteBranch.branchId,
+        filesInDraft,
         githubFolder: site.githubFolder || '',
     })
     console.timeEnd(`${timerId} - get files for source`)
@@ -141,24 +150,10 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     const i18n = source._i18n
 
-    // Process banner markdown if it exists
-    // Check if there's a fumabase.jsonc query parameter with updated content
-    const docsJsonParam = url.searchParams.get('fumabase.jsonc')
-    const docsJson: DocsJsonType = (() => {
-        if (docsJsonParam) {
-            try {
-                const decodedContent = decodeURIComponent(docsJsonParam)
-                return JSONC.parse(decodedContent)
-            } catch (error) {
-                console.error(
-                    'Error parsing fumabase.jsonc query parameter:',
-                    error,
-                )
-                return siteBranch.docsJson as any
-            }
-        }
-        return siteBranch.docsJson as any
-    })()
+    const docsJson = getDocsJson({
+        filesInDraft,
+        docsJson: siteBranch.docsJson,
+    })
 
     // Check signal before processing banner
     if (request.signal.aborted) {
@@ -184,7 +179,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     console.timeEnd(`${timerId} - process banner markdown`)
 
     // Check for preview websocket ID in cookies
-    const cookies = parseCookies(request.headers.get('Cookie'))
+
     const previewWebsocketId = cookies['__websocket_preview'] || null
     // Trieve fields removed - now using Eyecrest with branchId
 
