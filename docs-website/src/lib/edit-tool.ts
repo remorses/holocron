@@ -34,9 +34,9 @@ export const fileUpdateSchema = z.object({
 })
 export type FileUpdate = z.infer<typeof fileUpdateSchema>
 
-
-
-export function isStrReplaceParameterComplete(args: Partial<EditToolParamSchema>) {
+export function isStrReplaceParameterComplete(
+    args: Partial<EditToolParamSchema>,
+) {
     if (!args) return false
     const { command, path, file_text, insert_line, new_str, old_str } = args
 
@@ -99,7 +99,7 @@ export function createEditExecute({
         switch (command) {
             case 'view': {
                 let content: string | null = null
-                
+
                 try {
                     content = await fileSystem.read(path)
                     if (content === null) {
@@ -171,7 +171,7 @@ export function createEditExecute({
                         }
                     }
                 }
-                
+
                 await fileSystem.write(path, file_text)
                 return file_text
             }
@@ -219,10 +219,7 @@ export function createEditExecute({
                 //         error: `Old string "${old_str}" found more than once in the document.`,
                 //     }
                 // }
-                const replacedContent = currentContent.replace(
-                    old_str,
-                    new_str,
-                )
+                const replacedContent = currentContent.replace(old_str, new_str)
                 if (validateNewContent) {
                     try {
                         const result = await validateNewContent({
@@ -407,11 +404,13 @@ export function createEditTool({
     }
 
     // For OpenAI models, convert optionals to nullables
-    const schema = model?.provider?.startsWith('openai') 
+    const schema = model?.provider?.startsWith('openai')
         ? optionalToNullable(editToolParamsSchema)
         : editToolParamsSchema
 
     return tool({
+        onInputDelta(options) {},
+
         description: editToolDescription,
         inputSchema: schema,
         execute,

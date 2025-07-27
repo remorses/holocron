@@ -7,7 +7,7 @@ import { cn } from './cn.js'
 import { parseMarkdownIncremental } from './incremental-markdown-parser.js'
 import { MarkdownRendererProps } from './markdown.js'
 
-import { simplerProcessor } from './simple-processor.js'
+import { processorWithAst, simplerProcessor } from './simple-processor.js'
 
 export const StreamingMarkdownRuntimeComponent = memo(
     function MarkdownRuntimeComponent({
@@ -30,6 +30,8 @@ export const StreamingMarkdownRuntimeComponent = memo(
                 if (!markdown) return []
 
                 try {
+                    // const file = await processorWithAst(processor).process(markdown)
+                    // const ast = file.data.ast
                     const ast = await parseMarkdownIncremental({
                         cache: markdownCache,
                         markdown,

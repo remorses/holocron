@@ -159,10 +159,10 @@ export function addIndentation(spaces: number, text: string): string {
 
 export function Dot({ toolCallId }: { toolCallId?: string }) {
     const { messages } = useChatContext()
-    
+
     const isLastPendingCall = useMemo(() => {
         if (!toolCallId) return false
-        
+
         // Find all tool calls across all messages
         const allToolCalls: Array<{ id: string; state?: string }> = []
         messages.forEach((message) => {
@@ -177,18 +177,18 @@ export function Dot({ toolCallId }: { toolCallId?: string }) {
                 })
             }
         })
-        
+
         // Check if this is the last tool call
         const lastToolCall = allToolCalls[allToolCalls.length - 1]
         if (!lastToolCall || lastToolCall.id !== toolCallId) return false
-        
+
         // Check if it's still processing (not output-available or error)
         return lastToolCall.state !== 'output-available' && lastToolCall.state !== 'error'
     }, [toolCallId, messages])
-    
+
     return (
-        <span className={cn(isLastPendingCall && 'animate-pulse')}>
-            •
+        <span className={cn('whitespace-pre',isLastPendingCall && 'animate-pulse')}>
+            •{' '}
         </span>
     )
 }

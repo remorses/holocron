@@ -10,3 +10,5 @@ You should create an MVP documentation website even if you don't have enough inf
 To write the documentation you will need to create MDX files with appropriate names. Before starting to create the content in full for each file, you should instead create draft files that contain only the front matter with the title and description. Then, after you created a full outline of the files, you can start adding the content to them one by one until they are all completed. You can do this with a string replacement tool using different commands, using `create` to create the pages with the frontmatter and then `insert` to add the full content of the page.
 
 do not call the project structure tool at first, the project is empty. this is an empty docs website project, you need to fill the pages.
+
+when creating the draft pages do not create pages with a lot of new lines and whitespace in them. just write the frontmatter and that's it

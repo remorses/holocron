@@ -1,6 +1,10 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import dedent from 'string-dedent'
-import { OpenAIResponsesProviderOptions, openai } from '@ai-sdk/openai'
+import {
+    OpenAIResponsesProviderOptions,
+    openai,
+    createOpenAI,
+} from '@ai-sdk/openai'
 import {
     UIMessage,
     generateObject,
@@ -67,10 +71,14 @@ const deletePagesSchema = z.object({
 const renameFileSchema = z.object({
     oldPath: z
         .string()
-        .describe('The current file path to rename. Must include the file extension.'),
+        .describe(
+            'The current file path to rename. Must include the file extension.',
+        ),
     newPath: z
         .string()
-        .describe('The new file path. Must include the file extension. The parent directory must exist or be created first.'),
+        .describe(
+            'The new file path. Must include the file extension. The parent directory must exist or be created first.',
+        ),
 })
 
 // Website-specific fetchUrl schema that requires absolute URLs
@@ -216,7 +224,8 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             languages: branch.site?.locales?.map((x) => x.locale) || [],
         })
 
-        let model = openai.responses('gpt-4.1')
+        let model = openai.responses('o4-mini')
+
         if (chat?.modelId && chat?.modelProvider) {
             if (chat.modelProvider.startsWith('openai')) {
                 model = openai(chat.modelId)
@@ -245,7 +254,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 })
             },
         })
-        
+
         const docsJsonRenderFormTool = createRenderFormTool({
             jsonSchema: docsJsonSchema as any,
             replaceOptionalsWithNulls: model.provider.startsWith('openai'),
@@ -264,39 +273,46 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                         })
                     } catch (error: any) {
                         // Extract error details
-                        const errorLine = error.line || error.position?.start?.line || 1
-                        const errorColumn = error.column || error.position?.start?.column || 1
-                        const errorMessage = error.reason || error.message || 'Unknown MDX error'
-                        
+                        const errorLine =
+                            error.line || error.position?.start?.line || 1
+                        const errorColumn =
+                            error.column || error.position?.start?.column || 1
+                        const errorMessage =
+                            error.reason || error.message || 'Unknown MDX error'
+
                         // Split markdown into lines
                         const lines = x.content.split('\n')
-                        
+
                         // Calculate line range to show (5 lines before and after the error)
                         const contextRange = 5
                         const startLine = Math.max(1, errorLine - contextRange)
-                        const endLine = Math.min(lines.length, errorLine + contextRange)
-                        
+                        const endLine = Math.min(
+                            lines.length,
+                            errorLine + contextRange,
+                        )
+
                         // Build context message
                         let contextMessage = `MDX Compilation Error at line ${errorLine}, column ${errorColumn}:\n${errorMessage}\n\n`
                         contextMessage += 'Error Context:\n'
-                        
+
                         for (let i = startLine - 1; i < endLine; i++) {
                             const lineNumber = i + 1
                             const isErrorLine = lineNumber === errorLine
                             const line = lines[i] || ''
-                            
+
                             // Add line with line number
                             contextMessage += `${lineNumber.toString().padStart(3, ' ')} | ${line}\n`
-                            
+
                             // Add error indicator for the error line
                             if (isErrorLine && errorColumn) {
                                 const padding = ' '.repeat(5 + errorColumn)
                                 contextMessage += `${padding}^\n`
                             }
                         }
-                        
-                        contextMessage += '\nPlease fix the MDX syntax error and submit the tool call again.'
-                        
+
+                        contextMessage +=
+                            '\nPlease fix the MDX syntax error and submit the tool call again.'
+
                         throw new Error(contextMessage)
                     }
                 }
@@ -307,40 +323,46 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                         // Get line and column for JSON errors
                         let line = 1
                         let column = 1
-                        
+
                         // Try to extract position from error message
                         const posMatch = e.message.match(/position (\d+)/)
                         if (posMatch) {
                             const position = parseInt(posMatch[1])
-                            const lines = x.content.substring(0, position).split('\n')
+                            const lines = x.content
+                                .substring(0, position)
+                                .split('\n')
                             line = lines.length
                             column = lines[lines.length - 1].length + 1
                         }
-                        
+
                         // Build context for JSON error
                         const lines = x.content.split('\n')
                         const contextRange = 5
                         const startLine = Math.max(1, line - contextRange)
-                        const endLine = Math.min(lines.length, line + contextRange)
-                        
+                        const endLine = Math.min(
+                            lines.length,
+                            line + contextRange,
+                        )
+
                         let contextMessage = `JSON Parse Error at line ${line}:\n${e.message}\n\n`
                         contextMessage += 'Error Context:\n'
-                        
+
                         for (let i = startLine - 1; i < endLine; i++) {
                             const lineNumber = i + 1
                             const isErrorLine = lineNumber === line
                             const lineContent = lines[i] || ''
-                            
+
                             contextMessage += `${lineNumber.toString().padStart(3, ' ')} | ${lineContent}\n`
-                            
+
                             if (isErrorLine && column) {
                                 const padding = ' '.repeat(5 + column - 1)
                                 contextMessage += `${padding}^\n`
                             }
                         }
-                        
-                        contextMessage += '\nPlease fix the JSON syntax error and submit the tool call again.'
-                        
+
+                        contextMessage +=
+                            '\nPlease fix the JSON syntax error and submit the tool call again.'
+
                         throw new Error(contextMessage)
                     }
                 }
@@ -379,19 +401,24 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                         }
                         return { path, title }
                     })
-                    
+
                     // Add files from filesInDraft that are not already in the list
-                    const existingPaths = new Set(filePaths.map(f => f.path))
+                    const existingPaths = new Set(filePaths.map((f) => f.path))
                     const draftFiles = fileSystem.getFilesInDraft()
-                    for (const [draftPath, fileUpdate] of Object.entries(draftFiles)) {
-                        if (!existingPaths.has(draftPath) && fileUpdate.content !== null) {
+                    for (const [draftPath, fileUpdate] of Object.entries(
+                        draftFiles,
+                    )) {
+                        if (
+                            !existingPaths.has(draftPath) &&
+                            fileUpdate.content !== null
+                        ) {
                             filePaths.push({
                                 path: draftPath,
                                 title: '(draft)',
                             })
                         }
                     }
-                    
+
                     filePaths.push({
                         path: path.posix.join(
                             branch.site.githubFolder || '.',
@@ -417,7 +444,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     } catch (error) {
                         return {
                             deletedFiles: [],
-                            error: error.message
+                            error: error.message,
                         }
                     }
                 },
@@ -631,6 +658,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 openai: {
                     reasoningSummary: 'detailed',
                     strictJsonSchema: true,
+
                 } satisfies OpenAIResponsesProviderOptions,
             },
         })
@@ -670,6 +698,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     createdAt: new Date(),
                 }
             },
+
             originalMessages: messages,
             generateMessageId: idGenerator,
             async onFinish({ messages: uiMessages }) {
@@ -837,8 +866,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                                         sourceId: part.sourceId,
                                         url: part.url,
                                         title: part.title,
-                                        providerMetadata:
-                                            part.providerMetadata as any,
+
                                     },
                                 }),
                             )

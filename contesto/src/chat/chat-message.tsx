@@ -72,7 +72,10 @@ function isMessageAlmostEmpty(message: UIMessage) {
         return false
     }
     const allText = message.parts.every(
-        (x) => x.type === 'text' || x.type === 'step-start',
+        (x) =>
+            x.type === 'reasoning' ||
+            x.type === 'text' ||
+            x.type === 'step-start',
     )
 
     if (!allText) {

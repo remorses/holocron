@@ -19,9 +19,30 @@
     font-display: swap;
 }
 
+
+@font-face {
+    font-family: 'iA Writer Quattro';
+    src: url('https://cdn.jsdelivr.net/gh/iaolo/iA-Fonts@release/iAWriterQuattroS-Regular.woff2') format('woff2'),
+         url('https://cdn.jsdelivr.net/gh/iaolo/iA-Fonts@release/iAWriterQuattroS-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+
+@font-face {
+    font-family: 'Inconsolata';
+    src: url('https://fonts.gstatic.com/s/inconsolata/v31/QldKNThLqRwH-OJ1UHjlKGlX5qhExw.woff2') format('woff2'),
+         url('https://fonts.gstatic.com/s/inconsolata/v31/QldKNThLqRwH-OJ1UHjlKGlX5qhExw.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
 @theme {
+    --text-mono: 12px;
     --font-mono:
-        'Consolas', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        'Inconsolata', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
     --font-sans:
         ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';

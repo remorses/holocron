@@ -335,7 +335,6 @@ export default function Chat({
             ) => {
                 const args: Partial<EditToolParamSchema> = toolPart.input as any
 
-                // Handle strReplaceEditor tool output
                 if (toolPart.type === 'tool-strReplaceEditor') {
                     if (args?.command === 'view') {
                         return
@@ -353,7 +352,10 @@ export default function Chat({
                     )
 
                     let revalidate = args.command === 'create'
-
+                    useWebsiteState.setState({
+                        filesInDraft: { ...filesInDraft },
+                        currentSlug,
+                    })
                     try {
                         await docsRpcClient.setDocsState({
                             state: {
@@ -367,10 +369,6 @@ export default function Chat({
                     } catch (e) {
                         console.error('failed setDocsState', e)
                     }
-                    useWebsiteState.setState({
-                        filesInDraft: { ...filesInDraft },
-                        currentSlug,
-                    })
                 }
 
                 // Handle selectText tool output
@@ -466,6 +464,7 @@ export default function Chat({
                 if (abortController.signal.aborted) {
                     break
                 }
+                console.log(newMessages.at(-1))
                 startTransition(() => {
                     setMessages(newMessages)
                 })
@@ -533,7 +532,7 @@ function TodoItem({
 
 function TodosActions() {
     return (
-        <div className='leading-8 text-[14px] whitespace-pre-wrap gap-[0.1em] flex flex-col items-start tracking-wide'>
+        <div className='leading-snug whitespace-pre-wrap gap-[0.1em] flex flex-col items-start tracking-wide'>
             <div>
                 <Dot /> Hi! I am Fumabase, your AI docs assistant
             </div>
@@ -552,11 +551,25 @@ function TodosActions() {
     )
 }
 
+const Banner = () => (
+    <pre className='font-mono text-xs leading-tight mb-4 text-center text-purple-200'>
+        {[
+            '  ███████╗██╗   ██╗███╗   ███╗ █████╗ ██████╗  █████╗ ███████╗███████╗',
+            '  ██╔════╝██║   ██║████╗ ████║██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔════╝',
+            '  █████╗  ██║   ██║██╔████╔██║███████║██████╔╝███████║███████╗█████╗  ',
+            '  ██╔══╝  ██║   ██║██║╚██╔╝██║██╔══██║██╔══██╗██╔══██║╚════██║██╔══╝  ',
+            '  ██║     ╚██████╔╝██║ ╚═╝ ██║██║  ██║██████╔╝██║  ██║███████║███████╗',
+            '  ╚═╝      ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝',
+        ].join('\n')}
+    </pre>
+)
+
 function WelcomeMessage() {
     const { messages } = useChatContext()
     if (messages.length) return null
     return (
-        <div className='text-sm font-mono  w-auto items-center flex flex-col -ml-6 -mt-[160px]'>
+        <div className='text-mono font-mono w-auto items-center flex flex-col -ml-6 -mt-[160px]'>
+            <Banner />
             <TodosActions />
         </div>
     )
@@ -567,7 +580,7 @@ function MonoSpaceTest() {
     if (messages.length) return null
     return (
         <ChatAssistantMessage
-            className='font-mono text-sm'
+            className='font-mono text-mono'
             message={{
                 role: 'assistant',
                 id: '',
@@ -680,7 +693,7 @@ function Messages({ ref }) {
 
     if (!messages.length) return null
     return (
-        <div ref={ref} className='text-sm flex flex-col grow mt-6 gap-6'>
+        <div ref={ref} className='text-xs flex flex-col grow mt-6 gap-6'>
             {messages.map((message) => {
                 return (
                     <MessageRenderer
@@ -719,7 +732,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
         <ChatForm>
             <ChatAssistantMessage
                 style={{ minHeight }}
-                className='font-mono text-sm whitespace-pre-wrap'
+                className='font-mono whitespace-pre-wrap'
                 message={message}
             >
                 {message.parts.map((part, index) => {
@@ -730,7 +743,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                                 <Markdown
                                     isStreaming={isChatGenerating}
                                     key={index}
-                                    className='prose-sm'
+                                    className=''
                                     markdown={part.text}
                                 />
                             </div>
@@ -738,6 +751,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                     }
 
                     if (part.type === 'reasoning') {
+                        if (!part.text) return null
                         return (
                             <div className='flex flex-row opacity-70 tracking-wide gap-[1ch]'>
                                 <Dot />
@@ -1288,7 +1302,7 @@ function PrButton({}) {
                         <AlertCircle className='size-5 text-destructive mt-0.5 flex-shrink-0' />
                         <div className='grow'>
                             <h4 className='font-medium  mb-1'>Error</h4>
-                            <p className='text-sm '>{errorMessage}</p>
+                            <p className=' '>{errorMessage}</p>
                         </div>
                         <Button
                             variant='ghost'
@@ -1454,7 +1468,7 @@ function SaveChangesButton({}) {
                         <AlertCircle className='size-5 text-destructive mt-0.5 flex-shrink-0' />
                         <div className='grow'>
                             <h4 className='font-medium  mb-1'>Error</h4>
-                            <p className='text-sm '>{errorMessage}</p>
+                            <p className=' '>{errorMessage}</p>
                         </div>
                         <Button
                             variant='ghost'

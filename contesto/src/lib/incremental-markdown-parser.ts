@@ -78,6 +78,7 @@ export const parseMarkdownIncremental = async ({
 
         /* ② miss → parse ---------------------------------------------- */
         const rest = text.slice(offset)
+        if (!rest) break
 
         const file = await processorWithAst(
             processor
@@ -96,19 +97,21 @@ export const parseMarkdownIncremental = async ({
     }
 
     /* ③ refresh cache (skip the live tail) --------------------------- */
-    children
-        .slice(0, trailingNodes ? -trailingNodes : undefined)
-        .forEach((node) => {
-            const start = node.position?.start.offset
-            const end = node.position?.end.offset
-            const slice = text.slice(start, end)
-            cache.set(start, {
-                len: slice.length,
-                hash: quickHash(slice),
-                end,
-                nodes: [node],
+    if (children.length > trailingNodes) {
+        children
+            .slice(0, trailingNodes ? -trailingNodes : undefined)
+            .forEach((node) => {
+                const start = node.position?.start.offset
+                const end = node.position?.end.offset
+                const slice = text.slice(start, end)
+                cache.set(start, {
+                    len: slice.length,
+                    hash: quickHash(slice),
+                    end,
+                    nodes: [node],
+                })
             })
-        })
+    }
     // If cache is too big, remove some items (simple LRU: delete lowest keys first)
     const MAX_CACHE_SIZE = 300
     if (cache.size > MAX_CACHE_SIZE) {

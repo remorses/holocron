@@ -1,5 +1,102 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 1: "---
+title:" 1`] = `
+"***
+
+title:
+"
+`;
+
+exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 1: "---" 1`] = `
+"***
+"
+`;
+
+exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 2: "---
+title: Test" 1`] = `
+"***
+
+title: Test
+"
+`;
+
+exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 2: "--- title:" 1`] = `
+"\\--- title:
+"
+`;
+
+exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 3: "---
+title: Test Document
+author:" 1`] = `
+"***
+
+title: Test Document
+author:
+"
+`;
+
+exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 3: "--- title: Test" 1`] = `
+"\\--- title: Test
+"
+`;
+
+exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 4: "---
+title: Test Document
+author: John" 1`] = `
+"***
+
+title: Test Document
+author: John
+"
+`;
+
+exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 4: "--- title: Test Document" 1`] = `
+"\\--- title: Test Document
+"
+`;
+
+exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 5: "---
+title: Test Document
+author: John Doe
+---
+
+
+
+" 1`] = `
+"***
+
+title: Test Document
+author: John Doe
+----------------
+"
+`;
+
+exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 5: "--- title: Test Document author:" 1`] = `
+"\\--- title: Test Document author:
+"
+`;
+
+exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 6: "--- title: Test Document author: John" 1`] = `
+"\\--- title: Test Document author: John
+"
+`;
+
+exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 7: "--- title: Test Document author: John Doe" 1`] = `
+"\\--- title: Test Document author: John Doe
+"
+`;
+
+exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 8: "--- title: Test Document author: John Doe ---" 1`] = `
+"\\--- title: Test Document author: John Doe ---
+"
+`;
+
+exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 9: "--- title: Test Document author: John Doe --- " 1`] = `
+"\\--- title: Test Document author: John Doe ---
+"
+`;
+
 exports[`incremental parse > incremental parsing and jsx at chunk 1 1`] = `"<h1></h1>"`;
 
 exports[`incremental parse > incremental parsing and jsx at chunk 2 1`] = `"<h1>Welcome</h1>"`;

@@ -689,7 +689,7 @@ describe('process-chat', () => {
 
           The user wants a clear plan: first, I'll get the current time in UTC. After that, I need to find the difference between 150 and 75. To do this, I'll explain each step as I go. First, I'll call getCurrentTime, and when the result is available, I'll calculate the difference using calculateDifference, passing in 150 and 75 as parameters. Since sequential tasks are requested, I'll ensure the response is structured accordingly in the commentary channel.**Organizing function calls**
 
-          It looks like I need to structure my response to fit the user's request effectively. First, I'll explain the steps I planned: retrieving the current UTC time, and then calculating the difference between 150 and 75. Since the second part relies on the first, I need to make the first function call in my final response, along with the reasoning. 
+          It looks like I need to structure my response to fit the user's request effectively. First, I'll explain the steps I planned: retrieving the current UTC time, and then calculating the difference between 150 and 75. Since the second part relies on the first, I need to make the first function call in my final response, along with the reasoning.
 
           So, I’ll prepare to request the UTC time first, ensuring that the explanation is clear and follows the required structure.",
                   "type": "reasoning",

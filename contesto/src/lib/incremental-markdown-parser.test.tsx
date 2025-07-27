@@ -36,7 +36,7 @@ function toMarkdown(ast: any): string {
 }
 
 function simulateStreaming(text: string): string[] {
-    const words = text.split(' ')
+    const words = text.split(/\s+/)
     const result: string[] = []
     for (let i = 1; i <= words.length; i++) {
         result.push(words.slice(0, i).join(' '))
@@ -105,7 +105,6 @@ this is another paragraph
                 })
                 const jsx = renderToStaticMarkup(
                     <SafeMdxRenderer
-
                         mdast={ast}
                         components={{
                             Cards({ children }) {
@@ -171,5 +170,37 @@ this is another paragraph
           </Cards>
           "
         `)
+    })
+})
+
+describe('frontmatter-only file with newlines', () => {
+    const frontmatterCache = new Map<number, SegmentEntry>()
+    const frontmatterMarkdown = `---
+title: Test Document
+author: John Doe
+---
+
+
+
+`
+
+    // Simulate incremental parsing word by word
+    const chunks = simulateStreaming(frontmatterMarkdown)
+
+    chunks.forEach((chunk, idx) => {
+        test(`frontmatter parsing at chunk ${idx + 1}: "${chunk}"`, async () => {
+            const ast = await parseAndWaitForHighlighter({
+                markdown: chunk,
+                cache: frontmatterCache,
+            })
+
+            const result = toMarkdown(ast)
+
+            // Check that we don't have infinite newlines
+            const newlineCount = (result.match(/\n/g) || []).length
+            expect(newlineCount).toBeLessThan(20) // Should not have excessive newlines
+
+            expect(result).toMatchSnapshot()
+        })
     })
 })

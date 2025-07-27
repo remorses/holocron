@@ -30,7 +30,7 @@ export function MarkdownRuntimeChat({
             markdown={markdown}
             processor={processor}
             components={mdxComponents}
-            className={cn('block max-w-full text-sm prose-sm ', className)}
+            className={cn('block max-w-full text-mono prose-xs ', className)}
         />
     )
 }
@@ -76,13 +76,11 @@ const renderNode: RenderNode = (node, transform) => {
         }
 
         return (
-            <div
-                className='not-prose -ml-2 max-w-full leading-relaxed'
-                {...props}
-            >
+            <div className='-ml-[1em] max-w-full not-prose leading-relaxed' {...props}>
                 <div
                     dangerouslySetInnerHTML={{ __html: html ?? node.value }}
-                    className='overflow-x-auto hide-scrollbar overflow-y-hidden max-w-full whitespace-pre-wrap'
+                    // style={{ fontSize: 'inherit' }}
+                    className='overflow-x-auto hide-scrollbar font-mono text-xs overflow-y-hidden max-w-full whitespace-pre-wrap'
                 ></div>
             </div>
         )
