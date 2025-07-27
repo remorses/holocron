@@ -9,7 +9,7 @@ import {
 } from 'react'
 import JSONC from 'tiny-jsonc'
 import { Route } from '../routes/_catchall'
-import { useLoaderData, useNavigate, useRouteLoaderData } from 'react-router'
+import { useLoaderData, useRouteLoaderData } from 'react-router'
 import { useDocsState } from './docs-state'
 import { DocsJsonType } from './docs-json'
 

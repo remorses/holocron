@@ -886,6 +886,9 @@ export const app = new Spiceflow({ basePath: '/api' })
                             },
                         },
                     },
+                    include: {
+                        site: true,
+                    },
                 }),
                 prisma.chat.findFirst({
                     where: {
@@ -902,6 +905,39 @@ export const app = new Spiceflow({ basePath: '/api' })
             if (!chat) {
                 throw new AppError('Chat not found or access denied')
             }
+
+            const site = branch.site
+
+            // Convert filesInDraft to files array for syncSite
+            const files = Object.entries(filesInDraft)
+                .filter(([_, fileUpdate]) => fileUpdate?.content !== undefined)
+                .map(([filePath, fileUpdate]) => ({
+                    relativePath: filePath,
+                    contents: fileUpdate?.content || '',
+                }))
+
+            // Get current docsJson and comments
+            const docsJson = (branch.docsJson || {}) as DocsJsonType
+            const docsJsonComments = (branch.docsJsonComments || {}) as any
+
+            // Convert files to assets generator
+            const assets = assetsFromFilesList({
+                files,
+                docsJson,
+                docsJsonComments,
+                githubFolder: site.githubFolder || '',
+            })
+
+            // Sync the files as markdown pages
+            await syncSite({
+                files: assets,
+                trieveDatasetId: branch.trieveDatasetId || undefined,
+                githubFolder: site.githubFolder || '',
+                branchId,
+                siteId: site.siteId,
+                name: site.name || '',
+                docsJson,
+            })
 
             // Update chat with the saved files
             await prisma.chat.update({

@@ -56,7 +56,8 @@ import {
     saveChatMessages,
     loadChatMessages,
 } from '../lib/docs-state'
-import { useRouteLoaderData, useLocation, useNavigate } from 'react-router'
+import { useRouteLoaderData, useLocation } from 'react-router'
+import { usePreservedNavigate } from './preserved-search-link'
 import type { Route } from '../routes/_catchall'
 import { env } from '../lib/env'
 import { Trash2Icon, XIcon } from 'lucide-react'
@@ -75,7 +76,7 @@ import { FileSystemEmulator } from 'website/src/lib/file-system-emulator'
 export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
     const chatId = usePersistentDocsState((x) => x.chatId)
     const location = useLocation()
-    const navigate = useNavigate()
+    const navigate = usePreservedNavigate()
 
     // Get files from root loader data
     const rootLoaderData = useRouteLoaderData(

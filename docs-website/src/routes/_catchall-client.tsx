@@ -3,7 +3,7 @@
 import React from 'react'
 import { useNProgress } from 'docs-website/src/lib/nprogress'
 import { Banner } from 'fumadocs-ui/components/banner'
-import { ReactRouterProvider } from 'fumadocs-core/framework/react-router'
+import { FrameworkProvider } from 'fumadocs-core/framework'
 import { LinkItemType } from 'fumadocs-ui/layouts/links'
 import { DocsLayout as DocsLayoutNotebook } from 'fumadocs-ui/layouts/notebook'
 import type { Option } from 'fumadocs-ui/components/layout/root-toggle'
@@ -24,7 +24,11 @@ import {
     useNavigation,
     useRevalidator,
     useSearchParams,
+    useLocation,
+    useNavigate,
+    useParams,
 } from 'react-router'
+import { PreservedSearchLink, usePreservedNavigate, setGlobalNavigate, globalNavigate } from '../components/preserved-search-link'
 import { useShallow } from 'zustand/react/shallow'
 import type { Route } from './_catchall'
 
@@ -80,9 +84,8 @@ async function setDocsStateForMessage(partialState: Partial<DocsState>) {
         prevState.currentSlug !== partialState.currentSlug &&
         partialState.currentSlug !== window.location.pathname
     ) {
-        // return await navigate(state.currentSlug!)
-        // TODO do client side navigation instead
-        window.location.pathname = partialState.currentSlug
+        // Use global navigate to preserve search params
+        globalNavigate(partialState.currentSlug)
     }
     console.log(`setting docs-state from parent message state`, partialState)
     startTransition(() => {
@@ -387,7 +390,7 @@ export function ClientApp() {
                 <UserBanner docsJson={docsJson} />
             )}
 
-            <ReactRouterProvider>
+            <CustomReactRouterProvider>
                 <RootProvider
                     search={{
                         options: {},
@@ -430,7 +433,7 @@ export function ClientApp() {
                         </DocsLayoutWrapper>
                     </ThemeProvider>
                 </RootProvider>
-            </ReactRouterProvider>
+            </CustomReactRouterProvider>
         </>
     )
 }
@@ -597,7 +600,7 @@ function PreviewBanner({ websocketId }: { websocketId?: string }) {
         // Remove websocketId from search params before reloading
         const url = new URL(window.location.href)
         url.searchParams.set('websocketId', '')
-        window.location.href = url.toString()
+        globalNavigate(url.pathname + url.search)
     }
 
     const websocketServerPreviewConnected = useDocsState(
@@ -732,6 +735,51 @@ function Logo({ docsJson = {} as DocsJsonType }) {
             )}
         </div>
     )
+}
+
+// Custom React Router Provider with preserved search params
+function CustomReactRouterProvider({ children }: { children: React.ReactNode }) {
+    const location = useLocation()
+    const navigate = useNavigate()
+    const params = useParams()
+    const revalidator = useRevalidator()
+    const preservedNavigate = usePreservedNavigate()
+    
+    // Set the global navigate function
+    useEffect(() => {
+        setGlobalNavigate(preservedNavigate)
+    }, [preservedNavigate])
+    
+    const framework = useMemo(() => ({
+        usePathname() {
+            return location.pathname
+        },
+        useParams() {
+            // Convert React Router params to fumadocs expected format
+            const result: Record<string, string | string[]> = {}
+            for (const [key, value] of Object.entries(params)) {
+                if (value !== undefined) {
+                    result[key] = value
+                }
+            }
+            return result
+        },
+        useRouter() {
+            return {
+                push(url: string) {
+                    preservedNavigate(url)
+                },
+                refresh() {
+                    void revalidator.revalidate()
+                }
+            }
+        },
+        Link({ href, prefetch, ...props }: any) {
+            return <PreservedSearchLink to={href} prefetch={prefetch ? "intent" : "none"} {...props} />
+        }
+    }), [location.pathname, params, preservedNavigate, revalidator])
+    
+    return <FrameworkProvider {...framework}>{children}</FrameworkProvider>
 }
 
 // Extend globalThis to include our type-safe variable

@@ -212,7 +212,7 @@ function ChatContent() {
     const hideBrowser = useShouldHideBrowser()
 
     return (
-        <div className='dark:bg-black flex h-full p-4'>
+        <div className='dark:bg-black flex h-full gap-2 py-4 px-3'>
             <ChatLeftSidebar />
 
             {!hideBrowser && (

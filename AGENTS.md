@@ -486,9 +486,9 @@ For private packages, which do not have versions, you must instead use the curre
 - Fixed a bug that caused the app to crash on startup
 ```
 
-these are just exasmples, be clear and consies in your changelog entries.
+these are just example, be clear and consies in your changelog entries.
 
-use present tense, like "add support for X" or "fix bug with Y". Be detailed but concise, do not use nested bullet points. Always show example code snippets if applicable, and use proper markdown formatting.
+use present tense. Be detailed but concise, omit useless verbs like "implement", "added", just put the subject there instead, so it is showerer. it's implicit we are adding feature or fixes. do not use nested bullet points. Always show example code snippets if applicable, and use proper markdown formatting.
 
 ```
 

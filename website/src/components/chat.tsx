@@ -481,7 +481,7 @@ export default function Chat({
             generateMessages={submitMessages}
             initialValue={initialChatState}
         >
-            <div className='flex grow w-full max-w-[900px] flex-col gap-3 px-6 justify-center'>
+            <div className='flex grow w-full max-w-[900px] flex-col gap-3 pr-2 pl-0 justify-center'>
                 <Messages ref={ref} />
                 <WelcomeMessage />
                 <Footer />
@@ -504,7 +504,7 @@ function TodoItem({
     const { setDraftText } = useChatContext()
     return (
         <button
-            className={`ml-4 ${className} hover:text-blue-300 cursor-pointer group`}
+            className={`ml-4 ${className} hover:text-blue-300 hover:bg-purple-900/20 px-2 py-1 rounded-md transition-colors cursor-pointer group`}
             onClick={(e) => {
                 if (props.onClick) props.onClick(e)
                 if (userMessage) {
