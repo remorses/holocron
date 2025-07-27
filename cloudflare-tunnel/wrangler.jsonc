@@ -14,6 +14,10 @@
             "pattern": "fumabase.com/_tunnel/*",
             "zone_name": "fumabase.com",
         },
+        {
+            "pattern": "unframer.co/framer-mcp-tunnel/*",
+            "zone_name": "unframer.co",
+        },
     ],
 
     "durable_objects": {
