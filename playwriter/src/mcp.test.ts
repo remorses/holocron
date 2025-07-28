@@ -1,11 +1,18 @@
 import { createMCPClient } from './mcp-client.js'
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, beforeAll, afterAll } from 'vitest'
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 
 describe('MCP Server Tests', () => {
+    let client: Awaited<ReturnType<typeof createMCPClient>>['client']
     let cleanup: (() => Promise<void>) | null = null
 
-    afterEach(async () => {
+    beforeAll(async () => {
+        const result = await createMCPClient()
+        client = result.client
+        cleanup = result.cleanup
+    })
+
+    afterAll(async () => {
         if (cleanup) {
             await cleanup()
             cleanup = null
@@ -13,10 +20,7 @@ describe('MCP Server Tests', () => {
     })
 
     it('should capture console logs', async () => {
-        const { client, cleanup: cleanupFn } = await createMCPClient()
-        cleanup = cleanupFn
-
-        // Connect first
+        // Connect first (open a new page)
         const connectResult = await client.callTool({
             name: 'new_page',
             arguments: {},
@@ -72,12 +76,15 @@ describe('MCP Server Tests', () => {
             },
           ]
         `)
+
+        // Close the page opened
+        await client.callTool({
+            name: 'close_page',
+            arguments: {},
+        })
     }, 30000)
 
     it('should capture accessibility snapshot of hacker news', async () => {
-        const { client, cleanup: cleanupFn } = await createMCPClient()
-        cleanup = cleanupFn
-
         // Create new page
         await client.callTool({
             name: 'new_page',
@@ -101,10 +108,13 @@ describe('MCP Server Tests', () => {
 
         // Save initial snapshot
         const initialData =
-            typeof initialSnapshot === 'object' && initialSnapshot.content?.[0]?.text
+            typeof initialSnapshot === 'object' &&
+            initialSnapshot.content?.[0]?.text
                 ? tryJsonParse(initialSnapshot.content[0].text)
                 : initialSnapshot
-        expect(initialData).toMatchFileSnapshot('snapshots/hacker-news-initial-accessibility.md')
+        expect(initialData).toMatchFileSnapshot(
+            'snapshots/hacker-news-initial-accessibility.md',
+        )
         expect(initialData).toContain('table')
         expect(initialData).toContain('Hacker News')
 
@@ -133,10 +143,13 @@ describe('MCP Server Tests', () => {
 
         // Save focused snapshot
         const focusedData =
-            typeof focusedSnapshot === 'object' && focusedSnapshot.content?.[0]?.text
+            typeof focusedSnapshot === 'object' &&
+            focusedSnapshot.content?.[0]?.text
                 ? tryJsonParse(focusedSnapshot.content[0].text)
                 : focusedSnapshot
-        expect(focusedData).toMatchFileSnapshot('snapshots/hacker-news-focused-accessibility.md')
+        expect(focusedData).toMatchFileSnapshot(
+            'snapshots/hacker-news-focused-accessibility.md',
+        )
 
         // Verify the snapshot contains expected content
         expect(focusedData).toBeDefined()
@@ -162,20 +175,26 @@ describe('MCP Server Tests', () => {
 
         // Save tabbed snapshot
         const tabbedData =
-            typeof tabbedSnapshot === 'object' && tabbedSnapshot.content?.[0]?.text
+            typeof tabbedSnapshot === 'object' &&
+            tabbedSnapshot.content?.[0]?.text
                 ? tryJsonParse(tabbedSnapshot.content[0].text)
                 : tabbedSnapshot
-        expect(tabbedData).toMatchFileSnapshot('snapshots/hacker-news-tabbed-accessibility.md')
+        expect(tabbedData).toMatchFileSnapshot(
+            'snapshots/hacker-news-tabbed-accessibility.md',
+        )
 
         // Verify the snapshot is different
         expect(tabbedData).toBeDefined()
         expect(tabbedData).toContain('Hacker News')
+
+        // Close the page opened
+        await client.callTool({
+            name: 'close_page',
+            arguments: {},
+        })
     }, 30000)
 
     it('should capture accessibility snapshot of shadcn UI', async () => {
-        const { client, cleanup: cleanupFn } = await createMCPClient()
-        cleanup = cleanupFn
-
         // Create new page
         await client.callTool({
             name: 'new_page',
@@ -204,6 +223,12 @@ describe('MCP Server Tests', () => {
                 : snapshot
         expect(data).toMatchFileSnapshot('snapshots/shadcn-ui-accessibility.md')
         expect(data).toContain('shadcn')
+
+        // Close the page opened
+        await client.callTool({
+            name: 'close_page',
+            arguments: {},
+        })
     }, 30000)
 })
 function tryJsonParse(str: string) {
