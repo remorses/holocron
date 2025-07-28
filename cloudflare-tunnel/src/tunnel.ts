@@ -57,9 +57,11 @@ export class Tunnel {
 
         if (role === 'up') {
             if (this.up) {
-                // Close existing upstream connection and replace it
-                this.up.close(1012, 'replaced by new upstream')
-                this.up = null
+                // Accept the connection but immediately close it with a specific code
+                server.accept()
+                server.close(4009, 'Upstream already connected')
+                // Still return a successful WebSocket upgrade response
+                return addCors(new Response(null, { status: 101, webSocket: client }))
             }
             this.up = server
             server.accept()
