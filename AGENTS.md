@@ -40,6 +40,8 @@ instead of adding packages directly in package.json use `pnpm install package` i
 
 - use || over in: avoid 'x' in obj checks. prefer doing `obj?.x || ''` over doing `'x' in obj ? obj.x : ''`. only use the in operator if that field causes problems in typescript checks because typescript thinks the field is missing, as a last resort.
 
+- when creating urls from a path and a base url prefer using `new URL(path, baseUrl).toString()` instead of normal string interpolation. use type safe react-router `href` or spiceflow `this.safePath` (available inside routes) if possible
+
 - for node built ins imports never import singular names, instead do `import fs from 'node:fs'`, same for path, os, etc.
 
 - NEVER start the development server with pnpm dev yourself. there is not reason to do so, even with &
@@ -120,6 +122,8 @@ Never write tests yourself that call prisma or interact with database or emails.
 # secrets
 
 this project uses Doppler to manage secrets, with a single project with 3 envs: dev, preview and production. dev is the env already selected and implicing in doppler calls.
+
+in typescript never use process.env directly, instead find the closes `env.ts` file that export a env object (this file should already exist). so the env can be used type safely and i can clearly see which secrets are available and need to be added.
 
 # react router v7
 
