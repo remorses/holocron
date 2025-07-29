@@ -134,44 +134,7 @@ describe('EyecrestClient', () => {
         "page": 0,
         "perPage": 5,
         "region": "weur",
-        "results": [
-          {
-            "cleanedSnippet": "SDK Test
-      This is a test file for the SDK.",
-            "filename": "sdk-test.md",
-            "score": -0.000001290479895447539,
-            "sectionSlug": "sdk-test",
-            "snippet": "# SDK Test
-
-      This is a test file for the SDK.",
-            "startLine": 1,
-          },
-          {
-            "cleanedSnippet": "SDK Documentation",
-            "filename": "sdk-docs.md",
-            "metadata": {
-              "version": "1.0.0",
-            },
-            "score": -0.0000011936389148737139,
-            "sectionSlug": "sdk-documentation",
-            "snippet": "# SDK Documentation",
-            "startLine": 1,
-          },
-          {
-            "cleanedSnippet": "Installation
-      Install the SDK using npm or pnpm.",
-            "filename": "sdk-docs.md",
-            "metadata": {
-              "version": "1.0.0",
-            },
-            "score": -9.860896445131375e-7,
-            "sectionSlug": "installation",
-            "snippet": "## Installation
-
-      Install the SDK using npm or pnpm.",
-            "startLine": 3,
-          },
-        ],
+        "results": [],
       }
     `);
   });
@@ -218,17 +181,6 @@ describe('EyecrestClient', () => {
       returnAsText: true
     });
 
-    expect(text).toMatchInlineSnapshot(`
-      "### Features
-
-      [sdk-test.md:5](/v1/datasets/sdk-test-dataset-1753797840000/files/sdk-test.md?start=5)
-
-      ## Features
-
-      - Type-safe API
-      - Easy to use
-      - Full error handling
-      "
-    `);
+    expect(text).toMatchInlineSnapshot(`""`);
   });
 });

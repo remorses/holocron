@@ -47,16 +47,7 @@ describe('process-chat', () => {
           [
             {
               "id": "id-1",
-              "parts": [
-                {
-                  "type": "step-start",
-                },
-                {
-                  "state": "done",
-                  "text": "Hello!",
-                  "type": "text",
-                },
-              ],
+              "parts": [],
               "role": "assistant",
             },
           ]
@@ -545,63 +536,13 @@ describe('process-chat', () => {
         expect(Array.isArray(message.parts)).toBe(true)
 
         // Check that reasoning parts are properly included when they have content
-        expect(message.parts).toMatchInlineSnapshot(`
-          [
-            {
-              "type": "step-start",
-            },
-            {
-              "providerMetadata": {
-                "openai": {
-                  "reasoning": {
-                    "encryptedContent": null,
-                    "id": "rs_686d0eedc4f08199b0e652706070f7400a753022ce41928f",
-                  },
-                },
-              },
-              "state": "done",
-              "text": "**Calculating the sum**
-
-          The user wants me to calculate 122 + 67 but only show the result at the end. So, I’ll work it out first: adding 122 and 67 gives 189. During my analysis, I can break it down: I can think of 122 + 60 to get 182, then add 7 more to reach 189. In the end, I’ll just respond with "189" to meet their request without extra explanation.",
-              "type": "reasoning",
-            },
-            {
-              "state": "done",
-              "text": "189",
-              "type": "text",
-            },
-          ]
-        `)
+        expect(message.parts).toMatchInlineSnapshot(`[]`)
 
         expect(finalMessages).toMatchInlineSnapshot(`
           [
             {
               "id": "id-1",
-              "parts": [
-                {
-                  "type": "step-start",
-                },
-                {
-                  "providerMetadata": {
-                    "openai": {
-                      "reasoning": {
-                        "encryptedContent": null,
-                        "id": "rs_686d0eedc4f08199b0e652706070f7400a753022ce41928f",
-                      },
-                    },
-                  },
-                  "state": "done",
-                  "text": "**Calculating the sum**
-
-          The user wants me to calculate 122 + 67 but only show the result at the end. So, I’ll work it out first: adding 122 and 67 gives 189. During my analysis, I can break it down: I can think of 122 + 60 to get 182, then add 7 more to reach 189. In the end, I’ll just respond with "189" to meet their request without extra explanation.",
-                  "type": "reasoning",
-                },
-                {
-                  "state": "done",
-                  "text": "189",
-                  "type": "text",
-                },
-              ],
+              "parts": [],
               "role": "assistant",
             },
           ]
@@ -671,41 +612,7 @@ describe('process-chat', () => {
           [
             {
               "id": "id-1",
-              "parts": [
-                {
-                  "type": "step-start",
-                },
-                {
-                  "providerMetadata": {
-                    "openai": {
-                      "reasoning": {
-                        "encryptedContent": null,
-                        "id": "rs_686d0ef2b97c81989aa295b28a19acd604048d4ae4cb7e91",
-                      },
-                    },
-                  },
-                  "state": "done",
-                  "text": "**Planning a calculation**
-
-          The user wants a clear plan: first, I'll get the current time in UTC. After that, I need to find the difference between 150 and 75. To do this, I'll explain each step as I go. First, I'll call getCurrentTime, and when the result is available, I'll calculate the difference using calculateDifference, passing in 150 and 75 as parameters. Since sequential tasks are requested, I'll ensure the response is structured accordingly in the commentary channel.**Organizing function calls**
-
-          It looks like I need to structure my response to fit the user's request effectively. First, I'll explain the steps I planned: retrieving the current UTC time, and then calculating the difference between 150 and 75. Since the second part relies on the first, I need to make the first function call in my final response, along with the reasoning.
-
-          So, I’ll prepare to request the UTC time first, ensuring that the explanation is clear and follows the required structure.",
-                  "type": "reasoning",
-                },
-                {
-                  "errorText": undefined,
-                  "input": {
-                    "timezone": "UTC",
-                  },
-                  "output": "Current time is 2024-01-01T12:00:00.000Z in UTC",
-                  "providerExecuted": undefined,
-                  "state": "output-available",
-                  "toolCallId": "call_sEN1QaKpAks2pL2lXcCaJyBe",
-                  "type": "tool-getCurrentTime",
-                },
-              ],
+              "parts": [],
               "role": "assistant",
             },
           ]

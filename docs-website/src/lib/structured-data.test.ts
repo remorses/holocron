@@ -402,6 +402,10 @@ npm install package
                       ],
                       "children": [
                         {
+                          "data": {
+                            "hProperties": {},
+                            "html": "<pre class="shiki shiki-themes github-light github-dark" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e" tabindex="0"><code><span class="line"><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">const</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF"> example</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583"> =</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF"> "JavaScript code"</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">;</span></span></code></pre>",
+                          },
                           "lang": "javascript",
                           "meta": null,
                           "position": {
@@ -474,6 +478,10 @@ npm install package
                       ],
                       "children": [
                         {
+                          "data": {
+                            "hProperties": {},
+                            "html": "<pre class="shiki shiki-themes github-light github-dark" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e" tabindex="0"><code><span class="line"><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">const</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF"> example</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">:</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF"> string</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583"> =</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF"> "TypeScript code"</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">;</span></span></code></pre>",
+                          },
                           "lang": "typescript",
                           "meta": null,
                           "position": {
@@ -615,6 +623,10 @@ npm install package
                           "type": "paragraph",
                         },
                         {
+                          "data": {
+                            "hProperties": {},
+                            "html": "<pre class="shiki shiki-themes github-light github-dark" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e" tabindex="0"><code><span class="line"><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">npm</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF"> install</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF"> package</span></span></code></pre>",
+                          },
                           "lang": "bash",
                           "meta": null,
                           "position": {
@@ -869,6 +881,11 @@ def hello():
                   "type": "heading",
                 },
                 {
+                  "data": {
+                    "hProperties": {},
+                    "html": "<pre class="shiki shiki-themes github-light github-dark" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e" tabindex="0"><code><span class="line"><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">def</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0"> hello</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">():</span></span>
+          <span class="line"><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF">    print</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">"Hello, World!"</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span></code></pre>",
+                  },
                   "lang": "python",
                   "meta": null,
                   "position": {
@@ -1486,6 +1503,10 @@ This is an accordion item with content.
                       ],
                       "children": [
                         {
+                          "data": {
+                            "hProperties": {},
+                            "html": "<pre class="shiki shiki-themes github-light github-dark" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e" tabindex="0"><code><span class="line"><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">npm</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF"> install</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF"> fumadocs-core</span></span></code></pre>",
+                          },
                           "lang": "bash",
                           "meta": null,
                           "position": {
@@ -1541,6 +1562,10 @@ This is an accordion item with content.
                       ],
                       "children": [
                         {
+                          "data": {
+                            "hProperties": {},
+                            "html": "<pre class="shiki shiki-themes github-light github-dark" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e" tabindex="0"><code><span class="line"><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">yarn</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF"> add</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF"> fumadocs-core</span></span></code></pre>",
+                          },
                           "lang": "bash",
                           "meta": null,
                           "position": {
@@ -1596,6 +1621,10 @@ This is an accordion item with content.
                       ],
                       "children": [
                         {
+                          "data": {
+                            "hProperties": {},
+                            "html": "<pre class="shiki shiki-themes github-light github-dark" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e" tabindex="0"><code><span class="line"><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">pnpm</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF"> add</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF"> fumadocs-core</span></span></code></pre>",
+                          },
                           "lang": "bash",
                           "meta": null,
                           "position": {
@@ -1739,6 +1768,18 @@ This is an accordion item with content.
                   "type": "heading",
                 },
                 {
+                  "data": {
+                    "hProperties": {
+                      "title": "{1,3-5}",
+                    },
+                    "html": "<pre class="shiki shiki-themes github-light github-dark" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e" tabindex="0" title="{1,3-5}"><code><span class="line"><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">const</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF"> config</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583"> =</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+          <span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">  theme: </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'dark'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+          <span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">  features: [</span></span>
+          <span class="line"><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">    'syntax-highlighting'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+          <span class="line"><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">    'line-numbers'</span></span>
+          <span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">  ]</span></span>
+          <span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre>",
+                  },
                   "lang": "typescript",
                   "meta": "{1,3-5}",
                   "position": {
@@ -2386,6 +2427,11 @@ const test = true;
                   "type": "list",
                 },
                 {
+                  "data": {
+                    "hProperties": {},
+                    "html": "<pre class="shiki shiki-themes github-light github-dark" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e" tabindex="0"><code><span class="line"><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D">// And code blocks</span></span>
+          <span class="line"><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">const</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF"> test</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583"> =</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF"> true</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">;</span></span></code></pre>",
+                  },
                   "lang": "javascript",
                   "meta": null,
                   "position": {

@@ -27,8 +27,9 @@
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.9.4",
-    "@xmorse/tar-parser": "^0.3.0",
     "@modelcontextprotocol/sdk": "^1.16.0",
+    "@upstash/vector": "^1.2.2",
+    "@xmorse/tar-parser": "^0.3.0",
     "agents": "^0.0.109",
     "ajv": "^8.17.1",
     "github-slugger": "^2.0.0",

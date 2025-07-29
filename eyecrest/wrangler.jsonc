@@ -13,7 +13,8 @@
     "durable_objects": {
         "bindings": [
             { "name": "DATASETS", "class_name": "Datasets" },
-            { "name": "MCP_OBJECT", "class_name": "MyMCP" }
+            { "name": "MCP_OBJECT", "class_name": "MyMCP" },
+            { "name": "UPSTASH_VECTOR_DATASETS", "class_name": "UpstashVectorDatasets" }
         ]
     },
 
@@ -37,6 +38,10 @@
         {
             "tag": "v5",
             "renamed_classes": [{"from": "DatasetCache", "to": "Datasets"}]
+        },
+        {
+            "tag": "v6",
+            "new_classes": ["UpstashVectorDatasets"]
         }
     ],
 

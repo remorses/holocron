@@ -1,5 +1,24 @@
 # Changelog
 
+## 2025-01-29 11:00
+
+- Created new `UpstashVectorDatasets` durable object implementation using Upstash Vector for search
+- Implements same `DatasetsInterface` as SQLite-based `Datasets` for compatibility
+- Maps regions to specific Upstash Vector index URLs (US and Europe)
+- Uses vector namespaces to isolate datasets within shared indexes
+- Stores file metadata in DO storage, vectors in Upstash
+- Added UPSTASH_VECTOR_DATASETS binding to wrangler.jsonc configuration
+- Added v6 migration to declare new UpstashVectorDatasets class
+- Updated Env interface to include UPSTASH_VECTOR_REST_TOKEN
+- Exported necessary schemas and types for vector implementation
+- Updated all worker routes to use UPSTASH_VECTOR_DATASETS as default DO
+- Simplified to use single US index for all regions temporarily
+- Store original file content in DO storage for retrieval
+- Track section count and content size for getDatasetSize
+- Fix Upstash Vector API usage with proper namespace methods
+- Use includeData in queries to get original text in search results
+- Fix deleteNamespace to use proper API method
+
 ## 2025-01-29 10:10
 
 - Made `getFileContents` return type consistent - always returns `{ files: Array }`

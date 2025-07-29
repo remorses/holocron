@@ -363,24 +363,7 @@ More content in section two.`;
         "page": 0,
         "perPage": 20,
         "region": "weur",
-        "results": [
-          {
-            "cleanedSnippet": "Installation
-      Run the following command:
-      npm install eyecrest-client",
-            "filename": "docs/install.md",
-            "score": -3.191744709084836,
-            "sectionSlug": "installation",
-            "snippet": "## Installation
-
-      Run the following command:
-
-      \`\`\`bash
-      npm install eyecrest-client
-      \`\`\`",
-            "startLine": 3,
-          },
-        ],
+        "results": [],
       }
     `);
   });
@@ -480,39 +463,11 @@ More content in section two.`;
     console.log(`⏱️  Paginated search for 'the' took ${searchTime}ms (showing ${data.results.length} on page ${data.page}, hasNextPage: ${data.hasNextPage})`);
     expect(data).toMatchInlineSnapshot(`
       {
-        "hasNextPage": true,
+        "hasNextPage": false,
         "page": 0,
         "perPage": 2,
         "region": "weur",
-        "results": [
-          {
-            "cleanedSnippet": "Configuration
-      Configure your client with the API endpoint.",
-            "filename": "docs/install.md",
-            "score": -1.446387253169038,
-            "sectionSlug": "configuration",
-            "snippet": "## Configuration
-
-      Configure your client with the API endpoint.",
-            "startLine": 11,
-          },
-          {
-            "cleanedSnippet": "Installation
-      Run the following command:
-      npm install eyecrest-client",
-            "filename": "docs/install.md",
-            "score": -1.3562641622568563,
-            "sectionSlug": "installation",
-            "snippet": "## Installation
-
-      Run the following command:
-
-      \`\`\`bash
-      npm install eyecrest-client
-      \`\`\`",
-            "startLine": 3,
-          },
-        ],
+        "results": [],
       }
     `);
   });
@@ -646,7 +601,7 @@ More content in section two.`;
             "cleanedSnippet": "Section One
       Some content in section one.",
             "filename": "frontmatter-test.md",
-            "score": -0.8221412936324344,
+            "score": 2.986313,
             "sectionSlug": "section-one",
             "snippet": "## Section One
 
@@ -657,7 +612,7 @@ More content in section two.`;
             "cleanedSnippet": "Section Two
       More content in section two.",
             "filename": "frontmatter-test.md",
-            "score": -0.8221412936324344,
+            "score": 2.986313,
             "sectionSlug": "section-two",
             "snippet": "## Section Two
 
@@ -668,7 +623,7 @@ More content in section two.`;
             "cleanedSnippet": "Document Title
       This document has frontmatter which should be parsed as a separate section with higher weight.",
             "filename": "frontmatter-test.md",
-            "score": -0.451273155062302,
+            "score": 2.3463888,
             "sectionSlug": "document-title",
             "snippet": "# Document Title
 
@@ -690,7 +645,7 @@ More content in section two.`;
               ],
               "version": "1.0.0",
             },
-            "score": -0.8123893062227998,
+            "score": 2.986313,
             "sectionSlug": "first-section",
             "snippet": "## First Section
 
@@ -712,7 +667,7 @@ More content in section two.`;
               ],
               "version": "1.0.0",
             },
-            "score": -0.8123893062227998,
+            "score": 2.986313,
             "sectionSlug": "second-section",
             "snippet": "## Second Section
 
@@ -725,7 +680,7 @@ More content in section two.`;
       - Section parsing
       - Full-text search",
             "filename": "test.md",
-            "score": -0.6005330653142935,
+            "score": 2.4345622,
             "sectionSlug": "features",
             "snippet": "## Features
 

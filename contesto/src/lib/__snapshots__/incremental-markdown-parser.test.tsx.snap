@@ -1,23 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 1: "---
-title:" 1`] = `
-"***
-
-title:
-"
-`;
-
 exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 1: "---" 1`] = `
 "***
-"
-`;
-
-exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 2: "---
-title: Test" 1`] = `
-"***
-
-title: Test
 "
 `;
 
@@ -26,49 +10,13 @@ exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 2: "
 "
 `;
 
-exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 3: "---
-title: Test Document
-author:" 1`] = `
-"***
-
-title: Test Document
-author:
-"
-`;
-
 exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 3: "--- title: Test" 1`] = `
 "\\--- title: Test
 "
 `;
 
-exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 4: "---
-title: Test Document
-author: John" 1`] = `
-"***
-
-title: Test Document
-author: John
-"
-`;
-
 exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 4: "--- title: Test Document" 1`] = `
 "\\--- title: Test Document
-"
-`;
-
-exports[`frontmatter-only file with newlines > frontmatter parsing at chunk 5: "---
-title: Test Document
-author: John Doe
----
-
-
-
-" 1`] = `
-"***
-
-title: Test Document
-author: John Doe
-----------------
 "
 `;
 
@@ -107,75 +55,101 @@ exports[`incremental parse > incremental parsing and jsx at chunk 4 1`] = `"<h1>
 
 exports[`incremental parse > incremental parsing and jsx at chunk 5 1`] = `"<h1>Welcome to the Example</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 6 1`] = `"<h1>Welcome to the Example Document</h1><p>This</p>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 6 1`] = `"<h1>Welcome to the Example Document</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 7 1`] = `"<h1>Welcome to the Example Document</h1><p>This is</p>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 7 1`] = `"<h1>Welcome to the Example Document This</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 8 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a</p>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 8 1`] = `"<h1>Welcome to the Example Document This is</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 9 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample</p>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 9 1`] = `"<h1>Welcome to the Example Document This is a</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 10 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown</p>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 10 1`] = `"<h1>Welcome to the Example Document This is a sample</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 11 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file</p>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 11 1`] = `"<h1>Welcome to the Example Document This is a sample markdown</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 12 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to</p>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 12 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 13 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase</p>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 13 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 14 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various</p>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 14 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 15 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2></h2>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 15 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 16 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li></li></ul>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 16 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features.</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 17 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li><p>Easy</p></li></ul>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 17 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features.</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 18 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li><p>Easy formatting</p></li><li></li></ul>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 18 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 19 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li><p>Easy formatting</p></li><li><p>Lists</p></li><li></li></ul>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 19 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features *</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 20 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li><p>Easy formatting</p></li><li><p>Lists</p></li><li><p>**Bold</p></li></ul>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 20 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 21 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li><p>Easy formatting</p></li><li><p>Lists</p></li><li><p><strong>Bold text</strong></p></li><li></li></ul>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 21 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 22 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li><p>Easy formatting</p></li><li><p>Lists</p></li><li><p><strong>Bold text</strong></p></li><li><p><a href="https://example.com" title="">Links</a></p></li></ul><blockquote></blockquote>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 22 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting *</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 23 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li><p>Easy formatting</p></li><li><p>Lists</p></li><li><p><strong>Bold text</strong></p></li><li><p><a href="https://example.com" title="">Links</a></p></li></ul><blockquote><p>&quot;Markdown</p></blockquote>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 23 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 24 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li><p>Easy formatting</p></li><li><p>Lists</p></li><li><p><strong>Bold text</strong></p></li><li><p><a href="https://example.com" title="">Links</a></p></li></ul><blockquote><p>&quot;Markdown makes</p></blockquote>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 24 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists *</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 25 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li><p>Easy formatting</p></li><li><p>Lists</p></li><li><p><strong>Bold text</strong></p></li><li><p><a href="https://example.com" title="">Links</a></p></li></ul><blockquote><p>&quot;Markdown makes documentation</p></blockquote>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 25 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * **Bold</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 26 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li><p>Easy formatting</p></li><li><p>Lists</p></li><li><p><strong>Bold text</strong></p></li><li><p><a href="https://example.com" title="">Links</a></p></li></ul><blockquote><p>&quot;Markdown makes documentation easy!&quot;</p></blockquote><pre><code class="language-js">console.log(&#x27;Hello,</code></pre>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 26 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong></h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 27 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li><p>Easy formatting</p></li><li><p>Lists</p></li><li><p><strong>Bold text</strong></p></li><li><p><a href="https://example.com" title="">Links</a></p></li></ul><blockquote><p>&quot;Markdown makes documentation easy!&quot;</p></blockquote><pre><code class="language-js">console.log(&#x27;Hello, world!&#x27;);</code></pre><ol start="1"><li></li></ol>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 27 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> *</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 28 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li><p>Easy formatting</p></li><li><p>Lists</p></li><li><p><strong>Bold text</strong></p></li><li><p><a href="https://example.com" title="">Links</a></p></li></ul><blockquote><p>&quot;Markdown makes documentation easy!&quot;</p></blockquote><pre><code class="language-js">console.log(&#x27;Hello, world!&#x27;);</code></pre><ol start="1"><li><p>one</p></li><li></li></ol>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 28 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a></h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 29 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li><p>Easy formatting</p></li><li><p>Lists</p></li><li><p><strong>Bold text</strong></p></li><li><p><a href="https://example.com" title="">Links</a></p></li></ul><blockquote><p>&quot;Markdown makes documentation easy!&quot;</p></blockquote><pre><code class="language-js">console.log(&#x27;Hello, world!&#x27;);</code></pre><ol start="1"><li><p>one</p></li><li><p>two</p></li><li></li></ol>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 29 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt;</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 30 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li><p>Easy formatting</p></li><li><p>Lists</p></li><li><p><strong>Bold text</strong></p></li><li><p><a href="https://example.com" title="">Links</a></p></li></ul><blockquote><p>&quot;Markdown makes documentation easy!&quot;</p></blockquote><pre><code class="language-js">console.log(&#x27;Hello, world!&#x27;);</code></pre><ol start="1"><li><p>one</p></li><li><p>two</p></li><li><p>three</p></li></ol><p>this</p>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 30 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 31 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li><p>Easy formatting</p></li><li><p>Lists</p></li><li><p><strong>Bold text</strong></p></li><li><p><a href="https://example.com" title="">Links</a></p></li></ul><blockquote><p>&quot;Markdown makes documentation easy!&quot;</p></blockquote><pre><code class="language-js">console.log(&#x27;Hello, world!&#x27;);</code></pre><ol start="1"><li><p>one</p></li><li><p>two</p></li><li><p>three</p></li></ol><p>this is</p>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 31 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 32 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li><p>Easy formatting</p></li><li><p>Lists</p></li><li><p><strong>Bold text</strong></p></li><li><p><a href="https://example.com" title="">Links</a></p></li></ul><blockquote><p>&quot;Markdown makes documentation easy!&quot;</p></blockquote><pre><code class="language-js">console.log(&#x27;Hello, world!&#x27;);</code></pre><ol start="1"><li><p>one</p></li><li><p>two</p></li><li><p>three</p></li></ol><p>this is another</p>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 32 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes documentation</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 33 1`] = `"Expected a closing tag for \`<Cards>\` (24:1-24:8)"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 33 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes documentation easy!&quot;</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 34 1`] = `"Expected a closing tag for \`<Cards>\` (24:1-24:8)"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 34 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes documentation easy!&quot; \`\`\`js</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 35 1`] = `"Expected a closing tag for \`<Card>\` (25:3-25:9)"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 35 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes documentation easy!&quot; \`\`\`js console.log(&#x27;Hello,</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 36 1`] = `"Expected a closing tag for \`<Card>\` (25:3-25:9)"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 36 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes documentation easy!&quot; \`\`\`js console.log(&#x27;Hello, world!&#x27;);</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 37 1`] = `"Expected a closing tag for \`<Card>\` (25:3-25:9)"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 37 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes documentation easy!&quot; <code>js console.log(&#x27;Hello, world!&#x27;); </code></h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 38 1`] = `"Expected a closing tag for \`<Card>\` (25:3-25:9)"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 38 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes documentation easy!&quot; <code>js console.log(&#x27;Hello, world!&#x27;); </code> 1.</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 39 1`] = `"Expected a closing tag for \`<Card>\` (25:3-25:9)"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 39 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes documentation easy!&quot; <code>js console.log(&#x27;Hello, world!&#x27;); </code> 1. one</h1>"`;
 
-exports[`incremental parse > incremental parsing and jsx at chunk 40 1`] = `"<h1>Welcome to the Example Document</h1><p>This is a sample markdown file to showcase various features.</p><h2>Features</h2><ul><li><p>Easy formatting</p></li><li><p>Lists</p></li><li><p><strong>Bold text</strong></p></li><li><p><a href="https://example.com" title="">Links</a></p></li></ul><blockquote><p>&quot;Markdown makes documentation easy!&quot;</p></blockquote><pre><code class="language-js">console.log(&#x27;Hello, world!&#x27;);</code></pre><ol start="1"><li><p>one</p></li><li><p>two</p></li><li><p>three</p></li></ol><p>this is another paragraph</p><cards><card><p>some text</p></card></cards>"`;
+exports[`incremental parse > incremental parsing and jsx at chunk 40 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes documentation easy!&quot; <code>js console.log(&#x27;Hello, world!&#x27;); </code> 1. one 2.</h1>"`;
+
+exports[`incremental parse > incremental parsing and jsx at chunk 41 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes documentation easy!&quot; <code>js console.log(&#x27;Hello, world!&#x27;); </code> 1. one 2. two</h1>"`;
+
+exports[`incremental parse > incremental parsing and jsx at chunk 42 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes documentation easy!&quot; <code>js console.log(&#x27;Hello, world!&#x27;); </code> 1. one 2. two 3.</h1>"`;
+
+exports[`incremental parse > incremental parsing and jsx at chunk 43 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes documentation easy!&quot; <code>js console.log(&#x27;Hello, world!&#x27;); </code> 1. one 2. two 3. three</h1>"`;
+
+exports[`incremental parse > incremental parsing and jsx at chunk 44 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes documentation easy!&quot; <code>js console.log(&#x27;Hello, world!&#x27;); </code> 1. one 2. two 3. three this</h1>"`;
+
+exports[`incremental parse > incremental parsing and jsx at chunk 45 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes documentation easy!&quot; <code>js console.log(&#x27;Hello, world!&#x27;); </code> 1. one 2. two 3. three this is</h1>"`;
+
+exports[`incremental parse > incremental parsing and jsx at chunk 46 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes documentation easy!&quot; <code>js console.log(&#x27;Hello, world!&#x27;); </code> 1. one 2. two 3. three this is another</h1>"`;
+
+exports[`incremental parse > incremental parsing and jsx at chunk 47 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes documentation easy!&quot; <code>js console.log(&#x27;Hello, world!&#x27;); </code> 1. one 2. two 3. three this is another paragraph</h1>"`;
+
+exports[`incremental parse > incremental parsing and jsx at chunk 48 1`] = `"Expected a closing tag for \`<Cards>\` (1:309-1:316) before the end of \`atxHeading\`"`;
+
+exports[`incremental parse > incremental parsing and jsx at chunk 49 1`] = `"Expected a closing tag for \`<Card>\` (1:317-1:323) before the end of \`atxHeading\`"`;
+
+exports[`incremental parse > incremental parsing and jsx at chunk 50 1`] = `"Expected a closing tag for \`<Card>\` (1:317-1:323) before the end of \`atxHeading\`"`;
+
+exports[`incremental parse > incremental parsing and jsx at chunk 51 1`] = `"Expected a closing tag for \`<Card>\` (1:317-1:323) before the end of \`atxHeading\`"`;
+
+exports[`incremental parse > incremental parsing and jsx at chunk 52 1`] = `"Expected a closing tag for \`<Cards>\` (1:309-1:316) before the end of \`atxHeading\`"`;
+
+exports[`incremental parse > incremental parsing and jsx at chunk 53 1`] = `"<h1>Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features * Easy formatting * Lists * <strong>Bold text</strong> * <a href="https://example.com" title="">Links</a> &gt; &quot;Markdown makes documentation easy!&quot; <code>js console.log(&#x27;Hello, world!&#x27;); </code> 1. one 2. two 3. three this is another paragraph <cards> <card> some text </card> </cards></h1>"`;
 
 exports[`incremental parse > incremental parsing at chunk 1 1`] = `
 "#
@@ -204,423 +178,225 @@ exports[`incremental parse > incremental parsing at chunk 5 1`] = `
 
 exports[`incremental parse > incremental parsing at chunk 6 1`] = `
 "# Welcome to the Example Document
-
-This
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 7 1`] = `
-"# Welcome to the Example Document
-
-This is
+"# Welcome to the Example Document This
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 8 1`] = `
-"# Welcome to the Example Document
-
-This is a
+"# Welcome to the Example Document This is
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 9 1`] = `
-"# Welcome to the Example Document
-
-This is a sample
+"# Welcome to the Example Document This is a
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 10 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown
+"# Welcome to the Example Document This is a sample
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 11 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file
+"# Welcome to the Example Document This is a sample markdown
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 12 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to
+"# Welcome to the Example Document This is a sample markdown file
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 13 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase
+"# Welcome to the Example Document This is a sample markdown file to
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 14 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various
+"# Welcome to the Example Document This is a sample markdown file to showcase
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 15 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-##
+"# Welcome to the Example Document This is a sample markdown file to showcase various
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 16 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-## Features
-
-*
+"# Welcome to the Example Document This is a sample markdown file to showcase various features.
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 17 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-## Features
-
-* Easy
+"# Welcome to the Example Document This is a sample markdown file to showcase various features.
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 18 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-## Features
-
-* Easy formatting
-*
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 19 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-## Features
-
-* Easy formatting
-* Lists
-*
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\*
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 20 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-## Features
-
-* Easy formatting
-* Lists
-* \\*\\*Bold
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 21 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-## Features
-
-* Easy formatting
-* Lists
-* **Bold text**
-*
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 22 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-## Features
-
-* Easy formatting
-* Lists
-* **Bold text**
-* [Links](https://example.com)
-
->
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\*
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 23 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-## Features
-
-* Easy formatting
-* Lists
-* **Bold text**
-* [Links](https://example.com)
-
-> "Markdown
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 24 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-## Features
-
-* Easy formatting
-* Lists
-* **Bold text**
-* [Links](https://example.com)
-
-> "Markdown makes
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\*
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 25 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-## Features
-
-* Easy formatting
-* Lists
-* **Bold text**
-* [Links](https://example.com)
-
-> "Markdown makes documentation
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* \\*\\*Bold
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 26 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-## Features
-
-* Easy formatting
-* Lists
-* **Bold text**
-* [Links](https://example.com)
-
-> "Markdown makes documentation easy!"
-
-\`\`\`js
-console.log('Hello,
-\`\`\`
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text**
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 27 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-## Features
-
-* Easy formatting
-* Lists
-* **Bold text**
-* [Links](https://example.com)
-
-> "Markdown makes documentation easy!"
-
-\`\`\`js
-console.log('Hello, world!');
-\`\`\`
-
-1.
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\*
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 28 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-## Features
-
-* Easy formatting
-* Lists
-* **Bold text**
-* [Links](https://example.com)
-
-> "Markdown makes documentation easy!"
-
-\`\`\`js
-console.log('Hello, world!');
-\`\`\`
-
-1. one
-2.
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com)
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 29 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-## Features
-
-* Easy formatting
-* Lists
-* **Bold text**
-* [Links](https://example.com)
-
-> "Markdown makes documentation easy!"
-
-\`\`\`js
-console.log('Hello, world!');
-\`\`\`
-
-1. one
-2. two
-3.
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) >
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 30 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-## Features
-
-* Easy formatting
-* Lists
-* **Bold text**
-* [Links](https://example.com)
-
-> "Markdown makes documentation easy!"
-
-\`\`\`js
-console.log('Hello, world!');
-\`\`\`
-
-1. one
-2. two
-3. three
-
-this
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 31 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-## Features
-
-* Easy formatting
-* Lists
-* **Bold text**
-* [Links](https://example.com)
-
-> "Markdown makes documentation easy!"
-
-\`\`\`js
-console.log('Hello, world!');
-\`\`\`
-
-1. one
-2. two
-3. three
-
-this is
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes
 "
 `;
 
 exports[`incremental parse > incremental parsing at chunk 32 1`] = `
-"# Welcome to the Example Document
-
-This is a sample markdown file to showcase various features.
-
-## Features
-
-* Easy formatting
-* Lists
-* **Bold text**
-* [Links](https://example.com)
-
-> "Markdown makes documentation easy!"
-
-\`\`\`js
-console.log('Hello, world!');
-\`\`\`
-
-1. one
-2. two
-3. three
-
-this is another
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes documentation
 "
 `;
 
-exports[`incremental parse > incremental parsing at chunk 33 1`] = `"Expected a closing tag for \`<Cards>\` (24:1-24:8)"`;
+exports[`incremental parse > incremental parsing at chunk 33 1`] = `
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes documentation easy!"
+"
+`;
 
-exports[`incremental parse > incremental parsing at chunk 34 1`] = `"Expected a closing tag for \`<Cards>\` (24:1-24:8)"`;
+exports[`incremental parse > incremental parsing at chunk 34 1`] = `
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes documentation easy!" \\\`\\\`\\\`js
+"
+`;
 
-exports[`incremental parse > incremental parsing at chunk 35 1`] = `"Expected a closing tag for \`<Card>\` (25:3-25:9)"`;
+exports[`incremental parse > incremental parsing at chunk 35 1`] = `
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes documentation easy!" \\\`\\\`\\\`js console.log('Hello,
+"
+`;
 
-exports[`incremental parse > incremental parsing at chunk 36 1`] = `"Expected a closing tag for \`<Card>\` (25:3-25:9)"`;
+exports[`incremental parse > incremental parsing at chunk 36 1`] = `
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes documentation easy!" \\\`\\\`\\\`js console.log('Hello, world!');
+"
+`;
 
-exports[`incremental parse > incremental parsing at chunk 37 1`] = `"Expected a closing tag for \`<Card>\` (25:3-25:9)"`;
+exports[`incremental parse > incremental parsing at chunk 37 1`] = `
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes documentation easy!" \`js console.log('Hello, world!'); \`
+"
+`;
 
-exports[`incremental parse > incremental parsing at chunk 38 1`] = `"Expected a closing tag for \`<Card>\` (25:3-25:9)"`;
+exports[`incremental parse > incremental parsing at chunk 38 1`] = `
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes documentation easy!" \`js console.log('Hello, world!'); \` 1.
+"
+`;
 
-exports[`incremental parse > incremental parsing at chunk 39 1`] = `"Expected a closing tag for \`<Card>\` (25:3-25:9)"`;
+exports[`incremental parse > incremental parsing at chunk 39 1`] = `
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes documentation easy!" \`js console.log('Hello, world!'); \` 1. one
+"
+`;
 
 exports[`incremental parse > incremental parsing at chunk 40 1`] = `
-"# Welcome to the Example Document
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes documentation easy!" \`js console.log('Hello, world!'); \` 1. one 2.
+"
+`;
 
-This is a sample markdown file to showcase various features.
+exports[`incremental parse > incremental parsing at chunk 41 1`] = `
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes documentation easy!" \`js console.log('Hello, world!'); \` 1. one 2. two
+"
+`;
 
-## Features
+exports[`incremental parse > incremental parsing at chunk 42 1`] = `
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes documentation easy!" \`js console.log('Hello, world!'); \` 1. one 2. two 3.
+"
+`;
 
-* Easy formatting
-* Lists
-* **Bold text**
-* [Links](https://example.com)
+exports[`incremental parse > incremental parsing at chunk 43 1`] = `
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes documentation easy!" \`js console.log('Hello, world!'); \` 1. one 2. two 3. three
+"
+`;
 
-> "Markdown makes documentation easy!"
+exports[`incremental parse > incremental parsing at chunk 44 1`] = `
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes documentation easy!" \`js console.log('Hello, world!'); \` 1. one 2. two 3. three this
+"
+`;
 
-\`\`\`js
-console.log('Hello, world!');
-\`\`\`
+exports[`incremental parse > incremental parsing at chunk 45 1`] = `
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes documentation easy!" \`js console.log('Hello, world!'); \` 1. one 2. two 3. three this is
+"
+`;
 
-1. one
-2. two
-3. three
+exports[`incremental parse > incremental parsing at chunk 46 1`] = `
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes documentation easy!" \`js console.log('Hello, world!'); \` 1. one 2. two 3. three this is another
+"
+`;
 
-this is another paragraph
+exports[`incremental parse > incremental parsing at chunk 47 1`] = `
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes documentation easy!" \`js console.log('Hello, world!'); \` 1. one 2. two 3. three this is another paragraph
+"
+`;
 
-<Cards>
-  <Card>
-    some text
-  </Card>
-</Cards>
+exports[`incremental parse > incremental parsing at chunk 48 1`] = `"Expected a closing tag for \`<Cards>\` (1:309-1:316) before the end of \`atxHeading\`"`;
+
+exports[`incremental parse > incremental parsing at chunk 49 1`] = `"Expected a closing tag for \`<Card>\` (1:317-1:323) before the end of \`atxHeading\`"`;
+
+exports[`incremental parse > incremental parsing at chunk 50 1`] = `"Expected a closing tag for \`<Card>\` (1:317-1:323) before the end of \`atxHeading\`"`;
+
+exports[`incremental parse > incremental parsing at chunk 51 1`] = `"Expected a closing tag for \`<Card>\` (1:317-1:323) before the end of \`atxHeading\`"`;
+
+exports[`incremental parse > incremental parsing at chunk 52 1`] = `"Expected a closing tag for \`<Cards>\` (1:309-1:316) before the end of \`atxHeading\`"`;
+
+exports[`incremental parse > incremental parsing at chunk 53 1`] = `
+"# Welcome to the Example Document This is a sample markdown file to showcase various features. ## Features \\* Easy formatting \\* Lists \\* **Bold text** \\* [Links](https://example.com) > "Markdown makes documentation easy!" \`js console.log('Hello, world!'); \` 1. one 2. two 3. three this is another paragraph <Cards> <Card> some text </Card> </Cards>
 "
 `;

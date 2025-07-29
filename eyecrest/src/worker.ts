@@ -16,11 +16,12 @@ import { parseMarkdownIntoSections, isSupportedMarkdownFile, Section } from "./m
 import { computeGitBlobSHA, verifySHA } from "./sha-utils.js";
 import { cleanMarkdownContent } from "./markdown-cleaner.js";
 import { parseTar } from "@xmorse/tar-parser";
+import { UpstashVectorDatasets } from "./vector-datasets.js";
 
 
 // Valid Cloudflare Durable Object regions
 const VALID_REGIONS = ['wnam', 'enam', 'weur', 'eeur', 'apac', 'me', 'sam', 'oc', 'afr'] as const;
-type DurableObjectRegion = typeof VALID_REGIONS[number];
+export type DurableObjectRegion = typeof VALID_REGIONS[number];
 
 // Supported file extensions for import
 const SUPPORTED_EXTENSIONS = ['.md', '.mdx'] as const;
@@ -82,11 +83,14 @@ type SearchResultRow = {
 
 /* ---------- ENV interface ---------------------------- */
 
-interface Env {
+export interface Env {
   DATASETS: DurableObjectNamespace;
+  UPSTASH_VECTOR_DATASETS: DurableObjectNamespace;
   ASSETS: Fetcher;
   EYECREST_PUBLIC_KEY: string; // RSA public key in PEM format
   EYECREST_KV: KVNamespace;
+  UPSTASH_VECTOR_REST_TOKEN: string; // US index token
+  UPSTASH_VECTOR_REST_TOKEN_EU?: string; // EU index token (optional, falls back to US)
 }
 
 /* ======================================================================
@@ -97,7 +101,7 @@ const DatasetIdSchema = z.string()
   .regex(/^[a-zA-Z0-9_-]+$/, 'Dataset ID must only contain alphanumeric characters, hyphens, and underscores')
   .max(400, 'Dataset ID must not exceed 400 characters');
 
-const FileSchema = z.object({
+export const FileSchema = z.object({
   filename: z.string()
     .regex(/^[a-zA-Z0-9!_.*'()\-\/]+$/, 'Filename must only contain alphanumeric characters and safe special characters (!_.*\'()-/)')
     .max(500, 'Filename must not exceed 500 characters')
@@ -178,7 +182,7 @@ const GetFileContentsExtendedResponseSchema = GetFileContentsResponseSchema.exte
   weight: z.number().optional()
 });
 
-const GetFileContentsResultSchema = z.object({
+export const GetFileContentsResultSchema = z.object({
   files: z.array(z.object({
     filename: z.string(),
     content: z.string(),
@@ -188,7 +192,7 @@ const GetFileContentsResultSchema = z.object({
   }))
 });
 
-const GetDatasetSizeResponseSchema = z.object({
+export const GetDatasetSizeResponseSchema = z.object({
   totalSizeBytes: z.number().describe('Total size of stored data in bytes (content + metadata + sections)'),
   uploadedContentSizeBytes: z.number().describe('Total size of user-uploaded file content in bytes (excluding duplicated sections)'),
   fileCount: z.number().describe('Number of files in the dataset'),
@@ -206,31 +210,31 @@ const ImportResponseSchema = z.object({
 });
 
 // Parameter schemas for DO methods
-const BaseDatasetParamsSchema = z.object({
+export const BaseDatasetParamsSchema = z.object({
   datasetId: z.string(),
   orgId: z.string()
 });
 
-const UpsertDatasetParamsSchema = BaseDatasetParamsSchema.extend({
+export const UpsertDatasetParamsSchema = BaseDatasetParamsSchema.extend({
   region: z.string(),
   isPrimary: z.boolean(),
   replicaRegions: z.array(z.string()).optional(),
   waitForReplication: z.boolean().optional()
 });
 
-const UpsertFilesParamsSchema = BaseDatasetParamsSchema.extend({
+export const UpsertFilesParamsSchema = BaseDatasetParamsSchema.extend({
   files: z.array(FileSchema),
   region: z.string().optional(),
   waitForReplication: z.boolean().optional()
 });
 
-const DeleteFilesParamsSchema = BaseDatasetParamsSchema.extend({
+export const DeleteFilesParamsSchema = BaseDatasetParamsSchema.extend({
   filenames: z.array(z.string()),
   region: z.string().optional(),
   waitForReplication: z.boolean().optional()
 });
 
-const GetFileContentsParamsSchema = BaseDatasetParamsSchema.extend({
+export const GetFileContentsParamsSchema = BaseDatasetParamsSchema.extend({
   filePath: z.string().optional(),
   showLineNumbers: z.boolean().optional(),
   start: z.number().optional(),
@@ -239,7 +243,7 @@ const GetFileContentsParamsSchema = BaseDatasetParamsSchema.extend({
   getAllFiles: z.boolean().optional()
 });
 
-const SearchSectionsParamsSchema = BaseDatasetParamsSchema.extend({
+export const SearchSectionsParamsSchema = BaseDatasetParamsSchema.extend({
   query: z.string(),
   page: z.number().optional(),
   perPage: z.number().optional(),
@@ -248,7 +252,7 @@ const SearchSectionsParamsSchema = BaseDatasetParamsSchema.extend({
   region: z.string().optional()
 });
 
-const SyncFromPrimaryParamsSchema = BaseDatasetParamsSchema.extend({
+export const SyncFromPrimaryParamsSchema = BaseDatasetParamsSchema.extend({
   primaryRegion: z.string()
 });
 
@@ -394,8 +398,8 @@ export class Datasets extends DatasetsInterface {
 
     return this.replicaRegions.map(region => {
       const doId = getDurableObjectId({ datasetId, region });
-      const id = this.env.DATASETS.idFromName(doId);
-      const stub = this.env.DATASETS.get(id, { locationHint: region });
+      const id = this.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
+      const stub = this.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region });
       return { region, stub };
     });
   }
@@ -488,8 +492,8 @@ export class Datasets extends DatasetsInterface {
           .map(async replicaRegion => {
             try {
               const replicaDoId = getDurableObjectId({ datasetId, region: replicaRegion });
-              const replicaId = this.env.DATASETS.idFromName(replicaDoId);
-              const replicaStub = this.env.DATASETS.get(replicaId, { locationHint: replicaRegion }) as unknown as DatasetsInterface;
+              const replicaId = this.env.UPSTASH_VECTOR_DATASETS.idFromName(replicaDoId);
+              const replicaStub = this.env.UPSTASH_VECTOR_DATASETS.get(replicaId, { locationHint: replicaRegion }) as unknown as DatasetsInterface;
 
               // Create the replica DO
               await replicaStub.upsertDataset({
@@ -1100,8 +1104,8 @@ export class Datasets extends DatasetsInterface {
     try {
       // Create primary stub from ID
       const primaryDoId = getDurableObjectId({ datasetId, region: primaryRegion });
-      const primaryId = this.env.DATASETS.idFromName(primaryDoId);
-      const primaryStub = this.env.DATASETS.get(primaryId, { locationHint: primaryRegion }) as unknown as DatasetsInterface;
+      const primaryId = this.env.UPSTASH_VECTOR_DATASETS.idFromName(primaryDoId);
+      const primaryStub = this.env.UPSTASH_VECTOR_DATASETS.get(primaryId, { locationHint: primaryRegion }) as unknown as DatasetsInterface;
 
       // Get all data from primary using enhanced getFileContents
       const result = await primaryStub.getFileContents({ datasetId, orgId, getAllFiles: true });
@@ -1350,8 +1354,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Create DO ID and stub with locationHint for primary
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
+      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
+      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       // Upsert dataset in primary DO (it will handle creating replicas)
       await stub.upsertDataset({
@@ -1392,8 +1396,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
+      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
+      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       await stub.upsertFiles({ datasetId, orgId, files, region, waitForReplication });
     },
@@ -1426,8 +1430,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
+      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
+      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       await stub.deleteFiles({ datasetId, orgId, filenames, region, waitForReplication });
     },
@@ -1458,8 +1462,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
+      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
+      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       // Delete from DO (which will cascade to replicas)
       await stub.deleteDataset({ datasetId, orgId });
@@ -1502,8 +1506,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
+      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
+      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       const result = await stub.getFileContents({
         datasetId,
@@ -1565,8 +1569,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region as any }) as unknown as DatasetsInterface;
+      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
+      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region as any }) as unknown as DatasetsInterface;
 
       const result = await stub.searchSections({
         datasetId,
@@ -1616,8 +1620,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region as any }) as unknown as DatasetsInterface;
+      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
+      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region as any }) as unknown as DatasetsInterface;
 
       const data = await stub.searchSections({
         datasetId,
@@ -1693,8 +1697,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
   //     // Create DO ID and stub with locationHint
   //     const doId = getDurableObjectId({ datasetId, region });
-  //     const id = state.env.DATASETS.idFromName(doId);
-  //     const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
+  //     const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
+  //     const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
   //     const tokens = await stub.getTokens({ datasetId, orgId });
 
@@ -1736,8 +1740,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
+      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
+      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       return await stub.getDatasetSize({ datasetId, orgId });
     },
@@ -1775,8 +1779,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
+      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
+      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       // Process the tar archive
       const result = await processTarArchive({
@@ -1834,8 +1838,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
 
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
+      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
+      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       // Build GitHub archive URL using codeload subdomain to avoid redirect
       const url = `https://codeload.github.com/${owner}/${repo}/tar.gz/refs/heads/${branch}`;
@@ -2256,6 +2260,9 @@ async function processTarArchive({
 
 // Export the app for client generation
 export { app };
+
+// Export Durable Object classes
+export { UpstashVectorDatasets };
 
 export default {
   fetch: (req: Request, env: Env, ctx: ExecutionContext) =>
