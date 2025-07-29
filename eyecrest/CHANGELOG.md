@@ -1,5 +1,31 @@
 # Changelog
 
+## 2025-01-29 10:10
+
+- Made `getFileContents` return type consistent - always returns `{ files: Array }`
+- Removed union type that returned either single file or array
+- Created `GetFileContentsResultSchema` for consistent response structure
+- Updated all callers to handle the new array-based response format
+
+## 2025-01-29 10:00
+
+- Made `updateReplicaRegions` method private in Durable Object class
+- Method was never called by worker or external code
+- Improves encapsulation by hiding internal implementation details
+- Created `DatasetsInterface` abstract class defining public DO methods
+- Worker now uses `DatasetsInterface` type instead of `as any as Datasets`
+- Improved type safety by clearly separating public API from implementation
+- Removed `searchSectionsText` method from DO, logic moved to worker route
+- Made `getTokens` method private and commented out the API route
+- Removed `getAllData` method, functionality merged into `getFileContents`
+- Enhanced `getFileContents` to support `getAllFiles` mode for syncing
+- Worker converts search results to text format for `.txt` endpoint
+- Extracted inline Zod schemas to named variables for reusability
+- Created parameter schemas for all DO methods to reduce duplication
+- Abstract class now uses `z.infer` types, reducing code by ~75%
+- Added schemas: `SearchResultItemSchema`, `GetFileContentsResponseSchema`, `GetDatasetSizeResponseSchema`, `ImportResponseSchema`
+- Route handlers now use named schemas instead of inline definitions
+
 ## 2025-01-24 19:50
 
 - Added `deleteDataset` method to the SDK client for deleting entire datasets

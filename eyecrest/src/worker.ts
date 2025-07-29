@@ -149,22 +149,107 @@ const SearchSectionsQuerySchema = z.object({
   snippetLength: z.coerce.number().int().positive().max(500).default(300).describe('Maximum length of snippet (max 500)'),
 });
 
+const SearchResultItemSchema = z.object({
+  filename: z.string().describe('Source file path'),
+  sectionSlug: z.string().describe('URL-friendly slug of the section heading'),
+  snippet: z.string().describe('Raw markdown excerpt'),
+  cleanedSnippet: z.string().describe('Cleaned text excerpt without markdown syntax'),
+  score: z.number().describe('Relevance score'),
+  startLine: z.number().describe('Line number where section starts'),
+  metadata: z.any().optional().describe('File metadata if available'),
+});
+
 const SearchSectionsResponseSchema = z.object({
-  results: z.array(
-    z.object({
-      filename: z.string().describe('Source file path'),
-      sectionSlug: z.string().describe('URL-friendly slug of the section heading'),
-      snippet: z.string().describe('Raw markdown excerpt'),
-      cleanedSnippet: z.string().describe('Cleaned text excerpt without markdown syntax'),
-      score: z.number().describe('Relevance score'),
-      startLine: z.number().describe('Line number where section starts'),
-      metadata: z.any().optional().describe('File metadata if available'),
-    })
-  ),
+  results: z.array(SearchResultItemSchema),
   hasNextPage: z.boolean().describe('Whether there are more results on the next page'),
   page: z.number().int().describe('Current page'),
   perPage: z.number().int().describe('Results per page'),
   region: z.string().describe('Durable Object region where search was executed'),
+});
+
+const GetFileContentsResponseSchema = z.object({
+  content: z.string().describe('Full file content or specified line range'),
+  sha: z.string().describe('SHA-1 hash of the original file content using Git blob format'),
+  metadata: z.any().optional().describe('User-provided metadata for the file')
+});
+
+const GetFileContentsExtendedResponseSchema = GetFileContentsResponseSchema.extend({
+  filename: z.string().optional(),
+  weight: z.number().optional()
+});
+
+const GetFileContentsResultSchema = z.object({
+  files: z.array(z.object({
+    filename: z.string(),
+    content: z.string(),
+    sha: z.string().optional(),
+    metadata: z.any().optional(),
+    weight: z.number().optional()
+  }))
+});
+
+const GetDatasetSizeResponseSchema = z.object({
+  totalSizeBytes: z.number().describe('Total size of stored data in bytes (content + metadata + sections)'),
+  uploadedContentSizeBytes: z.number().describe('Total size of user-uploaded file content in bytes (excluding duplicated sections)'),
+  fileCount: z.number().describe('Number of files in the dataset'),
+  sectionCount: z.number().describe('Number of sections/chunks in the dataset'),
+  breakdown: z.object({
+    databaseSizeBytes: z.number().describe('Estimated total size in bytes (same as totalSizeBytes)'),
+    contentSizeBytes: z.number().describe('Total size of file contents in bytes'),
+    metadataSizeBytes: z.number().describe('Total size of metadata in bytes')
+  }).describe('Detailed breakdown of storage usage')
+});
+
+const ImportResponseSchema = z.object({
+  filesImported: z.number().describe('Number of files imported'),
+  totalSizeBytes: z.number().describe('Total size of imported files in bytes')
+});
+
+// Parameter schemas for DO methods
+const BaseDatasetParamsSchema = z.object({
+  datasetId: z.string(),
+  orgId: z.string()
+});
+
+const UpsertDatasetParamsSchema = BaseDatasetParamsSchema.extend({
+  region: z.string(),
+  isPrimary: z.boolean(),
+  replicaRegions: z.array(z.string()).optional(),
+  waitForReplication: z.boolean().optional()
+});
+
+const UpsertFilesParamsSchema = BaseDatasetParamsSchema.extend({
+  files: z.array(FileSchema),
+  region: z.string().optional(),
+  waitForReplication: z.boolean().optional()
+});
+
+const DeleteFilesParamsSchema = BaseDatasetParamsSchema.extend({
+  filenames: z.array(z.string()),
+  region: z.string().optional(),
+  waitForReplication: z.boolean().optional()
+});
+
+const GetFileContentsParamsSchema = BaseDatasetParamsSchema.extend({
+  filePath: z.string().optional(),
+  showLineNumbers: z.boolean().optional(),
+  start: z.number().optional(),
+  end: z.number().optional(),
+  region: z.string().optional(),
+  getAllFiles: z.boolean().optional()
+});
+
+const SearchSectionsParamsSchema = BaseDatasetParamsSchema.extend({
+  query: z.string(),
+  page: z.number().optional(),
+  perPage: z.number().optional(),
+  maxChunksPerFile: z.number().optional(),
+  snippetLength: z.number().optional(),
+  region: z.string().optional()
+});
+
+const SyncFromPrimaryParamsSchema = BaseDatasetParamsSchema.extend({
+  primaryRegion: z.string()
 });
 
 // Export types for SDK use
@@ -180,9 +265,27 @@ export type SearchSectionsResponse = z.infer<typeof SearchSectionsResponseSchema
    ==================================================================== */
 
 /* ======================================================================
+   Durable Object Interface
+   ==================================================================== */
+export abstract class DatasetsInterface extends DurableObject {
+  abstract upsertDataset(params: z.infer<typeof UpsertDatasetParamsSchema>): Promise<void>;
+  abstract upsertFiles(params: z.infer<typeof UpsertFilesParamsSchema>): Promise<void>;
+  abstract deleteFiles(params: z.infer<typeof DeleteFilesParamsSchema>): Promise<void>;
+  abstract deleteDataset(params: z.infer<typeof BaseDatasetParamsSchema>): Promise<void>;
+  abstract getFileContents(params: z.infer<typeof GetFileContentsParamsSchema>): Promise<
+    z.infer<typeof GetFileContentsResultSchema>
+  >;
+  abstract searchSections(params: z.infer<typeof SearchSectionsParamsSchema>): Promise<SearchSectionsResponse>;
+  abstract getDatasetSize(params: z.infer<typeof BaseDatasetParamsSchema>): Promise<
+    z.infer<typeof GetDatasetSizeResponseSchema>
+  >;
+  abstract syncFromPrimary(params: z.infer<typeof SyncFromPrimaryParamsSchema>): Promise<void>;
+}
+
+/* ======================================================================
    Durable Object: per‑dataset file storage
    ==================================================================== */
-export class Datasets extends DurableObject {
+export class Datasets extends DatasetsInterface {
   private sql: SqlStorage;
   private datasetId?: string;
   private doRegion?: DurableObjectRegion;
@@ -386,7 +489,7 @@ export class Datasets extends DurableObject {
             try {
               const replicaDoId = getDurableObjectId({ datasetId, region: replicaRegion });
               const replicaId = this.env.DATASETS.idFromName(replicaDoId);
-              const replicaStub = this.env.DATASETS.get(replicaId, { locationHint: replicaRegion }) as any as Datasets;
+              const replicaStub = this.env.DATASETS.get(replicaId, { locationHint: replicaRegion }) as unknown as DatasetsInterface;
 
               // Create the replica DO
               await replicaStub.upsertDataset({
@@ -421,7 +524,7 @@ export class Datasets extends DurableObject {
     }
   }
 
-  async updateReplicaRegions({ datasetId, replicaRegions }: { datasetId: string; replicaRegions: DurableObjectRegion[] }): Promise<void> {
+  private async updateReplicaRegions({ datasetId, replicaRegions }: { datasetId: string; replicaRegions: DurableObjectRegion[] }): Promise<void> {
     this.replicaRegions = replicaRegions;
     const replicaRegionsJson = JSON.stringify(replicaRegions);
     const now = Date.now();
@@ -706,16 +809,18 @@ export class Datasets extends DurableObject {
     showLineNumbers,
     start,
     end,
-    region
+    region,
+    getAllFiles = false
   }: {
     datasetId: string;
     orgId: string;
-    filePath: string;
+    filePath?: string;
     showLineNumbers?: boolean;
     start?: number;
     end?: number;
     region?: string;
-  }): Promise<{ content: string; sha: string; metadata?: any }> {
+    getAllFiles?: boolean;
+  }): Promise<z.infer<typeof GetFileContentsResultSchema>> {
     // Load dataset info if not already loaded
     if (!this.datasetId || this.datasetId !== datasetId) {
       await this.loadDatasetInfo(datasetId);
@@ -734,7 +839,30 @@ export class Datasets extends DurableObject {
     // Verify ownership
     await this.verifyDatasetOwnership(datasetId, orgId);
 
-    const results = [...this.sql.exec<Pick<FileRow, 'content' | 'sha' | 'metadata'>>("SELECT content, sha, metadata FROM files WHERE filename = ?", filePath)];
+    // If getAllFiles is true, return all files
+    if (getAllFiles) {
+      const rows = [...this.sql.exec<FileRow>(
+        "SELECT filename, content, sha, metadata, weight FROM files ORDER BY filename"
+      )];
+
+      // Convert to result format
+      return {
+        files: rows.map(file => ({
+          filename: file.filename,
+          content: file.content,
+          sha: file.sha,
+          metadata: file.metadata ? JSON.parse(file.metadata) : undefined,
+          weight: file.weight
+        }))
+      };
+    }
+
+    // Single file mode - filePath is required
+    if (!filePath) {
+      throw new Error('filePath is required when getAllFiles is false');
+    }
+
+    const results = [...this.sql.exec<Pick<FileRow, 'content' | 'sha' | 'metadata' | 'weight'>>("SELECT content, sha, metadata, weight FROM files WHERE filename = ?", filePath)];
     const row = results.length > 0 ? results[0] : null;
 
     if (!row) {
@@ -744,13 +872,23 @@ export class Datasets extends DurableObject {
     let content = row.content;
     const sha = row.sha;
     const metadata = row.metadata ? JSON.parse(row.metadata) : undefined;
+    const weight = row.weight;
 
     // Apply line formatting if any formatting options are specified
     if (showLineNumbers || start !== undefined || end !== undefined) {
       content = formatFileWithLines(content, showLineNumbers || false, start, end);
     }
 
-    return { content, sha, metadata };
+    // Return single file in array format
+    return {
+      files: [{
+        filename: filePath,
+        content,
+        sha,
+        metadata,
+        weight
+      }]
+    };
   }
 
   async searchSections({
@@ -894,51 +1032,6 @@ export class Datasets extends DurableObject {
     };
   }
 
-  async searchSectionsText({
-    datasetId,
-    orgId,
-    query,
-    page = 0,
-    perPage = 20,
-    maxChunksPerFile = 5,
-    snippetLength = 300,
-    region
-  }: {
-    datasetId: string;
-    orgId: string;
-    query: string;
-    page?: number;
-    perPage?: number;
-    maxChunksPerFile?: number;
-    snippetLength?: number;
-    region: string;
-  }): Promise<string> {
-    const data = await this.searchSections({ datasetId, orgId, query, page, perPage, maxChunksPerFile, snippetLength, region });
-
-    // Convert to markdown format with headings and URLs
-    let textResult = data.results
-      .map((result) => {
-        // Extract heading from snippet if present
-        const headingMatch = result.snippet.match(/^(#{1,6})\s+(.+)$/m);
-        const heading = headingMatch ? headingMatch[2] : '';
-        const level = headingMatch ? headingMatch[1].length : 2;
-        const headingPrefix = '#'.repeat(Math.min(level + 1, 6)); // Offset by 1 to show hierarchy
-
-        // Build URL to read specific line
-        const baseUrl = `/v1/datasets/${datasetId}/files/${result.filename}`;
-        const lineUrl = result.startLine ? `${baseUrl}?start=${result.startLine}` : baseUrl;
-
-        return `${headingPrefix} ${heading}\n\n[${result.filename}:${result.startLine || '1'}](${lineUrl})\n\n${result.snippet}\n`;
-      })
-      .join('\n---\n\n');
-
-    // Add pagination info if there's a next page
-    if (data.hasNextPage) {
-      textResult += `\n\n---\n\n*More results available on page ${data.page + 1}*`;
-    }
-
-    return textResult;
-  }
 
   private async verifyDatasetOwnership(datasetId: string, orgId: string): Promise<void> {
     const datasetRows = [...this.sql.exec<Pick<DatasetRow, 'org_id'>>("SELECT org_id FROM datasets WHERE dataset_id = ?", datasetId)];
@@ -995,33 +1088,6 @@ export class Datasets extends DurableObject {
     }
   }
 
-  async getAllData({ datasetId, orgId }: { datasetId: string; orgId: string }): Promise<FileSchema[]> {
-    // Load dataset info if not already loaded
-    if (!this.datasetId || this.datasetId !== datasetId) {
-      await this.loadDatasetInfo(datasetId);
-    }
-
-    // Validate we have required fields
-    if (!this.doRegion || !this.datasetId) {
-      throw new Error('DO region and datasetId must be set');
-    }
-
-    // Verify ownership
-    await this.verifyDatasetOwnership(datasetId, orgId);
-
-    // Get all files with their content and metadata
-    const files = [...this.sql.exec<FileRow>(
-      "SELECT filename, content, sha, metadata, weight FROM files ORDER BY filename"
-    )];
-
-    // Convert to FileSchema format
-    return files.map(file => ({
-      filename: file.filename,
-      content: file.content,
-      metadata: file.metadata ? JSON.parse(file.metadata) : undefined,
-      weight: file.weight
-    }));
-  }
 
   async syncFromPrimary({ datasetId, orgId, primaryRegion }: {
     datasetId: string;
@@ -1035,10 +1101,11 @@ export class Datasets extends DurableObject {
       // Create primary stub from ID
       const primaryDoId = getDurableObjectId({ datasetId, region: primaryRegion });
       const primaryId = this.env.DATASETS.idFromName(primaryDoId);
-      const primaryStub = this.env.DATASETS.get(primaryId, { locationHint: primaryRegion }) as any as Datasets;
+      const primaryStub = this.env.DATASETS.get(primaryId, { locationHint: primaryRegion }) as unknown as DatasetsInterface;
 
-      // Get all data from primary
-      const files = await primaryStub.getAllData({ datasetId, orgId });
+      // Get all data from primary using enhanced getFileContents
+      const result = await primaryStub.getFileContents({ datasetId, orgId, getAllFiles: true });
+      const files = result.files;
       console.log(`[sync-from-primary] Received ${files.length} files from primary`);
 
       if (files.length === 0) {
@@ -1051,7 +1118,12 @@ export class Datasets extends DurableObject {
       await this.upsertFiles({
         datasetId,
         orgId,
-        files,
+        files: files.map(f => ({
+          filename: f.filename,
+          content: f.content,
+          metadata: f.metadata,
+          weight: f.weight || 1.0
+        })),
         region: this.doRegion,
         waitForReplication: false // Don't replicate from replica
       });
@@ -1063,7 +1135,7 @@ export class Datasets extends DurableObject {
     }
   }
 
-  async getTokens({ datasetId, orgId }: { datasetId: string; orgId: string }): Promise<string[]> {
+  private async getTokens({ datasetId, orgId }: { datasetId: string; orgId: string }): Promise<string[]> {
     // Load dataset info if not already loaded
     if (!this.datasetId || this.datasetId !== datasetId) {
       await this.loadDatasetInfo(datasetId);
@@ -1279,7 +1351,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       // Create DO ID and stub with locationHint for primary
       const doId = getDurableObjectId({ datasetId, region });
       const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
+      const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       // Upsert dataset in primary DO (it will handle creating replicas)
       await stub.upsertDataset({
@@ -1321,7 +1393,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
       const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
+      const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       await stub.upsertFiles({ datasetId, orgId, files, region, waitForReplication });
     },
@@ -1355,7 +1427,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
       const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
+      const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       await stub.deleteFiles({ datasetId, orgId, filenames, region, waitForReplication });
     },
@@ -1387,7 +1459,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
       const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
+      const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       // Delete from DO (which will cascade to replicas)
       await stub.deleteDataset({ datasetId, orgId });
@@ -1404,11 +1476,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
     path: '/v1/datasets/:datasetId/files/*',
     params: z.object({ datasetId: DatasetIdSchema, '*': z.string() }),
     query: GetFileContentsQuerySchema,
-    response: z.object({
-      content: z.string().describe('Full file content or specified line range'),
-      sha: z.string().describe('SHA-1 hash of the original file content using Git blob format'),
-      metadata: z.any().optional().describe('User-provided metadata for the file')
-    }),
+    response: GetFileContentsResponseSchema,
     async handler({ request, params, query, state }) {
       const { datasetId, '*': filePath } = params;
       const { showLineNumbers, start, end } = query;
@@ -1435,7 +1503,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
       const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
+      const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       const result = await stub.getFileContents({
         datasetId,
@@ -1445,9 +1513,22 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         start,
         end,
         region,
+        getAllFiles: false
       });
 
-      return result;
+      // Extract the single file from the result
+      if (result.files.length === 0) {
+        throw new Error(`File not found: ${filePath}`);
+      }
+      
+      const file = result.files[0];
+      
+      // Return without filename and weight for backward compatibility
+      return {
+        content: file.content,
+        sha: file.sha || '',
+        metadata: file.metadata
+      };
     },
     openapi: { operationId: 'getFileContents' },
   })
@@ -1485,7 +1566,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
       const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region as any }) as any as Datasets;
+      const stub = state.env.DATASETS.get(id, { locationHint: region as any }) as unknown as DatasetsInterface;
 
       const result = await stub.searchSections({
         datasetId,
@@ -1536,9 +1617,9 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
       const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region as any }) as any as Datasets;
+      const stub = state.env.DATASETS.get(id, { locationHint: region as any }) as unknown as DatasetsInterface;
 
-      const result = await stub.searchSectionsText({
+      const data = await stub.searchSections({
         datasetId,
         orgId,
         query: q,
@@ -1549,7 +1630,29 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         region,
       });
 
-      return new Response(result, {
+      // Convert to markdown format with headings and URLs
+      let textResult = data.results
+        .map((result) => {
+          // Extract heading from snippet if present
+          const headingMatch = result.snippet.match(/^(#{1,6})\s+(.+)$/m);
+          const heading = headingMatch ? headingMatch[2] : '';
+          const level = headingMatch ? headingMatch[1].length : 2;
+          const headingPrefix = '#'.repeat(Math.min(level + 1, 6)); // Offset by 1 to show hierarchy
+
+          // Build URL to read specific line
+          const baseUrl = `/v1/datasets/${datasetId}/files/${result.filename}`;
+          const lineUrl = result.startLine ? `${baseUrl}?start=${result.startLine}` : baseUrl;
+
+          return `${headingPrefix} ${heading}\n\n[${result.filename}:${result.startLine || '1'}](${lineUrl})\n\n${result.snippet}\n`;
+        })
+        .join('\n---\n\n');
+
+      // Add pagination info if there's a next page
+      if (data.hasNextPage) {
+        textResult += `\n\n---\n\n*More results available on page ${data.page + 1}*`;
+      }
+
+      return new Response(textResult, {
         status: 200,
         headers: { 'Content-Type': 'text/plain; charset=utf-8' }
       });
@@ -1557,68 +1660,58 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
     openapi: { operationId: 'searchSectionsText' },
   })
 
-  // 7) Get all tokens (vocabulary) from the dataset
-  .route({
-    method: 'GET',
-    path: '/v1/datasets/:datasetId/tokens',
-    params: z.object({ datasetId: DatasetIdSchema }),
-    response: z.object({
-      tokens: z.array(z.string()).describe('All unique tokens from the full-text search index'),
-      count: z.number().describe('Total number of unique tokens')
-    }),
-    async handler({ request, params, state }) {
-      const { datasetId } = params;
-      const orgId = state.orgId!; // Guaranteed by middleware
+  // 7) Get all tokens (vocabulary) from the dataset - REMOVED (private method now)
+  // .route({
+  //   method: 'GET',
+  //   path: '/v1/datasets/:datasetId/tokens',
+  //   params: z.object({ datasetId: DatasetIdSchema }),
+  //   response: z.object({
+  //     tokens: z.array(z.string()).describe('All unique tokens from the full-text search index'),
+  //     count: z.number().describe('Total number of unique tokens')
+  //   }),
+  //   async handler({ request, params, state }) {
+  //     const { datasetId } = params;
+  //     const orgId = state.orgId!; // Guaranteed by middleware
 
-      // Get dataset config (must exist)
-      const config = await getDatasetConfig({
-        kv: state.env.EYECREST_KV,
-        datasetId
-      });
+  //     // Get dataset config (must exist)
+  //     const config = await getDatasetConfig({
+  //       kv: state.env.EYECREST_KV,
+  //       datasetId
+  //     });
 
-      if (!config) {
-        throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
-      }
+  //     if (!config) {
+  //       throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
+  //     }
 
-      // Use closest available region for read operation
-      const region = getClosestAvailableRegion({
-        request: request as Request,
-        primaryRegion: config.primaryRegion,
-        replicaRegions: config.replicaRegions,
-        isReadOperation: true
-      });
+  //     // Use closest available region for read operation
+  //     const region = getClosestAvailableRegion({
+  //       request: request as Request,
+  //       primaryRegion: config.primaryRegion,
+  //       replicaRegions: config.replicaRegions,
+  //       isReadOperation: true
+  //     });
 
-      // Create DO ID and stub with locationHint
-      const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
+  //     // Create DO ID and stub with locationHint
+  //     const doId = getDurableObjectId({ datasetId, region });
+  //     const id = state.env.DATASETS.idFromName(doId);
+  //     const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
-      const tokens = await stub.getTokens({ datasetId, orgId });
+  //     const tokens = await stub.getTokens({ datasetId, orgId });
 
-      return {
-        tokens,
-        count: tokens.length
-      };
-    },
-    openapi: { operationId: 'getTokens' },
-  })
+  //     return {
+  //       tokens,
+  //       count: tokens.length
+  //     };
+  //   },
+  //   openapi: { operationId: 'getTokens' },
+  // })
 
   // 8) Get dataset size and statistics
   .route({
     method: 'GET',
     path: '/v1/datasets/:datasetId/size',
     params: z.object({ datasetId: DatasetIdSchema }),
-    response: z.object({
-      totalSizeBytes: z.number().describe('Total size of stored data in bytes (content + metadata + sections)'),
-      uploadedContentSizeBytes: z.number().describe('Total size of user-uploaded file content in bytes (excluding duplicated sections)'),
-      fileCount: z.number().describe('Number of files in the dataset'),
-      sectionCount: z.number().describe('Number of sections/chunks in the dataset'),
-      breakdown: z.object({
-        databaseSizeBytes: z.number().describe('Estimated total size in bytes (same as totalSizeBytes)'),
-        contentSizeBytes: z.number().describe('Total size of file contents in bytes'),
-        metadataSizeBytes: z.number().describe('Total size of metadata in bytes')
-      }).describe('Detailed breakdown of storage usage')
-    }),
+    response: GetDatasetSizeResponseSchema,
     async handler({ request, params, state }) {
       const { datasetId } = params;
       const orgId = state.orgId!; // Guaranteed by middleware
@@ -1644,7 +1737,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
       const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
+      const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       return await stub.getDatasetSize({ datasetId, orgId });
     },
@@ -1662,10 +1755,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       metadata: z.any().optional().describe('Optional metadata to attach to imported files'),
       waitForReplication: z.boolean().optional().default(true).describe('Whether to wait for replication to complete (default: true)')
     }),
-    response: z.object({
-      filesImported: z.number().describe('Number of files imported'),
-      totalSizeBytes: z.number().describe('Total size of imported files in bytes')
-    }),
+    response: ImportResponseSchema,
     async handler({ request, params, state }) {
       const { datasetId } = params;
       const { url, path, metadata, waitForReplication = true } = await request.json();
@@ -1686,7 +1776,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
       const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
+      const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       // Process the tar archive
       const result = await processTarArchive({
@@ -1724,10 +1814,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       metadata: z.any().optional().describe('Optional metadata to attach to imported files'),
       waitForReplication: z.boolean().optional().default(true).describe('Whether to wait for replication to complete (default: true)')
     }),
-    response: z.object({
-      filesImported: z.number().describe('Number of files imported'),
-      totalSizeBytes: z.number().describe('Total size of imported files in bytes')
-    }),
+    response: ImportResponseSchema,
     async handler({ request, params, state }) {
       const { datasetId } = params;
       const { owner, repo, branch, path, metadata, waitForReplication = true } = await request.json();
@@ -1748,7 +1835,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       // Create DO ID and stub with locationHint
       const doId = getDurableObjectId({ datasetId, region });
       const id = state.env.DATASETS.idFromName(doId);
-      const stub = state.env.DATASETS.get(id, { locationHint: region }) as any as Datasets;
+      const stub = state.env.DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       // Build GitHub archive URL using codeload subdomain to avoid redirect
       const url = `https://codeload.github.com/${owner}/${repo}/tar.gz/refs/heads/${branch}`;
@@ -1993,7 +2080,7 @@ async function processTarArchive({
   path?: string;
   metadata?: any;
   region: DurableObjectRegion;
-  stub: any;
+  stub: DatasetsInterface;
   ctx: ExecutionContext;
 }): Promise<{ filesImported: number; totalSizeBytes: number }> {
   const startTime = Date.now();

@@ -422,7 +422,7 @@ More content in section two.`;
     expect(data.breakdown.contentSizeBytes).toBeGreaterThan(0);
   });
 
-  test('should get all tokens from the dataset', async () => {
+  test.skip('should get all tokens from the dataset', async () => {
     const startTime = Date.now();
     const response = await fetch(
       `${PRODUCTION_URL}/v1/datasets/${TEST_DATASET_ID}/tokens`,
