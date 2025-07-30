@@ -308,7 +308,7 @@ function RightSide() {
                 <div className='grow'></div>
                 <GithubRepoButton />
                 <GitHubSyncStatus />
-                <GitHubSyncButton />
+                {/* <GitHubSyncButton /> */}
                 <InstallGithubAppToolbar />
             </div>
 

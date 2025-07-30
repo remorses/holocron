@@ -532,21 +532,44 @@ function TodoItem({
 }
 
 function TodosActions() {
+    const isOnboardingChat = useShouldHideBrowser()
+
+    const onboardingItems = [
+        'Create a docs website for my company',
+        'Add a custom domain for the docs site',
+        'Add a new page about the company mission',
+        'Customize the colors of the website',
+    ]
+
+    const updateItems = [
+        'Add a new page to my docs based on a web research',
+        'Add icons to all the pages',
+        'Remove a page from the docs',
+        'Add tables to docs pages that contain complex tabular infromation',
+    ]
+
+    const items = isOnboardingChat ? onboardingItems : updateItems
+    const greeting = isOnboardingChat
+        ? 'Hi! I am Fumabase, your AI docs assistant'
+        : "Hi! I'm ready to help update your docs"
+    const subtitle = isOnboardingChat
+        ? 'Things you can do with Fumabase:'
+        : 'Try these powerful doc enhancements:'
+
     return (
         <div className='leading-snug whitespace-pre-wrap gap-[0.1em] flex flex-col items-start tracking-wide'>
             <div>
-                <Dot /> Hi! I am Fumabase, your AI docs assistant
+                <Dot /> {greeting}
             </div>
             <div>
-                <Dot /> Things you can do with Fumabase:
+                <Dot /> {subtitle}
             </div>
             <div className='flex flex-col items-start'>
-                <TodoItem isFirst>
-                    Create a docs website for my company
-                </TodoItem>
-                <TodoItem>Add a custom domain for the docs site</TodoItem>
-                <TodoItem>Add a new page about the company mission</TodoItem>
-                <TodoItem>Customize the colors of the website</TodoItem>
+                {items.map((item, index) => (
+                    <TodoItem key={index} isFirst={index === 0}>
+                        {item}
+                    </TodoItem>
+                ))}
             </div>
         </div>
     )
@@ -1036,7 +1059,7 @@ function Footer() {
                                 </a>
                             )}
 
-                            <PrButton />
+                            <PrButton className='ml-auto' />
                             <SaveChangesButton className='ml-auto' />
                         </div>
 
@@ -1156,8 +1179,7 @@ function Footer() {
         </AnimatePresence>
     )
 }
-
-function PrButton({}) {
+function PrButton({ className = '' }) {
     const [isLoading, setIsLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
     const [buttonText, setButtonText] = useTemporaryState('', 2000)
@@ -1254,7 +1276,7 @@ function PrButton({}) {
     if (!messages?.length) return null
 
     return (
-        <div className='flex items-center gap-2'>
+        <div className={cn('flex items-center gap-2', className)}>
             <Popover
                 onOpenChange={(x) => {
                     if (!x) setErrorMessage('')
