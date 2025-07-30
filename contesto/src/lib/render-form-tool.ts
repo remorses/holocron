@@ -1,4 +1,5 @@
 import { tool } from 'ai'
+import dedent from 'string-dedent'
 import type { JSONSchema7 } from 'json-schema'
 import * as schemaLib from 'json-schema-library'
 import { z } from 'zod'
@@ -17,7 +18,8 @@ export interface RenderFormToolConfig {
 export function createRenderFormTool({
     jsonSchema,
     replaceOptionalsWithNulls,
-    notifyError = (err, msg) => console.error(msg || 'Error in createRenderFormTool', err),
+    notifyError = (err, msg) =>
+        console.error(msg || 'Error in createRenderFormTool', err),
 }: RenderFormToolConfig) {
     let uiFieldsSchema = UIFieldSchema
     if (replaceOptionalsWithNulls) {
@@ -85,8 +87,24 @@ export function createRenderFormTool({
     }
 
     return tool({
-        description:
-            'Render a series of input elements so the user can provide structured data. Array-style names such as items[0].color are supported. Use radio type for small number of options (less than 4) where you want to show option descriptions alongside the choices.',
+        description: dedent`
+          Render a series of input elements so the user can provide structured data.
+          Array-style names such as items[0].color are supported.
+          Use radio type for small number of options (less than 4) where you want to show option descriptions alongside the choices.
+
+          Never render too many form fields at once.
+
+          If your workflow requires asking for a lot of fields, split the form into many messages, each one with 1 form field ideally.
+
+          Only render many form fields in the case of list of items or fields that are part of an object.
+
+          For data collection instead render one form field at a time.
+
+          If the user submits a form without adding the fields you want do not ask the user to fill the form again. Instead render another form!
+          Previous messages forms will be disabled and the user cannot submit them again. Instead render a simpler shorter form the user can fill in. Use relevant default values.
+
+          Always try to fill in the default values so the user has less things to type and check.
+      `.split('\n'),
         inputSchema: RenderFormParameters,
         execute,
     })
