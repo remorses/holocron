@@ -1,3 +1,29 @@
+declare global {
+    interface Highlight {
+        add(range: Range): void
+        delete(range: Range): void
+        has(range: Range): boolean
+        clear(): void
+        readonly size: number
+    }
+
+    interface HighlightRegistry extends Map<string, Highlight> {
+        set(name: string, highlight: Highlight): this
+        delete(name: string): boolean
+        clear(): void
+    }
+
+    interface Window {
+        Highlight: {
+            new (): Highlight
+        }
+    }
+    
+    interface CSS {
+        highlights?: HighlightRegistry
+    }
+}
+
 export function highlightText({
     slug,
     startLine,
