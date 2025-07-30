@@ -8,7 +8,11 @@ interface TruncatedTextProps {
     isStreaming?: boolean
 }
 
-export function TruncatedText({ children, className, isStreaming = false }: TruncatedTextProps) {
+export function TruncatedText({
+    children,
+    className,
+    isStreaming = false,
+}: TruncatedTextProps) {
     const [isExpanded, setIsExpanded] = useState(false)
 
     return (
@@ -16,7 +20,7 @@ export function TruncatedText({ children, className, isStreaming = false }: Trun
             <div
                 className={cn(
                     'cursor-pointer',
-                    !isExpanded && !isStreaming && 'line-clamp-3'
+                    !isExpanded && !isStreaming && 'line-clamp-3',
                 )}
                 onClick={() => {
                     if (!isStreaming) {
@@ -26,9 +30,6 @@ export function TruncatedText({ children, className, isStreaming = false }: Trun
             >
                 {children}
             </div>
-            {!isExpanded && !isStreaming && (
-                <span className="text-muted-foreground">...</span>
-            )}
         </div>
     )
 }

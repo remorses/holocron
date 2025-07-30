@@ -98,7 +98,13 @@ import {
 } from 'website/src/components/ui/command'
 import { docsRpcClient } from '../lib/docs-setstate'
 import { WebsiteUIMessage } from '../lib/types'
-import { cn, safeJsoncParse, slugKebabCaseKeepExtension } from '../lib/utils'
+import {
+    capitalize,
+    cn,
+    safeJsoncParse,
+    slugKebabCaseKeepExtension,
+    spaceCase,
+} from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import { flushSync } from 'react-dom'
@@ -778,7 +784,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                     if (part.type === 'reasoning') {
                         if (!part.text) return null
                         return (
-                            <div className='flex flex-row opacity-70 tracking-wide gap-[1ch]'>
+                            <div className='flex flex-row opacity-80 tracking-wide gap-[1ch]'>
                                 <Dot />
                                 <TruncatedText isStreaming={isChatGenerating}>
                                     <Markdown
@@ -878,7 +884,8 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                         }
                         return (
                             <ToolPreviewContainer key={index}>
-                                <Dot /> {spaceCase(toolName)}({callArg})
+                                <Dot /> {capitalize(spaceCase(toolName))}(
+                                {callArg}
                                 {error && <ErrorPreview error={error} />}
                             </ToolPreviewContainer>
                         )
@@ -897,13 +904,6 @@ function stringifyArgs(obj: any): string {
             return `${key}=${JSON.stringify(value)}`
         })
         .join(', ')
-}
-
-function spaceCase(str: string): string {
-    return str
-        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-        .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
-        .replace(/^./, (m) => m.toUpperCase())
 }
 
 // Static autocomplete suggestions for first message

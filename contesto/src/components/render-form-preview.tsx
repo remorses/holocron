@@ -307,13 +307,14 @@ export function RenderFormPreview({
     output: result,
     message,
     showSubmitButton = false,
+    className,
 }: {
     input?: DeepPartial<RenderFormParameters>
     output?: any
+    className?: string
     message: UIMessage
     showSubmitButton?: boolean
 }) {
-
     const { messages, isGenerating } = useChatContext()
 
     const disabled = messages[messages.length - 1]?.id !== message.id
@@ -363,8 +364,9 @@ export function RenderFormPreview({
     return (
         <div
             className={cn(
-                'flex not-prose font-sans rounded-lg flex-col gap-6 animate-in fade-in',
+                'flex not-prose my-8 font-sans bg-background rounded-lg flex-col gap-6 animate-in fade-in',
                 disabled && 'opacity-50 pointer-events-none',
+                className,
             )}
         >
             {fieldGroups.map((group, groupIndex) => {
@@ -412,7 +414,7 @@ export function RenderFormPreview({
                     )
                 } else {
                     return group.fields.map((f) => (
-                        <div key={f.name} className='flex flex-col gap-6'>
+                        <div key={f.name} className='flex flex-col p-6 gap-6 '>
                             {f.type !== 'button' &&
                                 f.type !== 'color_picker' && (
                                     <label className='font-medium text-sm'>

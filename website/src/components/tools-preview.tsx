@@ -3,7 +3,7 @@ import { useChatContext } from 'contesto/src/chat/chat-provider'
 import { MarkdownRuntimeChat as Markdown } from 'docs-website/src/lib/markdown-runtime-chat'
 import { escapeMdxSyntax, truncateText } from 'docs-website/src/lib/utils'
 import { WebsiteToolPart } from 'website/src/lib/types'
-import { cn } from 'website/src/lib/utils'
+import { capitalize, cn } from 'website/src/lib/utils'
 import { parsePatch } from 'diff'
 import { ReactNode, useMemo } from 'react'
 
@@ -62,7 +62,7 @@ export function EditorToolPreview({
 
         return (
             <ToolPreviewContainer>
-                <Dot toolCallId={toolCallId}/> {command} <Highlight>{args?.path}</Highlight>
+                <Dot toolCallId={toolCallId}/> {capitalize(command)} <Highlight>{args?.path}</Highlight>
                 {command === 'insert' ? `:${args?.insert_line || 0}` : ''}
                 {error ? (
                     <ErrorPreview error={result.error} />
@@ -129,7 +129,7 @@ export function FilesTreePreview({
 
     return (
         <ToolPreviewContainer>
-            <Dot toolCallId={toolCallId}/> getting file structure
+            <Dot toolCallId={toolCallId}/> Getting file structure
             <br />
             <Markdown
                 isStreaming={isChatGenerating}

@@ -159,3 +159,17 @@ export async function* processGeneratorConcurrentlyInOrder<T, R>(
         yield await nextPromise
     }
 }
+
+
+
+export function capitalize(str: string): string {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+export function spaceCase(str: string): string {
+    return str
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
+        .replace(/^./, (m) => m.toUpperCase())
+}
