@@ -6,8 +6,8 @@ if (!JWT_TOKEN) {
   throw new Error('EYECREST_EXAMPLE_JWT not found. Make sure to run with doppler: doppler run -- tsx src/search-benchmark-github.ts');
 }
 
-// Use a unique dataset ID for each test run
-const datasetId = `test-org-123-xx-benchmark`;
+// Use a unique dataset ID for each test run with timestamp
+const datasetId = `test-org-123-xx-benchmark-${Date.now()}`;
 
 const client = new EyecrestClient({
   token: JWT_TOKEN,
@@ -27,7 +27,7 @@ await client.upsertDataset({
   datasetId,
   primaryRegion: 'weur',
   waitForReplication: false,
-  provider: 'upstash'
+  provider: 'neon'
 });
 
 

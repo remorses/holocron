@@ -48,6 +48,12 @@ interface NeonProjectInfo {
   branchId: string;
 }
 
+// Use a single shared project per region
+const SHARED_PROJECT_NAME = 'eyecrest-shared-multitenant';
+
+// Fixed Neon project to use for all datasets
+const FIXED_NEON_PROJECT_ID = 'mute-haze-99793724';
+
 export class NeonDatasets extends DurableObject implements DatasetsInterface {
   private datasetId?: string;
   private doRegion?: DurableObjectRegion;
@@ -73,116 +79,162 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
     return this.neonApi;
   }
 
-  private async getOrCreateNeonProject(): Promise<NeonProjectInfo> {
-    if (!this.datasetId) {
-      throw new Error('Dataset ID not set');
-    }
-
-    // Check if we already have a project
-    const stored = await this.state.storage.get<NeonProjectInfo>('neon:project');
-    if (stored) {
+  private async getOrCreateSharedProject(): Promise<NeonProjectInfo> {
+    const storageKey = `neon:fixed:${FIXED_NEON_PROJECT_ID}`;
+    
+    // Check if we already have the connection info cached
+    const stored = await this.state.storage.get<NeonProjectInfo>(storageKey);
+    if (stored && stored.connectionUri) {
+      console.log(`[neon] Using cached connection for fixed project: ${FIXED_NEON_PROJECT_ID}`);
       return stored;
     }
 
-    // Create a new project
+    // Get connection details for the fixed project
     const api = this.getNeonApi();
-    const neonRegion = REGION_TO_NEON[this.doRegion || 'wnam'];
     
-    const { data } = await api.createProject({
-      project: { 
-        name: `eyecrest-${this.datasetId}`, 
-        region_id: neonRegion,
-        pg_version: 17
+    console.log(`[neon] Getting connection details for fixed project: ${FIXED_NEON_PROJECT_ID}`);
+    
+    try {
+      // Get project details
+      const { data: project } = await api.getProject(FIXED_NEON_PROJECT_ID);
+      
+      // Get branches
+      const { data: branches } = await api.listProjectBranches({ projectId: FIXED_NEON_PROJECT_ID });
+      const defaultBranch = branches.branches.find(b => b.default) || branches.branches[0];
+      
+      if (!defaultBranch) {
+        throw new Error(`No branches found in project ${FIXED_NEON_PROJECT_ID}`);
       }
-    });
-
-    const project = data.project;
-    const branch = data.branch;
-    const roles = data.roles;
-    const databases = data.databases;
-    const connectionUris = data.connection_uris;
-
-    // The branch is created with the default database, so we might not need to create another one
-    let connectionUri = '';
-    if (connectionUris && connectionUris.length > 0) {
-      connectionUri = connectionUris[0].connection_uri;
-    }
-
-    // If we need an endpoint, we can create one
-    if (!connectionUri && branch) {
-      const { data: endpointData } = await api.createProjectEndpoint(project.id, {
-        endpoint: {
-          branch_id: branch.id,
-          type: EndpointType.ReadWrite,
-          region_id: project.region_id,
-          autoscaling_limit_min_cu: 0.25,
-          autoscaling_limit_max_cu: 0.25
-        }
+      
+      // Get connection URI directly
+      const { data: connectionUri } = await api.getConnectionUri({ 
+        projectId: FIXED_NEON_PROJECT_ID,
+        branch_id: defaultBranch.id,
+        database_name: 'neondb',
+        role_name: 'neondb_owner'
       });
       
-      if (endpointData.endpoint) {
-        connectionUri = endpointData.endpoint.host;
-        // Build connection URI with the first role
-        if (roles && roles.length > 0) {
-          connectionUri = `postgresql://${roles[0].name}:****@${endpointData.endpoint.host}/neondb?sslmode=require`;
-        }
+      if (!connectionUri.uri) {
+        throw new Error(`No connection URI found for project ${FIXED_NEON_PROJECT_ID}`);
       }
+      
+      const projectInfo: NeonProjectInfo = {
+        projectId: FIXED_NEON_PROJECT_ID,
+        connectionUri: connectionUri.uri,
+        branchId: defaultBranch.id
+      };
+      
+      // Store project info
+      await this.state.storage.put(storageKey, projectInfo);
+      
+      // Initialize schema
+      await this.initializeSchema(connectionUri.uri);
+      
+      return projectInfo;
+    } catch (error) {
+      console.error('[neon] Failed to get fixed project details:', error);
+      throw new Error(`Failed to connect to fixed Neon project ${FIXED_NEON_PROJECT_ID}: ${error.message}`);
     }
-
-    const projectInfo: NeonProjectInfo = {
-      projectId: project.id,
-      connectionUri: connectionUri,
-      branchId: branch?.id || ''
-    };
-
-    // Store project info
-    await this.state.storage.put('neon:project', projectInfo);
-
-    // Initialize schema
-    await this.initializeSchema(connectionUri);
-
-    return projectInfo;
   }
 
   private async initializeSchema(connectionUri: string) {
     const sql = neon(connectionUri);
 
-    // Create extensions
-    // Note: Neon might not have pg_search or pgvector extensions
-    // We'll use PostgreSQL's built-in full text search instead
+    // Try to drop any existing BM25 indexes that might be corrupted
+    try {
+      // Drop BM25 index using ParadeDB's drop function if it exists
+      await sql`CALL paradedb.drop_bm25(index_name => 'sections_bm25_idx', schema_name => 'public')`;
+      console.log('[neon] Dropped existing BM25 index using ParadeDB function');
+    } catch (error) {
+      // Try regular DROP INDEX as fallback
+      try {
+        await sql`DROP INDEX IF EXISTS sections_bm25_idx`;
+        console.log('[neon] Dropped existing BM25 index if it existed');
+      } catch (dropError) {
+        console.log('[neon] No BM25 index to drop or error dropping:', dropError);
+      }
+    }
+    
+    // Drop problematic composite index that exceeds btree size limits
+    try {
+      await sql`DROP INDEX IF EXISTS sections_dataset_content_idx`;
+      console.log('[neon] Dropped problematic composite index');
+    } catch (e) {
+      // Index might not exist
+    }
 
-    // Create files table
+    // Disable pg_search extension due to JSON parsing compatibility issues
+    // The extension causes "EOF while parsing a value" errors during data inserts
+    // See: https://github.com/paradedb/paradedb/issues/1205
+    console.log('[neon] pg_search extension disabled - using PostgreSQL full-text search');
+
+    // Create files table with dataset_id for multi-tenancy
     await sql`CREATE TABLE IF NOT EXISTS files (
-      filename TEXT PRIMARY KEY,
+      dataset_id TEXT NOT NULL,
+      filename TEXT NOT NULL,
       content TEXT NOT NULL,
       sha TEXT NOT NULL,
       metadata JSONB,
       weight REAL DEFAULT 1.0,
       created_at TIMESTAMPTZ DEFAULT NOW(),
-      updated_at TIMESTAMPTZ DEFAULT NOW()
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (dataset_id, filename)
     )`;
 
-    // Create sections table  
+    // Create sections table with dataset_id for multi-tenancy
     await sql`CREATE TABLE IF NOT EXISTS sections (
       id SERIAL PRIMARY KEY,
-      filename TEXT NOT NULL REFERENCES files(filename) ON DELETE CASCADE,
+      dataset_id TEXT NOT NULL,
+      filename TEXT NOT NULL,
       section_slug TEXT,
       content TEXT NOT NULL,
       level INTEGER NOT NULL,
       order_index INTEGER NOT NULL,
       start_line INTEGER NOT NULL,
       weight REAL DEFAULT 1.0,
-      UNIQUE(filename, order_index)
+      UNIQUE(dataset_id, filename, order_index),
+      FOREIGN KEY (dataset_id, filename) REFERENCES files(dataset_id, filename) ON DELETE CASCADE
     )`;
 
-    // Create GIN index for full text search
-    await sql`CREATE INDEX IF NOT EXISTS sections_content_idx 
-      ON sections USING GIN (to_tsvector('english', content))`;
+    // Create indexes concurrently - ignore errors if they already exist
+    console.log('[neon] Creating indexes...');
+    
+    // Files indexes
+    try {
+      await sql`CREATE INDEX CONCURRENTLY idx_files_dataset_id ON files(dataset_id)`;
+    } catch (e) { /* Index might already exist */ }
+    
+    try {
+      await sql`CREATE INDEX CONCURRENTLY idx_files_dataset_filename ON files(dataset_id, filename)`;
+    } catch (e) { /* Index might already exist */ }
+    
+    // Sections indexes  
+    try {
+      await sql`CREATE INDEX CONCURRENTLY idx_sections_dataset_id ON sections(dataset_id)`;
+    } catch (e) { /* Index might already exist */ }
+    
+    try {
+      await sql`CREATE INDEX CONCURRENTLY idx_sections_dataset_filename ON sections(dataset_id, filename)`;
+    } catch (e) { /* Index might already exist */ }
+
+    // Skip BM25 index creation due to pg_search parsing issues
+    // Only use PostgreSQL's native full-text search with GIN indexes
+    {
+      console.log('[neon] Skipping BM25 index due to pg_search compatibility issues');
+      
+      try {
+        await sql`CREATE INDEX CONCURRENTLY sections_content_gin_idx 
+          ON sections USING GIN (to_tsvector('english', content))`;
+      } catch (e) { /* Index might already exist */ }
+      
+      // Note: Composite index on (dataset_id, tsvector) can exceed btree size limits
+      // The GIN index above combined with dataset_id index is sufficient
+    }
   }
 
   private async getSql() {
     if (!this.sql) {
-      const projectInfo = await this.getOrCreateNeonProject();
+      const projectInfo = await this.getOrCreateSharedProject();
       this.sql = neon(projectInfo.connectionUri);
     }
     return this.sql;
@@ -255,7 +307,7 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
       await this.state.storage.put(`dataset:${datasetId}`, info);
       
       // Ensure Neon project is created
-      await this.getOrCreateNeonProject();
+      await this.getOrCreateSharedProject();
     }
     
     this.replicaRegions = (replicaRegions || []) as DurableObjectRegion[];
@@ -308,56 +360,122 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
     
     const sql = await this.getSql();
     
-    // Process each file
-    let processedCount = 0;
+    // Compute SHAs for all files in parallel
+    const fileData = await Promise.all(
+      files.map(async (file) => ({
+        ...file,
+        computedSHA: await computeGitBlobSHA(file.content)
+      }))
+    );
     
-    for (const file of files) {
-      const computedSHA = await computeGitBlobSHA(file.content);
-      
-      // Check if file exists and SHA matches
-      const existing = await sql`
-        SELECT sha FROM files WHERE filename = ${file.filename}
-      ` as { sha: string }[];
-      
-      if (existing.length > 0 && existing[0].sha === computedSHA) {
-        continue; // Skip unchanged files
+    // Get existing files to check which ones need updating
+    const filenames = files.map(f => f.filename);
+    const existing = await sql`
+      SELECT filename, sha 
+      FROM files 
+      WHERE dataset_id = ${datasetId} 
+        AND filename = ANY(${filenames}::text[])
+    ` as { filename: string; sha: string }[];
+    
+    const existingMap = new Map(existing.map(e => [e.filename, e.sha]));
+    
+    // Separate files into inserts and updates
+    const toInsert: typeof fileData = [];
+    const toUpdate: typeof fileData = [];
+    
+    for (const file of fileData) {
+      const existingSha = existingMap.get(file.filename);
+      if (!existingSha) {
+        toInsert.push(file);
+      } else if (existingSha !== file.computedSHA) {
+        toUpdate.push(file);
       }
-      
-      processedCount++;
-      
-      // Upsert file
+      // Skip files with matching SHA
+    }
+    
+    const processedCount = toInsert.length + toUpdate.length;
+    console.log(`[neon-upsert] Processing ${processedCount} files (${toInsert.length} new, ${toUpdate.length} updated)`);
+    
+    // Insert new files one by one to avoid pg_search JSON parsing issues
+    for (const file of toInsert) {
       await sql`
-        INSERT INTO files (filename, content, sha, metadata, weight, updated_at)
-        VALUES (${file.filename}, ${file.content}, ${computedSHA}, ${JSON.stringify(file.metadata)}, ${file.weight || 1.0}, NOW())
-        ON CONFLICT (filename) 
-        DO UPDATE SET 
-          content = EXCLUDED.content,
-          sha = EXCLUDED.sha,
-          metadata = EXCLUDED.metadata,
-          weight = EXCLUDED.weight,
-          updated_at = NOW()
+        INSERT INTO files (dataset_id, filename, content, sha, metadata, weight, updated_at)
+        VALUES (
+          ${datasetId},
+          ${file.filename},
+          ${file.content},
+          ${file.computedSHA},
+          ${file.metadata ? JSON.stringify(file.metadata) : null}::jsonb,
+          ${file.weight || 1.0},
+          NOW()
+        )
+      `;
+    }
+    
+    // Update existing files one by one (as requested)
+    for (const file of toUpdate) {
+      await sql`
+        UPDATE files 
+        SET content = ${file.content},
+            sha = ${file.computedSHA},
+            metadata = ${file.metadata ? JSON.stringify(file.metadata) : null}::jsonb,
+            weight = ${file.weight || 1.0},
+            updated_at = NOW()
+        WHERE dataset_id = ${datasetId} AND filename = ${file.filename}
+      `;
+    }
+    
+    // Process sections for all changed files (inserts + updates)
+    const changedFiles = [...toInsert, ...toUpdate];
+    if (changedFiles.length > 0) {
+      // Delete existing sections for changed files
+      const changedFilenames = changedFiles.map(f => f.filename);
+      await sql`
+        DELETE FROM sections 
+        WHERE dataset_id = ${datasetId} 
+          AND filename = ANY(${changedFilenames}::text[])
       `;
       
-      // Delete existing sections
-      await sql`DELETE FROM sections WHERE filename = ${file.filename}`;
+      // Prepare all sections for batch insert
+      const allSections: any[] = [];
       
-      // Process sections if markdown
-      if (isSupportedMarkdownFile(file.filename)) {
-        const parsed = parseMarkdownIntoSections(file.content);
-        const slugger = new Slugger();
+      for (const file of changedFiles) {
+        if (isSupportedMarkdownFile(file.filename)) {
+          const parsed = parseMarkdownIntoSections(file.content);
+          const slugger = new Slugger();
+          
+          for (const section of parsed.sections) {
+            allSections.push({
+              dataset_id: datasetId,
+              filename: file.filename,
+              section_slug: section.headingSlug || '',
+              content: section.content || '',
+              level: section.level,
+              order_index: section.orderIndex,
+              start_line: section.startLine,
+              weight: section.weight ?? file.weight ?? 1.0
+            });
+          }
+        }
+      }
+      
+      // Insert sections in batches to balance performance and avoid pg_search issues
+      const SECTION_BATCH_SIZE = 100;
+      for (let i = 0; i < allSections.length; i += SECTION_BATCH_SIZE) {
+        const batch = allSections.slice(i, i + SECTION_BATCH_SIZE);
         
-        // Insert sections
-        for (const section of parsed.sections) {
+        for (const section of batch) {
           await sql`
-            INSERT INTO sections (filename, section_slug, content, level, order_index, start_line, weight)
+            INSERT INTO sections (dataset_id, filename, section_slug, content, level, order_index, start_line, weight)
             VALUES (
-              ${file.filename},
-              ${section.headingSlug || ''},
+              ${section.dataset_id},
+              ${section.filename},
+              ${section.section_slug},
               ${section.content},
               ${section.level},
-              ${section.orderIndex},
-              ${section.startLine},
-              ${section.weight ?? file.weight ?? 1.0}
+              ${section.order_index},
+              ${section.start_line},
+              ${section.weight}
             )
           `;
         }
@@ -411,7 +529,7 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
     // Delete files (sections will cascade)
     await sql`
       DELETE FROM files 
-      WHERE filename = ANY(${filenames})
+      WHERE dataset_id = ${datasetId} AND filename = ANY(${filenames})
     `;
     
     // Forward deletes to replicas if this is the primary
@@ -456,19 +574,17 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
     // Verify ownership
     await this.verifyDatasetOwnership(datasetId, orgId);
     
-    // Delete Neon project
-    const projectInfo = await this.state.storage.get<NeonProjectInfo>('neon:project');
-    if (projectInfo) {
-      const api = this.getNeonApi();
-      try {
-        await api.deleteProject(projectInfo.projectId);
-      } catch (error) {
-        console.error('[neon-delete] Failed to delete Neon project:', error);
-      }
-    }
+    // Delete all data for this dataset from the shared database
+    const sql = await this.getSql();
     
-    // Delete all stored metadata
-    await this.state.storage.deleteAll();
+    // Delete all files for this dataset (sections will cascade)
+    await sql`
+      DELETE FROM files 
+      WHERE dataset_id = ${datasetId}
+    `;
+    
+    // Delete dataset metadata from storage
+    await this.state.storage.delete(`dataset:${datasetId}`);
     
     // If this is the primary, notify replicas to delete themselves
     if (await this.isPrimary()) {
@@ -509,6 +625,7 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
       const files = await sql`
         SELECT filename, content, sha, metadata, weight
         FROM files
+        WHERE dataset_id = ${datasetId}
         ORDER BY filename
       ` as { filename: string; content: string; sha: string; metadata: any; weight: number }[];
       
@@ -531,7 +648,7 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
     const result = await sql`
       SELECT filename, content, sha, metadata, weight
       FROM files
-      WHERE filename = ${filePath}
+      WHERE dataset_id = ${datasetId} AND filename = ${filePath}
     ` as { filename: string; content: string; sha: string; metadata: any; weight: number }[];
     
     if (!result || result.length === 0) {
@@ -569,44 +686,90 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
     
     const sql = await this.getSql();
     
-    // Use PostgreSQL's built-in full text search
     const offset = page * perPage;
     const limit = perPage + 1; // Get one extra to check for next page
     
-    const results = await sql`
-      WITH search_results AS (
-        SELECT 
-          s.id,
-          s.filename,
-          s.section_slug,
-          s.content,
-          s.start_line,
-          s.weight as section_weight,
-          f.weight as file_weight,
-          f.metadata as file_metadata,
-          ts_rank(to_tsvector('english', s.content), plainto_tsquery('english', ${query})) as score,
-          ROW_NUMBER() OVER (PARTITION BY s.filename ORDER BY ts_rank(to_tsvector('english', s.content), plainto_tsquery('english', ${query})) DESC) as rn
-        FROM sections s
-        JOIN files f ON s.filename = f.filename
-        WHERE to_tsvector('english', s.content) @@ plainto_tsquery('english', ${query})
+    // Force PostgreSQL full-text search due to pg_search compatibility issues
+    let hasPgSearch = false;
+    // Disabled: pg_search causes JSON parsing errors
+    // try {
+    //   const extCheck = await sql`
+    //     SELECT 1 FROM pg_extension WHERE extname = 'pg_search'
+    //   ` as { '?column?': number }[];
+    //   hasPgSearch = extCheck.length > 0;
+    // } catch (error) {
+    //   // pg_search not available
+    // }
+    
+    let results;
+    if (hasPgSearch) {
+      // Use BM25 search with pg_search (ParadeDB)
+      console.log('[neon-search] Using BM25 search with pg_search');
+      results = await sql`
+        WITH search_results AS (
+          SELECT 
+            s.id,
+            s.filename,
+            s.section_slug,
+            s.content,
+            s.start_line,
+            s.weight as section_weight,
+            f.weight as file_weight,
+            f.metadata as file_metadata,
+            paradedb.score(s.id) as score,
+            ROW_NUMBER() OVER (PARTITION BY s.filename ORDER BY paradedb.score(s.id) DESC) as rn
+          FROM sections s
+          JOIN files f ON s.dataset_id = f.dataset_id AND s.filename = f.filename
+          WHERE s.dataset_id = ${datasetId} 
+            AND s.content @@@ ${query}
+          ORDER BY score DESC
+        )
+        SELECT *
+        FROM search_results
+        WHERE rn <= ${maxChunksPerFile}
         ORDER BY score DESC
-      )
-      SELECT *
-      FROM search_results
-      WHERE rn <= ${maxChunksPerFile}
-      ORDER BY score DESC
-      LIMIT ${limit}
-      OFFSET ${offset}
-    ` as {
-      filename: string;
-      section_slug: string;
-      content: string;
-      start_line: number;
-      section_weight: number;
-      file_weight: number;
-      file_metadata: any;
-      score: number;
-    }[];
+        LIMIT ${limit}
+        OFFSET ${offset}
+      `;
+    } else {
+      // Fallback to PostgreSQL full-text search
+      console.log('[neon-search] Using PostgreSQL full-text search');
+      results = await sql`
+        WITH search_results AS (
+          SELECT 
+            s.id,
+            s.filename,
+            s.section_slug,
+            s.content,
+            s.start_line,
+            s.weight as section_weight,
+            f.weight as file_weight,
+            f.metadata as file_metadata,
+            ts_rank(to_tsvector('english', s.content), plainto_tsquery('english', ${query})) as score,
+            ROW_NUMBER() OVER (PARTITION BY s.filename ORDER BY ts_rank(to_tsvector('english', s.content), plainto_tsquery('english', ${query})) DESC) as rn
+          FROM sections s
+          JOIN files f ON s.dataset_id = f.dataset_id AND s.filename = f.filename
+          WHERE s.dataset_id = ${datasetId} 
+            AND to_tsvector('english', s.content) @@ plainto_tsquery('english', ${query})
+          ORDER BY score DESC
+        )
+        SELECT *
+        FROM search_results
+        WHERE rn <= ${maxChunksPerFile}
+        ORDER BY score DESC
+        LIMIT ${limit}
+        OFFSET ${offset}
+      ` as {
+        filename: string;
+        section_slug: string;
+        content: string;
+        start_line: number;
+        section_weight: number;
+        file_weight: number;
+        file_metadata: any;
+        score: number;
+      }[];
+    }
     
     const hasNext = results.length > perPage;
     const items = results.slice(0, perPage);
@@ -652,7 +815,8 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
         COALESCE(SUM(LENGTH(f.content)), 0)::text as content_size,
         COALESCE(SUM(LENGTH(f.metadata::text)), 0)::text as metadata_size
       FROM files f
-      LEFT JOIN sections s ON f.filename = s.filename
+      LEFT JOIN sections s ON f.dataset_id = s.dataset_id AND f.filename = s.filename
+      WHERE f.dataset_id = ${datasetId}
     ` as {
       file_count: string;
       section_count: string;

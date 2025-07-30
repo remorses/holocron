@@ -293,6 +293,7 @@ More content in section two.`;
       ## Usage
 
       Upload markdown files and search through them.",
+        "metadata": {},
         "sha": "888714a3a2b2d0f763ddcd537ac56c4d61abe77a",
       }
     `);
@@ -730,6 +731,7 @@ More content in section two.`;
     expect(data).toMatchInlineSnapshot(`
       {
         "content": "Test content for SHA check",
+        "metadata": {},
         "sha": "1782917c7c9a9c41779b7f69d27db008019f9b92",
       }
     `);

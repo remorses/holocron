@@ -1,5 +1,63 @@
 # Changelog
 
+## 2025-01-30 11:00
+
+- Fixed Neon pg_search compatibility issues after thorough investigation
+- Removed json_array_elements usage and switched to standard SQL inserts
+- Disabled pg_search extension and BM25 indexes due to ParadeDB issue #1205
+- Falls back to PostgreSQL native full-text search with GIN indexes
+- Removed problematic composite btree index that exceeds size limits
+- Handle null/undefined metadata properly in JSON serialization
+
+## 2025-01-30 10:35
+
+- Simplified processTarArchive implementation with straightforward for loop
+- Collect all tar entries first, then process in batches
+- Removed complex promise chaining for clearer control flow
+- Moved processTarArchive to separate file for better organization
+- Reduced batch size to 50 for more frequent progress updates
+
+## 2025-01-30 10:30
+
+- Optimized file uploads with batch operations using JSON encoding
+- Only update files when SHA changes, skip unchanged files
+- Single query for all new file inserts using json_array_elements
+- Batch insert all sections in one query instead of one per section
+- Check existing files in bulk to minimize database queries
+- Compute all SHAs in parallel for better performance
+
+## 2025-01-30 10:25
+
+- Create indexes with try/catch to ignore existing index errors
+- Removed DROP INDEX to avoid unnecessary index recreation
+- Maintains non-blocking index creation for better performance
+
+## 2025-01-30 10:20
+
+- Use CREATE INDEX CONCURRENTLY to avoid blocking writes during index creation
+- Added composite indexes on (dataset_id, filename) for faster lookups
+- Check for existing indexes before creation to avoid errors
+- This significantly improves file upload performance in production
+
+## 2025-01-30 10:15
+
+- Updated Neon implementation to use a fixed project ID (mute-haze-99793724)
+- Removed automatic project creation - now uses pre-existing Neon project
+- Simplified connection handling by using Neon API's getConnectionUri method
+- All datasets now share the same Neon database with dataset_id partitioning
+
+## 2025-01-30 09:00
+
+- Restructured Neon implementation to use multi-tenant architecture
+- Single shared database per region instead of one database per dataset
+- Added dataset_id column to all tables (files and sections)
+- Updated all SQL queries to filter by dataset_id
+- Created composite primary keys and foreign keys for multi-tenancy
+- Added proper indexes for efficient multi-tenant search performance
+- Supports ParadeDB (pg_search) BM25 search in AWS regions
+- Falls back to PostgreSQL full-text search in non-AWS regions
+- Significantly reduces infrastructure costs by sharing databases
+
 ## 2025-01-29 13:00
 
 - Changed default dataset provider from 'upstash' to 'neon'

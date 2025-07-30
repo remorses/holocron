@@ -157,6 +157,7 @@ describe('EyecrestClient', () => {
       5  ## Features
       6  
       7  - Type-safe API",
+        "metadata": {},
         "sha": "48ce1348bcaf391b590c42d479d4e99da0218f13",
       }
     `);
