@@ -46,6 +46,8 @@ instead of adding packages directly in package.json use `pnpm install package` i
 
 - NEVER start the development server with pnpm dev yourself. there is not reason to do so, even with &
 
+- if you encounter typescript lint errors for a npm package, read the node_modules/package/*.d.ts files to understand the typescript types of the package. If you cannot understand them, ask me to help you with it.
+
 ```ts
 // BAD. DO NOT DO THIS
 let favicon: string | undefined

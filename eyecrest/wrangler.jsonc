@@ -14,7 +14,8 @@
         "bindings": [
             { "name": "DATASETS", "class_name": "Datasets" },
             { "name": "MCP_OBJECT", "class_name": "MyMCP" },
-            { "name": "UPSTASH_VECTOR_DATASETS", "class_name": "UpstashVectorDatasets" }
+            { "name": "UPSTASH_VECTOR_DATASETS", "class_name": "UpstashVectorDatasets" },
+            { "name": "NEON_DATASETS", "class_name": "NeonDatasets" }
         ]
     },
 
@@ -42,6 +43,10 @@
         {
             "tag": "v6",
             "new_classes": ["UpstashVectorDatasets"]
+        },
+        {
+            "tag": "v7",
+            "new_classes": ["NeonDatasets"]
         }
     ],
 

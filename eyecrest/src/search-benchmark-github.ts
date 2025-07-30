@@ -26,7 +26,8 @@ await client.deleteDataset({
 await client.upsertDataset({
   datasetId,
   primaryRegion: 'weur',
-  waitForReplication: false
+  waitForReplication: false,
+  provider: 'upstash'
 });
 
 

@@ -28,6 +28,8 @@
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.9.4",
     "@modelcontextprotocol/sdk": "^1.16.0",
+    "@neondatabase/api-client": "^2.2.0",
+    "@neondatabase/serverless": "^1.0.1",
     "@upstash/vector": "^1.2.2",
     "@xmorse/tar-parser": "^0.3.0",
     "agents": "^0.0.109",

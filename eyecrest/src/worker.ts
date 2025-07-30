@@ -17,6 +17,7 @@ import { computeGitBlobSHA, verifySHA } from "./sha-utils.js";
 import { cleanMarkdownContent } from "./markdown-cleaner.js";
 import { parseTar } from "@xmorse/tar-parser";
 import { UpstashVectorDatasets } from "./vector-datasets.js";
+import { NeonDatasets } from "./neon-datasets.js";
 
 
 // Valid Cloudflare Durable Object regions
@@ -32,6 +33,7 @@ interface DatasetConfig {
   primaryRegion: DurableObjectRegion;
   orgId: string;
   replicaRegions?: DurableObjectRegion[];
+  provider?: 'sqlite' | 'upstash' | 'neon'; // Dataset storage provider (default: upstash)
 }
 
 
@@ -86,11 +88,13 @@ type SearchResultRow = {
 export interface Env {
   DATASETS: DurableObjectNamespace;
   UPSTASH_VECTOR_DATASETS: DurableObjectNamespace;
+  NEON_DATASETS: DurableObjectNamespace;
   ASSETS: Fetcher;
   EYECREST_PUBLIC_KEY: string; // RSA public key in PEM format
   EYECREST_KV: KVNamespace;
   UPSTASH_VECTOR_REST_TOKEN: string; // US index token
   UPSTASH_VECTOR_REST_TOKEN_EU?: string; // EU index token (optional, falls back to US)
+  NEON_API_KEY: string; // Neon API key for provisioning databases
 }
 
 /* ======================================================================
@@ -134,6 +138,10 @@ const UpsertDatasetRequestSchema = z.object({
     .optional()
     .default(true)
     .describe('Whether to wait for data sync to complete when adding new replicas (default: true)'),
+  provider: z.enum(['sqlite', 'upstash', 'neon'])
+    .optional()
+    .default('upstash')
+    .describe('Storage provider for the dataset (default: upstash). Cannot be changed after creation.'),
 });
 
 const GetFileContentsQuerySchema = z.object({
@@ -1318,7 +1326,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
     request: UpsertDatasetRequestSchema,
     response: z.void(),
     async handler({ request, params, state }) {
-      const { primaryRegion, replicaRegions, waitForReplication = true } = await request.json();
+      const { primaryRegion, replicaRegions, waitForReplication = true, provider = 'upstash' } = await request.json();
       const { datasetId } = params;
       const orgId = state.orgId!; // Guaranteed by middleware
 
@@ -1332,6 +1340,10 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         throw new Error(`Cannot change primary region from ${existingConfig.primaryRegion} to ${primaryRegion}. Primary region is immutable.`);
       }
 
+      if (existingConfig && existingConfig.provider && existingConfig.provider !== provider) {
+        throw new Error(`Cannot change provider from ${existingConfig.provider} to ${provider}. Provider is immutable.`);
+      }
+
       // Create new config if needed
       const region = existingConfig?.primaryRegion || primaryRegion || getClosestDurableObjectRegion({
         continent: request.cf?.continent as string | undefined,
@@ -1342,7 +1354,8 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       const config: DatasetConfig = {
         primaryRegion: region,
         orgId,
-        replicaRegions: replicaRegions || existingConfig?.replicaRegions
+        replicaRegions: replicaRegions || existingConfig?.replicaRegions,
+        provider: existingConfig?.provider || provider
       };
 
       // Save config to KV
@@ -1352,10 +1365,13 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         config
       });
 
+      // Get the appropriate namespace based on provider
+      const namespace = getDurableObjectNamespace(state.env, config.provider);
+
       // Create DO ID and stub with locationHint for primary
       const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
-      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
+      const id = namespace.idFromName(doId);
+      const stub = namespace.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       // Upsert dataset in primary DO (it will handle creating replicas)
       await stub.upsertDataset({
@@ -1382,22 +1398,12 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       const { datasetId } = params;
       const orgId = state.orgId!; // Guaranteed by middleware
 
-      // Get dataset config (must exist)
-      const config = await getDatasetConfig({
+      // Get dataset config and stub
+      const { config, stub, region } = await getDatasetStub({
+        env: state.env,
         kv: state.env.EYECREST_KV,
         datasetId
       });
-
-      if (!config) {
-        throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
-      }
-
-      const region = config.primaryRegion;
-
-      // Create DO ID and stub with locationHint
-      const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
-      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       await stub.upsertFiles({ datasetId, orgId, files, region, waitForReplication });
     },
@@ -1416,22 +1422,12 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       const { datasetId } = params;
       const orgId = state.orgId!; // Guaranteed by middleware
 
-      // Get dataset config (must exist)
-      const config = await getDatasetConfig({
+      // Get dataset config and stub
+      const { config, stub, region } = await getDatasetStub({
+        env: state.env,
         kv: state.env.EYECREST_KV,
         datasetId
       });
-
-      if (!config) {
-        throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
-      }
-
-      const region = config.primaryRegion;
-
-      // Create DO ID and stub with locationHint
-      const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
-      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       await stub.deleteFiles({ datasetId, orgId, filenames, region, waitForReplication });
     },
@@ -1448,22 +1444,12 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       const { datasetId } = params;
       const orgId = state.orgId!; // Guaranteed by middleware
 
-      // Get dataset config (must exist)
-      const config = await getDatasetConfig({
+      // Get dataset config and stub (will throw if not found)
+      const { config, stub } = await getDatasetStub({
+        env: state.env,
         kv: state.env.EYECREST_KV,
         datasetId
       });
-
-      if (!config) {
-        throw new Error(`Dataset ${datasetId} not found`);
-      }
-
-      const region = config.primaryRegion;
-
-      // Create DO ID and stub with locationHint
-      const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
-      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       // Delete from DO (which will cascade to replicas)
       await stub.deleteDataset({ datasetId, orgId });
@@ -1504,10 +1490,13 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         isReadOperation: true
       });
 
-      // Create DO ID and stub with locationHint
-      const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
-      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
+      // Get stub for the selected region
+      const { stub } = await getDatasetStub({
+        env: state.env,
+        kv: state.env.EYECREST_KV,
+        datasetId,
+        region
+      });
 
       const result = await stub.getFileContents({
         datasetId,
@@ -1567,10 +1556,13 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         isReadOperation: true
       });
 
-      // Create DO ID and stub with locationHint
-      const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
-      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region as any }) as unknown as DatasetsInterface;
+      // Get stub for the selected region
+      const { stub } = await getDatasetStub({
+        env: state.env,
+        kv: state.env.EYECREST_KV,
+        datasetId,
+        region
+      });
 
       const result = await stub.searchSections({
         datasetId,
@@ -1618,10 +1610,13 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         isReadOperation: true
       });
 
-      // Create DO ID and stub with locationHint
-      const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
-      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region as any }) as unknown as DatasetsInterface;
+      // Get stub for the selected region
+      const { stub } = await getDatasetStub({
+        env: state.env,
+        kv: state.env.EYECREST_KV,
+        datasetId,
+        region
+      });
 
       const data = await stub.searchSections({
         datasetId,
@@ -1695,10 +1690,13 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
   //       isReadOperation: true
   //     });
 
-  //     // Create DO ID and stub with locationHint
-  //     const doId = getDurableObjectId({ datasetId, region });
-  //     const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
-  //     const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
+  //     // Get stub for the selected region
+  //     const { stub } = await getDatasetStub({
+  //       env: state.env,
+  //       kv: state.env.EYECREST_KV,
+  //       datasetId,
+  //       region
+  //     });
 
   //     const tokens = await stub.getTokens({ datasetId, orgId });
 
@@ -1738,10 +1736,13 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
         isReadOperation: true
       });
 
-      // Create DO ID and stub with locationHint
-      const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
-      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
+      // Get stub for the selected region
+      const { stub } = await getDatasetStub({
+        env: state.env,
+        kv: state.env.EYECREST_KV,
+        datasetId,
+        region
+      });
 
       return await stub.getDatasetSize({ datasetId, orgId });
     },
@@ -1765,22 +1766,12 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       const { url, path, metadata, waitForReplication = true } = await request.json();
       const orgId = state.orgId!; // Guaranteed by middleware
 
-      // Get dataset config (must exist)
-      const config = await getDatasetConfig({
+      // Get dataset config and stub (primary region only for writes)
+      const { config, stub, region } = await getDatasetStub({
+        env: state.env,
         kv: state.env.EYECREST_KV,
         datasetId
       });
-
-      if (!config) {
-        throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
-      }
-
-      const region = config.primaryRegion;
-
-      // Create DO ID and stub with locationHint
-      const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
-      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       // Process the tar archive
       const result = await processTarArchive({
@@ -1824,22 +1815,12 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
       const { owner, repo, branch, path, metadata, waitForReplication = true } = await request.json();
       const orgId = state.orgId!; // Guaranteed by middleware
 
-      // Get dataset config (must exist)
-      const config = await getDatasetConfig({
+      // Get dataset config and stub (primary region only for writes)
+      const { config, stub, region } = await getDatasetStub({
+        env: state.env,
         kv: state.env.EYECREST_KV,
         datasetId
       });
-
-      if (!config) {
-        throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
-      }
-
-      const region = config.primaryRegion;
-
-      // Create DO ID and stub with locationHint
-      const doId = getDurableObjectId({ datasetId, region });
-      const id = state.env.UPSTASH_VECTOR_DATASETS.idFromName(doId);
-      const stub = state.env.UPSTASH_VECTOR_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
 
       // Build GitHub archive URL using codeload subdomain to avoid redirect
       const url = `https://codeload.github.com/${owner}/${repo}/tar.gz/refs/heads/${branch}`;
@@ -2017,6 +1998,46 @@ interface GetDurableObjectIdArgs {
 
 function getDurableObjectId({ datasetId, region, shard = 0 }: GetDurableObjectIdArgs): string {
   return `${region}.${shard}.${datasetId}`;
+}
+
+// Get the appropriate Durable Object namespace based on provider
+function getDurableObjectNamespace(env: Env, provider: DatasetConfig['provider']): DurableObjectNamespace {
+  switch (provider) {
+    case 'sqlite':
+      return env.DATASETS;
+    case 'neon':
+      return env.NEON_DATASETS;
+    case 'upstash':
+    default:
+      return env.UPSTASH_VECTOR_DATASETS;
+  }
+}
+
+// Helper to get dataset config and create DO stub
+interface GetDatasetStubArgs {
+  env: Env;
+  kv: KVNamespace;
+  datasetId: string;
+  region?: DurableObjectRegion;
+}
+
+async function getDatasetStub({ env, kv, datasetId, region }: GetDatasetStubArgs): Promise<{
+  config: DatasetConfig;
+  stub: DatasetsInterface;
+  region: DurableObjectRegion;
+}> {
+  const config = await getDatasetConfig({ kv, datasetId });
+  if (!config) {
+    throw new Error(`Dataset ${datasetId} not found. Please create the dataset first using POST /v1/datasets/${datasetId}`);
+  }
+
+  const targetRegion = region || config.primaryRegion;
+  const namespace = getDurableObjectNamespace(env, config.provider);
+  const doId = getDurableObjectId({ datasetId, region: targetRegion });
+  const id = namespace.idFromName(doId);
+  const stub = namespace.get(id, { locationHint: targetRegion }) as unknown as DatasetsInterface;
+
+  return { config, stub, region: targetRegion };
 }
 
 interface GetClosestAvailableRegionArgs {
@@ -2262,7 +2283,7 @@ async function processTarArchive({
 export { app };
 
 // Export Durable Object classes
-export { UpstashVectorDatasets };
+export { UpstashVectorDatasets, NeonDatasets };
 
 export default {
   fetch: (req: Request, env: Env, ctx: ExecutionContext) =>

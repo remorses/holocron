@@ -1,5 +1,23 @@
 # Changelog
 
+## 2025-01-29 12:00
+
+- Created new `NeonDatasets` durable object implementation using Neon serverless Postgres
+- Implements same `DatasetsInterface` for compatibility with other providers  
+- Provisions separate Neon database for each dataset/namespace
+- Uses PostgreSQL's built-in full-text search with GIN indexes and ts_rank
+- Maps Cloudflare regions to closest Neon regions (US, EU, Asia)
+- Added provider selection to dataset creation API
+- `provider` field in `UpsertDatasetRequestSchema` accepts 'sqlite', 'upstash', or 'neon' (default: 'upstash')
+- Provider is immutable after dataset creation
+- Created `getDurableObjectNamespace()` helper to select appropriate DO based on provider
+- Created `getDatasetStub()` helper to simplify route handlers
+- Updated all routes to use provider-based namespace selection
+- Added NEON_DATASETS binding and NEON_API_KEY to environment interface
+- Added v7 migration in wrangler.jsonc for NeonDatasets class
+- Fixed TypeScript errors by properly handling Neon SQL query result types
+- Successfully tested Neon implementation with file upload, search, and retrieval
+
 ## 2025-01-29 11:00
 
 - Created new `UpstashVectorDatasets` durable object implementation using Upstash Vector for search
