@@ -114,7 +114,7 @@
         "sentries": "^0.2.2",
         "shiki": "^3.6.0",
         "sonner": "^2.0.5",
-        "spiceflow": "^1.17.6",
+        "spiceflow": "^1.17.7",
         "string-dedent": "^3.0.1",
         "stripe": "^18.2.1",
         "tailwind-merge": "^3.3.1",

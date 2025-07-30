@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic'
-import { preventProcessExitIfBusy } from 'spiceflow/'
+import { AnySpiceflow, preventProcessExitIfBusy } from 'spiceflow'
 
 import dedent from 'string-dedent'
 import {
@@ -58,7 +58,7 @@ import agentPrompt from '../prompts/agent.md?raw'
 import createSitePrompt from '../prompts/create-site.md?raw'
 import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
-import { preventProcessExitIfBusy } from 'docs-website/src/lib/graceful-shutdown'
+
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 function onboardSpecificPrompt() {

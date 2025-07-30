@@ -38,7 +38,7 @@
     "jose": "^6.0.12",
     "jump-gouache": "^2.1.1",
     "marked": "^15.0.12",
-    "spiceflow": "^1.17.6",
+    "spiceflow": "^1.17.7",
     "zod": "^4.0.5"
   }
 }
