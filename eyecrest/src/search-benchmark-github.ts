@@ -19,10 +19,10 @@ console.log(`\n📊 Starting benchmark with dataset: ${datasetId}`);
 console.log('🔧 Creating dataset with primary region: weur');
 const upsertStartTime = Date.now();
 
-await client.deleteDataset({
-  datasetId,
+// await client.deleteDataset({
+//   datasetId,
 
-}).catch(() => null);
+// }).catch(() => null);
 await client.upsertDataset({
   datasetId,
   primaryRegion: 'weur',

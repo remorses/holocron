@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-01-29 13:00
+
+- Changed default dataset provider from 'upstash' to 'neon'
+- Updated both schema default and runtime default to use Neon
+- Neon provides better full-text search capabilities with PostgreSQL
+
 ## 2025-01-29 12:00
 
 - Created new `NeonDatasets` durable object implementation using Neon serverless Postgres
@@ -8,7 +14,7 @@
 - Uses PostgreSQL's built-in full-text search with GIN indexes and ts_rank
 - Maps Cloudflare regions to closest Neon regions (US, EU, Asia)
 - Added provider selection to dataset creation API
-- `provider` field in `UpsertDatasetRequestSchema` accepts 'sqlite', 'upstash', or 'neon' (default: 'upstash')
+- `provider` field in `UpsertDatasetRequestSchema` accepts 'sqlite', 'upstash', or 'neon' (default: 'neon')
 - Provider is immutable after dataset creation
 - Created `getDurableObjectNamespace()` helper to select appropriate DO based on provider
 - Created `getDatasetStub()` helper to simplify route handlers

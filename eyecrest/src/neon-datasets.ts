@@ -1,5 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
-import { createApiClient } from '@neondatabase/api-client';
+import { createApiClient, EndpointType } from '@neondatabase/api-client';
 import { neon } from '@neondatabase/serverless';
 import { z } from "zod";
 import Slugger from "github-slugger";
@@ -113,7 +113,7 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
       const { data: endpointData } = await api.createProjectEndpoint(project.id, {
         endpoint: {
           branch_id: branch.id,
-          type: 'read_write' as any,
+          type: EndpointType.ReadWrite,
           region_id: project.region_id,
           autoscaling_limit_min_cu: 0.25,
           autoscaling_limit_max_cu: 0.25
@@ -269,7 +269,7 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
             try {
               const replicaDoId = getDurableObjectId({ datasetId, region: replicaRegion as DurableObjectRegion });
               const replicaId = this.env.NEON_DATASETS.idFromName(replicaDoId);
-              const replicaStub = this.env.NEON_DATASETS.get(replicaId, { locationHint: replicaRegion as DurableObjectRegion }) as any;
+              const replicaStub = this.env.NEON_DATASETS.get(replicaId, { locationHint: replicaRegion as DurableObjectRegion }) as unknown as DatasetsInterface;
               
               await replicaStub.upsertDataset({
                 datasetId,
@@ -317,9 +317,9 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
       // Check if file exists and SHA matches
       const existing = await sql`
         SELECT sha FROM files WHERE filename = ${file.filename}
-      `;
+      ` as { sha: string }[];
       
-      if ((existing as any[]).length > 0 && (existing as any[])[0].sha === computedSHA) {
+      if (existing.length > 0 && existing[0].sha === computedSHA) {
         continue; // Skip unchanged files
       }
       
@@ -510,10 +510,10 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
         SELECT filename, content, sha, metadata, weight
         FROM files
         ORDER BY filename
-      `;
+      ` as { filename: string; content: string; sha: string; metadata: any; weight: number }[];
       
       return {
-        files: (files as any[]).map(f => ({
+        files: files.map(f => ({
           filename: f.filename,
           content: f.content,
           sha: f.sha,
@@ -532,13 +532,13 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
       SELECT filename, content, sha, metadata, weight
       FROM files
       WHERE filename = ${filePath}
-    `;
+    ` as { filename: string; content: string; sha: string; metadata: any; weight: number }[];
     
-    if (!result || (result as any[]).length === 0) {
+    if (!result || result.length === 0) {
       throw new Error(`File not found: ${filePath} in dataset ${datasetId}`);
     }
     
-    let content = (result as any[])[0].content;
+    let content = result[0].content;
     
     // Apply line formatting if requested
     if (showLineNumbers || start !== undefined || end !== undefined) {
@@ -547,11 +547,11 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
     
     return {
       files: [{
-        filename: (result as any[])[0].filename,
+        filename: result[0].filename,
         content,
-        sha: (result as any[])[0].sha,
-        metadata: (result as any[])[0].metadata,
-        weight: (result as any[])[0].weight
+        sha: result[0].sha,
+        metadata: result[0].metadata,
+        weight: result[0].weight
       }]
     };
   }
@@ -597,10 +597,19 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
       ORDER BY score DESC
       LIMIT ${limit}
       OFFSET ${offset}
-    `;
+    ` as {
+      filename: string;
+      section_slug: string;
+      content: string;
+      start_line: number;
+      section_weight: number;
+      file_weight: number;
+      file_metadata: any;
+      score: number;
+    }[];
     
-    const hasNext = (results as any[]).length > perPage;
-    const items = (results as any[]).slice(0, perPage);
+    const hasNext = results.length > perPage;
+    const items = results.slice(0, perPage);
     
     const formattedResults = items.map(r => ({
       filename: r.filename,
@@ -644,7 +653,12 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
         COALESCE(SUM(LENGTH(f.metadata::text)), 0)::text as metadata_size
       FROM files f
       LEFT JOIN sections s ON f.filename = s.filename
-    `;
+    ` as {
+      file_count: string;
+      section_count: string;
+      content_size: string;
+      metadata_size: string;
+    }[];
     
     const result = stats[0] || { file_count: '0', section_count: '0', content_size: '0', metadata_size: '0' };
     const totalSize = Number(result.content_size) + Number(result.metadata_size);
@@ -671,7 +685,7 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
       // Create primary stub
       const primaryDoId = getDurableObjectId({ datasetId, region: primaryRegion as DurableObjectRegion });
       const primaryId = this.env.NEON_DATASETS.idFromName(primaryDoId);
-      const primaryStub = this.env.NEON_DATASETS.get(primaryId, { locationHint: primaryRegion as DurableObjectRegion }) as any;
+      const primaryStub = this.env.NEON_DATASETS.get(primaryId, { locationHint: primaryRegion as DurableObjectRegion }) as unknown as DatasetsInterface;
       
       // Get all data from primary
       const result = await primaryStub.getFileContents({ datasetId, orgId, getAllFiles: true });
@@ -717,7 +731,7 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
     return info?.primaryRegion === this.doRegion;
   }
 
-  private async getReplicaStubs(datasetId: string): Promise<Array<{ region: DurableObjectRegion; stub: any }>> {
+  private async getReplicaStubs(datasetId: string): Promise<Array<{ region: DurableObjectRegion; stub: DatasetsInterface }>> {
     if (!(await this.isPrimary()) || this.replicaRegions.length === 0) {
       return [];
     }
@@ -725,7 +739,7 @@ export class NeonDatasets extends DurableObject implements DatasetsInterface {
     return this.replicaRegions.map(region => {
       const doId = getDurableObjectId({ datasetId, region });
       const id = this.env.NEON_DATASETS.idFromName(doId);
-      const stub = this.env.NEON_DATASETS.get(id, { locationHint: region });
+      const stub = this.env.NEON_DATASETS.get(id, { locationHint: region }) as unknown as DatasetsInterface;
       return { region, stub };
     });
   }

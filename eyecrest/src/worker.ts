@@ -33,7 +33,7 @@ interface DatasetConfig {
   primaryRegion: DurableObjectRegion;
   orgId: string;
   replicaRegions?: DurableObjectRegion[];
-  provider?: 'sqlite' | 'upstash' | 'neon'; // Dataset storage provider (default: upstash)
+  provider?: 'sqlite' | 'upstash' | 'neon'; // Dataset storage provider (default: neon)
 }
 
 
@@ -140,8 +140,8 @@ const UpsertDatasetRequestSchema = z.object({
     .describe('Whether to wait for data sync to complete when adding new replicas (default: true)'),
   provider: z.enum(['sqlite', 'upstash', 'neon'])
     .optional()
-    .default('upstash')
-    .describe('Storage provider for the dataset (default: upstash). Cannot be changed after creation.'),
+    .default('neon')
+    .describe('Storage provider for the dataset (default: neon). Cannot be changed after creation.'),
 });
 
 const GetFileContentsQuerySchema = z.object({
@@ -1326,7 +1326,7 @@ const app = new Spiceflow({disableSuperJsonUnlessRpc: true})
     request: UpsertDatasetRequestSchema,
     response: z.void(),
     async handler({ request, params, state }) {
-      const { primaryRegion, replicaRegions, waitForReplication = true, provider = 'upstash' } = await request.json();
+      const { primaryRegion, replicaRegions, waitForReplication = true, provider = 'neon' } = await request.json();
       const { datasetId } = params;
       const orgId = state.orgId!; // Guaranteed by middleware
 
