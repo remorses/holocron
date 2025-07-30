@@ -577,6 +577,17 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
 
             selectText: tool({
                 inputSchema: selectTextInputSchema,
+                description: dedent`
+                Select a range of lines inside a page to highlight some content for the user.
+
+                Always use this tool when the user asks you to search something in the website.
+
+                This tool is only useful as a way to highlight information to the user. It has no actual effect other than presentational, you should not use it unless the user is asking to search something in the website.
+
+                This is the preferred way to show information to the user instead of quoting the page again in a message.
+
+                Your messages should always be super short and concise.
+                `,
                 execute: async ({ slug, startLine, endLine }) => {
                     const cleanedSlug = cleanSlug(slug)
                     const slugParts = cleanedSlug.split('/').filter(Boolean)

@@ -3,11 +3,14 @@
 import React, { lazy, Suspense } from 'react'
 import { prefetchDNS, preconnect } from 'react-dom'
 import { useHydrated } from './hooks'
+import { lucideVersion } from './utils'
 
 // simple in-memory cache so every icon is fetched only once
 const cache: Record<string, React.ComponentType<any>> = {}
 
 type DynamicIconProps = { icon?: string } & React.SVGProps<SVGSVGElement>
+
+
 
 export function DynamicIconInner({ icon: name, ...rest }: DynamicIconProps) {
     prefetchDNS('https://esm.sh')
@@ -20,7 +23,7 @@ export function DynamicIconInner({ icon: name, ...rest }: DynamicIconProps) {
         (cache[name] = lazy(() =>
             import(
                 /* @vite-ignore */
-                `https://esm.sh/lucide-react@0.525.0/es2022/dist/esm/icons/${name}.mjs`
+                `https://esm.sh/lucide-react@${lucideVersion}/es2022/dist/esm/icons/${name}.mjs`
             ).catch((e) => ({ default: EmptyIcon })),
         ))
 

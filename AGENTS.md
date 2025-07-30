@@ -2,6 +2,8 @@ when summarizing changes at the end of the message be super short, a few words a
 
 Please ask questions and confirm assumptions before generating complex architecture code.
 
+NEVER run command with & at the end to run them in the background. This is leaky and harmful! Instead ask me to run commands in the background if needed.
+
 # package manager: pnpm with workspace
 
 This project uses pnpm workspaces to manage dependencies. Important scripts are in the root package.json or various packages package.json
@@ -130,6 +132,8 @@ in typescript never use process.env directly, instead find the closes `env.ts` f
 # react router v7
 
 the website uses react-router v7.
+
+NEVER start the dev server yourself with `pnpm dev`, instead ask me to do so.
 
 React-router framework is the successor of Remix, it is basically the same framework and it uses loaders and actions as core features.
 

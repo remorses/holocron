@@ -215,3 +215,6 @@ export function getDocsJson({ filesInDraft, docsJson }): DocsJsonType {
         return docsJson
     }
 }
+
+
+export const lucideVersion = '0.525.0'

@@ -11,7 +11,7 @@ import type {
 import { isRouteErrorResponse, ServerRouter } from 'react-router'
 import { notifyError } from './lib/errors'
 
-export const streamTimeout = 60 * 20 * 1_000
+export const streamTimeout = 60 * 30 * 1_000
 
 export default function handleRequest(
     request: Request,
