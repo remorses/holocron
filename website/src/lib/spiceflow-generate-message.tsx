@@ -1,4 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic'
+import { preventProcessExitIfBusy } from 'spiceflow/'
+
 import dedent from 'string-dedent'
 import {
     OpenAIResponsesProviderOptions,
@@ -56,6 +58,7 @@ import agentPrompt from '../prompts/agent.md?raw'
 import createSitePrompt from '../prompts/create-site.md?raw'
 import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
+import { preventProcessExitIfBusy } from 'docs-website/src/lib/graceful-shutdown'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 function onboardSpecificPrompt() {
@@ -152,7 +155,10 @@ export type WebsiteTools = {
     }
 }
 
-export const generateMessageApp = new Spiceflow().state('userId', '').route({
+export const generateMessageApp = new Spiceflow()
+    .use(preventProcessExitIfBusy())
+    .state('userId', '')
+    .route({
     method: 'POST',
     path: '/generateMessage',
     request: z.object({
@@ -172,9 +178,9 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             branchId,
             filesInDraft,
         } = await request.json()
-        // First, check if the user can access the requested branch
-        // Fetch branch and chat in parallel for efficiency
-        const [branch, chat, pageCount] = await Promise.all([
+            // First, check if the user can access the requested branch
+            // Fetch branch and chat in parallel for efficiency
+            const [branch, chat, pageCount] = await Promise.all([
             prisma.siteBranch.findFirst({
                 where: {
                     branchId,

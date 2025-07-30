@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-01-30 11:00
+
+- Created reusable graceful shutdown middleware using Spiceflow middleware pattern
+- Migrated from manual request counting to middleware-based approach
+- Process gracefully waits for active requests with configurable timeout
+
 ## 2025-01-26 20:30
 
 - Added toolCallId prop to Dot component for showing pulse animation on pending tool calls

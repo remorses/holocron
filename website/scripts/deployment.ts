@@ -48,6 +48,7 @@ async function main() {
         minInstances: 1,
         forceHttps: false,
         maxInstances: 1,
+        kill_timeout: 300,
         healthCheckPath: '/api/health',
         memorySize: '1gb',
         machineType: 'shared-cpu-2x',

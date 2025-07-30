@@ -39,7 +39,7 @@ async function main() {
         memorySize: '1gb',
         machineType: 'shared-cpu-2x',
         depot: true,
-
+        kill_timeout: 300,
         env: {
             ...env,
             NODE_ENV: 'production',

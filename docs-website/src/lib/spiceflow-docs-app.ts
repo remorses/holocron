@@ -14,7 +14,7 @@ import { Spiceflow } from 'spiceflow'
 import z from 'zod'
 import agentPrompt from '../prompts/docs-agent.md?raw'
 import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
-
+import { preventProcessExitIfBusy } from 'spiceflow'
 import { notifyError } from './errors'
 import { getFilesForSource } from './source.server'
 import {
@@ -43,9 +43,11 @@ import {
 } from './edit-tool'
 import { FileSystemEmulator } from 'website/src/lib/file-system-emulator'
 
+
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
 export const docsApp = new Spiceflow({ basePath: '/api' })
+    .use(preventProcessExitIfBusy())
     .route({
         method: 'POST',
         path: '/generateMessage',

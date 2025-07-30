@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-01-30
+
+- Added graceful shutdown middleware for Spiceflow apps
+- Created `preventProcessExitIfBusy` function with configurable wait times
+- Applied middleware to docsApp to handle SIGINT/SIGTERM gracefully
+
 ## 2025-01-27
 
 - Implement custom Link and navigate components that preserve search query parameters during navigation
