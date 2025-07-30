@@ -79,9 +79,6 @@ export function startWebSocketWithTunnel(existingWebsocketId?: string) {
                     `WebSocket closed during connection: ${code} - ${reason}`,
                 )
                 reject(error)
-                return
-
-                console.log('Upstream WebSocket closed')
             })
 
             // Graceful shutdown

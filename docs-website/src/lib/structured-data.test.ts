@@ -6,8 +6,6 @@ describe('structuredData', () => {
     test('structuredData processes MDX with various node types', async () => {
         const processor = getProcessor({
             extension: 'mdx',
-            highlighter: undefined,
-            onMissingLanguage: undefined,
         })
 
         // Test basic MDX with frontmatter, headings, and text
@@ -137,8 +135,6 @@ this is another paragraph in the same subsection 2
     test('processes MDX with admonitions and code tabs', async () => {
         const processor = getProcessor({
             extension: 'mdx',
-            highlighter: undefined,
-            onMissingLanguage: undefined,
         })
 
         const admonitionMdx = `---
@@ -760,8 +756,6 @@ npm install package
     test('processes markdown file extension', async () => {
         const processor = getProcessor({
             extension: 'md',
-            highlighter: undefined,
-            onMissingLanguage: undefined,
         })
 
         const markdownContent = `---
@@ -1232,8 +1226,6 @@ def hello():
     test('processes MDX with install blocks and mermaid', async () => {
         const processor = getProcessor({
             extension: 'mdx',
-            highlighter: undefined,
-            onMissingLanguage: undefined,
         })
 
         const complexMdx = `---
@@ -2060,8 +2052,6 @@ This is an accordion item with content.
     test('processes empty MDX document', async () => {
         const processor = getProcessor({
             extension: 'mdx',
-            highlighter: undefined,
-            onMissingLanguage: undefined,
         })
 
         const emptyMdx = `---
@@ -2120,8 +2110,6 @@ title: "Empty Document"
     test('processes MDX without frontmatter', async () => {
         const processor = getProcessor({
             extension: 'mdx',
-            highlighter: undefined,
-            onMissingLanguage: undefined,
         })
 
         const noFrontmatterMdx = `# Document Without Frontmatter

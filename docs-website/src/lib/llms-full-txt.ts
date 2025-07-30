@@ -64,6 +64,7 @@ export async function generateLlmsFullTxt({
         const files = await getFilesForSource({
             branchId: siteBranch.branchId,
             githubFolder: site.githubFolder || '',
+            filesInDraft: {},
         })
         const source = getFumadocsSource({
             defaultLanguage: site.defaultLocale,
@@ -98,7 +99,10 @@ export async function generateLlmsFullTxt({
 
             // Create a map for quick lookup
             const pageContentMap = new Map(
-                markdownPages.map((page) => [page.slug, page.content?.markdown ||'']),
+                markdownPages.map((page) => [
+                    page.slug,
+                    page.content?.markdown || '',
+                ]),
             )
 
             // Add each page in the batch

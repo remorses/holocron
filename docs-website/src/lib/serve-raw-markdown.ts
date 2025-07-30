@@ -49,6 +49,7 @@ export async function serveRawMarkdown({
     const files = await getFilesForSource({
         branchId: siteBranch.branchId,
         githubFolder: siteBranch.site?.githubFolder || '',
+        filesInDraft: {},
     })
     const source = getFumadocsSource({
         defaultLanguage: site.defaultLocale,
@@ -110,7 +111,12 @@ export async function serveRawMarkdown({
         ])
         const markdown = indexPage?.content?.markdown || null
         if (markdown) {
-            const formattedMarkdown = formatFileWithLines(markdown, showLineNumbers, startLine, endLine)
+            const formattedMarkdown = formatFileWithLines(
+                markdown,
+                showLineNumbers,
+                startLine,
+                endLine,
+            )
             const cacheTag = getCacheTagForPage({
                 branchId: siteBranch.branchId,
                 slug: indexPage?.slug || '/',
@@ -125,7 +131,12 @@ export async function serveRawMarkdown({
         return null
     }
 
-    const formattedMarkdown = formatFileWithLines(page.content?.markdown ||'', showLineNumbers, startLine, endLine)
+    const formattedMarkdown = formatFileWithLines(
+        page.content?.markdown || '',
+        showLineNumbers,
+        startLine,
+        endLine,
+    )
     const cacheTag = getCacheTagForPage({
         branchId: siteBranch.branchId,
         slug: page.slug,
@@ -159,7 +170,8 @@ function formatFileWithLines(
     const hasContentBelow = actualEnd < lines.length
 
     // Show line numbers if requested or if line ranges are specified
-    const shouldShowLineNumbers = showLineNumbers || startLine !== undefined || endLine !== undefined
+    const shouldShowLineNumbers =
+        showLineNumbers || startLine !== undefined || endLine !== undefined
 
     // Add line numbers if requested
     if (shouldShowLineNumbers) {
@@ -167,12 +179,11 @@ function formatFileWithLines(
         const maxLineNumber = startLineNumber + filteredLines.length - 1
         const padding = maxLineNumber.toString().length
 
-        const formattedLines = filteredLines
-            .map((line, index) => {
-                const lineNumber = startLineNumber + index
-                const paddedNumber = lineNumber.toString().padStart(padding, ' ')
-                return `${paddedNumber}  ${line}`
-            })
+        const formattedLines = filteredLines.map((line, index) => {
+            const lineNumber = startLineNumber + index
+            const paddedNumber = lineNumber.toString().padStart(padding, ' ')
+            return `${paddedNumber}  ${line}`
+        })
 
         // Add end of file indicator if at the end
         const result: string[] = []

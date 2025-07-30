@@ -1,10 +1,10 @@
 import type { DocsJsonType } from 'docs-website/src/lib/docs-json.js'
-import os from 'os'
+import os from 'node:os'
 import JSONC from 'tiny-jsonc'
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
-import { execSync } from 'child_process'
+import { execSync } from 'node:child_process'
 
 export async function readTopLevelDocsJson(dir) {
     const docsJsonPath = path.resolve(dir, 'fumabase.jsonc')
@@ -35,7 +35,9 @@ export async function getCurrentGitBranch(): Promise<string | undefined> {
         } catch {
             // No commits yet, check if we're on a branch
             try {
-                const branch = execSync('git symbolic-ref --short HEAD', { encoding: 'utf-8' }).trim()
+                const branch = execSync('git symbolic-ref --short HEAD', {
+                    encoding: 'utf-8',
+                }).trim()
                 return branch
             } catch {
                 return undefined
@@ -43,7 +45,9 @@ export async function getCurrentGitBranch(): Promise<string | undefined> {
         }
 
         // Normal case: get current branch
-        const branch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf-8' }).trim()
+        const branch = execSync('git rev-parse --abbrev-ref HEAD', {
+            encoding: 'utf-8',
+        }).trim()
         return branch === 'HEAD' ? undefined : branch
     } catch (e) {
         return undefined
@@ -83,7 +87,9 @@ export function safeParseJson<T = any>(str: string): T | undefined {
 
 export function getGitRepoRoot(): string | undefined {
     try {
-        const repoRoot = execSync('git rev-parse --show-toplevel', { encoding: 'utf-8' }).trim()
+        const repoRoot = execSync('git rev-parse --show-toplevel', {
+            encoding: 'utf-8',
+        }).trim()
         return path.resolve(repoRoot)
     } catch {
         return undefined
@@ -92,16 +98,20 @@ export function getGitRepoRoot(): string | undefined {
 
 export function getGitRemoteUrl(): string | undefined {
     try {
-        return execSync('git remote get-url origin', { encoding: 'utf-8' }).trim()
+        return execSync('git remote get-url origin', {
+            encoding: 'utf-8',
+        }).trim()
     } catch {
         return undefined
     }
 }
 
-export function getGitHubInfo(): { githubOwner: string; githubRepo: string; name: string } | undefined {
+export function getGitHubInfo():
+    | { githubOwner: string; githubRepo: string; name: string }
+    | undefined {
     const remoteUrl = getGitRemoteUrl()
     if (!remoteUrl) return undefined
-    
+
     const match = remoteUrl.match(/github\.com[\/:]([^\/]+)\/([^\/\.]+)/)
     if (match) {
         return {
@@ -113,24 +123,34 @@ export function getGitHubInfo(): { githubOwner: string; githubRepo: string; name
     return undefined
 }
 
-export function checkGitStatus(): { hasUncommittedChanges: boolean; hasUnpushedCommits: boolean; error?: string } {
+export function checkGitStatus(): {
+    hasUncommittedChanges: boolean
+    hasUnpushedCommits: boolean
+    error?: string
+} {
     try {
         // Check for uncommitted changes using porcelain format for machine readable output
-        const gitStatus = execSync('git status --porcelain', { encoding: 'utf-8' }).trim()
+        const gitStatus = execSync('git status --porcelain', {
+            encoding: 'utf-8',
+        }).trim()
         const hasUncommittedChanges = gitStatus.length > 0
 
         // Check for unpushed commits
         let hasUnpushedCommits = false
         try {
-            const currentBranch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf-8' }).trim()
+            const currentBranch = execSync('git rev-parse --abbrev-ref HEAD', {
+                encoding: 'utf-8',
+            }).trim()
             if (currentBranch && currentBranch !== 'HEAD') {
                 // Check if remote branch exists
                 try {
-                    execSync(`git rev-parse --verify origin/${currentBranch}`, { stdio: 'ignore' })
+                    execSync(`git rev-parse --verify origin/${currentBranch}`, {
+                        stdio: 'ignore',
+                    })
                     // Remote branch exists, check for unpushed commits
                     const unpushedCommits = execSync(
                         `git log origin/${currentBranch}..${currentBranch} --oneline`,
-                        { encoding: 'utf-8' }
+                        { encoding: 'utf-8' },
                     ).trim()
                     hasUnpushedCommits = unpushedCommits.length > 0
                 } catch {
@@ -140,11 +160,19 @@ export function checkGitStatus(): { hasUncommittedChanges: boolean; hasUnpushedC
             }
         } catch (e) {
             // Could not determine branch or remote status
-            return { hasUncommittedChanges, hasUnpushedCommits: false, error: 'Could not check remote branch status' }
+            return {
+                hasUncommittedChanges,
+                hasUnpushedCommits: false,
+                error: 'Could not check remote branch status',
+            }
         }
 
         return { hasUncommittedChanges, hasUnpushedCommits }
     } catch (e) {
-        return { hasUncommittedChanges: false, hasUnpushedCommits: false, error: e.message }
+        return {
+            hasUncommittedChanges: false,
+            hasUnpushedCommits: false,
+            error: e.message,
+        }
     }
 }

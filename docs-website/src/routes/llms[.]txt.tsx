@@ -1,6 +1,6 @@
 import { prisma } from 'db'
 import type { Route } from './+types/llms[.]txt'
-import { getFilesForSource,  } from '../lib/source.server'
+import { getFilesForSource } from '../lib/source.server'
 import { getFumadocsSource } from '../lib/source'
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -39,6 +39,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     const files = await getFilesForSource({
         branchId: siteBranch.branchId,
         githubFolder: siteBranch.site?.githubFolder || '',
+        filesInDraft: {},
     })
     const source = getFumadocsSource({
         defaultLanguage: site.defaultLocale,

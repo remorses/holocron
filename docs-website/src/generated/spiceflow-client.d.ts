@@ -54,7 +54,7 @@ export declare const apiClient: {
                 import('spiceflow/client').SpiceflowClient.ClientResponse<{
                     200: {
                         success: boolean
-                        content: string
+                        content: string | undefined
                     }
                 }>
             >
@@ -62,14 +62,14 @@ export declare const apiClient: {
         generateMessage: {
             post: (
                 request: {
-                    branchId: string
-                    siteId: string
                     messages: import('ai').UIMessage<
                         unknown,
                         import('ai').UIDataTypes,
                         import('ai').UITools
                     >[]
+                    siteId: string
                     chatId: string
+                    branchId: string
                     currentSlug: string
                     filesInDraft: Record<
                         string,
@@ -91,114 +91,13 @@ export declare const apiClient: {
             ) => Promise<
                 import('spiceflow/client').SpiceflowClient.ClientResponse<{
                     200: AsyncGenerator<
-                        | {
-                              type: 'text-start'
-                              id: string
-                          }
-                        | {
-                              type: 'text-delta'
-                              delta: string
-                              id: string
-                          }
-                        | {
-                              type: 'text-end'
-                              id: string
-                          }
-                        | {
-                              type: 'reasoning-start'
-                              id: string
-                              providerMetadata?: import('ai').ProviderMetadata
-                          }
-                        | {
-                              type: 'reasoning-delta'
-                              id: string
-                              delta: string
-                              providerMetadata?: import('ai').ProviderMetadata
-                          }
-                        | {
-                              type: 'reasoning-end'
-                              id: string
-                              providerMetadata?: import('ai').ProviderMetadata
-                          }
-                        | {
-                              type: 'error'
-                              errorText: string
-                          }
-                        | {
-                              type: 'tool-input-available'
-                              toolCallId: string
-                              toolName: string
-                              input: unknown
-                              providerExecuted?: boolean
-                          }
-                        | {
-                              type: 'tool-output-available'
-                              toolCallId: string
-                              output: unknown
-                              providerExecuted?: boolean
-                          }
-                        | {
-                              type: 'tool-output-error'
-                              toolCallId: string
-                              errorText: string
-                              providerExecuted?: boolean
-                          }
-                        | {
-                              type: 'tool-input-start'
-                              toolCallId: string
-                              toolName: string
-                              providerExecuted?: boolean
-                          }
-                        | {
-                              type: 'tool-input-delta'
-                              toolCallId: string
-                              inputTextDelta: string
-                          }
-                        | {
-                              type: 'source-url'
-                              sourceId: string
-                              url: string
-                              title?: string
-                              providerMetadata?: import('ai').ProviderMetadata
-                          }
-                        | {
-                              type: 'source-document'
-                              sourceId: string
-                              mediaType: string
-                              title: string
-                              filename?: string
-                              providerMetadata?: import('ai').ProviderMetadata
-                          }
-                        | {
-                              type: 'file'
-                              url: string
-                              mediaType: string
-                          }
-                        | {
-                              type: 'start-step'
-                          }
-                        | {
-                              type: 'finish-step'
-                          }
-                        | {
-                              type: `data-${string}`
-                              id?: string
-                              data: unknown
-                              transient?: boolean
-                          }
-                        | {
-                              type: 'start'
-                              messageId?: string
-                              messageMetadata?: unknown
-                          }
-                        | {
-                              type: 'finish'
-                              messageMetadata?: unknown
-                          }
-                        | {
-                              type: 'message-metadata'
-                              messageMetadata: unknown
-                          },
+                        import('ai').InferUIMessageChunk<
+                            import('ai').UIMessage<
+                                unknown,
+                                import('ai').UIDataTypes,
+                                import('ai').UITools
+                            >
+                        >,
                         void,
                         any
                     >
@@ -285,10 +184,10 @@ export declare const apiClient: {
         submitRateFeedback: {
             post: (
                 request: {
-                    message: string
                     branchId: string
                     url: string
                     opinion: 'good' | 'bad'
+                    message: string
                 },
                 options?:
                     | {
@@ -367,6 +266,36 @@ export declare const apiClient: {
                 }>
             >
         }
+        saveChangesForChat: {
+            post: (
+                request: {
+                    branchId: string
+                    chatId: string
+                    filesInDraft: Record<
+                        string,
+                        {
+                            githubPath: string
+                            content: string | null
+                            addedLines?: number | undefined
+                            deletedLines?: number | undefined
+                        }
+                    >
+                },
+                options?:
+                    | {
+                          headers?: Record<string, unknown> | undefined
+                          query?: Record<string, unknown> | undefined
+                          fetch?: RequestInit | undefined
+                      }
+                    | undefined,
+            ) => Promise<
+                import('spiceflow/client').SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean
+                    }
+                }>
+            >
+        }
         getCliSession: {
             post: (
                 request: {
@@ -404,24 +333,24 @@ export declare const apiClient: {
             post: (
                 request: {
                     name: string
-                    orgId: string
                     files: {
                         relativePath: string
                         contents: string
+                        downloadUrl?: string | undefined
                         metadata?:
                             | {
                                   width?: number | undefined
                                   height?: number | undefined
                               }
                             | undefined
-                        downloadUrl?: string | undefined
                     }[]
-                    siteId?: string | undefined
-                    githubBranch?: string | undefined
-                    githubFolder?: string | undefined
+                    orgId: string
                     githubOwner?: string | undefined
                     githubRepo?: string | undefined
                     githubRepoId?: number | undefined
+                    githubBranch?: string | undefined
+                    githubFolder?: string | undefined
+                    siteId?: string | undefined
                 },
                 options?:
                     | {
@@ -444,13 +373,13 @@ export declare const apiClient: {
                             errorMessage: string
                             errorType: import('db/src/generated/enums').MarkdownPageSyncErrorType
                         }[]
+                        githubFolder?: string | undefined
+                        orgId?: string | undefined
                         createdAt?: Date | undefined
                         name?: string | null | undefined
-                        orgId?: string | undefined
                         defaultLocale?: string | undefined
-                        githubFolder?: string | undefined
-                        githubOwner?: string | undefined
-                        githubRepo?: string | undefined
+                        githubOwner?: string | null | undefined
+                        githubRepo?: string | null | undefined
                         githubRepoId?: number | undefined
                     }
                 }>
@@ -471,14 +400,14 @@ export declare const apiClient: {
                         success: boolean
                         files: (
                             | {
-                                  contents: string
-                                  relativePath: string
-                                  downloadUrl?: undefined
+                                  content: string
+                                  filePath: string
+                                  encoding?: undefined
                               }
                             | {
-                                  contents: string
-                                  relativePath: string
-                                  downloadUrl: string
+                                  content: string
+                                  filePath: string
+                                  encoding: string
                               }
                         )[]
                     }
@@ -529,7 +458,7 @@ export declare const apiClient: {
         databaseNightlyCleanup: {
             post: (
                 request: {
-                    SECRET: string
+                    SERVICE_SECRET: string
                 },
                 options?:
                     | {
@@ -607,7 +536,7 @@ export declare function createApiClient(
                 import('spiceflow/client').SpiceflowClient.ClientResponse<{
                     200: {
                         success: boolean
-                        content: string
+                        content: string | undefined
                     }
                 }>
             >
@@ -615,14 +544,14 @@ export declare function createApiClient(
         generateMessage: {
             post: (
                 request: {
-                    branchId: string
-                    siteId: string
                     messages: import('ai').UIMessage<
                         unknown,
                         import('ai').UIDataTypes,
                         import('ai').UITools
                     >[]
+                    siteId: string
                     chatId: string
+                    branchId: string
                     currentSlug: string
                     filesInDraft: Record<
                         string,
@@ -644,114 +573,13 @@ export declare function createApiClient(
             ) => Promise<
                 import('spiceflow/client').SpiceflowClient.ClientResponse<{
                     200: AsyncGenerator<
-                        | {
-                              type: 'text-start'
-                              id: string
-                          }
-                        | {
-                              type: 'text-delta'
-                              delta: string
-                              id: string
-                          }
-                        | {
-                              type: 'text-end'
-                              id: string
-                          }
-                        | {
-                              type: 'reasoning-start'
-                              id: string
-                              providerMetadata?: import('ai').ProviderMetadata
-                          }
-                        | {
-                              type: 'reasoning-delta'
-                              id: string
-                              delta: string
-                              providerMetadata?: import('ai').ProviderMetadata
-                          }
-                        | {
-                              type: 'reasoning-end'
-                              id: string
-                              providerMetadata?: import('ai').ProviderMetadata
-                          }
-                        | {
-                              type: 'error'
-                              errorText: string
-                          }
-                        | {
-                              type: 'tool-input-available'
-                              toolCallId: string
-                              toolName: string
-                              input: unknown
-                              providerExecuted?: boolean
-                          }
-                        | {
-                              type: 'tool-output-available'
-                              toolCallId: string
-                              output: unknown
-                              providerExecuted?: boolean
-                          }
-                        | {
-                              type: 'tool-output-error'
-                              toolCallId: string
-                              errorText: string
-                              providerExecuted?: boolean
-                          }
-                        | {
-                              type: 'tool-input-start'
-                              toolCallId: string
-                              toolName: string
-                              providerExecuted?: boolean
-                          }
-                        | {
-                              type: 'tool-input-delta'
-                              toolCallId: string
-                              inputTextDelta: string
-                          }
-                        | {
-                              type: 'source-url'
-                              sourceId: string
-                              url: string
-                              title?: string
-                              providerMetadata?: import('ai').ProviderMetadata
-                          }
-                        | {
-                              type: 'source-document'
-                              sourceId: string
-                              mediaType: string
-                              title: string
-                              filename?: string
-                              providerMetadata?: import('ai').ProviderMetadata
-                          }
-                        | {
-                              type: 'file'
-                              url: string
-                              mediaType: string
-                          }
-                        | {
-                              type: 'start-step'
-                          }
-                        | {
-                              type: 'finish-step'
-                          }
-                        | {
-                              type: `data-${string}`
-                              id?: string
-                              data: unknown
-                              transient?: boolean
-                          }
-                        | {
-                              type: 'start'
-                              messageId?: string
-                              messageMetadata?: unknown
-                          }
-                        | {
-                              type: 'finish'
-                              messageMetadata?: unknown
-                          }
-                        | {
-                              type: 'message-metadata'
-                              messageMetadata: unknown
-                          },
+                        import('ai').InferUIMessageChunk<
+                            import('ai').UIMessage<
+                                unknown,
+                                import('ai').UIDataTypes,
+                                import('ai').UITools
+                            >
+                        >,
                         void,
                         any
                     >
@@ -838,10 +666,10 @@ export declare function createApiClient(
         submitRateFeedback: {
             post: (
                 request: {
-                    message: string
                     branchId: string
                     url: string
                     opinion: 'good' | 'bad'
+                    message: string
                 },
                 options?:
                     | {
@@ -920,6 +748,36 @@ export declare function createApiClient(
                 }>
             >
         }
+        saveChangesForChat: {
+            post: (
+                request: {
+                    branchId: string
+                    chatId: string
+                    filesInDraft: Record<
+                        string,
+                        {
+                            githubPath: string
+                            content: string | null
+                            addedLines?: number | undefined
+                            deletedLines?: number | undefined
+                        }
+                    >
+                },
+                options?:
+                    | {
+                          headers?: Record<string, unknown> | undefined
+                          query?: Record<string, unknown> | undefined
+                          fetch?: RequestInit | undefined
+                      }
+                    | undefined,
+            ) => Promise<
+                import('spiceflow/client').SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean
+                    }
+                }>
+            >
+        }
         getCliSession: {
             post: (
                 request: {
@@ -957,24 +815,24 @@ export declare function createApiClient(
             post: (
                 request: {
                     name: string
-                    orgId: string
                     files: {
                         relativePath: string
                         contents: string
+                        downloadUrl?: string | undefined
                         metadata?:
                             | {
                                   width?: number | undefined
                                   height?: number | undefined
                               }
                             | undefined
-                        downloadUrl?: string | undefined
                     }[]
-                    siteId?: string | undefined
-                    githubBranch?: string | undefined
-                    githubFolder?: string | undefined
+                    orgId: string
                     githubOwner?: string | undefined
                     githubRepo?: string | undefined
                     githubRepoId?: number | undefined
+                    githubBranch?: string | undefined
+                    githubFolder?: string | undefined
+                    siteId?: string | undefined
                 },
                 options?:
                     | {
@@ -997,13 +855,13 @@ export declare function createApiClient(
                             errorMessage: string
                             errorType: import('db/src/generated/enums').MarkdownPageSyncErrorType
                         }[]
+                        githubFolder?: string | undefined
+                        orgId?: string | undefined
                         createdAt?: Date | undefined
                         name?: string | null | undefined
-                        orgId?: string | undefined
                         defaultLocale?: string | undefined
-                        githubFolder?: string | undefined
-                        githubOwner?: string | undefined
-                        githubRepo?: string | undefined
+                        githubOwner?: string | null | undefined
+                        githubRepo?: string | null | undefined
                         githubRepoId?: number | undefined
                     }
                 }>
@@ -1024,14 +882,14 @@ export declare function createApiClient(
                         success: boolean
                         files: (
                             | {
-                                  contents: string
-                                  relativePath: string
-                                  downloadUrl?: undefined
+                                  content: string
+                                  filePath: string
+                                  encoding?: undefined
                               }
                             | {
-                                  contents: string
-                                  relativePath: string
-                                  downloadUrl: string
+                                  content: string
+                                  filePath: string
+                                  encoding: string
                               }
                         )[]
                     }
@@ -1082,7 +940,7 @@ export declare function createApiClient(
         databaseNightlyCleanup: {
             post: (
                 request: {
-                    SECRET: string
+                    SERVICE_SECRET: string
                 },
                 options?:
                     | {
@@ -1158,7 +1016,7 @@ export declare const apiClientWithDurableFetch: {
                 import('spiceflow/client').SpiceflowClient.ClientResponse<{
                     200: {
                         success: boolean
-                        content: string
+                        content: string | undefined
                     }
                 }>
             >
@@ -1166,14 +1024,14 @@ export declare const apiClientWithDurableFetch: {
         generateMessage: {
             post: (
                 request: {
-                    branchId: string
-                    siteId: string
                     messages: import('ai').UIMessage<
                         unknown,
                         import('ai').UIDataTypes,
                         import('ai').UITools
                     >[]
+                    siteId: string
                     chatId: string
+                    branchId: string
                     currentSlug: string
                     filesInDraft: Record<
                         string,
@@ -1195,114 +1053,13 @@ export declare const apiClientWithDurableFetch: {
             ) => Promise<
                 import('spiceflow/client').SpiceflowClient.ClientResponse<{
                     200: AsyncGenerator<
-                        | {
-                              type: 'text-start'
-                              id: string
-                          }
-                        | {
-                              type: 'text-delta'
-                              delta: string
-                              id: string
-                          }
-                        | {
-                              type: 'text-end'
-                              id: string
-                          }
-                        | {
-                              type: 'reasoning-start'
-                              id: string
-                              providerMetadata?: import('ai').ProviderMetadata
-                          }
-                        | {
-                              type: 'reasoning-delta'
-                              id: string
-                              delta: string
-                              providerMetadata?: import('ai').ProviderMetadata
-                          }
-                        | {
-                              type: 'reasoning-end'
-                              id: string
-                              providerMetadata?: import('ai').ProviderMetadata
-                          }
-                        | {
-                              type: 'error'
-                              errorText: string
-                          }
-                        | {
-                              type: 'tool-input-available'
-                              toolCallId: string
-                              toolName: string
-                              input: unknown
-                              providerExecuted?: boolean
-                          }
-                        | {
-                              type: 'tool-output-available'
-                              toolCallId: string
-                              output: unknown
-                              providerExecuted?: boolean
-                          }
-                        | {
-                              type: 'tool-output-error'
-                              toolCallId: string
-                              errorText: string
-                              providerExecuted?: boolean
-                          }
-                        | {
-                              type: 'tool-input-start'
-                              toolCallId: string
-                              toolName: string
-                              providerExecuted?: boolean
-                          }
-                        | {
-                              type: 'tool-input-delta'
-                              toolCallId: string
-                              inputTextDelta: string
-                          }
-                        | {
-                              type: 'source-url'
-                              sourceId: string
-                              url: string
-                              title?: string
-                              providerMetadata?: import('ai').ProviderMetadata
-                          }
-                        | {
-                              type: 'source-document'
-                              sourceId: string
-                              mediaType: string
-                              title: string
-                              filename?: string
-                              providerMetadata?: import('ai').ProviderMetadata
-                          }
-                        | {
-                              type: 'file'
-                              url: string
-                              mediaType: string
-                          }
-                        | {
-                              type: 'start-step'
-                          }
-                        | {
-                              type: 'finish-step'
-                          }
-                        | {
-                              type: `data-${string}`
-                              id?: string
-                              data: unknown
-                              transient?: boolean
-                          }
-                        | {
-                              type: 'start'
-                              messageId?: string
-                              messageMetadata?: unknown
-                          }
-                        | {
-                              type: 'finish'
-                              messageMetadata?: unknown
-                          }
-                        | {
-                              type: 'message-metadata'
-                              messageMetadata: unknown
-                          },
+                        import('ai').InferUIMessageChunk<
+                            import('ai').UIMessage<
+                                unknown,
+                                import('ai').UIDataTypes,
+                                import('ai').UITools
+                            >
+                        >,
                         void,
                         any
                     >
@@ -1389,10 +1146,10 @@ export declare const apiClientWithDurableFetch: {
         submitRateFeedback: {
             post: (
                 request: {
-                    message: string
                     branchId: string
                     url: string
                     opinion: 'good' | 'bad'
+                    message: string
                 },
                 options?:
                     | {
@@ -1471,6 +1228,36 @@ export declare const apiClientWithDurableFetch: {
                 }>
             >
         }
+        saveChangesForChat: {
+            post: (
+                request: {
+                    branchId: string
+                    chatId: string
+                    filesInDraft: Record<
+                        string,
+                        {
+                            githubPath: string
+                            content: string | null
+                            addedLines?: number | undefined
+                            deletedLines?: number | undefined
+                        }
+                    >
+                },
+                options?:
+                    | {
+                          headers?: Record<string, unknown> | undefined
+                          query?: Record<string, unknown> | undefined
+                          fetch?: RequestInit | undefined
+                      }
+                    | undefined,
+            ) => Promise<
+                import('spiceflow/client').SpiceflowClient.ClientResponse<{
+                    200: {
+                        success: boolean
+                    }
+                }>
+            >
+        }
         getCliSession: {
             post: (
                 request: {
@@ -1508,24 +1295,24 @@ export declare const apiClientWithDurableFetch: {
             post: (
                 request: {
                     name: string
-                    orgId: string
                     files: {
                         relativePath: string
                         contents: string
+                        downloadUrl?: string | undefined
                         metadata?:
                             | {
                                   width?: number | undefined
                                   height?: number | undefined
                               }
                             | undefined
-                        downloadUrl?: string | undefined
                     }[]
-                    siteId?: string | undefined
-                    githubBranch?: string | undefined
-                    githubFolder?: string | undefined
+                    orgId: string
                     githubOwner?: string | undefined
                     githubRepo?: string | undefined
                     githubRepoId?: number | undefined
+                    githubBranch?: string | undefined
+                    githubFolder?: string | undefined
+                    siteId?: string | undefined
                 },
                 options?:
                     | {
@@ -1548,13 +1335,13 @@ export declare const apiClientWithDurableFetch: {
                             errorMessage: string
                             errorType: import('db/src/generated/enums').MarkdownPageSyncErrorType
                         }[]
+                        githubFolder?: string | undefined
+                        orgId?: string | undefined
                         createdAt?: Date | undefined
                         name?: string | null | undefined
-                        orgId?: string | undefined
                         defaultLocale?: string | undefined
-                        githubFolder?: string | undefined
-                        githubOwner?: string | undefined
-                        githubRepo?: string | undefined
+                        githubOwner?: string | null | undefined
+                        githubRepo?: string | null | undefined
                         githubRepoId?: number | undefined
                     }
                 }>
@@ -1575,14 +1362,14 @@ export declare const apiClientWithDurableFetch: {
                         success: boolean
                         files: (
                             | {
-                                  contents: string
-                                  relativePath: string
-                                  downloadUrl?: undefined
+                                  content: string
+                                  filePath: string
+                                  encoding?: undefined
                               }
                             | {
-                                  contents: string
-                                  relativePath: string
-                                  downloadUrl: string
+                                  content: string
+                                  filePath: string
+                                  encoding: string
                               }
                         )[]
                     }
@@ -1633,7 +1420,7 @@ export declare const apiClientWithDurableFetch: {
         databaseNightlyCleanup: {
             post: (
                 request: {
-                    SECRET: string
+                    SERVICE_SECRET: string
                 },
                 options?:
                     | {
