@@ -10,13 +10,13 @@ interface TruncatedTextProps {
 
 export function TruncatedText({ children, className, isStreaming = false }: TruncatedTextProps) {
     const [isExpanded, setIsExpanded] = useState(false)
-    
+
     return (
         <div className={cn('relative', className)}>
             <div
                 className={cn(
                     'cursor-pointer',
-                    !isExpanded && !isStreaming && 'line-clamp-2'
+                    !isExpanded && !isStreaming && 'line-clamp-3'
                 )}
                 onClick={() => {
                     if (!isStreaming) {

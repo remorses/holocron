@@ -4,6 +4,8 @@ Please ask questions and confirm assumptions before generating complex architect
 
 NEVER run command with & at the end to run them in the background. This is leaky and harmful! Instead ask me to run commands in the background if needed.
 
+NEVER commit yourself unless asked to do so. I will commit the code myself.
+
 # package manager: pnpm with workspace
 
 This project uses pnpm workspaces to manage dependencies. Important scripts are in the root package.json or various packages package.json
