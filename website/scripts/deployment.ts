@@ -47,7 +47,7 @@ async function main() {
         dockerfile: 'Dockerfile',
         minInstances: 1,
         forceHttps: false,
-        maxInstances: 3,
+        maxInstances: 1,
         healthCheckPath: '/api/health',
         memorySize: '1gb',
         machineType: 'shared-cpu-2x',
