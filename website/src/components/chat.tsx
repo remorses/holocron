@@ -102,6 +102,7 @@ import { cn, safeJsoncParse, slugKebabCaseKeepExtension } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import { flushSync } from 'react-dom'
+import { TruncatedText } from './truncated-text'
 
 function keyForDocsJson({ chatId }) {
     return `fumabase.jsonc-${chatId}`
@@ -779,12 +780,14 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                         return (
                             <div className='flex flex-row opacity-70 tracking-wide gap-[1ch]'>
                                 <Dot />
-                                <Markdown
-                                    isStreaming={isChatGenerating}
-                                    key={index}
-                                    className='prose-sm'
-                                    markdown={part.text}
-                                />
+                                <TruncatedText isStreaming={isChatGenerating}>
+                                    <Markdown
+                                        isStreaming={isChatGenerating}
+                                        key={index}
+                                        className='prose-sm'
+                                        markdown={part.text}
+                                    />
+                                </TruncatedText>
                             </div>
                         )
                     }
