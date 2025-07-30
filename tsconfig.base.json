@@ -24,6 +24,7 @@
         "esModuleInterop": true,
         "resolveJsonModule": true,
         "noImplicitAny": false,
+
         "useUnknownInCatchVariables": false,
         "sourceMap": true,
         "jsx": "react-jsx",

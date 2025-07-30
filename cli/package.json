@@ -39,7 +39,7 @@
         "@types/mime-types": "^2.1.4",
         "@types/prompts": "^2.4.9",
         "@types/ws": "^8.18.1",
-        "docs-website": "file:../docs-website",
-        "website": "file:../website"
+        "docs-website": "workspace:*",
+        "website": "workspace:*"
     }
 }

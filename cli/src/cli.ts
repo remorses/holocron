@@ -494,7 +494,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                     ),
                 )
                 for (const file of data.files) {
-                    const filePath = file.relativePath
+                    const filePath = file.filePath
                     const dirPath = path.dirname(filePath)
 
                     // Create directories if they don't exist
@@ -503,10 +503,10 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                     }
 
                     // Handle files with downloadUrl (media files)
-                    if (file.downloadUrl && !file.contents) {
+                    if ('downloadUrl' in file && file.downloadUrl && !file.content) {
                         try {
                             console.log(pc.gray(`  → Downloading ${filePath}`))
-                            const response = await fetch(file.downloadUrl)
+                            const response = await fetch((file as any).downloadUrl)
                             if (!response.ok) {
                                 console.error(
                                     `Failed to download ${filePath}: ${response.statusText}`,
@@ -529,7 +529,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                         // Write text file
                         await fs.promises.writeFile(
                             filePath,
-                            file.contents,
+                            file.content,
                             'utf-8',
                         )
                     }
@@ -865,12 +865,9 @@ cli.command('login', 'Login to fumabase')
     })
 
 cli.command('dev', 'Preview your fumabase website')
-    .option('--dir <dir>', 'Directory with the fumabase.jsonc', {
-        default: process.cwd(),
-    })
-    .action(async function main(options) {
-        // console.log({ options })
-        let { dir } = options
+    .option('--dir <dir>', 'Directory with the fumabase.jsonc')
+    .action(async (options) => {
+        let { dir = process.cwd() } = options
         dir = path.resolve(dir)
 
         // Get git repository root for calculating relative paths
@@ -902,7 +899,7 @@ cli.command('dev', 'Preview your fumabase website')
 
             // Wait for initial scan to complete
             await new Promise<void>((resolve) => {
-                const cb = (filePath) => {
+                const cb = (filePath: string) => {
                     const isTextFile =
                         filePath.endsWith('.mdx') ||
                         filePath.endsWith('.md') ||
@@ -1022,7 +1019,7 @@ cli.command('dev', 'Preview your fumabase website')
                             githubFolder,
                             path.posix.relative(
                                 dir,
-                                filePath.replace(/\\\\/g, '/'),
+                                filePath.replace(/\\/g, '/'),
                             ),
                         )
                         return [
@@ -1042,7 +1039,7 @@ cli.command('dev', 'Preview your fumabase website')
             // Wait for first message from browser before sending files
 
             console.log(pc.blue(`Waiting for browser to connect...`))
-            ws.on('message', async (message) => {
+            ws.on('message', async (message: any) => {
                 const string = message.toString()
                 const data = safeParseJson(string)
                 // send the full state only on first message from the browser
@@ -1067,13 +1064,15 @@ cli.command('dev', 'Preview your fumabase website')
                 for (const [key, value] of Object.entries(filesInDraft)) {
                     // console.log(`sending state to website for file: ${key}`)
                     await client.setDocsState({
-                        filesInDraft: { [key]: value },
+                        state: {
+                            filesInDraft: { [key]: value },
+                        },
                     })
                 }
             })
 
             // Watch for file changes and additions
-            const handleFileUpdate = async (filePath: string, revalidate) => {
+            const handleFileUpdate = async (filePath: string, revalidate: boolean) => {
                 const fullPath = path.resolve(dir, filePath)
 
                 // Check if it's a media file
@@ -1087,7 +1086,7 @@ cli.command('dev', 'Preview your fumabase website')
                     : await fs.promises.readFile(fullPath, 'utf-8')
                 const githubPath = path.posix.join(
                     githubFolder,
-                    path.posix.relative(dir, filePath.replace(/\\\\/g, '/')),
+                    path.posix.relative(dir, filePath.replace(/\\/g, '/')),
                 )
 
                 // Update the local filesInDraft
@@ -1102,7 +1101,9 @@ cli.command('dev', 'Preview your fumabase website')
                     pc.gray(`Sending websocket update for ${githubPath}`),
                 )
                 return client.setDocsState({
-                    state: { filesInDraft: updatedFile },
+                    state: {
+                        filesInDraft: updatedFile,
+                    },
                     revalidate,
                 })
             }
@@ -1113,7 +1114,7 @@ cli.command('dev', 'Preview your fumabase website')
             watcher.on('unlink', (filePath) => {
                 const githubPath = path.posix.join(
                     githubFolder,
-                    path.posix.relative(dir, filePath.replace(/\\\\/g, '/')),
+                    path.posix.relative(dir, filePath.replace(/\\/g, '/')),
                 )
                 // Handle file deletion
                 if (filesInDraft[githubPath]) {
@@ -1131,7 +1132,9 @@ cli.command('dev', 'Preview your fumabase website')
                         pc.gray(`Sending websocket message for deleted file`),
                     )
                     client.setDocsState({
-                        state: { filesInDraft: deletedFile },
+                        state: {
+                            filesInDraft: deletedFile,
+                        },
                         revalidate: true,
                     })
                 }

@@ -3,10 +3,13 @@
     "compilerOptions": {
         "rootDir": "src",
         "allowJs": true,
-        "lib": ["dom"],
+        "lib": ["esnext", "es2015", "dom"],
+        "skipLibCheck": true,
+        "types": ["vite/client"],
         "outDir": "dist",
         "resolveJsonModule": true,
         "jsx": "react-jsx"
     },
-    "include": ["src"]
+    "include": ["src"],
+    "exclude": ["node_modules", "**/node_modules/**"]
 }

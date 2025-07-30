@@ -3,7 +3,7 @@ import type { PageTree, TOCItemType } from 'fumadocs-core/server'
 
 import { create } from 'zustand'
 import { createIdGenerator, UIMessage } from 'ai'
-import { highlightText } from './highlight-text'
+import { highlightText } from './highlight-text.js'
 
 const generateId = createIdGenerator()
 export function generateChatId(): string {
