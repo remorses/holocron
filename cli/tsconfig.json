@@ -5,6 +5,7 @@
         "allowJs": true,
         "lib": ["dom"],
         "outDir": "dist",
+        "resolveJsonModule": true,
         "jsx": "react-jsx"
     },
     "include": ["src"]
