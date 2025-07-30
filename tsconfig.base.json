@@ -22,6 +22,7 @@
         "noFallthroughCasesInSwitch": true,
         "downlevelIteration": true,
         "esModuleInterop": true,
+        "resolveJsonModule": true,
         "noImplicitAny": false,
         "useUnknownInCatchVariables": false,
         "sourceMap": true,
