@@ -27,7 +27,7 @@ export async function importFromGitHub({
     return processTarArchive({
         url: tarUrl,
         datasetId,
-        path: path ? `${repo}-${branch}/${path}` : `${repo}-${branch}`,
+        path, // Don't prepend repo name, processTarArchive already strips it
         metadata: {
             source: 'github',
             owner,

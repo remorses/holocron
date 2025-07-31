@@ -25,9 +25,9 @@ import type {
     SearchSectionsResponse,
 } from './types.js'
 
-class LanceDbImplementation implements DatasetsInterface {
+export class LanceDbImplementation implements DatasetsInterface {
     private db?: lancedb.Connection
-    private dbPath: string = './lancedb' // Default path, can be overridden
+    private dbPath: string = 'db://fumabase-co7ad3' // Default to cloud database
 
     constructor(dbPath?: string) {
         if (dbPath) {
@@ -47,7 +47,7 @@ class LanceDbImplementation implements DatasetsInterface {
                 }
                 this.db = await lancedb.connect(this.dbPath, {
                     apiKey,
-                    region,
+                    region: 'us-east-1',
                 } as any)
             } else {
                 // Local connection
@@ -492,3 +492,6 @@ export class SearchClient implements DatasetsInterface {
 
 // Export with old name for backward compatibility
 export { SearchClient as EyecrestClient }
+
+// Re-export types that might be needed
+export type { SearchSectionsResponse } from './types.js'

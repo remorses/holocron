@@ -6,9 +6,10 @@ const datasetId = `test-lancedb-sdk-${Date.now()}`
 
 describe('LanceDB SDK Implementation', () => {
     // Initialize client with LanceDB provider
+    // Use a test-specific local path to avoid conflicts with cloud database
     const client = new SearchClient({
         provider: 'lancedb',
-        dbPath: './test-lancedb' // Use a test-specific path
+        dbPath: './test-lancedb' // Use local for tests
     })
     
     afterAll(async () => {

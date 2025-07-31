@@ -61,7 +61,7 @@ export async function processTarArchive({
     // Parse the tar and collect files
     await parseTar(gz, async (entry) => {
         entriesProcessed++
-        if (entriesProcessed % 100 === 0) {
+        if (entriesProcessed % 1000 === 0) {
             console.log(
                 `[import-tar] Processed ${entriesProcessed} tar entries...`,
             )
