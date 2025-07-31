@@ -28,9 +28,6 @@ export default defineConfig({
         },
     },
     build: {
-        // sourcemap: true,
-        minify: false,
-
         rollupOptions: {
             output: {
                 // 👉 put every async chunk that comes from shiki or lucide-react in its own folder
