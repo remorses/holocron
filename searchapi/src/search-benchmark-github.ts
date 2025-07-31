@@ -10,8 +10,7 @@ if (!JWT_TOKEN) {
 const datasetId = `test-org-123-xx-benchmark-${Date.now()}`;
 
 const client = new EyecrestClient({
-  token: JWT_TOKEN,
-  baseUrl: 'https://eyecrest.org'
+
 });
 
 // Setup: Create dataset and upload test files
@@ -25,7 +24,7 @@ const upsertStartTime = Date.now();
 // }).catch(() => null);
 await client.upsertDataset({
   datasetId,
-  primaryRegion: 'weur',
+
   waitForReplication: false,
   provider: 'neon'
 });

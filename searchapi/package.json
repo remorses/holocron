@@ -8,8 +8,7 @@
         "./sdk": "./src/sdk.ts"
     },
     "scripts": {
-        "deployment": "tsc && pnpm wrangler deploy",
-        "test": "vitest",
+        "test": "doppler run -- pnpm vitest --run",
         "benchmark": "doppler run -- tsx src/search-benchmark-github.ts"
     },
     "keywords": [],
@@ -27,6 +26,7 @@
         "@xmorse/tar-parser": "^0.3.0",
         "agents": "^0.0.109",
         "ajv": "^8.17.1",
+        "apache-arrow": "18.1.0",
         "github-slugger": "^2.0.0",
         "jose": "^6.0.12",
         "marked": "^15.0.12",

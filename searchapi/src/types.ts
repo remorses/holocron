@@ -215,10 +215,8 @@ const ImportResponseSchema = z.object({
         .describe('Total size of imported files in bytes'),
 })
 
-// Parameter schemas for DO methods
 export const BaseDatasetParamsSchema = z.object({
     datasetId: z.string(),
-    orgId: z.string(),
 })
 
 export const UpsertDatasetParamsSchema = BaseDatasetParamsSchema.extend({})

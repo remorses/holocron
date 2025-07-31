@@ -42,3 +42,5 @@ export function findLineNumberInContent(
 
     return null
 }
+
+export const SUPPORTED_EXTENSIONS = ['md', 'mdx']
