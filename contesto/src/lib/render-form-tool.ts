@@ -104,7 +104,7 @@ export function createRenderFormTool({
           Previous messages forms will be disabled and the user cannot submit them again. Instead render a simpler shorter form the user can fill in. Use relevant default values.
 
           Always try to fill in the default values so the user has less things to type and check.
-      `.split('\n'),
+      `,
         inputSchema: RenderFormParameters,
         execute,
     })
