@@ -3,10 +3,7 @@ import path from 'path'
 import YAML from 'js-yaml'
 import { getProcessor, ProcessorData } from './mdx-heavy'
 
-const highlighter = await createHighlighter({
-    themes: ['github-dark', 'github-light'],
-    langs: Object.keys(bundledLanguages),
-})
+
 const processorCache = new Map<
     string | undefined,
     ReturnType<typeof getProcessor>
