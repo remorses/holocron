@@ -30,6 +30,7 @@ export const env = {
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
+    LANCEDB_API_KEY: process.env.LANCEDB_API_KEY,
 }
 
 // console.log(env)
