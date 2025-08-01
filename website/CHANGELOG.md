@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-08-01 19:00
+
+- **FileSystemEmulator**: Verified move operations correctly delete old paths
+- **Added tests**: Created comprehensive tests for file move deletion behavior
+- **Fixed getProjectFiles tool**: Handle deleted files in the second loop by marking paths for removal instead of filtering in the first loop
+
 ## 2025-01-30 11:00
 
 - Created reusable graceful shutdown middleware using Spiceflow middleware pattern
