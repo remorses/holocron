@@ -313,6 +313,8 @@ export const getProcessor = function getProcessor({
 }
 
 export function getTocFromMdast(ast) {
+    if (!ast) return []
+    if (!ast?.children) return []
     const file = new VFile()
     remark().use(remarkMdx).use(remarkHeading).runSync(ast, file)
 

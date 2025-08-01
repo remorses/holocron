@@ -553,7 +553,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     }
 
     console.time(`${timerId} - get toc from mdast`)
-    if (!toc) {
+    if (toc === null && ast) {
         toc = getTocFromMdast(ast)
     }
     console.timeEnd(`${timerId} - get toc from mdast`)
@@ -574,7 +574,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         {
             type: 'page' as const,
             openapiUrl: '',
-            toc: toc,
+            toc: toc || [],
             title: frontmatter?.title || '',
             description: frontmatter.description || '',
             markdown: markdown,
