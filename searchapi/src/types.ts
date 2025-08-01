@@ -27,9 +27,8 @@ export const FileSchema = z.object({
     weight: z
         .number()
         .optional()
-        .default(1.0)
         .describe(
-            'Optional weight for ranking in search results (default: 1.0)',
+            'Optional weight for ranking in search results',
         ),
 })
 
@@ -39,26 +38,12 @@ const UpsertFilesRequestSchema = z.object({
     files: z
         .array(FileSchema)
         .describe('List of files to ingest and auto-chunk'),
-    waitForReplication: z
-        .boolean()
-        .optional()
-        .default(true)
-        .describe(
-            'Whether to wait for replication to complete (default: true)',
-        ),
 })
 
 const DeleteFilesSchema = z.object({
     filenames: z
         .array(z.string())
         .describe('List of full file paths to delete'),
-    waitForReplication: z
-        .boolean()
-        .optional()
-        .default(true)
-        .describe(
-            'Whether to wait for replication to complete (default: true)',
-        ),
 })
 
 const UpsertDatasetRequestSchema = z.object({
@@ -223,14 +208,10 @@ export const UpsertDatasetParamsSchema = BaseDatasetParamsSchema.extend({})
 
 export const UpsertFilesParamsSchema = BaseDatasetParamsSchema.extend({
     files: z.array(FileSchema),
-
-    waitForReplication: z.boolean().optional(),
 })
 
 export const DeleteFilesParamsSchema = BaseDatasetParamsSchema.extend({
     filenames: z.array(z.string()),
-
-    waitForReplication: z.boolean().optional(),
 })
 
 export const GetFileContentsParamsSchema = BaseDatasetParamsSchema.extend({

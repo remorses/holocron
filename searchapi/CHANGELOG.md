@@ -1,5 +1,14 @@
 # Changelog
 
+## 2025-01-31 16:00
+
+### Code Quality Improvements
+
+- **Refactored table caching logic** - Extracted repeated table caching code into a single `getOrCreateTable()` method for better maintainability
+- **Extracted getExistingFiles method** - Moved file existence checking logic into a dedicated, well-tested method for better code organization
+- **Added comprehensive test suite** - Created thorough tests for getExistingFiles including edge cases, SQL injection protection, and large dataset handling
+- **Fixed TypeScript types** - Made weight field properly optional in FileSchema, removed non-existent waitForReplication parameter
+
 ## 2025-01-31 15:30
 
 ### Major Performance Optimizations
@@ -12,7 +21,7 @@
 - **Added SHA-based deduplication** - Skip re-uploading files with unchanged content by comparing SHA hashes
 - **Delayed FTS index creation** - Create full-text search indexes after bulk upload for better performance
 - **Added table optimization** - Automatically optimize table (compact fragments) after large imports (>5000 files)
-- **Implemented aggressive caching** - Cache table references and FTS index status to eliminate redundant database operations
+- **Implemented aggressive caching** - Cache table references and FTS index status to eliminate redundant database operations across all methods (upsertFiles, searchSections, etc.)
 - **Removed unnecessary computations** - Eliminated vector placeholder field and cleanMarkdown computation during search
 - **Fixed cloud database race conditions** - Handle "table already exists" errors gracefully during concurrent operations
 

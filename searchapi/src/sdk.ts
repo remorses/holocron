@@ -45,7 +45,7 @@ export class SearchClient implements DatasetsInterface {
         if (!this.db) {
             const apiKey = process.env.LANCEDB_API_KEY
             const region = process.env.LANCEDB_REGION || 'us-east-1'
-            
+
             if (this.dbPath.startsWith('db://')) {
                 // LanceDB Cloud connection
                 if (!apiKey) {
@@ -82,52 +82,90 @@ export class SearchClient implements DatasetsInterface {
         return datasetId.replace(/[^a-zA-Z0-9_]/g, '_')
     }
 
+    private async getOrCreateTable(tableName: string): Promise<lancedb.Table | null> {
+        // Check cache first
+        let table = this.tableCache.get(tableName)
+        if (table) {
+            console.log(`[table] Using cached table reference for ${tableName}`)
+            return table
+        }
+
+        // Not in cache, check if table exists
+        const db = await this.getConnection()
+        const tables = await db.tableNames()
+
+        if (!tables.includes(tableName)) {
+            return null
+        }
+
+        // Table exists but not cached, open and cache it
+        console.log(`[table] Opening table ${tableName} (not cached)`)
+        table = await db.openTable(tableName)
+        this.tableCache.set(tableName, table)
+        return table
+    }
+
+    async getExistingFiles(table: lancedb.Table, filenames: string[]): Promise<Map<string, string>> {
+        const existingFilesMap: Map<string, string> = new Map()
+
+        if (filenames.length === 0) {
+            return existingFilesMap
+        }
+
+        // Escape single quotes in filenames for SQL
+        const filenameList = filenames
+            .map(f => `'${f.replace(/'/g, "''")}'`)
+            .join(',')
+
+        try {
+            const existingFilesQuery = await table
+                .query()
+                .where(`filename IN (${filenameList}) AND type = 'file'`)
+                .select(['filename', 'sha'])
+                .toArray()
+
+            // Build a map for O(1) lookups
+            for (const file of existingFilesQuery) {
+                existingFilesMap.set(file.filename, file.sha)
+            }
+        } catch (error) {
+            console.error('[upsert] Error querying existing files:', error)
+        }
+
+        return existingFilesMap
+    }
+
     async upsertDataset(
         params: z.infer<typeof UpsertDatasetParamsSchema>,
     ): Promise<void> {
         const { datasetId } = params
         const db = await this.getConnection()
         const tableName = this.sanitizeTableName(datasetId)
-        
+
         // For LanceDB, the table will be created when files are first added
         // We just verify we can connect and the dataset ID is valid
-        
+
         // Dataset will be created when files are added
     }
 
     async upsertFiles(
         params: z.infer<typeof UpsertFilesParamsSchema>,
     ): Promise<void> {
-        const { datasetId, files, waitForReplication = true } = params
+        const { datasetId, files,  } = params
         const db = await this.getConnection()
         const tableName = this.sanitizeTableName(datasetId)
-        
+
         console.log(`[upsert] Starting upsertFiles for dataset ${datasetId} with ${files.length} files`)
         const startTime = Date.now()
 
-        // Check if table exists
-        const tables = await db.tableNames()
-        let table: lancedb.Table | null = null
-        
-        if (tables.includes(tableName)) {
-            table = await db.openTable(tableName)
-        }
+        // Get table from cache or open it
+        let table = await this.getOrCreateTable(tableName)
 
         // Optimization: Only query for the specific files we're uploading
         let existingFilesMap: Map<string, string> = new Map()
-        if (table && files.length > 0) {
-            // Build IN clause for efficient lookup
-            const filenameList = files.map(f => `'${f.filename.replace(/'/g, "''")}'`).join(',')
-            const existingFilesQuery = await table
-                .query()
-                .where(`filename IN (${filenameList}) AND type = 'file'`)
-                .select(['filename', 'sha'])
-                .toArray()
-            
-            // Build a map for O(1) lookups
-            for (const file of existingFilesQuery) {
-                existingFilesMap.set(file.filename, file.sha)
-            }
+        if (table) {
+            const filenames = files.map(f => f.filename)
+            existingFilesMap = await this.getExistingFiles(table, filenames)
             console.log(`[upsert] Found ${existingFilesMap.size} existing files (out of ${files.length} to check)`)
         }
 
@@ -155,7 +193,7 @@ export class SearchClient implements DatasetsInterface {
             }
 
             processedCount++
-            
+
             // Add file row
             allRows.push({
                 type: 'file',
@@ -178,10 +216,10 @@ export class SearchClient implements DatasetsInterface {
             // Parse sections if it's a markdown file
             if (isSupportedMarkdownFile(file.filename)) {
                 const parsed = parseMarkdownIntoSections(file.content)
-                
+
                 for (const section of parsed.sections) {
                     const sectionWeight = section.weight ?? file.weight ?? 1.0
-                    
+
                     allRows.push({
                         type: 'section',
                         filename: file.filename,
@@ -209,7 +247,9 @@ export class SearchClient implements DatasetsInterface {
                 // Create new table with all rows
                 try {
                     table = await db.createTable(tableName, allRows)
-                    
+                    // Cache the new table
+                    this.tableCache.set(tableName, table)
+
                     // Create a btree index on filename for efficient mergeInsert operations
                     console.log(`[upsert] Creating btree index on filename column...`)
                     try {
@@ -220,7 +260,7 @@ export class SearchClient implements DatasetsInterface {
                     } catch (indexError) {
                         console.warn('[upsert] Failed to create filename index:', indexError)
                     }
-                    
+
                     // Delay FTS index creation - will be created later for better bulk performance
                     console.log(`[upsert] Delaying FTS index creation for bulk upload performance`)
                 } catch (createError: any) {
@@ -228,6 +268,8 @@ export class SearchClient implements DatasetsInterface {
                     if (createError.message?.includes('already exists')) {
                         console.log(`[upsert] Table already exists, opening it...`)
                         table = await db.openTable(tableName)
+                        // Cache the opened table
+                        this.tableCache.set(tableName, table)
                         // Add the rows to existing table
                         await table.add(allRows, { mode: 'append' })
                     } else {
@@ -237,7 +279,7 @@ export class SearchClient implements DatasetsInterface {
             } else {
                 // Use mergeInsert for much better performance (single operation instead of delete + add)
                 console.log(`[upsert] Using mergeInsert for ${allRows.length} rows...`)
-                
+
                 try {
                     await table
                         .mergeInsert('filename')
@@ -285,7 +327,7 @@ export class SearchClient implements DatasetsInterface {
 
         console.log(`[upsert] Processing files (${processedCount} processed, ${skippedCount} skipped): ${Date.now() - startTime}ms`)
         console.log(`[upsert] Completed upsertFiles for dataset ${datasetId}`)
-        
+
         // Track total rows inserted and mark index as pending
         if (processedCount > 0) {
             const currentTotal = this.totalRowsInserted.get(datasetId) || 0
@@ -293,24 +335,28 @@ export class SearchClient implements DatasetsInterface {
             this.pendingIndexCreation.add(datasetId)
         }
     }
-    
+
     async createPendingIndexes(datasetId: string): Promise<void> {
         if (!this.pendingIndexCreation.has(datasetId)) {
             console.log(`[index] No pending indexes for dataset ${datasetId}`)
             return
         }
-        
+
         const db = await this.getConnection()
         const tableName = this.sanitizeTableName(datasetId)
         const tables = await db.tableNames()
-        
+
         if (!tables.includes(tableName)) {
             console.log(`[index] Table ${tableName} not found`)
             return
         }
-        
-        const table = await db.openTable(tableName)
-        
+
+        // Get table from cache or open it
+        const table = await this.getOrCreateTable(tableName)
+        if (!table) {
+            throw new Error(`Table ${tableName} not found`)
+        }
+
         console.log(`[index] Creating FTS indexes for dataset ${datasetId}...`)
         try {
             const ftsOptions: lancedb.IndexOptions = {
@@ -325,7 +371,7 @@ export class SearchClient implements DatasetsInterface {
                 }),
                 replace: true,
             }
-            
+
             await table.createIndex('section_content', ftsOptions)
             console.log(`[index] FTS index created successfully`)
             this.pendingIndexCreation.delete(datasetId)
@@ -335,21 +381,25 @@ export class SearchClient implements DatasetsInterface {
             console.warn(`[index] Failed to create FTS indexes:`, error)
         }
     }
-    
+
     async optimizeTable(datasetId: string): Promise<void> {
         const db = await this.getConnection()
         const tableName = this.sanitizeTableName(datasetId)
         const tables = await db.tableNames()
-        
+
         if (!tables.includes(tableName)) {
             return
         }
-        
-        const table = await db.openTable(tableName)
-        
+
+        // Get table from cache or open it
+        const table = await this.getOrCreateTable(tableName)
+        if (!table) {
+            throw new Error(`Table ${tableName} not found`)
+        }
+
         console.log(`[optimize] Optimizing table for dataset ${datasetId}...`)
         const startTime = Date.now()
-        
+
         try {
             const stats = await table.optimize()
             console.log(`[optimize] Table optimized in ${Date.now() - startTime}ms`)
@@ -364,15 +414,13 @@ export class SearchClient implements DatasetsInterface {
         params: z.infer<typeof DeleteFilesParamsSchema>,
     ): Promise<void> {
         const { datasetId, filenames } = params
-        const db = await this.getConnection()
         const tableName = this.sanitizeTableName(datasetId)
 
-        const tables = await db.tableNames()
-        if (!tables.includes(tableName)) {
+        // Get table from cache or open it
+        const table = await this.getOrCreateTable(tableName)
+        if (!table) {
             throw new Error(`Dataset ${datasetId} not found.`)
         }
-
-        const table = await db.openTable(tableName)
 
         // Delete all rows (files and sections) for the given filenames
         for (const filename of filenames) {
@@ -384,33 +432,34 @@ export class SearchClient implements DatasetsInterface {
         params: z.infer<typeof BaseDatasetParamsSchema>,
     ): Promise<void> {
         const { datasetId } = params
-        const db = await this.getConnection()
         const tableName = this.sanitizeTableName(datasetId)
 
-        const tables = await db.tableNames()
-        if (!tables.includes(tableName)) {
+        // Get table from cache or open it
+        const table = await this.getOrCreateTable(tableName)
+        if (!table) {
             throw new Error(`Dataset ${datasetId} not found.`)
         }
 
-        const table = await db.openTable(tableName)
-
         // Drop the entire table
+        const db = await this.getConnection()
         await db.dropTable(tableName)
+
+        // Clear caches for this table
+        this.tableCache.delete(tableName)
+        this.ftsIndexCache.delete(tableName)
     }
 
     async getFileContents(
         params: z.infer<typeof GetFileContentsParamsSchema>,
     ): Promise<z.infer<typeof GetFileContentsResultSchema>> {
         const { datasetId, filePath, showLineNumbers, start, end, getAllFiles } = params
-        const db = await this.getConnection()
         const tableName = this.sanitizeTableName(datasetId)
 
-        const tables = await db.tableNames()
-        if (!tables.includes(tableName)) {
+        // Get table from cache or open it
+        const table = await this.getOrCreateTable(tableName)
+        if (!table) {
             throw new Error(`Dataset ${datasetId} not found.`)
         }
-
-        const table = await db.openTable(tableName)
 
         if (getAllFiles) {
             // Get all unique files (type = 'file')
@@ -438,7 +487,7 @@ export class SearchClient implements DatasetsInterface {
             .where(`filename = '${filePath}' AND type = 'file'`)
             .limit(1)
             .toArray()
-        
+
         if (files.length === 0) {
             throw new Error(`File not found: ${filePath}`)
         }
@@ -452,7 +501,7 @@ export class SearchClient implements DatasetsInterface {
             const startLine = start || 1
             const endLine = end || lines.length
             const selectedLines = lines.slice(startLine - 1, endLine)
-            
+
             if (showLineNumbers) {
                 const maxLineNum = startLine + selectedLines.length - 1
                 const padding = maxLineNum.toString().length
@@ -482,46 +531,33 @@ export class SearchClient implements DatasetsInterface {
         const { datasetId, query, page = 0, perPage = 20, maxChunksPerFile = 5, snippetLength = 300 } = params
         console.log(`[search] Starting search for query "${query}" in dataset ${datasetId}`)
         const searchStartTime = Date.now()
-        
+
         const db = await this.getConnection()
         const tableName = this.sanitizeTableName(datasetId)
 
-        // Check cache first
-        let table = this.tableCache.get(tableName)
+        // Get table from cache or open it
+        const table = await this.getOrCreateTable(tableName)
         if (!table) {
-            const tablesStart = Date.now()
-            const tables = await db.tableNames()
-            console.log(`[search] tableNames() took ${Date.now() - tablesStart}ms`)
-            
-            if (!tables.includes(tableName)) {
-                return {
-                    results: [],
-                    hasNextPage: false,
-                    page,
-                    perPage,
-                }
+            return {
+                results: [],
+                hasNextPage: false,
+                page,
+                perPage,
             }
-
-            const openStart = Date.now()
-            table = await db.openTable(tableName)
-            console.log(`[search] openTable() took ${Date.now() - openStart}ms`)
-            this.tableCache.set(tableName, table)
-        } else {
-            console.log(`[search] Using cached table reference`)
         }
-        
+
         // Use FTS search if available, otherwise fall back to manual search
         let matchingSections: any[]
-        
+
         // Check if FTS index exists (cached)
         let hasFtsIndex = this.ftsIndexCache.get(tableName)
         if (hasFtsIndex === undefined) {
             const indicesStart = Date.now()
             const indices = await table.listIndices()
             console.log(`[search] listIndices() took ${Date.now() - indicesStart}ms, found ${indices.length} indices`)
-            
-            hasFtsIndex = indices.some(index => 
-                index.columns.includes('section_content') && 
+
+            hasFtsIndex = indices.some(index =>
+                index.columns.includes('section_content') &&
                 (index.indexType === 'INVERTED' || index.indexType === 'FTS' || index.indexType.toLowerCase().includes('text'))
             )
             this.ftsIndexCache.set(tableName, hasFtsIndex)
@@ -529,7 +565,7 @@ export class SearchClient implements DatasetsInterface {
         } else {
             console.log(`[search] FTS index exists: ${hasFtsIndex} (from cache)`)
         }
-        
+
         if (hasFtsIndex) {
             try {
                 // Use FTS search on section_content
@@ -540,7 +576,7 @@ export class SearchClient implements DatasetsInterface {
                     .limit(perPage * (page + 1) + 1) // Get extra for pagination check
                     .toArray()
                 console.log(`[search] FTS search took ${Date.now() - ftsStart}ms, found ${searchResults.length} results`)
-                
+
                 matchingSections = searchResults.map(section => ({
                     ...section,
                     score: section._score || 1.0,
@@ -555,7 +591,7 @@ export class SearchClient implements DatasetsInterface {
                     .where(`type = 'section'`)
                     .toArray()
                 console.log(`[search] Manual query took ${Date.now() - manualStart}ms, loaded ${allSections.length} sections`)
-                
+
                 // Filter sections that match the query
                 const filterStart = Date.now()
                 matchingSections = allSections
@@ -576,7 +612,7 @@ export class SearchClient implements DatasetsInterface {
                 .where(`type = 'section'`)
                 .toArray()
             console.log(`[search] Manual query took ${Date.now() - manualStart}ms, loaded ${allSections.length} sections`)
-            
+
             // Filter sections that match the query
             const filterStart = Date.now()
             matchingSections = allSections
@@ -609,7 +645,7 @@ export class SearchClient implements DatasetsInterface {
         const endIdx = startIdx + perPage
         const pageResults = allResults.slice(startIdx, endIdx + 1) // Get one extra to check for next page
         const hasNextPage = pageResults.length > perPage
-        
+
         if (hasNextPage) {
             pageResults.pop() // Remove the extra result
         }
@@ -626,7 +662,7 @@ export class SearchClient implements DatasetsInterface {
             metadata: section.metadata && section.metadata !== '' ? JSON.parse(section.metadata) : undefined,
         }))
         console.log(`[search] Result mapping took ${Date.now() - mapStart}ms`)
-        
+
         console.log(`[search] Total search time: ${Date.now() - searchStartTime}ms`)
 
         return {
@@ -641,19 +677,17 @@ export class SearchClient implements DatasetsInterface {
         params: z.infer<typeof BaseDatasetParamsSchema>,
     ): Promise<z.infer<typeof GetDatasetSizeResponseSchema>> {
         const { datasetId } = params
-        const db = await this.getConnection()
         const tableName = this.sanitizeTableName(datasetId)
 
-        const tables = await db.tableNames()
-        if (!tables.includes(tableName)) {
+        // Get table from cache or open it
+        const table = await this.getOrCreateTable(tableName)
+        if (!table) {
             throw new Error(`Dataset ${datasetId} not found.`)
         }
 
-        const table = await db.openTable(tableName)
-        
         // Get all rows to calculate sizes
         const allRows = await table.query().toArray()
-        
+
         let fileCount = 0
         let sectionCount = 0
         let contentSizeBytes = 0

@@ -152,7 +152,6 @@ export async function processTarArchive({
             await stub.upsertFiles({
                 datasetId,
                 files: batch,
-                waitForReplication: false,
             })
 
             filesImported += batch.length

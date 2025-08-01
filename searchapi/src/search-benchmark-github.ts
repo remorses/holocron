@@ -2,7 +2,7 @@ import { SearchClient } from './sdk.js'
 import { importFromGitHub } from './import-github.js'
 
 // Use a unique dataset ID for each test run with timestamp
-const datasetId = `test-lancedb-benchmark-${Date.now()}`
+const datasetId = `test-lancedb-benchmark`
 
 // Initialize client (defaults to LanceDB cloud)
 // Use environment variable if provided, otherwise use default cloud database
@@ -70,10 +70,10 @@ const searchQueries = [
 // Test search functionality before benchmarking
 console.log('\n🔍 Testing search functionality...')
 try {
-    const testResult = await dataset.searchSections({ 
-        datasetId, 
-        query: searchQueries[0].query, 
-        perPage: 10 
+    const testResult = await dataset.searchSections({
+        datasetId,
+        query: searchQueries[0].query,
+        perPage: 10
     })
     console.log(`✅ Search working! Found ${testResult.results.length} results for "${searchQueries[0].query}"`)
     if (testResult.results.length > 0) {
@@ -88,10 +88,10 @@ try {
 console.log('\n📊 Search result counts:')
 for (const { query, description } of searchQueries) {
     try {
-        const result = await dataset.searchSections({ 
-            datasetId, 
-            query, 
-            perPage: 20 
+        const result = await dataset.searchSections({
+            datasetId,
+            query,
+            perPage: 20
         })
         console.log(`  "${query}" (${description}): ${result.results.length} results`)
     } catch (error: any) {
