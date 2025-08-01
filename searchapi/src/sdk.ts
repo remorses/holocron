@@ -11,6 +11,7 @@ import {
     GetDatasetSizeResponseSchema,
 } from './types.js'
 import * as lancedb from '@lancedb/lancedb'
+import type { ConnectionOptions } from '@lancedb/lancedb'
 import { parseMarkdownIntoSections, isSupportedMarkdownFile } from './markdown-parser.js'
 import { computeGitBlobSHA } from './sha-utils.js'
 import { cleanMarkdownContent } from './markdown-cleaner.js'
@@ -25,7 +26,7 @@ import type {
     SearchSectionsResponse,
 } from './types.js'
 
-export class LanceDbImplementation implements DatasetsInterface {
+export class SearchClient implements DatasetsInterface {
     private db?: lancedb.Connection
     private dbPath: string = 'db://fumabase-co7ad3' // Default to cloud database
 
@@ -45,10 +46,24 @@ export class LanceDbImplementation implements DatasetsInterface {
                 if (!apiKey) {
                     throw new Error('LANCEDB_API_KEY environment variable is required for cloud connections')
                 }
-                this.db = await lancedb.connect(this.dbPath, {
+                const connectionOptions: Partial<ConnectionOptions> = {
                     apiKey,
                     region: 'us-east-1',
-                } as any)
+                    // Performance optimizations for cloud connections
+                    clientConfig: {
+                        timeoutConfig: {
+                            connectTimeout: 300, // 5 minutes for large uploads
+                            readTimeout: 600,    // 10 minutes for large operations
+                        },
+                        retryConfig: {
+                            retries: 5,
+                            connectRetries: 3,
+                            readRetries: 3,
+                            backoffFactor: 0.5,
+                        },
+                    },
+                }
+                this.db = await lancedb.connect(this.dbPath, connectionOptions)
             } else {
                 // Local connection
                 this.db = await lancedb.connect(this.dbPath)
@@ -93,6 +108,22 @@ export class LanceDbImplementation implements DatasetsInterface {
             table = await db.openTable(tableName)
         }
 
+        // Get all existing files upfront to avoid queries in loop
+        let existingFilesMap: Map<string, string> = new Map()
+        if (table) {
+            const existingFilesQuery = await table
+                .query()
+                .where(`type = 'file'`)
+                .select(['filename', 'sha'])
+                .toArray()
+            
+            // Build a map for O(1) lookups
+            for (const file of existingFilesQuery) {
+                existingFilesMap.set(file.filename, file.sha)
+            }
+            console.log(`[upsert] Found ${existingFilesMap.size} existing files in dataset`)
+        }
+
         // Compute SHAs in parallel
         const shaStart = Date.now()
         const shaComputations = await Promise.all(
@@ -109,18 +140,11 @@ export class LanceDbImplementation implements DatasetsInterface {
         const allRows: any[] = []
 
         for (const { file, computedSHA } of shaComputations) {
-            // Check if file exists and has same SHA
-            if (table) {
-                const existingFiles = await table
-                    .query()
-                    .where(`filename = '${file.filename}' AND type = 'file'`)
-                    .limit(1)
-                    .toArray()
-                
-                if (existingFiles.length > 0 && existingFiles[0].sha === computedSHA) {
-                    skippedCount++
-                    continue
-                }
+            // Check if file exists and has same SHA using the map
+            const existingSHA = existingFilesMap.get(file.filename)
+            if (existingSHA === computedSHA) {
+                skippedCount++
+                continue
             }
 
             processedCount++
@@ -178,14 +202,40 @@ export class LanceDbImplementation implements DatasetsInterface {
         if (allRows.length > 0) {
             if (!table) {
                 // Create new table with all rows
-                await db.createTable(tableName, allRows)
-            } else {
-                // Delete existing entries for processed files
-                for (const filename of shaComputations.map(sc => sc.file.filename)) {
-                    await table.delete(`filename = '${filename}'`)
+                table = await db.createTable(tableName, allRows)
+                
+                // Create FTS indexes for better search performance
+                console.log(`[upsert] Creating FTS indexes for dataset ${datasetId}...`)
+                try {
+                    // Create FTS index on section content for fast text search
+                    const ftsOptions: lancedb.IndexOptions = {
+                        config: lancedb.Index.fts({
+                            withPosition: true, // Enable phrase search
+                            baseTokenizer: 'simple',
+                            lowercase: true,
+                            maxTokenLength: 40,
+                            language: 'English', // Must be capitalized
+                            stem: true,
+                            removeStopWords: true,
+                        }),
+                        replace: true,
+                    }
+                    
+                    await table.createIndex('section_content', ftsOptions)
+                    console.log(`[upsert] FTS index created on section_content`)
+                } catch (error) {
+                    console.warn(`[upsert] Failed to create FTS indexes:`, error)
                 }
-                // Add new rows
-                await table.add(allRows)
+            } else {
+                // Batch delete for better performance
+                const filenames = shaComputations.map(sc => sc.file.filename)
+                if (filenames.length > 0) {
+                    // Create a single delete query for all files
+                    const deleteQuery = filenames.map(f => `filename = '${f}'`).join(' OR ')
+                    await table.delete(deleteQuery)
+                }
+                // Add new rows with explicit append mode
+                await table.add(allRows, { mode: 'append' })
             }
         }
 
@@ -328,21 +378,39 @@ export class LanceDbImplementation implements DatasetsInterface {
 
         const table = await db.openTable(tableName)
         
-        // Get only sections (type = 'section')
-        const searchQuery = query.toLowerCase()
-        const allSections = await table
-            .query()
-            .where(`type = 'section'`)
-            .toArray()
+        // Use FTS search if available, otherwise fall back to manual search
+        let matchingSections: any[]
         
-        // Filter sections that match the query
-        const matchingSections = allSections
-            .filter(section => section.section_content && section.section_content.toLowerCase().includes(searchQuery))
-            .map(section => ({
+        try {
+            // Try to use FTS search on section_content
+            const searchResults = await table
+                .search(query)
+                .where(`type = 'section'`)
+                .limit(perPage * (page + 1) + 1) // Get extra for pagination check
+                .toArray()
+            
+            matchingSections = searchResults.map(section => ({
                 ...section,
-                score: 1.0, // Placeholder score
+                score: section._score || 1.0,
             }))
-            .sort((a, b) => b.score - a.score)
+        } catch (error) {
+            // Fall back to manual search if FTS is not available
+            console.warn('[search] FTS search failed, falling back to manual search:', error)
+            const searchQuery = query.toLowerCase()
+            const allSections = await table
+                .query()
+                .where(`type = 'section'`)
+                .toArray()
+            
+            // Filter sections that match the query
+            matchingSections = allSections
+                .filter(section => section.section_content && section.section_content.toLowerCase().includes(searchQuery))
+                .map(section => ({
+                    ...section,
+                    score: 1.0, // Placeholder score
+                }))
+                .sort((a, b) => b.score - a.score)
+        }
 
         // Group by file and limit per file
         const fileGroups: Record<string, any[]> = {}
@@ -433,60 +501,6 @@ export class LanceDbImplementation implements DatasetsInterface {
                 metadataSizeBytes,
             },
         }
-    }
-}
-
-export class SearchClient implements DatasetsInterface {
-    private datasets: DatasetsInterface
-
-    constructor({ provider, dbPath }: { provider?: 'lancedb'; dbPath?: string }) {
-        if (provider === 'lancedb') {
-            this.datasets = new LanceDbImplementation(dbPath)
-        } else {
-            throw new Error(`Unsupported provider: ${provider}`)
-        }
-    }
-
-    async upsertDataset(
-        params: z.infer<typeof UpsertDatasetParamsSchema>,
-    ): Promise<void> {
-        return this.datasets.upsertDataset(params)
-    }
-
-    async upsertFiles(
-        params: z.infer<typeof UpsertFilesParamsSchema>,
-    ): Promise<void> {
-        return this.datasets.upsertFiles(params)
-    }
-
-    async deleteFiles(
-        params: z.infer<typeof DeleteFilesParamsSchema>,
-    ): Promise<void> {
-        return this.datasets.deleteFiles(params)
-    }
-
-    async deleteDataset(
-        params: z.infer<typeof BaseDatasetParamsSchema>,
-    ): Promise<void> {
-        return this.datasets.deleteDataset(params)
-    }
-
-    async getFileContents(
-        params: z.infer<typeof GetFileContentsParamsSchema>,
-    ): Promise<z.infer<typeof GetFileContentsResultSchema>> {
-        return this.datasets.getFileContents(params)
-    }
-
-    async searchSections(
-        params: z.infer<typeof SearchSectionsParamsSchema>,
-    ): Promise<SearchSectionsResponse> {
-        return this.datasets.searchSections(params)
-    }
-
-    async getDatasetSize(
-        params: z.infer<typeof BaseDatasetParamsSchema>,
-    ): Promise<z.infer<typeof GetDatasetSizeResponseSchema>> {
-        return this.datasets.getDatasetSize(params)
     }
 }
 

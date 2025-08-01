@@ -1,13 +1,13 @@
-import { LanceDbImplementation } from './sdk.js'
+import { SearchClient } from './sdk.js'
 import { importFromGitHub } from './import-github.js'
 
 // Use a unique dataset ID for each test run with timestamp
 const datasetId = `test-lancedb-benchmark-${Date.now()}`
 
-// Initialize LanceDB implementation directly
+// Initialize client (defaults to LanceDB cloud)
 // Use environment variable if provided, otherwise use default cloud database
 const lanceDbUri = process.env.LANCEDB_URI
-const dataset = new LanceDbImplementation(lanceDbUri)
+const dataset = new SearchClient(lanceDbUri)
 
 if (!lanceDbUri || lanceDbUri === 'db://fumabase-co7ad3') {
     console.log('☁️  Using LanceDB Cloud (fumabase-co7ad3)')

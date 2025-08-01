@@ -100,7 +100,8 @@ export async function processTarArchive({
     )
 
     // Process files in batches
-    const BATCH_SIZE = 50
+    // LanceDB recommends 10k-100k rows per batch for optimal performance
+    const BATCH_SIZE = 1000 // Increased from 50 for better cloud performance
 
     for (let i = 0; i < allEntries.length; i += BATCH_SIZE) {
         const batchEntries = allEntries.slice(i, i + BATCH_SIZE)
