@@ -330,6 +330,9 @@ importers:
       '@iconify-json/lucide':
         specifier: ^1.2.49
         version: 1.2.49
+      '@lancedb/lancedb':
+        specifier: ^0.21.2
+        version: 0.21.2(apache-arrow@18.1.0)
       '@matejmazur/react-katex':
         specifier: ^3.1.3
         version: 3.1.3(katex@0.16.22)(react@19.1.1)
@@ -1965,6 +1968,9 @@ importers:
       '@iconify-json/lucide':
         specifier: ^1.2.49
         version: 1.2.49
+      '@lancedb/lancedb':
+        specifier: ^0.21.2
+        version: 0.21.2(apache-arrow@18.1.0)
       '@motionone/dom':
         specifier: ^10.18.0
         version: 10.18.0
