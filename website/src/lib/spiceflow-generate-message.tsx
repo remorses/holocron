@@ -409,22 +409,28 @@ export const generateMessageApp = new Spiceflow()
                         return { path, title }
                     })
 
-                    // Add files from filesInDraft that are not already in the list
+                    // Process files from filesInDraft
                     const existingPaths = new Set(filePaths.map((f) => f.path))
                     const draftFiles = fileSystem.getFilesInDraft()
+                    const pathsToRemove = new Set<string>()
+                    
                     for (const [draftPath, fileUpdate] of Object.entries(
                         draftFiles,
                     )) {
-                        if (
-                            !existingPaths.has(draftPath) &&
-                            fileUpdate.content !== null
-                        ) {
+                        if (fileUpdate.content === null) {
+                            // Mark this path for removal
+                            pathsToRemove.add(draftPath)
+                        } else if (!existingPaths.has(draftPath)) {
+                            // Add new draft files
                             filePaths.push({
                                 path: draftPath,
                                 title: '(draft)',
                             })
                         }
                     }
+                    
+                    // Remove deleted files
+                    filePaths = filePaths.filter(f => !pathsToRemove.has(f.path))
 
                     filePaths.push({
                         path: path.posix.join(
