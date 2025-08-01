@@ -180,7 +180,7 @@ importers:
         version: 12.23.12(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       fumadocs-ui:
         specifier: ^15.6.1
-        version: 15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11)
+        version: 15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11)
       json-schema:
         specifier: ^0.4.0
         version: 0.4.0
@@ -314,6 +314,9 @@ importers:
     dependencies:
       '@ai-sdk/anthropic':
         specifier: 2.0.0
+        version: 2.0.0(zod@4.0.5)
+      '@ai-sdk/groq':
+        specifier: ^2.0.0
         version: 2.0.0(zod@4.0.5)
       '@ai-sdk/openai':
         specifier: 2.0.0
@@ -1802,7 +1805,7 @@ importers:
         version: link:../fumadocs/packages/openapi
       fumadocs-ui:
         specifier: ^15.6.1
-        version: 15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11)
+        version: 15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11)
       react:
         specifier: ^19.1.1
         version: 19.1.1
@@ -1833,7 +1836,7 @@ importers:
         version: link:../fumadocs/packages/ui
       next:
         specifier: ^15.3.5
-        version: 15.3.5(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 15.3.5(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react:
         specifier: ^19.1.1
         version: 19.1.1
@@ -1940,6 +1943,9 @@ importers:
     dependencies:
       '@ai-sdk/anthropic':
         specifier: 2.0.0
+        version: 2.0.0(zod@4.0.5)
+      '@ai-sdk/groq':
+        specifier: ^2.0.0
         version: 2.0.0(zod@4.0.5)
       '@ai-sdk/openai':
         specifier: 2.0.0
@@ -2356,6 +2362,12 @@ packages:
 
   '@ai-sdk/gateway@1.0.0':
     resolution: {integrity: sha512-VEm87DyRx1yIPywbTy8ntoyh4jEDv1rJ88m+2I7zOm08jJI5BhFtAWh0OF6YzZu1Vu4NxhOWO4ssGdsqydDQ3A==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4
+
+  '@ai-sdk/groq@2.0.0':
+    resolution: {integrity: sha512-3N1Rcg6wWaT8Vugqcg6N6PrEHI2NlunFqFQKJ12f37VZSXc4BL5G29PqJfrD9mOUP9h2f84wPiArg1py8Uhmmg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4
@@ -14786,6 +14798,12 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.0(zod@4.0.5)
       zod: 4.0.5
 
+  '@ai-sdk/groq@2.0.0(zod@4.0.5)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.0(zod@4.0.5)
+      zod: 4.0.5
+
   '@ai-sdk/openai@2.0.0(zod@4.0.5)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
@@ -24396,7 +24414,7 @@ snapshots:
   fsevents@2.3.3:
     optional: true
 
-  fumadocs-core@15.6.1(@oramacloud/client@2.1.4)(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+  fumadocs-core@15.6.1(@oramacloud/client@2.1.4)(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       '@formatjs/intl-localematcher': 0.6.1
       '@orama/orama': 3.1.11
@@ -24434,7 +24452,7 @@ snapshots:
       unist-util-visit: 5.0.0
       zod: 3.25.76
 
-  fumadocs-ui@15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11):
+  fumadocs-ui@15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11):
     dependencies:
       '@radix-ui/react-accordion': 1.2.11(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@radix-ui/react-collapsible': 1.1.11(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -24447,7 +24465,7 @@ snapshots:
       '@radix-ui/react-slot': 1.2.3(@types/react@19.1.9)(react@19.1.1)
       '@radix-ui/react-tabs': 1.1.12(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       class-variance-authority: 0.7.1
-      fumadocs-core: 15.6.1(@oramacloud/client@2.1.4)(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      fumadocs-core: 15.6.1(@oramacloud/client@2.1.4)(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       lodash.merge: 4.6.2
       next-themes: 0.4.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       postcss-selector-parser: 7.1.0
@@ -26441,7 +26459,7 @@ snapshots:
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  next@15.3.5(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+  next@15.3.5(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       '@next/env': 15.3.5
       '@swc/counter': 0.1.3

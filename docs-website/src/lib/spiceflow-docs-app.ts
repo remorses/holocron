@@ -1,6 +1,7 @@
 import { OpenAIResponsesProviderOptions, openai } from '@ai-sdk/openai'
 import dedent from 'string-dedent'
 import { anthropic } from '@ai-sdk/anthropic'
+import { groq } from '@ai-sdk/groq'
 import {
     UIMessage,
     streamText,
@@ -113,7 +114,7 @@ export const docsApp = new Spiceflow({ basePath: '/fumabaseInternalAPI' })
             const pages = source.getPages(locale)
 
             // let model = openai.responses('gpt-4.1')
-            let model = anthropic('claude-3-5-haiku-latest')
+            let model = groq('qwen/qwen3-32b')
 
             const linksText = pages
                 .map((page) => {

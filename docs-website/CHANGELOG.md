@@ -1,5 +1,10 @@
 # Changelog
 
+## 2025-08-01 20:00
+
+- Switch default AI model to Groq with qwen/qwen3-32b model
+- Added @ai-sdk/groq dependency for Groq AI provider support
+
 ## 2025-08-01 18:50
 
 - **Fix draft files returning 404**: Changed condition from `!markdown` to `markdown == null` to properly handle empty string draft content

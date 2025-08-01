@@ -7,7 +7,7 @@ export const env = {
     SERVICE_SECRET: process.env.SERVICE_SECRET,
     GOOGLE_ID: process.env.GOOGLE_ID,
     GOOGLE_SECRET: process.env.GOOGLE_SECRET,
-
+    GROQ_API_KEY: process.env.GROQ_API_KEY,
     GITHUB_APP_ID: process.env.GITHUB_APP_ID,
     GITHUB_APP_PRIVATE_KEY: process.env.GITHUB_APP_PRIVATE_KEY,
     GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,

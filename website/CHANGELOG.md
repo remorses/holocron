@@ -1,5 +1,10 @@
 # Changelog
 
+## 2025-08-01 20:00
+
+- Switch default AI model to Groq with qwen/qwen3-32b model
+- Added @ai-sdk/groq dependency for Groq AI provider support
+
 ## 2025-08-01 19:00
 
 - **FileSystemEmulator**: Verified move operations correctly delete old paths

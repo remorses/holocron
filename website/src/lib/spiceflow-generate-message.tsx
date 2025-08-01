@@ -1,6 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import { AnySpiceflow, preventProcessExitIfBusy } from 'spiceflow'
-
+import { groq } from '@ai-sdk/groq'
 import dedent from 'string-dedent'
 import {
     OpenAIResponsesProviderOptions,
@@ -231,7 +231,7 @@ export const generateMessageApp = new Spiceflow()
             languages: branch.site?.locales?.map((x) => x.locale) || [],
         })
 
-        let model = openai.responses('o4-mini')
+        let model = groq('qwen/qwen3-32b')
 
         if (chat?.modelId && chat?.modelProvider) {
             if (chat.modelProvider.startsWith('openai')) {
