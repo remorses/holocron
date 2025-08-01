@@ -29,6 +29,11 @@ import type {
 export class SearchClient implements DatasetsInterface {
     private db?: lancedb.Connection
     private dbPath: string = 'db://fumabase-co7ad3' // Default to cloud database
+    private pendingIndexCreation: Set<string> = new Set()
+    private totalRowsInserted: Map<string, number> = new Map()
+    // Cache for table references and index status
+    private tableCache: Map<string, lancedb.Table> = new Map()
+    private ftsIndexCache: Map<string, boolean> = new Map()
 
     constructor(dbPath?: string) {
         if (dbPath) {
@@ -108,12 +113,14 @@ export class SearchClient implements DatasetsInterface {
             table = await db.openTable(tableName)
         }
 
-        // Get all existing files upfront to avoid queries in loop
+        // Optimization: Only query for the specific files we're uploading
         let existingFilesMap: Map<string, string> = new Map()
-        if (table) {
+        if (table && files.length > 0) {
+            // Build IN clause for efficient lookup
+            const filenameList = files.map(f => `'${f.filename.replace(/'/g, "''")}'`).join(',')
             const existingFilesQuery = await table
                 .query()
-                .where(`type = 'file'`)
+                .where(`filename IN (${filenameList}) AND type = 'file'`)
                 .select(['filename', 'sha'])
                 .toArray()
             
@@ -121,7 +128,7 @@ export class SearchClient implements DatasetsInterface {
             for (const file of existingFilesQuery) {
                 existingFilesMap.set(file.filename, file.sha)
             }
-            console.log(`[upsert] Found ${existingFilesMap.size} existing files in dataset`)
+            console.log(`[upsert] Found ${existingFilesMap.size} existing files (out of ${files.length} to check)`)
         }
 
         // Compute SHAs in parallel
@@ -165,7 +172,6 @@ export class SearchClient implements DatasetsInterface {
                 level: 0,
                 order_index: 0,
                 start_line: 0,
-                vector: new Array(1536).fill(0), // Placeholder
                 cleaned_content: '',
             })
 
@@ -191,7 +197,6 @@ export class SearchClient implements DatasetsInterface {
                         level: section.level,
                         order_index: section.orderIndex,
                         start_line: section.startLine,
-                        vector: new Array(1536).fill(0), // Placeholder for embeddings
                         cleaned_content: cleanMarkdownContent(section.content),
                     })
                 }
@@ -202,45 +207,157 @@ export class SearchClient implements DatasetsInterface {
         if (allRows.length > 0) {
             if (!table) {
                 // Create new table with all rows
-                table = await db.createTable(tableName, allRows)
-                
-                // Create FTS indexes for better search performance
-                console.log(`[upsert] Creating FTS indexes for dataset ${datasetId}...`)
                 try {
-                    // Create FTS index on section content for fast text search
-                    const ftsOptions: lancedb.IndexOptions = {
-                        config: lancedb.Index.fts({
-                            withPosition: true, // Enable phrase search
-                            baseTokenizer: 'simple',
-                            lowercase: true,
-                            maxTokenLength: 40,
-                            language: 'English', // Must be capitalized
-                            stem: true,
-                            removeStopWords: true,
-                        }),
-                        replace: true,
+                    table = await db.createTable(tableName, allRows)
+                    
+                    // Create a btree index on filename for efficient mergeInsert operations
+                    console.log(`[upsert] Creating btree index on filename column...`)
+                    try {
+                        await table.createIndex('filename', {
+                            config: lancedb.Index.btree(),
+                            replace: true,
+                        })
+                    } catch (indexError) {
+                        console.warn('[upsert] Failed to create filename index:', indexError)
                     }
                     
-                    await table.createIndex('section_content', ftsOptions)
-                    console.log(`[upsert] FTS index created on section_content`)
-                } catch (error) {
-                    console.warn(`[upsert] Failed to create FTS indexes:`, error)
+                    // Delay FTS index creation - will be created later for better bulk performance
+                    console.log(`[upsert] Delaying FTS index creation for bulk upload performance`)
+                } catch (createError: any) {
+                    // Table might already exist due to race condition or eventual consistency
+                    if (createError.message?.includes('already exists')) {
+                        console.log(`[upsert] Table already exists, opening it...`)
+                        table = await db.openTable(tableName)
+                        // Add the rows to existing table
+                        await table.add(allRows, { mode: 'append' })
+                    } else {
+                        throw createError
+                    }
                 }
             } else {
-                // Batch delete for better performance
-                const filenames = shaComputations.map(sc => sc.file.filename)
-                if (filenames.length > 0) {
-                    // Create a single delete query for all files
-                    const deleteQuery = filenames.map(f => `filename = '${f}'`).join(' OR ')
-                    await table.delete(deleteQuery)
+                // Use mergeInsert for much better performance (single operation instead of delete + add)
+                console.log(`[upsert] Using mergeInsert for ${allRows.length} rows...`)
+                
+                try {
+                    await table
+                        .mergeInsert('filename')
+                        .whenMatchedUpdateAll()
+                        .whenNotMatchedInsertAll()
+                        .execute(allRows)
+                } catch (mergeError: any) {
+                    // Check if error is due to missing index on filename
+                    if (mergeError.message?.includes('Please create an index on the join column filename')) {
+                        console.log('[upsert] Creating btree index on filename column for mergeInsert...')
+                        try {
+                            await table.createIndex('filename', {
+                                config: lancedb.Index.btree(),
+                                replace: true,
+                            })
+                            // Retry mergeInsert after creating index
+                            await table
+                                .mergeInsert('filename')
+                                .whenMatchedUpdateAll()
+                                .whenNotMatchedInsertAll()
+                                .execute(allRows)
+                        } catch (retryError) {
+                            // If still fails, use fallback
+                            console.warn('[upsert] mergeInsert failed after index creation, falling back to delete + add:', retryError)
+                            const filenames = shaComputations.map(sc => sc.file.filename)
+                            if (filenames.length > 0) {
+                                const deleteQuery = filenames.map(f => `filename = '${f.replace(/'/g, "''")}'`).join(' OR ')
+                                await table.delete(deleteQuery)
+                            }
+                            await table.add(allRows, { mode: 'append' })
+                        }
+                    } else {
+                        // Other error, use fallback
+                        console.warn('[upsert] mergeInsert failed, falling back to delete + add:', mergeError)
+                        const filenames = shaComputations.map(sc => sc.file.filename)
+                        if (filenames.length > 0) {
+                            const deleteQuery = filenames.map(f => `filename = '${f.replace(/'/g, "''")}'`).join(' OR ')
+                            await table.delete(deleteQuery)
+                        }
+                        await table.add(allRows, { mode: 'append' })
+                    }
                 }
-                // Add new rows with explicit append mode
-                await table.add(allRows, { mode: 'append' })
             }
         }
 
         console.log(`[upsert] Processing files (${processedCount} processed, ${skippedCount} skipped): ${Date.now() - startTime}ms`)
         console.log(`[upsert] Completed upsertFiles for dataset ${datasetId}`)
+        
+        // Track total rows inserted and mark index as pending
+        if (processedCount > 0) {
+            const currentTotal = this.totalRowsInserted.get(datasetId) || 0
+            this.totalRowsInserted.set(datasetId, currentTotal + processedCount)
+            this.pendingIndexCreation.add(datasetId)
+        }
+    }
+    
+    async createPendingIndexes(datasetId: string): Promise<void> {
+        if (!this.pendingIndexCreation.has(datasetId)) {
+            console.log(`[index] No pending indexes for dataset ${datasetId}`)
+            return
+        }
+        
+        const db = await this.getConnection()
+        const tableName = this.sanitizeTableName(datasetId)
+        const tables = await db.tableNames()
+        
+        if (!tables.includes(tableName)) {
+            console.log(`[index] Table ${tableName} not found`)
+            return
+        }
+        
+        const table = await db.openTable(tableName)
+        
+        console.log(`[index] Creating FTS indexes for dataset ${datasetId}...`)
+        try {
+            const ftsOptions: lancedb.IndexOptions = {
+                config: lancedb.Index.fts({
+                    withPosition: true,
+                    baseTokenizer: 'simple',
+                    lowercase: true,
+                    maxTokenLength: 40,
+                    language: 'English',
+                    stem: true,
+                    removeStopWords: true,
+                }),
+                replace: true,
+            }
+            
+            await table.createIndex('section_content', ftsOptions)
+            console.log(`[index] FTS index created successfully`)
+            this.pendingIndexCreation.delete(datasetId)
+            // Update FTS cache
+            this.ftsIndexCache.set(tableName, true)
+        } catch (error) {
+            console.warn(`[index] Failed to create FTS indexes:`, error)
+        }
+    }
+    
+    async optimizeTable(datasetId: string): Promise<void> {
+        const db = await this.getConnection()
+        const tableName = this.sanitizeTableName(datasetId)
+        const tables = await db.tableNames()
+        
+        if (!tables.includes(tableName)) {
+            return
+        }
+        
+        const table = await db.openTable(tableName)
+        
+        console.log(`[optimize] Optimizing table for dataset ${datasetId}...`)
+        const startTime = Date.now()
+        
+        try {
+            const stats = await table.optimize()
+            console.log(`[optimize] Table optimized in ${Date.now() - startTime}ms`)
+            console.log(`[optimize] Fragments removed: ${stats.compaction.fragmentsRemoved}, added: ${stats.compaction.fragmentsAdded}`)
+            console.log(`[optimize] Files removed: ${stats.compaction.filesRemoved}, added: ${stats.compaction.filesAdded}`)
+        } catch (error) {
+            console.warn(`[optimize] Failed to optimize table:`, error)
+        }
     }
 
     async deleteFiles(
@@ -363,46 +480,105 @@ export class SearchClient implements DatasetsInterface {
         params: z.infer<typeof SearchSectionsParamsSchema>,
     ): Promise<SearchSectionsResponse> {
         const { datasetId, query, page = 0, perPage = 20, maxChunksPerFile = 5, snippetLength = 300 } = params
+        console.log(`[search] Starting search for query "${query}" in dataset ${datasetId}`)
+        const searchStartTime = Date.now()
+        
         const db = await this.getConnection()
         const tableName = this.sanitizeTableName(datasetId)
 
-        const tables = await db.tableNames()
-        if (!tables.includes(tableName)) {
-            return {
-                results: [],
-                hasNextPage: false,
-                page,
-                perPage,
+        // Check cache first
+        let table = this.tableCache.get(tableName)
+        if (!table) {
+            const tablesStart = Date.now()
+            const tables = await db.tableNames()
+            console.log(`[search] tableNames() took ${Date.now() - tablesStart}ms`)
+            
+            if (!tables.includes(tableName)) {
+                return {
+                    results: [],
+                    hasNextPage: false,
+                    page,
+                    perPage,
+                }
             }
-        }
 
-        const table = await db.openTable(tableName)
+            const openStart = Date.now()
+            table = await db.openTable(tableName)
+            console.log(`[search] openTable() took ${Date.now() - openStart}ms`)
+            this.tableCache.set(tableName, table)
+        } else {
+            console.log(`[search] Using cached table reference`)
+        }
         
         // Use FTS search if available, otherwise fall back to manual search
         let matchingSections: any[]
         
-        try {
-            // Try to use FTS search on section_content
-            const searchResults = await table
-                .search(query)
-                .where(`type = 'section'`)
-                .limit(perPage * (page + 1) + 1) // Get extra for pagination check
-                .toArray()
+        // Check if FTS index exists (cached)
+        let hasFtsIndex = this.ftsIndexCache.get(tableName)
+        if (hasFtsIndex === undefined) {
+            const indicesStart = Date.now()
+            const indices = await table.listIndices()
+            console.log(`[search] listIndices() took ${Date.now() - indicesStart}ms, found ${indices.length} indices`)
             
-            matchingSections = searchResults.map(section => ({
-                ...section,
-                score: section._score || 1.0,
-            }))
-        } catch (error) {
-            // Fall back to manual search if FTS is not available
-            console.warn('[search] FTS search failed, falling back to manual search:', error)
+            hasFtsIndex = indices.some(index => 
+                index.columns.includes('section_content') && 
+                (index.indexType === 'INVERTED' || index.indexType === 'FTS' || index.indexType.toLowerCase().includes('text'))
+            )
+            this.ftsIndexCache.set(tableName, hasFtsIndex)
+            console.log(`[search] FTS index exists: ${hasFtsIndex} (cached for future)`)
+        } else {
+            console.log(`[search] FTS index exists: ${hasFtsIndex} (from cache)`)
+        }
+        
+        if (hasFtsIndex) {
+            try {
+                // Use FTS search on section_content
+                const ftsStart = Date.now()
+                const searchResults = await table
+                    .search(query)
+                    .where(`type = 'section'`)
+                    .limit(perPage * (page + 1) + 1) // Get extra for pagination check
+                    .toArray()
+                console.log(`[search] FTS search took ${Date.now() - ftsStart}ms, found ${searchResults.length} results`)
+                
+                matchingSections = searchResults.map(section => ({
+                    ...section,
+                    score: section._score || 1.0,
+                }))
+            } catch (error) {
+                // If FTS still fails, fall back to manual search
+                console.warn('[search] FTS search failed despite index, falling back to manual search:', error)
+                const manualStart = Date.now()
+                const searchQuery = query.toLowerCase()
+                const allSections = await table
+                    .query()
+                    .where(`type = 'section'`)
+                    .toArray()
+                console.log(`[search] Manual query took ${Date.now() - manualStart}ms, loaded ${allSections.length} sections`)
+                
+                // Filter sections that match the query
+                const filterStart = Date.now()
+                matchingSections = allSections
+                    .filter(section => section.section_content && section.section_content.toLowerCase().includes(searchQuery))
+                    .map(section => ({
+                        ...section,
+                        score: 1.0, // Placeholder score
+                    }))
+                    .sort((a, b) => b.score - a.score)
+                console.log(`[search] Filtering took ${Date.now() - filterStart}ms, matched ${matchingSections.length} sections`)
+            }
+        } else {
+            // No FTS index, use manual search
+            const manualStart = Date.now()
             const searchQuery = query.toLowerCase()
             const allSections = await table
                 .query()
                 .where(`type = 'section'`)
                 .toArray()
+            console.log(`[search] Manual query took ${Date.now() - manualStart}ms, loaded ${allSections.length} sections`)
             
             // Filter sections that match the query
+            const filterStart = Date.now()
             matchingSections = allSections
                 .filter(section => section.section_content && section.section_content.toLowerCase().includes(searchQuery))
                 .map(section => ({
@@ -410,9 +586,11 @@ export class SearchClient implements DatasetsInterface {
                     score: 1.0, // Placeholder score
                 }))
                 .sort((a, b) => b.score - a.score)
+            console.log(`[search] Filtering took ${Date.now() - filterStart}ms, matched ${matchingSections.length} sections`)
         }
 
         // Group by file and limit per file
+        const groupStart = Date.now()
         const fileGroups: Record<string, any[]> = {}
         for (const section of matchingSections) {
             if (!fileGroups[section.filename]) {
@@ -422,8 +600,10 @@ export class SearchClient implements DatasetsInterface {
                 fileGroups[section.filename].push(section)
             }
         }
+        console.log(`[search] Grouping by file took ${Date.now() - groupStart}ms`)
 
         // Flatten and paginate
+        const paginateStart = Date.now()
         const allResults = Object.values(fileGroups).flat()
         const startIdx = page * perPage
         const endIdx = startIdx + perPage
@@ -433,16 +613,21 @@ export class SearchClient implements DatasetsInterface {
         if (hasNextPage) {
             pageResults.pop() // Remove the extra result
         }
+        console.log(`[search] Pagination took ${Date.now() - paginateStart}ms`)
 
+        const mapStart = Date.now()
         const results = pageResults.map(section => ({
             filename: section.filename,
             sectionSlug: section.section_slug,
             snippet: section.section_content.substring(0, snippetLength),
-            cleanedSnippet: (section.cleaned_content || cleanMarkdownContent(section.section_content)).substring(0, snippetLength),
+            cleanedSnippet: section.cleaned_content ? section.cleaned_content.substring(0, snippetLength) : '',
             score: section.score,
             startLine: section.start_line,
             metadata: section.metadata && section.metadata !== '' ? JSON.parse(section.metadata) : undefined,
         }))
+        console.log(`[search] Result mapping took ${Date.now() - mapStart}ms`)
+        
+        console.log(`[search] Total search time: ${Date.now() - searchStartTime}ms`)
 
         return {
             results,

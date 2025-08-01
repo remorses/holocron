@@ -167,6 +167,19 @@ export async function processTarArchive({
     console.log(
         `[import-tar] Successfully imported ${filesImported} files (${(totalSizeBytes / 1024 / 1024).toFixed(2)} MB) in ${duration.toFixed(2)} seconds`,
     )
+    
+    // After bulk import, create indexes and optimize if using SearchClient
+    const { SearchClient } = await import('./sdk.js')
+    if (stub instanceof SearchClient) {
+        console.log('[import-tar] Creating indexes after bulk import...')
+        await stub.createPendingIndexes(datasetId)
+        
+        // Optimize table if many files were imported
+        if (filesImported > 5000) {
+            console.log('[import-tar] Optimizing table after large import...')
+            await stub.optimizeTable(datasetId)
+        }
+    }
 
     return { filesImported, totalSizeBytes }
 }
