@@ -986,7 +986,7 @@ function ContextButton({
 function Footer() {
     const { isGenerating: isPending, draftText: text } = useChatContext()
 
-    const { chat, githubFolder, prUrl, mentionOptions, branchId } =
+    const { chat, chatId, githubFolder, prUrl, mentionOptions, branchId } =
         useLoaderData() as Route.ComponentProps['loaderData']
     const siteData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId',
@@ -1009,6 +1009,11 @@ function Footer() {
             }
         })
     }, [])
+    useEffect(() => {
+        if (textareaRef?.current) {
+            textareaRef.current.focus()
+        }
+    }, [chatId])
     const transcribeAudio = async (audioFile: File): Promise<string> => {
         try {
             const formData = new FormData()
