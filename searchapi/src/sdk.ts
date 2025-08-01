@@ -18,7 +18,7 @@ import { cleanMarkdownContent } from './markdown-cleaner.js'
 
 // Import types from types.js
 import type {
-    EyecrestFile,
+    SearchApiFile,
     DeleteFilesRequest,
     UpsertDatasetRequest,
     GetFileContentsQuery,
@@ -726,4 +726,4 @@ export class SearchClient implements DatasetsInterface {
 
 
 // Re-export types that might be needed
-export type { SearchSectionsResponse } from './types.js'
+export type { SearchSectionsResponse, SearchApiFile } from './types.js'

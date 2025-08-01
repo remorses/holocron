@@ -377,7 +377,7 @@ export function ClientApp() {
     const docsJson = useDocsJson()
     useNProgress()
     // Inline DocsProvider
-    const { i18n, trieveReadApiKey, trieveDatasetId, cssStyles, themeCSS } =
+    const { i18n, cssStyles, themeCSS } =
         loaderData || {}
     const locale = i18n?.defaultLanguage
 
@@ -395,7 +395,6 @@ export function ClientApp() {
                     search={{
                         options: {},
                         SearchDialog: CustomSearchDialog,
-                        // enabled: !!trieveDatasetId,
                     }}
                     i18n={{
                         locale: locale || '',

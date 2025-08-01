@@ -2,6 +2,7 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
+    "@lancedb/lancedb": "^0.21.2",
     "@prisma/client": "^6.12.0",
     "@sentry/node": "^9.28.1",
     "json-schema-library": "^10.1.2",

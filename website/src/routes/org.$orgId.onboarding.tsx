@@ -67,7 +67,6 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     })
     await syncSite({
         files,
-        trieveDatasetId: undefined,
         githubFolder: site.githubFolder,
         branchId,
         siteId,

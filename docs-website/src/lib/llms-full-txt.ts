@@ -1,9 +1,9 @@
 import { prisma } from 'db'
 import { getFilesForSource } from './source.server'
 import {
-    searchDocsWithTrieve,
-    formatTrieveSearchResults,
-} from './trieve-search'
+    searchDocsWithEyecrest,
+    formatEyecrestSearchResults,
+} from './eyecrest-search'
 import { getFumadocsSource } from './source'
 
 export async function generateLlmsFullTxt({
@@ -46,15 +46,14 @@ export async function generateLlmsFullTxt({
     }
 
     if (searchQuery?.length) {
-        // Use Trieve search for search queries
-        const searchResults = await searchDocsWithTrieve({
+        // Use Eyecrest search for search queries
+        const searchResults = await searchDocsWithEyecrest({
             query: searchQuery,
+            branchId: siteBranch.branchId,
             // exact: true,
-            searchType: 'bm25',
-            trieveDatasetId: siteBranch.trieveDatasetId,
         })
 
-        output += formatTrieveSearchResults({
+        output += formatEyecrestSearchResults({
             results: searchResults,
             baseUrl,
         })

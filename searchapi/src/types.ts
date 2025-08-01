@@ -233,7 +233,7 @@ export const SearchSectionsParamsSchema = BaseDatasetParamsSchema.extend({
 })
 
 // Export types for SDK use
-export type EyecrestFile = z.input<typeof FileSchema>
+export type SearchApiFile = z.input<typeof FileSchema>
 export type DeleteFilesRequest = z.infer<typeof DeleteFilesSchema>
 export type UpsertDatasetRequest = z.infer<typeof UpsertDatasetRequestSchema>
 export type GetFileContentsQuery = z.infer<typeof GetFileContentsQuerySchema>

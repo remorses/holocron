@@ -1,7 +1,7 @@
 import type { Route } from './+types/api.search'
 
 import { prisma } from 'db'
-import { searchDocsWithTrieve } from '../lib/trieve-search'
+import { searchDocsWithEyecrest } from '../lib/eyecrest-search'
 
 export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url)
@@ -38,10 +38,9 @@ export async function loader({ request }: Route.LoaderArgs) {
     const defaultLanguage = site?.defaultLocale
     const languages = site?.locales?.map((x) => x.locale)
 
-    const results = await searchDocsWithTrieve({
-        trieveDatasetId: siteBranch.trieveDatasetId,
+    const results = await searchDocsWithEyecrest({
+        branchId: branchId,
         query,
-        tag,
     })
     return new Response(JSON.stringify(results, null, 2), {
         headers: {

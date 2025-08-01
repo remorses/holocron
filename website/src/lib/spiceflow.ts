@@ -207,7 +207,6 @@ export const app = new Spiceflow({ basePath: '/api' })
                 githubFolder,
                 branchId,
                 name: site.name || '',
-                trieveDatasetId: branch.trieveDatasetId || undefined,
                 files: pages,
                 docsJson: (branch.docsJson || {}) as DocsJsonType,
             })
@@ -931,7 +930,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             // Sync the files as markdown pages
             await syncSite({
                 files: assets,
-                trieveDatasetId: branch.trieveDatasetId || undefined,
+                // trieveDatasetId: branch.trieveDatasetId || undefined,
                 githubFolder: site.githubFolder || '',
                 branchId,
                 siteId: site.siteId,
@@ -1200,7 +1199,6 @@ export const app = new Spiceflow({ basePath: '/api' })
 
             await syncSite({
                 files: assets,
-                trieveDatasetId: undefined,
                 githubFolder: githubFolder || '',
                 branchId: finalBranchId,
                 siteId: finalSiteId,

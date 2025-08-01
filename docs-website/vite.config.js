@@ -63,7 +63,12 @@ export default defineConfig({
         !process.env.VITEST ? reactRouter() : react(),
         // tsconfigPaths(),
         viteExternalsPlugin({
-            externals: ['pg', 'shiki', 'json-schema-library'],
+            externals: [
+                'pg',
+                'shiki',
+                'json-schema-library',
+                '@lancedb/lancedb',
+            ],
         }),
         tailwindcss(),
         process.env.ANALYZE &&

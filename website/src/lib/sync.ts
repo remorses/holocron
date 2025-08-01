@@ -24,7 +24,7 @@ import {
 } from 'docs-website/src/lib/s3'
 import { deduplicateBy, generateSlugFromPath } from 'docs-website/src/lib/utils'
 import path from 'path'
-import { ChunkReqPayload, TrieveSDK } from 'trieve-ts-sdk'
+import type { SearchApiFile } from 'searchapi/sdk'
 import { cloudflareClient } from './cloudflare'
 import { env } from './env'
 import { notifyError } from './errors'
@@ -50,10 +50,7 @@ import {
     extractJsonCComments,
     JsonCComments,
 } from './json-c-comments'
-import {
-    cleanupOrphanedTrieveChunks,
-    TrieveChunkMetadata,
-} from 'docs-website/src/lib/trieve-search'
+import { client as eyecrest } from 'docs-website/src/lib/eyecrest'
 
 export function gitBlobSha(
     content: string | Buffer,
@@ -254,9 +251,7 @@ export async function* assetsFromFilesList({
 export async function syncSite({
     branchId,
     siteId,
-    trieveDatasetId,
     files,
-    name,
     signal,
     githubFolder,
     docsJson,
@@ -265,7 +260,6 @@ export async function syncSite({
     branchId: string
     githubFolder: string
     siteId: string
-    trieveDatasetId?: string
     name: string
     signal?: AbortSignal
     docsJson: DocsJsonType
@@ -303,26 +297,9 @@ export async function syncSite({
         return micromatch.isMatch(pathForMatching, ignorePatterns)
     }
 
-    const chunkSize = 120
-    let allChunksToSync: ChunkReqPayload[] = []
-
-    const trieve = new TrieveSDK({
-        apiKey: env.TRIEVE_API_KEY!,
-        organizationId: env.TRIEVE_ORGANIZATION_ID!,
-        datasetId: trieveDatasetId || undefined,
-    })
-    if (!trieveDatasetId) {
-        try {
-            const { datasetId } = await createTrieveDataset({
-                siteId,
-                branchId,
-                name,
-            })
-            trieve.datasetId = datasetId
-        } catch (e) {
-            notifyError(e)
-        }
-    }
+    // Files to sync to Eyecrest
+    let allFilesToSync: SearchApiFile[] = []
+    let deletedFilenames: string[] = []
     const cacheTagsToInvalidate = [] as string[]
     const processedSlugs = new Set<string>()
     const deletedAssetPaths = [] as string[]
@@ -335,9 +312,7 @@ export async function syncSite({
     const mediaAssetSlugs = new Set(allMediaAssets.map((asset) => asset.slug))
 
     // Closure functions for each asset type
-    async function syncMetaFile(
-        asset: AssetForSync,
-    ): Promise<ChunkReqPayload[]> {
+    async function syncMetaFile(asset: AssetForSync): Promise<SearchApiFile[]> {
         if (asset.type !== 'metaFile') return []
 
         let metaJsonData
@@ -369,9 +344,7 @@ export async function syncSite({
         return []
     }
 
-    async function syncDocsJson(
-        asset: AssetForSync,
-    ): Promise<ChunkReqPayload[]> {
+    async function syncDocsJson(asset: AssetForSync): Promise<SearchApiFile[]> {
         if (asset.type !== 'docsJson') return []
 
         console.log(`Updating docsJson for branch ${branchId}`)
@@ -492,7 +465,7 @@ export async function syncSite({
 
     async function syncStylesCss(
         asset: AssetForSync,
-    ): Promise<ChunkReqPayload[]> {
+    ): Promise<SearchApiFile[]> {
         if (asset.type !== 'stylesCss') return []
 
         console.log(`Updating stylesCss for branch ${branchId}`)
@@ -505,7 +478,7 @@ export async function syncSite({
 
     async function syncMediaAsset(
         asset: AssetForSync,
-    ): Promise<ChunkReqPayload[]> {
+    ): Promise<SearchApiFile[]> {
         if (asset.type !== 'mediaAsset') return []
 
         let slug = getSlugFromPath({
@@ -641,10 +614,10 @@ export async function syncSite({
         return []
     }
 
-    async function syncPage(asset: AssetForSync): Promise<ChunkReqPayload[]> {
+    async function syncPage(asset: AssetForSync): Promise<SearchApiFile[]> {
         if (asset.type !== 'page') return []
 
-        const chunksToSync: ChunkReqPayload[] = []
+        const filesToSync: SearchApiFile[] = []
         const slug = getSlugFromPath({
             githubPath: asset.githubPath,
             githubFolder,
@@ -654,7 +627,7 @@ export async function syncSite({
 
         if (processedSlugs.has(slug)) {
             console.log(`Skipping duplicate page with slug: ${slug}`)
-            return chunksToSync
+            return filesToSync
         }
 
         let data: ProcessorData
@@ -756,16 +729,19 @@ export async function syncSite({
 
         const structuredData = data.structuredData
 
-        if (data.frontmatter.title)
-            chunksToSync.push(
-                ...processForTrieve({
-                    _id: slug,
+        // Create Eyecrest file for this page
+        if (asset.markdown) {
+            filesToSync.push({
+                filename: asset.githubPath,
+                content: asset.markdown,
+                metadata: {
                     title: data.frontmatter.title,
-                    url: slug,
-                    structured: structuredData,
-                    pageSlug: slug,
-                }),
-            )
+                    slug: slug,
+                    frontmatter: data.frontmatter,
+                },
+                weight: 1.0,
+            })
+        }
 
         console.log(
             `Upserting page with slug: ${slug}, title: ${data.frontmatter.title}...`,
@@ -860,16 +836,17 @@ export async function syncSite({
             ` -> Upserted page: ${data.title} (ID: ${slug}, path: ${asset.githubPath})`,
         )
 
-        return chunksToSync
+        return filesToSync
     }
 
     async function syncDeletedAsset(
         asset: AssetForSync,
-    ): Promise<ChunkReqPayload[]> {
+    ): Promise<SearchApiFile[]> {
         if (asset.type !== 'deletedAsset') return []
 
         console.log(`Processing deleted asset: ${asset.githubPath}`)
         deletedAssetPaths.push(asset.githubPath)
+        deletedFilenames.push(asset.githubPath)
 
         // Find and delete pages with this githubPath
         const pagesToDelete = await prisma.markdownPage.findMany({
@@ -897,26 +874,7 @@ export async function syncSite({
                 cacheTagsToInvalidate.push(pageCacheTag)
             }
 
-            // Delete from Trieve if available
-            if (trieve.datasetId) {
-                for (const page of pagesToDelete) {
-                    try {
-                        await trieve.deleteGroup({
-                            deleteChunks: true,
-                            groupId: page.slug,
-                            trDataset: trieve.datasetId,
-                        })
-                        console.log(
-                            `Deleted Trieve chunks for page ${page.slug}`,
-                        )
-                    } catch (error) {
-                        console.error(
-                            `Error deleting Trieve chunks for page ${page.slug}:`,
-                            error,
-                        )
-                    }
-                }
-            }
+            // Deletion from Eyecrest will be handled after collecting all deleted files
 
             // Delete from database
             const deleteResult = await prisma.markdownPage.deleteMany({
@@ -1016,29 +974,53 @@ export async function syncSite({
             }
         },
     )) {
-        allChunksToSync.push(...chunks)
-        if (chunks.length >= chunkSize && trieve.datasetId) {
-            console.log(`Syncing ${chunks.length} chunks to Trieve...`)
-            const groups = groupByN(chunks, chunkSize)
-            chunks.length = 0
-            waitUntil(
-                Promise.all(groups.map((group) => trieve.createChunk(group))),
-            )
-        }
+        allFilesToSync.push(...chunks)
     }
 
-    // Process any remaining chunks that didn't reach batch size
-    if (allChunksToSync.length > 0) {
-        console.log(
-            `Syncing remaining ${allChunksToSync.length} chunks to Trieve...`,
-        )
-        const groups = groupByN(allChunksToSync, chunkSize)
-        if (trieve.datasetId) {
-            await Promise.all(groups.map((group) => trieve.createChunk(group)))
+    // Ensure dataset exists before syncing files
+    console.log(`Ensuring dataset ${branchId} exists in Eyecrest...`)
+    try {
+        await eyecrest.upsertDataset({
+            datasetId: branchId, // Use branchId as dataset ID
+        })
+        console.log('Dataset created/updated successfully.')
+    } catch (error) {
+        console.error('Error creating/updating dataset in Eyecrest:', error)
+        notifyError(error, 'eyecrest dataset creation')
+    }
+
+    // Upload all files to Eyecrest
+    if (allFilesToSync.length > 0) {
+        console.log(`Syncing ${allFilesToSync.length} files to Eyecrest...`)
+        try {
+            await eyecrest.upsertFiles({
+                datasetId: branchId, // Use branchId as dataset ID
+                files: allFilesToSync,
+            })
+            console.log('Files synced to Eyecrest successfully.')
+        } catch (error) {
+            console.error('Error syncing files to Eyecrest:', error)
+            notifyError(error, 'eyecrest sync')
         }
-        console.log('Remaining chunks synced to Trieve successfully.')
     } else {
-        console.log('No remaining chunks to sync to Trieve.')
+        console.log('No files to sync to Eyecrest.')
+    }
+
+    // Delete files from Eyecrest
+    if (deletedFilenames.length > 0) {
+        console.log(
+            `Deleting ${deletedFilenames.length} files from Eyecrest...`,
+        )
+        try {
+            await eyecrest.deleteFiles({
+                datasetId: branchId, // Use branchId as dataset ID
+                filenames: deletedFilenames,
+            })
+            console.log('Files deleted from Eyecrest successfully.')
+        } catch (error) {
+            console.error('Error deleting files from Eyecrest:', error)
+            notifyError(error, 'eyecrest delete')
+        }
     }
 
     // Invalidate cache tags
@@ -1046,15 +1028,7 @@ export async function syncSite({
         await cloudflareClient.invalidateCacheTags(cacheTagsToInvalidate)
     }
 
-    // Clean up orphaned Trieve chunks after sync is complete
-    if (trieve.datasetId) {
-        try {
-            await cleanupOrphanedTrieveChunks({ siteId, branchId })
-        } catch (error) {
-            notifyError(error, 'trieve cleanup')
-            // Don't throw the error to avoid failing the entire sync process
-        }
-    }
+    // No cleanup needed for Eyecrest as it handles file updates automatically
 
     console.log('Import script finished.')
 }
@@ -1478,34 +1452,10 @@ export async function deletePages({
         `Deleting pages with slugs: ${slugs.join(', ')} from branch ${branchId} in site ${siteId}`,
     )
 
-    // 1. Get the branch to retrieve the Trieve dataset ID
-    const branch = await prisma.siteBranch.findUnique({
-        where: { branchId },
-        select: { trieveDatasetId: true },
-    })
+    // Collect all githubPaths to delete from Eyecrest
+    const filesToDelete: string[] = []
 
-    if (!branch) {
-        throw new Error(`Branch with ID ${branchId} not found`)
-    }
-
-    // 2. Initialize Trieve SDK if we have a dataset ID
-    let trieve: TrieveSDK | undefined
-    if (branch.trieveDatasetId) {
-        trieve = new TrieveSDK({
-            apiKey: env.TRIEVE_API_KEY!,
-            organizationId: env.TRIEVE_ORGANIZATION_ID!,
-            datasetId: branch.trieveDatasetId,
-        })
-        console.log(
-            `Initialized Trieve SDK with dataset ID: ${branch.trieveDatasetId}`,
-        )
-    } else {
-        console.log(
-            `No Trieve dataset found for site ${siteId}, skipping Trieve cleanup`,
-        )
-    }
-
-    // 3. For each slug, find all pages that have that slug or start with that slug + "/"
+    // For each slug, find all pages that have that slug or start with that slug + "/"
     for (const rootSlug of slugs) {
         // Find the main page and all its children
         console.log(`Finding pages for slug ${rootSlug} in branch ${branchId}`)
@@ -1520,6 +1470,7 @@ export async function deletePages({
             select: {
                 pageId: true,
                 slug: true,
+                githubPath: true,
             },
         })
 
@@ -1534,33 +1485,12 @@ export async function deletePages({
             `Found ${pagesToDelete.length} pages to delete for slug ${rootSlug}`,
         )
 
-        // 4. Delete chunks from Trieve if available (do this before deleting pages from DB)
-        if (trieve && branch.trieveDatasetId) {
-            for (const page of pagesToDelete) {
-                try {
-                    console.log(
-                        `Deleting chunks for page ${page.slug} from Trieve`,
-                    )
-
-                    await trieve.deleteGroup({
-                        deleteChunks: true,
-                        groupId: page.slug,
-                        trDataset: branch.trieveDatasetId,
-                    })
-
-                    console.log(
-                        `Successfully deleted chunks for page ${page.slug} from Trieve`,
-                    )
-                } catch (error) {
-                    console.error(
-                        `Error deleting chunks for page ${page.slug} from Trieve:`,
-                        error,
-                    )
-                }
-            }
+        // Collect githubPaths for Eyecrest deletion
+        for (const page of pagesToDelete) {
+            filesToDelete.push(page.githubPath)
         }
 
-        // 5. Delete pages from database
+        // Delete pages from database
         console.log(`Deleting pages from database for slug ${rootSlug}`)
         const deleteResult = await prisma.markdownPage.deleteMany({
             where: {
@@ -1577,126 +1507,27 @@ export async function deletePages({
         )
     }
 
+    // Delete files from Eyecrest
+    if (filesToDelete.length > 0) {
+        console.log(`Deleting ${filesToDelete.length} files from Eyecrest...`)
+        try {
+            await eyecrest.deleteFiles({
+                datasetId: branchId, // Use branchId as dataset ID
+                filenames: filesToDelete,
+            })
+            console.log('Files deleted from Eyecrest successfully.')
+        } catch (error) {
+            console.error('Error deleting files from Eyecrest:', error)
+            notifyError(error, 'eyecrest delete')
+        }
+    }
+
     console.log('Page deletion completed')
 }
 
-function processForTrieve(page: DocumentRecord & { pageSlug: string }) {
-    const chunks: ChunkReqPayload[] = []
-    const group_tracking_ids = [page.pageSlug]
-    const tag_set = page.tag ? [page.tag] : []
-    if (page.description)
-        chunks.push({
-            tracking_id: `${page._id}-${page.description}`,
-            chunk_html: page.description || page.title,
-            link: page.url,
-            tag_set,
-            metadata: {
-                page_title: page.title,
-                page_id: page._id,
-            } satisfies TrieveChunkMetadata,
-            upsert_by_tracking_id: true,
-            group_tracking_ids,
-        })
+// processForTrieve function removed - now using Eyecrest SDK directly
 
-    page.structured.contents.forEach((p: StructuredContent) => {
-        const heading = p.heading
-            ? page.structured.headings.find((h) => p.heading === h.id)
-            : null
-
-        chunks.push({
-            tracking_id: `${page._id}-${heading?.id}-content`,
-            chunk_html: p.content,
-            link: page.url,
-            tag_set,
-            metadata: {
-                page_title: page.title,
-                section: heading?.content || '',
-                section_id: heading?.id || '',
-                page_id: page._id,
-                line: p.line?.toString(),
-            } satisfies TrieveChunkMetadata,
-            upsert_by_tracking_id: true,
-            group_tracking_ids,
-        })
-    })
-    page.structured.headings.forEach((heading: Heading) => {
-        chunks.push({
-            tracking_id: `${page._id}-${heading?.id}-heading`,
-            chunk_html: heading.content,
-            link: page.url,
-            tag_set,
-            metadata: {
-                page_title: page.title,
-                section: heading?.content || '',
-                section_id: heading?.id || '',
-                page_id: page._id,
-                line: heading.line?.toString(),
-            } satisfies TrieveChunkMetadata,
-            upsert_by_tracking_id: true,
-            group_tracking_ids,
-        })
-    })
-
-    // console.log(JSON.stringify({ chunks }, null, 2))
-    return chunks
-}
-
-async function createTrieveDataset({ siteId, branchId, name }) {
-    const trieve = new TrieveSDK({
-        apiKey: env.TRIEVE_API_KEY!,
-        organizationId: env.TRIEVE_ORGANIZATION_ID!,
-    })
-    console.log(
-        `No Trieve dataset found for site ${siteId}, creating new dataset...`,
-    )
-    const dataset = await trieve
-        .createDataset({
-            dataset_name: `${name} ${siteId}`,
-            tracking_id: siteId,
-            server_configuration: {},
-        })
-        .catch((e) => {
-            if (e.message.includes('already exists')) {
-                console.log('Trieve dataset already exists')
-                return null
-            }
-            throw e
-        })
-    let datasetId = dataset?.id
-    if (!datasetId) {
-        console.log(`Trieve dataset already exists for site ${siteId}`)
-        const dataset = await trieve.getDatasetByTrackingId(siteId)
-        if (!dataset) {
-            throw new Error(
-                'Trieve dataset not found even if it already exists',
-            )
-        }
-        datasetId = dataset.id
-    }
-
-    console.log(`Created Trieve dataset with ID: ${datasetId}`)
-
-    console.log(`Creating read-only API key for dataset ${datasetId}...`)
-    const token = await trieve.createOrganizationApiKey({
-        name: `read only for site ${siteId}`,
-        role: 0,
-
-        dataset_ids: [datasetId],
-    })
-    console.log(`API key created successfully`)
-
-    trieve.datasetId = datasetId
-    console.log(`Updating site record with Trieve dataset information...`)
-    await prisma.siteBranch.update({
-        where: { branchId },
-        data: {
-            trieveDatasetId: datasetId,
-            trieveReadApiKey: token.api_key,
-        },
-    })
-    console.log(`Site record updated with Trieve dataset ID and API key`)
-    return { datasetId: datasetId }
-}
+// createTrieveDataset function removed - now using branchId as dataset ID in Eyecrest
 
 export async function publicFileMapUrl({
     owner,

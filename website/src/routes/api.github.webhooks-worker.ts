@@ -174,7 +174,6 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
         await syncSite({
             branchId: siteBranch.branchId,
             siteId: siteBranch.site.siteId,
-            trieveDatasetId: siteBranch.trieveDatasetId || undefined,
             githubFolder: siteBranch.site.githubFolder,
             files: changedFiles,
             name: siteBranch.site.name || '',
