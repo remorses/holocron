@@ -723,8 +723,7 @@ export class SearchClient implements DatasetsInterface {
     }
 }
 
-// Export with old name for backward compatibility
-export { SearchClient as EyecrestClient }
+
 
 // Re-export types that might be needed
 export type { SearchSectionsResponse } from './types.js'
