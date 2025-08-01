@@ -519,7 +519,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         }
     }
 
-    if (!page && !markdown) {
+    if (!page && markdown == null) {
         console.log('Page not found for slug:', slug)
         throw new Response('null', {
             status: 404,

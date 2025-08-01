@@ -126,7 +126,7 @@ const ChatProvider = (props: {
         if (messageElement) {
             messageElement.scrollIntoView({
                 behavior: 'smooth',
-                // block: 'nearest',
+                block: 'start',
             })
         } else {
             console.warn(

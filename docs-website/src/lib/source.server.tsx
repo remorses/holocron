@@ -64,7 +64,7 @@ export async function getFilesForSource({
     const allFiles = [...files]
     if (Object.keys(filesInDraft).length > 0) {
         for (const [githubPath, draft] of Object.entries(filesInDraft)) {
-            if (!draft?.content) continue
+            if (draft?.content == null) continue
 
             const normalizedPath = removeGithubFolder(githubPath, githubFolder)
             // Check if this file already exists in the files array

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2025-08-01 18:50
+
+- **Fix draft files returning 404**: Changed condition from `!markdown` to `markdown == null` to properly handle empty string draft content
+- **Fix typo**: Correct "fiimport" to "import" in mdx.server.ts
+
 ## 2025-01-30
 
 - Added graceful shutdown middleware for Spiceflow apps

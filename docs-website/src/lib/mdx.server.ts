@@ -1,4 +1,4 @@
-fiimport { createHighlighter, bundledLanguages } from 'shiki/bundle/full'
+import { createHighlighter, bundledLanguages } from 'shiki/bundle/full'
 import path from 'path'
 import YAML from 'js-yaml'
 import { getProcessor, ProcessorData } from './mdx-heavy'

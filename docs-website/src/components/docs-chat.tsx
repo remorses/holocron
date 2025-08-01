@@ -98,7 +98,7 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
         console.log({ currentSlug, currentOrigin })
         try {
             const { data: generator, error } =
-                await docsApiClientWithDurableFetch.api.generateMessage.post(
+                await docsApiClientWithDurableFetch.fumabaseInternalAPI.generateMessage.post(
                     {
                         messages: messages as DocsUIMessage[],
                         currentSlug: currentSlug,

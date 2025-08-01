@@ -16,4 +16,6 @@ do not call the project structure tool at first, the project is empty. this is a
 when creating the draft pages do not create pages with a lot of new lines and whitespace in them. just write the frontmatter and that's it
 
 
-this chat is for creating a new site. DO NOT call `getProjectFiles`! That will contain only an empty fumabase.jsonc file. DO NOT read fumabase.jsonc. it's just a placeholder empty config file.
+- this conversation is for creating a new site. DO NOT call `getProjectFiles`! That will contain only an empty fumabase.jsonc file. DO NOT read fumabase.jsonc. it's just a placeholder empty config file.
+
+- when creating pages for a new site try to create an interesting structure using folders. having all pages at the root level is boring, instead thing of ways to group them and use folders for these groups

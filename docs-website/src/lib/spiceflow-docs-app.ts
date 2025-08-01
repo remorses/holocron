@@ -46,7 +46,7 @@ import { FileSystemEmulator } from 'website/src/lib/file-system-emulator'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
-export const docsApp = new Spiceflow({ basePath: '/api' })
+export const docsApp = new Spiceflow({ basePath: '/fumabaseInternalAPI' })
     .use(preventProcessExitIfBusy())
     .route({
         method: 'POST',
