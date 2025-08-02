@@ -16,37 +16,22 @@ export async function* readableStreamToAsyncIterable<T>(
     }
 }
 export function asyncIterableToReadableStream<T>(
-  iterable: AsyncIterable<T>,
+    iterable: AsyncIterable<T>,
 ): ReadableStream<T> {
-  return new ReadableStream<T>({
-    async pull(controller) {
-      let iterator = (this as any).iterator as AsyncIterator<T> | undefined;
+    return new ReadableStream<T>({
 
-      try {
-        if (!iterator) {
-          iterator = iterable[Symbol.asyncIterator]();
-          (this as any).iterator = iterator;
-        }
-
-        const { value, done } = await iterator.next();
-        if (done) controller.close();
-        else    controller.enqueue(value);
-      } catch (err) {
-        console.error('stream error:', err);
-        controller.error(err);
-      }
-    },
-
-    async cancel() {
-      const iterator = (this as any).iterator as AsyncIterator<T> | undefined;
-      if (iterator?.return) {
-        try { await iterator.return(); }
-        catch { /* swallow */ }
-      }
-    },
-  });
+        async start(controller) {
+            try {
+                for await (const value of iterable) {
+                    controller.enqueue(value)
+                }
+                controller.close()
+            } catch (err) {
+                controller.error(err)
+            }
+        },
+    })
 }
-
 
 export { memoize }
 

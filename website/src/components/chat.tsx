@@ -300,7 +300,7 @@ export default function Chat({
         const currentSlug = useWebsiteState.getState()?.currentSlug || ''
         const { githubFolder } = loaderData
 
-        try {
+
             const { data: generator, error } =
                 await apiClientWithDurableFetch.api.generateMessage.post(
                     {
@@ -488,8 +488,7 @@ export default function Chat({
             }
             console.log('finished streaming message response, revalidating')
             await revalidator.revalidate()
-        } finally {
-        }
+
 
 
     }

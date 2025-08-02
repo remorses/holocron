@@ -939,7 +939,7 @@ export const generateMessageApp = new Spiceflow()
         })
         for await (const message of (stream)) {
             yield message
-            // throw new Error('test error')
+            throw new Error('test error')
         }
         await result.content
     },

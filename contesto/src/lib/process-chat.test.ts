@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest'
+import { describe, test, expect, vi } from 'vitest'
 import {
     createIdGenerator,
     streamText,
@@ -47,7 +47,21 @@ describe('process-chat', () => {
           [
             {
               "id": "id-1",
-              "parts": [],
+              "parts": [
+                {
+                  "type": "step-start",
+                },
+                {
+                  "providerMetadata": {
+                    "openai": {
+                      "itemId": "msg_688e048b39a8819bbd4830724d08e11e0b43efd0c990efa1",
+                    },
+                  },
+                  "state": "done",
+                  "text": "Hello!",
+                  "type": "text",
+                },
+              ],
               "role": "assistant",
             },
           ]
@@ -104,6 +118,11 @@ describe('process-chat', () => {
                   "type": "step-start",
                 },
                 {
+                  "providerMetadata": {
+                    "openai": {
+                      "itemId": "msg_688e048c3598819994e1a598699aee18067d7e424d3e2306",
+                    },
+                  },
                   "state": "done",
                   "text": "1, 2, 3.",
                   "type": "text",
@@ -230,8 +249,15 @@ describe('process-chat', () => {
                   "type": "step-start",
                 },
                 {
+                  "providerMetadata": {
+                    "openai": {
+                      "itemId": "msg_688e048f3e70819a9606fe51d866adbe0a0395efd2a6fc32",
+                    },
+                  },
                   "state": "done",
-                  "text": "{"message": "hello"}",
+                  "text": "\`\`\`json
+          {"message": "hello"}
+          \`\`\`",
                   "type": "text",
                 },
               ],
@@ -302,6 +328,11 @@ describe('process-chat', () => {
                   "type": "step-start",
                 },
                 {
+                  "providerMetadata": {
+                    "openai": {
+                      "itemId": "msg_688e0490398c819bb17d76ed97726068081bb26617ec147b",
+                    },
+                  },
                   "state": "done",
                   "text": "test",
                   "type": "text",
@@ -469,6 +500,11 @@ describe('process-chat', () => {
                   "type": "step-start",
                 },
                 {
+                  "callProviderMetadata": {
+                    "openai": {
+                      "itemId": "fc_688e04914810819a828c8471dc50d53b0c2dffb6b9f4e4fb",
+                    },
+                  },
                   "errorText": undefined,
                   "input": {
                     "timezone": "UTC",
@@ -476,7 +512,7 @@ describe('process-chat', () => {
                   "output": "Current time is 2024-01-01T12:00:00.000Z in UTC",
                   "providerExecuted": undefined,
                   "state": "output-available",
-                  "toolCallId": "call_IbLOVx1uVpfsRM0FXipQQn5z",
+                  "toolCallId": "call_xr74HH9FWdrLMi6jGy5Hz4nC",
                   "type": "tool-getCurrentTime",
                 },
               ],
@@ -536,13 +572,65 @@ describe('process-chat', () => {
         expect(Array.isArray(message.parts)).toBe(true)
 
         // Check that reasoning parts are properly included when they have content
-        expect(message.parts).toMatchInlineSnapshot(`[]`)
+        expect(message.parts).toMatchInlineSnapshot(`
+          [
+            {
+              "type": "step-start",
+            },
+            {
+              "providerMetadata": {
+                "openai": {
+                  "itemId": "rs_688e049252bc8199948a9edff93a35280b751baed0bd9b28",
+                  "reasoningEncryptedContent": null,
+                },
+              },
+              "state": "done",
+              "text": "",
+              "type": "reasoning",
+            },
+            {
+              "providerMetadata": {
+                "openai": {
+                  "itemId": "msg_688e04943dcc8199b24142c3c336de5c0b751baed0bd9b28",
+                },
+              },
+              "state": "done",
+              "text": "189",
+              "type": "text",
+            },
+          ]
+        `)
 
         expect(finalMessages).toMatchInlineSnapshot(`
           [
             {
               "id": "id-1",
-              "parts": [],
+              "parts": [
+                {
+                  "type": "step-start",
+                },
+                {
+                  "providerMetadata": {
+                    "openai": {
+                      "itemId": "rs_688e049252bc8199948a9edff93a35280b751baed0bd9b28",
+                      "reasoningEncryptedContent": null,
+                    },
+                  },
+                  "state": "done",
+                  "text": "",
+                  "type": "reasoning",
+                },
+                {
+                  "providerMetadata": {
+                    "openai": {
+                      "itemId": "msg_688e04943dcc8199b24142c3c336de5c0b751baed0bd9b28",
+                    },
+                  },
+                  "state": "done",
+                  "text": "189",
+                  "type": "text",
+                },
+              ],
               "role": "assistant",
             },
           ]
@@ -612,10 +700,179 @@ describe('process-chat', () => {
           [
             {
               "id": "id-1",
-              "parts": [],
+              "parts": [
+                {
+                  "type": "step-start",
+                },
+                {
+                  "providerMetadata": {
+                    "openai": {
+                      "itemId": "rs_688e0495ded0819aa94982a58b65b8420176387a5cb06ae9",
+                      "reasoningEncryptedContent": null,
+                    },
+                  },
+                  "state": "done",
+                  "text": "**Planning the process**
+
+          I'm outlining a two-step process for the user. First, I’ll get the current time in the UTC timezone. After that, I'll calculate the difference between 150 and 75. They want to see my reasoning for each step, so I’ll write out the plan before executing it. Once I have the current time, I’ll proceed to calculate the difference. Finally, I'll summarize the results for the user. Let's get started!",
+                  "type": "reasoning",
+                },
+                {
+                  "providerMetadata": {
+                    "openai": {
+                      "itemId": "rs_688e0495ded0819aa94982a58b65b8420176387a5cb06ae9",
+                      "reasoningEncryptedContent": null,
+                    },
+                  },
+                  "state": "done",
+                  "text": "**Outlining my steps**
+
+          I need to follow the developer instructions: any calls to defined tools must go through the commentary channel. I’ll start by planning in the analysis channel. My plan will include getting the current time in UTC and then calculating the difference between two numbers. I’ll write a message detailing each step and the reasoning before calling the functions. After that, I’ll wait for the result and then proceed to the next calculation. Let’s execute that plan!",
+                  "type": "reasoning",
+                },
+                {
+                  "callProviderMetadata": {
+                    "openai": {
+                      "itemId": "fc_688e049d5630819a8f8237b3c24e8b080176387a5cb06ae9",
+                    },
+                  },
+                  "errorText": undefined,
+                  "input": {
+                    "timezone": "UTC",
+                  },
+                  "output": "Current time is 2024-01-01T12:00:00.000Z in UTC",
+                  "providerExecuted": undefined,
+                  "state": "output-available",
+                  "toolCallId": "call_w9Qd4x2WOMh0c21KOhClHQpT",
+                  "type": "tool-getCurrentTime",
+                },
+              ],
               "role": "assistant",
             },
           ]
         `)
     }, 30000)
+
+    test('should propagate error thrown after first chunk', async () => {
+        // Create a generator that yields one chunk then throws
+        async function* errorAfterFirstChunkGenerator() {
+            // Yield first chunk successfully
+            yield {
+                type: '0' as const, // UI message chunk type
+                textDelta: 'Hello ',
+            }
+            
+            // Throw error after first chunk
+            throw new Error('Stream error after first chunk')
+        }
+
+        const generateId = createIdGenerator()
+        
+        // Test that the error is properly propagated
+        let errorThrown = false
+        try {
+            const messages: UIMessage[] = []
+            let updateCount = 0
+            
+            for await (const newMessages of uiStreamToUIMessages({
+                uiStream: asyncIterableToReadableStream(errorAfterFirstChunkGenerator()),
+                messages,
+                generateId,
+            })) {
+                updateCount++
+                // We should receive at least one update before the error
+                expect(newMessages.length).toBeGreaterThan(0)
+            }
+            
+            // If we get here, the error wasn't thrown
+            expect.fail('Expected error to be thrown')
+        } catch (error: any) {
+            errorThrown = true
+            expect(error.message).toBe('Stream error after first chunk')
+        }
+        
+        expect(errorThrown).toBe(true)
+    })
+
+    test('should handle readUIMessageStream error propagation', async () => {
+        // Simulate a more complex scenario with readUIMessageStream
+        const { readUIMessageStream } = await import('ai')
+        
+        async function* complexErrorGenerator() {
+            // Yield some valid UI chunks
+            yield { type: 'start-step' as const }
+            yield { type: '0' as const, textDelta: 'Processing...' }
+            
+            // Simulate async delay
+            await new Promise(resolve => setTimeout(resolve, 10))
+            
+            // Error after async operation
+            throw new Error('Async processing failed')
+        }
+
+        const generateId = createIdGenerator()
+        const message = { id: generateId(), role: 'assistant' as const, parts: [] }
+        
+        let onErrorCalled = false
+        let errorThrown = false
+        
+        // Create the stream through readUIMessageStream
+        const uiStream = readUIMessageStream({
+            stream: asyncIterableToReadableStream(complexErrorGenerator()),
+            terminateOnError: true,
+            onError: (error) => {
+                // This should be called when the error occurs
+                onErrorCalled = true
+                expect(error.message).toBe('Async processing failed')
+            },
+            message,
+        })
+        
+        // The error should propagate through uiStreamToUIMessages
+        try {
+            const messages: UIMessage[] = []
+            let updateCount = 0
+            
+            for await (const newMessages of uiStreamToUIMessages({
+                uiStream,
+                messages,
+                generateId,
+            })) {
+                updateCount++
+                // We might receive some updates before the error
+                expect(newMessages.length).toBeGreaterThan(0)
+            }
+            
+            // If we get here, the error wasn't thrown
+            expect.fail('Expected error to be thrown')
+        } catch (error: any) {
+            errorThrown = true
+            expect(error.message).toBe('Async processing failed')
+        }
+        
+        expect(onErrorCalled).toBe(true)
+        expect(errorThrown).toBe(true)
+    })
+
+    test('should handle errors in asyncIterableToReadableStream', async () => {
+        // Test the specific error handling in asyncIterableToReadableStream
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+        
+        async function* immediateErrorGenerator() {
+            throw new Error('Immediate generator error')
+        }
+        
+        try {
+            const stream = asyncIterableToReadableStream(immediateErrorGenerator())
+            const reader = stream.getReader()
+            
+            // The error should be thrown when we try to read
+            await expect(reader.read()).rejects.toThrow('Immediate generator error')
+            
+            // Verify console.error was not called with the new implementation
+            expect(consoleSpy).not.toHaveBeenCalled()
+        } finally {
+            consoleSpy.mockRestore()
+        }
+    })
 })

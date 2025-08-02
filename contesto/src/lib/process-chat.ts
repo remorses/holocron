@@ -67,6 +67,10 @@ export async function* uiStreamToUIMessages<M extends UIMessage>({
             ? uiStream
             : asyncIterableToReadableStream(uiStream),
         terminateOnError: true,
+        onError: (error) => {
+            console.error('Error in UI message stream:', error)
+            throw error
+        },
         message,
     })) {
         const currentMessages = [...messages]
