@@ -442,13 +442,15 @@ export function RenderFormPreview({
             })}
             {showSubmitButton &&
                 args.fields.some((f) => f && f.type !== 'button') && (
-                    <Button
-                        type='submit'
-                        className='w-full m-6'
-                        disabled={disabled || isGenerating}
-                    >
-                        {isGenerating ? 'Loading...' : 'Submit'}
-                    </Button>
+                    <div className='p-6'>
+                        <Button
+                            type='submit'
+                            className='w-full '
+                            disabled={disabled || isGenerating}
+                        >
+                            {isGenerating ? 'Loading...' : 'Submit'}
+                        </Button>
+                    </div>
                 )}
         </div>
     )

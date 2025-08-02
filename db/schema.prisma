@@ -402,12 +402,6 @@ enum ChatMessageRole {
 }
 
 
-enum ModelProvider {
-  openai
-  anthropic
-  google
-}
-
 // ─── MODELS ────────────────────────────────────────────────────────────
 
 model Chat {
@@ -427,7 +421,7 @@ model Chat {
   branchId        String
   branch          SiteBranch    @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
   modelId String?
-  modelProvider ModelProvider?
+  modelProvider String?
 
   @@index([userId])
   @@index([branchId])

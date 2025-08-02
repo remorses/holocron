@@ -15,37 +15,38 @@ export async function* readableStreamToAsyncIterable<T>(
         reader.releaseLock()
     }
 }
-
 export function asyncIterableToReadableStream<T>(
-    iterable: AsyncIterable<T>,
+  iterable: AsyncIterable<T>,
 ): ReadableStream<T> {
-    return new ReadableStream<T>({
-        async pull(controller) {
-            const iterator = (this as any).iterator as
-                | AsyncIterator<T>
-                | undefined
-            if (!iterator) {
-                ;(this as any).iterator = iterable[Symbol.asyncIterator]()
-            }
-            const { value, done } = await (
-                (this as any).iterator as AsyncIterator<T>
-            ).next()
-            if (done) {
-                controller.close()
-            } else {
-                controller.enqueue(value)
-            }
-        },
-        async cancel() {
-            const iterator = (this as any).iterator as
-                | AsyncIterator<T>
-                | undefined
-            if (iterator && typeof iterator.return === 'function') {
-                await iterator.return()
-            }
-        },
-    })
+  return new ReadableStream<T>({
+    async pull(controller) {
+      let iterator = (this as any).iterator as AsyncIterator<T> | undefined;
+
+      try {
+        if (!iterator) {
+          iterator = iterable[Symbol.asyncIterator]();
+          (this as any).iterator = iterator;
+        }
+
+        const { value, done } = await iterator.next();
+        if (done) controller.close();
+        else    controller.enqueue(value);
+      } catch (err) {
+        console.error('stream error:', err);
+        controller.error(err);
+      }
+    },
+
+    async cancel() {
+      const iterator = (this as any).iterator as AsyncIterator<T> | undefined;
+      if (iterator?.return) {
+        try { await iterator.return(); }
+        catch { /* swallow */ }
+      }
+    },
+  });
 }
+
 
 export { memoize }
 

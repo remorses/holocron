@@ -1,14 +1,31 @@
-import { isToolUIPart, readUIMessageStream, UIMessage, UIMessageChunk } from 'ai'
+import {
+    isToolUIPart,
+    readUIMessageStream,
+    UIMessage,
+    UIMessageChunk,
+} from 'ai'
 import {
     asyncIterableToReadableStream,
     isReadableStream,
     throttleGenerator,
 } from './utils.js'
 
-export type ToolPart<M extends UIMessage = UIMessage> = Extract<M['parts'][number], { type: `tool-${string}`; toolCallId: string; state: string }>
-export type ToolPartOutputAvailable<M extends UIMessage = UIMessage> = Extract<ToolPart<M>, { state: 'output-available' }>
-export type ToolPartInputAvailable<M extends UIMessage = UIMessage> = Extract<ToolPart<M>, { state: 'input-available' }>
-export type ToolPartInputStreaming<M extends UIMessage = UIMessage> = Extract<ToolPart<M>, { state: 'input-streaming' }>
+export type ToolPart<M extends UIMessage = UIMessage> = Extract<
+    M['parts'][number],
+    { type: `tool-${string}`; toolCallId: string; state: string }
+>
+export type ToolPartOutputAvailable<M extends UIMessage = UIMessage> = Extract<
+    ToolPart<M>,
+    { state: 'output-available' }
+>
+export type ToolPartInputAvailable<M extends UIMessage = UIMessage> = Extract<
+    ToolPart<M>,
+    { state: 'input-available' }
+>
+export type ToolPartInputStreaming<M extends UIMessage = UIMessage> = Extract<
+    ToolPart<M>,
+    { state: 'input-streaming' }
+>
 
 export async function* uiStreamToUIMessages<M extends UIMessage>({
     uiStream,
@@ -23,9 +40,13 @@ export async function* uiStreamToUIMessages<M extends UIMessage>({
     messages: M[]
     generateId: () => string
     throttleMs?: number
-    onToolOutput?: (toolPart: ToolPartOutputAvailable<M>) => void | Promise<void>
+    onToolOutput?: (
+        toolPart: ToolPartOutputAvailable<M>,
+    ) => void | Promise<void>
     onToolInput?: (toolPart: ToolPartInputAvailable<M>) => void | Promise<void>
-    onToolInputStreaming?: (toolPart: ToolPartInputStreaming<M>) => void | Promise<void>
+    onToolInputStreaming?: (
+        toolPart: ToolPartInputStreaming<M>,
+    ) => void | Promise<void>
 }): AsyncIterable<M[]> {
     const lastMessage = messages[messages.length - 1]
     const replaceLastMessage = lastMessage?.role === 'assistant'
@@ -45,7 +66,7 @@ export async function* uiStreamToUIMessages<M extends UIMessage>({
         stream: isReadableStream(uiStream)
             ? uiStream
             : asyncIterableToReadableStream(uiStream),
-
+        terminateOnError: true,
         message,
     })) {
         const currentMessages = [...messages]
@@ -56,7 +77,8 @@ export async function* uiStreamToUIMessages<M extends UIMessage>({
         }
 
         // Handle tool callbacks
-        const lastPart = generatedMessage.parts[generatedMessage.parts.length - 1]
+        const lastPart =
+            generatedMessage.parts[generatedMessage.parts.length - 1]
         if (lastPart && isToolUIPart(lastPart)) {
             const toolPart = lastPart
 
@@ -75,7 +97,9 @@ export async function* uiStreamToUIMessages<M extends UIMessage>({
 
             // Check for tool input streaming
             if (toolPart.state === 'input-streaming' && onToolInputStreaming) {
-                await onToolInputStreaming(toolPart as ToolPartInputStreaming<M>)
+                await onToolInputStreaming(
+                    toolPart as ToolPartInputStreaming<M>,
+                )
             }
         }
 

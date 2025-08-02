@@ -1,4 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic'
+import fs from 'fs'
 import { AnySpiceflow, preventProcessExitIfBusy } from 'spiceflow'
 import { groq } from '@ai-sdk/groq'
 import dedent from 'string-dedent'
@@ -17,6 +18,7 @@ import {
     isToolUIPart,
     createIdGenerator,
     Tool,
+    ModelMessage,
 } from 'ai'
 import { prisma, Prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
@@ -156,7 +158,7 @@ export type WebsiteTools = {
 }
 
 export const generateMessageApp = new Spiceflow()
-    .use(preventProcessExitIfBusy())
+
     .state('userId', '')
     .route({
     method: 'POST',
@@ -231,19 +233,21 @@ export const generateMessageApp = new Spiceflow()
             languages: branch.site?.locales?.map((x) => x.locale) || [],
         })
 
-        let model = groq('qwen/qwen3-32b')
+        // let model = groq('qwen/qwen3-32b')
 
-        if (chat?.modelId && chat?.modelProvider) {
-            if (chat.modelProvider.startsWith('openai')) {
-                model = openai(chat.modelId)
-            } else if (chat.modelProvider === 'anthropic') {
-                model = anthropic(chat.modelId)
-            } else {
-                throw new Error(
-                    `Unsupported model provider: ${chat.modelProvider}`,
-                )
-            }
-        }
+        let model = openai.responses('gpt-4.1')
+
+        // if (chat?.modelId && chat?.modelProvider) {
+        //     if (chat.modelProvider.startsWith('openai')) {
+        //         model = openai(chat.modelId)
+        //     } else if (chat.modelProvider === 'anthropic') {
+        //         model = anthropic(chat.modelId)
+        //     } else {
+        //         // throw new Error(
+        //         //     `Unsupported model provider: ${chat.modelProvider}`,
+        //         // )
+        //     }
+        // }
         // Create FileSystemEmulator instance
         const fileSystem = new FileSystemEmulator({
             filesInDraft,
@@ -413,7 +417,7 @@ export const generateMessageApp = new Spiceflow()
                     const existingPaths = new Set(filePaths.map((f) => f.path))
                     const draftFiles = fileSystem.getFilesInDraft()
                     const pathsToRemove = new Set<string>()
-                    
+
                     for (const [draftPath, fileUpdate] of Object.entries(
                         draftFiles,
                     )) {
@@ -428,7 +432,7 @@ export const generateMessageApp = new Spiceflow()
                             })
                         }
                     }
-                    
+
                     // Remove deleted files
                     filePaths = filePaths.filter(f => !pathsToRemove.has(f.path))
 
@@ -651,38 +655,51 @@ export const generateMessageApp = new Spiceflow()
             }),
         }
 
+
+        const allMessages: ModelMessage[] = [
+            {
+                role: 'system',
+
+                content: [
+                    agentPromptTemplate({
+                        docsJsonSchema: JSON.stringify(
+                            docsJsonSchema,
+                            null,
+                            2,
+                        ),
+                    }),
+                    isOnboardingChat && '## Onboarding Instructions',
+                    isOnboardingChat && onboardSpecificPrompt(),
+                ]
+                    .filter(Boolean)
+                    .join('\n\n'),
+            },
+            ...convertToModelMessages(
+                messages.filter((x) => x.role !== 'system'),
+            ),
+        ]
+
+
+        debugMessages(allMessages)
+
+
+
+
         const result = streamText({
             model,
             tools,
-
-            messages: [
-                {
-                    role: 'system',
-                    content: [
-                        agentPromptTemplate({
-                            docsJsonSchema: JSON.stringify(
-                                docsJsonSchema,
-                                null,
-                                2,
-                            ),
-                        }),
-                        isOnboardingChat && '## Onboarding Instructions',
-                        isOnboardingChat && onboardSpecificPrompt(),
-                    ]
-                        .filter(Boolean)
-                        .join('\n\n'),
-                },
-                ...convertToModelMessages(
-                    messages.filter((x) => x.role !== 'system'),
-                ),
-            ],
+            onError: (error) => {
+              console.log(`Error in streamText:`, error)
+              throw error
+            },
+            messages: allMessages,
             stopWhen: stepCountIs(100),
 
             providerOptions: {
                 openai: {
                     reasoningSummary: 'detailed',
                     strictJsonSchema: true,
-                    include: ['reasoning.encrypted_content'],
+                    // include: ['reasoning.encrypted_content'],
                     store: false,
                     parallelToolCalls: true,
                 } satisfies OpenAIResponsesProviderOptions,
@@ -718,19 +735,18 @@ export const generateMessageApp = new Spiceflow()
         }
         const idGenerator = createIdGenerator()
         const stream = result.toUIMessageStream({
-            // originalMessages: messages,
-            messageMetadata: () => {
-                return {
-                    createdAt: new Date(),
-                }
+            onError: (error) => {
+              console.error(`Error in toUIMessageStream:`, error)
+              throw error
             },
 
             originalMessages: messages,
             generateMessageId: idGenerator,
-            async onFinish({ messages: uiMessages }) {
-                console.log(`chat finished, saving the chat in database`)
-                const resultMessages = uiMessages
-                console.log(resultMessages)
+            async onFinish({ messages: uiMessages,  isAborted }) {
+
+                console.log(`chat finished, saving the chat in database`, isAborted ? 'aborted' : 'completed')
+
+                debugMessages(uiMessages, 'scripts/ui-result-messages.json')
 
                 const previousMessages = await prisma.chatMessage.findMany({
                     where: { chatId },
@@ -758,6 +774,7 @@ export const generateMessageApp = new Spiceflow()
                         data: {
                             chatId,
                             modelId: model.modelId,
+                            modelProvider: model.provider,
                             createdAt: prevChat?.createdAt,
                             userId,
                             branchId,
@@ -772,7 +789,7 @@ export const generateMessageApp = new Spiceflow()
                 )
 
                 // Create message operations
-                for (const [msgIdx, msg] of resultMessages.entries()) {
+                for (const [msgIdx, msg] of uiMessages.entries()) {
                     const parts = 'parts' in msg ? msg.parts || [] : []
 
                     if (msg.role !== 'assistant' && msg.role !== 'user') {
@@ -913,14 +930,18 @@ export const generateMessageApp = new Spiceflow()
                 await prisma.$transaction(operations)
                 waitUntil(
                     generateAndSaveChatTitle({
-                        resultMessages,
+                        resultMessages: uiMessages,
                         chatId,
                         userId,
                     }).catch(notifyError),
                 )
             },
         })
-        yield* readableStreamToAsyncIterable(stream)
+        for await (const message of (stream)) {
+            yield message
+            // throw new Error('test error')
+        }
+        await result.content
     },
 })
 
@@ -1094,4 +1115,21 @@ export async function getPageContent({ githubPath, branchId }) {
         return pageWithContent?.content?.markdown || ''
     }
     return JSON.stringify(metaFile?.jsonData, null, 2) || ''
+}
+
+
+function debugMessages(allMessages: any[],filePath='scripts/messages.json') {
+  return
+  let combinedMessages = [...allMessages]
+  if (fs.existsSync(filePath)) {
+    try {
+      const existing = JSON.parse(fs.readFileSync(filePath, 'utf8'))
+      if (Array.isArray(existing)) {
+        combinedMessages = existing.concat(allMessages)
+      }
+    } catch (e) {
+      // If error (invalid JSON), just use allMessages
+    }
+  }
+  fs.writeFileSync(filePath, JSON.stringify(combinedMessages, null, 2))
 }

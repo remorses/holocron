@@ -10,7 +10,7 @@ import {
     getPresignedUrl,
     s3,
 } from 'docs-website/src/lib/s3'
-import { Spiceflow } from 'spiceflow'
+import { preventProcessExitIfBusy, Spiceflow } from 'spiceflow'
 import { cors } from 'spiceflow/cors'
 import { openapi } from 'spiceflow/openapi'
 import exampleDocs from 'website/scripts/example-docs.json'
@@ -68,6 +68,7 @@ export const app = new Spiceflow({ basePath: '/api' })
     // .state('env', {} as Env)
     // Health check endpoint
     .state('userId', '')
+    .use(preventProcessExitIfBusy())
     .use(async ({ request, state }) => {
         const session = await getSession({ request })
         state.userId = session?.userId

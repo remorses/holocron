@@ -39,6 +39,6 @@ export const apiClientWithDurableFetch = createSpiceflowClient<SpiceflowApp>(
             }
         },
 
-        fetch: durableFetchClient.fetch,
+        // fetch: durableFetchClient.fetch,
     },
 )

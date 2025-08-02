@@ -18,7 +18,7 @@ export default defineConfig({
         'process.env.NODE_ENV': NODE_ENV,
     },
     optimizeDeps: {
-        exclude: ['lucide-react', '@lancedb/lancedb'],
+        exclude: ['@lancedb/lancedb'],
     },
 
     test: {

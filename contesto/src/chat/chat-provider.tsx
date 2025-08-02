@@ -35,6 +35,9 @@ const ChatProvider = (props: {
     const stableInitialState = useShallowStable(props.initialValue)
     const store = useMemo(() => {
         const abortController = new AbortController()
+        abortController.signal.addEventListener('abort', () => {
+          console.log('Generation aborted:', abortController.signal.reason)
+        })
         let store = create<ChatState>(() => ({
             messages: [],
             submit() {
@@ -80,20 +83,7 @@ const ChatProvider = (props: {
         if (isGenerating) {
             return
         }
-        const messageElement = document.querySelector(
-            `[data-message-id="${userMessageId}"]`,
-        )
-        if (messageElement) {
-            messageElement.scrollIntoView({
-                behavior: 'smooth',
 
-                block: 'start',
-            })
-        } else {
-            console.warn(
-                `Message element with id ${userMessageId} not found for scrolling`,
-            )
-        }
         if (!value.trim()) {
             const lastUserMessage = [...messages]
                 .reverse()
@@ -134,6 +124,22 @@ const ChatProvider = (props: {
                 })
             })
         }
+
+        requestAnimationFrame(() => {
+            const messageElement = document.querySelector(
+                `[data-message-id="${userMessageId}"]`,
+            )
+            if (messageElement) {
+                messageElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                })
+            } else {
+                console.warn(
+                    `Message element with id ${userMessageId} not found for scrolling`,
+                )
+            }
+        })
 
 
         store.setState({

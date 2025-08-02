@@ -10,7 +10,7 @@ import {
 import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
 import { MarkdownRuntimeChat as Markdown } from 'docs-website/src/lib/markdown-runtime-chat'
 import memoize from 'micro-memoize'
-import { memo, startTransition, useEffect, useMemo, useState } from 'react'
+import { Fragment, memo, startTransition, useEffect, useMemo, useState } from 'react'
 
 import {
     Dot,
@@ -258,18 +258,27 @@ export default function Chat({
     const initialChatState = useMemo<Partial<ChatState>>(() => {
         const state = {
             messages: chat.messages.map((msg) => {
-                const message: UIMessage = {
-                    ...msg,
-                    parts: [
-                        ...(msg.textParts || []),
-                        ...(msg.reasoningParts || []),
-                        ...(msg.toolParts || []),
-                        ...(msg.sourceUrlParts || []),
-                        ...(msg.fileParts || []),
-                    ]
-                        .flat()
-                        .sort((a, b) => a.index - b.index) as any,
-                }
+              const {
+                  textParts = [],
+                  reasoningParts = [],
+                  toolParts = [],
+                  sourceUrlParts = [],
+                  fileParts = [],
+                  ...rest
+              } = msg
+
+              const message: UIMessage = {
+                  ...rest,
+                  parts: [
+                      ...textParts,
+                      ...reasoningParts,
+                      ...toolParts,
+                      ...sourceUrlParts,
+                      ...fileParts,
+                  ]
+                      .flat()
+                      .sort((a, b) => a.index - b.index) as any,
+              }
                 return message
             }),
             isGenerating: false,
@@ -477,10 +486,12 @@ export default function Chat({
                     setMessages(newMessages)
                 })
             }
+            console.log('finished streaming message response, revalidating')
+            await revalidator.revalidate()
         } finally {
         }
 
-        await revalidator.revalidate()
+
     }
 
     return (
@@ -769,7 +780,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                 {message.parts.map((part, index) => {
                     if (part.type === 'text') {
                         return (
-                            <div className='flex flex-row tracking-wide gap-[1ch]'>
+                            <div  key={index}  className='flex flex-row tracking-wide gap-[1ch]'>
                                 <Dot />
                                 <Markdown
                                     isStreaming={isChatGenerating}
@@ -784,7 +795,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                     if (part.type === 'reasoning') {
                         if (!part.text) return null
                         return (
-                            <div className='flex flex-row opacity-80 tracking-wide gap-[1ch]'>
+                            <div key={index} className='flex flex-row opacity-80 tracking-wide gap-[1ch]'>
                                 <Dot />
                                 <TruncatedText isStreaming={isChatGenerating}>
                                     <Markdown
@@ -799,17 +810,17 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                     }
                     if (part && 'errorText' in part && part.errorText) {
                         return (
-                            <>
+                            <Fragment key={index} >
                                 <Dot /> {part.type}
                                 <ErrorPreview error={part.errorText} />
-                            </>
+                            </Fragment>
                         )
                     }
                     if (part.type === 'tool-strReplaceEditor') {
                         return <EditorToolPreview key={index} {...part} />
                     }
                     if (part.type === 'tool-getProjectFiles') {
-                        return <FilesTreePreview key={index} {...part} />
+                        return < FilesTreePreview  key={index} {...part} />
                     }
                     if (
                         part.type === 'tool-renderForm' &&
