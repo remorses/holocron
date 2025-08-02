@@ -233,9 +233,8 @@ export const generateMessageApp = new Spiceflow()
             languages: branch.site?.locales?.map((x) => x.locale) || [],
         })
 
-        // let model = groq('qwen/qwen3-32b')
-
-        let model = openai.responses('gpt-4.1')
+        let model = groq('moonshotai/kimi-k2-instruct')
+        // let model = openai.responses('gpt-4.1')
 
         // if (chat?.modelId && chat?.modelProvider) {
         //     if (chat.modelProvider.startsWith('openai')) {
