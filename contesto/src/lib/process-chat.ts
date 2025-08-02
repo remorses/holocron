@@ -48,6 +48,7 @@ export async function* uiStreamToUIMessages<M extends UIMessage>({
         toolPart: ToolPartInputStreaming<M>,
     ) => void | Promise<void>
 }): AsyncIterable<M[]> {
+    let capturedError: unknown = null
     const lastMessage = messages[messages.length - 1]
     const replaceLastMessage = lastMessage?.role === 'assistant'
 
@@ -65,7 +66,10 @@ export async function* uiStreamToUIMessages<M extends UIMessage>({
     for await (let generatedMessage of readUIMessageStream({
         stream: isReadableStream(uiStream)
             ? uiStream
-            : asyncIterableToReadableStream(uiStream),
+            : asyncIterableToReadableStream(uiStream, (error) => {
+                  // TODO this is a work around because of a crazy bug where readUIMessageStream does not detect errors in the readable stream, errors are silently ignored. i debugged it for 2 horus and found nothing. a added a test for readUIMessageStream in ai package and it behaves correctly.
+                  capturedError = error
+              }),
         terminateOnError: true,
         onError: (error) => {
             console.error('Error in UI message stream:', error)
@@ -73,6 +77,10 @@ export async function* uiStreamToUIMessages<M extends UIMessage>({
         },
         message,
     })) {
+        if (capturedError) {
+            throw capturedError
+        }
+
         const currentMessages = [...messages]
         if (!replaceLastMessage) {
             currentMessages.push(generatedMessage)

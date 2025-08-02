@@ -17,6 +17,7 @@ export async function* readableStreamToAsyncIterable<T>(
 }
 export function asyncIterableToReadableStream<T>(
     iterable: AsyncIterable<T>,
+    onError?: (error: unknown) => void,
 ): ReadableStream<T> {
     return new ReadableStream<T>({
 
@@ -27,6 +28,9 @@ export function asyncIterableToReadableStream<T>(
                 }
                 controller.close()
             } catch (err) {
+                if (onError) {
+                    onError(err)
+                }
                 controller.error(err)
             }
         },
