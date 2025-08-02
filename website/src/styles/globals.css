@@ -19,7 +19,6 @@
     font-display: swap;
 }
 
-
 @theme {
     --text-mono: 12px;
     --font-mono:
@@ -100,8 +99,6 @@
 }
 
 @theme inline {
-
-
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
@@ -219,4 +216,21 @@
     /* Hide scrollbar for IE, Edge and Firefox */
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
+}
+
+.prose-quoteless {
+    :where(blockquote p:first-of-type):not(
+            :where([class~='not-prose'], [class~='not-prose'] *)
+        )::before {
+        content: none;
+    }
+    :where(blockquote p:first-of-type):not(
+            :where([class~='not-prose'], [class~='not-prose'] *)
+        )::after {
+        content: none;
+    }
+}
+
+.prose-no-underline a {
+    text-decoration: none;
 }
