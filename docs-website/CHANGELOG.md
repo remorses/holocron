@@ -1,5 +1,16 @@
 # Changelog
 
+## 2025-08-03
+
+- Added ShowMore component for content height restriction with expand/collapse functionality
+- Component displays gradient fade and expand button when content exceeds specified height
+
+## 2025-08-02 12:00
+
+- Implemented line restriction in remarkCodeToHtml for code blocks
+- Added support for data-last-lines attribute in mdx-heavy.tsx
+- Shows ellipsis (...) when code is truncated to indicate more content
+
 ## 2025-08-01 20:00
 
 - Switch default AI model to Groq with qwen/qwen3-32b model

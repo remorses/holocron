@@ -5,7 +5,7 @@ import { diffWordsWithSpace } from 'diff'
 import { useMemo } from 'react'
 import { mdxComponents } from '../components/mdx-components'
 import { markAddedNodes } from './diff'
-import { renderNode } from './mdx-code-block'
+import { renderNode } from './mdx-render-node'
 import { getProcessor } from './mdx-heavy'
 
 export function MarkdownRuntime({

@@ -6,7 +6,7 @@
 
 @source "../../../docs-website/src";
 @source "../../../contesto/src";
-@plugin "@tailwindcss/typography";
+/*@plugin "@tailwindcss/typography";*/
 
 @custom-variant dark (&:is(.dark *));
 
@@ -19,13 +19,21 @@
     font-display: swap;
 }
 
+@font-face {
+    font-family: 'Inter';
+    src: url('https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK-G0bq7diAaBFpM.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
 @theme {
-    --text-mono: 12px;
+    --text-mono: 16px;
     --font-mono:
-        'Inconsolata', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
-    --font-sans:
-        ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+        'Consolas', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        --font-sans:
+            'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+            'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
 :root {

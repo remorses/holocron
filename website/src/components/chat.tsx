@@ -1,22 +1,28 @@
 'use client'
 import dedent from 'string-dedent'
 
-import { createIdGenerator, UIMessage } from 'ai'
+import { createIdGenerator, isToolUIPart, UIMessage } from 'ai'
 import {
     ChatAssistantMessage,
     ChatErrorMessage,
     ChatUserMessage,
 } from 'contesto/src/chat/chat-message'
 import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
-import { MarkdownRuntimeChat as Markdown } from 'docs-website/src/lib/markdown-runtime-chat'
+import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
 import memoize from 'micro-memoize'
-import { Fragment, memo, startTransition, useEffect, useMemo, useState } from 'react'
+import {
+    Fragment,
+    memo,
+    startTransition,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react'
 
 import {
     Dot,
     EditorToolPreview,
     ErrorPreview,
-    FilesTreePreview,
     ToolPreviewContainer,
 } from 'website/src/components/tools-preview'
 
@@ -258,27 +264,27 @@ export default function Chat({
     const initialChatState = useMemo<Partial<ChatState>>(() => {
         const state = {
             messages: chat.messages.map((msg) => {
-              const {
-                  textParts = [],
-                  reasoningParts = [],
-                  toolParts = [],
-                  sourceUrlParts = [],
-                  fileParts = [],
-                  ...rest
-              } = msg
+                const {
+                    textParts = [],
+                    reasoningParts = [],
+                    toolParts = [],
+                    sourceUrlParts = [],
+                    fileParts = [],
+                    ...rest
+                } = msg
 
-              const message: UIMessage = {
-                  ...rest,
-                  parts: [
-                      ...textParts,
-                      ...reasoningParts,
-                      ...toolParts,
-                      ...sourceUrlParts,
-                      ...fileParts,
-                  ]
-                      .flat()
-                      .sort((a, b) => a.index - b.index) as any,
-              }
+                const message: UIMessage = {
+                    ...rest,
+                    parts: [
+                        ...textParts,
+                        ...reasoningParts,
+                        ...toolParts,
+                        ...sourceUrlParts,
+                        ...fileParts,
+                    ]
+                        .flat()
+                        .sort((a, b) => a.index - b.index) as any,
+                }
                 return message
             }),
             isGenerating: false,
@@ -300,197 +306,186 @@ export default function Chat({
         const currentSlug = useWebsiteState.getState()?.currentSlug || ''
         const { githubFolder } = loaderData
 
-
-            const { data: generator, error } =
-                await apiClientWithDurableFetch.api.generateMessage.post(
-                    {
-                        messages: messages as WebsiteUIMessage[],
-                        siteId,
-                        branchId,
-                        currentSlug,
-                        filesInDraft,
-                        chatId: chat.chatId,
-                    },
-                    {
-                        query: {
-                            lastMessageId: messages[messages.length - 1]?.id,
-                        },
-                        fetch: { signal: abortController.signal },
-                    },
-                )
-            if (error) throw error
-            console.log(generator)
-            async function getPageContent(githubPath: string) {
-                const { data, error } = await apiClient.api.getPageContent.post(
-                    {
-                        branchId,
-                        githubPath: githubPath,
-                    },
-                )
-                if (error) return ''
-                return data?.content
-            }
-            // Create global FileSystemEmulator for tool execution
-            const globalFileSystem = new FileSystemEmulator({
-                filesInDraft,
-                getPageContent,
-                onFilesDraftChange: async () => {
-                    // Update the global state whenever files change
-                    // useWebsiteState.setState({
-                    //     filesInDraft: filesInDraft,
-                    // })
+        const { data: generator, error } =
+            await apiClientWithDurableFetch.api.generateMessage.post(
+                {
+                    messages: messages as WebsiteUIMessage[],
+                    siteId,
+                    branchId,
+                    currentSlug,
+                    filesInDraft,
+                    chatId: chat.chatId,
                 },
+                {
+                    query: {
+                        lastMessageId: messages[messages.length - 1]?.id,
+                    },
+                    fetch: { signal: abortController.signal },
+                },
+            )
+        if (error) throw error
+        console.log(generator)
+        async function getPageContent(githubPath: string) {
+            const { data, error } = await apiClient.api.getPageContent.post({
+                branchId,
+                githubPath: githubPath,
             })
-            const execute = createEditExecute({
-                fileSystem: globalFileSystem,
-            })
+            if (error) return ''
+            return data?.content
+        }
+        // Create global FileSystemEmulator for tool execution
+        const globalFileSystem = new FileSystemEmulator({
+            filesInDraft,
+            getPageContent,
+            onFilesDraftChange: async () => {
+                // Update the global state whenever files change
+                // useWebsiteState.setState({
+                //     filesInDraft: filesInDraft,
+                // })
+            },
+        })
+        const execute = createEditExecute({
+            fileSystem: globalFileSystem,
+        })
 
-            let isPostMessageBusy = false
+        let isPostMessageBusy = false
 
-            const onToolOutput = async (
-                toolPart: ToolPartOutputAvailable<WebsiteUIMessage>,
-            ) => {
-                const args: Partial<EditToolParamSchema> = toolPart.input as any
+        const onToolOutput = async (
+            toolPart: ToolPartOutputAvailable<WebsiteUIMessage>,
+        ) => {
+            const args: Partial<EditToolParamSchema> = toolPart.input as any
 
+            if (toolPart.type === 'tool-strReplaceEditor') {
+                if (args?.command === 'view') {
+                    return
+                }
+
+                const currentSlug = generateSlugFromPath(
+                    args.path || '',
+                    githubFolder,
+                )
+
+                await execute(args as any)
+                console.log(
+                    `applying the setState update to the docs site`,
+                    toolPart,
+                )
+
+                let revalidate = args.command === 'create'
+                useWebsiteState.setState({
+                    filesInDraft: { ...filesInDraft },
+                    currentSlug,
+                })
+                try {
+                    await docsRpcClient.setDocsState({
+                        state: {
+                            filesInDraft: filesInDraft,
+                            isMarkdownStreaming: false,
+                            currentSlug,
+                        },
+                        revalidate,
+                        idempotenceKey: toolPart.toolCallId,
+                    })
+                } catch (e) {
+                    console.error('failed setDocsState', e)
+                }
+            }
+
+            // Handle selectText tool output
+            if (toolPart.type === 'tool-selectText') {
+                if (toolPart.output?.error) {
+                    console.error('selectText error:', toolPart.output.error)
+                    return
+                }
+
+                const targetSlug = toolPart.output?.slug
+                if (targetSlug && typeof targetSlug === 'string') {
+                    const currentSlug = targetSlug
+
+                    try {
+                        await docsRpcClient.setDocsState({
+                            state: {
+                                currentSlug,
+                                highlightedLines: toolPart.input,
+                            },
+                        })
+                    } catch (e) {
+                        console.error('failed to set highlight state:', e)
+                    }
+                }
+            }
+        }
+
+        // Use throttle instead of debounce to ensure the function executes at regular intervals
+        // and doesn't delay beyond the throttle period, which could cause it to override
+        // the output-available call that comes later
+        const onToolInputStreaming = throttle(
+            100,
+            async (toolPart: ToolPartInputStreaming<WebsiteUIMessage>) => {
                 if (toolPart.type === 'tool-strReplaceEditor') {
+                    const args: Partial<EditToolParamSchema> =
+                        toolPart.input as any
                     if (args?.command === 'view') {
                         return
                     }
-
+                    if (!isStrReplaceParameterComplete(args)) {
+                        return
+                    }
                     const currentSlug = generateSlugFromPath(
                         args.path || '',
                         githubFolder,
                     )
 
-                    await execute(args as any)
-                    console.log(
-                        `applying the setState update to the docs site`,
-                        toolPart,
-                    )
-
-                    let revalidate = args.command === 'create'
-                    useWebsiteState.setState({
-                        filesInDraft: { ...filesInDraft },
-                        currentSlug,
+                    if (isPostMessageBusy) return
+                    // Create a temporary FileSystemEmulator for preview
+                    let updatedPagesCopy = { ...filesInDraft }
+                    const previewFileSystem = new FileSystemEmulator({
+                        filesInDraft: updatedPagesCopy,
+                        getPageContent,
+                        // No onFilesDraftChange callback for preview
                     })
+                    const localExecute = createEditExecute({
+                        fileSystem: previewFileSystem,
+                    })
+                    await localExecute(args as any)
+                    isPostMessageBusy = true
                     try {
-                        await docsRpcClient.setDocsState({
-                            state: {
-                                filesInDraft: filesInDraft,
-                                isMarkdownStreaming: false,
-                                currentSlug,
-                            },
-                            revalidate,
-                            idempotenceKey: toolPart.toolCallId,
-                        })
-                    } catch (e) {
-                        console.error('failed setDocsState', e)
-                    }
-                }
-
-                // Handle selectText tool output
-                if (toolPart.type === 'tool-selectText') {
-                    if (toolPart.output?.error) {
-                        console.error(
-                            'selectText error:',
-                            toolPart.output.error,
-                        )
-                        return
-                    }
-
-                    const targetSlug = toolPart.output?.slug
-                    if (targetSlug && typeof targetSlug === 'string') {
-                        const currentSlug = targetSlug
-
-                        try {
-                            await docsRpcClient.setDocsState({
+                        docsRpcClient
+                            .setDocsState({
                                 state: {
+                                    filesInDraft: updatedPagesCopy,
                                     currentSlug,
-                                    highlightedLines: toolPart.input,
+                                    isMarkdownStreaming: true,
                                 },
                             })
-                        } catch (e) {
-                            console.error('failed to set highlight state:', e)
-                        }
-                    }
+                            .catch((e) => {
+                                console.error(e)
+                            })
+                            .finally(() => {
+                                isPostMessageBusy = false
+                            })
+                    } catch (e) {}
                 }
+            },
+        )
+
+        for await (const newMessages of uiStreamToUIMessages<WebsiteUIMessage>({
+            uiStream: generator,
+            messages: messages as WebsiteUIMessage[],
+            generateId,
+            onToolOutput,
+            onToolInputStreaming,
+        })) {
+            if (abortController.signal.aborted) {
+                break
             }
-
-            // Use throttle instead of debounce to ensure the function executes at regular intervals
-            // and doesn't delay beyond the throttle period, which could cause it to override
-            // the output-available call that comes later
-            const onToolInputStreaming = throttle(
-                100,
-                async (toolPart: ToolPartInputStreaming<WebsiteUIMessage>) => {
-                    if (toolPart.type === 'tool-strReplaceEditor') {
-                        const args: Partial<EditToolParamSchema> =
-                            toolPart.input as any
-                        if (args?.command === 'view') {
-                            return
-                        }
-                        if (!isStrReplaceParameterComplete(args)) {
-                            return
-                        }
-                        const currentSlug = generateSlugFromPath(
-                            args.path || '',
-                            githubFolder,
-                        )
-
-                        if (isPostMessageBusy) return
-                        // Create a temporary FileSystemEmulator for preview
-                        let updatedPagesCopy = { ...filesInDraft }
-                        const previewFileSystem = new FileSystemEmulator({
-                            filesInDraft: updatedPagesCopy,
-                            getPageContent,
-                            // No onFilesDraftChange callback for preview
-                        })
-                        const localExecute = createEditExecute({
-                            fileSystem: previewFileSystem,
-                        })
-                        await localExecute(args as any)
-                        isPostMessageBusy = true
-                        try {
-                            docsRpcClient
-                                .setDocsState({
-                                    state: {
-                                        filesInDraft: updatedPagesCopy,
-                                        currentSlug,
-                                        isMarkdownStreaming: true,
-                                    },
-                                })
-                                .catch((e) => {
-                                    console.error(e)
-                                })
-                                .finally(() => {
-                                    isPostMessageBusy = false
-                                })
-                        } catch (e) {}
-                    }
-                },
-            )
-
-            for await (const newMessages of uiStreamToUIMessages<WebsiteUIMessage>(
-                {
-                    uiStream: generator,
-                    messages: messages as WebsiteUIMessage[],
-                    generateId,
-                    onToolOutput,
-                    onToolInputStreaming,
-                },
-            )) {
-                if (abortController.signal.aborted) {
-                    break
-                }
-                console.log(newMessages.at(-1))
-                startTransition(() => {
-                    setMessages(newMessages)
-                })
-            }
-            console.log('finished streaming message response, revalidating')
-            await revalidator.revalidate()
-
-
-
+            console.log(newMessages.at(-1))
+            startTransition(() => {
+                setMessages(newMessages)
+            })
+        }
+        console.log('finished streaming message response, revalidating')
+        await revalidator.revalidate()
     }
 
     return (
@@ -521,7 +516,7 @@ function TodoItem({
     const { setDraftText } = useChatContext()
     return (
         <button
-            className={`ml-4 ${className} hover:text-blue-300 hover:bg-purple-900/20 px-2 py-1 rounded-md transition-colors cursor-pointer group`}
+            className={`ml-4 ${className} hover:text-blue-300 hover:bg-purple-900/20 px-2 py-1 rounded-md text-start transition-colors cursor-pointer group`}
             onClick={(e) => {
                 if (props.onClick) props.onClick(e)
                 if (userMessage) {
@@ -562,7 +557,7 @@ function TodosActions() {
         'Add a new page to my docs based on a web research',
         'Add icons to all the pages',
         'Remove a page from the docs',
-        'Add tables to docs pages that contain complex tabular infromation',
+        'Add tables to docs pages that contain complex tabular information',
     ]
 
     const items = isOnboardingChat ? onboardingItems : updateItems
@@ -574,7 +569,7 @@ function TodosActions() {
         : 'Try these powerful doc enhancements:'
 
     return (
-        <div className='leading-snug whitespace-pre-wrap gap-[0.1em] flex flex-col items-start tracking-wide'>
+        <div className='leading-snug font-mono text-sm whitespace-pre-wrap break-all gap-[0.1em] flex flex-col items-start'>
             <div>
                 <Dot /> {greeting}
             </div>
@@ -609,7 +604,7 @@ function WelcomeMessage() {
     const { messages } = useChatContext()
     if (messages.length) return null
     return (
-        <div className='text-mono font-mono w-auto items-center flex flex-col -ml-6 -mt-[160px]'>
+        <div className='text-mono font-mono text-sm w-auto items-center flex flex-col -mt-[160px]'>
             <Banner />
             <TodosActions />
         </div>
@@ -621,7 +616,7 @@ function MonoSpaceTest() {
     if (messages.length) return null
     return (
         <ChatAssistantMessage
-            className='font-mono text-mono'
+            className='text-mono'
             message={{
                 role: 'assistant',
                 id: '',
@@ -734,7 +729,7 @@ function Messages({ ref }) {
 
     if (!messages.length) return null
     return (
-        <div ref={ref} className='text-xs flex flex-col grow mt-6 gap-6'>
+        <div ref={ref} className='flex flex-col grow mt-6 gap-6'>
             {messages.map((message) => {
                 return (
                     <MessageRenderer
@@ -756,7 +751,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
     const isLastMessage = messages[messages.length - 1]?.id === message.id
     if (message.role === 'user') {
         return (
-            <ChatUserMessage className='my-8 text-[16px]' message={message}>
+            <ChatUserMessage className='my-4 text-[16px]' message={message}>
                 {message.parts.map((part, index) => {
                     if (part.type === 'text') {
                         return part.text
@@ -773,14 +768,17 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
         <ChatForm>
             <ChatAssistantMessage
                 style={{ minHeight }}
-                className='font-mono whitespace-pre-wrap'
+                className=' whitespace-pre-wrap'
                 message={message}
             >
                 {message.parts.map((part, index) => {
                     if (part.type === 'text') {
                         return (
-                            <div  key={index}  className='flex flex-row tracking-wide gap-[1ch]'>
-                                <Dot />
+                            <div
+                                key={index}
+                                className='flex flex-row tracking-wide gap-1'
+                            >
+                                {/*<Dot />*/}
                                 <Markdown
                                     isStreaming={isChatGenerating}
                                     key={index}
@@ -794,7 +792,10 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                     if (part.type === 'reasoning') {
                         if (!part.text) return null
                         return (
-                            <div key={index} className='flex flex-row opacity-80 tracking-wide gap-[1ch]'>
+                            <div
+                                key={index}
+                                className='flex flex-row opacity-80 tracking-wide gap-[1ch]'
+                            >
                                 <Dot />
                                 <TruncatedText isStreaming={isChatGenerating}>
                                     <Markdown
@@ -809,7 +810,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                     }
                     if (part && 'errorText' in part && part.errorText) {
                         return (
-                            <Fragment key={index} >
+                            <Fragment key={index}>
                                 <Dot /> {part.type}
                                 <ErrorPreview error={part.errorText} />
                             </Fragment>
@@ -819,7 +820,22 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                         return <EditorToolPreview key={index} {...part} />
                     }
                     if (part.type === 'tool-getProjectFiles') {
-                        return < FilesTreePreview  key={index} {...part} />
+                        const code = part.output || '\n'
+
+                        if (!code) return null
+
+                        return (
+                            <ToolPreviewContainer>
+                                <Dot toolCallId={part.toolCallId} /> Getting
+                                file structure
+                                <br />
+                                <Markdown
+                                    isStreaming={isChatGenerating}
+                                    className='pt-[1em] block'
+                                    markdown={`<ShowMore>\n\`\`\`sh lineNumbers=true\n${code}\n\`\`\`\n</ShowMore>`}
+                                />
+                            </ToolPreviewContainer>
+                        )
                     }
                     if (
                         part.type === 'tool-renderForm' &&
@@ -878,24 +894,17 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                     //     )
                     // }
 
-                    if (part.type.startsWith('tool-')) {
+                    if (
+                        isToolUIPart(part) &&
+                        part.state !== 'input-streaming'
+                    ) {
                         const toolName = part.type.replace('tool-', '')
-                        const callArg =
-                            'input' in part
-                                ? truncateText(stringifyArgs(part.input))
-                                : ''
-                        let error = ''
-                        if (
-                            typeof part === 'object' &&
-                            'error' in part &&
-                            part.error
-                        ) {
-                            error = part.error as any
-                        }
+                        const callArg = truncateText(stringifyArgs(part.input))
+                        let error = part.errorText
                         return (
                             <ToolPreviewContainer key={index}>
                                 <Dot /> {capitalize(spaceCase(toolName))}(
-                                {callArg}
+                                {callArg})
                                 {error && <ErrorPreview error={error} />}
                             </ToolPreviewContainer>
                         )
@@ -910,8 +919,11 @@ function stringifyArgs(obj: any): string {
     if (!obj || typeof obj !== 'object') return JSON.stringify(obj)
     return Object.entries(obj)
         .map(([key, value]) => {
-            // For null/undefined/primitive types, JSON.stringify handles all cases
-            return `${key}=${JSON.stringify(value)}`
+            let strValue = JSON.stringify(value)
+            if (typeof strValue === 'string' && strValue.length > 300) {
+                strValue = strValue.slice(0, 300) + '...'
+            }
+            return `${key}=${strValue}`
         })
         .join(', ')
 }

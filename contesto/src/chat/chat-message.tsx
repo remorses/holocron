@@ -26,7 +26,7 @@ function ChatLoadingSpinner() {
     // We use a span for each sequence, only one visible at a time via keyframes.
     // Inline style for keyframes to avoid external CSS dependencies.
     return (
-        <span className='ml-2 mt-2 inline-flex h-3 select-none font-mono text-base text-muted-foreground'>
+        <span className='ml-2 mt-2 inline-flex h-3 select-none text-base text-muted-foreground'>
             <style>
                 {`
                     @keyframes chatDot1 {

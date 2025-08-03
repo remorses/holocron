@@ -12,6 +12,7 @@ import {
     UIMessage,
     generateObject,
     streamText,
+    smoothStream,
     tool,
     convertToModelMessages,
     stepCountIs,
@@ -57,15 +58,11 @@ import { getFumadocsSource } from 'docs-website/src/lib/source'
 import Handlebars from 'handlebars'
 import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
 import agentPrompt from '../prompts/agent.md?raw'
-import createSitePrompt from '../prompts/create-site.md?raw'
+
 import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
 
-
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
-function onboardSpecificPrompt() {
-    return createSitePrompt
-}
 
 const deletePagesSchema = z.object({
     filePaths: z
@@ -157,10 +154,7 @@ export type WebsiteTools = {
     }
 }
 
-export const generateMessageApp = new Spiceflow()
-
-    .state('userId', '')
-    .route({
+export const generateMessageApp = new Spiceflow().state('userId', '').route({
     method: 'POST',
     path: '/generateMessage',
     request: z.object({
@@ -180,9 +174,9 @@ export const generateMessageApp = new Spiceflow()
             branchId,
             filesInDraft,
         } = await request.json()
-            // First, check if the user can access the requested branch
-            // Fetch branch and chat in parallel for efficiency
-            const [branch, chat, pageCount] = await Promise.all([
+        // First, check if the user can access the requested branch
+        // Fetch branch and chat in parallel for efficiency
+        const [branch, chat, pageCount] = await Promise.all([
             prisma.siteBranch.findFirst({
                 where: {
                     branchId,
@@ -433,7 +427,9 @@ export const generateMessageApp = new Spiceflow()
                     }
 
                     // Remove deleted files
-                    filePaths = filePaths.filter(f => !pathsToRemove.has(f.path))
+                    filePaths = filePaths.filter(
+                        (f) => !pathsToRemove.has(f.path),
+                    )
 
                     filePaths.push({
                         path: path.posix.join(
@@ -654,21 +650,22 @@ export const generateMessageApp = new Spiceflow()
             }),
         }
 
-
         const allMessages: ModelMessage[] = [
             {
                 role: 'system',
 
                 content: [
+                    await import('../prompts/tone-and-style.md?raw').then(
+                        (x) => x.default,
+                    ),
                     agentPromptTemplate({
-                        docsJsonSchema: JSON.stringify(
-                            docsJsonSchema,
-                            null,
-                            2,
-                        ),
+                        docsJsonSchema: JSON.stringify(docsJsonSchema, null, 2),
                     }),
                     isOnboardingChat && '## Onboarding Instructions',
-                    isOnboardingChat && onboardSpecificPrompt(),
+                    isOnboardingChat &&
+                        (await import('../prompts/create-site.md?raw').then(
+                            (x) => x.default,
+                        )),
                 ]
                     .filter(Boolean)
                     .join('\n\n'),
@@ -678,19 +675,19 @@ export const generateMessageApp = new Spiceflow()
             ),
         ]
 
-
         debugMessages(allMessages)
-
-
-
 
         const result = streamText({
             model,
             tools,
             onError: (error) => {
-              console.log(`Error in streamText:`, error)
-              throw error
+                console.log(`Error in streamText:`, error)
+                throw error
             },
+            experimental_transform: smoothStream({
+                delayInMs: 7,
+                chunking: 'word',
+            }),
             messages: allMessages,
             stopWhen: stepCountIs(100),
 
@@ -735,15 +732,17 @@ export const generateMessageApp = new Spiceflow()
         const idGenerator = createIdGenerator()
         const stream = result.toUIMessageStream({
             onError: (error) => {
-              console.error(`Error in toUIMessageStream:`, error)
-              throw error
+                console.error(`Error in toUIMessageStream:`, error)
+                throw error
             },
 
             originalMessages: messages,
             generateMessageId: idGenerator,
-            async onFinish({ messages: uiMessages,  isAborted }) {
-
-                console.log(`chat finished, saving the chat in database`, isAborted ? 'aborted' : 'completed')
+            async onFinish({ messages: uiMessages, isAborted }) {
+                console.log(
+                    `chat finished, saving the chat in database`,
+                    isAborted ? 'aborted' : 'completed',
+                )
 
                 debugMessages(uiMessages, 'scripts/ui-result-messages.json')
 
@@ -936,7 +935,7 @@ export const generateMessageApp = new Spiceflow()
                 )
             },
         })
-        for await (const message of (stream)) {
+        for await (const message of stream) {
             yield message
         }
         await result.content
@@ -1115,19 +1114,18 @@ export async function getPageContent({ githubPath, branchId }) {
     return JSON.stringify(metaFile?.jsonData, null, 2) || ''
 }
 
-
-function debugMessages(allMessages: any[],filePath='scripts/messages.json') {
-  return
-  let combinedMessages = [...allMessages]
-  if (fs.existsSync(filePath)) {
-    try {
-      const existing = JSON.parse(fs.readFileSync(filePath, 'utf8'))
-      if (Array.isArray(existing)) {
-        combinedMessages = existing.concat(allMessages)
-      }
-    } catch (e) {
-      // If error (invalid JSON), just use allMessages
+function debugMessages(allMessages: any[], filePath = 'scripts/messages.json') {
+    return
+    let combinedMessages = [...allMessages]
+    if (fs.existsSync(filePath)) {
+        try {
+            const existing = JSON.parse(fs.readFileSync(filePath, 'utf8'))
+            if (Array.isArray(existing)) {
+                combinedMessages = existing.concat(allMessages)
+            }
+        } catch (e) {
+            // If error (invalid JSON), just use allMessages
+        }
     }
-  }
-  fs.writeFileSync(filePath, JSON.stringify(combinedMessages, null, 2))
+    fs.writeFileSync(filePath, JSON.stringify(combinedMessages, null, 2))
 }

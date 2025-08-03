@@ -1,6 +1,6 @@
 'use client'
 
-import { Markdown } from 'contesto/src/lib/markdown'
+import { Markdown, MarkdownRendererProps } from 'contesto/src/lib/markdown'
 import { diffWordsWithSpace } from 'diff'
 import { useMemo } from 'react'
 import { mdxComponents as docsMdxComponents } from '../components/mdx-components'
@@ -19,8 +19,9 @@ export function MarkdownRuntimeChat({
     extension = 'mdx',
     isStreaming = true,
     markdown,
+    onAst,
     className = '',
-}) {
+}: MarkdownRendererProps & { extension?: string }) {
     const processor = useMemo(() => getProcessor({ extension }), [extension])
 
     return (
@@ -29,6 +30,7 @@ export function MarkdownRuntimeChat({
             renderNode={renderNode}
             markdown={markdown}
             processor={processor}
+            onAst={onAst}
             components={mdxComponents}
             className={cn('block max-w-full text-mono prose-xs ', className)}
         />
@@ -80,7 +82,7 @@ const renderNode: RenderNode = (node, transform) => {
                 <div
                     dangerouslySetInnerHTML={{ __html: html ?? node.value }}
                     // style={{ fontSize: 'inherit' }}
-                    className='overflow-x-auto hide-scrollbar font-mono text-xs overflow-y-hidden max-w-full whitespace-pre-wrap'
+                    className='overflow-x-auto hide-scrollbar overflow-y-hidden max-w-full whitespace-pre-wrap'
                 ></div>
             </div>
         )

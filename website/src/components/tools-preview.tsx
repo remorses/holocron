@@ -1,14 +1,17 @@
-import { FileEditPreview, jsxDedent } from 'contesto'
 import { useChatContext } from 'contesto/src/chat/chat-provider'
-import { MarkdownRuntimeChat as Markdown } from 'docs-website/src/lib/markdown-runtime-chat'
-import { escapeMdxSyntax, truncateText } from 'docs-website/src/lib/utils'
+import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
+// import { MarkdownRuntimeChat as Markdown } from 'docs-website/src/lib/markdown-runtime-chat'
+import { truncateText } from 'docs-website/src/lib/utils'
 import { WebsiteToolPart } from 'website/src/lib/types'
 import { capitalize, cn } from 'website/src/lib/utils'
-import { parsePatch } from 'diff'
 import { ReactNode, useMemo } from 'react'
 
 function Highlight({ children }: { children: ReactNode }) {
-    return <span className=" dark:text-purple-300">{children}</span>
+    return (
+        <span className=' dark:text-purple-300 text-purple-800'>
+            {children}
+        </span>
+    )
 }
 
 export function ErrorPreview({ error }) {
@@ -16,7 +19,9 @@ export function ErrorPreview({ error }) {
     return (
         <>
             <br />⎿ Error:{' '}
-            <span className='text-destructive'>{truncatedError}</span>
+            <span className='dark:text-red-300 text-red-500'>
+                {truncatedError}
+            </span>
         </>
     )
 }
@@ -28,15 +33,13 @@ export function EditorToolPreview({
     output: result,
 }: Extract<WebsiteToolPart, { type: 'tool-strReplaceEditor' }>) {
     const { isGenerating: isChatGenerating } = useChatContext()
-    let code = args?.new_str || args?.file_text || ''
-    if (code && typeof code === 'object') {
-        code = code?.['error'] || JSON.stringify(code, null, 2)
-    }
     const command = args?.command
     let error = ''
     if (typeof result === 'object' && 'error' in result && result.error) {
         error = result.error
     }
+
+    // For non-mutation operations, just log progress
     if (command === 'view') {
         let linesText = ''
         if (args?.view_range?.length === 2) {
@@ -46,29 +49,50 @@ export function EditorToolPreview({
 
         return (
             <ToolPreviewContainer>
-                <Dot toolCallId={toolCallId}/> Reading <Highlight>{args?.path}</Highlight>
+                <Dot toolCallId={toolCallId} /> Reading{' '}
+                <Highlight>{args?.path}</Highlight>
                 {linesText}
                 {error && <ErrorPreview error={error} />}
             </ToolPreviewContainer>
         )
     }
-    if (command === 'create' || command === 'insert') {
-        let markdown = ''
-        markdown +=
-            '````mdx lineNumbers' +
-            ` title=" ${args?.path || ''}" \n` +
-            code +
-            '\n````'
+
+    if (command === 'undo_edit') {
+        return (
+            <ToolPreviewContainer>
+                <Dot toolCallId={toolCallId} /> Undo last edit in{' '}
+                <Highlight>{args?.path}</Highlight>
+                {error && <ErrorPreview error={error} />}
+            </ToolPreviewContainer>
+        )
+    }
+
+    // For mutation operations (create, insert, str_replace), show code snippet
+    if (
+        command === 'create' ||
+        command === 'insert' ||
+        command === 'str_replace'
+    ) {
+        let code = args?.new_str || args?.file_text || ''
+        if (code && typeof code === 'object') {
+            code = code?.['error'] || JSON.stringify(code, null, 2)
+        }
+
+        const markdown = `<ShowMore >\n\`\`\`\`mdx lineNumbers=true data-last-lines=5  \n${code}\n\`\`\`\`\n</ShowMore>`
+
+        let actionText = capitalize(command)
+        if (command === 'str_replace') actionText = 'Replacing content in'
 
         return (
             <ToolPreviewContainer>
-                <Dot toolCallId={toolCallId}/> {capitalize(command)} <Highlight>{args?.path}</Highlight>
+                <Dot toolCallId={toolCallId} /> {actionText}{' '}
+                <Highlight>{args?.path}</Highlight>
                 {command === 'insert' ? `:${args?.insert_line || 0}` : ''}
                 {error ? (
-                    <ErrorPreview error={result.error} />
+                    <ErrorPreview error={error} />
                 ) : (
                     <Markdown
-                        className='block  pt-[1em]'
+                        className='block pt-[1em]'
                         isStreaming={isChatGenerating}
                         markdown={markdown}
                     />
@@ -77,65 +101,11 @@ export function EditorToolPreview({
         )
     }
 
-    if (command === 'undo_edit') {
-        return (
-            <ToolPreviewContainer>
-                <Dot toolCallId={toolCallId}/> Undo last edit in <Highlight>{args?.path}</Highlight>
-                {error && <ErrorPreview error={error} />}
-            </ToolPreviewContainer>
-        )
-    }
-
-    // For replace command
-    if (state === 'output-available' && result && typeof result === 'string') {
-        // Parse the diff patch from the result string
-        const patches = parsePatch(result)
-        if (patches.length > 0 && patches[0].hunks) {
-            return (
-                <ToolPreviewContainer>
-                    <Dot toolCallId={toolCallId}/> Replaced content in <Highlight>{args?.path}</Highlight>
-                    {error ? (
-                        <ErrorPreview error={error} />
-                    ) : (
-                        <div className='overflow-x-auto py-2 max-w-full'>
-                            <FileEditPreview
-                                hunks={patches[0].hunks}
-                                className={'pt-[1em]  min-w-max w-full'}
-                                paddingLeft={0}
-                            />
-                        </div>
-                    )}
-                </ToolPreviewContainer>
-            )
-        }
-    }
-
     return (
         <ToolPreviewContainer>
-            <Dot toolCallId={toolCallId}/> Replacing content in <Highlight>{args?.path}</Highlight>
+            <Dot toolCallId={toolCallId} /> Processing{' '}
+            <Highlight>{args?.path}</Highlight>
             {error && <ErrorPreview error={error} />}
-        </ToolPreviewContainer>
-    )
-}
-
-export function FilesTreePreview({
-    output,
-    toolCallId,
-}: Extract<WebsiteToolPart, { type: 'tool-getProjectFiles' }>) {
-    const { isGenerating: isChatGenerating } = useChatContext()
-    const code = output || '\n'
-
-    if (!code) return null
-
-    return (
-        <ToolPreviewContainer>
-            <Dot toolCallId={toolCallId}/> Getting file structure
-            <br />
-            <Markdown
-                isStreaming={isChatGenerating}
-                className='pt-[1em] block'
-                markdown={`\n\`\`\`sh lineNumbers=true\n${code}\n\`\`\`\n`}
-            />
         </ToolPreviewContainer>
     )
 }
@@ -145,7 +115,11 @@ export function ToolPreviewContainer({
 }: {
     children: React.ReactNode
 }) {
-    return <div className='py-1 space-y-2'>{children}</div>
+    return (
+        <div className='py-2 px-2 bg-background border rounded-lg font-mono text-sm space-y-2'>
+            {children}
+        </div>
+    )
 }
 
 export function addIndentation(spaces: number, text: string): string {
@@ -168,10 +142,13 @@ export function Dot({ toolCallId }: { toolCallId?: string }) {
         messages.forEach((message) => {
             if (message.parts) {
                 message.parts.forEach((part) => {
-                    if (part.type?.startsWith('tool-') && 'toolCallId' in part) {
+                    if (
+                        part.type?.startsWith('tool-') &&
+                        'toolCallId' in part
+                    ) {
                         allToolCalls.push({
                             id: part.toolCallId,
-                            state: part.state
+                            state: part.state,
                         })
                     }
                 })
@@ -183,12 +160,20 @@ export function Dot({ toolCallId }: { toolCallId?: string }) {
         if (!lastToolCall || lastToolCall.id !== toolCallId) return false
 
         // Check if it's still processing (not output-available or error)
-        return lastToolCall.state !== 'output-available' && lastToolCall.state !== 'error'
+        return (
+            lastToolCall.state !== 'output-available' &&
+            lastToolCall.state !== 'error'
+        )
     }, [toolCallId, messages])
 
     return (
-        <span className={cn('whitespace-pre',isLastPendingCall && 'animate-pulse')}>
-            •{' '}
+        <span
+            className={cn(
+                'whitespace-pre',
+                isLastPendingCall && 'animate-pulse',
+            )}
+        >
+            •
         </span>
     )
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-08-02 12:00
+
+- Simplified tools-preview.tsx to show code snippets for mutation operations
+- Added data-last-lines attribute support to limit displayed lines in code blocks
+- Replaced complex diff parsing with direct code snippet rendering
+
 ## 2025-08-01 20:00
 
 - Switch default AI model to Groq with qwen/qwen3-32b model

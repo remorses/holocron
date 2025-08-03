@@ -68,6 +68,7 @@ const remarkCodeToHtml = () => async (tree: Root, file) => {
                 ...meta,
             }
 
+
             let html = '\n'
             try {
                 const hast = await codeToHast(node.value, {
@@ -234,7 +235,8 @@ export function parseMetaString(
 
     // Match: key="value", key='value', key=value (no quotes), key (standalone)
     // We'll use a robust regex that matches all patterns
-    const metaRegex = /(\w+)(?:=(?:"([^"]*)"|'([^']*)'|([^\s"']+)))?/g
+    // Updated to support hyphens in attribute names
+    const metaRegex = /([\w-]+)(?:=(?:"([^"]*)"|'([^']*)'|([^\s"']+)))?/g
     let match: RegExpExecArray | null
 
     while ((match = metaRegex.exec(meta)) !== null) {

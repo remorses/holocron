@@ -29,6 +29,7 @@ describe('admonitions', () => {
         const data = result.data as { ast: Root }
         const jsx = renderToStaticMarkup(
             <SafeMdxRenderer
+            allowClientEsmImports
                 mdast={data?.ast}
                 components={{
                     Callout({ children, type }) {

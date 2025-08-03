@@ -71,7 +71,7 @@ export const StreamingMarkdownRuntimeComponent = memo(
         return (
             <div
                 className={cn(
-                    'contents prose select-text dark:prose-invert',
+                    'prose select-text dark:prose-invert',
                     className,
                 )}
                 ref={container}
@@ -79,6 +79,7 @@ export const StreamingMarkdownRuntimeComponent = memo(
                 {resultAst?.children?.map((block, index) => {
                     return (
                         <SafeMdxRenderer
+                          allowClientEsmImports
                             key={index}
                             addMarkdownLineNumbers
                             renderNode={renderNode}

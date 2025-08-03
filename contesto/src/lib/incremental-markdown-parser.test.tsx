@@ -106,6 +106,7 @@ this is another paragraph
                 const jsx = renderToStaticMarkup(
                     <SafeMdxRenderer
                         mdast={ast}
+                        allowClientEsmImports
                         components={{
                             Cards({ children }) {
                                 return React.createElement(

@@ -8,6 +8,7 @@ import {
     tool,
     stepCountIs,
     convertToModelMessages,
+    smoothStream,
 } from 'ai'
 import { prisma } from 'db'
 import Handlebars from 'handlebars'
@@ -325,6 +326,10 @@ export const docsApp = new Spiceflow({ basePath: '/fumabaseInternalAPI' })
 
             const result = streamText({
                 model,
+                experimental_transform: smoothStream({
+                    delayInMs: 7,
+                    chunking: 'word',
+                }),
                 messages: [
                     {
                         role: 'system',
