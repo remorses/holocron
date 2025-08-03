@@ -104,3 +104,8 @@ mark {
     content-visibility: auto;
     /* contain-intrinsic-size: auto 500px; */
 }
+
+
+.fd-steps {
+    content-visibility: visible;
+}
