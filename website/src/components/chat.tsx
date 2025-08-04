@@ -9,13 +9,7 @@ import {
 } from 'contesto/src/chat/chat-message'
 import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
 import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
-import {
-    Fragment,
-    startTransition,
-    useEffect,
-    useMemo,
-    useState,
-} from 'react'
+import { Fragment, startTransition, useEffect, useMemo, useState } from 'react'
 
 import {
     Dot,
@@ -215,8 +209,6 @@ function ChatForm({ children }: { children: React.ReactNode }) {
             onSubmit={formMethods.handleSubmit(() => {
                 if (isOnboardingChat) {
                     const currentValues = formMethods.getValues()
-
-
 
                     // Format values as key: value pairs instead of JSON
                     const formattedMessage = Object.entries(currentValues)
@@ -483,8 +475,6 @@ export default function Chat({
     )
 }
 
-
-
 function Messages({ ref }) {
     const { messages } = useChatContext()
 
@@ -535,18 +525,12 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                 {message.parts.map((part, index) => {
                     if (part.type === 'text') {
                         return (
-                            <div
+                            <Markdown
+                                isStreaming={isChatGenerating}
                                 key={index}
-                                className='flex flex-row tracking-wide gap-1'
-                            >
-                                {/*<Dot />*/}
-                                <Markdown
-                                    isStreaming={isChatGenerating}
-                                    key={index}
-                                    className=''
-                                    markdown={part.text}
-                                />
-                            </div>
+                                className=''
+                                markdown={part.text}
+                            />
                         )
                     }
 
@@ -853,7 +837,10 @@ function Footer() {
                                 <div className='flex items-center gap-2'>
                                     <ChatUploadButton
                                         onUpload={async (file) => {
-                                            return await uploadFileToSite(file, siteId)
+                                            return await uploadFileToSite(
+                                                file,
+                                                siteId,
+                                            )
                                         }}
                                         accept='image/*,text/*,.pdf,.docx,.doc'
                                         onFilesChange={(files) => {

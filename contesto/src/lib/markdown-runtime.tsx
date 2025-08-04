@@ -1,4 +1,8 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import {
+    keepPreviousData,
+    useQuery,
+    useSuspenseQuery,
+} from '@tanstack/react-query'
 import { memo, useRef, useState } from 'react'
 
 import { SafeMdxRenderer } from 'safe-mdx'
@@ -23,7 +27,7 @@ export const StreamingMarkdownRuntimeComponent = memo(
 
         let [markdownCache] = useState(() => new Map())
 
-        const { data: resultAst } = useQuery({
+        const { data: resultAst } = useSuspenseQuery({
             queryKey: ['markdown-ast', markdown, isStreaming],
 
             queryFn: async ({}) => {
@@ -64,22 +68,19 @@ export const StreamingMarkdownRuntimeComponent = memo(
                 if (isStreaming) return true
                 return false
             },
-            enabled: !!markdown,
-            placeholderData: keepPreviousData,
+
+            // placeholderData: keepPreviousData,
         })
 
         return (
             <div
-                className={cn(
-                    'prose select-text dark:prose-invert',
-                    className,
-                )}
+                className={cn('prose select-text dark:prose-invert', className)}
                 ref={container}
             >
                 {resultAst?.children?.map((block, index) => {
                     return (
                         <SafeMdxRenderer
-                          allowClientEsmImports
+                            allowClientEsmImports
                             key={index}
                             addMarkdownLineNumbers
                             renderNode={renderNode}

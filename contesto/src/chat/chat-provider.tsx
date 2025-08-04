@@ -36,7 +36,7 @@ const ChatProvider = (props: {
     const store = useMemo(() => {
         const abortController = new AbortController()
         abortController.signal.addEventListener('abort', () => {
-          console.log('Generation aborted:', abortController.signal.reason)
+            console.log('Generation aborted:', abortController.signal.reason)
         })
         let store = create<ChatState>(() => ({
             messages: [],
@@ -141,7 +141,6 @@ const ChatProvider = (props: {
             }
         })
 
-
         store.setState({
             isGenerating: true,
             assistantErrorMessage: undefined,
@@ -180,6 +179,26 @@ const ChatProvider = (props: {
             window.removeEventListener('chatRegenerate', handleChatRegenerate)
         }
     }, [submit])
+    useEffect(() => {
+        const messages = stableInitialState.messages || []
+        const lastUserMessage = [...messages]
+            .reverse()
+            .find((msg) => msg.role === 'user')
+        const userMessageId = lastUserMessage?.id
+        const messageElement = document.querySelector(
+            `[data-message-id="${userMessageId}"]`,
+        )
+        if (messageElement) {
+            messageElement.scrollIntoView({
+                behavior: 'instant',
+                block: 'start',
+            })
+        } else {
+            console.warn(
+                `Message element with id ${userMessageId} not found for scrolling initial message`,
+            )
+        }
+    }, [stableInitialState])
 
     useEffect(() => {
         // Load initial text from localStorage if not provided in props

@@ -72,12 +72,27 @@ export function EditorToolPreview({
         command === 'insert' ||
         command === 'str_replace'
     ) {
-        let code = args?.new_str || args?.file_text || ''
+        let language = 'mdx'
+        let code = args?.file_text || args?.new_str || ''
+        if (args?.new_str || args?.old_str) {
+            language = 'diff'
+            code =
+                (args.old_str || '')
+                    .split('\n')
+                    .map((line) => `- ${line}`)
+                    .join('\n') +
+                '\n' +
+                (args.new_str || '')
+                    .split('\n')
+                    .map((line) => `+ ${line}`)
+                    .join('\n')
+        }
+
         if (code && typeof code === 'object') {
             code = code?.['error'] || JSON.stringify(code, null, 2)
         }
 
-        const markdown = `<ShowMore >\n\`\`\`\`mdx lineNumbers=true data-last-lines=5  \n${code}\n\`\`\`\`\n</ShowMore>`
+        const markdown = `<ShowMore>\n\`\`\`\`${language} lineNumbers=true data-last-lines=5  \n${code}\n\`\`\`\`\n</ShowMore>`
 
         let actionText = capitalize(command)
         if (command === 'str_replace') actionText = 'Replacing content in'
@@ -115,7 +130,7 @@ export function ToolPreviewContainer({
     children: React.ReactNode
 }) {
     return (
-        <div className='py-2 px-2 bg-background border rounded-lg font-mono text-sm space-y-2'>
+        <div className='py-2 rounded-lg font-mono text-sm space-y-2 w-full'>
             {children}
         </div>
     )

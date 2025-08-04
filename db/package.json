@@ -6,6 +6,8 @@
     "description": "db",
     "scripts": {
         "studio": "doppler run -- prisma studio",
+        "psql:prod": "doppler run -c production --command 'psql \"$(echo $DATABASE_URL | sed \"s/\\?.*//\")\"'",
+        "psql:preview": "doppler run --command 'psql $DATABASE_URL'",
         "diff:prod": "doppler run -c production --command 'pnpm prisma migrate diff --script --from-url $DATABASE_URL --to-schema-datamodel schema.prisma > diff.sql'",
         "diff:preview": "doppler run -c preview --command 'pnpm prisma migrate diff --script --from-url $DATABASE_URL --to-schema-datamodel schema.prisma > diff.sql'",
         "push:diff": "doppler run --command 'psql \"$DIRECT_URL\" -a -f diff.sql'",

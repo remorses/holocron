@@ -21,7 +21,7 @@ import {
     useRevalidator,
     useSearchParams,
 } from 'react-router'
-import { ChatLeftSidebar } from '../components/app-sidebar'
+import { ChatLeftSidebar } from '../components/left-sidebar'
 import { BrowserWindow } from '../components/browser-window'
 import { SidebarInset, SidebarProvider } from '../components/ui/sidebar'
 import { getSession } from '../lib/better-auth'

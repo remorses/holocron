@@ -1,2 +1,2 @@
--- This is an empty migration.
-
+-- DropEnum
+DROP TYPE "ModelProvider";

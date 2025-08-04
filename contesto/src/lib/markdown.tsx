@@ -22,7 +22,13 @@ export type MarkdownRendererProps = {
     renderNode?: RenderNode
 }
 
-const reactQueryClient = new QueryClient()
+const reactQueryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            experimental_prefetchInRender: true,
+        },
+    },
+})
 
 export const Markdown = function MarkdownRender(props: MarkdownRendererProps) {
     const { ast } = props

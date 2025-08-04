@@ -183,7 +183,6 @@ function NewChatButton() {
         </Popover>
     )
 }
-
 export function ChatLeftSidebar({
     ...props
 }: React.ComponentProps<typeof Sidebar>) {
@@ -196,14 +195,16 @@ export function ChatLeftSidebar({
     const { chatId } = params
     const { userSites } = orgData
 
+    const overflowDivRef = React.useRef<HTMLDivElement>(null)
+
     return (
         <div
             {...props}
             style={{
                 width: hideBrowser ? '100%' : '500px',
                 ...(hideBrowser && {
-                  paddingLeft: '2px',
-                  paddingRight: '2px',
+                    paddingLeft: '2px',
+                    paddingRight: '2px',
                 }),
             }}
             className='dark mx-auto bg-black h-full flex-col scheme-only-dark px-0 grid max-w-full min-h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
@@ -217,7 +218,10 @@ export function ChatLeftSidebar({
                 </div>
             </div>
 
-            <div className='grow relative overflow-y-auto items-center overflow-x-hidden w-full row-span-23 flex flex-col '>
+            <div
+                ref={overflowDivRef}
+                className='grow relative overflow-y-auto items-center overflow-x-hidden w-full row-span-23 flex flex-col '
+            >
                 <Chat />
             </div>
         </div>
