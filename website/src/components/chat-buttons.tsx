@@ -225,9 +225,7 @@ export function SaveChangesButton({ className = '' }) {
             return true
         }
 
-        // if (!hasNonPushedChanges) {
-        //     return true
-        // }
+
         return false
     })()
 

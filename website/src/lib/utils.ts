@@ -164,17 +164,6 @@ export async function* processGeneratorConcurrentlyInOrder<T, R>(
 
 
 
-export function capitalize(str: string): string {
-    if (!str) return '';
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-export function spaceCase(str: string): string {
-    return str
-        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-        .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
-        .replace(/^./, (m) => m.toUpperCase())
-}
 
 export async function uploadFileToSite(file: File, siteId: string) {
     const idGenerator = createIdGenerator()
@@ -184,7 +173,7 @@ export async function uploadFileToSite(file: File, siteId: string) {
         ),
     )
     const contentType = file.type || 'application/octet-stream'
-    
+
     const { error, data } = await apiClient.api.createUploadSignedUrl.post({
         siteId,
         files: [
@@ -195,11 +184,11 @@ export async function uploadFileToSite(file: File, siteId: string) {
             },
         ],
     })
-    
+
     if (error) throw error
-    
+
     const [result] = data.files
-    
+
     const uploadResp = await fetch(result.signedUrl, {
         method: 'PUT',
         headers: {
@@ -207,11 +196,11 @@ export async function uploadFileToSite(file: File, siteId: string) {
         },
         body: file,
     })
-    
+
     if (!uploadResp.ok) {
         throw new Error('Failed to upload file to storage.')
     }
-    
+
     return {
         name: result.path,
         contentType,
@@ -223,16 +212,16 @@ export async function transcribeAudio(audioFile: File): Promise<string> {
     try {
         const formData = new FormData()
         formData.append('audio', audioFile)
-        
+
         const response = await fetch('/api/transcribeAudio', {
             method: 'POST',
             body: formData,
         })
-        
+
         if (!response.ok) {
             throw new Error('Transcription failed')
         }
-        
+
         const { text } = await response.json()
         return text || ''
     } catch (error) {

@@ -2,9 +2,11 @@ import { prisma } from 'db'
 import { loader, MetaData, PageData, VirtualFile } from 'fumadocs-core/source'
 import { getIconJsx } from './icons.server'
 import { I18nConfig } from 'fumadocs-core/i18n'
-import { StructuredData } from './mdx-heavy'
+import { ProcessorDataFrontmatter, StructuredData } from './mdx-heavy'
 import { deduplicateBy } from './utils'
 import { FilesInDraft } from './docs-state'
+
+type MyVirtualFile = VirtualFile & { data?: ProcessorDataFrontmatter }
 
 export async function getFilesForSource({
     branchId,
@@ -14,7 +16,7 @@ export async function getFilesForSource({
     branchId: string
     githubFolder: string
     filesInDraft: FilesInDraft
-}) {
+}): Promise<Array<MyVirtualFile>> {
     const [allPages, metaFiles] = await Promise.all([
         prisma.markdownPage.findMany({
             where: {
@@ -36,7 +38,7 @@ export async function getFilesForSource({
                 githubPath = githubPath.slice(githubFolder.length)
             }
             githubPath = removeFrontSlash(githubPath)
-            const res: VirtualFile = {
+            const res: MyVirtualFile = {
                 data: { ...(x.frontmatter as any) },
                 path: githubPath,
                 type: 'page',
@@ -52,8 +54,8 @@ export async function getFilesForSource({
                     githubPath = githubPath.slice(githubFolder.length)
                 }
                 githubPath = removeFrontSlash(githubPath)
-                const res: VirtualFile = {
-                    data: x.jsonData,
+                const res: MyVirtualFile = {
+                    data: x.jsonData as any,
                     path: githubPath,
                     type: 'meta',
                 }

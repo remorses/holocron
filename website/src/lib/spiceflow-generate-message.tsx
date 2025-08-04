@@ -26,7 +26,7 @@ import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import path from 'path'
 import { Spiceflow } from 'spiceflow'
 import z from 'zod'
-import { printDirectoryTree } from '../components/directory-tree'
+import { printDirectoryTree } from 'docs-website/src/lib/directory-tree'
 import {
     createEditTool,
     EditToolParamSchema,
@@ -215,11 +215,11 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
 
         const isOnboardingChat = !pageCount
 
-        // Create source for page navigation
+        const githubFolder = branch.site.githubFolder || ''
         const files = await getFilesForSource({
             branchId,
             filesInDraft,
-            githubFolder: branch.site?.githubFolder || '',
+            githubFolder,
         })
         const source = getFumadocsSource({
             files,
@@ -392,45 +392,14 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     'Returns a directory tree diagram of the current project files as plain text. Useful for giving an overview or locating files.',
                 inputSchema: z.object({}),
                 execute: async () => {
-                    const allFiles = await getTabFilesWithoutContents({
-                        branchId,
-                    })
-                    let filePaths = allFiles.map((x) => {
-                        const path = x.githubPath
-                        let title = ''
-                        if (x.type === 'page') {
-                            const frontmatter =
-                                x.frontmatter as ProcessorDataFrontmatter
-                            title = frontmatter?.title || ''
+                    const filePaths = [...files].map((x) => {
+                        const title = x.data?.title || ''
+                        const p = path.posix.join(githubFolder, x.path)
+                        return {
+                            path: p,
+                            title,
                         }
-                        return { path, title }
                     })
-
-                    // Process files from filesInDraft
-                    const existingPaths = new Set(filePaths.map((f) => f.path))
-                    const draftFiles = fileSystem.getFilesInDraft()
-                    const pathsToRemove = new Set<string>()
-
-                    for (const [draftPath, fileUpdate] of Object.entries(
-                        draftFiles,
-                    )) {
-                        if (fileUpdate.content === null) {
-                            // Mark this path for removal
-                            pathsToRemove.add(draftPath)
-                        } else if (!existingPaths.has(draftPath)) {
-                            // Add new draft files
-                            filePaths.push({
-                                path: draftPath,
-                                title: '(draft)',
-                            })
-                        }
-                    }
-
-                    // Remove deleted files
-                    filePaths = filePaths.filter(
-                        (f) => !pathsToRemove.has(f.path),
-                    )
-
                     filePaths.push({
                         path: path.posix.join(
                             branch.site.githubFolder || '.',

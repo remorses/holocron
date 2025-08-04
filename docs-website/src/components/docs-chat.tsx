@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 
-import { createIdGenerator } from 'ai'
+import { createIdGenerator, isToolUIPart } from 'ai'
 import {
     ToolPartInputAvailable,
     ToolPartInputStreaming,
     ToolPartOutputAvailable,
-    uiStreamToUIMessages
+    uiStreamToUIMessages,
 } from 'contesto/src/lib/process-chat'
 import { ScrollArea } from 'docs-website/src/components/ui/scroll-area'
 
@@ -58,13 +58,20 @@ import {
 import {
     createEditExecute,
     EditToolParamSchema,
-    isStrReplaceParameterComplete
+    isStrReplaceParameterComplete,
 } from '../lib/edit-tool'
 import { env } from '../lib/env'
 import { DocsUIMessage } from '../lib/types'
-import { throttle } from '../lib/utils'
+import { capitalize, spaceCase, throttle, truncateText } from '../lib/utils'
 import type { Route } from '../routes/_catchall'
 import { usePreservedNavigate } from './preserved-search-link'
+import { RenderFormPreview } from 'contesto'
+import {
+    ErrorPreview,
+    EditorToolPreview,
+    ToolPreviewContainer,
+    Dot,
+} from './chat-tool-previews'
 
 export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
     const chatId = usePersistentDocsState((x) => x.chatId)
@@ -124,8 +131,6 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                 const text = await res.text()
                 return text
             }
-
-
 
             const onToolOutput = async (
                 toolPart: ToolPartOutputAvailable<DocsUIMessage>,
@@ -221,7 +226,9 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
 
                         // Update docs state with new filesInDraft from the preview file system
                         useDocsState.setState({
-                            filesInDraft: { ...previewFileSystem.getFilesInDraft() },
+                            filesInDraft: {
+                                ...previewFileSystem.getFilesInDraft(),
+                            },
                         })
                     }
                 },
@@ -420,23 +427,16 @@ function Messages({ ref }: { ref?: React.Ref<HTMLDivElement> }) {
         </div>
     )
 }
-
 function MessageRenderer({ message }: { message: DocsUIMessage }) {
-    const { isGenerating: isChatGenerating } = useChatContext()
+    const { isGenerating: isChatGenerating, messages } = useChatContext()
 
+    const isLastMessage = messages[messages.length - 1]?.id === message.id
     if (message.role === 'user') {
         return (
-            <ChatUserMessage message={message}>
+            <ChatUserMessage className='my-4 text-[16px]' message={message}>
                 {message.parts.map((part, index) => {
                     if (part.type === 'text') {
-                        return (
-                            <Markdown
-                                key={index}
-                                className='[&_p]:m-0'
-                                isStreaming={isChatGenerating}
-                                markdown={part.text}
-                            />
-                        )
+                        return part.text
                     }
                     return null
                 })}
@@ -444,116 +444,126 @@ function MessageRenderer({ message }: { message: DocsUIMessage }) {
         )
     }
 
+    let minHeight = isLastMessage ? 'calc(-248px + 100dvh)' : '0px'
+
     return (
-        <ChatAssistantMessage message={message}>
-            {message.parts.map((part, index) => {
-                if (part.type === 'text') {
-                    return (
-                        <Markdown
-                            isStreaming={isChatGenerating}
-                            key={index}
-                            markdown={part.text}
-                        />
-                    )
-                }
-
-                if (part.type === 'reasoning') {
-                    return (
-                        <Markdown
-                            key={index}
-                            isStreaming={isChatGenerating}
-                            markdown={'thinking: ' + part.text}
-                        />
-                    )
-                }
-
-                if (part.type === 'tool-searchDocs') {
-                    return (
-                        <div
-                            key={index}
-                            className='text-sm text-muted-foreground'
-                        >
-                            <Markdown
-                                isStreaming={isChatGenerating}
-                                markdown={`🔍 Searching docs: ${part.input?.terms?.join(', ') || 'unknown'}`}
-                            />
-                        </div>
-                    )
-                }
-
-                if (part.type === 'tool-goToPage') {
-                    return (
-                        <div
-                            key={index}
-                            className='text-sm text-muted-foreground'
-                        >
-                            <Markdown
-                                isStreaming={isChatGenerating}
-                                markdown={`📄 Navigating to: ${part.input?.slug || 'unknown'}`}
-                            />
-                        </div>
-                    )
-                }
-
-                if (part.type === 'tool-getCurrentPage') {
-                    return (
-                        <div
-                            key={index}
-                            className='text-sm text-muted-foreground'
-                        >
-                            <Markdown
-                                isStreaming={isChatGenerating}
-                                markdown={`📍 Getting current page`}
-                            />
-                        </div>
-                    )
-                }
-
-                if (part.type === 'tool-fetchUrl') {
-                    return (
-                        <div
-                            key={index}
-                            className='text-sm text-muted-foreground'
-                        >
-                            <Markdown
-                                isStreaming={isChatGenerating}
-                                markdown={`🌐 Fetching: ${part.input?.url || 'unknown'}`}
-                            />
-                        </div>
-                    )
-                }
-
-
-                if (part.type === 'tool-selectText') {
-                    if (!part.input) return null
-                    return (
-                        <div
-                            key={index}
-                            className='text-sm text-muted-foreground'
-                        >
-                            <Markdown
-                                isStreaming={isChatGenerating}
-                                markdown={`🔎 Selecting lines  ${part.input?.slug}:${part.input?.startLine || 0}:${part.input?.endLine || ''}`}
-                            />
-                        </div>
-                    )
-                }
-
-                if (
-                    part.type.startsWith('tool-') &&
-                    process.env.NODE_ENV === 'development'
-                ) {
-                    return (
-                        <pre key={index} className='text-xs p-2 rounded'>
-                            {JSON.stringify(part, null, 2)}
-                        </pre>
-                    )
-                }
-
-                return null
-            })}
+        <ChatAssistantMessage
+            style={{ minHeight }}
+            className=''
+            message={message}
+        >
+            {message.parts.map((part, index) => (
+                <MessagePartRenderer key={index} part={part} />
+            ))}
         </ChatAssistantMessage>
     )
+}
+
+export function MessagePartRenderer({
+    part,
+}: {
+    part: DocsUIMessage['parts'][0]
+}) {
+    const { isGenerating: isChatGenerating, messages } = useChatContext()
+
+    if (part.type === 'text') {
+        return (
+            <Markdown
+                isStreaming={isChatGenerating}
+                className=''
+                markdown={part.text}
+            />
+        )
+    }
+
+    if (part.type === 'reasoning') {
+        if (!part.text) return null
+        return (
+            <div className='flex flex-row opacity-80 tracking-wide gap-[1ch]'>
+                <Dot />
+
+                <Markdown
+                    isStreaming={isChatGenerating}
+                    className='prose-sm'
+                    markdown={`<ShowMore>\n${part.text}\n</ShowMore>\n`}
+                />
+            </div>
+        )
+    }
+    if (part && 'errorText' in part && part.errorText) {
+        return (
+            <Fragment>
+                <Dot /> {part.type}
+                <ErrorPreview error={part.errorText} />
+            </Fragment>
+        )
+    }
+    if (part.type === 'tool-strReplaceEditor') {
+        return <EditorToolPreview {...part} />
+    }
+    if (part.type === 'tool-getProjectFiles') {
+        const code = part.output || '\n'
+
+        if (!code) return null
+
+        return (
+            <ToolPreviewContainer>
+                <Dot toolCallId={part.toolCallId} /> Getting file structure
+                <br />
+                <Markdown
+                    isStreaming={isChatGenerating}
+                    className='pt-[1em] block'
+                    markdown={`<ShowMore>\n\`\`\`sh lineNumbers=true\n${code}\n\`\`\`\n</ShowMore>`}
+                />
+            </ToolPreviewContainer>
+        )
+    }
+
+    if (part.type === 'tool-selectText') {
+        if (!part.input) return null
+        return (
+            <ToolPreviewContainer>
+                <Dot /> Selecting lines ${part.input?.slug}:$
+                {part.input?.startLine || 0}-${part.input?.endLine || ''}
+            </ToolPreviewContainer>
+        )
+    }
+    // if (
+    //     part.type.startsWith('tool-') &&
+    //     process.env.NODE_ENV === 'development'
+    // ) {
+    //     return (
+    //         <pre>
+    //             {JSON.stringify(part, null, 2)}
+    //         </pre>
+    //     )
+    // }
+
+    if (isToolUIPart(part) && part.state !== 'input-streaming') {
+        const toolName = part.type.replace('tool-', '')
+        const callArg = truncateText(stringifyArgs(part.input))
+        let error = part.errorText
+        return (
+            <ToolPreviewContainer>
+                <Dot /> {capitalize(spaceCase(toolName))}({callArg})
+                {error && <ErrorPreview error={error} />}
+            </ToolPreviewContainer>
+        )
+    }
+    return null
+}
+
+function stringifyArgs(obj: any): string {
+    if (!obj || typeof obj !== 'object') return JSON.stringify(obj)
+    return Object.entries(obj)
+        .map(([key, value]) => {
+            let strValue = JSON.stringify(value)
+            if (typeof strValue === 'string' && strValue.length > 300) {
+                strValue = strValue.slice(0, 300) + '...'
+            }
+            return `${key}=${strValue}`
+        })
+        .join(', ')
 }
 
 // Static autocomplete suggestions for first message

@@ -62,8 +62,10 @@ import {
 } from 'docs-website/src/lib/edit-tool'
 import { FileSystemEmulator } from '../lib/file-system-emulator'
 import {
+    capitalize,
     escapeMdxSyntax,
     generateSlugFromPath,
+    spaceCase,
     throttle,
     truncateText,
 } from 'docs-website/src/lib/utils'
@@ -93,16 +95,18 @@ import {
 import { docsRpcClient } from '../lib/docs-setstate'
 import { WebsiteUIMessage } from '../lib/types'
 import {
-    capitalize,
     cn,
     safeJsoncParse,
-    spaceCase,
     transcribeAudio,
     uploadFileToSite,
 } from '../lib/utils'
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import { TruncatedText } from './truncated-text'
+import {
+    MessagePartRenderer,
+
+} from 'docs-website/src/components/docs-chat'
 
 function keyForDocsJson({ chatId }) {
     return `fumabase.jsonc-${chatId}`
@@ -444,7 +448,6 @@ export default function Chat({
             if (abortController.signal.aborted) {
                 break
             }
-            console.log(newMessages.at(-1))
             startTransition(() => {
                 setMessages(newMessages)
             })
@@ -499,6 +502,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                     if (part.type === 'text') {
                         return part.text
                     }
+
                     return null
                 })}
             </ChatUserMessage>
@@ -509,71 +513,8 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
 
     return (
         <ChatForm>
-            <ChatAssistantMessage
-                style={{ minHeight }}
-                className=' whitespace-pre-wrap'
-                message={message}
-            >
+            <ChatAssistantMessage style={{ minHeight }} message={message}>
                 {message.parts.map((part, index) => {
-                    if (part.type === 'text') {
-                        return (
-                            <Markdown
-                                isStreaming={isChatGenerating}
-                                key={index}
-                                className=''
-                                markdown={part.text}
-                            />
-                        )
-                    }
-
-                    if (part.type === 'reasoning') {
-                        if (!part.text) return null
-                        return (
-                            <div
-                                key={index}
-                                className='flex flex-row opacity-80 tracking-wide gap-[1ch]'
-                            >
-                                <Dot />
-                                <TruncatedText isStreaming={isChatGenerating}>
-                                    <Markdown
-                                        isStreaming={isChatGenerating}
-                                        key={index}
-                                        className='prose-sm'
-                                        markdown={part.text}
-                                    />
-                                </TruncatedText>
-                            </div>
-                        )
-                    }
-                    if (part && 'errorText' in part && part.errorText) {
-                        return (
-                            <Fragment key={index}>
-                                <Dot /> {part.type}
-                                <ErrorPreview error={part.errorText} />
-                            </Fragment>
-                        )
-                    }
-                    if (part.type === 'tool-strReplaceEditor') {
-                        return <EditorToolPreview key={index} {...part} />
-                    }
-                    if (part.type === 'tool-getProjectFiles') {
-                        const code = part.output || '\n'
-
-                        if (!code) return null
-
-                        return (
-                            <ToolPreviewContainer>
-                                <Dot toolCallId={part.toolCallId} /> Getting
-                                file structure
-                                <br />
-                                <Markdown
-                                    isStreaming={isChatGenerating}
-                                    className='pt-[1em] block'
-                                    markdown={`<ShowMore>\n\`\`\`sh lineNumbers=true\n${code}\n\`\`\`\n</ShowMore>`}
-                                />
-                            </ToolPreviewContainer>
-                        )
-                    }
                     if (
                         part.type === 'tool-renderForm' &&
                         part.state === 'output-available'
@@ -582,16 +523,6 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                             <RenderFormPreview
                                 key={index}
                                 message={message}
-                                {...part}
-                                showSubmitButton={hideBrowser}
-                            />
-                        )
-                    }
-                    if (part.type === 'tool-updateFumabaseJsonc') {
-                        return (
-                            <RenderFormPreview
-                                message={message}
-                                key={index}
                                 {...part}
                                 showSubmitButton={hideBrowser}
                             />
@@ -610,59 +541,23 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                             </ToolPreviewContainer>
                         )
                     }
-                    if (part.type === 'tool-selectText') {
-                        if (!part.input) return null
+                    if (part.type === 'tool-updateFumabaseJsonc') {
                         return (
-                            <ToolPreviewContainer key={index}>
-                                <Dot /> Selecting lines ${part.input?.slug}:$
-                                {part.input?.startLine || 0}-$
-                                {part.input?.endLine || ''}
-                            </ToolPreviewContainer>
+                            <RenderFormPreview
+                                message={message}
+                                key={index}
+                                {...part}
+                                showSubmitButton={hideBrowser}
+                            />
                         )
                     }
-                    // if (
-                    //     part.type.startsWith('tool-') &&
-                    //     process.env.NODE_ENV === 'development'
-                    // ) {
-                    //     return (
-                    //         <pre key={index}>
-                    //             {JSON.stringify(part, null, 2)}
-                    //         </pre>
-                    //     )
-                    // }
-
-                    if (
-                        isToolUIPart(part) &&
-                        part.state !== 'input-streaming'
-                    ) {
-                        const toolName = part.type.replace('tool-', '')
-                        const callArg = truncateText(stringifyArgs(part.input))
-                        let error = part.errorText
-                        return (
-                            <ToolPreviewContainer key={index}>
-                                <Dot /> {capitalize(spaceCase(toolName))}(
-                                {callArg})
-                                {error && <ErrorPreview error={error} />}
-                            </ToolPreviewContainer>
-                        )
-                    }
+                    return (
+                        <MessagePartRenderer part={part as any} key={index} />
+                    )
                 })}
             </ChatAssistantMessage>
         </ChatForm>
     )
-}
-
-function stringifyArgs(obj: any): string {
-    if (!obj || typeof obj !== 'object') return JSON.stringify(obj)
-    return Object.entries(obj)
-        .map(([key, value]) => {
-            let strValue = JSON.stringify(value)
-            if (typeof strValue === 'string' && strValue.length > 300) {
-                strValue = strValue.slice(0, 300) + '...'
-            }
-            return `${key}=${strValue}`
-        })
-        .join(', ')
 }
 
 // Static autocomplete suggestions for first message

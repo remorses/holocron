@@ -44,7 +44,7 @@ import {
     type FileUpdate,
 } from './edit-tool'
 import { FileSystemEmulator } from 'website/src/lib/file-system-emulator'
-
+import { printDirectoryTree } from './directory-tree'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
@@ -171,11 +171,7 @@ export const docsApp = new Spiceflow({ basePath: '/fumabaseInternalAPI' })
                     }
 
                     if (metaFile?.jsonData) {
-                        return JSON.stringify(
-                            metaFile.jsonData,
-                            null,
-                            2,
-                        )
+                        return JSON.stringify(metaFile.jsonData, null, 2)
                     }
 
                     const error = new Error(
@@ -191,8 +187,8 @@ export const docsApp = new Spiceflow({ basePath: '/fumabaseInternalAPI' })
                 model: { provider: model.provider },
             })
 
-            const tools: Record<string, any> = {
-              strReplaceEditor: editTool,
+            const tools = {
+                strReplaceEditor: editTool,
                 searchDocs: tool({
                     inputSchema: searchDocsInputSchema,
                     execute: async ({ terms, searchType = 'fulltext' }) => {
@@ -207,6 +203,7 @@ export const docsApp = new Spiceflow({ basePath: '/fumabaseInternalAPI' })
                         })
                     },
                 }),
+
                 goToPage: tool({
                     inputSchema: goToPageInputSchema,
                     execute: async ({ slug: _slug }) => {
@@ -231,55 +228,74 @@ export const docsApp = new Spiceflow({ basePath: '/fumabaseInternalAPI' })
                 fetchUrl: tool({
                     inputSchema: fetchUrlInputSchema,
                     execute: async ({ url }) => {
-                            let fullUrl: string
-                            if (
-                                url.startsWith('http://') ||
-                                url.startsWith('https://')
-                            ) {
-                                fullUrl = url
-                            } else {
-                                // If only path is provided, use current origin as base
-                                fullUrl = new URL(url, currentOrigin).toString()
-                            }
+                        let fullUrl: string
+                        if (
+                            url.startsWith('http://') ||
+                            url.startsWith('https://')
+                        ) {
+                            fullUrl = url
+                        } else {
+                            // If only path is provided, use current origin as base
+                            fullUrl = new URL(url, currentOrigin).toString()
+                        }
 
-                            try {
-                                console.log(`Fetching URL: ${fullUrl}`)
+                        try {
+                            console.log(`Fetching URL: ${fullUrl}`)
 
-                                const response = await fetch(fullUrl)
-                                if (!response.ok) {
-                                    console.log(
-                                        `Failed to fetch ${fullUrl}: ${response.status} ${response.statusText}`,
-                                    )
-                                    return `Failed to fetch ${fullUrl}: ${response.status} ${response.statusText}`
-                                }
-
-                                const contentType =
-                                    response.headers.get('content-type') || ''
-                                console.log(`Content type: ${contentType}`)
-
-                                if (contentType.includes('application/json')) {
-                                    const data = await response.json()
-                                    return JSON.stringify(data, null, 2)
-                                } else if (contentType.includes('text/html')) {
-                                    const html = await response.text()
-                                    // Return first 2000 characters to avoid overwhelming context
-                                    return html.length > 2000
-                                        ? html.substring(0, 2000) + '...'
-                                        : html
-                                } else {
-                                    const text = await response.text()
-                                    return text.length > 2000
-                                        ? text.substring(0, 2000) + '...'
-                                        : text
-                                }
-                            } catch (error) {
+                            const response = await fetch(fullUrl)
+                            if (!response.ok) {
                                 console.log(
-                                    `Error fetching ${fullUrl} ${error.message}`,
+                                    `Failed to fetch ${fullUrl}: ${response.status} ${response.statusText}`,
                                 )
-                                return `Error fetching ${url}: ${error.message}`
+                                return `Failed to fetch ${fullUrl}: ${response.status} ${response.statusText}`
                             }
-                        },
-                    }),
+
+                            const contentType =
+                                response.headers.get('content-type') || ''
+                            console.log(`Content type: ${contentType}`)
+
+                            if (contentType.includes('application/json')) {
+                                const data = await response.json()
+                                return JSON.stringify(data, null, 2)
+                            } else if (contentType.includes('text/html')) {
+                                const html = await response.text()
+                                // Return first 2000 characters to avoid overwhelming context
+                                return html.length > 2000
+                                    ? html.substring(0, 2000) + '...'
+                                    : html
+                            } else {
+                                const text = await response.text()
+                                return text.length > 2000
+                                    ? text.substring(0, 2000) + '...'
+                                    : text
+                            }
+                        } catch (error) {
+                            console.log(
+                                `Error fetching ${fullUrl} ${error.message}`,
+                            )
+                            return `Error fetching ${url}: ${error.message}`
+                        }
+                    },
+                }),
+                getProjectFiles: tool({
+                    description:
+                        'Returns a directory tree diagram of the current project files as plain text. Useful for giving an overview or locating files.',
+                    inputSchema: z.object({}),
+                    execute: async () => {
+                        const filePaths = [...files].map((x) => {
+                            const title = x.data?.title || ''
+                            const p = x.path || ''
+                            return {
+                                path: p,
+                                title,
+                            }
+                        })
+
+                        return printDirectoryTree({
+                            filePaths,
+                        })
+                    },
+                }),
                 selectText: tool({
                     inputSchema: selectTextInputSchema,
                     description: dedent`
@@ -301,9 +317,7 @@ export const docsApp = new Spiceflow({ basePath: '/fumabaseInternalAPI' })
                         //     return { error: `Cannot select more than 10 lines of text. You requested ${endLine - startLine + 1} lines.` }
                         // }
 
-                        const slugParts = cleanedSlug
-                            .split('/')
-                            .filter(Boolean)
+                        const slugParts = cleanedSlug.split('/').filter(Boolean)
                         const page = source.getPage(slugParts)
                         if (!page) {
                             return {
@@ -322,7 +336,6 @@ export const docsApp = new Spiceflow({ basePath: '/fumabaseInternalAPI' })
             }
 
             // Add edit tool
-
 
             const result = streamText({
                 model,

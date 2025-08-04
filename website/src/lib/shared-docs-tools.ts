@@ -79,6 +79,10 @@ export type DocsTools = {
         input: FetchUrlInput
         output: any
     }
+    getProjectFiles: {
+        input: {}
+        output: string
+    }
     selectText: {
         input: SelectTextInput
         output: {
