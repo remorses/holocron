@@ -3,6 +3,8 @@ import { twMerge } from 'tailwind-merge'
 import { cn } from './cn'
 import JSONC from 'tiny-jsonc'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
+import { createIdGenerator } from 'ai'
+import { apiClient } from './spiceflow-client'
 export const sleep = (ms: number): Promise<void> => {
     return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -172,4 +174,69 @@ export function spaceCase(str: string): string {
         .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
         .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
         .replace(/^./, (m) => m.toUpperCase())
+}
+
+export async function uploadFileToSite(file: File, siteId: string) {
+    const idGenerator = createIdGenerator()
+    const filename = encodeURIComponent(
+        slugKebabCaseKeepExtension(
+            `${idGenerator()}-${file.name || 'file'}`,
+        ),
+    )
+    const contentType = file.type || 'application/octet-stream'
+    
+    const { error, data } = await apiClient.api.createUploadSignedUrl.post({
+        siteId,
+        files: [
+            {
+                slug: filename,
+                contentType,
+                contentLength: file.size,
+            },
+        ],
+    })
+    
+    if (error) throw error
+    
+    const [result] = data.files
+    
+    const uploadResp = await fetch(result.signedUrl, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': contentType,
+        },
+        body: file,
+    })
+    
+    if (!uploadResp.ok) {
+        throw new Error('Failed to upload file to storage.')
+    }
+    
+    return {
+        name: result.path,
+        contentType,
+        url: result.finalUrl,
+    }
+}
+
+export async function transcribeAudio(audioFile: File): Promise<string> {
+    try {
+        const formData = new FormData()
+        formData.append('audio', audioFile)
+        
+        const response = await fetch('/api/transcribeAudio', {
+            method: 'POST',
+            body: formData,
+        })
+        
+        if (!response.ok) {
+            throw new Error('Transcription failed')
+        }
+        
+        const { text } = await response.json()
+        return text || ''
+    } catch (error) {
+        console.error('Transcription error:', error)
+        return ''
+    }
 }

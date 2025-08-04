@@ -91,7 +91,7 @@ const favicon: string = () => {
 
 - hooks, all functions that start with use, MUST ALWAYS be called in the component render scope, never inside other closures in the component or event handlers. Follow react rules of hooks.
 
-
+- always put all hooks at the start of component functions. Put hooks that are bigger and longer later if possible. all other non hooks logic should go after hooks section, things like conditionals, expressions, etc
 
 
 # testing

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2025-08-04
+
+- Refactored chat components into separate files for better organization
+- Created `chat-buttons.tsx` with `SaveChangesButton`, `DiffStats`, and `PrButton` components
+- Created `chat-welcome.tsx` with `WelcomeMessage` and related components
+- Extracted `uploadFileToSite` and `transcribeAudio` functions to `utils.ts`
+- Renamed `tools-preview.tsx` to `chat-tool-previews.tsx` for consistency
+
 ## 2025-08-02 12:00
 
 - Simplified tools-preview.tsx to show code snippets for mutation operations
