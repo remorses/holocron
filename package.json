@@ -3,7 +3,7 @@
     "private": true,
     "scripts": {
         "test": "NODE_ENV=test vitest",
-        "deployment": "pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm && pnpm -r --parallel --stream --no-bail run --filter website --filter docs-website deployment",
+        "deployment": "pnpm bootstrap && pnpm -r --parallel --stream --no-bail run --filter website --filter docs-website deployment",
         "bootstrap": "pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm ",
         "watch": "pnpm -r watch",
         "typecheck": "pnpm -r --parallel --stream typecheck",

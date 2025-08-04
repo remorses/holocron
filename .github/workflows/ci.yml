@@ -17,6 +17,9 @@ permissions:
 
 jobs:
     ci:
+        strategy:
+            matrix:
+                package: [website, docs-website]
         env:
             DOPPLER_TOKEN: ${{ github.ref_name == 'main' && secrets.DOPPLER_PRODUCTION_TOKEN ||  secrets.DOPPLER_PREVIEW_TOKEN }}
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -42,7 +45,8 @@ jobs:
             - uses: dopplerhq/cli-action@v3
             - uses: superfly/flyctl-actions/setup-flyctl@master
             - run: pnpm install --frozen-lockfile=false
-            - run: 'pnpm deployment'
+            - run: pnpm bootstrap
+            - run: pnpm --filter ${{ matrix.package }} deployment
             # - uses: remorses/buildmedic@opencode
             #   env:
             #       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
