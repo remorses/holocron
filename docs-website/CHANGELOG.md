@@ -1,5 +1,10 @@
 # Changelog
 
+## 2025-08-04 10:00
+
+- Refactored chat-tool-previews.tsx to use ShowMore component directly instead of embedding it in markdown
+- Replaced markdown string interpolation with direct CodeBlock component usage for better type safety
+
 ## 2025-08-03
 
 - Added ShowMore component for content height restriction with expand/collapse functionality

@@ -571,7 +571,7 @@ export class SearchClient implements DatasetsInterface {
                 // Use FTS search on section_content
                 const ftsStart = Date.now()
                 const searchResults = await table
-                    .search(query)
+                    .search(query,)
                     .where(`type = 'section'`)
                     .limit(perPage * (page + 1) + 1) // Get extra for pagination check
                     .toArray()

@@ -72,6 +72,7 @@ import {
     ToolPreviewContainer,
     Dot,
 } from './chat-tool-previews'
+import { ShowMore } from './show-more'
 
 export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
     const chatId = usePersistentDocsState((x) => x.chatId)
@@ -479,15 +480,16 @@ export function MessagePartRenderer({
     if (part.type === 'reasoning') {
         if (!part.text) return null
         return (
-            <div className='flex flex-row opacity-80 tracking-wide gap-[1ch]'>
-                <Dot />
-
-                <Markdown
-                    isStreaming={isChatGenerating}
-                    className='prose-sm'
-                    markdown={`<ShowMore>\n${part.text}\n</ShowMore>\n`}
-                />
-            </div>
+            <ShowMore>
+                <div className='flex flex-row opacity-80 tracking-wide gap-[1ch]'>
+                    <Dot />
+                    <Markdown
+                        isStreaming={isChatGenerating}
+                        className='prose-sm'
+                        markdown={part.text}
+                    />
+                </div>
+            </ShowMore>
         )
     }
     if (part && 'errorText' in part && part.errorText) {

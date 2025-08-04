@@ -227,8 +227,8 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             languages: branch.site?.locales?.map((x) => x.locale) || [],
         })
 
-        let model = groq('moonshotai/kimi-k2-instruct')
-        // let model = openai.responses('gpt-4.1')
+        // let model = groq('moonshotai/kimi-k2-instruct')
+        let model = openai.responses('o4-mini')
 
         // if (chat?.modelId && chat?.modelProvider) {
         //     if (chat.modelProvider.startsWith('openai')) {
@@ -664,7 +664,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 openai: {
                     reasoningSummary: 'detailed',
                     strictJsonSchema: true,
-                    // include: ['reasoning.encrypted_content'],
+                    include: ['reasoning.encrypted_content'],
                     store: false,
                     parallelToolCalls: true,
                 } satisfies OpenAIResponsesProviderOptions,
