@@ -17,12 +17,15 @@ function Highlight({ children }: { children: ReactNode }) {
 export function ErrorPreview({ error }) {
     const truncatedError = truncateText(String(error), 300)
     return (
-        <>
-            <br />⎿ Error:{' '}
-            <span className='dark:text-red-300 text-red-500'>
-                {truncatedError}
+        <div className='flex flex-row gap-2'>
+            <div className='shrink-0'>⎿</div>
+            <span>
+                Error:{' '}
+                <span className='dark:text-red-300 text-red-500'>
+                    {truncatedError}
+                </span>
             </span>
-        </>
+        </div>
     )
 }
 
@@ -152,7 +155,9 @@ export function Dot({ toolCallId }: { toolCallId?: string }) {
         if (!toolCallId) return false
 
         // Find all tool calls across all messages
+        //
         const allToolCalls: Array<{ id: string; state?: string }> = []
+
         messages.forEach((message) => {
             if (message.parts) {
                 message.parts.forEach((part) => {
@@ -187,7 +192,7 @@ export function Dot({ toolCallId }: { toolCallId?: string }) {
                 isLastPendingCall && 'animate-pulse',
             )}
         >
-            •
+            •{' '}
         </span>
     )
 }
