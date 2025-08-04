@@ -6,7 +6,7 @@ import React from 'react'
 
 export function ShowMore({
     children,
-    height = 180,
+    height = 160,
     background = 'black',
     className,
 }: {

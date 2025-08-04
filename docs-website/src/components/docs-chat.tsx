@@ -480,12 +480,12 @@ export function MessagePartRenderer({
     if (part.type === 'reasoning') {
         if (!part.text) return null
         return (
-            <ShowMore>
-                <div className='flex flex-row opacity-80 tracking-wide gap-[1ch]'>
+            <ShowMore >
+                <div className='flex flex-row text-sm opacity-80 tracking-wide gap-[1ch]'>
                     <Dot />
                     <Markdown
                         isStreaming={isChatGenerating}
-                        className='prose-sm'
+                        className='prose-sm '
                         markdown={part.text}
                     />
                 </div>
@@ -509,15 +509,17 @@ export function MessagePartRenderer({
         if (!code) return null
 
         return (
-            <ToolPreviewContainer>
-                <Dot toolCallId={part.toolCallId} /> Getting file structure
-                <br />
-                <Markdown
-                    isStreaming={isChatGenerating}
-                    className='pt-[1em] block'
-                    markdown={`<ShowMore>\n\`\`\`sh lineNumbers=true\n${code}\n\`\`\`\n</ShowMore>`}
-                />
-            </ToolPreviewContainer>
+            <ShowMore>
+                <ToolPreviewContainer>
+                    <Dot toolCallId={part.toolCallId} /> Getting file structure
+                    <br />
+                    <Markdown
+                        isStreaming={isChatGenerating}
+                        className='pt-[1em] block'
+                        markdown={`\`\`\`sh lineNumbers=true\n${code}\n\`\`\``}
+                    />
+                </ToolPreviewContainer>
+            </ShowMore>
         )
     }
 

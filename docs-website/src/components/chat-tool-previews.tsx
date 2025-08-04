@@ -4,6 +4,7 @@ import { truncateText } from 'docs-website/src/lib/utils'
 import { DocsToolPart } from 'docs-website/src/lib/types'
 import { capitalize, cn } from 'docs-website/src/lib/utils'
 import { ReactNode, useMemo } from 'react'
+import { ShowMore } from './show-more'
 
 function Highlight({ children }: { children: ReactNode }) {
     return (
@@ -80,11 +81,13 @@ export function EditorToolPreview({
             code =
                 (args.old_str || '')
                     .split('\n')
+                    .filter(Boolean)
                     .map((line) => `- ${line}`)
                     .join('\n') +
                 '\n' +
                 (args.new_str || '')
                     .split('\n')
+                    .filter(Boolean)
                     .map((line) => `+ ${line}`)
                     .join('\n')
         }
@@ -93,26 +96,28 @@ export function EditorToolPreview({
             code = code?.['error'] || JSON.stringify(code, null, 2)
         }
 
-        const markdown = `<ShowMore>\n\`\`\`\`${language} lineNumbers=true data-last-lines=5  \n${code}\n\`\`\`\`\n</ShowMore>`
+        const markdown = `\`\`\`\`${language} lineNumbers=true data-last-lines=5  \n${code}\n\`\`\`\``
 
         let actionText = capitalize(command)
         if (command === 'str_replace') actionText = 'Replacing content in'
 
         return (
-            <ToolPreviewContainer>
-                <Dot toolCallId={toolCallId} /> {actionText}{' '}
-                <Highlight>{args?.path}</Highlight>
-                {command === 'insert' ? `:${args?.insert_line || 0}` : ''}
-                {error ? (
-                    <ErrorPreview error={error} />
-                ) : (
-                    <Markdown
-                        className='block pt-[1em]'
-                        isStreaming={isChatGenerating}
-                        markdown={markdown}
-                    />
-                )}
-            </ToolPreviewContainer>
+            <ShowMore>
+                <ToolPreviewContainer>
+                    <Dot toolCallId={toolCallId} /> {actionText}{' '}
+                    <Highlight>{args?.path}</Highlight>
+                    {command === 'insert' ? `:${args?.insert_line || 0}` : ''}
+                    {error ? (
+                        <ErrorPreview error={error} />
+                    ) : (
+                        <Markdown
+                            className='block'
+                            isStreaming={isChatGenerating}
+                            markdown={markdown}
+                        />
+                    )}
+                </ToolPreviewContainer>
+            </ShowMore>
         )
     }
 
@@ -136,7 +141,6 @@ export function ToolPreviewContainer({
         </div>
     )
 }
-
 
 export function Dot({ toolCallId }: { toolCallId?: string }) {
     const { messages } = useChatContext()
