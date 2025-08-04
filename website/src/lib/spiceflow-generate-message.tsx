@@ -654,7 +654,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 throw error
             },
             experimental_transform: smoothStream({
-                delayInMs: 7,
+                delayInMs: 10,
                 chunking: 'word',
             }),
             messages: allMessages,

@@ -379,8 +379,17 @@ const ChatMessageActions = memo(function MessageActions() {
     )
 })
 
+function truncateText(text: string, maxLength: number = 500): string {
+    if (!text?.length || text?.length <= maxLength) {
+        return text
+    }
+    return text.slice(0, maxLength).trimEnd() + '...'
+}
+
 export function ChatErrorMessage() {
-    const error = useChatState((x) => x?.assistantErrorMessage)
+    const error = truncateText(
+        useChatState((x) => x?.assistantErrorMessage) || '',
+    )
 
     const handleRetry = () => {
         // Clear the error and retry - the user message is already in the messages
@@ -399,7 +408,7 @@ export function ChatErrorMessage() {
                             <h4 className=' font-medium text-red-800 dark:text-red-200 mb-1'>
                                 Failed to generate response
                             </h4>
-                            <p className=' text-red-700 dark:text-red-300'>
+                            <p className='break-all text-red-700 dark:text-red-300'>
                                 {error}
                             </p>
                         </div>

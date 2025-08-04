@@ -122,6 +122,9 @@ export async function* uiStreamToUIMessages<M extends UIMessage>({
             yield currentMessages
         }
     }
+    if (capturedError) {
+        throw capturedError
+    }
 
     // Yield final messages
     const finalMessages = [...messages]

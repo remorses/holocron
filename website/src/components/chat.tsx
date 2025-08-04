@@ -675,7 +675,7 @@ function Footer() {
     const textareaRef = React.useRef<HTMLTextAreaElement>(null)
 
     return (
-        <AnimatePresence mode='popLayout'>
+
             <motion.div
                 layoutId='textarea'
                 className='sticky bottom-0 pt-4 z-50 w-full'
@@ -770,6 +770,6 @@ function Footer() {
                     autocompleteSuggestions={AUTOCOMPLETE_SUGGESTIONS}
                 />
             </motion.div>
-        </AnimatePresence>
+
     )
 }
