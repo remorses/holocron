@@ -295,7 +295,7 @@ export function ChatUserMessage({
             )}
             style={scrollStyle}
         >
-            <div className='max-w-full relative group/message  px-4 py-2 rounded-xl'>
+            <div className=' max-w-[80%] relative group/message  px-4 py-2 rounded-xl'>
                 <motion.div
                     className='inset-0 bg-muted absolute rounded-xl'
                     layout
