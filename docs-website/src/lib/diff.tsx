@@ -296,6 +296,30 @@ export function markAddedNodes(diffs: Change[], ast: Root): Root {
     // Walk the AST starting from the root
     walk(ast as Node)
 
+    // Second pass: Clone root-level nodes that contain added content
+    // to avoid maintaining object identity
+    function hasAddedContent(node: Node): boolean {
+        // Check if this node itself is marked as added
+        if (node.data?.hProperties?.['data-added']) {
+            return true
+        }
+        
+        // Check if any children have added content
+        if ('children' in node && Array.isArray(node.children)) {
+            return node.children.some(child => hasAddedContent(child as Node))
+        }
+        
+        return false
+    }
+
+    // Clone root-level children that contain added content
+    ast.children = ast.children.map(child => {
+        if (hasAddedContent(child as Node)) {
+            return structuredClone(child)
+        }
+        return child
+    })
+
     return ast
 }
 
