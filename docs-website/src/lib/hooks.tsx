@@ -43,7 +43,9 @@ export function usePrevious<T>(value: T): T | undefined {
 }
 export function useDocsJson(): DocsJsonType {
     const { docsJson } =
-        (useRouteLoaderData('routes/_catchall') as Route.ComponentProps['loaderData']) || {}
+        (useRouteLoaderData(
+            'routes/_catchall',
+        ) as Route.ComponentProps['loaderData']) || {}
 
     // Check for state overrides for docsJson
     const docsJsonString = useDocsState((state) => {
@@ -76,4 +78,26 @@ export function useHydrated() {
         () => true, // client snapshot
         () => false, // server snapshot (always false)
     )
+}
+
+export function useDisableBodyScroll(isActive) {
+    useEffect(() => {
+        const bodyStyle = document.body.style
+        const htmlStyle = document.documentElement.style
+        const prevBodyOverflow = bodyStyle.overflow
+        const prevHtmlOverflow = htmlStyle.overflow
+
+        if (isActive) {
+            bodyStyle.overflow = 'hidden'
+            htmlStyle.overflow = 'hidden'
+        } else {
+            bodyStyle.overflow = prevBodyOverflow
+            htmlStyle.overflow = prevHtmlOverflow
+        }
+
+        return () => {
+            bodyStyle.overflow = prevBodyOverflow
+            htmlStyle.overflow = prevHtmlOverflow
+        }
+    }, [isActive])
 }

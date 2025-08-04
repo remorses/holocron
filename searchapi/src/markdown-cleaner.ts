@@ -1,13 +1,59 @@
 import { marked, Token } from 'marked';
+import yaml from 'js-yaml';
+
+/**
+ * Recursively extracts text values from YAML data structure
+ */
+function extractTextFromYaml(data: any): string[] {
+  const textValues: string[] = [];
+  
+  if (typeof data === 'string') {
+    textValues.push(data);
+  } else if (typeof data === 'number' || typeof data === 'boolean') {
+    textValues.push(String(data));
+  } else if (Array.isArray(data)) {
+    for (const item of data) {
+      textValues.push(...extractTextFromYaml(item));
+    }
+  } else if (data && typeof data === 'object') {
+    for (const value of Object.values(data)) {
+      textValues.push(...extractTextFromYaml(value));
+    }
+  }
+  
+  return textValues;
+}
 
 /**
  * Cleans markdown/MDX content using marked parser, removing all syntax and leaving only text
  */
 export function cleanMarkdownContent(content: string): string {
+  // Check if content starts with frontmatter
+  const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n?/m);
+  
+  let cleanedText = '';
+  let markdownContent = content;
+  
+  if (frontmatterMatch) {
+    // Extract and clean frontmatter
+    const yamlContent = frontmatterMatch[1];
+    try {
+      const yamlData = yaml.load(yamlContent);
+      const textValues = extractTextFromYaml(yamlData);
+      if (textValues.length > 0) {
+        cleanedText = textValues.join(' ') + '\n';
+      }
+    } catch (e) {
+      // If YAML parsing fails, return empty string for the entire content
+      return '';
+    }
+    
+    // Remove frontmatter from markdown content
+    markdownContent = content.slice(frontmatterMatch[0].length);
+  }
+  
   // Pre-process to remove MDX-specific content that marked doesn't handle
-  let cleaned = content
-    // Remove frontmatter
-    .replace(/^---[\s\S]*?---/m, '')
+  let cleaned = markdownContent
     // Remove import statements
 
 
@@ -130,9 +176,12 @@ export function cleanMarkdownContent(content: string): string {
     }
   }
   
-  // Join and clean up excessive newlines
-  return processedTokens
+  // Join all content
+  const markdownText = processedTokens
     .join('')
     .replace(/\n{3,}/g, '\n\n') // Collapse multiple newlines to double
     .trim();
+    
+  // Combine frontmatter text (if any) with markdown text
+  return (cleanedText + markdownText).trim();
 }

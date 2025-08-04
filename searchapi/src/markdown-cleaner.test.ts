@@ -150,9 +150,98 @@ This is the document content after frontmatter.`;
 
     const result = cleanMarkdownContent(markdown);
     expect(result).toMatchInlineSnapshot(`
-      "Actual Content
+      "My Document John Doe
+      Actual Content
       This is the document content after frontmatter."
     `);
+  });
+
+  test('frontmatter values are extracted and included', () => {
+    // Test various frontmatter formats
+    const markdownWithYamlFrontmatter = `---
+title: Test Page About Rockets
+description: This page explains rocket science
+tags: [rockets, space, science]
+author: John Doe
+published: true
+weight: 2.0
+---
+
+# Main Content
+
+This is the actual content.`;
+
+    const result1 = cleanMarkdownContent(markdownWithYamlFrontmatter);
+    expect(result1).toMatchInlineSnapshot(`
+      "Test Page About Rockets This page explains rocket science rockets space science John Doe true 2
+      Main Content
+      This is the actual content."
+    `);
+
+    // Test frontmatter with complex YAML
+    const complexFrontmatter = `---
+title: Complex Frontmatter Test
+meta:
+  description: A complex example
+  keywords:
+    - test
+    - frontmatter
+    - yaml
+nested:
+  deeply:
+    nested:
+      value: 42
+      text: This contains important information
+---
+
+Content after complex frontmatter.`;
+
+    const result2 = cleanMarkdownContent(complexFrontmatter);
+    expect(result2).toMatchInlineSnapshot(`
+      "Complex Frontmatter Test A complex example test frontmatter yaml 42 This contains important information
+      Content after complex frontmatter."
+    `);
+
+    // Test frontmatter only (no content after)
+    const frontmatterOnly = `---
+title: Just Frontmatter
+description: This file only has frontmatter
+---`;
+
+    const result3 = cleanMarkdownContent(frontmatterOnly);
+    expect(result3).toMatchInlineSnapshot(`"Just Frontmatter This file only has frontmatter"`);
+
+    // Test multiple dashes in frontmatter
+    const frontmatterWithDashes = `---
+title: Title with --- dashes
+description: Also has --- in content
+---
+
+# The actual content starts here`;
+
+    const result4 = cleanMarkdownContent(frontmatterWithDashes);
+    expect(result4).toMatchInlineSnapshot(`
+      "Title with --- dashes Also has --- in content
+      The actual content starts here"
+    `);
+    
+    // Test invalid YAML frontmatter
+    const invalidYamlFrontmatter = `---
+title: Invalid YAML
+description: [This is not valid YAML
+  missing: closing bracket
+tags:
+  - one
+  - two
+  bad indentation here
+---
+
+# Content after invalid YAML
+
+This content should not be returned.`;
+
+    const result5 = cleanMarkdownContent(invalidYamlFrontmatter);
+    expect(result5).toMatchInlineSnapshot(`""`);
   });
 
   test('complex mixed content', () => {
@@ -198,23 +287,24 @@ Regular paragraph with ~~strikethrough~~ text.`;
 
     const result = cleanMarkdownContent(markdown);
     expect(result).toMatchInlineSnapshot(`
-  "import { useState } from 'react';
-  Complex Mixed Content
-  Features
-  - **Bold item** with *emphasis*
-  - \`Code in list\`
-  - [Link in list](https://example.com)
-  const Component = () => {
-    const [count, setCount] = useState(0);
-    return <div>{count}</div>;
-  };
-  Blockquote with  formatting  and  code
-  Table Example
-  Feature Status
-  Search ✅ Done
-  Filter 🚧 WIP
-  Regular paragraph with  strikethrough  text."
-`);
+      "Complex Example
+      import { useState } from 'react';
+      Complex Mixed Content
+      Features
+      - **Bold item** with *emphasis*
+      - \`Code in list\`
+      - [Link in list](https://example.com)
+      const Component = () => {
+        const [count, setCount] = useState(0);
+        return <div>{count}</div>;
+      };
+      Blockquote with  formatting  and  code
+      Table Example
+      Feature Status
+      Search ✅ Done
+      Filter 🚧 WIP
+      Regular paragraph with  strikethrough  text."
+    `);
   });
 
   test('HTML comments and special characters', () => {

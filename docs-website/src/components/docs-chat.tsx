@@ -1,4 +1,10 @@
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import {
+    CSSProperties,
+    Fragment,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react'
 
 import { createIdGenerator, isToolUIPart } from 'ai'
 import {
@@ -73,6 +79,7 @@ import {
     Dot,
 } from './chat-tool-previews'
 import { ShowMore } from './show-more'
+import { useDisableBodyScroll } from '../lib/hooks'
 
 export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
     const chatId = usePersistentDocsState((x) => x.chatId)
@@ -84,6 +91,18 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
         'routes/_catchall',
     ) as Route.ComponentProps['loaderData']
     const files = rootLoaderData?.files || []
+
+    const initialChatState = useMemo<Partial<ChatState>>(
+        () => ({
+            messages: loadChatMessages(chatId),
+            abortController: new AbortController(),
+            isGenerating: false,
+        }),
+        [loaderData, chatId],
+    )
+    const drawerState = usePersistentDocsState((x) => x.drawerState)
+
+    useDisableBodyScroll(drawerState === 'open')
 
     const submitMessageWithoutDelete = async ({
         messages,
@@ -259,16 +278,6 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
         }
     }
 
-    const initialChatState = useMemo<Partial<ChatState>>(
-        () => ({
-            messages: loadChatMessages(chatId),
-            abortController: new AbortController(),
-            isGenerating: false,
-        }),
-        [loaderData, chatId],
-    )
-    const drawerState = usePersistentDocsState((x) => x.drawerState)
-
     const drawerContentStyle = (() => {
         if (drawerState === 'minimized') {
             return { transform: 'translateX(400px)' }
@@ -332,6 +341,11 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
                     <ChatTopBar />
                     <div
                         onClick={handleDrawerClick}
+                        style={
+                            {
+                                '--show-more-bg': 'var(--color-background)',
+                            } as CSSProperties
+                        }
                         className='p-4 flex flex-col min-h-0 grow pb-0'
                     >
                         <Chat />

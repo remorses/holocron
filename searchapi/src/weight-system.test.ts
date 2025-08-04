@@ -229,7 +229,7 @@ This is even deeper about testing.
         }
     })
     
-    test('frontmatter with title gets highest weight', async () => {
+    test('all frontmatter sections get weight 2.0', async () => {
         const files: SearchApiFile[] = [
             {
                 filename: 'with-title.md',
@@ -295,7 +295,7 @@ More content about weights.
               "cleanedSnippet": "",
               "filename": "without-title.md",
               "metadata": undefined,
-              "score": 1.5,
+              "score": 2,
               "sectionSlug": "",
               "snippet": "---
           author: Another Author
@@ -318,16 +318,11 @@ More content about weights.
           ]
         `)
         
-        // The frontmatter with title should rank highest
-        const withTitleFrontmatter = searchResults.results.find(
-            r => r.filename === 'with-title.md' && r.sectionSlug === ''
-        )
-        const withoutTitleFrontmatter = searchResults.results.find(
-            r => r.filename === 'without-title.md' && r.sectionSlug === ''
-        )
+        // All frontmatter sections should have weight 2.0
+        const frontmatterSections = searchResults.results.filter(r => r.sectionSlug === '')
         
-        if (withTitleFrontmatter && withoutTitleFrontmatter) {
-            expect(withTitleFrontmatter.score).toBeGreaterThan(withoutTitleFrontmatter.score)
+        for (const section of frontmatterSections) {
+            expect(section.score).toBe(2.0)
         }
     })
 })

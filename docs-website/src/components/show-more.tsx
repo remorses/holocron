@@ -3,16 +3,13 @@
 import { cn } from 'docs-website/src/lib/cn'
 import { ChevronDownIcon } from 'lucide-react'
 import React from 'react'
-
 export function ShowMore({
     children,
     height = 160,
-    background = 'black',
     className,
 }: {
     children: React.ReactNode
     height?: number
-    background?: string
     className?: string
 }) {
     const [isExpanded, setIsExpanded] = React.useState(false)
@@ -28,11 +25,12 @@ export function ShowMore({
     return (
         <div
             className={cn('relative', className)}
-            style={
-                {
-                    '--gradientBg': background,
-                } as React.CSSProperties
-            }
+            // style={
+            //     {
+            //         '--show-more-bg':
+            //             'var(--show-more-bg, var(--color-background))',
+            //     } as React.CSSProperties
+            // }
         >
             <div
                 ref={contentRef}
@@ -58,7 +56,7 @@ export function ShowMore({
                     {children}
                 </div>
                 {!isExpanded && needsExpansion && (
-                    <div className='absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-(--gradientBg) to-(--gradientBg)/0 pointer-events-none' />
+                    <div className='absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-(--show-more-bg) to-transparent pointer-events-none' />
                 )}
             </div>
             {needsExpansion && (

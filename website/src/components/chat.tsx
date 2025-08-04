@@ -9,7 +9,14 @@ import {
 } from 'contesto/src/chat/chat-message'
 import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
 import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
-import { Fragment, startTransition, useEffect, useMemo, useState } from 'react'
+import {
+    CSSProperties,
+    Fragment,
+    startTransition,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react'
 
 import {
     Dot,
@@ -103,10 +110,7 @@ import {
 import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import { TruncatedText } from './truncated-text'
-import {
-    MessagePartRenderer,
-
-} from 'docs-website/src/components/docs-chat'
+import { MessagePartRenderer } from 'docs-website/src/components/docs-chat'
 
 function keyForDocsJson({ chatId }) {
     return `fumabase.jsonc-${chatId}`
@@ -461,7 +465,14 @@ export default function Chat({
             generateMessages={submitMessages}
             initialValue={initialChatState}
         >
-            <div className='flex grow w-full max-w-[900px] flex-col gap-3 pr-2 pl-0 justify-center'>
+            <div
+                style={
+                    {
+                        '--show-more-bg': '#000',
+                    } as CSSProperties
+                }
+                className='flex grow w-full max-w-[900px] flex-col gap-3 pr-2 pl-0 justify-center'
+            >
                 <Messages ref={ref} />
                 <WelcomeMessage />
                 <Footer />
@@ -675,101 +686,96 @@ function Footer() {
     const textareaRef = React.useRef<HTMLTextAreaElement>(null)
 
     return (
+        <motion.div
+            layoutId='textarea'
+            className='sticky bottom-0 pt-4 z-50 w-full'
+        >
+            <div className='space-y-3'>
+                <div className='flex flex-col gap-2 '>
+                    <div className='flex gap-1 empty:hidden justify-start items-center bg-black p-1 rounded-md'>
+                        {showCreatePR && (
+                            <DiffStats
+                                filesInDraft={filesInDraft}
+                                hasNonPushedChanges={hasNonPushedChanges}
+                            />
+                        )}
+                        {prUrl && (
+                            <a
+                                href={prUrl}
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                className='text-xs text-accent-foreground underline'
+                            >
+                                view pr
+                            </a>
+                        )}
 
-            <motion.div
-                layoutId='textarea'
-                className='sticky bottom-0 pt-4 z-50 w-full'
-            >
-                <div className='space-y-3'>
-                    <div className='flex flex-col gap-2 '>
-                        <div className='flex gap-1 empty:hidden justify-start items-center bg-black p-1 rounded-md'>
-                            {showCreatePR && (
-                                <DiffStats
-                                    filesInDraft={filesInDraft}
-                                    hasNonPushedChanges={hasNonPushedChanges}
-                                />
-                            )}
-                            {prUrl && (
-                                <a
-                                    href={prUrl}
-                                    target='_blank'
-                                    rel='noopener noreferrer'
-                                    className='text-xs text-accent-foreground underline'
-                                >
-                                    view pr
-                                </a>
-                            )}
+                        <PrButton className='ml-auto' />
+                        <SaveChangesButton className='ml-auto' />
+                    </div>
 
-                            <PrButton className='ml-auto' />
-                            <SaveChangesButton className='ml-auto' />
+                    <div className='relative rounded-[20px] bg-popover'>
+                        <div className='flex'>
+                            <ContextButton
+                                textareaRef={textareaRef}
+                                contextOptions={mentionOptions || []}
+                            />
                         </div>
-
-                        <div className='relative rounded-[20px] bg-popover'>
-                            <div className='flex'>
-                                <ContextButton
-                                    textareaRef={textareaRef}
-                                    contextOptions={mentionOptions || []}
+                        <ChatTextarea
+                            ref={textareaRef}
+                            disabled={false}
+                            placeholder='Ask me anything...'
+                            className=''
+                            mentionOptions={mentionOptions || []}
+                        />
+                        {/* Textarea buttons */}
+                        <div className='flex items-center justify-between gap-2 p-3'>
+                            {/* Left buttons */}
+                            <div className='flex items-center gap-2'>
+                                <ChatUploadButton
+                                    onUpload={async (file) => {
+                                        return await uploadFileToSite(
+                                            file,
+                                            siteId,
+                                        )
+                                    }}
+                                    accept='image/*,text/*,.pdf,.docx,.doc'
+                                    onFilesChange={(files) => {
+                                        // TODO: Wire uploaded files to messages
+                                        console.log('Files uploaded:', files)
+                                    }}
+                                />
+                                <ChatRecordButton
+                                    transcribeAudio={transcribeAudio}
                                 />
                             </div>
-                            <ChatTextarea
-                                ref={textareaRef}
-                                disabled={false}
-                                placeholder='Ask me anything...'
-                                className=''
-                                mentionOptions={mentionOptions || []}
-                            />
-                            {/* Textarea buttons */}
-                            <div className='flex items-center justify-between gap-2 p-3'>
-                                {/* Left buttons */}
-                                <div className='flex items-center gap-2'>
-                                    <ChatUploadButton
-                                        onUpload={async (file) => {
-                                            return await uploadFileToSite(
-                                                file,
-                                                siteId,
-                                            )
-                                        }}
-                                        accept='image/*,text/*,.pdf,.docx,.doc'
-                                        onFilesChange={(files) => {
-                                            // TODO: Wire uploaded files to messages
-                                            console.log(
-                                                'Files uploaded:',
-                                                files,
-                                            )
-                                        }}
-                                    />
-                                    <ChatRecordButton
-                                        transcribeAudio={transcribeAudio}
-                                    />
-                                </div>
-                                {/* Right buttons */}
-                                <div className='flex items-center gap-2'>
-                                    {isPending ? (
-                                        <Button
-                                            className='rounded-full h-8'
-                                            onClick={stop}
-                                            variant='outline'
-                                        >
-                                            Stop
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            className='rounded-full h-8'
-                                            onClick={submit}
-                                            disabled={!text?.trim()}
-                                        >
-                                            Generate
-                                        </Button>
-                                    )}
-                                </div>
+                            {/* Right buttons */}
+                            <div className='flex items-center gap-2'>
+                                {isPending ? (
+                                    <Button
+                                        className='rounded-full h-8'
+                                        onClick={stop}
+                                        variant='outline'
+                                    >
+                                        Stop
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        className='rounded-full h-8'
+                                        onClick={submit}
+                                        disabled={!text?.trim()}
+                                    >
+                                        Generate
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
-                <ChatAutocomplete
-                    autocompleteSuggestions={AUTOCOMPLETE_SUGGESTIONS}
-                />
-            </motion.div>
-
+            </div>
+            <ChatAutocomplete
+                autocompleteSuggestions={AUTOCOMPLETE_SUGGESTIONS}
+            />
+        </motion.div>
     )
 }

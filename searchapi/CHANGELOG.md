@@ -1,12 +1,16 @@
 # Changelog
 
-## 2025-08-04 19:45
+## 2025-08-04 20:17
 
 - **Enhanced search ranking with weight system** - Implemented custom weight-based ranking for search results
-- **Frontmatter prioritization** - Frontmatter sections now get weight 2.0 (with title) or 1.5 (without title) 
+- **Frontmatter prioritization** - All frontmatter sections now get weight 2.0 regardless of content
 - **Heading level weights** - H1 (1.2), H2 (1.1), H3 (1.05), H4+ (1.0) for hierarchical ranking
 - **Integrated weights into search scoring** - Both FTS and manual search now multiply scores by section weights
 - **Added comprehensive weight system tests** - Tests verify frontmatter and heading hierarchy ranking behavior
+- **Refactored markdown cleaning** - Now uses js-yaml for proper YAML parsing instead of regex
+- **Unified cleaning function** - Single `cleanMarkdownContent` handles both frontmatter extraction and markdown cleaning
+- **Graceful YAML error handling** - Invalid YAML frontmatter returns empty string instead of failing
+- **Added frontmatter cleaning tests** - Comprehensive tests verify YAML value extraction and error handling
 
 ## 2025-01-31 16:00
 
