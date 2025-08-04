@@ -480,12 +480,12 @@ export function MessagePartRenderer({
     if (part.type === 'reasoning') {
         if (!part.text) return null
         return (
-            <ShowMore >
-                <div className='flex flex-row text-sm opacity-80 tracking-wide gap-[1ch]'>
+            <ShowMore>
+                <div className='flex flex-row text-sm  opacity-80 tracking-wide gap-[1ch]'>
                     <Dot />
                     <Markdown
                         isStreaming={isChatGenerating}
-                        className='prose-sm '
+                        className='prose-sm text-sm  '
                         markdown={part.text}
                     />
                 </div>
@@ -545,11 +545,20 @@ export function MessagePartRenderer({
 
     if (isToolUIPart(part) && part.state !== 'input-streaming') {
         const toolName = part.type.replace('tool-', '')
-        const callArg = truncateText(stringifyArgs(part.input))
+        const callArg = stringifyArgs(part.input)
         let error = part.errorText
         return (
-            <ToolPreviewContainer>
-                <Dot /> {capitalize(spaceCase(toolName))}({callArg})
+            <ToolPreviewContainer className='text-[13px]'>
+                <Dot />{' '}
+                <span className='dark:text-purple-300'>
+                    {capitalize(spaceCase(toolName))}
+                </span>{' '}
+                <div className='flex flex-row gap-2'>
+                    <div className='shrink-0'>⎿</div>
+                    <div className=''>
+                        <span className='whitespace-pre-wrap'>{callArg}</span>
+                    </div>
+                </div>
                 {error && <ErrorPreview error={error} />}
             </ToolPreviewContainer>
         )
@@ -563,11 +572,11 @@ function stringifyArgs(obj: any): string {
         .map(([key, value]) => {
             let strValue = JSON.stringify(value)
             if (typeof strValue === 'string' && strValue.length > 300) {
-                strValue = strValue.slice(0, 300) + '...'
+                strValue = strValue.slice(0, 50) + '...'
             }
             return `${key}=${strValue}`
         })
-        .join(', ')
+        .join('\n')
 }
 
 // Static autocomplete suggestions for first message
