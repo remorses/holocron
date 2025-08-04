@@ -216,12 +216,14 @@ const EditingUserMessage = memo(function EditingUserMessage({
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault()
+                                    e.stopPropagation()
                                     if (editText.trim()) {
                                         handleEditSave()
                                     }
                                 }
                                 if (e.key === 'Escape') {
                                     e.preventDefault()
+                                    e.stopPropagation()
                                     handleEditCancel()
                                 }
                             }}
