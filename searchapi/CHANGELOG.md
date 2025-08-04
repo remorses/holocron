@@ -1,5 +1,13 @@
 # Changelog
 
+## 2025-08-04 19:45
+
+- **Enhanced search ranking with weight system** - Implemented custom weight-based ranking for search results
+- **Frontmatter prioritization** - Frontmatter sections now get weight 2.0 (with title) or 1.5 (without title) 
+- **Heading level weights** - H1 (1.2), H2 (1.1), H3 (1.05), H4+ (1.0) for hierarchical ranking
+- **Integrated weights into search scoring** - Both FTS and manual search now multiply scores by section weights
+- **Added comprehensive weight system tests** - Tests verify frontmatter and heading hierarchy ranking behavior
+
 ## 2025-01-31 16:00
 
 ### Code Quality Improvements

@@ -579,7 +579,8 @@ export class SearchClient implements DatasetsInterface {
 
                 matchingSections = searchResults.map(section => ({
                     ...section,
-                    score: section._score || 1.0,
+                    // Multiply FTS score by section weight
+                    score: (section._score || 1.0) * (section.weight || 1.0),
                 }))
             } catch (error) {
                 // If FTS still fails, fall back to manual search
@@ -598,7 +599,8 @@ export class SearchClient implements DatasetsInterface {
                     .filter(section => section.section_content && section.section_content.toLowerCase().includes(searchQuery))
                     .map(section => ({
                         ...section,
-                        score: 1.0, // Placeholder score
+                        // Use weight as score for manual search
+                        score: section.weight || 1.0,
                     }))
                     .sort((a, b) => b.score - a.score)
                 console.log(`[search] Filtering took ${Date.now() - filterStart}ms, matched ${matchingSections.length} sections`)
@@ -619,11 +621,15 @@ export class SearchClient implements DatasetsInterface {
                 .filter(section => section.section_content && section.section_content.toLowerCase().includes(searchQuery))
                 .map(section => ({
                     ...section,
-                    score: 1.0, // Placeholder score
+                    // Use weight as score for manual search
+                    score: section.weight || 1.0,
                 }))
                 .sort((a, b) => b.score - a.score)
             console.log(`[search] Filtering took ${Date.now() - filterStart}ms, matched ${matchingSections.length} sections`)
         }
+
+        // Sort all matching sections by score (already includes weight)
+        matchingSections.sort((a, b) => b.score - a.score)
 
         // Group by file and limit per file
         const groupStart = Date.now()

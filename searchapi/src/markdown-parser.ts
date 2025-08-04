@@ -42,7 +42,7 @@ export function parseMarkdownIntoSections(content: string): ParsedMarkdown {
       level: 0, // Special level for frontmatter
       orderIndex: orderIndex++,
       startLine: 1,
-      weight: 1.3, // Higher weight for frontmatter
+      weight: 2.0, // Always use weight 2.0 for frontmatter
     });
     
     currentLineIndex = frontmatterLines;
@@ -103,12 +103,29 @@ export function parseMarkdownIntoSections(content: string): ParsedMarkdown {
       const sectionContent = lines.slice(startLine, endLine).join('\n').trim();
       
       if (sectionContent) {
+        // Assign weights based on heading level - higher level (H1) gets higher weight
+        let weight = 1.0;
+        switch (currentHeading.level) {
+          case 1:
+            weight = 1.2; // H1 headers
+            break;
+          case 2:
+            weight = 1.1; // H2 headers
+            break;
+          case 3:
+            weight = 1.05; // H3 headers
+            break;
+          default:
+            weight = 1.0; // H4-H6 headers
+        }
+        
         sections.push({
           content: sectionContent,
           headingSlug: slugger.slug(currentHeading.text),
           level: currentHeading.level,
           orderIndex: orderIndex++,
-          startLine: startLine + 1 // Convert to 1-based line numbering
+          startLine: startLine + 1, // Convert to 1-based line numbering
+          weight
         });
       }
     }
