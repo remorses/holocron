@@ -67,7 +67,6 @@ export function EditorToolPreview({
         )
     }
 
-    // For mutation operations (create, insert, str_replace), show code snippet
     if (
         command === 'create' ||
         command === 'insert' ||
