@@ -1,6 +1,6 @@
 import { createIdGenerator } from 'ai'
 import { useChatContext } from 'contesto/src/chat/chat-provider'
-import { Dot } from 'website/src/components/chat-tool-previews'
+import { Dot } from 'docs-website/src/components/chat-tool-previews'
 import { useShouldHideBrowser } from '../lib/hooks'
 import { cn } from '../lib/utils'
 import { flushSync } from 'react-dom'

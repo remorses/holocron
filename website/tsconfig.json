@@ -39,5 +39,5 @@
         },
         "noEmit": false
     },
-    "include": ["src", "scripts", ".react-router/types/**/*", "./src/worker.ts"]
+    "include": ["src", "scripts", ".react-router/types/**/*", "./src/worker.ts", ]
 }

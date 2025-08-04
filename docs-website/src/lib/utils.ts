@@ -12,6 +12,11 @@ export function trySync<T>(fn: () => T): { data: T | undefined; error: any } {
     }
 }
 
+export function capitalize(str: string): string {
+    if (!str) return ''
+    return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
 export function isAbsoluteUrl(url: string) {
     if (!url) {
         return false

@@ -16,7 +16,7 @@ import {
     EditorToolPreview,
     ErrorPreview,
     ToolPreviewContainer,
-} from 'website/src/components/chat-tool-previews'
+} from 'docs-website/src/components/chat-tool-previews'
 
 import { Button } from 'website/src/components/ui/button'
 import {
@@ -233,6 +233,7 @@ export default function Chat({
 }) {
     const loaderData = useLoaderData() as Route.ComponentProps['loaderData']
     const { chat, siteId, branchId } = loaderData
+    const revalidator = useRevalidator()
 
     const initialChatState = useMemo<Partial<ChatState>>(() => {
         const state = {
@@ -267,7 +268,6 @@ export default function Chat({
         return state
     }, [loaderData])
 
-    const revalidator = useRevalidator()
     const submitMessages = async ({
         messages,
         setMessages,
@@ -297,7 +297,6 @@ export default function Chat({
                 },
             )
         if (error) throw error
-        console.log(generator)
         async function getPageContent(githubPath: string) {
             const { data, error } = await apiClient.api.getPageContent.post({
                 branchId,
@@ -306,16 +305,10 @@ export default function Chat({
             if (error) return ''
             return data?.content
         }
-        // Create global FileSystemEmulator for tool execution
         const globalFileSystem = new FileSystemEmulator({
             filesInDraft,
             getPageContent,
-            onFilesDraftChange: async () => {
-                // Update the global state whenever files change
-                // useWebsiteState.setState({
-                //     filesInDraft: filesInDraft,
-                // })
-            },
+            onFilesDraftChange: async () => {},
         })
         const execute = createEditExecute({
             fileSystem: globalFileSystem,
@@ -415,7 +408,6 @@ export default function Chat({
                     const previewFileSystem = new FileSystemEmulator({
                         filesInDraft: updatedPagesCopy,
                         getPageContent,
-                        // No onFilesDraftChange callback for preview
                     })
                     const localExecute = createEditExecute({
                         fileSystem: previewFileSystem,

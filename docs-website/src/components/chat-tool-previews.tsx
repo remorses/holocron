@@ -1,9 +1,8 @@
 import { useChatContext } from 'contesto/src/chat/chat-provider'
 import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
-// import { MarkdownRuntimeChat as Markdown } from 'docs-website/src/lib/markdown-runtime-chat'
 import { truncateText } from 'docs-website/src/lib/utils'
-import { WebsiteToolPart } from 'website/src/lib/types'
-import { capitalize, cn } from 'website/src/lib/utils'
+import { DocsToolPart } from 'docs-website/src/lib/types'
+import { capitalize, cn } from 'docs-website/src/lib/utils'
 import { ReactNode, useMemo } from 'react'
 
 function Highlight({ children }: { children: ReactNode }) {
@@ -34,7 +33,7 @@ export function EditorToolPreview({
     state,
     toolCallId,
     output: result,
-}: Extract<WebsiteToolPart, { type: 'tool-strReplaceEditor' }>) {
+}: Extract<DocsToolPart, { type: 'tool-strReplaceEditor' }>) {
     const { isGenerating: isChatGenerating } = useChatContext()
     const command = args?.command
     let error = ''
@@ -42,7 +41,6 @@ export function EditorToolPreview({
         error = result.error
     }
 
-    // For non-mutation operations, just log progress
     if (command === 'view') {
         let linesText = ''
         if (args?.view_range?.length === 2) {
@@ -139,14 +137,6 @@ export function ToolPreviewContainer({
     )
 }
 
-export function addIndentation(spaces: number, text: string): string {
-    const indent = ' '.repeat(spaces)
-    return text
-        .split('\n')
-        .filter((line) => line.trim() !== '')
-        .map((line) => indent + line)
-        .join('\n')
-}
 
 export function Dot({ toolCallId }: { toolCallId?: string }) {
     const { messages } = useChatContext()

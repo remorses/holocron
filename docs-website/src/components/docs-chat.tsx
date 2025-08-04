@@ -1,15 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
-import { createIdGenerator, UIMessage } from 'ai'
+import { createIdGenerator } from 'ai'
 import {
-    uiStreamToUIMessages,
-    ToolPartOutputAvailable,
-    ToolPartInputStreaming,
-    ToolPart,
     ToolPartInputAvailable,
+    ToolPartInputStreaming,
+    ToolPartOutputAvailable,
+    uiStreamToUIMessages
 } from 'contesto/src/lib/process-chat'
 import { ScrollArea } from 'docs-website/src/components/ui/scroll-area'
-import { useStickToBottom } from 'use-stick-to-bottom'
 
 import {
     ChatAssistantMessage,
@@ -23,7 +21,6 @@ import {
 } from 'contesto/src/chat/chat-provider'
 import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
 import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
-import { ChatUploadButton } from 'contesto/src/chat/chat-upload-button'
 import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
 import { startTransition } from 'react'
 import { AnimatePresence, motion } from 'unframer'
@@ -36,42 +33,38 @@ import {
     CommandItem,
     CommandList,
 } from '../components/ui/command'
-import { Sheet, SheetContent } from '../components/ui/sheet'
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from '../components/ui/popover'
+import { Sheet, SheetContent } from '../components/ui/sheet'
 
+import { Trash2Icon, XIcon } from 'lucide-react'
+import { useLocation, useRouteLoaderData } from 'react-router'
+import { FileSystemEmulator } from 'website/src/lib/file-system-emulator'
 import { cn } from '../lib/cn'
-import { throttle } from '../lib/utils'
 import {
     docsApiClientWithDurableFetch,
     docsDurableFetchClient,
 } from '../lib/docs-spiceflow-client'
 import {
+    generateChatId,
+    loadChatMessages,
+    saveChatMessages,
     useDocsState,
     usePersistentDocsState,
-    generateChatId,
-    saveChatMessages,
-    loadChatMessages,
 } from '../lib/docs-state'
-import { useRouteLoaderData, useLocation } from 'react-router'
-import { usePreservedNavigate } from './preserved-search-link'
-import type { Route } from '../routes/_catchall'
-import { env } from '../lib/env'
-import { Trash2Icon, XIcon } from 'lucide-react'
-import { DocsUIMessage } from '../lib/types'
-import { throttleGenerator } from 'contesto/src/lib/utils'
-import { EditorToolPreview } from '../components/tool-preview'
 import {
     createEditExecute,
     EditToolParamSchema,
-    isStrReplaceParameterComplete,
-    ValidateNewContentArgs,
-    GetPageContentArgs,
+    isStrReplaceParameterComplete
 } from '../lib/edit-tool'
-import { FileSystemEmulator } from 'website/src/lib/file-system-emulator'
+import { env } from '../lib/env'
+import { DocsUIMessage } from '../lib/types'
+import { throttle } from '../lib/utils'
+import type { Route } from '../routes/_catchall'
+import { usePreservedNavigate } from './preserved-search-link'
 
 export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
     const chatId = usePersistentDocsState((x) => x.chatId)
@@ -529,9 +522,7 @@ function MessageRenderer({ message }: { message: DocsUIMessage }) {
                         </div>
                     )
                 }
-                if (part.type === 'tool-strReplaceEditor') {
-                    return <EditorToolPreview key={index} {...part} />
-                }
+
 
                 if (part.type === 'tool-selectText') {
                     if (!part.input) return null
