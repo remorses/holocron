@@ -66,15 +66,18 @@ export async function getFilesForSource({
     const allFiles = [...files]
     if (Object.keys(filesInDraft).length > 0) {
         for (const [githubPath, draft] of Object.entries(filesInDraft)) {
-            if (draft?.content == null) continue
-
             const normalizedPath = removeGithubFolder(githubPath, githubFolder)
             // Check if this file already exists in the files array
             const existingFileIndex = allFiles.findIndex(
                 (f) => f.path === normalizedPath,
             )
 
-            if (existingFileIndex >= 0) {
+            if (draft?.content == null) {
+                // Remove the file if draft content is null
+                if (existingFileIndex >= 0) {
+                    allFiles.splice(existingFileIndex, 1)
+                }
+            } else if (existingFileIndex >= 0) {
                 // Update existing file with draft content
                 allFiles[existingFileIndex] = {
                     ...allFiles[existingFileIndex],
@@ -90,7 +93,8 @@ export async function getFilesForSource({
             }
         }
     }
-    return deduplicateBy(files, (file) => file.path)
+    
+    return deduplicateBy(allFiles, (file) => file.path)
 }
 
 /**
