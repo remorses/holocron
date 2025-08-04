@@ -23,6 +23,7 @@ if (typeof window !== 'undefined') {
 }
 import {
     PageArticle,
+    PageRoot,
     PageTOCItems,
     PageTOCPopoverItems,
     PageTOCTitle,
@@ -31,7 +32,6 @@ import {
     PageBreadcrumb,
     PageFooter,
     PageLastUpdate,
-    PageRoot,
     PageTOC,
     PageTOCPopover,
     PageTOCPopoverContent,
