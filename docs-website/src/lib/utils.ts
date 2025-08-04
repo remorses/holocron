@@ -87,6 +87,11 @@ export function generateSlugFromPath(
     pathWithFrontSlash: string,
     basePath: string,
 ) {
+    // Return empty string for .json and .jsonc files to prevent navigation
+    if (pathWithFrontSlash.endsWith('.json') || pathWithFrontSlash.endsWith('.jsonc')) {
+        return ''
+    }
+    
     if (isAbsoluteUrl(pathWithFrontSlash)) {
         return pathWithFrontSlash
     }
