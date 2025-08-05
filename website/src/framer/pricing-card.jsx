@@ -28,17 +28,6 @@
 }} Props
 
  */
-
-/**
- * @type {import("unframer").UnframerBreakpoint}
- * Represents a responsive breakpoint for unframer.
- */
-
-/**
- * @typedef VariantsMap
- * Partial record of UnframerBreakpoint to Props.variant, with a mandatory 'base' key.
- * { [key in UnframerBreakpoint]?: Props['variant'] } & { base: Props['variant'] }
- */
 import { stdin_default } from "./chunks/chunk-EQCMABB4.js";
 import "./chunks/chunk-IEUFZ327.js";
 import "./chunks/chunk-IETFVNRG.js";
@@ -75,6 +64,17 @@ function ComponentWithRoot({ locale, ...rest }) {
 		</ContextProviders>
 	);
 }
+/**
+ * @type {import("unframer").UnframerBreakpoint}
+ * Represents a responsive breakpoint for unframer.
+ */
+
+/**
+ * @typedef VariantsMap
+ * Partial record of UnframerBreakpoint to Props.variant, with a mandatory 'base' key.
+ * { [key in UnframerBreakpoint]?: Props['variant'] } & { base: Props['variant'] }
+ */
+
 /**
  * Renders PricingCardFramerComponent for all breakpoints with a variants map. Variant prop is inferred per breakpoint.
  * @function

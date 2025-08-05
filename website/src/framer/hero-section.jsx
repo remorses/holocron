@@ -23,59 +23,49 @@
 }} Props
 
  */
-
-/**
- * @type {import("unframer").UnframerBreakpoint}
- * Represents a responsive breakpoint for unframer.
- */
-
-/**
- * @typedef VariantsMap
- * Partial record of UnframerBreakpoint to Props.variant, with a mandatory 'base' key.
- * { [key in UnframerBreakpoint]?: Props['variant'] } & { base: Props['variant'] }
- */
-import { stdin_default as stdin_default2 } from "./chunks/chunk-AGU7MRZZ.js";
-import { stdin_default } from "./chunks/chunk-IETFVNRG.js";
-import "./chunks/chunk-BTSBQWPZ.js";
+import { stdin_default } from "./chunks/chunk-AGU7MRZZ.js";
 import { className, css, fonts } from "./chunks/chunk-EWWPQ2JC.js";
 import {
 	className as className2,
 	css as css2,
 	fonts as fonts2,
 } from "./chunks/chunk-YL4V4VZK.js";
-import { stdin_default as stdin_default3 } from "./chunks/chunk-EHCTMXQN.js";
+import { stdin_default as stdin_default2 } from "./chunks/chunk-EHCTMXQN.js";
 import { routes } from "./chunks/chunk-733MZEOY.js";
 
 // virtual:hero-section
-import { Fragment as Fragment2 } from "react";
+import { Fragment as Fragment3 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/GalyA9rnNdna3cC4Fzdo/eo97FeJK7.js
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+// /:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/QOhidXeWpb2aZBPrzj7d/eo97FeJK7.js
+import { jsx as _jsx2, jsxs as _jsxs2 } from "react/jsx-runtime";
 import {
-	addFonts,
-	addPropertyControls,
+	addFonts as addFonts2,
+	addPropertyControls as addPropertyControls2,
 	ComponentViewportProvider,
-	ControlType,
-	cx,
+	ControlType as ControlType2,
+	cx as cx2,
+	FormPlainTextInput,
 	getFonts,
 	getFontsFromSharedStyle,
 	getLoadingLazyAtYPosition,
 	Image,
-	ResolveLinks,
-	RichText,
+	RichText as RichText2,
 	SmartComponentScopedContainer,
-	useComponentViewport,
-	useLocaleInfo,
-	useRouter,
-	useVariantState,
-	withCSS,
+	useComponentViewport as useComponentViewport2,
+	useLocaleInfo as useLocaleInfo2,
+	useVariantState as useVariantState2,
+	withCSS as withCSS2,
 	withFX,
 	withOptimizedAppearEffect,
 } from "unframer";
-import { LayoutGroup, motion, MotionConfigContext } from "unframer";
-import * as React from "react";
-import { useRef } from "react";
+import {
+	LayoutGroup as LayoutGroup2,
+	motion as motion2,
+	MotionConfigContext as MotionConfigContext2,
+} from "unframer";
+import * as React2 from "react";
+import { useRef as useRef2 } from "react";
 
 // /:https://framerusercontent.com/modules/rHv2weGC84WJaMaBqZST/M33wkThkp4Ray6OH5K74/KhK8sdpR3.js
 import { fontStore } from "unframer";
@@ -339,29 +329,43 @@ var css3 = [
 ];
 var className3 = "framer-cfhJf";
 
-// /:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/GalyA9rnNdna3cC4Fzdo/eo97FeJK7.js
-var BadgeFonts = getFonts(stdin_default2);
-var SmartComponentScopedContainerWithFXWithOptimizedAppearEffect =
-	withOptimizedAppearEffect(withFX(SmartComponentScopedContainer));
-var RichTextWithFXWithOptimizedAppearEffect = withOptimizedAppearEffect(
-	withFX(RichText),
-);
-var RichTextWithFX = withFX(RichText);
-var ComponentButtonFonts = getFonts(stdin_default);
-var MotionDivWithFXWithOptimizedAppearEffect = withOptimizedAppearEffect(
-	withFX(motion.div),
-);
-var MotionDivWithFX = withFX(motion.div);
-var ImageWithFXWithOptimizedAppearEffect = withOptimizedAppearEffect(
-	withFX(Image),
-);
-var GridFonts = getFonts(stdin_default3);
-var cycleOrder = ["DLscFvTjv", "vT5GKuegs", "M1TBpoN2c"];
-var serializationHash = "framer-eKUK2";
+// /:https://framerusercontent.com/modules/H0cQXXZTRQDZWDUHNVgj/lniQ8XB3OlEZZ0GHeUgT/B9T3cR2xg.js
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import {
+	addFonts,
+	addPropertyControls,
+	ControlType,
+	cx,
+	RichText,
+	useActiveVariantCallback,
+	useComponentViewport,
+	useLocaleInfo,
+	useVariantState,
+	withCSS,
+} from "unframer";
+import { LayoutGroup, motion, MotionConfigContext } from "unframer";
+import * as React from "react";
+import { useRef } from "react";
+var enabledGestures = {
+	YMxWp5pK_: {
+		hover: true,
+		pressed: true,
+	},
+};
+var cycleOrder = [
+	"YMxWp5pK_",
+	"qKUR9ViZo",
+	"OpBYbsVNK",
+	"rEiB2urhO",
+	"du2YlL8NV",
+];
+var serializationHash = "framer-EgLJG";
 var variantClassNames = {
-	DLscFvTjv: "framer-v-1ju9km5",
-	M1TBpoN2c: "framer-v-ct8w98",
-	vT5GKuegs: "framer-v-1k2jmim",
+	du2YlL8NV: "framer-v-1a50rfh",
+	OpBYbsVNK: "framer-v-shua57",
+	qKUR9ViZo: "framer-v-6gsmfh",
+	rEiB2urhO: "framer-v-ylysmg",
+	YMxWp5pK_: "framer-v-14js606",
 };
 function addPropertyOverrides(overrides, ...variants) {
 	const nextOverrides = {};
@@ -371,6 +375,418 @@ function addPropertyOverrides(overrides, ...variants) {
 	return nextOverrides;
 }
 var transition1 = {
+	delay: 0,
+	duration: 0.35,
+	ease: [0.3, 0, 0.2, 1],
+	type: "tween",
+};
+var Transition = ({ value, children }) => {
+	const config = React.useContext(MotionConfigContext);
+	const transition = value ?? config.transition;
+	const contextValue = React.useMemo(
+		() => ({
+			...config,
+			transition,
+		}),
+		[JSON.stringify(transition)],
+	);
+	return (
+		<MotionConfigContext.Provider value={contextValue}>
+			{children}
+		</MotionConfigContext.Provider>
+	);
+};
+var Variants = motion.create(React.Fragment);
+var humanReadableVariantMap = {
+	Default: "YMxWp5pK_",
+	Disabled: "OpBYbsVNK",
+	Error: "du2YlL8NV",
+	Loading: "qKUR9ViZo",
+	Success: "rEiB2urhO",
+};
+var getProps = ({ click, height, id, width, ...props }) => {
+	return {
+		...props,
+		DS6VJMmrO: click ?? props.DS6VJMmrO,
+		variant:
+			humanReadableVariantMap[props.variant] ?? props.variant ?? "YMxWp5pK_",
+	};
+};
+var createLayoutDependency = (props, variants) => {
+	if (props.layoutDependency)
+		return variants.join("-") + props.layoutDependency;
+	return variants.join("-");
+};
+var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
+	const fallbackRef = useRef(null);
+	const refBinding = ref ?? fallbackRef;
+	const defaultLayoutId = React.useId();
+	const { activeLocale, setLocale } = useLocaleInfo();
+	const componentViewport = useComponentViewport();
+	const {
+		style,
+		className: className4,
+		layoutId,
+		variant,
+		DS6VJMmrO,
+		...restProps
+	} = getProps(props);
+	const {
+		baseVariant,
+		classNames,
+		clearLoadingGesture,
+		gestureHandlers,
+		gestureVariant,
+		isLoading,
+		setGestureState,
+		setVariant,
+		variants,
+	} = useVariantState({
+		cycleOrder,
+		defaultVariant: "YMxWp5pK_",
+		enabledGestures,
+		ref: refBinding,
+		variant,
+		variantClassNames,
+	});
+	const layoutDependency = createLayoutDependency(props, variants);
+	const { activeVariantCallback, delay } =
+		useActiveVariantCallback(baseVariant);
+	const onTap6yg9ra = activeVariantCallback(async (...args) => {
+		setGestureState({
+			isPressed: false,
+		});
+		if (DS6VJMmrO) {
+			const res = await DS6VJMmrO(...args);
+			if (res === false) return false;
+		}
+	});
+	const sharedStyleClassNames = [];
+	const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames);
+	return (
+		<LayoutGroup id={layoutId ?? defaultLayoutId}>
+			<Variants animate={variants} initial={false}>
+				<Transition value={transition1}>
+					<motion.button
+						{...restProps}
+						{...gestureHandlers}
+						className={cx(
+							scopingClassNames,
+							"framer-14js606",
+							className4,
+							classNames,
+						)}
+						data-framer-name={"Default"}
+						data-highlight={true}
+						data-reset={"button"}
+						layoutDependency={layoutDependency}
+						layoutId={"YMxWp5pK_"}
+						onTap={onTap6yg9ra}
+						ref={refBinding}
+						style={{
+							opacity: 1,
+							...style,
+						}}
+						variants={{
+							"YMxWp5pK_-hover": {
+								opacity: 0.9,
+							},
+							"YMxWp5pK_-pressed": {
+								opacity: 1,
+							},
+							du2YlL8NV: {
+								opacity: 1,
+							},
+							OpBYbsVNK: {
+								opacity: 0.5,
+							},
+							rEiB2urhO: {
+								opacity: 1,
+							},
+						}}
+						{...addPropertyOverrides(
+							{
+								"YMxWp5pK_-hover": {
+									"data-framer-name": void 0,
+								},
+								"YMxWp5pK_-pressed": {
+									"data-framer-name": void 0,
+								},
+								du2YlL8NV: {
+									"data-framer-name": "Error",
+								},
+								OpBYbsVNK: {
+									"data-framer-name": "Disabled",
+								},
+								qKUR9ViZo: {
+									"data-framer-name": "Loading",
+								},
+								rEiB2urhO: {
+									"data-framer-name": "Success",
+								},
+							},
+							baseVariant,
+							gestureVariant,
+						)}
+					>
+						<motion.div
+							className={"framer-1yf0phd"}
+							data-framer-name={"AI Avatar"}
+							layoutDependency={layoutDependency}
+							layoutId={"Un1Wn_BS8"}
+							style={{
+								backgroundColor: "rgb(0, 0, 0)",
+								borderBottomLeftRadius: 12,
+								borderBottomRightRadius: 12,
+								borderTopLeftRadius: 12,
+								borderTopRightRadius: 12,
+							}}
+						>
+							<motion.div
+								className={"framer-8gfdsn"}
+								data-framer-name={"Label"}
+								layoutDependency={layoutDependency}
+								layoutId={"ukPUhLhoj"}
+							>
+								<RichText
+									__fromCanvasComponent={true}
+									className={"framer-v7gk6c"}
+									fonts={["Inter-Medium"]}
+									layoutDependency={layoutDependency}
+									layoutId={"wcQlD6UYo"}
+									style={{
+										"--extracted-r6o4lv":
+											"var(--token-e9b87438-ffd5-4fe0-8db2-85d90798dd9e, rgb(255, 255, 255))",
+										"--framer-link-text-color": "rgb(0, 153, 255)",
+										"--framer-link-text-decoration": "underline",
+									}}
+									verticalAlignment={"top"}
+									withExternalLayout={true}
+								>
+									<React.Fragment>
+										<motion.p
+											style={{
+												"--font-selector": "SW50ZXItTWVkaXVt",
+												"--framer-font-family":
+													'"Inter", "Inter Placeholder", sans-serif',
+												"--framer-font-size": "14px",
+												"--framer-font-weight": "500",
+												"--framer-line-height": "1.4285714em",
+												"--framer-text-color":
+													"var(--extracted-r6o4lv, var(--token-e9b87438-ffd5-4fe0-8db2-85d90798dd9e, rgb(255, 255, 255)))",
+											}}
+										>
+											{"generate website"}
+										</motion.p>
+									</React.Fragment>
+								</RichText>
+								<RichText
+									__fromCanvasComponent={true}
+									className={"framer-1llp786"}
+									fonts={["GF;Geist-500"]}
+									layoutDependency={layoutDependency}
+									layoutId={"Z7L1MeIfC"}
+									style={{
+										"--extracted-r6o4lv":
+											"var(--token-e9b87438-ffd5-4fe0-8db2-85d90798dd9e, rgb(255, 255, 255))",
+										"--framer-link-text-color": "rgb(0, 153, 255)",
+										"--framer-link-text-decoration": "underline",
+									}}
+									verticalAlignment={"top"}
+									withExternalLayout={true}
+									{...addPropertyOverrides(
+										{
+											"YMxWp5pK_-hover": {
+												children: (
+													<React.Fragment>
+														<motion.p
+															style={{
+																"--font-selector": "R0Y7R2Vpc3QtNTAw",
+																"--framer-font-family":
+																	'"Geist", "Geist Placeholder", sans-serif',
+																"--framer-font-size": "14px",
+																"--framer-font-weight": "500",
+																"--framer-line-height": "1.4285714em",
+																"--framer-text-color":
+																	"var(--extracted-r6o4lv, var(--token-e9b87438-ffd5-4fe0-8db2-85d90798dd9e, rgb(255, 255, 255)))",
+															}}
+														>
+															{"generate now"}
+														</motion.p>
+													</React.Fragment>
+												),
+											},
+										},
+										baseVariant,
+										gestureVariant,
+									)}
+								>
+									<React.Fragment>
+										<motion.p
+											style={{
+												"--font-selector": "R0Y7R2Vpc3QtNTAw",
+												"--framer-font-family":
+													'"Geist", "Geist Placeholder", sans-serif',
+												"--framer-font-size": "14px",
+												"--framer-font-weight": "500",
+												"--framer-line-height": "1.4285714em",
+												"--framer-text-color":
+													"var(--extracted-r6o4lv, var(--token-e9b87438-ffd5-4fe0-8db2-85d90798dd9e, rgb(255, 255, 255)))",
+											}}
+										>
+											{"Send"}
+										</motion.p>
+									</React.Fragment>
+								</RichText>
+							</motion.div>
+						</motion.div>
+					</motion.button>
+				</Transition>
+			</Variants>
+		</LayoutGroup>
+	);
+});
+var css4 = [
+	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
+	".framer-EgLJG.framer-481xj6, .framer-EgLJG .framer-481xj6 { display: block; }",
+	".framer-EgLJG.framer-14js606 { align-content: center; align-items: center; cursor: pointer; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 0px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-EgLJG .framer-1yf0phd { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 1px; height: 24px; justify-content: center; overflow: hidden; padding: 3px 16px 3px 16px; position: relative; width: min-content; will-change: var(--framer-will-change-override, transform); }",
+	".framer-EgLJG .framer-8gfdsn { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 0px; height: 20px; justify-content: flex-start; overflow: hidden; padding: 0px; position: relative; width: min-content; }",
+	".framer-EgLJG .framer-v7gk6c, .framer-EgLJG .framer-1llp786 { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
+	".framer-EgLJG.framer-v-14js606.hover .framer-8gfdsn { justify-content: flex-end; }",
+];
+var FramerB9T3cR2xg = withCSS(Component, css4, "framer-EgLJG");
+var stdin_default3 = FramerB9T3cR2xg;
+FramerB9T3cR2xg.displayName = "AI Submit Button";
+FramerB9T3cR2xg.defaultProps = {
+	height: 24,
+	width: 148,
+};
+addPropertyControls(FramerB9T3cR2xg, {
+	variant: {
+		options: ["YMxWp5pK_", "qKUR9ViZo", "OpBYbsVNK", "rEiB2urhO", "du2YlL8NV"],
+		optionTitles: ["Default", "Loading", "Disabled", "Success", "Error"],
+		title: "Variant",
+		type: ControlType.Enum,
+	},
+	DS6VJMmrO: {
+		title: "Click",
+		type: ControlType.EventHandler,
+	},
+});
+addFonts(
+	FramerB9T3cR2xg,
+	[
+		{
+			explicitInter: true,
+			fonts: [
+				{
+					family: "Inter",
+					source: "framer",
+					style: "normal",
+					unicodeRange:
+						"U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F",
+					url: "https://framerusercontent.com/assets/5A3Ce6C9YYmCjpQx9M4inSaKU.woff2",
+					weight: "500",
+				},
+				{
+					family: "Inter",
+					source: "framer",
+					style: "normal",
+					unicodeRange: "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116",
+					url: "https://framerusercontent.com/assets/Qx95Xyt0Ka3SGhinnbXIGpEIyP4.woff2",
+					weight: "500",
+				},
+				{
+					family: "Inter",
+					source: "framer",
+					style: "normal",
+					unicodeRange: "U+1F00-1FFF",
+					url: "https://framerusercontent.com/assets/6mJuEAguuIuMog10gGvH5d3cl8.woff2",
+					weight: "500",
+				},
+				{
+					family: "Inter",
+					source: "framer",
+					style: "normal",
+					unicodeRange: "U+0370-03FF",
+					url: "https://framerusercontent.com/assets/xYYWaj7wCU5zSQH0eXvSaS19wo.woff2",
+					weight: "500",
+				},
+				{
+					family: "Inter",
+					source: "framer",
+					style: "normal",
+					unicodeRange:
+						"U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF",
+					url: "https://framerusercontent.com/assets/otTaNuNpVK4RbdlT7zDDdKvQBA.woff2",
+					weight: "500",
+				},
+				{
+					family: "Inter",
+					source: "framer",
+					style: "normal",
+					unicodeRange:
+						"U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+					url: "https://framerusercontent.com/assets/d3tHnaQIAeqiE5hGcRw4mmgWYU.woff2",
+					weight: "500",
+				},
+				{
+					family: "Inter",
+					source: "framer",
+					style: "normal",
+					unicodeRange:
+						"U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB",
+					url: "https://framerusercontent.com/assets/DolVirEGb34pEXEp8t8FQBSK4.woff2",
+					weight: "500",
+				},
+				{
+					family: "Geist",
+					source: "google",
+					style: "normal",
+					url: "https://fonts.gstatic.com/s/geist/v3/gyBhhwUxId8gMGYQMKR3pzfaWI_RruM4mJPby1QNtA.woff2",
+					weight: "500",
+				},
+			],
+		},
+	],
+	{
+		supportsExplicitInterCodegen: true,
+	},
+);
+
+// /:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/QOhidXeWpb2aZBPrzj7d/eo97FeJK7.js
+var BadgeFonts = getFonts(stdin_default);
+var SmartComponentScopedContainerWithFXWithOptimizedAppearEffect =
+	withOptimizedAppearEffect(withFX(SmartComponentScopedContainer));
+var RichTextWithFXWithOptimizedAppearEffect = withOptimizedAppearEffect(
+	withFX(RichText2),
+);
+var RichTextWithFX = withFX(RichText2);
+var AISubmitButtonFonts = getFonts(stdin_default3);
+var MotionDivWithFXWithOptimizedAppearEffect = withOptimizedAppearEffect(
+	withFX(motion2.div),
+);
+var MotionDivWithFX = withFX(motion2.div);
+var ImageWithFXWithOptimizedAppearEffect = withOptimizedAppearEffect(
+	withFX(Image),
+);
+var GridFonts = getFonts(stdin_default2);
+var cycleOrder2 = ["DLscFvTjv", "vT5GKuegs", "M1TBpoN2c"];
+var serializationHash2 = "framer-S4oOJ";
+var variantClassNames2 = {
+	DLscFvTjv: "framer-v-1ju9km5",
+	M1TBpoN2c: "framer-v-ct8w98",
+	vT5GKuegs: "framer-v-1k2jmim",
+};
+function addPropertyOverrides2(overrides, ...variants) {
+	const nextOverrides = {};
+	variants?.forEach(
+		(variant) => variant && Object.assign(nextOverrides, overrides[variant]),
+	);
+	return nextOverrides;
+}
+var transition12 = {
 	bounce: 0.2,
 	delay: 0,
 	duration: 0.4,
@@ -524,9 +940,9 @@ var textEffect1 = {
 	type: "appear",
 };
 var transition8 = {
-	bounce: 0.2,
-	delay: 0.8,
-	duration: 0.8,
+	bounce: 0.1,
+	delay: 1.2,
+	duration: 1,
 	type: "spring",
 };
 var animation8 = {
@@ -552,10 +968,12 @@ var animation9 = {
 	x: 0,
 	y: 35,
 };
+var transformTemplate1 = (_, t) => `translate(-50%, -50%) ${t}`;
 var transition9 = {
-	bounce: 0.2,
-	delay: 0.7,
-	duration: 1.3,
+	damping: 60,
+	delay: 0.2,
+	mass: 1,
+	stiffness: 300,
 	type: "spring",
 };
 var animation10 = {
@@ -566,68 +984,12 @@ var animation10 = {
 	scale: 1,
 	skewX: 0,
 	skewY: 0,
+	transformPerspective: 1200,
 	transition: transition9,
 	x: 0,
 	y: 0,
 };
-var transition10 = {
-	bounce: 0.2,
-	delay: 1,
-	duration: 0.8,
-	type: "spring",
-};
 var animation11 = {
-	opacity: 1,
-	rotate: 0,
-	rotateX: 0,
-	rotateY: 0,
-	scale: 1,
-	skewX: 0,
-	skewY: 0,
-	transition: transition10,
-	x: 0,
-	y: 0,
-};
-var transition11 = {
-	bounce: 0.1,
-	delay: 1.2,
-	duration: 1,
-	type: "spring",
-};
-var animation12 = {
-	opacity: 1,
-	rotate: 0,
-	rotateX: 0,
-	rotateY: 0,
-	scale: 1,
-	skewX: 0,
-	skewY: 0,
-	transition: transition11,
-	x: 0,
-	y: 0,
-};
-var transformTemplate1 = (_, t) => `translate(-50%, -50%) ${t}`;
-var transition12 = {
-	damping: 60,
-	delay: 0.2,
-	mass: 1,
-	stiffness: 300,
-	type: "spring",
-};
-var animation13 = {
-	opacity: 1,
-	rotate: 0,
-	rotateX: 0,
-	rotateY: 0,
-	scale: 1,
-	skewX: 0,
-	skewY: 0,
-	transformPerspective: 1200,
-	transition: transition12,
-	x: 0,
-	y: 0,
-};
-var animation14 = {
 	opacity: 1e-3,
 	rotate: 0,
 	rotateX: 0,
@@ -639,7 +1001,7 @@ var animation14 = {
 	x: 0,
 	y: 50,
 };
-var animation15 = {
+var animation12 = {
 	opacity: 1e-3,
 	rotate: 0,
 	scale: 1,
@@ -648,7 +1010,7 @@ var animation15 = {
 	x: 0,
 	y: 10,
 };
-var transition13 = {
+var transition10 = {
 	damping: 80,
 	delay: 0.075,
 	mass: 1,
@@ -656,19 +1018,19 @@ var transition13 = {
 	type: "spring",
 };
 var textEffect2 = {
-	effect: animation15,
+	effect: animation12,
 	tokenization: "word",
-	transition: transition13,
+	transition: transition10,
 	trigger: "onInView",
 	type: "appear",
 };
-var transition14 = {
+var transition11 = {
 	delay: 0,
 	duration: 1,
 	ease: [0.12, 0.23, 0.5, 1],
 	type: "tween",
 };
-var animation16 = {
+var animation13 = {
 	opacity: 0,
 	rotate: 0,
 	rotateX: 0,
@@ -679,13 +1041,13 @@ var animation16 = {
 	x: 0,
 	y: -800,
 };
-var transition15 = {
+var transition122 = {
 	delay: 0,
 	duration: 1.2,
 	ease: [0.12, 0.23, 0.5, 1],
 	type: "tween",
 };
-var animation17 = {
+var animation14 = {
 	opacity: 0,
 	rotate: 0,
 	rotateX: 0,
@@ -696,13 +1058,13 @@ var animation17 = {
 	x: 0,
 	y: -500,
 };
-var transition16 = {
+var transition13 = {
 	delay: 0,
 	duration: 1.5,
 	ease: [0.12, 0.23, 0.5, 1],
 	type: "tween",
 };
-var animation18 = {
+var animation15 = {
 	opacity: 0,
 	rotate: 0,
 	rotateX: 0,
@@ -714,13 +1076,13 @@ var animation18 = {
 	y: -450,
 };
 var transformTemplate2 = (_, t) => `translateX(-50%) ${t}`;
-var transition17 = {
+var transition14 = {
 	bounce: 0,
 	delay: 0,
 	duration: 5,
 	type: "spring",
 };
-var animation19 = {
+var animation16 = {
 	opacity: 1,
 	rotate: 0,
 	rotateX: 0,
@@ -728,11 +1090,11 @@ var animation19 = {
 	scale: 1,
 	skewX: 0,
 	skewY: 0,
-	transition: transition17,
+	transition: transition14,
 	x: 0,
 	y: 0,
 };
-var animation20 = {
+var animation17 = {
 	opacity: 1e-3,
 	rotate: 0,
 	rotateX: 0,
@@ -743,13 +1105,13 @@ var animation20 = {
 	x: 0,
 	y: 0,
 };
-var transition18 = {
+var transition15 = {
 	bounce: 0,
 	delay: 0,
 	duration: 1,
 	type: "spring",
 };
-var animation21 = {
+var animation18 = {
 	opacity: 1,
 	rotate: 0,
 	rotateX: 0,
@@ -757,14 +1119,14 @@ var animation21 = {
 	scale: 1,
 	skewX: 0,
 	skewY: 0,
-	transition: transition18,
+	transition: transition15,
 	x: 0,
 	y: 0,
 };
-var Transition = ({ value, children }) => {
-	const config = React.useContext(MotionConfigContext);
+var Transition2 = ({ value, children }) => {
+	const config = React2.useContext(MotionConfigContext2);
 	const transition = value ?? config.transition;
-	const contextValue = React.useMemo(
+	const contextValue = React2.useMemo(
 		() => ({
 			...config,
 			transition,
@@ -772,42 +1134,42 @@ var Transition = ({ value, children }) => {
 		[JSON.stringify(transition)],
 	);
 	return (
-		<MotionConfigContext.Provider value={contextValue}>
+		<MotionConfigContext2.Provider value={contextValue}>
 			{children}
-		</MotionConfigContext.Provider>
+		</MotionConfigContext2.Provider>
 	);
 };
-var Variants = motion.create(React.Fragment);
-var humanReadableVariantMap = {
+var Variants2 = motion2.create(React2.Fragment);
+var humanReadableVariantMap2 = {
 	Desktop: "DLscFvTjv",
 	Phone: "M1TBpoN2c",
 	Tablet: "vT5GKuegs",
 };
-var getProps = ({ height, id, width, ...props }) => {
+var getProps2 = ({ height, id, width, ...props }) => {
 	return {
 		...props,
 		variant:
-			humanReadableVariantMap[props.variant] ?? props.variant ?? "DLscFvTjv",
+			humanReadableVariantMap2[props.variant] ?? props.variant ?? "DLscFvTjv",
 	};
 };
-var createLayoutDependency = (props, variants) => {
+var createLayoutDependency2 = (props, variants) => {
 	if (props.layoutDependency)
 		return variants.join("-") + props.layoutDependency;
 	return variants.join("-");
 };
-var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
-	const fallbackRef = useRef(null);
+var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
+	const fallbackRef = useRef2(null);
 	const refBinding = ref ?? fallbackRef;
-	const defaultLayoutId = React.useId();
-	const { activeLocale, setLocale } = useLocaleInfo();
-	const componentViewport = useComponentViewport();
+	const defaultLayoutId = React2.useId();
+	const { activeLocale, setLocale } = useLocaleInfo2();
+	const componentViewport = useComponentViewport2();
 	const {
 		style,
 		className: className4,
 		layoutId,
 		variant,
 		...restProps
-	} = getProps(props);
+	} = getProps2(props);
 	const {
 		baseVariant,
 		classNames,
@@ -818,25 +1180,24 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 		setGestureState,
 		setVariant,
 		variants,
-	} = useVariantState({
-		cycleOrder,
+	} = useVariantState2({
+		cycleOrder: cycleOrder2,
 		defaultVariant: "DLscFvTjv",
 		ref: refBinding,
 		variant,
-		variantClassNames,
+		variantClassNames: variantClassNames2,
 	});
-	const layoutDependency = createLayoutDependency(props, variants);
+	const layoutDependency = createLayoutDependency2(props, variants);
 	const sharedStyleClassNames = [className3, className2, className];
-	const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames);
-	const router = useRouter();
+	const scopingClassNames = cx2(serializationHash2, ...sharedStyleClassNames);
 	return (
-		<LayoutGroup id={layoutId ?? defaultLayoutId}>
-			<Variants animate={variants} initial={false}>
-				<Transition value={transition1}>
-					<motion.section
+		<LayoutGroup2 id={layoutId ?? defaultLayoutId}>
+			<Variants2 animate={variants} initial={false}>
+				<Transition2 value={transition12}>
+					<motion2.section
 						{...restProps}
 						{...gestureHandlers}
-						className={cx(
+						className={cx2(
 							scopingClassNames,
 							"framer-1ju9km5",
 							className4,
@@ -851,7 +1212,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 								"radial-gradient(22% 34% at 0% 26.8%, var(--token-18d2a01a-9676-41c1-bf6d-4772415cc68b, rgb(62, 32, 19)) 10.44481981981982%, var(--token-73712a6a-57cb-43d7-9c85-ad36472f666c, rgba(0, 0, 0, 0)) 100%)",
 							...style,
 						}}
-						{...addPropertyOverrides(
+						{...addPropertyOverrides2(
 							{
 								M1TBpoN2c: {
 									"data-framer-name": "Phone",
@@ -864,80 +1225,19 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 							gestureVariant,
 						)}
 					>
-						<motion.div
+						<motion2.div
 							className={"framer-4unfev"}
 							data-framer-name={"Heading & Supporting Text"}
 							layoutDependency={layoutDependency}
 							layoutId={"qbMQii1VS"}
 						>
-							<motion.div
+							<motion2.div
 								className={"framer-kcmu88"}
 								data-framer-name={"Heading - Container"}
 								layoutDependency={layoutDependency}
 								layoutId={"c3Cd20hMP"}
 							>
-								<ComponentViewportProvider
-									height={31}
-									y={
-										(componentViewport?.y || 0) +
-										80 +
-										(((componentViewport?.height || 800) - 80 - 382.8) / 2 +
-											0 +
-											0) +
-										0 +
-										0 +
-										0 +
-										0
-									}
-									{...addPropertyOverrides(
-										{
-											M1TBpoN2c: {
-												y:
-													(componentViewport?.y || 0) +
-													0 +
-													(((componentViewport?.height || 844) -
-														0 -
-														(Math.max(
-															0,
-															((componentViewport?.height || 844) - 0 - 0) / 1,
-														) *
-															1 +
-															0)) /
-														2 +
-														0 +
-														0) +
-													0 +
-													((Math.max(
-														0,
-														((componentViewport?.height || 844) - 0 - 0) / 1,
-													) *
-														1 -
-														10 -
-														374.8) /
-														2 +
-														0 +
-														0) +
-													0 +
-													0,
-											},
-											vT5GKuegs: {
-												y:
-													(componentViewport?.y || 0) +
-													0 +
-													(((componentViewport?.height || 1080) - 0 - 439.8) /
-														2 +
-														0 +
-														0) +
-													0 +
-													0 +
-													0 +
-													0,
-											},
-										},
-										baseVariant,
-										gestureVariant,
-									)}
-								>
+								<ComponentViewportProvider height={31}>
 									<SmartComponentScopedContainerWithFXWithOptimizedAppearEffect
 										__perspectiveFX={false}
 										__smartComponentFX={true}
@@ -955,7 +1255,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 										style={{
 											transformPerspective: 1200,
 										}}
-										{...addPropertyOverrides(
+										{...addPropertyOverrides2(
 											{
 												M1TBpoN2c: {
 													animate: animation2,
@@ -966,7 +1266,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											gestureVariant,
 										)}
 									>
-										{_jsx(stdin_default2, {
+										{_jsx2(stdin_default, {
 											height: "100%",
 											id: "yRPfOD4GF",
 											JYBYjvMjT: "Fumabase",
@@ -975,13 +1275,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 										})}
 									</SmartComponentScopedContainerWithFXWithOptimizedAppearEffect>
 								</ComponentViewportProvider>
-								<motion.div
+								<motion2.div
 									className={"framer-1af0tnz"}
 									data-framer-name={"Heading Content"}
 									layoutDependency={layoutDependency}
 									layoutId={"aK52kMf2s"}
 								>
-									<motion.div
+									<motion2.div
 										className={"framer-14lj2mo"}
 										data-framer-name={"Container"}
 										layoutDependency={layoutDependency}
@@ -1010,8 +1310,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											verticalAlignment={"top"}
 											withExternalLayout={true}
 										>
-											<React.Fragment>
-												<motion.h1
+											<React2.Fragment>
+												<motion2.h1
 													className={"framer-styles-preset-1oqitgb"}
 													data-styles-preset={"KhK8sdpR3"}
 													style={{
@@ -1020,10 +1320,10 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 													}}
 												>
 													{"docs websites"}
-													<motion.br />
+													<motion2.br />
 													{"for the agents era"}
-												</motion.h1>
-											</React.Fragment>
+												</motion2.h1>
+											</React2.Fragment>
 										</RichTextWithFXWithOptimizedAppearEffect>
 										<RichTextWithFX
 											__framer__animate={{
@@ -1050,7 +1350,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											}}
 											verticalAlignment={"top"}
 											withExternalLayout={true}
-											{...addPropertyOverrides(
+											{...addPropertyOverrides2(
 												{
 													M1TBpoN2c: {
 														__framer__animate: {
@@ -1063,321 +1363,115 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												gestureVariant,
 											)}
 										>
-											<React.Fragment>
-												<motion.p
+											<React2.Fragment>
+												<motion2.p
 													className={"framer-styles-preset-m4awkb"}
 													data-styles-preset={"YqcGXulro"}
 												>
 													{
 														"Build excellent documentation site with no effort, built on top of Fumadocs"
 													}
-												</motion.p>
-											</React.Fragment>
+												</motion2.p>
+											</React2.Fragment>
 										</RichTextWithFX>
-									</motion.div>
-									<motion.div
-										className={"framer-1jc27pn"}
-										data-framer-name={"Button"}
-										layoutDependency={layoutDependency}
-										layoutId={"Q_eRvdSPB"}
-									>
-										<ResolveLinks
-											links={[
-												{
-													href: {
-														webPageId: "p4p9Y1lWb",
-													},
-													implicitPathVariables: void 0,
-												},
-												{
-													href: {
-														webPageId: "p4p9Y1lWb",
-													},
-													implicitPathVariables: void 0,
-												},
-											]}
+										<motion2.div
+											className={"framer-1gclyq4"}
+											layoutDependency={layoutDependency}
+											layoutId={"P0zynsURB"}
+											style={{
+												backgroundColor:
+													"var(--token-faa915f5-e04b-4515-a52f-9a2bba33b6ba, rgba(255, 255, 255, 0.85))",
+												borderBottomLeftRadius: 16,
+												borderBottomRightRadius: 16,
+												borderTopLeftRadius: 16,
+												borderTopRightRadius: 16,
+											}}
 										>
-											{(resolvedLinks) => (
-												<ComponentViewportProvider
-													height={40}
-													y={
-														(componentViewport?.y || 0) +
-														80 +
-														(((componentViewport?.height || 800) - 80 - 382.8) /
-															2 +
-															0 +
-															0) +
-														0 +
-														0 +
-														0 +
-														46 +
-														0 +
-														236 +
-														0
-													}
-													{...addPropertyOverrides(
-														{
-															M1TBpoN2c: {
-																y:
-																	(componentViewport?.y || 0) +
-																	0 +
-																	(((componentViewport?.height || 844) -
-																		0 -
-																		(Math.max(
-																			0,
-																			((componentViewport?.height || 844) -
-																				0 -
-																				0) /
-																				1,
-																		) *
-																			1 +
-																			0)) /
-																		2 +
-																		0 +
-																		0) +
-																	0 +
-																	((Math.max(
-																		0,
-																		((componentViewport?.height || 844) -
-																			0 -
-																			0) /
-																			1,
-																	) *
-																		1 -
-																		10 -
-																		374.8) /
-																		2 +
-																		0 +
-																		0) +
-																	0 +
-																	47 +
-																	0 +
-																	230 +
-																	0,
-															},
-															vT5GKuegs: {
-																y:
-																	(componentViewport?.y || 0) +
-																	0 +
-																	(((componentViewport?.height || 1080) -
-																		0 -
-																		439.8) /
-																		2 +
-																		0 +
-																		0) +
-																	0 +
-																	0 +
-																	0 +
-																	48 +
-																	0 +
-																	260 +
-																	0,
-															},
-														},
-														baseVariant,
-														gestureVariant,
-													)}
+											<motion2.div
+												className={"framer-1reamr3"}
+												data-framer-name={"Fields"}
+												layoutDependency={layoutDependency}
+												layoutId={"eFbDdxj09"}
+												style={{
+													backgroundColor:
+														"var(--token-e9b87438-ffd5-4fe0-8db2-85d90798dd9e, rgb(255, 255, 255))",
+													borderBottomLeftRadius: 12,
+													borderBottomRightRadius: 12,
+													borderTopLeftRadius: 12,
+													borderTopRightRadius: 12,
+												}}
+											>
+												<motion2.label
+													className={"framer-1260k4l"}
+													layoutDependency={layoutDependency}
+													layoutId={"JzcR1Lm3L"}
 												>
-													<SmartComponentScopedContainerWithFXWithOptimizedAppearEffect
-														__perspectiveFX={false}
-														__smartComponentFX={true}
-														__targetOpacity={1}
-														animate={animation8}
-														className={"framer-cdcok3-container"}
-														data-framer-appear-id={"cdcok3"}
-														initial={animation9}
+													<FormPlainTextInput
+														className={"framer-5hifyp"}
+														inputName={"Demo"}
 														layoutDependency={layoutDependency}
-														layoutId={"r0G2sVIZo-container"}
-														nodeId={"r0G2sVIZo"}
-														optimized={true}
-														rendersWithMotion={true}
-														scopeId={"eo97FeJK7"}
-														{...addPropertyOverrides(
-															{
-																M1TBpoN2c: {
-																	animate: animation10,
-																},
-															},
-															baseVariant,
-															gestureVariant,
-														)}
-													>
-														{_jsx(stdin_default, {
-															b7sws2Xmf: false,
-															gDhgzsvqf: resolvedLinks[0],
-															height: "100%",
-															id: "r0G2sVIZo",
-															layoutId: "r0G2sVIZo",
-															nx2tuureE: "Build your docs site",
-															variant: "z1bsEAxC0",
-															width: "100%",
-															...addPropertyOverrides(
-																{
-																	M1TBpoN2c: {
-																		gDhgzsvqf:
-																			"https://www.framer.com?via=green13",
-																		variant: "h_czR0__J",
-																	},
-																	vT5GKuegs: {
-																		gDhgzsvqf: resolvedLinks[1],
-																	},
-																},
-																baseVariant,
-																gestureVariant,
-															),
-														})}
-													</SmartComponentScopedContainerWithFXWithOptimizedAppearEffect>
-												</ComponentViewportProvider>
-											)}
-										</ResolveLinks>
-										<ResolveLinks
-											links={[
-												{
-													href: {
-														webPageId: "ePrr9Htzz",
-													},
-													implicitPathVariables: void 0,
-												},
-												{
-													href: {
-														webPageId: "ePrr9Htzz",
-													},
-													implicitPathVariables: void 0,
-												},
-											]}
-										>
-											{(resolvedLinks1) => (
-												<ComponentViewportProvider
-													height={40}
-													y={
-														(componentViewport?.y || 0) +
-														80 +
-														(((componentViewport?.height || 800) - 80 - 382.8) /
-															2 +
-															0 +
-															0) +
-														0 +
-														0 +
-														0 +
-														46 +
-														0 +
-														236 +
-														0
-													}
-													{...addPropertyOverrides(
-														{
-															M1TBpoN2c: {
-																y:
-																	(componentViewport?.y || 0) +
-																	0 +
-																	(((componentViewport?.height || 844) -
-																		0 -
-																		(Math.max(
-																			0,
-																			((componentViewport?.height || 844) -
-																				0 -
-																				0) /
-																				1,
-																		) *
-																			1 +
-																			0)) /
-																		2 +
-																		0 +
-																		0) +
-																	0 +
-																	((Math.max(
-																		0,
-																		((componentViewport?.height || 844) -
-																			0 -
-																			0) /
-																			1,
-																	) *
-																		1 -
-																		10 -
-																		374.8) /
-																		2 +
-																		0 +
-																		0) +
-																	0 +
-																	47 +
-																	0 +
-																	230 +
-																	0,
-															},
-															vT5GKuegs: {
-																y:
-																	(componentViewport?.y || 0) +
-																	0 +
-																	(((componentViewport?.height || 1080) -
-																		0 -
-																		439.8) /
-																		2 +
-																		0 +
-																		0) +
-																	0 +
-																	0 +
-																	0 +
-																	48 +
-																	0 +
-																	260 +
-																	0,
-															},
-														},
-														baseVariant,
-														gestureVariant,
-													)}
+														layoutId={"dvMgR0vfW"}
+														placeholder={"generate a docs website for..."}
+														required={false}
+														style={{
+															"--framer-input-background":
+																"var(--token-e9b87438-ffd5-4fe0-8db2-85d90798dd9e, rgb(255, 255, 255))",
+															"--framer-input-font-color":
+																"var(--token-37c8ed4f-2a53-472e-9a87-a130781c4a8e, rgb(17, 24, 39))",
+															"--framer-input-icon-color": "rgb(153, 153, 153)",
+															"--framer-input-placeholder-color":
+																"var(--token-c2364785-8edf-4554-bf5f-fb11a35f5e74, rgb(107, 114, 128))",
+														}}
+														type={"text"}
+													/>
+												</motion2.label>
+												<motion2.div
+													className={"framer-1betuzm"}
+													data-framer-name={"Bottom"}
+													layoutDependency={layoutDependency}
+													layoutId={"xdRsp5Djk"}
 												>
-													<SmartComponentScopedContainerWithFXWithOptimizedAppearEffect
-														__perspectiveFX={false}
-														__smartComponentFX={true}
-														__targetOpacity={1}
-														animate={animation11}
-														className={"framer-1db3772-container"}
-														data-framer-appear-id={"1db3772"}
-														initial={animation9}
+													<motion2.div
+														className={"framer-3x51mh"}
+														data-framer-name={"space"}
 														layoutDependency={layoutDependency}
-														layoutId={"dNpt5BbBw-container"}
-														nodeId={"dNpt5BbBw"}
-														optimized={true}
-														rendersWithMotion={true}
-														scopeId={"eo97FeJK7"}
-													>
-														{_jsx(stdin_default, {
-															b7sws2Xmf: true,
-															gDhgzsvqf: resolvedLinks1[0],
-															height: "100%",
-															id: "dNpt5BbBw",
-															layoutId: "dNpt5BbBw",
-															nx2tuureE: "Open Demo",
-															variant: "feWXGq4P4",
-															width: "100%",
-															...addPropertyOverrides(
-																{
-																	M1TBpoN2c: {
-																		gDhgzsvqf:
-																			"https://easyframe.framer.website/",
-																		variant: "F7eWAlrXR",
-																	},
-																	vT5GKuegs: {
-																		gDhgzsvqf: resolvedLinks1[1],
-																	},
-																},
-																baseVariant,
-																gestureVariant,
-															),
-														})}
-													</SmartComponentScopedContainerWithFXWithOptimizedAppearEffect>
-												</ComponentViewportProvider>
-											)}
-										</ResolveLinks>
-									</motion.div>
-								</motion.div>
-							</motion.div>
+														layoutId={"BVr3O5ilw"}
+														style={{
+															borderBottomLeftRadius: 6,
+															borderBottomRightRadius: 6,
+															borderTopLeftRadius: 6,
+															borderTopRightRadius: 6,
+														}}
+													/>
+													<ComponentViewportProvider height={24}>
+														<SmartComponentScopedContainer
+															className={"framer-5y2jm1-container"}
+															layoutDependency={layoutDependency}
+															layoutId={"j_LTIQhsn-container"}
+															nodeId={"j_LTIQhsn"}
+															rendersWithMotion={true}
+															scopeId={"eo97FeJK7"}
+														>
+															{_jsx2(stdin_default3, {
+																height: "100%",
+																id: "j_LTIQhsn",
+																layoutId: "j_LTIQhsn",
+																variant: "YMxWp5pK_",
+																width: "100%",
+															})}
+														</SmartComponentScopedContainer>
+													</ComponentViewportProvider>
+												</motion2.div>
+											</motion2.div>
+										</motion2.div>
+									</motion2.div>
+								</motion2.div>
+							</motion2.div>
 							<MotionDivWithFXWithOptimizedAppearEffect
 								__perspectiveFX={false}
 								__smartComponentFX={true}
 								__targetOpacity={1}
-								animate={animation12}
+								animate={animation8}
 								className={"framer-1bhe5y"}
 								data-framer-appear-id={"1bhe5y"}
 								data-framer-name={"Social Trust"}
@@ -1386,7 +1480,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 								layoutId={"Y1BfEt1hm"}
 								optimized={true}
 							>
-								<motion.div
+								<motion2.div
 									className={"framer-elw1j5"}
 									data-framer-name={"Avatars"}
 									layoutDependency={layoutDependency}
@@ -1396,18 +1490,6 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 										background={{
 											alt: "",
 											fit: "fill",
-											loading: getLoadingLazyAtYPosition(
-												(componentViewport?.y || 0) +
-													80 +
-													(((componentViewport?.height || 800) - 80 - 382.8) /
-														2 +
-														0 +
-														0) +
-													0 +
-													366 +
-													8.4 +
-													-14,
-											),
 											pixelHeight: 1200,
 											pixelWidth: 1200,
 											sizes: "28px",
@@ -1434,99 +1516,11 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 													"radial-gradient(59.13065843621398% 60% at 127.1% 50%, rgba(0,0,0,0) 99%, rgba(0,0,0,1) 100%) add",
 											},
 										}}
-										{...addPropertyOverrides(
-											{
-												M1TBpoN2c: {
-													background: {
-														alt: "",
-														fit: "fill",
-														loading: getLoadingLazyAtYPosition(
-															(componentViewport?.y || 0) +
-																0 +
-																(((componentViewport?.height || 844) -
-																	0 -
-																	(Math.max(
-																		0,
-																		((componentViewport?.height || 844) -
-																			0 -
-																			0) /
-																			1,
-																	) *
-																		1 +
-																		0)) /
-																	2 +
-																	0 +
-																	0) +
-																0 +
-																((Math.max(
-																	0,
-																	((componentViewport?.height || 844) - 0 - 0) /
-																		1,
-																) *
-																	1 -
-																	10 -
-																	374.8) /
-																	2 +
-																	317 +
-																	41) +
-																8.4 +
-																-14,
-														),
-														pixelHeight: 1200,
-														pixelWidth: 1200,
-														sizes: "28px",
-														src: "https://framerusercontent.com/images/JULRia8V0uGJ38m7K35cs2mHM.png",
-														srcSet:
-															"https://framerusercontent.com/images/JULRia8V0uGJ38m7K35cs2mHM.png?scale-down-to=512 512w,https://framerusercontent.com/images/JULRia8V0uGJ38m7K35cs2mHM.png?scale-down-to=1024 1024w,https://framerusercontent.com/images/JULRia8V0uGJ38m7K35cs2mHM.png 1200w",
-													},
-												},
-												vT5GKuegs: {
-													background: {
-														alt: "",
-														fit: "fill",
-														loading: getLoadingLazyAtYPosition(
-															(componentViewport?.y || 0) +
-																0 +
-																(((componentViewport?.height || 1080) -
-																	0 -
-																	439.8) /
-																	2 +
-																	0 +
-																	0) +
-																0 +
-																423 +
-																8.4 +
-																-14,
-														),
-														pixelHeight: 1200,
-														pixelWidth: 1200,
-														sizes: "28px",
-														src: "https://framerusercontent.com/images/JULRia8V0uGJ38m7K35cs2mHM.png",
-														srcSet:
-															"https://framerusercontent.com/images/JULRia8V0uGJ38m7K35cs2mHM.png?scale-down-to=512 512w,https://framerusercontent.com/images/JULRia8V0uGJ38m7K35cs2mHM.png?scale-down-to=1024 1024w,https://framerusercontent.com/images/JULRia8V0uGJ38m7K35cs2mHM.png 1200w",
-													},
-												},
-											},
-											baseVariant,
-											gestureVariant,
-										)}
 									/>
 									<Image
 										background={{
 											alt: "",
 											fit: "fill",
-											loading: getLoadingLazyAtYPosition(
-												(componentViewport?.y || 0) +
-													80 +
-													(((componentViewport?.height || 800) - 80 - 382.8) /
-														2 +
-														0 +
-														0) +
-													0 +
-													366 +
-													8.4 +
-													-14,
-											),
 											pixelHeight: 1200,
 											pixelWidth: 904,
 											positionX: "center",
@@ -1556,103 +1550,11 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 													"radial-gradient(56.00000000000001% 56.00000000000001% at 130.5% 50%, rgba(0,0,0,0) 99.99%, rgba(0,0,0,1) 100%) add",
 											},
 										}}
-										{...addPropertyOverrides(
-											{
-												M1TBpoN2c: {
-													background: {
-														alt: "",
-														fit: "fill",
-														loading: getLoadingLazyAtYPosition(
-															(componentViewport?.y || 0) +
-																0 +
-																(((componentViewport?.height || 844) -
-																	0 -
-																	(Math.max(
-																		0,
-																		((componentViewport?.height || 844) -
-																			0 -
-																			0) /
-																			1,
-																	) *
-																		1 +
-																		0)) /
-																	2 +
-																	0 +
-																	0) +
-																0 +
-																((Math.max(
-																	0,
-																	((componentViewport?.height || 844) - 0 - 0) /
-																		1,
-																) *
-																	1 -
-																	10 -
-																	374.8) /
-																	2 +
-																	317 +
-																	41) +
-																8.4 +
-																-14,
-														),
-														pixelHeight: 1200,
-														pixelWidth: 904,
-														positionX: "center",
-														positionY: "center",
-														sizes: "28px",
-														src: "https://framerusercontent.com/images/0g2BAxpvasUh7eDWCbWaHzI5M.png",
-														srcSet:
-															"https://framerusercontent.com/images/0g2BAxpvasUh7eDWCbWaHzI5M.png?scale-down-to=1024 771w,https://framerusercontent.com/images/0g2BAxpvasUh7eDWCbWaHzI5M.png 904w",
-													},
-												},
-												vT5GKuegs: {
-													background: {
-														alt: "",
-														fit: "fill",
-														loading: getLoadingLazyAtYPosition(
-															(componentViewport?.y || 0) +
-																0 +
-																(((componentViewport?.height || 1080) -
-																	0 -
-																	439.8) /
-																	2 +
-																	0 +
-																	0) +
-																0 +
-																423 +
-																8.4 +
-																-14,
-														),
-														pixelHeight: 1200,
-														pixelWidth: 904,
-														positionX: "center",
-														positionY: "center",
-														sizes: "28px",
-														src: "https://framerusercontent.com/images/0g2BAxpvasUh7eDWCbWaHzI5M.png",
-														srcSet:
-															"https://framerusercontent.com/images/0g2BAxpvasUh7eDWCbWaHzI5M.png?scale-down-to=1024 771w,https://framerusercontent.com/images/0g2BAxpvasUh7eDWCbWaHzI5M.png 904w",
-													},
-												},
-											},
-											baseVariant,
-											gestureVariant,
-										)}
 									/>
 									<Image
 										background={{
 											alt: "",
 											fit: "fill",
-											loading: getLoadingLazyAtYPosition(
-												(componentViewport?.y || 0) +
-													80 +
-													(((componentViewport?.height || 800) - 80 - 382.8) /
-														2 +
-														0 +
-														0) +
-													0 +
-													366 +
-													8.4 +
-													-14,
-											),
 											pixelHeight: 1200,
 											pixelWidth: 904,
 											sizes: "28px",
@@ -1673,99 +1575,11 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												"radial-gradient(60.00000000000001% 60% at 124.8% 50%, rgba(0,0,0,0) 99.99%, rgba(0,0,0,1) 100%) add",
 										}}
 										transformTemplate={transformTemplate1}
-										{...addPropertyOverrides(
-											{
-												M1TBpoN2c: {
-													background: {
-														alt: "",
-														fit: "fill",
-														loading: getLoadingLazyAtYPosition(
-															(componentViewport?.y || 0) +
-																0 +
-																(((componentViewport?.height || 844) -
-																	0 -
-																	(Math.max(
-																		0,
-																		((componentViewport?.height || 844) -
-																			0 -
-																			0) /
-																			1,
-																	) *
-																		1 +
-																		0)) /
-																	2 +
-																	0 +
-																	0) +
-																0 +
-																((Math.max(
-																	0,
-																	((componentViewport?.height || 844) - 0 - 0) /
-																		1,
-																) *
-																	1 -
-																	10 -
-																	374.8) /
-																	2 +
-																	317 +
-																	41) +
-																8.4 +
-																-14,
-														),
-														pixelHeight: 1200,
-														pixelWidth: 904,
-														sizes: "28px",
-														src: "https://framerusercontent.com/images/2CBydzAi5aIjb2ShPxPHPp1qI.jpg",
-														srcSet:
-															"https://framerusercontent.com/images/2CBydzAi5aIjb2ShPxPHPp1qI.jpg?scale-down-to=1024 771w,https://framerusercontent.com/images/2CBydzAi5aIjb2ShPxPHPp1qI.jpg 904w",
-													},
-												},
-												vT5GKuegs: {
-													background: {
-														alt: "",
-														fit: "fill",
-														loading: getLoadingLazyAtYPosition(
-															(componentViewport?.y || 0) +
-																0 +
-																(((componentViewport?.height || 1080) -
-																	0 -
-																	439.8) /
-																	2 +
-																	0 +
-																	0) +
-																0 +
-																423 +
-																8.4 +
-																-14,
-														),
-														pixelHeight: 1200,
-														pixelWidth: 904,
-														sizes: "28px",
-														src: "https://framerusercontent.com/images/2CBydzAi5aIjb2ShPxPHPp1qI.jpg",
-														srcSet:
-															"https://framerusercontent.com/images/2CBydzAi5aIjb2ShPxPHPp1qI.jpg?scale-down-to=1024 771w,https://framerusercontent.com/images/2CBydzAi5aIjb2ShPxPHPp1qI.jpg 904w",
-													},
-												},
-											},
-											baseVariant,
-											gestureVariant,
-										)}
 									/>
 									<Image
 										background={{
 											alt: "",
 											fit: "fill",
-											loading: getLoadingLazyAtYPosition(
-												(componentViewport?.y || 0) +
-													80 +
-													(((componentViewport?.height || 800) - 80 - 382.8) /
-														2 +
-														0 +
-														0) +
-													0 +
-													366 +
-													8.4 +
-													-14,
-											),
 											pixelHeight: 1200,
 											pixelWidth: 904,
 											sizes: "28px",
@@ -1786,99 +1600,11 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												"radial-gradient(60.00000000000001% 60% at 126.6% 50%, rgba(0,0,0,0) 99.99%, rgba(0,0,0,1) 100%) add",
 										}}
 										transformTemplate={transformTemplate1}
-										{...addPropertyOverrides(
-											{
-												M1TBpoN2c: {
-													background: {
-														alt: "",
-														fit: "fill",
-														loading: getLoadingLazyAtYPosition(
-															(componentViewport?.y || 0) +
-																0 +
-																(((componentViewport?.height || 844) -
-																	0 -
-																	(Math.max(
-																		0,
-																		((componentViewport?.height || 844) -
-																			0 -
-																			0) /
-																			1,
-																	) *
-																		1 +
-																		0)) /
-																	2 +
-																	0 +
-																	0) +
-																0 +
-																((Math.max(
-																	0,
-																	((componentViewport?.height || 844) - 0 - 0) /
-																		1,
-																) *
-																	1 -
-																	10 -
-																	374.8) /
-																	2 +
-																	317 +
-																	41) +
-																8.4 +
-																-14,
-														),
-														pixelHeight: 1200,
-														pixelWidth: 904,
-														sizes: "28px",
-														src: "https://framerusercontent.com/images/w3uLbU7Y52vz44rYeU2HamRqrc.png",
-														srcSet:
-															"https://framerusercontent.com/images/w3uLbU7Y52vz44rYeU2HamRqrc.png?scale-down-to=1024 771w,https://framerusercontent.com/images/w3uLbU7Y52vz44rYeU2HamRqrc.png 904w",
-													},
-												},
-												vT5GKuegs: {
-													background: {
-														alt: "",
-														fit: "fill",
-														loading: getLoadingLazyAtYPosition(
-															(componentViewport?.y || 0) +
-																0 +
-																(((componentViewport?.height || 1080) -
-																	0 -
-																	439.8) /
-																	2 +
-																	0 +
-																	0) +
-																0 +
-																423 +
-																8.4 +
-																-14,
-														),
-														pixelHeight: 1200,
-														pixelWidth: 904,
-														sizes: "28px",
-														src: "https://framerusercontent.com/images/w3uLbU7Y52vz44rYeU2HamRqrc.png",
-														srcSet:
-															"https://framerusercontent.com/images/w3uLbU7Y52vz44rYeU2HamRqrc.png?scale-down-to=1024 771w,https://framerusercontent.com/images/w3uLbU7Y52vz44rYeU2HamRqrc.png 904w",
-													},
-												},
-											},
-											baseVariant,
-											gestureVariant,
-										)}
 									/>
 									<Image
 										background={{
 											alt: "",
 											fit: "fill",
-											loading: getLoadingLazyAtYPosition(
-												(componentViewport?.y || 0) +
-													80 +
-													(((componentViewport?.height || 800) - 80 - 382.8) /
-														2 +
-														0 +
-														0) +
-													0 +
-													366 +
-													8.4 +
-													-14,
-											),
 											pixelHeight: 1200,
 											pixelWidth: 800,
 											sizes: "28px",
@@ -1896,96 +1622,20 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											borderTopRightRadius: 18,
 										}}
 										transformTemplate={transformTemplate1}
-										{...addPropertyOverrides(
-											{
-												M1TBpoN2c: {
-													background: {
-														alt: "",
-														fit: "fill",
-														loading: getLoadingLazyAtYPosition(
-															(componentViewport?.y || 0) +
-																0 +
-																(((componentViewport?.height || 844) -
-																	0 -
-																	(Math.max(
-																		0,
-																		((componentViewport?.height || 844) -
-																			0 -
-																			0) /
-																			1,
-																	) *
-																		1 +
-																		0)) /
-																	2 +
-																	0 +
-																	0) +
-																0 +
-																((Math.max(
-																	0,
-																	((componentViewport?.height || 844) - 0 - 0) /
-																		1,
-																) *
-																	1 -
-																	10 -
-																	374.8) /
-																	2 +
-																	317 +
-																	41) +
-																8.4 +
-																-14,
-														),
-														pixelHeight: 1200,
-														pixelWidth: 800,
-														sizes: "28px",
-														src: "https://framerusercontent.com/images/F3qs8afO6hZEJSYnmJd7HhQoBw.png",
-														srcSet:
-															"https://framerusercontent.com/images/F3qs8afO6hZEJSYnmJd7HhQoBw.png?scale-down-to=1024 682w,https://framerusercontent.com/images/F3qs8afO6hZEJSYnmJd7HhQoBw.png 800w",
-													},
-												},
-												vT5GKuegs: {
-													background: {
-														alt: "",
-														fit: "fill",
-														loading: getLoadingLazyAtYPosition(
-															(componentViewport?.y || 0) +
-																0 +
-																(((componentViewport?.height || 1080) -
-																	0 -
-																	439.8) /
-																	2 +
-																	0 +
-																	0) +
-																0 +
-																423 +
-																8.4 +
-																-14,
-														),
-														pixelHeight: 1200,
-														pixelWidth: 800,
-														sizes: "28px",
-														src: "https://framerusercontent.com/images/F3qs8afO6hZEJSYnmJd7HhQoBw.png",
-														srcSet:
-															"https://framerusercontent.com/images/F3qs8afO6hZEJSYnmJd7HhQoBw.png?scale-down-to=1024 682w,https://framerusercontent.com/images/F3qs8afO6hZEJSYnmJd7HhQoBw.png 800w",
-													},
-												},
-											},
-											baseVariant,
-											gestureVariant,
-										)}
 									/>
-								</motion.div>
+								</motion2.div>
 								<RichTextWithFXWithOptimizedAppearEffect
 									__fromCanvasComponent={true}
 									__perspectiveFX={false}
 									__smartComponentFX={true}
 									__targetOpacity={1}
-									animate={animation13}
+									animate={animation10}
 									className={"framer-18v5tzb"}
 									data-framer-appear-id={"18v5tzb"}
 									data-framer-name={"Title"}
 									effect={textEffect2}
 									fonts={["Inter"]}
-									initial={animation14}
+									initial={animation11}
 									layoutDependency={layoutDependency}
 									layoutId={"IlYIi9pVp"}
 									optimized={true}
@@ -1995,36 +1645,36 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									verticalAlignment={"top"}
 									withExternalLayout={true}
 								>
-									<React.Fragment>
-										<motion.p
+									<React2.Fragment>
+										<motion2.p
 											className={"framer-styles-preset-1x4srpb"}
 											data-styles-preset={"WGktsHNSh"}
 										>
 											{"built on Fumadocs, already used by thousands"}
-										</motion.p>
-									</React.Fragment>
+										</motion2.p>
+									</React2.Fragment>
 								</RichTextWithFXWithOptimizedAppearEffect>
 							</MotionDivWithFXWithOptimizedAppearEffect>
-						</motion.div>
-						<motion.div
+						</motion2.div>
+						<motion2.div
 							className={"framer-9jo1y3"}
 							data-framer-name={"Shimmer"}
 							layoutDependency={layoutDependency}
 							layoutId={"dlGZKpvCs"}
 						>
-							<motion.div
+							<motion2.div
 								className={"framer-hx1jle"}
 								data-framer-name={"Container"}
 								layoutDependency={layoutDependency}
 								layoutId={"nHH0yZA3m"}
 							>
 								<MotionDivWithFX
-									__framer__loop={animation16}
+									__framer__loop={animation13}
 									__framer__loopEffectEnabled={true}
 									__framer__loopPauseOffscreen={false}
 									__framer__loopRepeatDelay={1}
 									__framer__loopRepeatType={"loop"}
-									__framer__loopTransition={transition14}
+									__framer__loopTransition={transition11}
 									__perspectiveFX={false}
 									__smartComponentFX={true}
 									__targetOpacity={1}
@@ -2038,12 +1688,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									}}
 								/>
 								<MotionDivWithFX
-									__framer__loop={animation17}
+									__framer__loop={animation14}
 									__framer__loopEffectEnabled={true}
 									__framer__loopPauseOffscreen={false}
 									__framer__loopRepeatDelay={1.5}
 									__framer__loopRepeatType={"loop"}
-									__framer__loopTransition={transition15}
+									__framer__loopTransition={transition122}
 									__perspectiveFX={false}
 									__smartComponentFX={true}
 									__targetOpacity={1}
@@ -2057,12 +1707,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									}}
 								/>
 								<MotionDivWithFX
-									__framer__loop={animation18}
+									__framer__loop={animation15}
 									__framer__loopEffectEnabled={true}
 									__framer__loopPauseOffscreen={false}
 									__framer__loopRepeatDelay={0.2}
 									__framer__loopRepeatType={"loop"}
-									__framer__loopTransition={transition16}
+									__framer__loopTransition={transition13}
 									__perspectiveFX={false}
 									__smartComponentFX={true}
 									__targetOpacity={1}
@@ -2075,15 +1725,15 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											"linear-gradient(180deg, var(--token-ba966f44-b096-454c-b9a7-2e7b01439cc6, rgb(250, 187, 0)) 0%, var(--token-83878271-40bd-4314-b766-4d665555aa78, rgb(255, 77, 0)) 35.585585585585584%, var(--token-73712a6a-57cb-43d7-9c85-ad36472f666c, rgba(0, 0, 0, 0)) 100%)",
 									}}
 								/>
-							</motion.div>
-						</motion.div>
-						<motion.div
+							</motion2.div>
+						</motion2.div>
+						<motion2.div
 							className={"framer-1ytjer"}
 							data-framer-name={"Visual Container"}
 							layoutDependency={layoutDependency}
 							layoutId={"SOosltvuo"}
 							transformTemplate={transformTemplate2}
-							{...addPropertyOverrides(
+							{...addPropertyOverrides2(
 								{
 									vT5GKuegs: {
 										transformTemplate: void 0,
@@ -2097,7 +1747,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 								__perspectiveFX={false}
 								__smartComponentFX={true}
 								__targetOpacity={1}
-								animate={animation19}
+								animate={animation16}
 								background={{
 									alt: "",
 									fit: "fill",
@@ -2116,7 +1766,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 								className={"framer-1vpwjt1"}
 								data-framer-appear-id={"1vpwjt1"}
 								data-framer-name={"Hero - main - visual"}
-								initial={animation20}
+								initial={animation17}
 								layoutDependency={layoutDependency}
 								layoutId={"EUXuBXmHe"}
 								optimized={true}
@@ -2134,7 +1784,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											"linear-gradient(0deg, rgba(0,0,0,0) 7.000000000000001%, rgba(0,0,0,1) 10%, rgba(0, 0, 0, 1) 93%, rgba(0, 0, 0, 0) 100%) add",
 									},
 								}}
-								{...addPropertyOverrides(
+								{...addPropertyOverrides2(
 									{
 										vT5GKuegs: {
 											background: {
@@ -2158,8 +1808,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									gestureVariant,
 								)}
 							/>
-						</motion.div>
-						<motion.div
+						</motion2.div>
+						<motion2.div
 							className={"framer-u2413q"}
 							data-framer-name={"Grid"}
 							layoutDependency={layoutDependency}
@@ -2174,10 +1824,10 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									__perspectiveFX={false}
 									__smartComponentFX={true}
 									__targetOpacity={1}
-									animate={animation21}
+									animate={animation18}
 									className={"framer-nwzasc-container"}
 									data-framer-appear-id={"nwzasc"}
-									initial={animation20}
+									initial={animation17}
 									layoutDependency={layoutDependency}
 									layoutId={"l673erBLp-container"}
 									nodeId={"l673erBLp"}
@@ -2185,7 +1835,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									rendersWithMotion={true}
 									scopeId={"eo97FeJK7"}
 								>
-									{_jsx(stdin_default3, {
+									{_jsx2(stdin_default2, {
 										height: "100%",
 										id: "l673erBLp",
 										layoutId: "l673erBLp",
@@ -2195,7 +1845,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 										},
 										variant: "hZMrdHfki",
 										width: "100%",
-										...addPropertyOverrides(
+										...addPropertyOverrides2(
 											{
 												M1TBpoN2c: {
 													variant: "LdpJM6G2s",
@@ -2210,79 +1860,84 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									})}
 								</SmartComponentScopedContainerWithFXWithOptimizedAppearEffect>
 							</ComponentViewportProvider>
-						</motion.div>
-					</motion.section>
-				</Transition>
-			</Variants>
-		</LayoutGroup>
+						</motion2.div>
+					</motion2.section>
+				</Transition2>
+			</Variants2>
+		</LayoutGroup2>
 	);
 });
-var css4 = [
+var css5 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-eKUK2.framer-1tk4vcq, .framer-eKUK2 .framer-1tk4vcq { display: block; }",
-	".framer-eKUK2.framer-1ju9km5 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 31px; height: 800px; justify-content: center; overflow: hidden; padding: 80px 0px 0px 0px; position: relative; width: 1200px; }",
-	".framer-eKUK2 .framer-4unfev { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 44px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-eKUK2 .framer-kcmu88 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 15px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-eKUK2 .framer-vll604-container { flex: none; height: auto; position: relative; width: auto; z-index: 2; }",
-	".framer-eKUK2 .framer-1af0tnz { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; max-width: 800px; overflow: visible; padding: 0px; position: relative; width: 800px; z-index: 2; }",
-	".framer-eKUK2 .framer-14lj2mo { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-eKUK2 .framer-bkpwdd { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; z-index: 1; }",
-	".framer-eKUK2 .framer-1uk34jx { flex: none; height: auto; max-width: 85%; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; z-index: 1; }",
-	".framer-eKUK2 .framer-1jc27pn { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 7px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
-	".framer-eKUK2 .framer-cdcok3-container { flex: none; height: auto; position: relative; width: auto; }",
-	".framer-eKUK2 .framer-1db3772-container { flex: none; height: auto; position: relative; width: auto; z-index: 3; }",
-	".framer-eKUK2 .framer-1bhe5y { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 15px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
-	".framer-eKUK2 .framer-elw1j5 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; min-height: 28px; min-width: 115px; overflow: hidden; padding: 0px; position: relative; width: min-content; }",
-	".framer-eKUK2 .framer-1wo8obo { flex: none; height: 28px; left: calc(12.500000000000021% - 28px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 28px / 2); width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
-	".framer-eKUK2 .framer-opum0o { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 31%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
-	".framer-eKUK2 .framer-1kppgrc { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 51%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
-	".framer-eKUK2 .framer-1rq7k0 { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 69%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
-	".framer-eKUK2 .framer-q5wh5f { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 88%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
-	".framer-eKUK2 .framer-18v5tzb { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
-	".framer-eKUK2 .framer-9jo1y3 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; left: calc(50.00000000000002% - min(1200px, 100%) / 2); max-width: 1200px; overflow: hidden; padding: 0px 35px 0px 35px; position: absolute; top: calc(50.00000000000002% - 800px / 2); width: 100%; z-index: 1; }",
-	".framer-eKUK2 .framer-hx1jle { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 1px; }",
-	".framer-eKUK2 .framer-5s020z { bottom: 100px; flex: none; height: 100px; left: calc(0.08928571428573649% - 2px / 2); overflow: hidden; position: absolute; width: 2px; z-index: 1; }",
-	".framer-eKUK2 .framer-f196iw { flex: none; height: 200px; left: calc(99.90291262135923% - 2px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 200px / 2); width: 2px; z-index: 1; }",
-	".framer-eKUK2 .framer-ju2czo { flex: none; height: 50px; left: calc(9.017857142857165% - 2px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 50px / 2); width: 2px; z-index: 1; }",
-	".framer-eKUK2 .framer-1ytjer { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; left: 50%; overflow: hidden; padding: 0px; position: absolute; top: 0px; width: 100%; z-index: 0; }",
-	".framer-eKUK2 .framer-1vpwjt1 { flex: none; gap: 10px; height: 800px; overflow: visible; position: relative; width: 1050px; z-index: 0; }",
-	".framer-eKUK2 .framer-u2413q { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 1; }",
-	".framer-eKUK2 .framer-nwzasc-container { flex: none; height: 800px; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
-	".framer-eKUK2.framer-v-1k2jmim.framer-1ju9km5 { height: 1080px; padding: 0px; width: 810px; }",
-	".framer-eKUK2.framer-v-1k2jmim .framer-4unfev { gap: 75px; }",
-	".framer-eKUK2.framer-v-1k2jmim .framer-kcmu88 { gap: 17px; order: 0; }",
-	".framer-eKUK2.framer-v-1k2jmim .framer-1af0tnz { gap: 49px; max-width: 730px; width: 100%; }",
-	".framer-eKUK2.framer-v-1k2jmim .framer-1bhe5y { order: 1; }",
-	".framer-eKUK2.framer-v-1k2jmim .framer-9jo1y3 { padding: 0px 40px 0px 40px; }",
-	".framer-eKUK2.framer-v-1k2jmim .framer-1ytjer { height: calc(var(--framer-viewport-height, 100vh) * 1); left: calc(50.00000000000002% - 100% / 2); padding: 0px 0px 80px 0px; }",
-	".framer-eKUK2.framer-v-1k2jmim .framer-1vpwjt1 { height: calc(var(--framer-viewport-height, 100vh) * 1); left: 1px; order: 0; position: absolute; top: calc(50.00000000000002% - 100vh / 2); width: 100%; }",
-	".framer-eKUK2.framer-v-ct8w98.framer-1ju9km5 { height: 844px; padding: 0px; width: 390px; }",
-	".framer-eKUK2.framer-v-ct8w98 .framer-4unfev { flex: 1 0 0px; gap: 41px; height: 1px; padding: 0px 20px 10px 20px; }",
-	".framer-eKUK2.framer-v-ct8w98 .framer-kcmu88 { gap: 16px; }",
-	".framer-eKUK2.framer-v-ct8w98 .framer-1af0tnz { gap: 17px; width: 100%; }",
-	".framer-eKUK2.framer-v-ct8w98 .framer-14lj2mo { gap: 12px; }",
-	".framer-eKUK2.framer-v-ct8w98 .framer-bkpwdd { max-width: 580px; }",
-	".framer-eKUK2.framer-v-ct8w98 .framer-1uk34jx { max-width: 500px; }",
+	".framer-S4oOJ.framer-1tk4vcq, .framer-S4oOJ .framer-1tk4vcq { display: block; }",
+	".framer-S4oOJ.framer-1ju9km5 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 31px; height: 800px; justify-content: center; overflow: hidden; padding: 80px 0px 0px 0px; position: relative; width: 1200px; }",
+	".framer-S4oOJ .framer-4unfev { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 44px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-S4oOJ .framer-kcmu88 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 15px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-S4oOJ .framer-vll604-container { flex: none; height: auto; position: relative; width: auto; z-index: 2; }",
+	".framer-S4oOJ .framer-1af0tnz { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; max-width: 800px; overflow: visible; padding: 0px; position: relative; width: 800px; z-index: 2; }",
+	".framer-S4oOJ .framer-14lj2mo { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 22px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-S4oOJ .framer-bkpwdd { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; z-index: 1; }",
+	".framer-S4oOJ .framer-1uk34jx { flex: none; height: auto; max-width: 85%; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; z-index: 1; }",
+	".framer-S4oOJ .framer-1gclyq4 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 0px; height: min-content; justify-content: center; overflow: visible; padding: 4px; position: relative; width: min-content; }",
+	".framer-S4oOJ .framer-1reamr3 { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; height: min-content; justify-content: space-between; overflow: hidden; padding: 0px; position: relative; width: 584px; will-change: var(--framer-will-change-override, transform); }",
+	".framer-S4oOJ .framer-1260k4l { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; padding: 0px; position: relative; width: 100%; }",
+	'.framer-S4oOJ .framer-5hifyp { --framer-input-font-family: "Inter"; --framer-input-font-letter-spacing: 0em; --framer-input-font-line-height: 1.4em; --framer-input-font-size: 15px; --framer-input-font-weight: 500; --framer-input-padding: 16px 16px 4px 16px; --framer-input-wrapper-height: auto; flex: none; height: auto; min-height: 10px; position: relative; width: 100%; }',
+	".framer-S4oOJ .framer-1betuzm { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; height: min-content; justify-content: space-between; overflow: visible; padding: 0px 6px 2px 6px; position: relative; width: 100%; }",
+	".framer-S4oOJ .framer-3x51mh { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 40px; height: min-content; justify-content: center; min-height: 30px; min-width: 101px; overflow: hidden; padding: 1px; position: relative; width: min-content; will-change: var(--framer-will-change-override, transform); }",
+	".framer-S4oOJ .framer-5y2jm1-container { flex: none; height: auto; position: relative; width: auto; }",
+	".framer-S4oOJ .framer-1bhe5y { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 15px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; z-index: 2; }",
+	".framer-S4oOJ .framer-elw1j5 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; min-height: 28px; min-width: 115px; overflow: hidden; padding: 0px; position: relative; width: min-content; }",
+	".framer-S4oOJ .framer-1wo8obo { flex: none; height: 28px; left: calc(12.500000000000021% - 28px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 28px / 2); width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
+	".framer-S4oOJ .framer-opum0o { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 31%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
+	".framer-S4oOJ .framer-1kppgrc { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 51%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
+	".framer-S4oOJ .framer-1rq7k0 { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 69%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
+	".framer-S4oOJ .framer-q5wh5f { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 28px); left: 88%; overflow: hidden; position: absolute; top: 50%; width: 28px; will-change: var(--framer-will-change-override, transform); z-index: 1; }",
+	".framer-S4oOJ .framer-18v5tzb { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
+	".framer-S4oOJ .framer-9jo1y3 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; left: calc(50.00000000000002% - min(1200px, 100%) / 2); max-width: 1200px; overflow: hidden; padding: 0px 35px 0px 35px; position: absolute; top: calc(50.00000000000002% - 800px / 2); width: 100%; z-index: 1; }",
+	".framer-S4oOJ .framer-hx1jle { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 1px; }",
+	".framer-S4oOJ .framer-5s020z { bottom: 100px; flex: none; height: 100px; left: calc(0.08928571428573649% - 2px / 2); overflow: hidden; position: absolute; width: 2px; z-index: 1; }",
+	".framer-S4oOJ .framer-f196iw { flex: none; height: 200px; left: calc(99.90291262135923% - 2px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 200px / 2); width: 2px; z-index: 1; }",
+	".framer-S4oOJ .framer-ju2czo { flex: none; height: 50px; left: calc(9.017857142857165% - 2px / 2); overflow: hidden; position: absolute; top: calc(50.00000000000002% - 50px / 2); width: 2px; z-index: 1; }",
+	".framer-S4oOJ .framer-1ytjer { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; left: 50%; overflow: hidden; padding: 0px; position: absolute; top: 0px; width: 100%; z-index: 0; }",
+	".framer-S4oOJ .framer-1vpwjt1 { flex: none; gap: 10px; height: 800px; overflow: visible; position: relative; width: 1050px; z-index: 0; }",
+	".framer-S4oOJ .framer-u2413q { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 1; }",
+	".framer-S4oOJ .framer-nwzasc-container { flex: none; height: 800px; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
+	".framer-S4oOJ.framer-v-1k2jmim.framer-1ju9km5 { height: 1080px; padding: 0px; width: 810px; }",
+	".framer-S4oOJ.framer-v-1k2jmim .framer-4unfev { gap: 75px; }",
+	".framer-S4oOJ.framer-v-1k2jmim .framer-kcmu88 { gap: 17px; order: 0; }",
+	".framer-S4oOJ.framer-v-1k2jmim .framer-1af0tnz { gap: 49px; max-width: 730px; width: 100%; }",
+	".framer-S4oOJ.framer-v-1k2jmim .framer-3x51mh { min-height: 29px; }",
+	".framer-S4oOJ.framer-v-1k2jmim .framer-1bhe5y { order: 1; }",
+	".framer-S4oOJ.framer-v-1k2jmim .framer-9jo1y3 { padding: 0px 40px 0px 40px; }",
+	".framer-S4oOJ.framer-v-1k2jmim .framer-1ytjer { height: calc(var(--framer-viewport-height, 100vh) * 1); left: calc(50.00000000000002% - 100% / 2); padding: 0px 0px 80px 0px; }",
+	".framer-S4oOJ.framer-v-1k2jmim .framer-1vpwjt1 { height: calc(var(--framer-viewport-height, 100vh) * 1); left: 1px; order: 0; position: absolute; top: calc(50.00000000000002% - 100vh / 2); width: 100%; }",
+	".framer-S4oOJ.framer-v-ct8w98.framer-1ju9km5 { height: 844px; padding: 0px; width: 390px; }",
+	".framer-S4oOJ.framer-v-ct8w98 .framer-4unfev { flex: 1 0 0px; gap: 41px; height: 1px; padding: 0px 20px 10px 20px; }",
+	".framer-S4oOJ.framer-v-ct8w98 .framer-kcmu88 { gap: 16px; }",
+	".framer-S4oOJ.framer-v-ct8w98 .framer-1af0tnz { gap: 17px; width: 100%; }",
+	".framer-S4oOJ.framer-v-ct8w98 .framer-14lj2mo { gap: 12px; }",
+	".framer-S4oOJ.framer-v-ct8w98 .framer-bkpwdd { max-width: 580px; }",
+	".framer-S4oOJ.framer-v-ct8w98 .framer-1uk34jx { max-width: 500px; }",
 	...css3,
 	...css2,
 	...css,
 ];
-var Framereo97FeJK7 = withCSS(Component, css4, "framer-eKUK2");
+var Framereo97FeJK7 = withCSS2(Component2, css5, "framer-S4oOJ");
 var stdin_default4 = Framereo97FeJK7;
 Framereo97FeJK7.displayName = "Hero Section";
 Framereo97FeJK7.defaultProps = {
 	height: 800,
 	width: 1200,
 };
-addPropertyControls(Framereo97FeJK7, {
+addPropertyControls2(Framereo97FeJK7, {
 	variant: {
 		options: ["DLscFvTjv", "vT5GKuegs", "M1TBpoN2c"],
 		optionTitles: ["Desktop", "Tablet", "Phone"],
 		title: "Variant",
-		type: ControlType.Enum,
+		type: ControlType2.Enum,
 	},
 });
-addFonts(
+addFonts2(
 	Framereo97FeJK7,
 	[
 		{
@@ -2348,10 +2003,70 @@ addFonts(
 					url: "https://framerusercontent.com/assets/b6Y37FthZeALduNqHicBT6FutY.woff2",
 					weight: "400",
 				},
+				{
+					family: "Inter",
+					source: "framer",
+					style: "normal",
+					unicodeRange:
+						"U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F",
+					url: "https://framerusercontent.com/assets/5A3Ce6C9YYmCjpQx9M4inSaKU.woff2",
+					weight: "500",
+				},
+				{
+					family: "Inter",
+					source: "framer",
+					style: "normal",
+					unicodeRange: "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116",
+					url: "https://framerusercontent.com/assets/Qx95Xyt0Ka3SGhinnbXIGpEIyP4.woff2",
+					weight: "500",
+				},
+				{
+					family: "Inter",
+					source: "framer",
+					style: "normal",
+					unicodeRange: "U+1F00-1FFF",
+					url: "https://framerusercontent.com/assets/6mJuEAguuIuMog10gGvH5d3cl8.woff2",
+					weight: "500",
+				},
+				{
+					family: "Inter",
+					source: "framer",
+					style: "normal",
+					unicodeRange: "U+0370-03FF",
+					url: "https://framerusercontent.com/assets/xYYWaj7wCU5zSQH0eXvSaS19wo.woff2",
+					weight: "500",
+				},
+				{
+					family: "Inter",
+					source: "framer",
+					style: "normal",
+					unicodeRange:
+						"U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF",
+					url: "https://framerusercontent.com/assets/otTaNuNpVK4RbdlT7zDDdKvQBA.woff2",
+					weight: "500",
+				},
+				{
+					family: "Inter",
+					source: "framer",
+					style: "normal",
+					unicodeRange:
+						"U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+					url: "https://framerusercontent.com/assets/d3tHnaQIAeqiE5hGcRw4mmgWYU.woff2",
+					weight: "500",
+				},
+				{
+					family: "Inter",
+					source: "framer",
+					style: "normal",
+					unicodeRange:
+						"U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB",
+					url: "https://framerusercontent.com/assets/DolVirEGb34pEXEp8t8FQBSK4.woff2",
+					weight: "500",
+				},
 			],
 		},
 		...BadgeFonts,
-		...ComponentButtonFonts,
+		...AISubmitButtonFonts,
 		...GridFonts,
 		...getFontsFromSharedStyle(fonts3),
 		...getFontsFromSharedStyle(fonts2),
@@ -2388,6 +2103,17 @@ function ComponentWithRoot({ locale, ...rest }) {
 		</ContextProviders>
 	);
 }
+/**
+ * @type {import("unframer").UnframerBreakpoint}
+ * Represents a responsive breakpoint for unframer.
+ */
+
+/**
+ * @typedef VariantsMap
+ * Partial record of UnframerBreakpoint to Props.variant, with a mandatory 'base' key.
+ * { [key in UnframerBreakpoint]?: Props['variant'] } & { base: Props['variant'] }
+ */
+
 /**
  * Renders HeroSectionFramerComponent for all breakpoints with a variants map. Variant prop is inferred per breakpoint.
  * @function

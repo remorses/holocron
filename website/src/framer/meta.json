@@ -1649,8 +1649,39 @@
       ],
       "format": "esm"
     },
-    "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/GalyA9rnNdna3cC4Fzdo/eo97FeJK7.js": {
-      "bytes": 48299,
+    "/:https://framerusercontent.com/modules/H0cQXXZTRQDZWDUHNVgj/lniQ8XB3OlEZZ0GHeUgT/B9T3cR2xg.js": {
+      "bytes": 11795,
+      "imports": [
+        {
+          "path": "react/jsx-runtime",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "unframer",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "unframer",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "react",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "react",
+          "kind": "import-statement",
+          "external": true
+        }
+      ],
+      "format": "esm"
+    },
+    "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/QOhidXeWpb2aZBPrzj7d/eo97FeJK7.js": {
+      "bytes": 41450,
       "imports": [
         {
           "path": "react/jsx-runtime",
@@ -1693,9 +1724,9 @@
           "original": "https://framerusercontent.com/modules/oiPWcq50Xx8PWjqWcwtY/U4YmoHGtbQcwuM5ebBlq/YqcGXulro.js"
         },
         {
-          "path": "/:https://framerusercontent.com/modules/qJpqdIH2iEbXijn91XcV/bbD5KBFfr9S3rBSahNMX/AZKPdPAzc.js",
+          "path": "/:https://framerusercontent.com/modules/H0cQXXZTRQDZWDUHNVgj/lniQ8XB3OlEZZ0GHeUgT/B9T3cR2xg.js",
           "kind": "import-statement",
-          "original": "https://framerusercontent.com/modules/qJpqdIH2iEbXijn91XcV/bbD5KBFfr9S3rBSahNMX/AZKPdPAzc.js"
+          "original": "https://framerusercontent.com/modules/H0cQXXZTRQDZWDUHNVgj/lniQ8XB3OlEZZ0GHeUgT/B9T3cR2xg.js"
         },
         {
           "path": "/:https://framerusercontent.com/modules/rGgCXkOMWEoWNIKhymIS/vBzEERXVg2F0bRiLejK3/DtPhz5kEG.js",
@@ -1724,9 +1755,9 @@
           "external": true
         },
         {
-          "path": "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/GalyA9rnNdna3cC4Fzdo/eo97FeJK7.js",
+          "path": "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/QOhidXeWpb2aZBPrzj7d/eo97FeJK7.js",
           "kind": "import-statement",
-          "original": "https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/GalyA9rnNdna3cC4Fzdo/eo97FeJK7.js"
+          "original": "https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/QOhidXeWpb2aZBPrzj7d/eo97FeJK7.js"
         },
         {
           "path": "unframer",
@@ -3313,14 +3344,6 @@
           "kind": "import-statement"
         },
         {
-          "path": "chunks/chunk-IETFVNRG.js",
-          "kind": "import-statement"
-        },
-        {
-          "path": "chunks/chunk-BTSBQWPZ.js",
-          "kind": "import-statement"
-        },
-        {
           "path": "chunks/chunk-EWWPQ2JC.js",
           "kind": "import-statement"
         },
@@ -3377,6 +3400,31 @@
           "external": true
         },
         {
+          "path": "react/jsx-runtime",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "unframer",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "unframer",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "react",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "react",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
           "path": "unframer",
           "kind": "import-statement",
           "external": true
@@ -3395,14 +3443,17 @@
         "virtual:hero-section": {
           "bytesInOutput": 1174
         },
-        "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/GalyA9rnNdna3cC4Fzdo/eo97FeJK7.js": {
-          "bytesInOutput": 46497
+        "/:https://framerusercontent.com/modules/nE57LSMJKO12pUW5Cuae/QOhidXeWpb2aZBPrzj7d/eo97FeJK7.js": {
+          "bytesInOutput": 40032
         },
         "/:https://framerusercontent.com/modules/rHv2weGC84WJaMaBqZST/M33wkThkp4Ray6OH5K74/KhK8sdpR3.js": {
           "bytesInOutput": 10306
+        },
+        "/:https://framerusercontent.com/modules/H0cQXXZTRQDZWDUHNVgj/lniQ8XB3OlEZZ0GHeUgT/B9T3cR2xg.js": {
+          "bytesInOutput": 10709
         }
       },
-      "bytes": 58878
+      "bytes": 63104
     },
     "pricing-card.js": {
       "imports": [

@@ -23,17 +23,6 @@
 }} Props
 
  */
-
-/**
- * @type {import("unframer").UnframerBreakpoint}
- * Represents a responsive breakpoint for unframer.
- */
-
-/**
- * @typedef VariantsMap
- * Partial record of UnframerBreakpoint to Props.variant, with a mandatory 'base' key.
- * { [key in UnframerBreakpoint]?: Props['variant'] } & { base: Props['variant'] }
- */
 import { className, css, fonts } from "./chunks/chunk-6G2SY433.js";
 import {
 	className as className2,
@@ -2089,6 +2078,17 @@ function ComponentWithRoot({ locale, ...rest }) {
 		</ContextProviders>
 	);
 }
+/**
+ * @type {import("unframer").UnframerBreakpoint}
+ * Represents a responsive breakpoint for unframer.
+ */
+
+/**
+ * @typedef VariantsMap
+ * Partial record of UnframerBreakpoint to Props.variant, with a mandatory 'base' key.
+ * { [key in UnframerBreakpoint]?: Props['variant'] } & { base: Props['variant'] }
+ */
+
 /**
  * Renders BentoSectionFramerComponent for all breakpoints with a variants map. Variant prop is inferred per breakpoint.
  * @function

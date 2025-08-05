@@ -25,17 +25,6 @@
 }} Props
 
  */
-
-/**
- * @type {import("unframer").UnframerBreakpoint}
- * Represents a responsive breakpoint for unframer.
- */
-
-/**
- * @typedef VariantsMap
- * Partial record of UnframerBreakpoint to Props.variant, with a mandatory 'base' key.
- * { [key in UnframerBreakpoint]?: Props['variant'] } & { base: Props['variant'] }
- */
 import { stdin_default } from "./chunks/chunk-BV4MQMG4.js";
 import "./chunks/chunk-SNH2M5FY.js";
 import { routes } from "./chunks/chunk-733MZEOY.js";
@@ -66,6 +55,17 @@ function ComponentWithRoot({ locale, ...rest }) {
 		</ContextProviders>
 	);
 }
+/**
+ * @type {import("unframer").UnframerBreakpoint}
+ * Represents a responsive breakpoint for unframer.
+ */
+
+/**
+ * @typedef VariantsMap
+ * Partial record of UnframerBreakpoint to Props.variant, with a mandatory 'base' key.
+ * { [key in UnframerBreakpoint]?: Props['variant'] } & { base: Props['variant'] }
+ */
+
 /**
  * Renders FaqFramerComponent for all breakpoints with a variants map. Variant prop is inferred per breakpoint.
  * @function

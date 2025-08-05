@@ -133,7 +133,7 @@
     "tiny-jsonc": "^1.0.2",
     "trieve-ts-sdk": "^0.0.122",
     "tw-animate-css": "^1.3.4",
-    "unframer": "^3.0.2",
+    "unframer": "^3.0.5",
     "unified": "^11.0.5",
     "unist-util-size": "^4.0.0",
     "unist-util-visit": "^5.0.0",
