@@ -393,6 +393,31 @@ export default function Chat({
                     }
                 }
             }
+            if (toolPart.type === 'tool-goToPage') {
+                if (toolPart.output?.error) {
+                    console.error('goToPage error:', toolPart.output.error)
+                    return
+                }
+
+                const targetSlug = toolPart.output?.slug
+                if (
+                    typeof targetSlug === 'string' &&
+                    targetSlug !== location.pathname
+                ) {
+                    try {
+                        useWebsiteState.setState({
+                            currentSlug,
+                        })
+                        await docsRpcClient.setDocsState({
+                            state: {
+                                currentSlug,
+                            },
+                        })
+                    } catch (e) {
+                        console.error('failed to set highlight state:', e)
+                    }
+                }
+            }
         }
 
         // Use throttle instead of debounce to ensure the function executes at regular intervals
