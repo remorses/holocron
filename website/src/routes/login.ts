@@ -6,10 +6,20 @@ export async function loader({ request }) {
     const { userId } = await getSession({ request })
     const url = new URL(request.url)
     const callbackUrl = url.searchParams.get('callbackUrl') || ''
-    const fullCallbackUrl = new URL(
-        callbackUrl || '/login',
-        process.env.PUBLIC_URL,
-    ).toString()
+
+    // Preserve all query parameters when constructing the callback URL
+    const fullCallbackUrl = (() => {
+        const baseUrl = new URL(callbackUrl || '/login', process.env.PUBLIC_URL)
+        // Copy all query params from the original request to the callback URL
+        // Only if they're not already present in the callback URL
+        url.searchParams.forEach((value, key) => {
+            if (!baseUrl.searchParams.has(key)) {
+                baseUrl.searchParams.set(key, value)
+            }
+        })
+        return baseUrl.toString()
+    })()
+
     if (!userId) {
         const res = await auth.api.signInSocial({
             body: {
@@ -73,13 +83,15 @@ export async function loader({ request }) {
         },
     })
 
+    const onboardingUrl =
+        href('/org/:orgId/onboarding', { orgId }) + (url.search || '')
     if (!site) {
-        return redirect(href('/org/:orgId/onboarding', { orgId }))
+        return redirect(onboardingUrl)
     }
     const siteId = site.siteId
     const latestBranch = site.branches[0]
     if (!latestBranch) {
-        return redirect(href('/org/:orgId/onboarding', { orgId }))
+        return redirect(onboardingUrl)
     }
 
     // Now find latest chat for that user on that branch (this is an extra DB call, but still just one in this block):
@@ -110,6 +122,6 @@ export async function loader({ request }) {
             orgId,
             siteId,
             chatId,
-        }),
+        }) + (url.search || ''),
     )
 }

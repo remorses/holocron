@@ -1,10 +1,4 @@
-import {
-    CSSProperties,
-    Fragment,
-    useEffect,
-    useMemo,
-    useState,
-} from 'react'
+import { CSSProperties, Fragment, useEffect, useMemo, useState } from 'react'
 
 import { createIdGenerator, isToolUIPart } from 'ai'
 import {
@@ -567,12 +561,16 @@ export function MessagePartRenderer({
                 <span className='dark:text-purple-300'>
                     {capitalize(spaceCase(toolName))}
                 </span>{' '}
-                <div className='flex flex-row gap-2'>
-                    <div className='shrink-0'>⎿</div>
-                    <div className=''>
-                        <span className='whitespace-pre-wrap'>{callArg}</span>
+                {!!callArg && (
+                    <div className='flex flex-row gap-2'>
+                        <div className='shrink-0'>⎿</div>
+                        <div className=''>
+                            <span className='whitespace-pre-wrap'>
+                                {callArg}
+                            </span>
+                        </div>
                     </div>
-                </div>
+                )}
                 {error && <ErrorPreview error={error} />}
             </ToolPreviewContainer>
         )
@@ -581,7 +579,7 @@ export function MessagePartRenderer({
 }
 
 function stringifyArgs(obj: any): string {
-    if (!obj || typeof obj !== 'object') return JSON.stringify(obj)
+    if (!obj || typeof obj !== 'object') return ''
     return Object.entries(obj)
         .map(([key, value]) => {
             let strValue = JSON.stringify(value)

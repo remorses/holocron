@@ -111,6 +111,7 @@ import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import { TruncatedText } from './truncated-text'
 import { MessagePartRenderer } from 'docs-website/src/components/docs-chat'
+import { useSearchParams } from 'react-router'
 
 function keyForDocsJson({ chatId }) {
     return `fumabase.jsonc-${chatId}`
@@ -243,8 +244,12 @@ export default function Chat({
     const { chat, siteId, branchId } = loaderData
     const revalidator = useRevalidator()
 
-    const initialChatState = useMemo<Partial<ChatState>>(() => {
-        const state = {
+    const [searchParams] = useSearchParams()
+    const initialDraftText = (searchParams.get('prompt') || undefined) as any
+    const initialChatState = useMemo(() => {
+        const state: Partial<ChatState> = {
+            draftText: initialDraftText,
+
             messages: chat.messages.map((msg) => {
                 const {
                     textParts = [],
@@ -657,7 +662,8 @@ function Footer() {
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
     const { siteId } = siteData
-
+    const [searchParams] = useSearchParams()
+    const initialDraftText = (searchParams.get('prompt') || undefined) as any
     const filesInDraft = useWebsiteState((x) => x?.filesInDraft || {})
     const lastPushedFiles = useWebsiteState((x) => x.lastPushedFiles)
     const hasNonPushedChanges = useMemo(() => {
@@ -667,6 +673,11 @@ function Footer() {
     useEffect(() => {
         const lastMessageId = messages[messages!.length - 1]?.id || ''
         const durableUrl = `/api/generateMessage?lastMessageId=${lastMessageId}`
+
+        if (initialDraftText) {
+            submit()
+            return
+        }
         if (!lastMessageId) return
         durableFetchClient.isInProgress(durableUrl).then(({ inProgress }) => {
             if (inProgress) {

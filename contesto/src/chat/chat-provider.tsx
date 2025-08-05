@@ -76,7 +76,7 @@ const ChatProvider = (props: {
         let userMessageId = generateId()
         const now = new Date()
         const {
-            draftText: value = '',
+            draftText: draftText = '',
             messages,
             isGenerating,
         } = store.getState()
@@ -84,7 +84,7 @@ const ChatProvider = (props: {
             return
         }
 
-        if (!value.trim()) {
+        if (!draftText.trim()) {
             const lastUserMessage = [...messages]
                 .reverse()
                 .find((msg) => msg.role === 'user')
@@ -106,7 +106,7 @@ const ChatProvider = (props: {
             const userMessage: UIMessage = {
                 id: userMessageId,
                 role: 'user',
-                parts: [{ type: 'text', text: value }],
+                parts: [{ type: 'text', text: draftText }],
             }
 
             flushSync(() => {
