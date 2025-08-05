@@ -1,4 +1,4 @@
-import { href, redirect } from 'react-router'
+import { Form, href, redirect, useNavigation } from 'react-router'
 import 'website/src/framer/styles.css'
 
 import { Route } from '../+types/root'
@@ -26,10 +26,17 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function App() {
+    const navigation = useNavigation()
+    const isLoading = navigation.state !== 'idle'
     return (
-        <div className='flex dark bg-black text-white flex-col items-center '>
+        <Form
+            action='/login'
+            className='flex dark bg-black text-white flex-col items-center '
+        >
             <NavBarFramerComponent.Responsive className='!fixed z-10' />
-            <HeroSectionFramerComponent.Responsive />
+            <HeroSectionFramerComponent.Responsive
+                promptButtonText={isLoading ? 'loading...' : 'generate website'}
+            />
             {/* <IntroSectionFramerComponent.Responsive />
             <BentoSectionFramerComponent.Responsive />
 
@@ -39,6 +46,6 @@ export default function App() {
             <TestimonialsSectionFramerComponent.Responsive /> */}
             <FaqSectionFramerComponent.Responsive className='min-h-[900px] flex flex-col justify-start' />
             <FooterFramerComponent.Responsive className='!w-full' />
-        </div>
+        </Form>
     )
 }
