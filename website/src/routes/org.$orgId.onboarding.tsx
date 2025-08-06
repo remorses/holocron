@@ -1,4 +1,4 @@
-import cuid from '@bugsnag/cuid'
+import { ulid } from 'ulid'
 import { prisma } from 'db'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import {
@@ -19,8 +19,8 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     }
     const userId = sessionData.userId
     const url = new URL(request.url)
-    const siteId = cuid()
-    const branchId = cuid()
+    const siteId = ulid()
+    const branchId = ulid()
     const userName = slugKebabCaseKeepExtension(
         sessionData.user?.name || 'fumabase',
     )

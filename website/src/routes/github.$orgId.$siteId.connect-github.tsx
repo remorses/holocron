@@ -11,7 +11,7 @@ import {
 import { defaultStartingFumabaseJson } from 'docs-website/src/lib/docs-json-examples'
 import type { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { apiClient } from '../lib/spiceflow-client'
-import cuid from '@bugsnag/cuid'
+import { ulid } from 'ulid'
 import { href } from 'react-router'
 import type { Route } from './+types/github.$orgId.$siteId.connect-github'
 import { GithubLoginRequestData } from '../lib/types'

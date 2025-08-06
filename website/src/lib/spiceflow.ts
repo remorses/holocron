@@ -1,4 +1,4 @@
-import cuid from '@bugsnag/cuid'
+import { ulid } from 'ulid'
 import {
     defaultDocsJsonComments,
     defaultStartingFumabaseJson,
@@ -1113,7 +1113,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 if (!branch) {
                     branch = await prisma.siteBranch.create({
                         data: {
-                            branchId: cuid(),
+                            branchId: ulid(),
                             siteId,
                             title: 'Main',
                             githubBranch: githubBranch || 'main',
@@ -1123,8 +1123,8 @@ export const app = new Spiceflow({ basePath: '/api' })
                 finalBranchId = branch.branchId
             } else {
                 // Create new site
-                finalSiteId = cuid()
-                finalBranchId = cuid()
+                finalSiteId = ulid()
+                finalBranchId = ulid()
                 const randomHash = Math.random().toString(36).substring(2, 10)
                 const internalHost = `${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${randomHash}.${env.APPS_DOMAIN}`
 

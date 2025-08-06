@@ -1,2 +1,2 @@
--- DropEnum
-DROP TYPE "ModelProvider";
+-- This is an empty migration.
+

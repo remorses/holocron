@@ -16,7 +16,7 @@ importers:
         version: 24.0.1
       unframer:
         specifier: latest
-        version: 3.0.5(@modelcontextprotocol/sdk@1.17.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 3.0.6(@modelcontextprotocol/sdk@1.17.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
     devDependencies:
       '@changesets/cli':
         specifier: ^2.29.4
@@ -180,7 +180,7 @@ importers:
         version: 12.23.12(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       fumadocs-ui:
         specifier: ^15.6.1
-        version: 15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11)
+        version: 15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11)
       json-schema:
         specifier: ^0.4.0
         version: 0.4.0
@@ -1805,7 +1805,7 @@ importers:
         version: link:../fumadocs/packages/openapi
       fumadocs-ui:
         specifier: ^15.6.1
-        version: 15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11)
+        version: 15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11)
       react:
         specifier: ^19.1.1
         version: 19.1.1
@@ -1836,7 +1836,7 @@ importers:
         version: link:../fumadocs/packages/ui
       next:
         specifier: ^15.3.5
-        version: 15.3.5(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 15.3.5(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react:
         specifier: ^19.1.1
         version: 19.1.1
@@ -2259,12 +2259,15 @@ importers:
       tw-animate-css:
         specifier: ^1.3.4
         version: 1.3.4
+      ulid:
+        specifier: ^3.0.1
+        version: 3.0.1
       undici:
         specifier: ^7.10.0
         version: 7.10.0
       unframer:
         specifier: latest
-        version: 3.0.5(@modelcontextprotocol/sdk@1.17.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 3.0.6(@modelcontextprotocol/sdk@1.17.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       use-stick-to-bottom:
         specifier: ^1.1.1
         version: 1.1.1(react@19.1.1)
@@ -8168,6 +8171,11 @@ packages:
 
   ajv-formats@3.0.1:
     resolution: {integrity: sha512-8iUql50EUR+uUcdRQ3HDqa6EVyo3docL8g5WJ3FNcWmu62IbkGUue/pEyLBW8VGKKucTPgqeks4fIU1DA4yowQ==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
 
   ajv-keywords@5.1.0:
     resolution: {integrity: sha512-YCS/JNFAUyr5vAuhk1DWm1CBxRHW9LbJ2ozWeemrIqpbsqKjHVxYPyi5GC0rjZIT5JxJ3virVTS8wk4i/Z+krw==}
@@ -13761,6 +13769,10 @@ packages:
     engines: {node: '>=0.8.0'}
     hasBin: true
 
+  ulid@3.0.1:
+    resolution: {integrity: sha512-dPJyqPzx8preQhqq24bBG1YNkvigm87K8kVEHCD+ruZg24t6IFEFv00xMWfxcC4djmFtiTLdFuADn4+DOz6R7Q==}
+    hasBin: true
+
   ultrahtml@1.6.0:
     resolution: {integrity: sha512-R9fBn90VTJrqqLDwyMph+HGne8eqY1iPfYhPzZrvKpIfwkWZbcYlfpsb8B9dTvBfpy1/hqAD7Wi8EKfP9e8zdw==}
 
@@ -13818,6 +13830,14 @@ packages:
 
   unframer@3.0.5:
     resolution: {integrity: sha512-TbZG6hsxs0ChuhyooaxyWT4kTPWIxSl7ejp3wnxfs0oDbjLIRmpRXEaDjr3kTU7zSDuPA77K3LBZgrnic90Agg==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+    peerDependencies:
+      react: '*'
+      react-dom: '*'
+
+  unframer@3.0.6:
+    resolution: {integrity: sha512-MijFgLIA0KBbwBs+oQW04WY2M2wIW+Iitd5krEV/bF76lI2jJvGJmNEimCLx9lUf6775s73kX2HEp9KO3OYUBg==}
     engines: {node: '>=18.0.0'}
     hasBin: true
     peerDependencies:
@@ -19875,7 +19895,7 @@ snapshots:
     dependencies:
       ajv: 8.17.1
       ajv-draft-04: 1.0.0(ajv@8.17.1)
-      ajv-formats: 3.0.1
+      ajv-formats: 3.0.1(ajv@8.17.1)
       jsonpointer: 5.0.1
       leven: 4.0.0
       yaml: 2.8.0
@@ -19885,7 +19905,7 @@ snapshots:
       '@scalar/openapi-types': 0.3.7
       ajv: 8.17.1
       ajv-draft-04: 1.0.0(ajv@8.17.1)
-      ajv-formats: 3.0.1
+      ajv-formats: 3.0.1(ajv@8.17.1)
       jsonpointer: 5.0.1
       leven: 4.0.0
       yaml: 2.8.0
@@ -19895,7 +19915,7 @@ snapshots:
       '@scalar/openapi-types': 0.3.7
       ajv: 8.17.1
       ajv-draft-04: 1.0.0(ajv@8.17.1)
-      ajv-formats: 3.0.1
+      ajv-formats: 3.0.1(ajv@8.17.1)
       jsonpointer: 5.0.1
       leven: 4.0.0
       yaml: 2.8.0
@@ -22225,8 +22245,8 @@ snapshots:
     dependencies:
       ajv: 8.17.1
 
-  ajv-formats@3.0.1:
-    dependencies:
+  ajv-formats@3.0.1(ajv@8.17.1):
+    optionalDependencies:
       ajv: 8.17.1
 
   ajv-keywords@5.1.0(ajv@8.17.1):
@@ -24433,7 +24453,7 @@ snapshots:
   fsevents@2.3.3:
     optional: true
 
-  fumadocs-core@15.6.1(@oramacloud/client@2.1.4)(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+  fumadocs-core@15.6.1(@oramacloud/client@2.1.4)(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       '@formatjs/intl-localematcher': 0.6.1
       '@orama/orama': 3.1.11
@@ -24471,7 +24491,7 @@ snapshots:
       unist-util-visit: 5.0.0
       zod: 3.25.76
 
-  fumadocs-ui@15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11):
+  fumadocs-ui@15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11):
     dependencies:
       '@radix-ui/react-accordion': 1.2.11(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@radix-ui/react-collapsible': 1.1.11(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -24484,7 +24504,7 @@ snapshots:
       '@radix-ui/react-slot': 1.2.3(@types/react@19.1.9)(react@19.1.1)
       '@radix-ui/react-tabs': 1.1.12(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       class-variance-authority: 0.7.1
-      fumadocs-core: 15.6.1(@oramacloud/client@2.1.4)(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      fumadocs-core: 15.6.1(@oramacloud/client@2.1.4)(@types/react@19.1.9)(algoliasearch@5.35.0)(next@15.4.5(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       lodash.merge: 4.6.2
       next-themes: 0.4.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       postcss-selector-parser: 7.1.0
@@ -26478,7 +26498,7 @@ snapshots:
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  next@15.3.5(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+  next@15.3.5(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       '@next/env': 15.3.5
       '@swc/counter': 0.1.3
@@ -29291,6 +29311,8 @@ snapshots:
   uglify-js@3.19.3:
     optional: true
 
+  ulid@3.0.1: {}
+
   ultrahtml@1.6.0: {}
 
   unbox-primitive@1.1.0:
@@ -29354,6 +29376,31 @@ snapshots:
       ufo: 1.6.1
 
   unframer@3.0.5(@modelcontextprotocol/sdk@1.17.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+    dependencies:
+      '@antfu/ni': 25.0.0
+      '@babel/core': 7.28.0
+      '@biomejs/js-api': 0.7.1(@biomejs/wasm-nodejs@1.9.4)
+      '@biomejs/wasm-nodejs': 1.9.4
+      async-sema: 3.1.1
+      cac: 6.7.14
+      esbuild: 0.25.8
+      esbuild-plugins-node-modules-polyfill: 1.7.1(esbuild@0.25.8)
+      nanospinner: 1.2.2
+      picocolors: 1.1.1
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
+      real-framer-motion: framer-motion@12.23.12(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      spiceflow: 1.17.7(@modelcontextprotocol/sdk@1.17.0)
+      string-dedent: 3.0.2
+      undici: 7.13.0
+    transitivePeerDependencies:
+      - '@biomejs/wasm-bundler'
+      - '@biomejs/wasm-web'
+      - '@emotion/is-prop-valid'
+      - '@modelcontextprotocol/sdk'
+      - supports-color
+
+  unframer@3.0.6(@modelcontextprotocol/sdk@1.17.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       '@antfu/ni': 25.0.0
       '@babel/core': 7.28.0

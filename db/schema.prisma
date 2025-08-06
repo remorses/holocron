@@ -133,7 +133,7 @@ model OrgInviteLink {
 }
 
 model Org {
-  orgId            String   @id @default(cuid())
+  orgId            String   @id @default(ulid())
   name             String   @default("")
   image            String?  @db.Text
   createdAt        DateTime @default(now())
@@ -169,7 +169,7 @@ model Subscription {
 }
 
 model Site {
-  siteId String  @id @default(cuid())
+  siteId String  @id @default(ulid())
   name   String?
   orgId  String
 
@@ -209,7 +209,7 @@ model Site {
 // }
 
 model SiteBranch {
-  branchId     String @id @default(cuid())
+  branchId     String @id @default(ulid())
   site         Site   @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
   siteId       String
   title        String
@@ -250,7 +250,7 @@ model MarkdownBlob {
 }
 
 model MarkdownPage {
-  pageId       String     @id @default(cuid())
+  pageId       String     @id @default(ulid())
   slug         String
 
   branchId     String
@@ -329,7 +329,7 @@ enum DomainType {
 }
 
 model Domain {
-  id   String @id @default(cuid())
+  id   String @id @default(ulid())
   host String @unique
 
   domainType DomainType
@@ -405,7 +405,7 @@ enum ChatMessageRole {
 // ─── MODELS ────────────────────────────────────────────────────────────
 
 model Chat {
-  chatId          String        @id @default(cuid())
+  chatId          String        @id @default(ulid())
   title           String?
   description     String?
   messages        ChatMessage[]
@@ -428,7 +428,7 @@ model Chat {
 }
 
 model ChatMessage {
-  id        String            @id @default(cuid())
+  id        String            @id @default(ulid())
 
   chat      Chat              @relation(fields: [chatId], references: [chatId], onDelete: Cascade)
   chatId    String
@@ -525,7 +525,7 @@ enum PageOpinion {
 }
 
 model PageFeedback {
-  id            String      @id @default(cuid())
+  id            String      @id @default(ulid())
   // siteId        String
   // site          Site        @relation(fields: [siteId], references: [siteId], onDelete: Cascade)
   url           String      @db.Text
