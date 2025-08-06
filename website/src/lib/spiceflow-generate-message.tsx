@@ -58,11 +58,38 @@ import { getFumadocsSource } from 'docs-website/src/lib/source'
 import Handlebars from 'handlebars'
 import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
 import agentPrompt from '../prompts/agent.md?raw'
-
+import exampleDocs from 'website/scripts/example-docs.json'
 import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
+
+function generateExampleTemplateFilesPrompt() {
+    let templateContents = ''
+    for (const doc of exampleDocs) {
+        if (doc.encoding === 'base64') continue
+        if (!doc.content) continue
+        templateContents += '\n'
+        templateContents += dedent`
+        <page>
+          <filename>${doc.filePath}</filename>
+          <content>
+          ${doc.content}
+          </content>
+        </page>
+        `
+    }
+    return dedent`
+    ## NEVER reply back with a question for the first message
+
+    If the user query is very short or nonsensical, do not reply back with a question. Assume the user is very lazy and will never reply back.
+    Instead generate the following template website, replace a few fields with data you can deduce from the user if possible or add new pages related to the user query.
+
+    <template>
+    ${templateContents}
+    </template>
+    `
+}
 
 const deletePagesSchema = z.object({
     filePaths: z
@@ -635,6 +662,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                         (await import('../prompts/create-site.md?raw').then(
                             (x) => x.default,
                         )),
+                    isOnboardingChat && generateExampleTemplateFilesPrompt(),
                 ]
                     .filter(Boolean)
                     .join('\n\n'),
