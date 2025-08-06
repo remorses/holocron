@@ -509,11 +509,20 @@ const components = {
     },
 }
 
-const MonacoMarkdownEditor = lazy(() =>
-    import('../components/monaco-markdown-editor').then((mod) => ({
+function importMonacoEditor() {
+    return import('../components/monaco-markdown-editor').then((mod) => ({
         default: mod.MonacoMarkdownEditor,
-    })),
-)
+    }))
+}
+
+const MonacoMarkdownEditor = lazy(() => importMonacoEditor())
+
+// prefetch monaco component
+if (typeof window !== 'undefined') {
+    setTimeout(() => {
+        importMonacoEditor()
+    }, 1000)
+}
 
 function DocsMarkdown(): any {
     const loaderData = useLoaderData<Route.ComponentProps['loaderData']>()
