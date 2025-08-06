@@ -10,13 +10,6 @@ export async function loader({ request }) {
     // Preserve all query parameters when constructing the callback URL
     const fullCallbackUrl = (() => {
         const baseUrl = new URL(callbackUrl || '/login', process.env.PUBLIC_URL)
-        // Copy all query params from the original request to the callback URL
-        // Only if they're not already present in the callback URL
-        url.searchParams.forEach((value, key) => {
-            if (!baseUrl.searchParams.has(key)) {
-                baseUrl.searchParams.set(key, value)
-            }
-        })
         return baseUrl.toString()
     })()
 
@@ -25,6 +18,7 @@ export async function loader({ request }) {
             body: {
                 provider: 'google',
                 callbackURL: fullCallbackUrl,
+                // newUserCallbackURL: fullCallbackUrl,
             },
         })
         if (!res.url) {
@@ -117,11 +111,14 @@ export async function loader({ request }) {
         })
         chatId = newChat.chatId
     }
-    return redirect(
+    const redirectUrl = new URL(
         href('/org/:orgId/site/:siteId/chat/:chatId', {
             orgId,
             siteId,
             chatId,
-        }) + (url.search || ''),
+        }),
+        process.env.PUBLIC_URL,
     )
+
+    return redirect(redirectUrl.pathname + url.search)
 }

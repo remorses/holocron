@@ -9,6 +9,7 @@ import { createContext, useContext, useMemo, useEffect, useRef } from 'react'
 import type { StoreApi, UseBoundStore } from 'zustand'
 import { ComboboxStore } from '@ariakit/react'
 import { cn } from '../lib/cn.js'
+import * as cookie from 'cookie'
 
 const ChatContext = createContext<UseBoundStore<StoreApi<ChatState>> | null>(
     null,
@@ -16,14 +17,16 @@ const ChatContext = createContext<UseBoundStore<StoreApi<ChatState>> | null>(
 
 import { shallow } from 'zustand/shallow'
 import { flushSync } from 'react-dom'
+import {
+    CONTESTO_DRAFT_MESSAGE_KEY,
+    CONTESTO_SUBMIT_ON_LOAD,
+} from '../lib/constants.js'
 
 function useShallowStable<T>(value: T): T {
     const ref = useRef(value)
     if (!shallow(ref.current, value)) ref.current = value
     return ref.current
 }
-
-const DRAFT_MESSAGE_KEY = 'contesto-chat-draft'
 
 const ChatProvider = (props: {
     children?: React.ReactNode
@@ -201,21 +204,50 @@ const ChatProvider = (props: {
     }, [stableInitialState])
 
     useEffect(() => {
-        // Load initial text from localStorage if not provided in props
+        // Load initial text from cookies if not provided in props
         if (!props.initialValue.draftText) {
-            const savedDraft = localStorage.getItem(DRAFT_MESSAGE_KEY)
+            const cookies = cookie.parse(document.cookie)
+            const savedDraft = cookies[CONTESTO_DRAFT_MESSAGE_KEY]
             if (savedDraft) {
-                store.setState({ draftText: savedDraft })
+                const decodedDraft = decodeURIComponent(savedDraft)
+                store.setState({ draftText: decodedDraft })
             }
         }
 
-        // Subscribe to text changes and persist to localStorage
+        // If cookies have CONTESTO_SUBMIT_ON_LOAD set to 'true', call submit
+        const cookies = cookie.parse(document.cookie)
+        if (cookies[CONTESTO_SUBMIT_ON_LOAD] === 'true') {
+            submit()
+            // Remove the cookie
+            document.cookie = cookie.serialize(CONTESTO_SUBMIT_ON_LOAD, '', {
+                maxAge: 0,
+                path: '/',
+            })
+        }
+
+        // Subscribe to text changes and persist to cookies
         const unsubscribe = store.subscribe((state, prevState) => {
             if (state.draftText !== prevState.draftText) {
                 if (state.draftText) {
-                    localStorage.setItem(DRAFT_MESSAGE_KEY, state.draftText)
+                    const encodedDraft = encodeURIComponent(state.draftText)
+                    document.cookie = cookie.serialize(
+                        CONTESTO_DRAFT_MESSAGE_KEY,
+                        encodedDraft,
+                        {
+                            path: '/',
+                            maxAge: 60 * 60 * 24 * 7, // 7 days
+                        },
+                    )
                 } else {
-                    localStorage.removeItem(DRAFT_MESSAGE_KEY)
+                    // Remove the cookie
+                    document.cookie = cookie.serialize(
+                        CONTESTO_DRAFT_MESSAGE_KEY,
+                        '',
+                        {
+                            maxAge: 0,
+                            path: '/',
+                        },
+                    )
                 }
             }
         })

@@ -1,3 +1,4 @@
+import * as cookie from 'cookie'
 import { Form, href, redirect, useNavigation } from 'react-router'
 import 'website/src/framer/styles.css'
 
@@ -16,6 +17,10 @@ import FaqSectionFramerComponent from 'website/src/framer/faq-section'
 import React, { Suspense } from 'react'
 import NavBarFramerComponent from '../framer/nav-bar'
 import FooterFramerComponent from '../framer/footer'
+import {
+    CONTESTO_DRAFT_MESSAGE_KEY,
+    CONTESTO_SUBMIT_ON_LOAD,
+} from 'contesto/src/lib/constants'
 
 export async function loader({ request }: Route.LoaderArgs) {
     const { userId, redirectTo } = await getSession({ request })
@@ -31,6 +36,32 @@ export default function App() {
     return (
         <Form
             action='/login'
+            onSubmit={(e) => {
+                const form = e.target as HTMLFormElement
+                const input = form.elements.namedItem(
+                    'prompt',
+                ) as HTMLInputElement | null
+                if (input && input.value !== undefined) {
+                    // Set cookies instead of localStorage
+                    const encodedValue = encodeURIComponent(input.value)
+                    document.cookie = cookie.serialize(
+                        CONTESTO_DRAFT_MESSAGE_KEY,
+                        encodedValue,
+                        {
+                            path: '/',
+                            maxAge: 60 * 60 * 24 * 7, // 7 days
+                        },
+                    )
+                    document.cookie = cookie.serialize(
+                        CONTESTO_SUBMIT_ON_LOAD,
+                        'true',
+                        {
+                            path: '/',
+                            maxAge: 60 * 60, // 1 hour
+                        },
+                    )
+                }
+            }}
             className='flex dark bg-black text-white flex-col items-center '
         >
             <NavBarFramerComponent.Responsive className='!fixed z-10' />

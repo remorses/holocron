@@ -245,11 +245,13 @@ export default function Chat({
     const revalidator = useRevalidator()
 
     const [searchParams] = useSearchParams()
-    const initialDraftText = (searchParams.get('prompt') || undefined) as any
     const initialChatState = useMemo(() => {
+        // Get prompt from URL search params
+        const promptFromUrl = searchParams.get('prompt') || ''
+        
         const state: Partial<ChatState> = {
-            draftText: initialDraftText,
-
+            // Set initial draftText from URL prompt if it exists
+            draftText: promptFromUrl,
             messages: chat.messages.map((msg) => {
                 const {
                     textParts = [],
@@ -279,7 +281,7 @@ export default function Chat({
 
         console.log('Using new initial chat state', state)
         return state
-    }, [loaderData])
+    }, [loaderData, searchParams])
 
     const submitMessages = async ({
         messages,
@@ -688,7 +690,7 @@ function Footer() {
     ) as SiteRoute.ComponentProps['loaderData']
     const { siteId } = siteData
     const [searchParams] = useSearchParams()
-    const initialDraftText = (searchParams.get('prompt') || undefined) as any
+
     const filesInDraft = useWebsiteState((x) => x?.filesInDraft || {})
     const lastPushedFiles = useWebsiteState((x) => x.lastPushedFiles)
     const hasNonPushedChanges = useMemo(() => {
@@ -699,10 +701,6 @@ function Footer() {
         const lastMessageId = messages[messages!.length - 1]?.id || ''
         const durableUrl = `/api/generateMessage?lastMessageId=${lastMessageId}`
 
-        if (initialDraftText) {
-            submit()
-            return
-        }
         if (!lastMessageId) return
         durableFetchClient.isInProgress(durableUrl).then(({ inProgress }) => {
             if (inProgress) {
