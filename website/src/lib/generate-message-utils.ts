@@ -128,7 +128,7 @@ export function filesInDraftToMarkdown(
         .sort((a, b) => a.path.localeCompare(b.path))
 
     if (filePaths.length === 0) {
-        return 'No files created.'
+        return ''
     }
 
     // Add file tree at the top

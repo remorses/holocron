@@ -1,4 +1,5 @@
 import { describe, test, expect } from 'vitest'
+import fs from 'fs'
 import {
     testGenerateMessage,
     type TestGenerateMessageResult,
@@ -32,6 +33,32 @@ const testCases: TestCase[] = [
                     (p) => p.includes('index.md') || p.includes('index.mdx'),
                 ),
             ).toBe(true)
+        },
+    },
+    {
+        name: 'nonsense user query',
+        messages: [
+            {
+                role: 'user',
+                content: 'adsf',
+            },
+        ],
+        onFinish: (result) => {
+            // Check that files were created
+            expect(Object.keys(result.filesInDraft).length).toBeGreaterThan(0)
+        },
+    },
+    {
+        name: 'form/change theme',
+        messages: [
+            {
+                role: 'user',
+                content: 'change the theme of the website',
+            },
+        ],
+        onFinish: (result) => {
+            // Check that files were created
+            expect(result.markdown).toContain('tool-renderForm')
         },
     },
     {
@@ -85,9 +112,9 @@ const testCases: TestCase[] = [
         },
     },
 ]
-describe.concurrent('generateMessageStream', () => {
+describe.concurrent('generateMessageStream', ({}) => {
     for (const testCase of testCases) {
-        test(
+        test.concurrent(
             testCase.name,
             async ({ expect }) => {
                 const { name, onFinish, ...inputParams } = testCase
@@ -107,6 +134,10 @@ describe.concurrent('generateMessageStream', () => {
                     'snapshots',
                     `${sanitizedName}-files-partial.md`,
                 )
+                // Ensure the parent directory exists
+                fs.mkdirSync(path.dirname(filesPartialPath), {
+                    recursive: true,
+                })
 
                 // Use while loop to iterate through generator
                 while (true) {
@@ -123,11 +154,12 @@ describe.concurrent('generateMessageStream', () => {
                             value.markdown,
                             'utf-8',
                         )
-                        writeFileSync(
-                            filesPartialPath,
-                            value.filesMarkdown,
-                            'utf-8',
-                        )
+                        if (value.filesMarkdown)
+                            writeFileSync(
+                                filesPartialPath,
+                                value.filesMarkdown,
+                                'utf-8',
+                            )
                     }
                 }
 
@@ -152,9 +184,11 @@ describe.concurrent('generateMessageStream', () => {
                 await expect(finalResult.markdown).toMatchFileSnapshot(
                     `./snapshots/${sanitizedName}-message.md`,
                 )
-                await expect(finalResult.filesMarkdown).toMatchFileSnapshot(
-                    `./snapshots/${sanitizedName}-files.md`,
-                )
+                if (finalResult.filesMarkdown) {
+                    await expect(finalResult.filesMarkdown).toMatchFileSnapshot(
+                        `./snapshots/${sanitizedName}-files.md`,
+                    )
+                }
             },
             60000,
         ) // 60 second timeout for AI generation
