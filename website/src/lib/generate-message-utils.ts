@@ -184,7 +184,7 @@ export async function* testGenerateMessage({
     // Create FileSystemEmulator
     const fileSystem = new FileSystemEmulator({
         filesInDraft,
-        getPageContent: async (githubPath: string) => {
+        getPageContent: async (_githubPath: string) => {
             // For new files being created, return empty string
             // Files being edited should already be in filesInDraft
             return ''
@@ -224,6 +224,11 @@ export async function* testGenerateMessage({
     // Convert async generator to ReadableStream
     const readableStream = asyncIterableToReadableStream(stream)
 
+    // Throttling logic
+    const throttleMs = 50
+    let lastYieldTs = 0
+    let lastItem: TestGenerateMessageResult | null = null
+
     // Use readUIMessageStream to consume the stream and yield results
     for await (const message of readUIMessageStream({
         stream: readableStream,
@@ -232,16 +237,26 @@ export async function* testGenerateMessage({
         },
     })) {
         // Only process assistant messages
-        if (message.role === 'assistant') {
-            const markdown = uiMessageToMarkdown(message)
 
-            // Yield current state
-            const currentFiles = fileSystem.getFilesInDraft()
-            yield {
-                markdown,
-                filesInDraft: currentFiles,
-                filesMarkdown: filesInDraftToMarkdown(currentFiles),
-            }
+        const markdown = uiMessageToMarkdown(message)
+
+        // Build current state item
+        const currentFiles = fileSystem.getFilesInDraft()
+        const item: TestGenerateMessageResult = {
+            markdown,
+            filesInDraft: currentFiles,
+            filesMarkdown: filesInDraftToMarkdown(currentFiles),
         }
+        lastItem = item
+        const now = Date.now()
+        if (now - lastYieldTs >= throttleMs) {
+            yield item
+            lastYieldTs = now
+            lastItem = null
+        }
+    }
+    // Always yield the last item, if there is one left
+    if (lastItem) {
+        yield lastItem
     }
 }
