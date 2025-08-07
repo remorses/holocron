@@ -1,11 +1,12 @@
 import { generateMessageStream } from './spiceflow-generate-message'
 import { FileSystemEmulator } from './file-system-emulator'
 import { createAiCacheMiddleware } from 'contesto/src/lib/ai-cache'
-import { 
-    wrapLanguageModel, 
+import {
+    wrapLanguageModel,
     readUIMessageStream,
     type CoreMessage,
-    type UIMessage 
+    type UIMessage,
+    isToolUIPart
 } from 'ai'
 import type { FileUpdate } from 'docs-website/src/lib/edit-tool'
 import { asyncIterableToReadableStream } from 'contesto/src/lib/utils'
@@ -26,9 +27,9 @@ export type TestGenerateMessageResult = {
  */
 export function uiMessageToMarkdown(message: UIMessage): string {
     const lines: string[] = []
-    
+
     if (!message.parts) return ''
-    
+
     for (const part of message.parts) {
         if (part.type === 'text') {
             // Regular text content
@@ -37,104 +38,25 @@ export function uiMessageToMarkdown(message: UIMessage): string {
             }
         } else if (part.type === 'reasoning') {
             // Reasoning content (for o1 models)
-            lines.push('\n## Reasoning\n')
-            lines.push(part.text || '')
-        } else if (part.type === 'tool-call') {
-            // Tool call with args
-            const toolCallPart = part as any
+            lines.push('\n<reasoning>')
+            lines.push((part.text || '').trim())
+            lines.push('</reasoning>\n')
+        } else if ( isToolUIPart(part) && part.state !== 'input-streaming') {
+
             const toolData = {
-                toolName: toolCallPart.toolName,
-                input: toolCallPart.args || {}
+                type: part.type,
+                input: part.input,
+                output: part.output,
+                errorText: part.errorText,
             }
             lines.push('\n<tool-call>')
-            lines.push(yaml.dump(toolData, { 
-                indent: 2, 
-                lineWidth: 80,
+            lines.push(yaml.dump(toolData, {
+                indent: 2,
+                lineWidth: 100,
                 noRefs: true,
                 sortKeys: false
             }))
             lines.push('</tool-call>\n')
-        } else if (part.type.startsWith('tool-')) {
-            // Tool parts with various states
-            const toolPart = part as any
-            const toolName = part.type.replace('tool-', '')
-            
-            if (toolPart.state === 'input-available' || toolPart.state === 'input-streaming') {
-                const toolData = {
-                    toolName: toolName,
-                    state: toolPart.state,
-                    input: toolPart.input || {}
-                }
-                
-                // Special handling for strReplaceEditor to make it more readable
-                if (toolName === 'strReplaceEditor' && typeof toolPart.input === 'object') {
-                    const input = toolPart.input as any
-                    if (input.command === 'view') {
-                        toolData.input = {
-                            command: 'view',
-                            path: input.path,
-                            ...(input.view_range && { view_range: input.view_range })
-                        }
-                    } else if (input.command === 'create') {
-                        toolData.input = {
-                            command: 'create',
-                            path: input.path,
-                            file_text: input.file_text || ''
-                        }
-                    } else if (input.command === 'str_replace') {
-                        toolData.input = {
-                            command: 'str_replace',
-                            path: input.path,
-                            old_str: input.old_str || '',
-                            new_str: input.new_str || ''
-                        }
-                    }
-                }
-                
-                lines.push('\n<tool-input>')
-                lines.push(yaml.dump(toolData, { 
-                    indent: 2, 
-                    lineWidth: 80,
-                    noRefs: true,
-                    sortKeys: false
-                }))
-                lines.push('</tool-input>\n')
-            }
-            
-            if (toolPart.state === 'output-available' && toolPart.output) {
-                const toolData = {
-                    toolName: toolName,
-                    state: 'output',
-                    output: toolPart.output
-                }
-                
-                lines.push('\n<tool-output>')
-                lines.push(yaml.dump(toolData, { 
-                    indent: 2, 
-                    lineWidth: 80,
-                    noRefs: true,
-                    sortKeys: false,
-                    skipInvalid: true
-                }))
-                lines.push('</tool-output>\n')
-            }
-            
-            if (toolPart.state === 'output-error') {
-                const toolData = {
-                    toolName: toolName,
-                    state: 'error',
-                    error: toolPart.errorText || 'Unknown error'
-                }
-                
-                lines.push('\n<tool-error>')
-                lines.push(yaml.dump(toolData, { 
-                    indent: 2, 
-                    lineWidth: 80,
-                    noRefs: true,
-                    sortKeys: false
-                }))
-                lines.push('</tool-error>\n')
-            }
         } else if (part.type === 'file') {
             // File attachments
             const fileData = {
@@ -143,10 +65,10 @@ export function uiMessageToMarkdown(message: UIMessage): string {
                 mediaType: part.mediaType || 'unknown',
                 ...(part.url && { url: part.url })
             }
-            
+
             lines.push('\n<file-attachment>')
-            lines.push(yaml.dump(fileData, { 
-                indent: 2, 
+            lines.push(yaml.dump(fileData, {
+                indent: 2,
                 lineWidth: 80,
                 noRefs: true,
                 sortKeys: false
@@ -159,21 +81,21 @@ export function uiMessageToMarkdown(message: UIMessage): string {
                 title: part.title || part.url,
                 url: part.url
             }
-            
+
             lines.push('\n<source-reference>')
-            lines.push(yaml.dump(sourceData, { 
-                indent: 2, 
+            lines.push(yaml.dump(sourceData, {
+                indent: 2,
                 lineWidth: 80,
                 noRefs: true,
                 sortKeys: false
             }))
             lines.push('</source-reference>\n')
-        } else if ((part as any).type === 'step-start' || (part as any).type === 'step-finish') {
+        } else if ((part ).type === 'step-start') {
             // Step boundaries for structured output
             lines.push(`\n--- ${(part as any).type} ---\n`)
         }
     }
-    
+
     return lines.join('\n').trim()
 }
 
@@ -182,7 +104,7 @@ export function uiMessageToMarkdown(message: UIMessage): string {
  */
 export function filesInDraftToMarkdown(filesInDraft: Record<string, FileUpdate>): string {
     const lines: string[] = []
-    
+
     // Filter out deleted files (content: null) and get file paths with titles
     const filePaths = Object.entries(filesInDraft)
         .filter(([, file]) => file.content !== null)
@@ -191,21 +113,21 @@ export function filesInDraftToMarkdown(filesInDraft: Record<string, FileUpdate>)
             title: ''
         }))
         .sort((a, b) => a.path.localeCompare(b.path))
-    
+
     if (filePaths.length === 0) {
         return 'No files created.'
     }
-    
+
     // Add file tree at the top
     lines.push('# File Tree\n')
     lines.push(printDirectoryTree({ filePaths }))
     lines.push('\n')
-    
+
     // Add individual file contents
     const sortedFiles = Object.entries(filesInDraft)
         .filter(([, file]) => file.content !== null)
         .sort(([a], [b]) => a.localeCompare(b))
-    
+
     for (const [path, file] of sortedFiles) {
         const cleanPath = path.startsWith('/') ? path.slice(1) : path
         lines.push('=' .repeat(50))
@@ -214,7 +136,7 @@ export function filesInDraftToMarkdown(filesInDraft: Record<string, FileUpdate>)
         lines.push(file.content || '')
         lines.push('\n')
     }
-    
+
     return lines.join('\n').trim()
 }
 
@@ -248,7 +170,7 @@ export async function* testGenerateMessage({
             }
         ],
     }))
-    
+
     // Create FileSystemEmulator
     const fileSystem = new FileSystemEmulator({
         filesInDraft,
@@ -261,13 +183,13 @@ export async function* testGenerateMessage({
             // No-op for tests
         },
     })
-    
+
     // Create AI cache middleware
     const cacheMiddleware = createAiCacheMiddleware({
         cacheDir: '.test-aicache',
         lruSize: 100,
     })
-    
+
     // Generate stream
     const stream = generateMessageStream({
         messages: uiMessages,
@@ -287,10 +209,10 @@ export async function* testGenerateMessage({
             middleware: cacheMiddleware,
         }),
     })
-    
+
     // Convert async generator to ReadableStream
     const readableStream = asyncIterableToReadableStream(stream)
-    
+
     // Use readUIMessageStream to consume the stream and yield results
     for await (const message of readUIMessageStream({
         stream: readableStream,
@@ -301,7 +223,7 @@ export async function* testGenerateMessage({
         // Only process assistant messages
         if (message.role === 'assistant') {
             const markdown = uiMessageToMarkdown(message)
-            
+
             // Yield current state
             const currentFiles = fileSystem.getFilesInDraft()
             yield {
