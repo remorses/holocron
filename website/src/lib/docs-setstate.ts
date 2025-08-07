@@ -33,6 +33,12 @@ export function createIframeRpcClient({
         const iframeWindow = iframeRef.current?.contentWindow
         if (!iframeWindow) throw new Error('iframe not ready')
 
+        useWebsiteState.setState({
+            filesInDraft: {
+                ...useWebsiteState.getState()?.filesInDraft,
+                ...state?.filesInDraft,
+            },
+        })
         const id = crypto.randomUUID()
 
         const message: IframeRpcMessage = {
