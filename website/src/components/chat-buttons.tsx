@@ -1,4 +1,4 @@
-import { memo, useMemo, useState, useEffect } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { Button } from 'website/src/components/ui/button'
 import {
     Popover,
@@ -20,7 +20,7 @@ import { cn } from '../lib/utils'
 import type { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import { FileUpdate, calculateLineChanges } from 'docs-website/src/lib/edit-tool'
-import memoize from 'micro-memoize'
+import { useQuery } from '@tanstack/react-query'
 
 export function PrButton({ className = '' }) {
     const [isLoading, setIsLoading] = useState(false)
@@ -361,47 +361,37 @@ export const DiffStats = memo(function DiffStats({
 }: DiffStatsProps) {
     const { branchId } = useLoaderData() as Route.ComponentProps['loaderData']
 
-    const getPageContent = useMemo(() => {
-        return memoize(async (githubPath: string) => {
-            const { data, error } = await apiClient.api.getPageContent.post({
-                branchId,
-                githubPath,
-            })
-            if (error) return ''
-            return data?.content || ''
-        })
-    }, [branchId])
-
-    const computedStats = useMemo(() => {
-        const computeStatsForFile = async (file: FileUpdate) => {
-            const originalContent = await getPageContent(file.githubPath)
-            const currentContent = file.content || ''
-            return calculateLineChanges(originalContent, currentContent)
-        }
-
-        return Object.entries(filesInDraft).map(async ([path, file]) => {
-            const stats = await computeStatsForFile(file)
-            return {
-                path,
-                file,
-                addedLines: stats.addedLines,
-                deletedLines: stats.deletedLines,
+    const { data: resolvedStats = [] } = useQuery({
+        queryKey: ['diffStats', branchId, filesInDraft],
+        queryFn: async () => {
+            const getPageContent = async (githubPath: string) => {
+                const { data, error } = await apiClient.api.getPageContent.post({
+                    branchId,
+                    githubPath,
+                })
+                if (error) return ''
+                return data?.content || ''
             }
-        })
-    }, [filesInDraft, getPageContent])
 
-    const [resolvedStats, setResolvedStats] = useState<
-        Array<{
-            path: string
-            file: FileUpdate
-            addedLines: number
-            deletedLines: number
-        }>
-    >([])
+            const computeStatsForFile = async (file: FileUpdate) => {
+                const originalContent = await getPageContent(file.githubPath)
+                const currentContent = file.content || ''
+                return calculateLineChanges(originalContent, currentContent)
+            }
 
-    useEffect(() => {
-        Promise.all(computedStats).then(setResolvedStats)
-    }, [computedStats])
+            const statsPromises = Object.entries(filesInDraft).map(async ([path, file]) => {
+                const stats = await computeStatsForFile(file)
+                return {
+                    path,
+                    file,
+                    addedLines: stats.addedLines,
+                    deletedLines: stats.deletedLines,
+                }
+            })
+
+            return Promise.all(statsPromises)
+        },
+    })
 
     // Only include files that have additions or deletions
     const changedFiles = resolvedStats.filter(
