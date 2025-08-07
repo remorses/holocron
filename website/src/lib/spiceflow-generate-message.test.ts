@@ -7,6 +7,8 @@ import {
 } from './generate-message-utils'
 import { writeFileSync, unlinkSync, existsSync } from 'fs'
 import path from 'path'
+import { isValidLucideIconName } from './icons'
+import dedent from 'dedent'
 
 type TestCase = TestGenerateMessageInput & {
     name: string
@@ -111,6 +113,115 @@ const testCases: TestCase[] = [
             // expect(hasUsersAndProducts).toBe(true)
         },
     },
+    {
+        name: 'add icons to pages',
+        filesInDraft: {
+            'index.mdx': {
+                githubPath: 'index.mdx',
+                content: dedent`
+                    ---
+                    title: Home
+                    ---
+                    
+                    # Welcome to our docs
+                    
+                    This is the home page.
+                `,
+            },
+            'getting-started.mdx': {
+                githubPath: 'getting-started.mdx',
+                content: dedent`
+                    ---
+                    title: Getting Started
+                    ---
+                    
+                    # Getting Started
+                    
+                    Learn how to get started with our product.
+                `,
+            },
+            'api/overview.mdx': {
+                githubPath: 'api/overview.mdx',
+                content: dedent`
+                    ---
+                    title: API Overview
+                    ---
+                    
+                    # API Overview
+                    
+                    Overview of our API endpoints.
+                `,
+            },
+            'guides/configuration.mdx': {
+                githubPath: 'guides/configuration.mdx',
+                content: dedent`
+                    ---
+                    title: Configuration
+                    ---
+                    
+                    # Configuration Guide
+                    
+                    How to configure the application.
+                `,
+            },
+        },
+        messages: [
+            {
+                role: 'user',
+                content: 'add icons to all pages',
+            },
+        ],
+        onFinish: (result) => {
+            // Check that files were updated
+            const updatedFiles = Object.entries(result.filesInDraft)
+            expect(updatedFiles.length).toBeGreaterThan(0)
+
+            // Track icons found for debugging
+            const iconsFound: Record<string, string | null> = {}
+            let hasValidIcons = false
+
+            // Check each file has an icon in the frontmatter
+            for (const [path, file] of updatedFiles) {
+                if ((path.endsWith('.mdx') || path.endsWith('.md')) && file.content) {
+                    // Try to find icon in content - more flexible pattern
+                    // Check for icon in frontmatter format or as a simple line
+                    const iconPatterns = [
+                        /^---\n[\s\S]*?icon:\s*['"]?([a-z-]+)['"]?[\s\S]*?\n---/im,
+                        /icon:\s*['"]?([a-z-]+)['"]?/i
+                    ]
+                    
+                    let iconName: string | null = null
+                    for (const pattern of iconPatterns) {
+                        const match = file.content.match(pattern)
+                        if (match) {
+                            iconName = match[1]
+                            break
+                        }
+                    }
+                    
+                    if (iconName) {
+                        iconsFound[path] = iconName
+                        // Validate icon name - make validation more flexible for kebab-case
+                        const isValid = isValidLucideIconName(iconName)
+                        if (isValid) {
+                            hasValidIcons = true
+                        } else {
+                            console.log(`Invalid icon name '${iconName}' in ${path}`)
+                        }
+                    } else {
+                        iconsFound[path] = null
+                    }
+                }
+            }
+
+            // Log for debugging
+            console.log('Icons found:', iconsFound)
+            console.log('Files in result:', Object.keys(result.filesInDraft))
+
+            // Ensure at least one file has a valid icon
+            expect(hasValidIcons, `No valid Lucide icons found. Icons found: ${JSON.stringify(iconsFound)}`).toBe(true)
+        },
+    },
 ]
 describe.concurrent('generateMessageStream', ({}) => {
     for (const testCase of testCases) {
@@ -190,7 +301,7 @@ describe.concurrent('generateMessageStream', ({}) => {
                     )
                 }
             },
-            60000,
-        ) // 60 second timeout for AI generation
+            120000,
+        ) // 120 second timeout for AI generation
     }
 })

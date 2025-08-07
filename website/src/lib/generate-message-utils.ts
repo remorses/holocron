@@ -136,13 +136,21 @@ export function filesInDraftToMarkdown(
     lines.push(printDirectoryTree({ filePaths }))
     lines.push('\n')
 
-    // Add individual file contents
-    const sortedFiles = Object.entries(filesInDraft)
-        .filter(([, file]) => file.content !== null)
+    // Add individual file contents - deduplicate by clean path
+    const filesByCleanPath = new Map<string, FileUpdate>()
+    for (const [path, file] of Object.entries(filesInDraft)) {
+        if (file.content !== null) {
+            const cleanPath = path.startsWith('/') ? path.slice(1) : path
+            // Later entries override earlier ones with the same clean path
+            filesByCleanPath.set(cleanPath, file)
+        }
+    }
+    
+    // Sort by path and output
+    const sortedFiles = Array.from(filesByCleanPath.entries())
         .sort(([a], [b]) => a.localeCompare(b))
-
-    for (const [path, file] of sortedFiles) {
-        const cleanPath = path.startsWith('/') ? path.slice(1) : path
+    
+    for (const [cleanPath, file] of sortedFiles) {
         lines.push('='.repeat(50))
         lines.push(`FILE: ${cleanPath}`)
         lines.push('='.repeat(50))

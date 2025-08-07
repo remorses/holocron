@@ -148,6 +148,7 @@
     "@types/react-dom": "^19.1.7",
     "@xmorse/deployment-utils": "^0.4.2",
     "autoprefixer": "^10.4.21",
+    "dedent": "^1.6.0",
     "postcss": "^8.5.5",
     "tailwindcss": "^4.1.10",
     "typescript": "^5.8.3",

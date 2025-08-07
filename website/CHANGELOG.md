@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-08-07 20:30
+
+- Added test case for adding Lucide icons to documentation pages
+- Created `isValidLucideIconName` utility function to validate icon names against @iconify-json/lucide package
+- Enhanced test validation to check for valid Lucide icon names in page frontmatter
+
 ## 2025-08-07
 
 - Replaced state and useMemo with React Query for fetching resolved stats in `DiffStats` component
