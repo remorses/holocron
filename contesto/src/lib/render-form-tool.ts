@@ -54,7 +54,7 @@ export function createRenderFormTool({
     // Create execute function
     async function execute(params: z.infer<typeof RenderFormParameters>) {
         if (!jsonSchema) {
-            return 'Rendered form to the user, when the user will submit the form, the data will be sent as a message'
+            return 'Rendered form to the user, the response will be sent back as a message from the user. DO NOT RENDER THE SAME FORM TWICE'
         }
         const errors: string[] = []
         try {
