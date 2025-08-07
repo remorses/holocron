@@ -146,8 +146,8 @@ export function isMediaFile(path: string): boolean {
 
 export async function* assetsFromFilesList({
     files,
-    docsJson,
-    docsJsonComments,
+    docsJson: defaultDocsJson,
+    docsJsonComments: defaultDocsJsonComments,
     githubFolder,
 }: {
     files: {
@@ -160,6 +160,23 @@ export async function* assetsFromFilesList({
     docsJson?: DocsJsonType
     docsJsonComments?: JsonCComments
 }): AsyncGenerator<AssetForSync> {
+    // Check if fumabase.jsonc exists in the files
+    const fumabaseJsonFile = files.find(f => f.relativePath.endsWith('fumabase.jsonc'))
+    
+    // Use fumabase.jsonc from files if present, otherwise use defaults
+    let docsJson: DocsJsonType | undefined
+    let docsJsonComments: JsonCComments | undefined
+    
+    if (fumabaseJsonFile?.contents) {
+        // Extract docsJson and comments from the fumabase.jsonc file
+        const { comments, data } = extractJsonCComments(fumabaseJsonFile.contents)
+        docsJson = data
+        docsJsonComments = comments
+    } else {
+        // Fall back to defaults
+        docsJson = defaultDocsJson
+        docsJsonComments = defaultDocsJsonComments
+    }
     // First handle meta.json files
     const metaFiles = files.filter((file) =>
         file.relativePath.endsWith('meta.json'),
