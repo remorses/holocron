@@ -12,7 +12,7 @@ If the user asks you to fill the content (without specifying which page), add co
 
 ## Updating many pages
 
-If you need to update many pages in a single request start by doing the update to each page, read one file and update it once at a time. Do not read all the files at once.
+If you need to update many pages at once do not read all pages to update upfront, instead read and update one by one.
 
 ## @ for file references
 

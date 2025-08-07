@@ -78,12 +78,14 @@ function generateExampleTemplateFilesPrompt() {
         `
     }
     return dedent`
-    ## NEVER reply back with a question or form for the first message
+    ## example template files
 
     If the user query is very short or nonsensical, do not reply back with a question. Assume the user is very lazy and will never reply back.
     Instead generate the following template website, replace a few fields with data you can deduce from the user if possible or add new pages related to the user query.
 
     When creating the using template content, fill the content in right away. Do not leave them empty with only the frontmatter.
+
+    After creating the template pages ask the user back for more information to customize the site to the user needs. Then start updating all pages to align to the user requirements.
 
     <template>
     ${templateContents}
