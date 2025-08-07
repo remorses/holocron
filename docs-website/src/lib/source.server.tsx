@@ -63,37 +63,43 @@ export async function getFilesForSource({
             }),
         )
 
+    // Get draft files
+    const draftFiles = getFilesFromFilesInDraft(filesInDraft, githubFolder)
+
+    // Merge files with draft files
     const allFiles = [...files]
-    if (Object.keys(filesInDraft).length > 0) {
-        for (const [githubPath, draft] of Object.entries(filesInDraft)) {
-            const normalizedPath = removeGithubFolder(githubPath, githubFolder)
+
+    if (draftFiles.length > 0) {
+        for (const draftFile of draftFiles) {
             // Check if this file already exists in the files array
             const existingFileIndex = allFiles.findIndex(
-                (f) => f.path === normalizedPath,
+                (f) => f.path === draftFile.path,
             )
 
-            if (draft?.content == null) {
-                // Remove the file if draft content is null
-                if (existingFileIndex >= 0) {
-                    allFiles.splice(existingFileIndex, 1)
-                }
-            } else if (existingFileIndex >= 0) {
-                // Update existing file with draft content
+            if (existingFileIndex >= 0) {
+                // Update existing file with draft file (preserving original data)
                 allFiles[existingFileIndex] = {
                     ...allFiles[existingFileIndex],
-                    // Note: we don't override the data here as it's used for meta information
+                    // Keep original data (frontmatter/meta) from database
                 }
             } else {
                 // Add new draft file
-                allFiles.push({
-                    path: normalizedPath,
-                    data: {},
-                    type: 'page',
-                })
+                allFiles.push(draftFile)
+            }
+        }
+
+        // Remove deleted files
+        for (const [githubPath, draft] of Object.entries(filesInDraft)) {
+            if (draft?.content == null) {
+                const normalizedPath = removeGithubFolder(githubPath, githubFolder)
+                const fileIndex = allFiles.findIndex((f) => f.path === normalizedPath)
+                if (fileIndex >= 0) {
+                    allFiles.splice(fileIndex, 1)
+                }
             }
         }
     }
-    
+
     return deduplicateBy(allFiles, (file) => file.path)
 }
 
@@ -114,4 +120,35 @@ export function removeGithubFolder(path: string, githubFolder: string): string {
         return path.slice(githubFolder.length + 1)
     }
     return path
+}
+
+/**
+ * Convert filesInDraft to VirtualFile array for use with getFumadocsSource
+ * Used in test utilities where we don't have database access
+ */
+export function getFilesFromFilesInDraft(
+    filesInDraft: FilesInDraft,
+    githubFolder: string = ''
+): Array<MyVirtualFile> {
+    const files: MyVirtualFile[] = []
+
+    for (const [githubPath, draft] of Object.entries(filesInDraft)) {
+        if (draft?.content == null) {
+            // Skip deleted files
+            continue
+        }
+
+        const normalizedPath = removeGithubFolder(githubPath, githubFolder)
+
+        // Determine file type based on extension
+        const isMetaFile = githubPath.endsWith('.json') || githubPath.endsWith('_meta.json')
+
+        files.push({
+            path: normalizedPath,
+            data: isMetaFile ? {} : {}, // Empty data for now, could parse frontmatter if needed
+            type: isMetaFile ? 'meta' : 'page',
+        })
+    }
+
+    return files
 }

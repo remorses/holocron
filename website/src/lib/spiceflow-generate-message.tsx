@@ -55,6 +55,7 @@ import {
 import { cleanSlug } from 'docs-website/src/lib/slug-utils'
 import { getFilesForSource } from 'docs-website/src/lib/source.server'
 import { getFumadocsSource } from 'docs-website/src/lib/source'
+import { VirtualFile } from 'fumadocs-core/source'
 import Handlebars from 'handlebars'
 import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
 
@@ -206,7 +207,7 @@ export async function* generateMessageStream({
     currentSlug: string
     filesInDraft: Record<string, FileUpdate>
     fileSystem: FileSystemEmulator
-    files: any[] // Files from getFilesForSource
+    files: Array<VirtualFile & { data?: ProcessorDataFrontmatter }> // Files from getFilesForSource
     isOnboardingChat: boolean
     githubFolder: string
     defaultLocale: string
@@ -224,6 +225,7 @@ export async function* generateMessageStream({
     const source = getFumadocsSource({
         files,
         defaultLanguage: defaultLocale,
+
         languages: locales,
     })
 
@@ -656,8 +658,8 @@ export async function* generateMessageStream({
             console.log(`Error in streamText:`, error)
             throw error
         },
-        experimental_transform: process.env.VITEST 
-            ? undefined 
+        experimental_transform: process.env.VITEST
+            ? undefined
             : smoothStream({
                 delayInMs: 10,
                 chunking: 'word',

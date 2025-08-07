@@ -1,5 +1,7 @@
 import { generateMessageStream } from './spiceflow-generate-message'
 import { FileSystemEmulator } from './file-system-emulator'
+import { VirtualFile } from 'fumadocs-core/source'
+import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
 import { createAiCacheMiddleware } from 'contesto/src/lib/ai-cache'
 import {
     wrapLanguageModel,
@@ -11,6 +13,7 @@ import {
 import type { FileUpdate } from 'docs-website/src/lib/edit-tool'
 import { asyncIterableToReadableStream } from 'contesto/src/lib/utils'
 import { printDirectoryTree } from 'docs-website/src/lib/directory-tree'
+import { getFilesFromFilesInDraft } from 'docs-website/src/lib/source.server'
 import * as yaml from 'js-yaml'
 
 /**
@@ -200,13 +203,16 @@ export async function* testGenerateMessage({
         lruSize: 100,
     })
 
+    // Get files from filesInDraft for source
+    const files = getFilesFromFilesInDraft(filesInDraft)
+
     // Generate stream
     const stream = generateMessageStream({
         messages: uiMessages,
         currentSlug,
         filesInDraft,
         fileSystem,
-        files: [], // Empty for onboarding
+        files,
         isOnboardingChat,
         githubFolder: '',
         defaultLocale: 'en',
