@@ -1,13 +1,11 @@
 --- step-start ---
 
 
-<reasoning>
+````md reasoning
 
-</reasoning>
+````
 
-
-<tool-call>
-type: tool-strReplaceEditor
+````yaml tool-strReplaceEditor
 input:
   command: create
   path: index.mdx
@@ -34,7 +32,6 @@ output: |
 
   Welcome to our documentation site. Feel free to explore the guides and reference materials.
 
-</tool-call>
-
+````
 
 --- step-start ---

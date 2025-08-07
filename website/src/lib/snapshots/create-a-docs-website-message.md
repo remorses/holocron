@@ -1,31 +1,29 @@
 --- step-start ---
 
 
-<reasoning>
+````md reasoning
 **Creating documentation structure**
 
 The user wants me to create a documentation website. I’ll start with an initial structure, which should include at least six pages organized into folders without asking any questions. I’ll set up folders such as "getting-started," "installation," "configuration," "api reference," and "guides." A simpler folder structure will work, like "getting-started/index.mdx" and "guides/...". I might go with a generic name like "My Project." I'll create the necessary pages with frontmatter, keeping it straightforward.
-</reasoning>
+````
 
 
-<reasoning>
+````md reasoning
 **Creating documentation skeleton**
 
 The user asked for a documentation website, so I’m thinking of a generic structure rather than one specific to Fumabase. I’ll set up six pages, including "introduction.mdx," "getting-started.mdx," "installation.mdx," "configuration.mdx," "api-reference/index.mdx," and "faq.mdx." Each page will have sensible placeholder content alongside proper frontmatter titles and descriptions. I’ll create a "README.md" for quick start instructions and ensure a clear content folder structure. I'll keep it straightforward and focus on creating the pages.
-</reasoning>
+````
 
 
-<reasoning>
+````md reasoning
 **Preparing to create documentation pages**
 
 I'm setting up to run "fumabase dev" and begin crafting the documentation. I’m copying a template for various pages, starting with "getting-started/index.mdx" and including essential details like prerequisites and descriptions. For the "Installation," "Configuration," "API Reference," and "FAQ" sections, I'll format each with proper titles, icons, and descriptions.
 
 I’ll prepare six create commands, ensuring any necessary directories are set up. After the initial pages are created, I plan to ask the user for project details to further customize the documentation.
-</reasoning>
+````
 
-
-<tool-call>
-type: tool-strReplaceEditor
+````yaml tool-strReplaceEditor
 input:
   command: create
   path: README.md
@@ -88,14 +86,11 @@ output: >
 
   Push your changes to the main branch to deploy updates automatically via our CI pipeline.
 
-</tool-call>
-
+````
 
 --- step-start ---
 
-
-<tool-call>
-type: tool-strReplaceEditor
+````yaml tool-strReplaceEditor
 input:
   command: create
   path: getting-started/index.mdx
@@ -190,14 +185,11 @@ output: |
   </Step>
   </Steps>
 
-</tool-call>
-
+````
 
 --- step-start ---
 
-
-<tool-call>
-type: tool-strReplaceEditor
+````yaml tool-strReplaceEditor
 input:
   command: create
   path: installation.mdx
@@ -268,14 +260,11 @@ output: |
 
   Ensure you see the CLI version printed.
 
-</tool-call>
-
+````
 
 --- step-start ---
 
-
-<tool-call>
-type: tool-strReplaceEditor
+````yaml tool-strReplaceEditor
 input:
   command: create
   path: configuration/index.mdx
@@ -358,14 +347,11 @@ output: |
   export MYPROJECT_REGION=us-east-1
   ```
 
-</tool-call>
-
+````
 
 --- step-start ---
 
-
-<tool-call>
-type: tool-strReplaceEditor
+````yaml tool-strReplaceEditor
 input:
   command: create
   path: api-reference/index.mdx
@@ -472,14 +458,11 @@ output: |
   [ { "id": "user_1", "email": "user@example.com" } ]
   ```
 
-</tool-call>
-
+````
 
 --- step-start ---
 
-
-<tool-call>
-type: tool-strReplaceEditor
+````yaml tool-strReplaceEditor
 input:
   command: create
   path: faq.mdx
@@ -540,8 +523,7 @@ output: |
 
   Fork the repo, make changes, and submit a pull request.
 
-</tool-call>
-
+````
 
 --- step-start ---
 

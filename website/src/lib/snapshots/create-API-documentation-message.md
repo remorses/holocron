@@ -1,31 +1,29 @@
 --- step-start ---
 
 
-<reasoning>
+````md reasoning
 **Creating API documentation structure**
 
 The user requested to create API documentation with endpoints for users and products. Since this is a new site from scratch, I'll focus on building an MVP documentation site that includes pages like an overview and a quickstart guide. I need to structure it by creating a root README, a quickstart page, and an "api" folder that contains pages for "users" and "products." Additionally, I might add an overview page as an index in this folder.
-</reasoning>
+````
 
 
-<reasoning>
+````md reasoning
 **Structuring API documentation**
 
 Since the user wants API documentation, it’s possible to create an OpenAPI spec file, but I could also write the pages manually. It might be best to have pages like api/users.mdx and api/products.mdx for clarity. I’ll need to include at least six pages, so I'll add authentication and errors pages. The final structure will consist of an index overview, a quickstart guide, and the API documentation pages. I’ll also create a README.md for the root.
-</reasoning>
+````
 
 
-<reasoning>
+````md reasoning
 **Drafting API documentation pages**
 
 I’m planning to create seven pages for the API documentation, including authentication, users, products, errors, a quickstart guide, and an overview index. I need to adjust the project settings afterward, but my main focus is on drafting these pages. 
 
 Each page will include specific sections with details like prerequisites for using the API, examples for making requests, and comprehensive explanations for each endpoint. I’ll implement the creation of the files next.
-</reasoning>
+````
 
-
-<tool-call>
-type: tool-strReplaceEditor
+````yaml tool-strReplaceEditor
 input:
   command: create
   path: index.mdx
@@ -78,14 +76,11 @@ output: |-
   </Card>
   </CardGroup>
 
-</tool-call>
-
+````
 
 --- step-start ---
 
-
-<tool-call>
-type: tool-strReplaceEditor
+````yaml tool-strReplaceEditor
 input:
   command: create
   path: quickstart.mdx
@@ -146,14 +141,11 @@ output: |-
   You should receive a 200 response with a list of users.
   </Check>
 
-</tool-call>
-
+````
 
 --- step-start ---
 
-
-<tool-call>
-type: tool-strReplaceEditor
+````yaml tool-strReplaceEditor
 input:
   command: create
   path: api/authentication.mdx
@@ -234,14 +226,11 @@ output: |-
   ```
   </CodeGroup>
 
-</tool-call>
-
+````
 
 --- step-start ---
 
-
-<tool-call>
-type: tool-strReplaceEditor
+````yaml tool-strReplaceEditor
 input:
   command: create
   path: api/users.mdx
@@ -386,14 +375,11 @@ output: |-
     -H "Authorization: Bearer YOUR_API_KEY"
   ```
 
-</tool-call>
-
+````
 
 --- step-start ---
 
-
-<tool-call>
-type: tool-strReplaceEditor
+````yaml tool-strReplaceEditor
 input:
   command: create
   path: api/products.mdx
@@ -538,14 +524,11 @@ output: |-
     -H "Authorization: Bearer YOUR_API_KEY"
   ```
 
-</tool-call>
-
+````
 
 --- step-start ---
 
-
-<tool-call>
-type: tool-strReplaceEditor
+````yaml tool-strReplaceEditor
 input:
   command: create
   path: api/errors.mdx
@@ -642,14 +625,11 @@ output: |-
   }
   ```
 
-</tool-call>
-
+````
 
 --- step-start ---
 
-
-<tool-call>
-type: tool-strReplaceEditor
+````yaml tool-strReplaceEditor
 input:
   command: create
   path: README.md
@@ -686,8 +666,7 @@ output: >-
 
   2. Start dev server: `fumabase dev`
 
-</tool-call>
-
+````
 
 --- step-start ---
 

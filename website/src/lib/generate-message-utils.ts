@@ -6,7 +6,7 @@ import {
     readUIMessageStream,
     type CoreMessage,
     type UIMessage,
-    isToolUIPart
+    isToolUIPart,
 } from 'ai'
 import type { FileUpdate } from 'docs-website/src/lib/edit-tool'
 import { asyncIterableToReadableStream } from 'contesto/src/lib/utils'
@@ -38,59 +38,67 @@ export function uiMessageToMarkdown(message: UIMessage): string {
             }
         } else if (part.type === 'reasoning') {
             // Reasoning content (for o1 models)
-            lines.push('\n<reasoning>')
+            lines.push('')
+            lines.push('````md reasoning')
             lines.push((part.text || '').trim())
-            lines.push('</reasoning>\n')
-        } else if ( isToolUIPart(part) && part.state !== 'input-streaming') {
-
+            lines.push('````')
+            lines.push('')
+        } else if (isToolUIPart(part) && part.state !== 'input-streaming') {
             const toolData = {
-                type: part.type,
                 input: part.input,
                 output: part.output,
                 errorText: part.errorText,
             }
-            lines.push('\n<tool-call>')
-            lines.push(yaml.dump(toolData, {
-                indent: 2,
-                lineWidth: 100,
-                noRefs: true,
-                sortKeys: false
-            }))
-            lines.push('</tool-call>\n')
+
+            lines.push('````yaml ' + part.type)
+            lines.push(
+                yaml.dump(toolData, {
+                    indent: 2,
+                    lineWidth: 100,
+                    noRefs: true,
+                    sortKeys: false,
+                }),
+            )
+            lines.push('````')
         } else if (part.type === 'file') {
             // File attachments
             const fileData = {
-                type: 'file',
                 filename: part.filename || 'unnamed',
                 mediaType: part.mediaType || 'unknown',
-                ...(part.url && { url: part.url })
+                ...(part.url && { url: part.url }),
             }
 
-            lines.push('\n<file-attachment>')
-            lines.push(yaml.dump(fileData, {
-                indent: 2,
-                lineWidth: 80,
-                noRefs: true,
-                sortKeys: false
-            }))
-            lines.push('</file-attachment>\n')
+            lines.push('')
+            lines.push('````yaml ' + part.type)
+            lines.push(
+                yaml.dump(fileData, {
+                    indent: 2,
+                    lineWidth: 80,
+                    noRefs: true,
+                    sortKeys: false,
+                }),
+            )
+            lines.push('````')
+            lines.push('')
         } else if (part.type === 'source-url') {
             // Source URL references
             const sourceData = {
-                type: 'source-url',
                 title: part.title || part.url,
-                url: part.url
+                url: part.url,
             }
 
-            lines.push('\n<source-reference>')
-            lines.push(yaml.dump(sourceData, {
-                indent: 2,
-                lineWidth: 80,
-                noRefs: true,
-                sortKeys: false
-            }))
-            lines.push('</source-reference>\n')
-        } else if ((part ).type === 'step-start') {
+            lines.push('')
+            lines.push('````yaml ' + part.type)
+            lines.push(
+                yaml.dump(sourceData, {
+                    indent: 2,
+                    lineWidth: 80,
+                    noRefs: true,
+                    sortKeys: false,
+                }),
+            )
+            lines.push('````')
+        } else if (part.type === 'step-start') {
             // Step boundaries for structured output
             lines.push(`\n--- ${(part as any).type} ---\n`)
         }
@@ -102,7 +110,9 @@ export function uiMessageToMarkdown(message: UIMessage): string {
 /**
  * Serialize filesInDraft to markdown format with file tree
  */
-export function filesInDraftToMarkdown(filesInDraft: Record<string, FileUpdate>): string {
+export function filesInDraftToMarkdown(
+    filesInDraft: Record<string, FileUpdate>,
+): string {
     const lines: string[] = []
 
     // Filter out deleted files (content: null) and get file paths with titles
@@ -110,7 +120,7 @@ export function filesInDraftToMarkdown(filesInDraft: Record<string, FileUpdate>)
         .filter(([, file]) => file.content !== null)
         .map(([path]) => ({
             path: path.startsWith('/') ? path.slice(1) : path,
-            title: ''
+            title: '',
         }))
         .sort((a, b) => a.path.localeCompare(b.path))
 
@@ -130,9 +140,9 @@ export function filesInDraftToMarkdown(filesInDraft: Record<string, FileUpdate>)
 
     for (const [path, file] of sortedFiles) {
         const cleanPath = path.startsWith('/') ? path.slice(1) : path
-        lines.push('=' .repeat(50))
+        lines.push('='.repeat(50))
         lines.push(`FILE: ${cleanPath}`)
-        lines.push('=' .repeat(50))
+        lines.push('='.repeat(50))
         lines.push(file.content || '')
         lines.push('\n')
     }
@@ -167,7 +177,7 @@ export async function* testGenerateMessage({
             {
                 type: 'text',
                 text: typeof msg.content === 'string' ? msg.content : '',
-            }
+            },
         ],
     }))
 
@@ -204,10 +214,11 @@ export async function* testGenerateMessage({
         trieveDatasetId: null,
         modelId: null,
         modelProvider: null,
-        experimental_wrapLanguageModel: (model: any) => wrapLanguageModel({
-            model,
-            middleware: cacheMiddleware,
-        }),
+        experimental_wrapLanguageModel: (model: any) =>
+            wrapLanguageModel({
+                model,
+                middleware: cacheMiddleware,
+            }),
     })
 
     // Convert async generator to ReadableStream
