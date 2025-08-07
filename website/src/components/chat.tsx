@@ -152,6 +152,7 @@ const setDocsJsonState = ({
     useWebsiteState.setState({ filesInDraft: newFilesInDraft })
     localStorage.setItem(keyForDocsJson({ chatId }), newJson)
     docsRpcClient.setDocsState({
+        // revalidate: true, // TODO
         state: { filesInDraft: newChanges },
     })
 }
@@ -248,7 +249,7 @@ export default function Chat({
     const initialChatState = useMemo(() => {
         // Get prompt from URL search params
         const promptFromUrl = searchParams.get('prompt') || ''
-        
+
         const state: Partial<ChatState> = {
             // Set initial draftText from URL prompt if it exists
             draftText: promptFromUrl,

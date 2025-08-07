@@ -14,7 +14,7 @@ import {
 } from 'react-router'
 // @ts-ignore
 import type { Route } from './+types/root'
-import { DocsJsonType, themeModules } from 'docs-website/src/lib/docs-json'
+import { DocsJsonType,  } from 'docs-website/src/lib/docs-json'
 import JSONC from 'tiny-jsonc'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
@@ -27,6 +27,7 @@ import {
 } from 'docs-website/src/routes/_catchall-client'
 import { FilesInDraft } from '../lib/docs-state'
 import { getDocsJson } from '../lib/utils'
+import { themeModules } from '../lib/themes'
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -205,6 +206,8 @@ export async function loader({ request }: Route.LoaderArgs) {
             const themePath = `../themes/${docsJson.theme}.css`
             if (themeModules[themePath]) {
                 return themeModules[themePath] as string
+            } else {
+              console.error(`cannot find theme css for ${themePath}`)
             }
         }
         return ''

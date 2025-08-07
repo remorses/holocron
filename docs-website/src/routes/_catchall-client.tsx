@@ -28,7 +28,12 @@ import {
     useNavigate,
     useParams,
 } from 'react-router'
-import { PreservedSearchLink, usePreservedNavigate, setGlobalNavigate, globalNavigate } from '../components/preserved-search-link'
+import {
+    PreservedSearchLink,
+    usePreservedNavigate,
+    setGlobalNavigate,
+    globalNavigate,
+} from '../components/preserved-search-link'
 import { useShallow } from 'zustand/react/shallow'
 import type { Route } from './_catchall'
 
@@ -377,8 +382,7 @@ export function ClientApp() {
     const docsJson = useDocsJson()
     useNProgress()
     // Inline DocsProvider
-    const { i18n, cssStyles, themeCSS } =
-        loaderData || {}
+    const { i18n, cssStyles, themeCSS } = loaderData || {}
     const locale = i18n?.defaultLanguage
 
     return (
@@ -737,47 +741,60 @@ function Logo({ docsJson = {} as DocsJsonType }) {
 }
 
 // Custom React Router Provider with preserved search params
-function CustomReactRouterProvider({ children }: { children: React.ReactNode }) {
+function CustomReactRouterProvider({
+    children,
+}: {
+    children: React.ReactNode
+}) {
     const location = useLocation()
     const navigate = useNavigate()
     const params = useParams()
     const revalidator = useRevalidator()
     const preservedNavigate = usePreservedNavigate()
-    
+
     // Set the global navigate function
     useEffect(() => {
         setGlobalNavigate(preservedNavigate)
     }, [preservedNavigate])
-    
-    const framework = useMemo(() => ({
-        usePathname() {
-            return location.pathname
-        },
-        useParams() {
-            // Convert React Router params to fumadocs expected format
-            const result: Record<string, string | string[]> = {}
-            for (const [key, value] of Object.entries(params)) {
-                if (value !== undefined) {
-                    result[key] = value
+
+    const framework = useMemo(
+        () => ({
+            usePathname() {
+                return location.pathname
+            },
+            useParams() {
+                // Convert React Router params to fumadocs expected format
+                const result: Record<string, string | string[]> = {}
+                for (const [key, value] of Object.entries(params)) {
+                    if (value !== undefined) {
+                        result[key] = value
+                    }
                 }
-            }
-            return result
-        },
-        useRouter() {
-            return {
-                push(url: string) {
-                    preservedNavigate(url)
-                },
-                refresh() {
-                    void revalidator.revalidate()
+                return result
+            },
+            useRouter() {
+                return {
+                    push(url: string) {
+                        preservedNavigate(url)
+                    },
+                    refresh() {
+                        void revalidator.revalidate()
+                    },
                 }
-            }
-        },
-        Link({ href, prefetch, ...props }: any) {
-            return <PreservedSearchLink to={href} prefetch={prefetch ? "intent" : "none"} {...props} />
-        }
-    }), [location.pathname, params, preservedNavigate, revalidator])
-    
+            },
+            Link({ href, prefetch, ...props }: any) {
+                return (
+                    <PreservedSearchLink
+                        to={href}
+                        prefetch={prefetch ? 'intent' : 'none'}
+                        {...props}
+                    />
+                )
+            },
+        }),
+        [location.pathname, params, preservedNavigate, revalidator],
+    )
+
     return <FrameworkProvider {...framework}>{children}</FrameworkProvider>
 }
 
