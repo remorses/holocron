@@ -57,12 +57,10 @@ import { getFilesForSource } from 'docs-website/src/lib/source.server'
 import { getFumadocsSource } from 'docs-website/src/lib/source'
 import Handlebars from 'handlebars'
 import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
-import agentPrompt from '../prompts/agent.md?raw'
+
 import exampleDocs from 'website/scripts/example-docs.json'
 import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
-
-const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
 function generateExampleTemplateFilesPrompt() {
     let templateContents = ''
@@ -653,12 +651,31 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 role: 'system',
 
                 content: [
+                    await import('../prompts/agent.md?raw').then(
+                        (x) => x.default,
+                    ),
                     await import('../prompts/tone-and-style.md?raw').then(
                         (x) => x.default,
                     ),
-                    agentPromptTemplate({
-                        docsJsonSchema: JSON.stringify(docsJsonSchema, null, 2),
-                    }),
+                    await import('../prompts/writing-mdx.md?raw').then(
+                        (x) => x.default,
+                    ),
+                    await import('../prompts/css-variables.md?raw').then(
+                        (x) => x.default,
+                    ),
+                    await import('../prompts/frontmatter.md?raw').then(
+                        (x) => x.default,
+                    ),
+
+                    dedent`
+                    ## fumabase.jsonc
+
+                    You can edit a top level fumabase.jsonc file to customize website settings, this file has the following json schema:
+
+                    <fumabaseJsonSchema>
+                    ${JSON.stringify(docsJsonSchema, null, 2)}
+                    </fumabaseJsonSchema>
+                    `,
                     isOnboardingChat && '## Onboarding Instructions',
                     isOnboardingChat &&
                         (await import('../prompts/create-site.md?raw').then(
