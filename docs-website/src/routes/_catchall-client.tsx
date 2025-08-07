@@ -57,6 +57,7 @@ import { CustomSearchDialog } from '../components/search'
 import { getTreeFromFiles } from '../lib/tree'
 import { getPageTreeForOpenAPI } from '../lib/openapi-client'
 import { env } from '../lib/env'
+import { useQuery } from '@tanstack/react-query'
 
 const ChatDrawer = lazy(() =>
     import('../components/docs-chat').then((mod) => ({
@@ -382,8 +383,34 @@ export function ClientApp() {
     const docsJson = useDocsJson()
     useNProgress()
     // Inline DocsProvider
-    const { i18n, cssStyles, themeCSS } = loaderData || {}
+    const { i18n, cssStyles, themeCSS: initialThemeCSS } = loaderData || {}
     const locale = i18n?.defaultLanguage
+    
+    // Use React Query to dynamically import theme CSS
+    const { data: themeCSS = initialThemeCSS || '' } = useQuery({
+        queryKey: ['theme-css', docsJson?.theme],
+        queryFn: async () => {
+            if (!docsJson?.theme) return ''
+            
+            try {
+                // Dynamically import themeModules
+                const { themeModules } = await import('../lib/themes')
+                if (themeModules[docsJson.theme]) {
+                    return themeModules[docsJson.theme]
+                } else {
+                    console.error(`cannot find theme css for ${docsJson.theme}`)
+                    return ''
+                }
+            } catch (error) {
+                console.error(`Failed to load theme ${docsJson?.theme}:`, error)
+                return ''
+            }
+        },
+        enabled: !!docsJson?.theme,
+        staleTime: Infinity, // Theme CSS doesn't change often
+    })
+
+
 
     return (
         <>

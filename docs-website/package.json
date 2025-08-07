@@ -46,6 +46,7 @@
     "@shikijs/themes": "^3.6.0",
     "@shikijs/transformers": "^3.6.0",
     "@sindresorhus/slugify": "^2.2.1",
+    "@tanstack/react-query": "^5.81.5",
     "@types/estree": "^1.0.8",
     "@types/mdast": "^4.0.4",
     "@types/nprogress": "^0.2.3",

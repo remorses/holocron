@@ -203,11 +203,10 @@ export async function loader({ request }: Route.LoaderArgs) {
     // Get theme CSS if theme is specified
     const themeCSS = (() => {
         if (docsJson.theme) {
-            const themePath = `../themes/${docsJson.theme}.css`
-            if (themeModules[themePath]) {
-                return themeModules[themePath] as string
+            if (themeModules[docsJson.theme]) {
+                return themeModules[docsJson.theme]
             } else {
-              console.error(`cannot find theme css for ${themePath}`)
+              console.error(`cannot find theme css for ${docsJson.theme}`)
             }
         }
         return ''
