@@ -7,6 +7,7 @@ import {
     Scripts,
     ScrollRestoration,
 } from 'react-router'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 export function meta() {
     return [
@@ -49,6 +50,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 import { Route } from './+types/root'
 import { useNProgress } from './components/nprogress'
 
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            staleTime: 1000 * 60 * 5, // 5 minutes
+            retry: 1,
+        },
+    },
+})
+
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     const containerClass =
         'flex flex-col items-center justify-center min-h-screen px-6 py-12 text-center bg-background text-foreground'
@@ -84,5 +94,9 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
 export default function App() {
     useNProgress()
-    return <Outlet />
+    return (
+        <QueryClientProvider client={queryClient}>
+            <Outlet />
+        </QueryClientProvider>
+    )
 }

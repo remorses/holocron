@@ -58,6 +58,7 @@
     "@react-router/node": "^7.6.2",
     "@remixicon/react": "^4.6.0",
     "@sentry/node": "^9.28.1",
+    "@tanstack/react-query": "^5.81.5",
     "@types/cookie": "^1.0.0",
     "@types/nprogress": "^0.2.3",
     "@uiw/react-color": "^2.6.0",

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2025-08-07
+
+- Replaced state and useMemo with React Query for fetching resolved stats in `DiffStats` component
+- Added React Query provider to root component for better data fetching management
+- Extracted `generateMessageStream` function from Spiceflow handler for better testability
+- Removed Prisma dependency from `generateMessageStream` completely
+- Replaced branch/chat objects with granular fields (githubFolder, defaultLocale, locales, etc.)
+- Moved database operations to onFinish callback in Spiceflow handler
+- Made isOnboardingChat an explicit input parameter
+- Moved FileSystemEmulator instantiation to Spiceflow route
+
 ## 2025-08-04
 
 - Refactored chat components into separate files for better organization

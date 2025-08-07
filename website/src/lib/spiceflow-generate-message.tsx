@@ -183,6 +183,532 @@ export type WebsiteTools = {
     }
 }
 
+/**
+ * Stateless function for generating messages - no Prisma dependency
+ */
+export async function* generateMessageStream({
+    messages,
+    currentSlug,
+    filesInDraft,
+    fileSystem,
+    isOnboardingChat,
+    branchId,
+    githubFolder,
+    defaultLocale,
+    locales,
+    trieveDatasetId,
+    modelId,
+    modelProvider,
+    onFinish,
+}: {
+    messages: UIMessage[]
+    currentSlug: string
+    filesInDraft: Record<string, FileUpdate>
+    fileSystem: FileSystemEmulator
+    isOnboardingChat: boolean
+    branchId: string
+    githubFolder: string
+    defaultLocale: string
+    locales: string[]
+    trieveDatasetId?: string | null
+    modelId?: string | null
+    modelProvider?: string | null
+    onFinish?: (params: {
+        uiMessages: UIMessage[]
+        isAborted: boolean
+        model: { modelId: string; provider: string }
+    }) => Promise<void>
+}) {
+    const files = await getFilesForSource({
+        branchId,
+        filesInDraft,
+        githubFolder,
+    })
+    const source = getFumadocsSource({
+        files,
+        defaultLanguage: defaultLocale,
+        languages: locales,
+    })
+
+    // let model = groq('moonshotai/kimi-k2-instruct')
+    let model = openai.responses('o4-mini')
+
+    // if (modelId && modelProvider) {
+    //     if (modelProvider.startsWith('openai')) {
+    //         model = openai(modelId)
+    //     } else if (modelProvider === 'anthropic') {
+    //         model = anthropic(modelId)
+    //     } else {
+    //         // throw new Error(
+    //         //     `Unsupported model provider: ${modelProvider}`,
+    //         // )
+    //     }
+    // }
+
+    const docsJsonRenderFormTool = createRenderFormTool({
+        jsonSchema: docsJsonSchema as any,
+        replaceOptionalsWithNulls: model.provider.startsWith('openai'),
+    })
+    // model = anthropic('claude-3-5-haiku-latest')
+    const strReplaceEditor = createEditTool({
+        fileSystem,
+        model: { provider: model.provider },
+        async validateNewContent(x) {
+            if (mdxRegex.test(x.githubPath)) {
+                try {
+                    await processMdxInServer({
+                        markdown: x.content,
+                        githubPath: x.githubPath,
+                        extension: path.extname(x.githubPath),
+                    })
+                } catch (error: any) {
+                    // Extract error details
+                    const errorLine =
+                        error.line || error.position?.start?.line || 1
+                    const errorColumn =
+                        error.column || error.position?.start?.column || 1
+                    const errorMessage =
+                        error.reason || error.message || 'Unknown MDX error'
+
+                    // Split markdown into lines
+                    const lines = x.content.split('\n')
+
+                    // Calculate line range to show (5 lines before and after the error)
+                    const contextRange = 5
+                    const startLine = Math.max(1, errorLine - contextRange)
+                    const endLine = Math.min(
+                        lines.length,
+                        errorLine + contextRange,
+                    )
+
+                    // Build context message
+                    let contextMessage = `MDX Compilation Error at line ${errorLine}, column ${errorColumn}:\n${errorMessage}\n\n`
+                    contextMessage += 'Error Context:\n'
+
+                    for (let i = startLine - 1; i < endLine; i++) {
+                        const lineNumber = i + 1
+                        const isErrorLine = lineNumber === errorLine
+                        const line = lines[i] || ''
+
+                        // Add line with line number
+                        contextMessage += `${lineNumber.toString().padStart(3, ' ')} | ${line}\n`
+
+                        // Add error indicator for the error line
+                        if (isErrorLine && errorColumn) {
+                            const padding = ' '.repeat(5 + errorColumn)
+                            contextMessage += `${padding}^\n`
+                        }
+                    }
+
+                    contextMessage +=
+                        '\nPlease fix the MDX syntax error and submit the tool call again.'
+
+                    throw new Error(contextMessage)
+                }
+            }
+            if (x.githubPath.endsWith('.json')) {
+                try {
+                    JSON.parse(x.content)
+                } catch (e: any) {
+                    // Get line and column for JSON errors
+                    let line = 1
+                    let column = 1
+
+                    // Try to extract position from error message
+                    const posMatch = e.message.match(/position (\d+)/)
+                    if (posMatch) {
+                        const position = parseInt(posMatch[1])
+                        const lines = x.content
+                            .substring(0, position)
+                            .split('\n')
+                        line = lines.length
+                        column = lines[lines.length - 1].length + 1
+                    }
+
+                    // Build context for JSON error
+                    const lines = x.content.split('\n')
+                    const contextRange = 5
+                    const startLine = Math.max(1, line - contextRange)
+                    const endLine = Math.min(
+                        lines.length,
+                        line + contextRange,
+                    )
+
+                    let contextMessage = `JSON Parse Error at line ${line}:\n${e.message}\n\n`
+                    contextMessage += 'Error Context:\n'
+
+                    for (let i = startLine - 1; i < endLine; i++) {
+                        const lineNumber = i + 1
+                        const isErrorLine = lineNumber === line
+                        const lineContent = lines[i] || ''
+
+                        contextMessage += `${lineNumber.toString().padStart(3, ' ')} | ${lineContent}\n`
+
+                        if (isErrorLine && column) {
+                            const padding = ' '.repeat(5 + column - 1)
+                            contextMessage += `${padding}^\n`
+                        }
+                    }
+
+                    contextMessage +=
+                        '\nPlease fix the JSON syntax error and submit the tool call again.'
+
+                    throw new Error(contextMessage)
+                }
+            }
+        },
+    })
+
+    const tools = {
+        strReplaceEditor,
+
+        ...(isOnboardingChat
+            ? {
+                  renderForm: createRenderFormTool({
+                      replaceOptionalsWithNulls:
+                          model.provider.startsWith('openai'),
+                  }),
+              }
+            : {
+                  updateFumabaseJsonc: docsJsonRenderFormTool,
+              }),
+
+        getProjectFiles: tool({
+            description:
+                'Returns a directory tree diagram of the current project files as plain text. Useful for giving an overview or locating files.',
+            inputSchema: z.object({}),
+            execute: async () => {
+                const filePaths = [...files].map((x) => {
+                    const title = x.data?.title || ''
+                    const p = path.posix.join(githubFolder, x.path)
+                    return {
+                        path: p,
+                        title,
+                    }
+                })
+                filePaths.push({
+                    path: path.posix.join(
+                        githubFolder || '.',
+                        'fumabase.jsonc',
+                    ),
+                    title: 'Use the renderForm tool to update these values',
+                })
+                // filePaths.push({ path: 'styles.css', title: 'The CSS styles for the website. Only update this file for advanced CSS customisations' })
+                return printDirectoryTree({
+                    filePaths,
+                })
+            },
+        }),
+
+        deletePages: tool({
+            description:
+                'Delete pages from the website. paths should never start with /. Paths should include the extension.',
+            inputSchema: deletePagesSchema,
+            execute: async ({ filePaths }) => {
+                try {
+                    await fileSystem.deleteBatch(filePaths)
+                    return { deletedFiles: filePaths }
+                } catch (error) {
+                    return {
+                        deletedFiles: [],
+                        error: error.message,
+                    }
+                }
+            },
+        }),
+
+        // Add docs tools - these provide basic functionality for the website context
+        searchDocs: tool({
+            inputSchema: searchDocsInputSchema,
+            execute: async ({ terms, searchType = 'fulltext' }) => {
+                // Try using Trieve search if available, otherwise fallback to simple search
+                if (trieveDatasetId) {
+                    try {
+                        const results = await searchDocsWithTrieve({
+                            trieveDatasetId,
+                            query: terms,
+                            searchType,
+                            tag: '',
+                        })
+                        return formatTrieveSearchResults({
+                            results,
+                            baseUrl: `${process.env.PUBLIC_URL || 'https://fumabase.com'}`,
+                        })
+                    } catch (error) {
+                        console.error(
+                            'Trieve search failed, falling back to simple search:',
+                            error,
+                        )
+                    }
+                }
+
+                // Fallback to simple search through existing pages
+                const allFiles = await getTabFilesWithoutContents({
+                    branchId,
+                })
+                const pages = allFiles.filter((x) => x.type === 'page')
+
+                const results = pages.filter((page) => {
+                    const title = (page.frontmatter as any)?.title || ''
+                    const searchText =
+                        `${title} ${page.githubPath}`.toLowerCase()
+                    return terms.some((term) =>
+                        searchText.includes(term.toLowerCase()),
+                    )
+                })
+
+                return (
+                    `Found ${results.length} pages matching search terms:\n` +
+                    results
+                        .map((page) => {
+                            const title =
+                                (page.frontmatter as any)?.title ||
+                                'Untitled'
+                            return `- ${title} (${page.githubPath})`
+                        })
+                        .join('\n')
+                )
+            },
+        }),
+
+        goToPage: tool({
+            inputSchema: goToPageInputSchema,
+            execute: async ({ slug }) => {
+                const cleanedSlug = cleanSlug(slug)
+                const slugParts = cleanedSlug.split('/').filter(Boolean)
+                const page = source.getPage(slugParts)
+
+                if (!page) {
+                    return { error: `Page ${cleanedSlug} not found` }
+                }
+
+                return {
+                    slug: page.url,
+                    message: `Found page: ${page.url}`,
+                }
+            },
+        }),
+
+        getCurrentPage: tool({
+            inputSchema: getCurrentPageInputSchema,
+            execute: async () => {
+                return `Current page slug: ${currentSlug}`
+            },
+        }),
+
+        fetchUrl: tool({
+            description:
+                'Fetch content from external websites. Only absolute HTTPS URLs are allowed.',
+            inputSchema: websiteFetchUrlInputSchema,
+            execute: async ({ url }) => {
+                // Validate that URL starts with https://
+                if (!url.startsWith('https://')) {
+                    return `Error: Only HTTPS URLs are allowed. URL must start with https://`
+                }
+
+                try {
+                    const response = await fetch(url)
+                    if (!response.ok) {
+                        return `Failed to fetch ${url}: ${response.status} ${response.statusText}`
+                    }
+
+                    const contentType =
+                        response.headers.get('content-type') || ''
+
+                    if (contentType.includes('application/json')) {
+                        const data = await response.json()
+                        const jsonString = JSON.stringify(data, null, 2)
+                        return (
+                            jsonString.substring(0, 2000) +
+                            (jsonString.length > 2000 ? '...' : '')
+                        )
+                    } else if (contentType.includes('text/html')) {
+                        const html = await response.text()
+                        return (
+                            html.substring(0, 2000) +
+                            (html.length > 2000 ? '...' : '')
+                        )
+                    } else {
+                        const text = await response.text()
+                        return (
+                            text.substring(0, 2000) +
+                            (text.length > 2000 ? '...' : '')
+                        )
+                    }
+                } catch (error) {
+                    return `Error fetching ${url}: ${error.message}`
+                }
+            },
+        }),
+
+        selectText: tool({
+            inputSchema: selectTextInputSchema,
+            description: dedent`
+            Select a range of lines inside a page to highlight some content for the user.
+
+            Always use this tool when the user asks you to search something in the website.
+
+            This tool is only useful as a way to highlight information to the user. It has no actual effect other than presentational, you should not use it unless the user is asking to search something in the website.
+
+            This is the preferred way to show information to the user instead of quoting the page again in a message.
+
+            Your messages should always be super short and concise.
+            `,
+            execute: async ({ slug, startLine, endLine }) => {
+                const cleanedSlug = cleanSlug(slug)
+                const slugParts = cleanedSlug.split('/').filter(Boolean)
+                const page = source.getPage(slugParts)
+
+                if (!page) {
+                    return { error: `Page ${cleanedSlug} not found` }
+                }
+
+                return {
+                    slug: page.url,
+                    startLine,
+                    endLine,
+                    message: `Selected text on ${page.url} from line ${startLine} to ${endLine}`,
+                }
+            },
+        }),
+
+        renameFile: tool({
+            description:
+                'Rename or move a file within the website. This updates the file path while preserving its content. Ensure the parent directory exists before moving a file to a new location.',
+            inputSchema: renameFileSchema,
+            execute: async ({ oldPath, newPath }) => {
+                try {
+                    await fileSystem.move(oldPath, newPath)
+                    return {
+                        oldPath,
+                        newPath,
+                        success: true,
+                    }
+                } catch (error) {
+                    return {
+                        oldPath,
+                        newPath,
+                        success: false,
+                        error: error.message,
+                    }
+                }
+            },
+        }),
+
+        ...(model.provider === 'openai' && {
+            webSearchOpenAI: openai.tools.webSearchPreview({
+                searchContextSize: 'high',
+            }),
+        }),
+        ...(model.provider === 'anthropic' && {
+            webSearchAnthropic: anthropic.tools.webSearch_20250305({}),
+        }),
+    }
+
+    const allMessages: ModelMessage[] = [
+        {
+            role: 'system',
+
+            content: [
+                await import('../prompts/agent.md?raw').then(
+                    (x) => x.default,
+                ),
+                await import('../prompts/tone-and-style.md?raw').then(
+                    (x) => x.default,
+                ),
+                await import('../prompts/writing-mdx.md?raw').then(
+                    (x) => x.default,
+                ),
+                await import('../prompts/css-variables.md?raw').then(
+                    (x) => x.default,
+                ),
+                await import('../prompts/frontmatter.md?raw').then(
+                    (x) => x.default,
+                ),
+
+                dedent`
+                ## fumabase.jsonc
+
+                You can edit a top level fumabase.jsonc file to customize website settings, this file has the following json schema:
+
+                <fumabaseJsonSchema>
+                ${JSON.stringify(docsJsonSchema, null, 2)}
+                </fumabaseJsonSchema>
+                `,
+                isOnboardingChat && '## Onboarding Instructions',
+                isOnboardingChat &&
+                    (await import('../prompts/create-site.md?raw').then(
+                        (x) => x.default,
+                    )),
+                isOnboardingChat && generateExampleTemplateFilesPrompt(),
+            ]
+                .filter(Boolean)
+                .join('\n\n'),
+        },
+        ...convertToModelMessages(
+            messages.filter((x) => x.role !== 'system'),
+        ),
+    ]
+
+    debugMessages(allMessages)
+
+    const result = streamText({
+        model,
+        tools,
+        onError: (error) => {
+            console.log(`Error in streamText:`, error)
+            throw error
+        },
+        experimental_transform: smoothStream({
+            delayInMs: 10,
+            chunking: 'word',
+        }),
+        messages: allMessages,
+        stopWhen: stepCountIs(100),
+
+        providerOptions: {
+            openai: {
+                reasoningSummary: 'detailed',
+                strictJsonSchema: true,
+                include: ['reasoning.encrypted_content'],
+                store: false,
+                parallelToolCalls: true,
+            } satisfies OpenAIResponsesProviderOptions,
+        },
+    })
+
+    const idGenerator = createIdGenerator()
+    const stream = result.toUIMessageStream({
+        onError: (error) => {
+            console.error(`Error in toUIMessageStream:`, error)
+            throw error
+        },
+
+        originalMessages: messages,
+        generateMessageId: idGenerator,
+        async onFinish({ messages: uiMessages, isAborted }) {
+            console.log(
+                `chat finished, processing`,
+                isAborted ? 'aborted' : 'completed',
+            )
+
+            debugMessages(uiMessages, 'scripts/ui-result-messages.json')
+
+            if (onFinish) {
+                await onFinish({
+                    uiMessages,
+                    isAborted,
+                    model: { modelId: model.modelId, provider: model.provider },
+                })
+            }
+        },
+    })
+    for await (const message of stream) {
+        yield message
+    }
+    await result.content
+}
+
 export const generateMessageApp = new Spiceflow().state('userId', '').route({
     method: 'POST',
     path: '/generateMessage',
@@ -242,487 +768,9 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             throw new Error('You do not have access to this branch')
         }
 
-        const isOnboardingChat = !pageCount
-
-        const githubFolder = branch.site.githubFolder || ''
-        const files = await getFilesForSource({
-            branchId,
-            filesInDraft,
-            githubFolder,
-        })
-        const source = getFumadocsSource({
-            files,
-            defaultLanguage: branch.site?.defaultLocale || 'en',
-            languages: branch.site?.locales?.map((x) => x.locale) || [],
-        })
-
-        // let model = groq('moonshotai/kimi-k2-instruct')
-        let model = openai.responses('o4-mini')
-
-        // if (chat?.modelId && chat?.modelProvider) {
-        //     if (chat.modelProvider.startsWith('openai')) {
-        //         model = openai(chat.modelId)
-        //     } else if (chat.modelProvider === 'anthropic') {
-        //         model = anthropic(chat.modelId)
-        //     } else {
-        //         // throw new Error(
-        //         //     `Unsupported model provider: ${chat.modelProvider}`,
-        //         // )
-        //     }
-        // }
-        // Create FileSystemEmulator instance
-        const fileSystem = new FileSystemEmulator({
-            filesInDraft,
-            getPageContent: async (githubPath) => {
-                const content = await getPageContent({ githubPath, branchId })
-                return content
-            },
-            onFilesDraftChange: async () => {
-                // Update the chat with current filesInDraft state
-                await prisma.chat.update({
-                    where: { chatId, userId },
-                    data: {
-                        filesInDraft: (filesInDraft as any) || {},
-                    },
-                })
-            },
-        })
-
-        const docsJsonRenderFormTool = createRenderFormTool({
-            jsonSchema: docsJsonSchema as any,
-            replaceOptionalsWithNulls: model.provider.startsWith('openai'),
-        })
-        // model = anthropic('claude-3-5-haiku-latest')
-        const strReplaceEditor = createEditTool({
-            fileSystem,
-            model: { provider: model.provider },
-            async validateNewContent(x) {
-                if (mdxRegex.test(x.githubPath)) {
-                    try {
-                        await processMdxInServer({
-                            markdown: x.content,
-                            githubPath: x.githubPath,
-                            extension: path.extname(x.githubPath),
-                        })
-                    } catch (error: any) {
-                        // Extract error details
-                        const errorLine =
-                            error.line || error.position?.start?.line || 1
-                        const errorColumn =
-                            error.column || error.position?.start?.column || 1
-                        const errorMessage =
-                            error.reason || error.message || 'Unknown MDX error'
-
-                        // Split markdown into lines
-                        const lines = x.content.split('\n')
-
-                        // Calculate line range to show (5 lines before and after the error)
-                        const contextRange = 5
-                        const startLine = Math.max(1, errorLine - contextRange)
-                        const endLine = Math.min(
-                            lines.length,
-                            errorLine + contextRange,
-                        )
-
-                        // Build context message
-                        let contextMessage = `MDX Compilation Error at line ${errorLine}, column ${errorColumn}:\n${errorMessage}\n\n`
-                        contextMessage += 'Error Context:\n'
-
-                        for (let i = startLine - 1; i < endLine; i++) {
-                            const lineNumber = i + 1
-                            const isErrorLine = lineNumber === errorLine
-                            const line = lines[i] || ''
-
-                            // Add line with line number
-                            contextMessage += `${lineNumber.toString().padStart(3, ' ')} | ${line}\n`
-
-                            // Add error indicator for the error line
-                            if (isErrorLine && errorColumn) {
-                                const padding = ' '.repeat(5 + errorColumn)
-                                contextMessage += `${padding}^\n`
-                            }
-                        }
-
-                        contextMessage +=
-                            '\nPlease fix the MDX syntax error and submit the tool call again.'
-
-                        throw new Error(contextMessage)
-                    }
-                }
-                if (x.githubPath.endsWith('.json')) {
-                    try {
-                        JSON.parse(x.content)
-                    } catch (e: any) {
-                        // Get line and column for JSON errors
-                        let line = 1
-                        let column = 1
-
-                        // Try to extract position from error message
-                        const posMatch = e.message.match(/position (\d+)/)
-                        if (posMatch) {
-                            const position = parseInt(posMatch[1])
-                            const lines = x.content
-                                .substring(0, position)
-                                .split('\n')
-                            line = lines.length
-                            column = lines[lines.length - 1].length + 1
-                        }
-
-                        // Build context for JSON error
-                        const lines = x.content.split('\n')
-                        const contextRange = 5
-                        const startLine = Math.max(1, line - contextRange)
-                        const endLine = Math.min(
-                            lines.length,
-                            line + contextRange,
-                        )
-
-                        let contextMessage = `JSON Parse Error at line ${line}:\n${e.message}\n\n`
-                        contextMessage += 'Error Context:\n'
-
-                        for (let i = startLine - 1; i < endLine; i++) {
-                            const lineNumber = i + 1
-                            const isErrorLine = lineNumber === line
-                            const lineContent = lines[i] || ''
-
-                            contextMessage += `${lineNumber.toString().padStart(3, ' ')} | ${lineContent}\n`
-
-                            if (isErrorLine && column) {
-                                const padding = ' '.repeat(5 + column - 1)
-                                contextMessage += `${padding}^\n`
-                            }
-                        }
-
-                        contextMessage +=
-                            '\nPlease fix the JSON syntax error and submit the tool call again.'
-
-                        throw new Error(contextMessage)
-                    }
-                }
-            },
-        })
-
-        const tools = {
-            strReplaceEditor,
-
-            ...(isOnboardingChat
-                ? {
-                      renderForm: createRenderFormTool({
-                          replaceOptionalsWithNulls:
-                              model.provider.startsWith('openai'),
-                      }),
-                  }
-                : {
-                      updateFumabaseJsonc: docsJsonRenderFormTool,
-                  }),
-
-            getProjectFiles: tool({
-                description:
-                    'Returns a directory tree diagram of the current project files as plain text. Useful for giving an overview or locating files.',
-                inputSchema: z.object({}),
-                execute: async () => {
-                    const filePaths = [...files].map((x) => {
-                        const title = x.data?.title || ''
-                        const p = path.posix.join(githubFolder, x.path)
-                        return {
-                            path: p,
-                            title,
-                        }
-                    })
-                    filePaths.push({
-                        path: path.posix.join(
-                            branch.site.githubFolder || '.',
-                            'fumabase.jsonc',
-                        ),
-                        title: 'Use the renderForm tool to update these values',
-                    })
-                    // filePaths.push({ path: 'styles.css', title: 'The CSS styles for the website. Only update this file for advanced CSS customisations' })
-                    return printDirectoryTree({
-                        filePaths,
-                    })
-                },
-            }),
-
-            deletePages: tool({
-                description:
-                    'Delete pages from the website. paths should never start with /. Paths should include the extension.',
-                inputSchema: deletePagesSchema,
-                execute: async ({ filePaths }) => {
-                    try {
-                        await fileSystem.deleteBatch(filePaths)
-                        return { deletedFiles: filePaths }
-                    } catch (error) {
-                        return {
-                            deletedFiles: [],
-                            error: error.message,
-                        }
-                    }
-                },
-            }),
-
-            // Add docs tools - these provide basic functionality for the website context
-            searchDocs: tool({
-                inputSchema: searchDocsInputSchema,
-                execute: async ({ terms, searchType = 'fulltext' }) => {
-                    // Try using Trieve search if available, otherwise fallback to simple search
-                    if (branch.trieveDatasetId) {
-                        try {
-                            const results = await searchDocsWithTrieve({
-                                trieveDatasetId: branch.trieveDatasetId,
-                                query: terms,
-                                searchType,
-                                tag: '',
-                            })
-                            return formatTrieveSearchResults({
-                                results,
-                                baseUrl: `${process.env.PUBLIC_URL || 'https://fumabase.com'}`,
-                            })
-                        } catch (error) {
-                            console.error(
-                                'Trieve search failed, falling back to simple search:',
-                                error,
-                            )
-                        }
-                    }
-
-                    // Fallback to simple search through existing pages
-                    const allFiles = await getTabFilesWithoutContents({
-                        branchId,
-                    })
-                    const pages = allFiles.filter((x) => x.type === 'page')
-
-                    const results = pages.filter((page) => {
-                        const title = (page.frontmatter as any)?.title || ''
-                        const searchText =
-                            `${title} ${page.githubPath}`.toLowerCase()
-                        return terms.some((term) =>
-                            searchText.includes(term.toLowerCase()),
-                        )
-                    })
-
-                    return (
-                        `Found ${results.length} pages matching search terms:\n` +
-                        results
-                            .map((page) => {
-                                const title =
-                                    (page.frontmatter as any)?.title ||
-                                    'Untitled'
-                                return `- ${title} (${page.githubPath})`
-                            })
-                            .join('\n')
-                    )
-                },
-            }),
-
-            goToPage: tool({
-                inputSchema: goToPageInputSchema,
-                execute: async ({ slug }) => {
-                    const cleanedSlug = cleanSlug(slug)
-                    const slugParts = cleanedSlug.split('/').filter(Boolean)
-                    const page = source.getPage(slugParts)
-
-                    if (!page) {
-                        return { error: `Page ${cleanedSlug} not found` }
-                    }
-
-                    return {
-                        slug: page.url,
-                        message: `Found page: ${page.url}`,
-                    }
-                },
-            }),
-
-            getCurrentPage: tool({
-                inputSchema: getCurrentPageInputSchema,
-                execute: async () => {
-                    return `Current page slug: ${currentSlug}`
-                },
-            }),
-
-            fetchUrl: tool({
-                description:
-                    'Fetch content from external websites. Only absolute HTTPS URLs are allowed.',
-                inputSchema: websiteFetchUrlInputSchema,
-                execute: async ({ url }) => {
-                    // Validate that URL starts with https://
-                    if (!url.startsWith('https://')) {
-                        return `Error: Only HTTPS URLs are allowed. URL must start with https://`
-                    }
-
-                    try {
-                        const response = await fetch(url)
-                        if (!response.ok) {
-                            return `Failed to fetch ${url}: ${response.status} ${response.statusText}`
-                        }
-
-                        const contentType =
-                            response.headers.get('content-type') || ''
-
-                        if (contentType.includes('application/json')) {
-                            const data = await response.json()
-                            const jsonString = JSON.stringify(data, null, 2)
-                            return (
-                                jsonString.substring(0, 2000) +
-                                (jsonString.length > 2000 ? '...' : '')
-                            )
-                        } else if (contentType.includes('text/html')) {
-                            const html = await response.text()
-                            return (
-                                html.substring(0, 2000) +
-                                (html.length > 2000 ? '...' : '')
-                            )
-                        } else {
-                            const text = await response.text()
-                            return (
-                                text.substring(0, 2000) +
-                                (text.length > 2000 ? '...' : '')
-                            )
-                        }
-                    } catch (error) {
-                        return `Error fetching ${url}: ${error.message}`
-                    }
-                },
-            }),
-
-            selectText: tool({
-                inputSchema: selectTextInputSchema,
-                description: dedent`
-                Select a range of lines inside a page to highlight some content for the user.
-
-                Always use this tool when the user asks you to search something in the website.
-
-                This tool is only useful as a way to highlight information to the user. It has no actual effect other than presentational, you should not use it unless the user is asking to search something in the website.
-
-                This is the preferred way to show information to the user instead of quoting the page again in a message.
-
-                Your messages should always be super short and concise.
-                `,
-                execute: async ({ slug, startLine, endLine }) => {
-                    const cleanedSlug = cleanSlug(slug)
-                    const slugParts = cleanedSlug.split('/').filter(Boolean)
-                    const page = source.getPage(slugParts)
-
-                    if (!page) {
-                        return { error: `Page ${cleanedSlug} not found` }
-                    }
-
-                    return {
-                        slug: page.url,
-                        startLine,
-                        endLine,
-                        message: `Selected text on ${page.url} from line ${startLine} to ${endLine}`,
-                    }
-                },
-            }),
-
-            renameFile: tool({
-                description:
-                    'Rename or move a file within the website. This updates the file path while preserving its content. Ensure the parent directory exists before moving a file to a new location.',
-                inputSchema: renameFileSchema,
-                execute: async ({ oldPath, newPath }) => {
-                    try {
-                        await fileSystem.move(oldPath, newPath)
-                        return {
-                            oldPath,
-                            newPath,
-                            success: true,
-                        }
-                    } catch (error) {
-                        return {
-                            oldPath,
-                            newPath,
-                            success: false,
-                            error: error.message,
-                        }
-                    }
-                },
-            }),
-
-            ...(model.provider === 'openai' && {
-                webSearchOpenAI: openai.tools.webSearchPreview({
-                    searchContextSize: 'high',
-                }),
-            }),
-            ...(model.provider === 'anthropic' && {
-                webSearchAnthropic: anthropic.tools.webSearch_20250305({}),
-            }),
-        }
-
-        const allMessages: ModelMessage[] = [
-            {
-                role: 'system',
-
-                content: [
-                    await import('../prompts/agent.md?raw').then(
-                        (x) => x.default,
-                    ),
-                    await import('../prompts/tone-and-style.md?raw').then(
-                        (x) => x.default,
-                    ),
-                    await import('../prompts/writing-mdx.md?raw').then(
-                        (x) => x.default,
-                    ),
-                    await import('../prompts/css-variables.md?raw').then(
-                        (x) => x.default,
-                    ),
-                    await import('../prompts/frontmatter.md?raw').then(
-                        (x) => x.default,
-                    ),
-
-                    dedent`
-                    ## fumabase.jsonc
-
-                    You can edit a top level fumabase.jsonc file to customize website settings, this file has the following json schema:
-
-                    <fumabaseJsonSchema>
-                    ${JSON.stringify(docsJsonSchema, null, 2)}
-                    </fumabaseJsonSchema>
-                    `,
-                    isOnboardingChat && '## Onboarding Instructions',
-                    isOnboardingChat &&
-                        (await import('../prompts/create-site.md?raw').then(
-                            (x) => x.default,
-                        )),
-                    isOnboardingChat && generateExampleTemplateFilesPrompt(),
-                ]
-                    .filter(Boolean)
-                    .join('\n\n'),
-            },
-            ...convertToModelMessages(
-                messages.filter((x) => x.role !== 'system'),
-            ),
-        ]
-
-        debugMessages(allMessages)
-
-        const result = streamText({
-            model,
-            tools,
-            onError: (error) => {
-                console.log(`Error in streamText:`, error)
-                throw error
-            },
-            experimental_transform: smoothStream({
-                delayInMs: 10,
-                chunking: 'word',
-            }),
-            messages: allMessages,
-            stopWhen: stepCountIs(100),
-
-            providerOptions: {
-                openai: {
-                    reasoningSummary: 'detailed',
-                    strictJsonSchema: true,
-                    include: ['reasoning.encrypted_content'],
-                    store: false,
-                    parallelToolCalls: true,
-                } satisfies OpenAIResponsesProviderOptions,
-            },
-        })
-
+        // Create the last user message before streaming
         const lastUserMessage = messages.findLast((x) => x.role === 'user')
         if (lastUserMessage) {
-            // console.log(`creating message for`, lastUserMessage)
             // Extract text content from parts
             const content = lastUserMessage.parts
                 .filter((part) => part.type === 'text')
@@ -742,31 +790,46 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     chatId,
                     createdAt: new Date(),
                     id: lastUserMessage.id,
-
                     role: 'user',
                 },
             })
         }
-        const idGenerator = createIdGenerator()
-        const stream = result.toUIMessageStream({
-            onError: (error) => {
-                console.error(`Error in toUIMessageStream:`, error)
-                throw error
+
+        // Create FileSystemEmulator instance
+        const fileSystem = new FileSystemEmulator({
+            filesInDraft,
+            getPageContent: async (githubPath) => {
+                const content = await getPageContent({ githubPath, branchId })
+                return content
             },
+            onFilesDraftChange: async () => {
+                // Update the chat with current filesInDraft state
+                await prisma.chat.update({
+                    where: { chatId, userId },
+                    data: {
+                        filesInDraft: (filesInDraft as any) || {},
+                    },
+                })
+            },
+        })
 
-            originalMessages: messages,
-            generateMessageId: idGenerator,
-            async onFinish({ messages: uiMessages, isAborted }) {
-                console.log(
-                    `chat finished, saving the chat in database`,
-                    isAborted ? 'aborted' : 'completed',
-                )
-
-                debugMessages(uiMessages, 'scripts/ui-result-messages.json')
-
+        // Use the extracted stateless function
+        yield* generateMessageStream({
+            messages,
+            currentSlug,
+            filesInDraft,
+            fileSystem,
+            isOnboardingChat: !pageCount,
+            branchId,
+            githubFolder: branch.site.githubFolder || '',
+            defaultLocale: branch.site?.defaultLocale || 'en',
+            locales: branch.site?.locales?.map((x) => x.locale) || [],
+            trieveDatasetId: branch.trieveDatasetId,
+            modelId: chat?.modelId,
+            modelProvider: chat?.modelProvider,
+            onFinish: async ({ uiMessages, isAborted, model }) => {
                 const previousMessages = await prisma.chatMessage.findMany({
                     where: { chatId },
-
                     orderBy: { index: 'asc' },
                 })
 
@@ -810,7 +873,6 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
 
                     if (msg.role !== 'assistant' && msg.role !== 'user') {
                         console.log(`ignoring message with role ${msg.role}`)
-                        msg.role
                         continue
                     }
                     const content =
@@ -932,11 +994,9 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                                 }),
                             )
                         } else {
-                            part.type
                             console.log(
                                 `skipping message of type ${part.type} in the database`,
                             )
-                            part.type
                         }
                         // Ignore all other part types for now
                     }
@@ -953,10 +1013,6 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 )
             },
         })
-        for await (const message of stream) {
-            yield message
-        }
-        await result.content
     },
 })
 
