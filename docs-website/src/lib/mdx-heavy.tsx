@@ -96,8 +96,6 @@ const remarkCodeToHtml = () => async (tree: Root, file) => {
                     ],
                 })
 
-                console.log(node.data.hProperties)
-                console.log(hast)
                 // Apply node.data.hProperties to all <pre> elements in the hast tree
                 if (hast && node.data && node.data.hProperties) {
                     visit(

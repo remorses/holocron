@@ -191,8 +191,8 @@ export async function* generateMessageStream({
     currentSlug,
     filesInDraft,
     fileSystem,
+    files,
     isOnboardingChat,
-    branchId,
     githubFolder,
     defaultLocale,
     locales,
@@ -200,13 +200,14 @@ export async function* generateMessageStream({
     modelId,
     modelProvider,
     onFinish,
+    experimental_wrapLanguageModel,
 }: {
     messages: UIMessage[]
     currentSlug: string
     filesInDraft: Record<string, FileUpdate>
     fileSystem: FileSystemEmulator
+    files: any[] // Files from getFilesForSource
     isOnboardingChat: boolean
-    branchId: string
     githubFolder: string
     defaultLocale: string
     locales: string[]
@@ -218,12 +219,8 @@ export async function* generateMessageStream({
         isAborted: boolean
         model: { modelId: string; provider: string }
     }) => Promise<void>
+    experimental_wrapLanguageModel?: (model: any) => any
 }) {
-    const files = await getFilesForSource({
-        branchId,
-        filesInDraft,
-        githubFolder,
-    })
     const source = getFumadocsSource({
         files,
         defaultLanguage: defaultLocale,
@@ -231,7 +228,7 @@ export async function* generateMessageStream({
     })
 
     // let model = groq('moonshotai/kimi-k2-instruct')
-    let model = openai.responses('o4-mini')
+    let model: any = openai.responses('o4-mini')
 
     // if (modelId && modelProvider) {
     //     if (modelProvider.startsWith('openai')) {
@@ -244,6 +241,11 @@ export async function* generateMessageStream({
     //         // )
     //     }
     // }
+
+    // Apply middleware if provided
+    if (experimental_wrapLanguageModel) {
+        model = experimental_wrapLanguageModel(model)
+    }
 
     const docsJsonRenderFormTool = createRenderFormTool({
         jsonSchema: docsJsonSchema as any,
@@ -442,16 +444,13 @@ export async function* generateMessageStream({
                     }
                 }
 
-                // Fallback to simple search through existing pages
-                const allFiles = await getTabFilesWithoutContents({
-                    branchId,
-                })
-                const pages = allFiles.filter((x) => x.type === 'page')
+                // Fallback to simple search through existing files
+                const pages = files.filter((x) => x.data)
 
                 const results = pages.filter((page) => {
-                    const title = (page.frontmatter as any)?.title || ''
+                    const title = page.data?.title || ''
                     const searchText =
-                        `${title} ${page.githubPath}`.toLowerCase()
+                        `${title} ${page.path}`.toLowerCase()
                     return terms.some((term) =>
                         searchText.includes(term.toLowerCase()),
                     )
@@ -461,10 +460,8 @@ export async function* generateMessageStream({
                     `Found ${results.length} pages matching search terms:\n` +
                     results
                         .map((page) => {
-                            const title =
-                                (page.frontmatter as any)?.title ||
-                                'Untitled'
-                            return `- ${title} (${page.githubPath})`
+                            const title = page.data?.title || 'Untitled'
+                            return `- ${title} (${page.path})`
                         })
                         .join('\n')
                 )
@@ -659,10 +656,12 @@ export async function* generateMessageStream({
             console.log(`Error in streamText:`, error)
             throw error
         },
-        experimental_transform: smoothStream({
-            delayInMs: 10,
-            chunking: 'word',
-        }),
+        experimental_transform: process.env.VITEST 
+            ? undefined 
+            : smoothStream({
+                delayInMs: 10,
+                chunking: 'word',
+            }),
         messages: allMessages,
         stopWhen: stepCountIs(100),
 
@@ -795,6 +794,13 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             })
         }
 
+        const githubFolder = branch.site.githubFolder || ''
+        const files = await getFilesForSource({
+            branchId,
+            filesInDraft,
+            githubFolder,
+        })
+
         // Create FileSystemEmulator instance
         const fileSystem = new FileSystemEmulator({
             filesInDraft,
@@ -819,9 +825,9 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             currentSlug,
             filesInDraft,
             fileSystem,
+            files,
             isOnboardingChat: !pageCount,
-            branchId,
-            githubFolder: branch.site.githubFolder || '',
+            githubFolder,
             defaultLocale: branch.site?.defaultLocale || 'en',
             locales: branch.site?.locales?.map((x) => x.locale) || [],
             trieveDatasetId: branch.trieveDatasetId,

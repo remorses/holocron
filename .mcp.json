@@ -1,19 +1,27 @@
 {
-    "mcpServers": {
-        "playwriter": {
-            "command": "pnpm",
-            "args": ["--filter", "playwriter", "mcp"]
-        },
-        "lsp": {
-            "command": "mcp-language-server",
-            "args": [
-                "--workspace",
-                "/Users/morse/Documents/GitHub/fumabase/",
-                "--lsp",
-                "typescript-language-server",
-                "--",
-                "--stdio"
-            ]
-        }
+  "mcpServers": {
+    "playwriter": {
+      "command": "pnpm",
+      "args": [
+        "--filter",
+        "playwriter",
+        "mcp"
+      ]
+    },
+    "lsp": {
+      "command": "mcp-language-server",
+      "args": [
+        "--workspace",
+        "/Users/morse/Documents/GitHub/fumabase/",
+        "--lsp",
+        "typescript-language-server",
+        "--",
+        "--stdio"
+      ]
+    },
+    "framer": {
+      "type": "sse",
+      "url": "https://mcp.unframer.co/sse?id=598f176d590e612e9b6bcaebb54abb0a8763c6f54ba5b9c136690ff9ad2400cc&secret=FpGeQQcnvd9CpFvZwEdONuAjEX7c6AwJ"
     }
+  }
 }

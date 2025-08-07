@@ -10,6 +10,30 @@
 - Moved database operations to onFinish callback in Spiceflow handler
 - Made isOnboardingChat an explicit input parameter
 - Moved FileSystemEmulator instantiation to Spiceflow route
+- Made files an input argument to remove internal getFilesForSource call
+- Removed branchId from generateMessageStream parameters
+- Added experimental_wrapLanguageModel middleware support for AI models
+- Created comprehensive test for generateMessageStream with AI cache middleware
+- Added testGenerateMessage utility function that accepts CoreMessage[] for easier testing  
+- Implemented comprehensive markdown conversion for all UI message part types:
+  - Text, reasoning, tool calls, tool states (input/output/error)
+  - File attachments, source URLs, step boundaries
+  - Special formatting for strReplaceEditor tool (view, create, str_replace)
+- Used readUIMessageStream with asyncIterableToReadableStream for proper stream consumption
+- Added snapshot testing with detailed markdown output showing full conversation flow
+- Created generate-message-utils.ts with reusable test utilities
+- Made testGenerateMessage an async generator that yields intermediate results
+- Added currentSlug parameter with default value '/'
+- Implemented partial snapshot writing during streaming for debugging
+- Used while loop pattern for iterating async generators in tests
+- Exported TestGenerateMessageResult and TestGenerateMessageInput types
+- Parametrized tests using array of test cases with name and onFinish callbacks
+- Created for loop to generate individual tests for each test case
+- Added filesInDraftToMarkdown serializer with file tree visualization using printDirectoryTree
+- Updated tests to write both message and files snapshots with 50ms throttling for partial writes
+- Snapshot files now use naming convention: name-message.md and name-files.md
+- Updated uiMessageToMarkdown to use YAML format wrapped in XML tags for tool rendering
+- Disabled smoothStream transformation when process.env.VITEST is defined for faster test execution
 
 ## 2025-08-04
 

@@ -60,6 +60,7 @@
     "@sentry/node": "^9.28.1",
     "@tanstack/react-query": "^5.81.5",
     "@types/cookie": "^1.0.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/nprogress": "^0.2.3",
     "@uiw/react-color": "^2.6.0",
     "@upstash/qstash": "^2.8.1",
