@@ -182,7 +182,6 @@ export async function loader({ request }: Route.LoaderArgs) {
     // Check for preview websocket ID in cookies
 
     const previewWebsocketId = cookies['__websocket_preview'] || null
-    // Trieve fields removed - now using Eyecrest with branchId
 
     // Check signal before openapi processing
     if (request.signal.aborted) {
@@ -217,8 +216,6 @@ export async function loader({ request }: Route.LoaderArgs) {
         url.searchParams.get('editorPreviewMode') === 'true'
 
     console.timeEnd(`${timerId} - total root loader time`)
-    const trieveReadApiKey = siteBranch.trieveReadApiKey
-    const trieveDatasetId = siteBranch.trieveDatasetId
     return {
         openapiUrl,
         openapiRenderer,
@@ -230,8 +227,6 @@ export async function loader({ request }: Route.LoaderArgs) {
         name: site.name,
         githubFolder: site.githubFolder,
         bannerAst,
-        trieveReadApiKey,
-        trieveDatasetId,
         previewWebsocketId,
         cssStyles: siteBranch.cssStyles,
         githubOwner: site.githubOwner,

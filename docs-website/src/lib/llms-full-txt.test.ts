@@ -72,8 +72,6 @@ describe(
                       json docsJson
                       json docsJsonComments
                       string cssStyles
-                      string trieveDatasetId
-                      string trieveReadApiKey
                       datetime lastGithubSyncAt
                   }
 

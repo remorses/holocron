@@ -220,14 +220,10 @@ export async function* testGenerateMessage({
         githubFolder: '',
         defaultLocale: 'en',
         locales: ['en'],
-        trieveDatasetId: null,
+        branchId: 'test-branch',
         modelId: null,
         modelProvider: null,
-        experimental_wrapLanguageModel: (model: any) =>
-            wrapLanguageModel({
-                model,
-                middleware: cacheMiddleware,
-            }),
+        middlewares: [cacheMiddleware],
     })
 
     // Convert async generator to ReadableStream

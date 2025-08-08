@@ -27,7 +27,6 @@ export async function generateLlmsFullTxt({
         },
         select: {
             branchId: true,
-            trieveDatasetId: true,
             domains: true,
             site: {
                 select: {

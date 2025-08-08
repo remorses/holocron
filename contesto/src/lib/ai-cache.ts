@@ -53,6 +53,7 @@ export function createAiCacheMiddleware({
             } : null
 
             if (cached && cached.result) {
+                // console.log(`using cache for ai request with model ${model.modelId}`)
                 return {
                     ...cached.result,
                     response: {
@@ -63,6 +64,7 @@ export function createAiCacheMiddleware({
                     },
                 }
             }
+            console.log(`skipping cache for ai request with model ${model.modelId}`)
 
             const result = await doGenerate()
 
@@ -93,6 +95,7 @@ export function createAiCacheMiddleware({
 
             // If cached, return a simulated ReadableStream that yields the cached result
             if (cached && cached.chunks) {
+
                 // Format the timestamps in the cached response
                 const formattedChunks = cached.chunks.map((p) => {
                     if (p.type === 'response-metadata' && p.timestamp) {
@@ -109,6 +112,7 @@ export function createAiCacheMiddleware({
                     rawCall: { rawPrompt: null, rawSettings: {} },
                 }
             }
+            console.log(`skipping cache for ai request with model ${model.modelId}`)
 
             // If not cached, proceed with streaming
             const { stream, ...rest } = await doStream()

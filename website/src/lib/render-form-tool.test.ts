@@ -472,70 +472,27 @@ test('render form tool schema is readable', () => {
           "fields": {
             "items": {
               "additionalProperties": false,
-              "description": "Each field requires a name property that describes the filed updated on that fumabase.jsonc scalar field, it can be siteId, name, description, logo.light, logo.dark, logo.href, logo.text, favicon.light, favicon.dark, navbar.links.{index}.label, navbar.links.{index}.href, navbar.links.{index}.icon, navbar.primary.type, navbar.primary.label, navbar.primary.href, navbar.primary.type, navbar.primary.href, tabs.{index}.tab, tabs.{index}.openapi, tabs.{index}.renderer, tabs.{index}.tab, tabs.{index}.mcp, footer.socials, footer.links.{index}.header, footer.links.{index}.items.{index}.label, footer.links.{index}.items.{index}.href, seo.metatags, seo.indexing, redirects.{index}.source, redirects.{index}.destination, redirects.{index}.permanent, banner.content, banner.dismissible, contextual.options.{index}, cssVariables.light, cssVariables.dark, domains.{index}, hideSidebar, ignore.{index}, theme where {index} is a number. NEVER use [index] syntax, for example instead of domains[0] use domains.0",
               "properties": {
                 "description": {
-                  "anyOf": [
-                    {
-                      "type": "string",
-                    },
-                    {
-                      "type": "null",
-                    },
-                  ],
+                  "type": "string",
                 },
                 "groupTitle": {
-                  "anyOf": [
-                    {
-                      "type": "string",
-                    },
-                    {
-                      "type": "null",
-                    },
-                  ],
                   "description": "Optional group title. When consecutive fields share the same groupTitle, they will be wrapped in a container with this title. ONLY use this for array of objects to put each object in the array into its own group. ",
+                  "type": "string",
                 },
                 "href": {
-                  "anyOf": [
-                    {
-                      "type": "string",
-                    },
-                    {
-                      "type": "null",
-                    },
-                  ],
+                  "type": "string",
                 },
                 "initialValue": {
                   "anyOf": [
                     {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                        },
-                        {
-                          "type": "null",
-                        },
-                      ],
+                      "type": "string",
                     },
                     {
-                      "anyOf": [
-                        {
-                          "type": "number",
-                        },
-                        {
-                          "type": "null",
-                        },
-                      ],
+                      "type": "number",
                     },
                     {
-                      "anyOf": [
-                        {
-                          "type": "boolean",
-                        },
-                        {
-                          "type": "null",
-                        },
-                      ],
+                      "type": "boolean",
                     },
                   ],
                 },
@@ -543,83 +500,44 @@ test('render form tool schema is readable', () => {
                   "type": "string",
                 },
                 "max": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                    },
-                    {
-                      "type": "null",
-                    },
-                  ],
+                  "type": "number",
                 },
                 "min": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                    },
-                    {
-                      "type": "null",
-                    },
-                  ],
+                  "type": "number",
                 },
                 "name": {
                   "type": "string",
                 },
                 "options": {
-                  "anyOf": [
-                    {
-                      "items": {
-                        "additionalProperties": false,
-                        "properties": {
-                          "label": {
-                            "type": "string",
-                          },
-                          "value": {
-                            "type": "string",
-                          },
-                        },
-                        "required": [
-                          "label",
-                          "value",
-                        ],
-                        "type": "object",
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "description": {
+                        "type": "string",
                       },
-                      "type": "array",
+                      "label": {
+                        "type": "string",
+                      },
+                      "value": {
+                        "type": "string",
+                      },
                     },
-                    {
-                      "type": "null",
-                    },
-                  ],
+                    "required": [
+                      "label",
+                      "value",
+                    ],
+                    "type": "object",
+                  },
+                  "type": "array",
                 },
                 "placeholder": {
-                  "anyOf": [
-                    {
-                      "type": "string",
-                    },
-                    {
-                      "type": "null",
-                    },
-                  ],
+                  "type": "string",
                 },
                 "required": {
-                  "anyOf": [
-                    {
-                      "type": "boolean",
-                    },
-                    {
-                      "type": "null",
-                    },
-                  ],
+                  "type": "boolean",
                 },
                 "step": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                    },
-                    {
-                      "type": "null",
-                    },
-                  ],
+                  "type": "number",
                 },
                 "type": {
                   "enum": [
@@ -628,6 +546,7 @@ test('render form tool schema is readable', () => {
                     "textarea",
                     "number",
                     "select",
+                    "radio",
                     "slider",
                     "switch",
                     "color_picker",
@@ -642,16 +561,6 @@ test('render form tool schema is readable', () => {
                 "name",
                 "type",
                 "label",
-                "description",
-                "required",
-                "groupTitle",
-                "placeholder",
-                "initialValue",
-                "min",
-                "max",
-                "step",
-                "options",
-                "href",
               ],
               "type": "object",
             },

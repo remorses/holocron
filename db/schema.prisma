@@ -218,8 +218,8 @@ model SiteBranch {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  trieveDatasetId  String?
-  trieveReadApiKey String?
+  // trieveDatasetId  String?
+  // trieveReadApiKey String?
   docsJson         Json     @default("{}")
   docsJsonComments         Json     @default("{}")
   cssStyles        String   @default("")

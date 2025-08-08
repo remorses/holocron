@@ -1,155 +1,210 @@
 # File Tree
 
-├── essentials
-│   ├── code.mdx
-│   └── frontmatter.mdx
-└── README.md
+├── getting-started
+│   └── index.mdx
+├── guides
+│   ├── configuration.mdx
+│   └── installation.mdx
+├── README.md
+├── reference
+│   ├── api-reference.mdx
+│   └── cli-commands.mdx
+└── tutorials
+    └── hello-world.mdx
 
 
 ==================================================
-FILE: essentials/code.mdx
+FILE: getting-started/index.mdx
 ==================================================
 ---
-title: 'Code Blocks'
-description: 'Display inline code and code blocks'
-icon: 'code'
----
-
-## Basic
-
-### Inline Code
-
-To denote a `word` or `phrase` as code, enclose it in backticks (`).
-
-```
-To denote a `word` or `phrase` as code, enclose it in backticks (`).
-```
-
-### Code Block
-
-Use [fenced code blocks](https://www.markdownguide.org/extended-syntax/#fenced-code-blocks) by enclosing code in three backticks and follow the leading ticks with the programming language of your snippet. Optionally, you can also write the filename after the language.
-
-```java HelloWorld.java
-class HelloWorld {
-    public static void main(String[] args) {
-        System.out.println("Hello, World!");
-    }
-}
-```
-
-````md
-```java HelloWorld.java
-class HelloWorld {
-    public static void main(String[] args) {
-        System.out.println("Hello, World!");
-    }
-}
-```
-````
-
-
-
-==================================================
-FILE: essentials/frontmatter.mdx
-==================================================
----
-title: 'Frontmatter'
-description: 'Configure page metadata and display properties'
-icon: 'file-text'
----
-
-## Overview
-
-Frontmatter is YAML metadata placed at the beginning of your markdown files. It controls how your page is displayed and indexed.
-
-```yaml
----
-title: 'Page Title'
-description: 'Brief description of the page content'
-icon: 'icon-name'
----
-```
-
-## Required Properties
-
-### title
-
-The page title that appears in the sidebar navigation and as the main H1 heading on the page.
-
-```yaml
 title: 'Getting Started'
-```
-
-### description
-
-Meta description used for SEO and displayed in search results. Also shown in the document overview.
-
-```yaml
-description: 'Learn how to set up and configure your project'
-```
-
-## Optional Properties
-
-### icon
-
-Icon name from [Lucide icons](https://lucide.dev) displayed next to the page title in the sidebar.
-
-```yaml
-icon: 'rocket'        # Shows rocket icon
-icon: 'book-open'     # Shows book-open icon
-icon: 'settings'      # Shows settings icon
-```
-
-<Tip>
-Browse the full icon library at [lucide.dev](https://lucide.dev) to find the perfect icon for your page.
-</Tip>
-
-## Example
-
-Here's a complete frontmatter example:
-
-```yaml
----
-title: 'API Reference'
-description: 'Complete API documentation with examples and response schemas'
-icon: 'code'
+description: 'Overview of setup and first steps'
+icon: 'rocket'
 ---
 
-# Your markdown content starts here
+# Getting Started
+
+Welcome to our documentation! This guide walks you through installation, configuration, and your first example.
+
+## Installation
+
+```bash
+npm install your-package
 ```
 
-This creates a page with:
-- "API Reference" in the sidebar and as the H1
-- SEO description for search engines
-- Code icon in the sidebar
+## Quick Start
 
+```javascript
+import { Client } from 'your-package';
+
+const client = new Client({ apiKey: 'YOUR_KEY' });
+await client.init();
+console.log('Ready!');
+```
+
+
+==================================================
+FILE: guides/configuration.mdx
+==================================================
+---
+title: 'Configuration'
+description: 'Configure application settings'
+icon: 'settings'
+---
+
+# Configuration
+
+Customize your setup by creating a configuration file (e.g., `config.json`):
+
+```json
+{
+  "apiKey": "YOUR_KEY",
+  "timeout": 5000
+}
+```
+
+Import and initialize with config:
+
+```javascript
+import { Client } from 'your-package';
+import config from './config.json';
+
+const client = new Client(config);
+```
+
+
+==================================================
+FILE: guides/installation.mdx
+==================================================
+---
+title: 'Installation'
+description: 'Install and set up the application'
+icon: 'download'
+---
+
+# Installation
+
+Follow these steps to install the application:
+
+1. Install via npm:
+
+   ```bash
+   npm install your-package
+   ```
+
+2. Or via Yarn:
+
+   ```bash
+   yarn add your-package
+   ```
 
 
 ==================================================
 FILE: README.md
 ==================================================
-# Fumabase Starter Kit
+# Documentation Site
 
-### Development
+## Development
 
-## 1. Install the Fumabase CLI
+1. Install the Fumabase CLI
 
-To preview your documentation changes locally, first install the [Fumabase CLI](https://www.npmjs.com/package/fumabase). Use the following command:
-
-```
+```bash
 npm i -g fumabase
 ```
 
-## 2. Start the Local Development Server
+2. Start local development server
 
-At the root of your documentation project (where `fumabase.jsonc` is located), start the development server with:
-
-```
+```bash
 fumabase dev
+```  
+
+## Next Steps
+
+Explore the documentation below to learn how to install, configure, and use the product.
+
+
+==================================================
+FILE: reference/api-reference.mdx
+==================================================
+---
+title: 'API Reference'
+description: 'Detailed API endpoints and usage'
+icon: 'code'
+---
+
+# API Reference
+
+## GET /items
+
+Retrieve a list of items.
+
+**Request**
+
+```http
+GET /api/items HTTP/1.1
+Authorization: Bearer YOUR_KEY
 ```
 
-### Publishing Changes
+**Response**
 
-## 3. Set Up Automatic Deployments
+```json
+[{ "id": 1, "name": "Item 1" }]
+```
 
-Install our GitHub App to enable automated deployments from your repository. After pushing changes to your default branch, your documentation will be deployed to production automatically.
+
+==================================================
+FILE: reference/cli-commands.mdx
+==================================================
+---
+title: 'CLI Commands'
+description: 'Command-line interface usage'
+icon: 'terminal'
+---
+
+# CLI Commands
+
+Use the CLI for common tasks:
+
+## Initialize project
+
+```bash
+your-cli init
+```
+
+## Build documentation
+
+```bash
+your-cli build
+```
+
+## Serve locally
+
+```bash
+your-cli serve
+```
+
+
+==================================================
+FILE: tutorials/hello-world.mdx
+==================================================
+---
+title: 'Hello World Tutorial'
+description: 'Create and run your first example'
+icon: 'terminal'
+---
+
+# Hello World
+
+In this tutorial, you'll write and run a simple "Hello World" example.
+
+```javascript
+import { Client } from 'your-package';
+
+async function main() {
+  const client = new Client({ apiKey: 'YOUR_KEY' });
+  await client.init();
+  console.log('Hello, World!');
+}
+
+main();
+```

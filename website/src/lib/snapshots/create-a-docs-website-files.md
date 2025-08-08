@@ -1,66 +1,155 @@
 # File Tree
 
-├── guides
-│   └── setup.mdx
-├── introduction
-│   └── index.mdx
-└── quickstart.mdx
+├── essentials
+│   ├── code.mdx
+│   ├── frontmatter.mdx
+│   └── images.mdx
+├── README.md
+└── writing
+    ├── accessibility.mdx
+    ├── code-examples.mdx
+    └── visual-design.mdx
 
 
 ==================================================
-FILE: guides/setup.mdx
+FILE: essentials/code.mdx
 ==================================================
 ---
-title: 'Setup'
-description: 'How to setup the product'
-icon: 'settings'
+title: 'Code Blocks'
+description: 'Display inline code and code blocks'
+icon: 'code'
 ---
 
-# Setup
+## Basic
 
-Learn how to install and configure the product for your environment.
+### Inline Code
 
-## Prerequisites
+To denote a `word` or `phrase` as code, enclose it in backticks (`).
 
-- Node.js 14+
-- A valid API key
+```md
+To denote a `word` or `phrase` as code, enclose it in backticks (`).
+```
 
-## Installation
+### Code Block
 
-```bash
-npm install -g your-product-cli
+Use fenced code blocks by enclosing code in three backticks and specifying the language:
+
+```javascript HelloWorld.js
+console.log('Hello, World!');
 ```
 
 
 
 ==================================================
-FILE: introduction/index.mdx
+FILE: essentials/frontmatter.mdx
 ==================================================
 ---
-title: 'Introduction'
-description: 'Overview of the product and documentation'
-icon: 'house'
+title: 'Frontmatter'
+description: 'Configure page metadata and display properties'
+icon: 'file-text'
 ---
 
-# Introduction
+Frontmatter is YAML metadata at the top of your file. It controls page title, description, icon, and display settings.
 
-Welcome to the documentation. This guide will help you understand the product and get started quickly.
+```yaml
+---
+title: 'Page Title'
+description: 'Brief description'
+icon: 'icon-name'
+---
+```
 
 
 
 ==================================================
-FILE: quickstart.mdx
+FILE: essentials/images.mdx
 ==================================================
 ---
-title: 'Quickstart'
-description: 'Get started quickly'
-icon: 'rocket'
+title: 'Images and Embeds'
+description: 'Add images, videos, and HTML elements'
+icon: 'image'
 ---
 
-# Quickstart
+## Images
 
-Follow these steps to set up and run the product in minutes.
+Use Markdown syntax:
 
-1. Install the CLI tool
-2. Configure your credentials
-3. Run your first command
+```md
+![Alt text](/path/image.jpg)
+```
+
+Or JSX in MDX:
+
+```jsx
+<img src="/path/image.jpg" alt="Alt text" />
+```
+
+
+
+==================================================
+FILE: README.md
+==================================================
+# Documentation Site
+
+Welcome to your new documentation site!
+
+## Development
+
+1. Install Fumabase CLI:
+
+```bash
+npm install -g fumabase
+```
+
+2. Start local server:
+
+```bash
+fumabase dev
+```
+
+3. Push changes to deploy automatically.
+
+
+
+==================================================
+FILE: writing/accessibility.mdx
+==================================================
+---
+title: 'Writing Accessible Documentation'
+description: 'Follow accessibility principles for inclusive docs'
+icon: 'accessibility'
+---
+
+# Writing Accessible Documentation
+
+Use clear language, semantic HTML, and alt text to ensure all users can read your docs.
+
+
+
+==================================================
+FILE: writing/code-examples.mdx
+==================================================
+---
+title: 'Writing Effective Code Examples'
+description: 'Create accurate, runnable examples with error handling'
+icon: 'code'
+---
+
+# Writing Effective Code Examples
+
+Ensure examples are complete, include error handling, and show expected outputs.
+
+
+
+==================================================
+FILE: writing/visual-design.mdx
+==================================================
+---
+title: 'Visual Design for Documentation'
+description: 'Use visual elements to improve comprehension'
+icon: 'layout-dashboard'
+---
+
+# Visual Design for Documentation
+
+Use callouts, images, and typography to guide readers through complex information.

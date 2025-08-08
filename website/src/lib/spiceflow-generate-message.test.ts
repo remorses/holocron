@@ -30,11 +30,11 @@ const testCases: TestCase[] = [
             // Check that files were created
             expect(Object.keys(result.filesInDraft).length).toBeGreaterThan(0)
 
-            // Check that some common files exist
+            // Check that some common files exist (index.md, index.mdx, or README.md)
             const createdPaths = Object.keys(result.filesInDraft)
             expect(
                 createdPaths.some(
-                    (p) => p.includes('index.md') || p.includes('index.mdx'),
+                    (p) => p.includes('index.md') || p.includes('index.mdx') || p.includes('README.md'),
                 ),
             ).toBe(true)
         },

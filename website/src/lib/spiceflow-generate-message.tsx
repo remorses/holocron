@@ -20,6 +20,8 @@ import {
     createIdGenerator,
     Tool,
     ModelMessage,
+    wrapLanguageModel,
+    type LanguageModelMiddleware,
 } from 'ai'
 import { prisma, Prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
@@ -49,9 +51,9 @@ import {
     type SelectTextInput,
 } from './shared-docs-tools'
 import {
-    searchDocsWithTrieve,
-    formatTrieveSearchResults,
-} from 'docs-website/src/lib/trieve-search'
+    searchDocsWithEyecrest,
+    formatEyecrestSearchResults,
+} from 'docs-website/src/lib/eyecrest-search'
 import { cleanSlug } from 'docs-website/src/lib/slug-utils'
 import { getFilesForSource } from 'docs-website/src/lib/source.server'
 import { getFumadocsSource } from 'docs-website/src/lib/source'
@@ -230,11 +232,11 @@ export async function* generateMessageStream({
     githubFolder,
     defaultLocale,
     locales,
-    trieveDatasetId,
+    branchId,
     modelId,
     modelProvider,
     onFinish,
-    experimental_wrapLanguageModel,
+    middlewares,
 }: {
     messages: UIMessage[]
     currentSlug: string
@@ -244,7 +246,7 @@ export async function* generateMessageStream({
     githubFolder: string
     defaultLocale: string
     locales: string[]
-    trieveDatasetId?: string | null
+    branchId: string
     modelId?: string | null
     modelProvider?: string | null
     onFinish?: (params: {
@@ -252,7 +254,7 @@ export async function* generateMessageStream({
         isAborted: boolean
         model: { modelId: string; provider: string }
     }) => Promise<void>
-    experimental_wrapLanguageModel?: (model: any) => any
+    middlewares?: LanguageModelMiddleware[]
 }) {
     // Auto-detect onboarding mode based on filesInDraft
     const isOnboardingChat = Object.keys(filesInDraft).length === 0
@@ -264,7 +266,7 @@ export async function* generateMessageStream({
     })
 
     // let model = groq('moonshotai/kimi-k2-instruct')
-    let model: any = openai.responses('o4-mini')
+    let model = openai.responses('o4-mini')
 
     // if (modelId && modelProvider) {
     //     if (modelProvider.startsWith('openai')) {
@@ -279,8 +281,11 @@ export async function* generateMessageStream({
     // }
 
     // Apply middleware if provided
-    if (experimental_wrapLanguageModel) {
-        model = experimental_wrapLanguageModel(model)
+    if (middlewares && middlewares.length > 0) {
+        model = wrapLanguageModel({
+            model,
+            middleware: middlewares,
+        })
     }
 
     const docsJsonRenderFormTool = createRenderFormTool({
@@ -471,25 +476,22 @@ export async function* generateMessageStream({
         searchDocs: tool({
             inputSchema: searchDocsInputSchema,
             execute: async ({ terms, searchType = 'fulltext' }) => {
-                // Try using Trieve search if available, otherwise fallback to simple search
-                if (trieveDatasetId) {
-                    try {
-                        const results = await searchDocsWithTrieve({
-                            trieveDatasetId,
-                            query: terms,
-                            searchType,
-                            tag: '',
-                        })
-                        return formatTrieveSearchResults({
-                            results,
-                            baseUrl: `${process.env.PUBLIC_URL || 'https://fumabase.com'}`,
-                        })
-                    } catch (error) {
-                        console.error(
-                            'Trieve search failed, falling back to simple search:',
-                            error,
-                        )
-                    }
+                // Try using Eyecrest search if available, otherwise fallback to simple search
+                try {
+                    const results = await searchDocsWithEyecrest({
+                        branchId: branchId,
+                        query: terms,
+                        exact: searchType === 'fulltext',
+                    })
+                    return formatEyecrestSearchResults({
+                        results,
+                        baseUrl: `${process.env.PUBLIC_URL || 'https://fumabase.com'}`,
+                    })
+                } catch (error) {
+                    console.error(
+                        'Eyecrest search failed, falling back to simple search:',
+                        error,
+                    )
                 }
 
                 // Fallback to simple search through existing files
@@ -840,7 +842,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             githubFolder,
             defaultLocale: branch.site?.defaultLocale || 'en',
             locales: branch.site?.locales?.map((x) => x.locale) || [],
-            trieveDatasetId: branch.trieveDatasetId,
+            branchId,
             modelId: chat?.modelId,
             modelProvider: chat?.modelProvider,
             onFinish: async ({ uiMessages, isAborted, model }) => {
@@ -891,14 +893,6 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                         console.log(`ignoring message with role ${msg.role}`)
                         continue
                     }
-                    const content =
-                        ('content' in msg ? msg.content : null) ||
-                        parts
-                            .filter((x: any) => x.type === 'text')
-                            .reduce(
-                                (acc: string, cur: any) => acc + cur.text,
-                                '\n',
-                            )
                     const prevMessage = previousMessages.find(
                         (x) => x.id === msg.id,
                     )
