@@ -21,8 +21,8 @@ import {
     Tool,
     ModelMessage,
     wrapLanguageModel,
-    type LanguageModelMiddleware,
 } from 'ai'
+import { type LanguageModelV2Middleware } from '@ai-sdk/provider'
 import { prisma, Prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import path from 'path'
@@ -254,7 +254,7 @@ export async function* generateMessageStream({
         isAborted: boolean
         model: { modelId: string; provider: string }
     }) => Promise<void>
-    middlewares?: LanguageModelMiddleware[]
+    middlewares?: LanguageModelV2Middleware[]
 }) {
     // Auto-detect onboarding mode based on filesInDraft
     const isOnboardingChat = Object.keys(filesInDraft).length === 0
@@ -289,7 +289,7 @@ export async function* generateMessageStream({
     }
 
     const docsJsonRenderFormTool = createRenderFormTool({
-        jsonSchema: docsJsonSchema as any,
+        jsonSchema: docsJsonSchema,
         replaceOptionalsWithNulls: model.provider.startsWith('openai'),
     })
     // model = anthropic('claude-3-5-haiku-latest')
