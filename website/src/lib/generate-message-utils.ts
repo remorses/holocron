@@ -15,6 +15,31 @@ import { getFilesFromFilesInDraft } from 'docs-website/src/lib/source.server'
 import * as yaml from 'js-yaml'
 
 /**
+ * Truncate object fields or string to max length
+ */
+function truncateObjectOrString(value: unknown, maxLength = 1000): unknown {
+    if (typeof value === 'string') {
+        return value.length > maxLength 
+            ? value.substring(0, maxLength) + '...'
+            : value
+    }
+    
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        const truncated: Record<string, unknown> = {}
+        for (const [key, val] of Object.entries(value)) {
+            if (typeof val === 'string' && val.length > maxLength) {
+                truncated[key] = val.substring(0, maxLength) + '...'
+            } else {
+                truncated[key] = val
+            }
+        }
+        return truncated
+    }
+    
+    return value
+}
+
+/**
  * Result type for testGenerateMessage generator
  */
 export type TestGenerateMessageResult = {
@@ -46,8 +71,8 @@ export function uiMessageToMarkdown(message: UIMessage): string {
             lines.push('')
         } else if (isToolUIPart(part) && part.state !== 'input-streaming') {
             const toolData = {
-                input: part.input,
-                output: part.output,
+                input: truncateObjectOrString(part.input),
+                output: truncateObjectOrString(part.output),
                 errorText: part.errorText,
             }
 
