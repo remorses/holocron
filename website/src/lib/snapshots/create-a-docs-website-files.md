@@ -113,7 +113,7 @@ FILE: faq.mdx
 ---
 title: 'FAQ'
 description: 'Frequently Asked Questions'
-icon: 'help-circle'
+icon: 'book-open'
 ---
 
 # FAQ

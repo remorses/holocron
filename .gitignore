@@ -13,3 +13,4 @@ coverage
 .aicache
 *.lance
 .*aicache
+snapshots/*-partial.md

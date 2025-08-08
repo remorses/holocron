@@ -56,7 +56,7 @@ FILE: api/errors.mdx
 ---
 title: 'Error Handling'
 description: 'Standard error responses and status codes.'
-icon: 'alert-circle'
+icon: 'info'
 ---
 
 # Error Handling
@@ -248,7 +248,7 @@ FILE: index.mdx
 ---
 title: 'API Documentation'
 description: 'Overview of available API endpoints for authentication, users, and products.'
-icon: 'api'
+icon: 'server'
 ---
 
 # API Documentation

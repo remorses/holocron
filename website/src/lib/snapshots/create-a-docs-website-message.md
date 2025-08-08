@@ -496,11 +496,160 @@ input:
   new_str: null
   old_str: null
   view_range: null
+output:
+  success: false
+  error: >-
+    you used an invalid icon "help-circle", to see the possible icons fetch the url
+    https://fumabase.com/lucide-icons.json
+
+````
+
+--- step-start ---
+
+
+````md reasoning
+**Updating icon for FAQ**
+
+I need to create the FAQ file but ran into an issue: the icon "help-circle" isn't valid. It looks like I should choose a different icon from lucide icons. I’m considering the "info" or "help" icons instead. I thought "help-circle" would work, but it may not exist or be recognized. I’ll go ahead and pick the "help" icon and try creating the FAQ file again, making sure to remove the old one first.
+````
+
+````yaml tool-strReplaceEditor
+input:
+  command: create
+  path: faq.mdx
+  file_text: |
+    ---
+    title: 'FAQ'
+    description: 'Frequently Asked Questions'
+    icon: 'help'
+    ---
+
+    # FAQ
+
+    ## How do I reset my API key?
+
+    Use the CLI command:
+
+    ```bash
+    myproject keys rotate
+    ```
+
+    ## Where do I report bugs?
+
+    Create an issue on our GitHub repository:
+
+    [GitHub Issues](https://github.com/myproject/issues)
+
+    ## How do I contribute?
+
+    Fork the repo, make changes, and submit a pull request.
+  insert_line: null
+  new_str: null
+  old_str: null
+  view_range: null
+output:
+  success: false
+  error: >-
+    you used an invalid icon "help", to see the possible icons fetch the url
+    https://fumabase.com/lucide-icons.json
+
+````
+
+--- step-start ---
+
+
+````md reasoning
+
+````
+
+````yaml tool-strReplaceEditor
+input:
+  command: create
+  path: faq.mdx
+  file_text: |
+    ---
+    title: 'FAQ'
+    description: 'Frequently Asked Questions'
+    icon: 'question-mark'
+    ---
+
+    # FAQ
+
+    ## How do I reset my API key?
+
+    Use the CLI command:
+
+    ```bash
+    myproject keys rotate
+    ```
+
+    ## Where do I report bugs?
+
+    Create an issue on our GitHub repository:
+
+    [GitHub Issues](https://github.com/myproject/issues)
+
+    ## How do I contribute?
+
+    Fork the repo, make changes, and submit a pull request.
+  insert_line: null
+  new_str: null
+  old_str: null
+  view_range: null
+output:
+  success: false
+  error: >-
+    you used an invalid icon "question-mark", to see the possible icons fetch the url
+    https://fumabase.com/lucide-icons.json
+
+````
+
+--- step-start ---
+
+
+````md reasoning
+
+````
+
+````yaml tool-strReplaceEditor
+input:
+  command: create
+  path: faq.mdx
+  file_text: |
+    ---
+    title: 'FAQ'
+    description: 'Frequently Asked Questions'
+    icon: 'book-open'
+    ---
+
+    # FAQ
+
+    ## How do I reset my API key?
+
+    Use the CLI command:
+
+    ```bash
+    myproject keys rotate
+    ```
+
+    ## Where do I report bugs?
+
+    Create an issue on our GitHub repository:
+
+    [GitHub Issues](https://github.com/myproject/issues)
+
+    ## How do I contribute?
+
+    Fork the repo, make changes, and submit a pull request.
+  insert_line: null
+  new_str: null
+  old_str: null
+  view_range: null
 output: |
   ---
   title: 'FAQ'
   description: 'Frequently Asked Questions'
-  icon: 'help-circle'
+  icon: 'book-open'
   ---
 
   # FAQ
@@ -527,4 +676,4 @@ output: |
 
 --- step-start ---
 
-Docs skeleton created. What’s your project name and key features so I can customize the site?
+Docs skeleton created. What’s your project name and key features so I can tailor the content?

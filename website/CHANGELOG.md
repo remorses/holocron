@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-08-08 11:30
+
+- **Enhanced icon validation**: Added real-time validation for Lucide icons in markdown frontmatter
+- **Improved AI feedback**: AI now receives `WARNING: you used an invalid icon "x", to see the possible icons fetch the url https://lucide.dev/icons/` when using invalid icon names
+- **Better user experience**: Prevents invalid icons from being used in documentation pages
+
 ## 2025-08-07 20:55
 
 - Removed `isOnboardingChat` parameter from generateMessageStream
@@ -26,11 +32,11 @@
 - Removed branchId from generateMessageStream parameters
 - Added experimental_wrapLanguageModel middleware support for AI models
 - Created comprehensive test for generateMessageStream with AI cache middleware
-- Added testGenerateMessage utility function that accepts CoreMessage[] for easier testing  
+- Added testGenerateMessage utility function that accepts CoreMessage[] for easier testing
 - Implemented comprehensive markdown conversion for all UI message part types:
-  - Text, reasoning, tool calls, tool states (input/output/error)
-  - File attachments, source URLs, step boundaries
-  - Special formatting for strReplaceEditor tool (view, create, str_replace)
+    - Text, reasoning, tool calls, tool states (input/output/error)
+    - File attachments, source URLs, step boundaries
+    - Special formatting for strReplaceEditor tool (view, create, str_replace)
 - Used readUIMessageStream with asyncIterableToReadableStream for proper stream consumption
 - Added snapshot testing with detailed markdown output showing full conversation flow
 - Created generate-message-utils.ts with reusable test utilities

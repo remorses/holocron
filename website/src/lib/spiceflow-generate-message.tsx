@@ -37,7 +37,7 @@ import {
 import { FileSystemEmulator } from './file-system-emulator'
 import { notifyError } from './errors'
 import { createRenderFormTool, RenderFormParameters } from 'contesto'
-import { mdxRegex } from './utils'
+import { mdxRegex as mdxOrMdRegex } from './utils'
 import {
     searchDocsInputSchema,
     goToPageInputSchema,
@@ -62,6 +62,8 @@ import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
 import exampleDocs from 'website/scripts/example-docs.json'
 import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
+import fm from 'front-matter'
+import { isValidLucideIconName } from './icons'
 
 function generateExampleTemplateFilesPrompt() {
     let templateContents = ''
@@ -258,7 +260,22 @@ export async function* generateMessageStream({
         fileSystem,
         model: { provider: model.provider },
         async validateNewContent(x) {
-            if (mdxRegex.test(x.githubPath)) {
+            // Validate frontmatter icons for MDX/MD files
+            if (mdxOrMdRegex.test(x.githubPath)) {
+                const parsed = fm(x.content)
+                const frontmatter = parsed.attributes as any
+
+                if (frontmatter && frontmatter.icon) {
+                    const iconName = String(frontmatter.icon)
+                    if (!isValidLucideIconName(iconName)) {
+                        throw new Error(
+                            `you used an invalid icon "${iconName}", to see the possible icons fetch the url https://fumabase.com/lucide-icons.json`,
+                        )
+                    }
+                }
+            }
+
+            if (mdxOrMdRegex.test(x.githubPath)) {
                 try {
                     await processMdxInServer({
                         markdown: x.content,
@@ -333,10 +350,7 @@ export async function* generateMessageStream({
                     const lines = x.content.split('\n')
                     const contextRange = 5
                     const startLine = Math.max(1, line - contextRange)
-                    const endLine = Math.min(
-                        lines.length,
-                        line + contextRange,
-                    )
+                    const endLine = Math.min(lines.length, line + contextRange)
 
                     let contextMessage = `JSON Parse Error at line ${line}:\n${e.message}\n\n`
                     contextMessage += 'Error Context:\n'
@@ -451,8 +465,7 @@ export async function* generateMessageStream({
 
                 const results = pages.filter((page) => {
                     const title = page.data?.title || ''
-                    const searchText =
-                        `${title} ${page.path}`.toLowerCase()
+                    const searchText = `${title} ${page.path}`.toLowerCase()
                     return terms.some((term) =>
                         searchText.includes(term.toLowerCase()),
                     )
@@ -511,6 +524,7 @@ export async function* generateMessageStream({
                         return `Failed to fetch ${url}: ${response.status} ${response.statusText}`
                     }
 
+                    const maxChars = 50_000
                     const contentType =
                         response.headers.get('content-type') || ''
 
@@ -518,20 +532,20 @@ export async function* generateMessageStream({
                         const data = await response.json()
                         const jsonString = JSON.stringify(data, null, 2)
                         return (
-                            jsonString.substring(0, 2000) +
-                            (jsonString.length > 2000 ? '...' : '')
+                            jsonString.substring(0, maxChars) +
+                            (jsonString.length > maxChars ? '...' : '')
                         )
                     } else if (contentType.includes('text/html')) {
                         const html = await response.text()
                         return (
-                            html.substring(0, 2000) +
-                            (html.length > 2000 ? '...' : '')
+                            html.substring(0, maxChars) +
+                            (html.length > maxChars ? '...' : '')
                         )
                     } else {
                         const text = await response.text()
                         return (
-                            text.substring(0, 2000) +
-                            (text.length > 2000 ? '...' : '')
+                            text.substring(0, maxChars) +
+                            (text.length > maxChars ? '...' : '')
                         )
                     }
                 } catch (error) {
@@ -609,9 +623,7 @@ export async function* generateMessageStream({
             role: 'system',
 
             content: [
-                await import('../prompts/agent.md?raw').then(
-                    (x) => x.default,
-                ),
+                await import('../prompts/agent.md?raw').then((x) => x.default),
                 await import('../prompts/tone-and-style.md?raw').then(
                     (x) => x.default,
                 ),
@@ -644,9 +656,7 @@ export async function* generateMessageStream({
                 .filter(Boolean)
                 .join('\n\n'),
         },
-        ...convertToModelMessages(
-            messages.filter((x) => x.role !== 'system'),
-        ),
+        ...convertToModelMessages(messages.filter((x) => x.role !== 'system')),
     ]
 
     debugMessages(allMessages)
@@ -661,9 +671,9 @@ export async function* generateMessageStream({
         experimental_transform: process.env.VITEST
             ? undefined
             : smoothStream({
-                delayInMs: 10,
-                chunking: 'word',
-            }),
+                  delayInMs: 10,
+                  chunking: 'word',
+              }),
         messages: allMessages,
         stopWhen: stepCountIs(100),
 
