@@ -167,7 +167,6 @@ export function filesInDraftToMarkdown(
 export type TestGenerateMessageInput = {
     messages: CoreMessage[]
     filesInDraft?: Record<string, FileUpdate>
-    isOnboardingChat?: boolean
     currentSlug?: string
 }
 
@@ -177,7 +176,6 @@ export type TestGenerateMessageInput = {
 export async function* testGenerateMessage({
     messages,
     filesInDraft = {},
-    isOnboardingChat = true,
     currentSlug = '/',
 }: TestGenerateMessageInput): AsyncGenerator<TestGenerateMessageResult> {
     // Convert CoreMessages to UIMessages format
@@ -221,7 +219,6 @@ export async function* testGenerateMessage({
         filesInDraft,
         fileSystem,
         files,
-        isOnboardingChat,
         githubFolder: '',
         defaultLocale: 'en',
         locales: ['en'],

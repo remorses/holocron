@@ -9,6 +9,8 @@ import { writeFileSync, unlinkSync, existsSync } from 'fs'
 import path from 'path'
 import { isValidLucideIconName } from './icons'
 import dedent from 'dedent'
+import fm from 'front-matter'
+import yaml from 'js-yaml'
 
 type TestCase = TestGenerateMessageInput & {
     name: string
@@ -172,54 +174,56 @@ const testCases: TestCase[] = [
             },
         ],
         onFinish: (result) => {
+            // Check that no file paths start with /
+            const filesWithSlash = Object.keys(result.filesInDraft).filter(path => path.startsWith('/'))
+            expect(filesWithSlash, `Files should not start with slash: ${filesWithSlash.join(', ')}`).toHaveLength(0)
+
             // Check that files were updated
             const updatedFiles = Object.entries(result.filesInDraft)
             expect(updatedFiles.length).toBeGreaterThan(0)
 
-            // Track icons found for debugging
-            const iconsFound: Record<string, string | null> = {}
-            let hasValidIcons = false
+            // Track which original files have icons
+            const originalFiles = ['index.mdx', 'getting-started.mdx', 'api/overview.mdx', 'guides/configuration.mdx']
+            const filesWithIcons: string[] = []
+            const filesWithoutIcons: string[] = []
+            const invalidIcons: Record<string, string> = {}
 
             // Check each file has an icon in the frontmatter
             for (const [path, file] of updatedFiles) {
-                if ((path.endsWith('.mdx') || path.endsWith('.md')) && file.content) {
-                    // Try to find icon in content - more flexible pattern
-                    // Check for icon in frontmatter format or as a simple line
-                    const iconPatterns = [
-                        /^---\n[\s\S]*?icon:\s*['"]?([a-z-]+)['"]?[\s\S]*?\n---/im,
-                        /icon:\s*['"]?([a-z-]+)['"]?/i
-                    ]
-                    
-                    let iconName: string | null = null
-                    for (const pattern of iconPatterns) {
-                        const match = file.content.match(pattern)
-                        if (match) {
-                            iconName = match[1]
-                            break
-                        }
-                    }
-                    
-                    if (iconName) {
-                        iconsFound[path] = iconName
-                        // Validate icon name - make validation more flexible for kebab-case
-                        const isValid = isValidLucideIconName(iconName)
-                        if (isValid) {
-                            hasValidIcons = true
+                // Only check our original files
+                if (originalFiles.includes(path) && file.content) {
+                    try {
+                        // Parse frontmatter using front-matter library
+                        const parsed = fm(file.content)
+                        const frontmatter = parsed.attributes as any
+                        
+                        if (frontmatter && frontmatter.icon) {
+                            const iconName = String(frontmatter.icon)
+                            const isValid = isValidLucideIconName(iconName)
+                            if (isValid) {
+                                filesWithIcons.push(path)
+                            } else {
+                                invalidIcons[path] = iconName
+                            }
                         } else {
-                            console.log(`Invalid icon name '${iconName}' in ${path}`)
+                            filesWithoutIcons.push(path)
                         }
-                    } else {
-                        iconsFound[path] = null
+                    } catch (error) {
+                        console.error(`Failed to parse frontmatter for ${path}:`, error)
+                        filesWithoutIcons.push(path)
                     }
                 }
             }
 
             // Log for debugging
-            console.log('Icons found:', iconsFound)
-            console.log('Files in result:', Object.keys(result.filesInDraft))
+            console.log('Files with valid icons:', filesWithIcons)
+            console.log('Files without icons:', filesWithoutIcons)
+            console.log('Invalid icons:', invalidIcons)
 
-            // Ensure at least one file has a valid icon
-            expect(hasValidIcons, `No valid Lucide icons found. Icons found: ${JSON.stringify(iconsFound)}`).toBe(true)
+            // All original files should have valid icons
+            expect(filesWithoutIcons, `These files are missing icons: ${filesWithoutIcons.join(', ')}`).toHaveLength(0)
+            expect(Object.keys(invalidIcons), `These files have invalid icons: ${JSON.stringify(invalidIcons)}`).toHaveLength(0)
+            expect(filesWithIcons.length, `Only ${filesWithIcons.length}/${originalFiles.length} files have valid icons`).toBe(originalFiles.length)
         },
     },
 ]

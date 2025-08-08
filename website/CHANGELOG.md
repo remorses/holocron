@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-08-07 20:55
+
+- Removed `isOnboardingChat` parameter from generateMessageStream
+- Auto-detect onboarding mode based on empty filesInDraft
+- Fixed file deduplication in filesInDraftToMarkdown utility
+
 ## 2025-08-07 20:30
 
 - Added test case for adding Lucide icons to documentation pages

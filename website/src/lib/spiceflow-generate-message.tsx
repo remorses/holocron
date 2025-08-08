@@ -193,7 +193,6 @@ export async function* generateMessageStream({
     filesInDraft,
     fileSystem,
     files,
-    isOnboardingChat,
     githubFolder,
     defaultLocale,
     locales,
@@ -208,7 +207,6 @@ export async function* generateMessageStream({
     filesInDraft: Record<string, FileUpdate>
     fileSystem: FileSystemEmulator
     files: Array<VirtualFile & { data?: ProcessorDataFrontmatter }> // Files from getFilesForSource
-    isOnboardingChat: boolean
     githubFolder: string
     defaultLocale: string
     locales: string[]
@@ -222,6 +220,8 @@ export async function* generateMessageStream({
     }) => Promise<void>
     experimental_wrapLanguageModel?: (model: any) => any
 }) {
+    // Auto-detect onboarding mode based on filesInDraft
+    const isOnboardingChat = Object.keys(filesInDraft).length === 0
     const source = getFumadocsSource({
         files,
         defaultLanguage: defaultLocale,
@@ -828,7 +828,6 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             filesInDraft,
             fileSystem,
             files,
-            isOnboardingChat: !pageCount,
             githubFolder,
             defaultLocale: branch.site?.defaultLocale || 'en',
             locales: branch.site?.locales?.map((x) => x.locale) || [],
