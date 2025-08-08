@@ -172,6 +172,22 @@ function ChatForm({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         if (isOnboardingChat) return
+        const unSub = formMethods.subscribe({
+            formState: { values: true },
+            callback: () =>
+                setDocsJsonState({
+                    values: formMethods.getValues(),
+                    previousJsonString,
+                    githubFolder,
+                    chatId,
+                }),
+        })
+
+        return unSub
+    }, [formMethods.subscribe, isOnboardingChat, chatId, previousJsonString])
+
+    useEffect(() => {
+        if (isOnboardingChat) return
         const persistedValues =
             typeof localStorage !== 'undefined'
                 ? localStorage.getItem(keyForDocsJson({ chatId }))
@@ -195,22 +211,6 @@ function ChatForm({ children }: { children: React.ReactNode }) {
             previousJsonString,
             chatId,
         })
-    }, [isOnboardingChat, chatId, previousJsonString])
-
-    useEffect(() => {
-        if (isOnboardingChat) return
-        const unSub = formMethods.subscribe({
-            formState: { values: true },
-            callback: ({ values, defaultValues }) =>
-                setDocsJsonState({
-                    values: { ...defaultValues, ...values },
-                    previousJsonString,
-                    githubFolder,
-                    chatId,
-                }),
-        })
-
-        return unSub
     }, [isOnboardingChat, chatId, previousJsonString])
 
     return (
@@ -475,22 +475,27 @@ export default function Chat({
             },
         )
 
-        for await (const newMessages of uiStreamToUIMessages<WebsiteUIMessage>({
-            uiStream: generator,
-            messages: messages as WebsiteUIMessage[],
-            generateId,
-            onToolOutput,
-            onToolInputStreaming,
-        })) {
-            if (abortController.signal.aborted) {
-                break
+        try {
+            for await (const newMessages of uiStreamToUIMessages<WebsiteUIMessage>(
+                {
+                    uiStream: generator,
+                    messages: messages as WebsiteUIMessage[],
+                    generateId,
+                    onToolOutput,
+                    onToolInputStreaming,
+                },
+            )) {
+                if (abortController.signal.aborted) {
+                    break
+                }
+                startTransition(() => {
+                    setMessages(newMessages)
+                })
             }
-            startTransition(() => {
-                setMessages(newMessages)
-            })
+        } finally {
+            console.log('finished streaming message response, revalidating')
+            await revalidator.revalidate()
         }
-        console.log('finished streaming message response, revalidating')
-        await revalidator.revalidate()
     }
 
     return (

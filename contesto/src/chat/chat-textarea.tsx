@@ -80,6 +80,16 @@ export function ChatTextarea({
             return
         }
 
+        // Handle ESC to stop generation
+        if (event.key === 'Escape') {
+            const isGenerating = useChatState.getState().isGenerating
+            if (isGenerating) {
+                event.preventDefault()
+                useChatState.getState().stop()
+            }
+            return
+        }
+
         // Handle mentions combobox
         if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
             mentionsCombobox.hide()
