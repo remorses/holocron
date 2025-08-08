@@ -8,10 +8,10 @@ FILE: index.mdx
 ==================================================
 ---
 title: 'Welcome'
-description: 'Welcome to the documentation'
-icon: 'rocket'
+description: 'Welcome page for the documentation.'
+icon: 'house'
 ---
 
 # Welcome
 
-Welcome to your new documentation site. Use the sidebar to explore guides and reference chapters.
+Welcome to the documentation. Start by exploring the sidebar to find guides, tutorials, and reference materials.

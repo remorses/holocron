@@ -266,7 +266,7 @@ export async function* generateMessageStream({
     })
 
     // let model = groq('moonshotai/kimi-k2-instruct')
-    let model = openai.responses('o4-mini')
+    let model = openai.responses('gpt-5-mini')
 
     // if (modelId && modelProvider) {
     //     if (modelProvider.startsWith('openai')) {

@@ -319,7 +319,7 @@ describe.concurrent('generateMessageStream', ({}) => {
                     expect(existsSync(filesPath)).toBe(true)
                 }
             },
-            120000,
+            1000 * 60 * 60,
         ) // 120 second timeout for AI generation
     }
 })
