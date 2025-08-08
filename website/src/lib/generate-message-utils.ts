@@ -204,8 +204,7 @@ export async function* testGenerateMessage({
 
     // Create AI cache middleware
     const cacheMiddleware = createAiCacheMiddleware({
-        cacheDir: '.test-aicache',
-        lruSize: 100,
+        cacheDir: '.aicache',
     })
 
     // Get files from filesInDraft for source

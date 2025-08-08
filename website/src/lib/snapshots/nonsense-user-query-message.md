@@ -8,71 +8,230 @@
 ````yaml tool-strReplaceEditor
 input:
   command: create
-  path: essentials/code.mdx
-  file_text: |
-    ---
-    title: 'Code Blocks'
-    description: 'Display inline code and code blocks'
-    icon: 'code'
-    ---
+  path: README.md
+  file_text: >
+    # Fumabase Starter Kit
 
-    ## Basic
 
-    ### Inline Code
+    ### Development
 
-    Use backticks (`) to denote inline code: `example`.
 
-    ```md
-    Use backticks (`) to denote inline code: `example`.
+    ## 1. Install the Fumabase CLI
+
+
+    To preview your documentation changes locally, first install the [Fumabase
+    CLI](https://www.npmjs.com/package/fumabase). Use the following command:
+
+
     ```
 
-    ### Code Block
+    npm i -g fumabase
 
-    Enclose code in triple backticks with language specifier:
-
-    ```javascript example.js
-    console.log('Hello, world!');
     ```
 
-    ```mdx
-    ```javascript example.js
-    console.log('Hello, world!');
+
+    ## 2. Start the Local Development Server
+
+
+    At the root of your documentation project (where `fumabase.jsonc` is located), start the
+    development server with:
+
+
     ```
+
+    fumabase dev
+
     ```
+
+
+    ### Publishing Changes
+
+
+    ## 3. Set Up Automatic Deployments
+
+
+    Install our GitHub App to enable automated deployments from your repository. After pushing
+    changes to your default branch, your documentation will be deployed to production automatically.
   insert_line: null
   new_str: null
   old_str: null
   view_range: null
-output: |
+output: >
+  # Fumabase Starter Kit
+
+
+  ### Development
+
+
+  ## 1. Install the Fumabase CLI
+
+
+  To preview your documentation changes locally, first install the [Fumabase
+  CLI](https://www.npmjs.com/package/fumabase). Use the following command:
+
+
+  ```
+
+  npm i -g fumabase
+
+  ```
+
+
+  ## 2. Start the Local Development Server
+
+
+  At the root of your documentation project (where `fumabase.jsonc` is located), start the
+  development server with:
+
+
+  ```
+
+  fumabase dev
+
+  ```
+
+
+  ### Publishing Changes
+
+
+  ## 3. Set Up Automatic Deployments
+
+
+  Install our GitHub App to enable automated deployments from your repository. After pushing changes
+  to your default branch, your documentation will be deployed to production automatically.
+
+````
+
+--- step-start ---
+
+````yaml tool-strReplaceEditor
+input:
+  command: create
+  path: essentials/code.mdx
+  file_text: >
+    ---
+
+    title: 'Code Blocks'
+
+    description: 'Display inline code and code blocks'
+
+    icon: 'code'
+
+    ---
+
+
+    ## Basic
+
+
+    ### Inline Code
+
+
+    To denote a `word` or `phrase` as code, enclose it in backticks (`).
+
+
+    ```
+
+    To denote a `word` or `phrase` as code, enclose it in backticks (`).
+
+    ```
+
+
+    ### Code Block
+
+
+    Use [fenced code blocks](https://www.markdownguide.org/extended-syntax/#fenced-code-blocks) by
+    enclosing code in three backticks and follow the leading ticks with the programming language of
+    your snippet. Optionally, you can also write the filename after the language.
+
+
+    ```java HelloWorld.java
+
+    class HelloWorld {
+        public static void main(String[] args) {
+            System.out.println("Hello, World!");
+        }
+    }
+
+    ```
+
+
+    ````md
+
+    ```java HelloWorld.java
+
+    class HelloWorld {
+        public static void main(String[] args) {
+            System.out.println("Hello, World!");
+        }
+    }
+
+    ```
+
+    ````
+  insert_line: null
+  new_str: null
+  old_str: null
+  view_range: null
+output: >
   ---
+
   title: 'Code Blocks'
+
   description: 'Display inline code and code blocks'
+
   icon: 'code'
+
   ---
+
 
   ## Basic
 
+
   ### Inline Code
 
-  Use backticks (`) to denote inline code: `example`.
 
-  ```md
-  Use backticks (`) to denote inline code: `example`.
+  To denote a `word` or `phrase` as code, enclose it in backticks (`).
+
+
   ```
+
+  To denote a `word` or `phrase` as code, enclose it in backticks (`).
+
+  ```
+
 
   ### Code Block
 
-  Enclose code in triple backticks with language specifier:
 
-  ```javascript example.js
-  console.log('Hello, world!');
+  Use [fenced code blocks](https://www.markdownguide.org/extended-syntax/#fenced-code-blocks) by
+  enclosing code in three backticks and follow the leading ticks with the programming language of
+  your snippet. Optionally, you can also write the filename after the language.
+
+
+  ```java HelloWorld.java
+
+  class HelloWorld {
+      public static void main(String[] args) {
+          System.out.println("Hello, World!");
+      }
+  }
+
   ```
 
-  ```mdx
-  ```javascript example.js
-  console.log('Hello, world!');
+
+  ````md
+
+  ```java HelloWorld.java
+
+  class HelloWorld {
+      public static void main(String[] args) {
+          System.out.println("Hello, World!");
+      }
+  }
+
   ```
-  ```
+
+  ````
 
 ````
 
@@ -97,8 +256,8 @@ input:
     ## Overview
 
 
-    Frontmatter is YAML metadata at the top of your MDX files. It controls page title, description,
-    and icon.
+    Frontmatter is YAML metadata placed at the beginning of your markdown files. It controls how
+    your page is displayed and indexed.
 
 
     ```yaml
@@ -107,7 +266,7 @@ input:
 
     title: 'Page Title'
 
-    description: 'Brief description'
+    description: 'Brief description of the page content'
 
     icon: 'icon-name'
 
@@ -116,19 +275,96 @@ input:
     ```
 
 
-    ### Required Fields
+    ## Required Properties
 
 
-    - **title**: Page title shown in sidebar
+    ### title
 
-    - **description**: SEO description
+
+    The page title that appears in the sidebar navigation and as the main H1 heading on the page.
+
+
+    ```yaml
+
+    title: 'Getting Started'
+
+    ```
+
+
+    ### description
+
+
+    Meta description used for SEO and displayed in search results. Also shown in the document
+    overview.
+
+
+    ```yaml
+
+    description: 'Learn how to set up and configure your project'
+
+    ```
+
+
+    ## Optional Properties
+
+
+    ### icon
+
+
+    Icon name from [Lucide icons](https://lucide.dev) displayed next to the page title in the
+    sidebar.
+
+
+    ```yaml
+
+    icon: 'rocket'        # Shows rocket icon
+
+    icon: 'book-open'     # Shows book-open icon
+
+    icon: 'settings'      # Shows settings icon
+
+    ```
 
 
     <Tip>
 
-    Find icon names at [lucide.dev](https://lucide.dev).
+    Browse the full icon library at [lucide.dev](https://lucide.dev) to find the perfect icon for
+    your page.
 
     </Tip>
+
+
+    ## Example
+
+
+    Here's a complete frontmatter example:
+
+
+    ```yaml
+
+    ---
+
+    title: 'API Reference'
+
+    description: 'Complete API documentation with examples and response schemas'
+
+    icon: 'code'
+
+    ---
+
+
+    # Your markdown content starts here
+
+    ```
+
+
+    This creates a page with:
+
+    - "API Reference" in the sidebar and as the H1
+
+    - SEO description for search engines
+
+    - Code icon in the sidebar
   insert_line: null
   new_str: null
   old_str: null
@@ -148,8 +384,8 @@ output: >
   ## Overview
 
 
-  Frontmatter is YAML metadata at the top of your MDX files. It controls page title, description,
-  and icon.
+  Frontmatter is YAML metadata placed at the beginning of your markdown files. It controls how your
+  page is displayed and indexed.
 
 
   ```yaml
@@ -158,7 +394,7 @@ output: >
 
   title: 'Page Title'
 
-  description: 'Brief description'
+  description: 'Brief description of the page content'
 
   icon: 'icon-name'
 
@@ -167,328 +403,96 @@ output: >
   ```
 
 
-  ### Required Fields
+  ## Required Properties
 
 
-  - **title**: Page title shown in sidebar
+  ### title
 
-  - **description**: SEO description
+
+  The page title that appears in the sidebar navigation and as the main H1 heading on the page.
+
+
+  ```yaml
+
+  title: 'Getting Started'
+
+  ```
+
+
+  ### description
+
+
+  Meta description used for SEO and displayed in search results. Also shown in the document
+  overview.
+
+
+  ```yaml
+
+  description: 'Learn how to set up and configure your project'
+
+  ```
+
+
+  ## Optional Properties
+
+
+  ### icon
+
+
+  Icon name from [Lucide icons](https://lucide.dev) displayed next to the page title in the sidebar.
+
+
+  ```yaml
+
+  icon: 'rocket'        # Shows rocket icon
+
+  icon: 'book-open'     # Shows book-open icon
+
+  icon: 'settings'      # Shows settings icon
+
+  ```
 
 
   <Tip>
 
-  Find icon names at [lucide.dev](https://lucide.dev).
+  Browse the full icon library at [lucide.dev](https://lucide.dev) to find the perfect icon for your
+  page.
 
   </Tip>
 
-````
 
---- step-start ---
+  ## Example
 
-````yaml tool-strReplaceEditor
-input:
-  command: create
-  path: essentials/markdown.mdx
-  file_text: |
-    ---
-    title: 'Markdown Syntax'
-    description: 'Text formatting, links, and headings in Markdown'
-    icon: 'text'
-    ---
 
-    ## Headings
+  Here's a complete frontmatter example:
 
-    Use `#` for headings:
 
-    ```md
-    # H1
-    ## H2
-    ### H3
-    ```
+  ```yaml
 
-    ## Text Formatting
-
-    - **Bold**: `**bold**`
-    - _Italic_: `_italic_`
-    - `Code`: `` `code` ``
-
-    ## Links
-
-    ```md
-    [Link text](https://example.com)
-    ```
-  insert_line: null
-  new_str: null
-  old_str: null
-  view_range: null
-output: |
-  ---
-  title: 'Markdown Syntax'
-  description: 'Text formatting, links, and headings in Markdown'
-  icon: 'text'
   ---
 
-  ## Headings
+  title: 'API Reference'
 
-  Use `#` for headings:
+  description: 'Complete API documentation with examples and response schemas'
 
-  ```md
-  # H1
-  ## H2
-  ### H3
-  ```
-
-  ## Text Formatting
-
-  - **Bold**: `**bold**`
-  - _Italic_: `_italic_`
-  - `Code`: `` `code` ``
-
-  ## Links
-
-  ```md
-  [Link text](https://example.com)
-  ```
-
-````
-
---- step-start ---
-
-````yaml tool-strReplaceEditor
-input:
-  command: create
-  path: essentials/images.mdx
-  file_text: >
-    ---
-
-    title: 'Images and Embeds'
-
-    description: 'Add images, videos, and HTML elements'
-
-    icon: 'image'
-
-    ---
-
-
-    ## Images
-
-
-    ![Fumabase Logo](/images/logo.png)
-
-
-    ```md
-
-    ![Alt text](/path/image.png)
-
-    ```
-
-
-    ## Embeds
-
-
-    Use HTML for rich embeds:
-
-
-    ```html
-
-    <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameBorder="0"
-    allowFullScreen></iframe>
-
-    ```
-  insert_line: null
-  new_str: null
-  old_str: null
-  view_range: null
-output: |
-  ---
-  title: 'Images and Embeds'
-  description: 'Add images, videos, and HTML elements'
-  icon: 'image'
-  ---
-
-  ## Images
-
-  ![Fumabase Logo](/images/logo.png)
-
-  ```md
-  ![Alt text](/path/image.png)
-  ```
-
-  ## Embeds
-
-  Use HTML for rich embeds:
-
-  ```html
-  <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameBorder="0" allowFullScreen></iframe>
-  ```
-
-````
-
---- step-start ---
-
-````yaml tool-strReplaceEditor
-input:
-  command: create
-  path: writing/accessibility.mdx
-  file_text: |
-    ---
-    title: 'Accessibility'
-    description: 'Ensure documentation is accessible to all users'
-    icon: 'eye'
-    ---
-
-    ## Alt Text
-
-    Provide descriptive alt text for images:
-
-    ```md
-    ![Dashboard showing metrics and charts](dashboard.png)
-    ```
-
-    ## Headings
-
-    Use meaningful headings for structure and navigation.
-  insert_line: null
-  new_str: null
-  old_str: null
-  view_range: null
-output: |
-  ---
-  title: 'Accessibility'
-  description: 'Ensure documentation is accessible to all users'
-  icon: 'eye'
-  ---
-
-  ## Alt Text
-
-  Provide descriptive alt text for images:
-
-  ```md
-  ![Dashboard showing metrics and charts](dashboard.png)
-  ```
-
-  ## Headings
-
-  Use meaningful headings for structure and navigation.
-
-````
-
---- step-start ---
-
-````yaml tool-strReplaceEditor
-input:
-  command: create
-  path: writing/code-examples.mdx
-  file_text: |
-    ---
-    title: 'Code Examples'
-    description: 'Best practices for writing effective code snippets'
-    icon: 'code'
-    ---
-
-    ## Complete Examples
-
-    Provide runnable examples:
-
-    ```javascript
-    console.log('Hello, world!');
-    ```
-
-    ## Error Handling
-
-    Show realistic failure scenarios:
-
-    ```javascript
-    try {
-      await fetch('/api');
-    } catch (e) {
-      console.error('Request failed', e);
-    }
-    ```
-  insert_line: null
-  new_str: null
-  old_str: null
-  view_range: null
-output: |
-  ---
-  title: 'Code Examples'
-  description: 'Best practices for writing effective code snippets'
   icon: 'code'
+
   ---
 
-  ## Complete Examples
 
-  Provide runnable examples:
+  # Your markdown content starts here
 
-  ```javascript
-  console.log('Hello, world!');
   ```
 
-  ## Error Handling
 
-  Show realistic failure scenarios:
+  This creates a page with:
 
-  ```javascript
-  try {
-    await fetch('/api');
-  } catch (e) {
-    console.error('Request failed', e);
-  }
-  ```
+  - "API Reference" in the sidebar and as the H1
+
+  - SEO description for search engines
+
+  - Code icon in the sidebar
 
 ````
 
 --- step-start ---
-
-````yaml tool-strReplaceEditor
-input:
-  command: create
-  path: README.md
-  file_text: >+
-    # Documentation Starter Kit
-
-
-    This project contains essential guides for writing and formatting documentation using MDX and
-    Fumabase components.
-
-
-    ## Development
-
-
-    ```bash
-
-    npm install -g fumabase
-
-    fumabase dev
-
-    ```
-
-  insert_line: null
-  new_str: null
-  old_str: null
-  view_range: null
-output: >+
-  # Documentation Starter Kit
-
-
-  This project contains essential guides for writing and formatting documentation using MDX and
-  Fumabase components.
-
-
-  ## Development
-
-
-  ```bash
-
-  npm install -g fumabase
-
-  fumabase dev
-
-  ```
-
-
-````
-
---- step-start ---
-
-Completed website scaffolding.

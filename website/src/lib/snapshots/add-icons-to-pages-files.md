@@ -13,7 +13,6 @@ FILE: api/overview.mdx
 ==================================================
 ---
 title: API Overview
-icon: server
 ---
 
 # API Overview
@@ -26,7 +25,6 @@ FILE: getting-started.mdx
 ==================================================
 ---
 title: Getting Started
-icon: rocket
 ---
 
 # Getting Started
@@ -39,7 +37,6 @@ FILE: guides/configuration.mdx
 ==================================================
 ---
 title: Configuration
-icon: settings
 ---
 
 # Configuration Guide
@@ -52,7 +49,6 @@ FILE: index.mdx
 ==================================================
 ---
 title: Home
-icon: house
 ---
 
 # Welcome to our docs

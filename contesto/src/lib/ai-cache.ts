@@ -1,6 +1,7 @@
 import stableString from 'fast-json-stable-stringify'
-import { FlatCache } from 'flat-cache'
-
+import { createStorage, type Storage } from 'unstorage'
+import fsDriverImport from 'unstorage/drivers/fs'
+const fsDriver = fsDriverImport as unknown as (opts: { base?: string }) => any
 import {
     simulateReadableStream,
 } from 'ai'
@@ -9,67 +10,55 @@ import {
     type LanguageModelV2Middleware,
     type LanguageModelV2StreamPart,
 } from '@ai-sdk/provider'
-import { createHash } from 'crypto'
-import { existsSync } from 'fs'
-import path, { dirname, join, resolve } from 'path'
+import { createHash } from 'node:crypto'
+import path from 'node:path'
+import * as yaml from 'js-yaml'
 
 export function createAiCacheMiddleware({
     cacheDir = '.aicache',
-    lruSize = 300,
-    cwd = process.cwd(),
-    ttl = 1000 * 60 * 24 * 360,
     onParams = (x) => {},
 } = {}) {
-    const modelsCaches = new Map<string, FlatCache>()
+    const modelsCaches = new Map<string, Storage>()
 
     function getModelCache(modelId: string) {
-        if (!path.isAbsolute(cacheDir)) {
-            cacheDir = findUp(cacheDir, cwd) || cacheDir
-        }
         if (!modelId) {
             throw new Error(`no modelId in ai generation`)
         }
         const cache = modelsCaches.get(modelId)
 
         if (!cache) {
-            const cacheId = `${modelId}-cache.json`
-            const cache = new FlatCache({
-                cacheDir,
-                cacheId,
-                lruSize,
-
-                ttl,
-                serialize(data) {
-                    return JSON.stringify(data)
-                },
-                deserialize(data) {
-                    return JSON.parse(data)
-                },
+            // Use absolute path from current working directory
+            const modelCacheDir = path.isAbsolute(cacheDir)
+                ? path.join(cacheDir, modelId)
+                : path.join(process.cwd(), cacheDir, modelId)
+            const storage = createStorage({
+                driver: fsDriver({ base: modelCacheDir }),
             })
-            cache.load()
-            modelsCaches.set(modelId, cache)
-            return cache
+            modelsCaches.set(modelId, storage)
+            return storage
         }
         return cache
     }
     const cacheMiddleware: LanguageModelV2Middleware = {
         wrapGenerate: async ({ doGenerate, params,  model }) => {
-            const cache = getModelCache(model.modelId)
+            const storage = getModelCache(model.modelId)
 
             onParams?.(params)
             const cacheKey = hashKey(params)
 
-            const cached = (await cache.get(cacheKey)) as Awaited<
-                ReturnType<LanguageModelV2['doGenerate']>
-            > | null
+            const cachedYaml = await storage.getItem(cacheKey) as string | null
+            const cached = cachedYaml ? yaml.load(cachedYaml) as {
+                params: any,
+                result: Awaited<ReturnType<LanguageModelV2['doGenerate']>>
+            } : null
 
-            if (cached) {
+            if (cached && cached.result) {
                 return {
-                    ...cached,
+                    ...cached.result,
                     response: {
-                        ...cached.response,
-                        timestamp: cached?.response?.timestamp
-                            ? new Date(cached?.response?.timestamp)
+                        ...cached.result.response,
+                        timestamp: cached.result?.response?.timestamp
+                            ? new Date(cached.result?.response?.timestamp)
                             : undefined,
                     },
                 }
@@ -77,26 +66,35 @@ export function createAiCacheMiddleware({
 
             const result = await doGenerate()
 
-            cache.set(cacheKey, result)
-            cache.save(true)
+            const yamlContent = yaml.dump({
+                params,
+                result,
+            }, {
+                indent: 2,
+                lineWidth: 120,
+                noRefs: true,
+                sortKeys: false,
+            })
+            await storage.setItem(cacheKey, yamlContent)
 
             return result
         },
 
         wrapStream: async ({ doStream, model, params }) => {
             const cacheKey = hashKey(params)
-            // console.log(params)
-            const cache = getModelCache(model.modelId)
+            const storage = getModelCache(model.modelId)
             onParams?.(params)
             // Check if the result is in the cache
-            const cached = (await cache.get(
-                cacheKey,
-            )) as LanguageModelV2StreamPart[]
+            const cachedYaml = await storage.getItem(cacheKey) as string | null
+            const cached = cachedYaml ? yaml.load(cachedYaml) as {
+                params: any,
+                chunks: LanguageModelV2StreamPart[]
+            } : null
 
             // If cached, return a simulated ReadableStream that yields the cached result
-            if (cached) {
+            if (cached && cached.chunks) {
                 // Format the timestamps in the cached response
-                const formattedChunks = cached.map((p) => {
+                const formattedChunks = cached.chunks.map((p) => {
                     if (p.type === 'response-metadata' && p.timestamp) {
                         return { ...p, timestamp: new Date(p.timestamp) }
                     } else return p
@@ -126,11 +124,18 @@ export function createAiCacheMiddleware({
                     controller.enqueue(chunk)
                 },
 
-                flush() {
+                async flush() {
                     // Store the full response in the cache after streaming is complete
-                    // console.log(`saving ai cache`)
-                    cache.set(cacheKey, fullResponse)
-                    cache.save(true)
+                    const yamlContent = yaml.dump({
+                        params,
+                        chunks: fullResponse,
+                    }, {
+                        indent: 2,
+                        lineWidth: 120,
+                        noRefs: true,
+                        sortKeys: false,
+                    })
+                    await storage.setItem(cacheKey, yamlContent)
                 },
             })
 
@@ -146,25 +151,4 @@ export function createAiCacheMiddleware({
 function hashKey(data: any): string {
     const jsonString = stableString(data)
     return createHash('sha256').update(jsonString).digest('hex')
-}
-
-function findUp(filename: string, startDir: string): string | null {
-    let currentDir = resolve(startDir)
-
-    while (true) {
-        const filePath = join(currentDir, filename)
-
-        if (existsSync(filePath)) {
-            return filePath
-        }
-
-        const parentDir = dirname(currentDir)
-
-        // If we've reached the root directory
-        if (parentDir === currentDir) {
-            return null
-        }
-
-        currentDir = parentDir
-    }
 }

@@ -36,7 +36,7 @@ instead of adding packages directly in package.json use `pnpm install package` i
 
 - do not use any: you must NEVER use any, if you find yourself using `as any` or `:any` use the @think tool to think hard if there are types you can import instead. do even a search in the project for what the type could be. any should be used as a last resort.
 
-- NEVER do `(x as any).field` or `'field' in x` before trying to accessing the property and checking if the code compiles first. the code probably doesn't need any or the in check. even if it does not, use @think tool first!
+- NEVER do `(x as any).field` or `'field' in x` before trying to accessing the property and checking if the code compiles first. the code probably doesn't need any or the in check. even if it does not, use @think tool first! Before adding (x as any).something ALWAYS read the .d.ts
 
 - after any change to typescript code ALWAYS run the `pnpm typecheck` script of that package, or if there is no typecheck script run `pnpm tsc` yourself
 

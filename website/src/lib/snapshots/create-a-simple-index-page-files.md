@@ -8,9 +8,10 @@ FILE: index.mdx
 ==================================================
 ---
 title: 'Welcome'
-description: 'Welcome to the documentation.'
+description: 'Welcome to the documentation'
+icon: 'house'
 ---
 
 # Welcome
 
-Welcome to our documentation site. Feel free to explore the guides and reference materials.
+Welcome to the documentation.

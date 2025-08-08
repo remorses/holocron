@@ -2,7 +2,7 @@ import { toJSONSchema, z } from 'zod'
 
 import { extractNamePathsFromSchema } from 'contesto'
 import dedent from 'dedent'
-import { themeNames } from './themes'
+import { themeNames } from './themes.js'
 
 
 // === Primitive helper schemas ===

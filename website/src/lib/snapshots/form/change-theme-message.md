@@ -10,12 +10,12 @@ input:
   fields:
     - name: theme
       type: select
-      label: Site Theme
+      label: Theme
       description: Select the color theme for the documentation site
       required: true
       groupTitle: null
       placeholder: null
-      initialValue: neutral
+      initialValue: null
       min: null
       max: null
       step: null
