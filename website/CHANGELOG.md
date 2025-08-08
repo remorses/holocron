@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-08-08 11:45
+
+- **System message testing**: Added reusable `generateSystemMessage()` function and test snapshots
+- **Test coverage improvement**: Created separate test for system message input with both onboarding and regular modes
+- **Code organization**: Extracted system message generation logic for better maintainability
+
 ## 2025-08-08 11:30
 
 - **Enhanced icon validation**: Added real-time validation for Lucide icons in markdown frontmatter

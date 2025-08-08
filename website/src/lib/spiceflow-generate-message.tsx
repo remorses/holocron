@@ -65,6 +65,38 @@ import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
 import fm from 'front-matter'
 import { isValidLucideIconName } from './icons'
 
+/**
+ * Generate the system message content for the AI
+ */
+export async function generateSystemMessage({
+    isOnboardingChat,
+}): Promise<string> {
+    return [
+        await import('../prompts/agent.md?raw').then((x) => x.default),
+        await import('../prompts/tone-and-style.md?raw').then((x) => x.default),
+        await import('../prompts/writing-mdx.md?raw').then((x) => x.default),
+        await import('../prompts/css-variables.md?raw').then((x) => x.default),
+        await import('../prompts/frontmatter.md?raw').then((x) => x.default),
+        dedent`
+        ## fumabase.jsonc
+
+        You can edit a top level fumabase.jsonc file to customize website settings, this file has the following json schema:
+
+        <fumabaseJsonSchema>
+        ${JSON.stringify(docsJsonSchema, null, 2)}
+        </fumabaseJsonSchema>
+        `,
+        isOnboardingChat && '## Onboarding Instructions',
+        isOnboardingChat &&
+            (await import('../prompts/create-site.md?raw').then(
+                (x) => x.default,
+            )),
+        isOnboardingChat && generateExampleTemplateFilesPrompt(),
+    ]
+        .filter(Boolean)
+        .join('\n\n')
+}
+
 function generateExampleTemplateFilesPrompt() {
     let templateContents = ''
     for (const doc of exampleDocs) {
@@ -621,40 +653,7 @@ export async function* generateMessageStream({
     const allMessages: ModelMessage[] = [
         {
             role: 'system',
-
-            content: [
-                await import('../prompts/agent.md?raw').then((x) => x.default),
-                await import('../prompts/tone-and-style.md?raw').then(
-                    (x) => x.default,
-                ),
-                await import('../prompts/writing-mdx.md?raw').then(
-                    (x) => x.default,
-                ),
-                await import('../prompts/css-variables.md?raw').then(
-                    (x) => x.default,
-                ),
-                await import('../prompts/frontmatter.md?raw').then(
-                    (x) => x.default,
-                ),
-
-                dedent`
-                ## fumabase.jsonc
-
-                You can edit a top level fumabase.jsonc file to customize website settings, this file has the following json schema:
-
-                <fumabaseJsonSchema>
-                ${JSON.stringify(docsJsonSchema, null, 2)}
-                </fumabaseJsonSchema>
-                `,
-                isOnboardingChat && '## Onboarding Instructions',
-                isOnboardingChat &&
-                    (await import('../prompts/create-site.md?raw').then(
-                        (x) => x.default,
-                    )),
-                isOnboardingChat && generateExampleTemplateFilesPrompt(),
-            ]
-                .filter(Boolean)
-                .join('\n\n'),
+            content: await generateSystemMessage({ isOnboardingChat }),
         },
         ...convertToModelMessages(messages.filter((x) => x.role !== 'system')),
     ]

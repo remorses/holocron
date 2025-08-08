@@ -105,9 +105,9 @@ const testCases: TestCase[] = [
             ).toBe(true)
 
             // Check content mentions users and products
-            const apiFiles = Object.entries(result.filesInDraft).filter(
-                ([path]) => path.toLowerCase().includes('api'),
-            )
+            // const apiFiles = Object.entries(result.filesInDraft).filter(
+            //     ([path]) => path.toLowerCase().includes('api'),
+            // )
             // const hasUsersAndProducts = apiFiles.some(([, file]) =>
             //     file.content?.toLowerCase().includes('users') &&
             //     file.content?.toLowerCase().includes('products')
@@ -175,15 +175,25 @@ const testCases: TestCase[] = [
         ],
         onFinish: (result) => {
             // Check that no file paths start with /
-            const filesWithSlash = Object.keys(result.filesInDraft).filter(path => path.startsWith('/'))
-            expect(filesWithSlash, `Files should not start with slash: ${filesWithSlash.join(', ')}`).toHaveLength(0)
+            const filesWithSlash = Object.keys(result.filesInDraft).filter(
+                (path) => path.startsWith('/'),
+            )
+            expect(
+                filesWithSlash,
+                `Files should not start with slash: ${filesWithSlash.join(', ')}`,
+            ).toHaveLength(0)
 
             // Check that files were updated
             const updatedFiles = Object.entries(result.filesInDraft)
             expect(updatedFiles.length).toBeGreaterThan(0)
 
             // Track which original files have icons
-            const originalFiles = ['index.mdx', 'getting-started.mdx', 'api/overview.mdx', 'guides/configuration.mdx']
+            const originalFiles = [
+                'index.mdx',
+                'getting-started.mdx',
+                'api/overview.mdx',
+                'guides/configuration.mdx',
+            ]
             const filesWithIcons: string[] = []
             const filesWithoutIcons: string[] = []
             const invalidIcons: Record<string, string> = {}
@@ -196,7 +206,7 @@ const testCases: TestCase[] = [
                         // Parse frontmatter using front-matter library
                         const parsed = fm(file.content)
                         const frontmatter = parsed.attributes as any
-                        
+
                         if (frontmatter && frontmatter.icon) {
                             const iconName = String(frontmatter.icon)
                             const isValid = isValidLucideIconName(iconName)
@@ -209,7 +219,10 @@ const testCases: TestCase[] = [
                             filesWithoutIcons.push(path)
                         }
                     } catch (error) {
-                        console.error(`Failed to parse frontmatter for ${path}:`, error)
+                        console.error(
+                            `Failed to parse frontmatter for ${path}:`,
+                            error,
+                        )
                         filesWithoutIcons.push(path)
                     }
                 }
@@ -221,9 +234,18 @@ const testCases: TestCase[] = [
             console.log('Invalid icons:', invalidIcons)
 
             // All original files should have valid icons
-            expect(filesWithoutIcons, `These files are missing icons: ${filesWithoutIcons.join(', ')}`).toHaveLength(0)
-            expect(Object.keys(invalidIcons), `These files have invalid icons: ${JSON.stringify(invalidIcons)}`).toHaveLength(0)
-            expect(filesWithIcons.length, `Only ${filesWithIcons.length}/${originalFiles.length} files have valid icons`).toBe(originalFiles.length)
+            expect(
+                filesWithoutIcons,
+                `These files are missing icons: ${filesWithoutIcons.join(', ')}`,
+            ).toHaveLength(0)
+            expect(
+                Object.keys(invalidIcons),
+                `These files have invalid icons: ${JSON.stringify(invalidIcons)}`,
+            ).toHaveLength(0)
+            expect(
+                filesWithIcons.length,
+                `Only ${filesWithIcons.length}/${originalFiles.length} files have valid icons`,
+            ).toBe(originalFiles.length)
         },
     },
 ]
@@ -308,4 +330,22 @@ describe.concurrent('generateMessageStream', ({}) => {
             120000,
         ) // 120 second timeout for AI generation
     }
+})
+
+test('system message input', async () => {
+    const { generateSystemMessage } = await import(
+        './spiceflow-generate-message'
+    )
+
+    // Test both onboarding and non-onboarding modes
+    const onboardingSystemMessage = await generateSystemMessage(true)
+    const regularSystemMessage = await generateSystemMessage(false)
+
+    // Save system messages as snapshots
+    await expect(onboardingSystemMessage).toMatchFileSnapshot(
+        './snapshots/system-message-onboarding.md',
+    )
+    await expect(regularSystemMessage).toMatchFileSnapshot(
+        './snapshots/system-message-regular.md',
+    )
 })

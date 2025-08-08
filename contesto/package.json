@@ -30,7 +30,7 @@
     "dependencies": {
         "@ai-sdk/openai": "2.0.0",
         "@ai-sdk/provider": "2.0.0",
-        "@ai-sdk/react": "2.0.0",
+        "@ai-sdk/react": "2.0.8",
         "@ai-sdk/ui-utils": "^1.2.11",
         "@ariakit/react": "^0.4.17",
         "@radix-ui/react-popover": "^1.1.14",
@@ -43,7 +43,7 @@
         "@tanstack/react-query": "^5.81.5",
         "@types/cookie": "^1.0.0",
         "@uiw/react-color": "^2.6.0",
-        "ai": "5.0.0",
+        "ai": "5.0.8",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "cookie": "^1.0.2",

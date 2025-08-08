@@ -1,13 +1,11 @@
 import { generateMessageStream } from './spiceflow-generate-message'
 import { FileSystemEmulator } from './file-system-emulator'
-import { VirtualFile } from 'fumadocs-core/source'
-import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
 import { createAiCacheMiddleware } from 'contesto/src/lib/ai-cache'
 import {
     wrapLanguageModel,
     readUIMessageStream,
-    type CoreMessage,
     type UIMessage,
+    type ModelMessage,
     isToolUIPart,
 } from 'ai'
 import type { FileUpdate } from 'docs-website/src/lib/edit-tool'
@@ -145,11 +143,12 @@ export function filesInDraftToMarkdown(
             filesByCleanPath.set(cleanPath, file)
         }
     }
-    
+
     // Sort by path and output
-    const sortedFiles = Array.from(filesByCleanPath.entries())
-        .sort(([a], [b]) => a.localeCompare(b))
-    
+    const sortedFiles = Array.from(filesByCleanPath.entries()).sort(
+        ([a], [b]) => a.localeCompare(b),
+    )
+
     for (const [cleanPath, file] of sortedFiles) {
         lines.push('='.repeat(50))
         lines.push(`FILE: ${cleanPath}`)
@@ -165,7 +164,7 @@ export function filesInDraftToMarkdown(
  * Input parameters for testGenerateMessage
  */
 export type TestGenerateMessageInput = {
-    messages: CoreMessage[]
+    messages: ModelMessage[]
     filesInDraft?: Record<string, FileUpdate>
     currentSlug?: string
 }

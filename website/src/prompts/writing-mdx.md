@@ -312,7 +312,7 @@ Customise folders by creating a `meta.json` file in the folder.
 {
     "title": "Display Name",
     "icon": "MyIcon",
-    "pages": ["index", "getting-started"],
+    "pages": ["index", "getting-started", "..."],
     "defaultOpen": true
 }
 ```
