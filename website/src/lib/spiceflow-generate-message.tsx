@@ -684,6 +684,7 @@ export async function* generateMessageStream({
                 strictJsonSchema: true,
                 include: ['reasoning.encrypted_content'],
                 store: false,
+                reasoningEffort: 'low',
                 parallelToolCalls: true,
             } satisfies OpenAIResponsesProviderOptions,
         },

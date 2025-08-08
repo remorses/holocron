@@ -76,7 +76,7 @@ export function createRenderFormTool({
                     )
                 }
             }
-            return errors.length > 0 ? { errors } : `rendered form to the user`
+            return errors.length > 0 ? { errors } : `Rendered form to the user. You can now assume the user has made the update to the data in the next message. To see the latest data read the file again.`
         } catch (err) {
             notifyError(err, 'createRenderFormExecute')
             errors.push(
