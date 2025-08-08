@@ -124,9 +124,9 @@ const testCases: TestCase[] = [
                     ---
                     title: Home
                     ---
-                    
+
                     # Welcome to our docs
-                    
+
                     This is the home page.
                 `,
             },
@@ -136,9 +136,9 @@ const testCases: TestCase[] = [
                     ---
                     title: Getting Started
                     ---
-                    
+
                     # Getting Started
-                    
+
                     Learn how to get started with our product.
                 `,
             },
@@ -148,9 +148,9 @@ const testCases: TestCase[] = [
                     ---
                     title: API Overview
                     ---
-                    
+
                     # API Overview
-                    
+
                     Overview of our API endpoints.
                 `,
             },
@@ -160,9 +160,9 @@ const testCases: TestCase[] = [
                     ---
                     title: Configuration
                     ---
-                    
+
                     # Configuration Guide
-                    
+
                     How to configure the application.
                 `,
             },
@@ -338,8 +338,8 @@ test('system message input', async () => {
     )
 
     // Test both onboarding and non-onboarding modes
-    const onboardingSystemMessage = await generateSystemMessage(true)
-    const regularSystemMessage = await generateSystemMessage(false)
+    const onboardingSystemMessage = await generateSystemMessage({isOnboardingChat: true})
+    const regularSystemMessage = await generateSystemMessage({ isOnboardingChat: false })
 
     // Save system messages as snapshots
     await expect(onboardingSystemMessage).toMatchFileSnapshot(
