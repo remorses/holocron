@@ -198,7 +198,7 @@ export const UIFieldSchema = z.object({
         ),
     // Input/textarea/password fields
     placeholder: z.string().optional(),
-    initialValue: z.union([z.string(), z.number(), z.boolean()]).optional(),
+    initialValue: z.union([z.string(), z.number(), z.boolean(), z.null()]),
     // Number/slider fields
     min: z.number().optional(),
     max: z.number().optional(),

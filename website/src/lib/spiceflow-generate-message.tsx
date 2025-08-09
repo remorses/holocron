@@ -271,7 +271,7 @@ export async function* generateMessageStream({
 
     // let model = groq('moonshotai/kimi-k2-instruct')
     // let model = anthropic('claude-sonnet-4-20250514')
-    let model = google('gemini-2.5-flash')
+    let model = openai('gpt-5-mini')
 
     // if (modelId && modelProvider) {
     //     if (modelProvider.startsWith('openai')) {
