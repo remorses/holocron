@@ -407,13 +407,13 @@ export const DocsConfigSchema = z
         siteId: z
             .string()
             .describe(
-                `The site id for this folder. This field is required and should never be manually updated.`,
+                `The site id for this folder. This field is required and should never be manually updated. This field should never by created instead it is automatically assigned.`,
             ),
-        name: z.string().min(1).describe('Project or product name'),
+        name: z.string().min(1).describe('Project or product name. This will be used in fumabase dashboard to list the user websites. It has no other use case than that.'),
 
         // navTopLinks: z.array(NavigationAnchorItem).optional(),
-        description: z.string().optional().describe('SEO description'),
-        logo: LogoSchema.optional().describe('Logo config'),
+        description: z.string().optional().describe('default SEO description for pages that do not have a description frontmatter'),
+        logo: LogoSchema.optional().describe('Logo config, shown in the top left in the navbar'),
         favicon: FaviconSchema.optional().describe('Favicon config'),
         // api: ApiSchema.optional().describe('API reference settings'),
         navbar: NavbarSchema.optional().describe('Top navbar settings'),
@@ -422,17 +422,17 @@ export const DocsConfigSchema = z
             .optional()
             .describe('Navigation tabs'),
 
-        footer: FooterSchema.optional().describe('Footer content'),
+        footer: FooterSchema.optional().describe('Footer content, shown at the bottom of the website in all pages'),
         // search: SearchSchema.optional().describe('Search behavior'),
         // // TODO
-        seo: SeoSchema.optional().describe('SEO meta & indexing'),
+        seo: SeoSchema.optional().describe('SEO meta & indexing settings'),
         redirects: z
             .array(RedirectSchema)
             .optional()
             .describe('Redirect rules'),
-        banner: BannerSchema.optional().describe('Site-wide banner'),
+        banner: BannerSchema.optional().describe('Site-wide banner for announcements or news'),
         // errors: ErrorsSchema.optional().describe('Error page config'),
-        contextual: ContextualSchema.optional().describe('Contextual actions'),
+        contextual: ContextualSchema.optional().describe('Contextual actions shown in the buttons at the top of a docs page'),
         cssVariables: CSSVariablesSchema.optional().describe('CSS variables'),
         // integrations: IntegrationsSchema.optional().describe('Integrations'),
         domains: z
@@ -445,7 +445,7 @@ export const DocsConfigSchema = z
             .boolean()
             .optional()
             .describe(
-                'Hide the sidebar completely from the documentation site',
+                'Hide the sidebar completely from the documentation site. This should be rare',
             ),
         ignore: z
             .array(z.string())
@@ -456,7 +456,7 @@ export const DocsConfigSchema = z
         theme: z
             .enum(themeNames as [string, ...string[]])
             .optional()
-            .describe('Color theme for the documentation site'),
+            .describe('Color theme for the documentation site. This is the preferred way to customize the website, it is much simpler and easier to use compared to custom css variables which are discouraged'),
     })
     .strict()
     .describe('Schema for fumabase.jsonc configuration')
