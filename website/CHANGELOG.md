@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-08-09 14:30
+
+- **Fix foreign key constraint error**: Set `githubSha` to null for pages with parse errors instead of invalid empty string
+- **Schema improvement**: Made `MarkdownPage.githubSha` nullable to properly handle markdown parsing failures
+- **Cleaner error handling**: Skip MarkdownBlob creation for pages with parse errors, avoiding unnecessary database entries
+
 ## 2025-08-08 11:45
 
 - **System message testing**: Added reusable `generateSystemMessage()` function and test snapshots

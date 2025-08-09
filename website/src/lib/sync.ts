@@ -162,11 +162,11 @@ export async function* assetsFromFilesList({
 }): AsyncGenerator<AssetForSync> {
     // Check if fumabase.jsonc exists in the files
     const fumabaseJsonFile = files.find(f => f.relativePath.endsWith('fumabase.jsonc'))
-    
+
     // Use fumabase.jsonc from files if present, otherwise use defaults
     let docsJson: DocsJsonType | undefined
     let docsJsonComments: JsonCComments | undefined
-    
+
     if (fumabaseJsonFile?.contents) {
         // Extract docsJson and comments from the fumabase.jsonc file
         const { comments, data } = extractJsonCComments(fumabaseJsonFile.contents)
@@ -736,12 +736,19 @@ export async function syncSite({
         const nonRecoverableErrors = errors.filter(
             (e) => e.errorType === 'mdParse' || e.errorType === 'mdxParse',
         )
+
+        // When there are parse errors, set githubSha to null
+        // This avoids creating unnecessary blob entries for error pages
+        const effectiveGithubSha = nonRecoverableErrors.length > 0
+            ? null
+            : asset.githubSha
+
         const pageInput: Prisma.MarkdownPageUncheckedCreateInput = {
             slug: slug,
             branchId,
             frontmatter: data.frontmatter,
             githubPath: asset.githubPath,
-            githubSha: nonRecoverableErrors.length > 0 ? '' : asset.githubSha,
+            githubSha: effectiveGithubSha,
         }
 
         const structuredData = data.structuredData
@@ -767,22 +774,8 @@ export async function syncSite({
         errors = deduplicateBy(errors, (x) => String(x.line || 0))
 
         // Execute all operations in a single transaction array for data consistency
-        // First, we need to handle the upsert and get the page
-        const [, page] = await prisma.$transaction([
-            prisma.markdownBlob.upsert({
-                where: { githubSha: asset.githubSha },
-                update: {
-                    markdown,
-                    mdast,
-                    structuredData: data.structuredData as any,
-                },
-                create: {
-                    githubSha: asset.githubSha,
-                    markdown,
-                    mdast,
-                    structuredData: data.structuredData as any,
-                },
-            }),
+        // Always put page upsert first for consistent access at results[0]
+        const [page] = await prisma.$transaction([
             prisma.markdownPage.upsert({
                 where: {
                     branchId_slug: { branchId, slug: slug },
@@ -790,7 +783,22 @@ export async function syncSite({
                 update: pageInput,
                 create: { ...pageInput, branchId },
             }),
-        ])
+            // Only create/update MarkdownBlob if we have a valid githubSha
+            effectiveGithubSha && prisma.markdownBlob.upsert({
+                where: { githubSha: effectiveGithubSha },
+                update: {
+                    markdown,
+                    mdast,
+                    structuredData: data.structuredData as any,
+                },
+                create: {
+                    githubSha: effectiveGithubSha,
+                    markdown,
+                    mdast,
+                    structuredData: data.structuredData as any,
+                },
+            })
+        ].filter(Boolean) as Prisma.PrismaPromise<any>[])
 
         // Now handle all relation operations in a single atomic transaction
         const relationOps: Prisma.PrismaPromise<any>[] = [

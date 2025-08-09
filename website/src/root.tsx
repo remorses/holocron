@@ -12,17 +12,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 export function meta() {
     return [
         { title: 'Fumabase' },
-        { name: 'description', content: 'Host Fumadocs websites without effort' },
+        {
+            name: 'description',
+            content: 'Host Fumadocs websites without effort',
+        },
         { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' },
     ]
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
     return (
-        <html
-            className='h-full flex dark  flex-col grow'
-            lang='en'
-        >
+        <html className='h-full flex dark  flex-col grow' lang='en'>
             <head>
                 <meta charSet='utf-8' />
                 <meta
@@ -37,6 +37,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     />
                 )}
                 <Links />
+                <script
+                    defer
+                    src='https://assets.onedollarstats.com/stonks.js'
+                ></script>
             </head>
             <body className='h-full flex flex-col grow dark:bg-black'>
                 {children}

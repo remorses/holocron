@@ -265,7 +265,7 @@ model MarkdownPage {
   frontmatter Json?
 
 
-  githubSha      String
+  githubSha      String?
   githubPath     String
   syncErrors MarkdownPageSyncError[]
   mediaAssets PageMediaAsset[]
