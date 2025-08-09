@@ -74,7 +74,7 @@ Frontmatter is YAML metadata placed at the beginning of your markdown files. It 
 ---
 title: 'Page Title'
 description: 'Brief description of the page content'
-icon: 'icon-name'
+icon: 'file'
 ---
 ```
 

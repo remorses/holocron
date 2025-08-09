@@ -1,4 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic'
+import { google, GoogleGenerativeAIProviderOptions } from '@ai-sdk/google'
 import yaml from 'js-yaml'
 import fs from 'fs'
 import { AnySpiceflow, preventProcessExitIfBusy } from 'spiceflow'
@@ -269,13 +270,16 @@ export async function* generateMessageStream({
     })
 
     // let model = groq('moonshotai/kimi-k2-instruct')
-    let model = anthropic('claude-sonnet-4-20250514')
+    // let model = anthropic('claude-sonnet-4-20250514')
+    let model = google('gemini-2.5-flash')
 
     // if (modelId && modelProvider) {
     //     if (modelProvider.startsWith('openai')) {
     //         model = openai(modelId)
     //     } else if (modelProvider === 'anthropic') {
     //         model = anthropic(modelId)
+    //     } else if (modelProvider === 'google') {
+    //         model = google(modelId)
     //     } else {
     //         // throw new Error(
     //         //     `Unsupported model provider: ${modelProvider}`,
@@ -682,6 +686,16 @@ export async function* generateMessageStream({
         stopWhen: stepCountIs(100),
 
         providerOptions: {
+            google: {
+                threshold: 'OFF',
+                structuredOutputs: true,
+                responseModalities: ['TEXT'],
+
+                thinkingConfig: {
+                    // includeThoughts: true,
+                    thinkingBudget: 0,
+                },
+            } satisfies GoogleGenerativeAIProviderOptions,
             zai: {
                 thinking: {
                     type: 'disabled',
@@ -702,6 +716,7 @@ export async function* generateMessageStream({
     const stream = result.toUIMessageStream({
         onError: (error: any) => {
             notifyError(error, 'toUIMessageStream')
+            throw error
             return error.message || error
         },
 
@@ -716,13 +731,13 @@ export async function* generateMessageStream({
             debugMessages(uiMessages, 'scripts/ui-result-messages.json')
 
             if (onFinish) {
-                console.log(
-                    yaml.dump(uiMessages, {
-                        noRefs: true,
-                        sortKeys: false,
-                        lineWidth: 120,
-                    }),
-                )
+                // console.log(
+                //     yaml.dump(uiMessages, {
+                //         noRefs: true,
+                //         sortKeys: false,
+                //         lineWidth: 120,
+                //     }),
+                // )
                 await onFinish({
                     uiMessages,
                     isAborted,

@@ -34,7 +34,8 @@ export async function loader({ request }) {
 
     // Check if login was initiated from landing page form
     const cookies = cookie.parse(request.headers.get('Cookie') || '')
-    const isFromLandingPage = cookies[DID_USER_CLICK_LANDING_PAGE_PROMPT] === 'true'
+    const isFromLandingPage =
+        cookies[DID_USER_CLICK_LANDING_PAGE_PROMPT] === 'true'
 
     let org = await prisma.org.findFirst({
         where: {
@@ -63,61 +64,7 @@ export async function loader({ request }) {
 
     // If from landing page, create a new site and redirect to it
     if (isFromLandingPage) {
-        // Create new site for landing page user
-        const newSite = await prisma.site.create({
-            data: {
-                orgId,
-                name: 'new docs site',
-                branches: {
-                    create: {
-                        title: 'main',
-                        githubBranch: 'main',
-                    },
-                },
-            },
-        })
-
-        // Get the created branch
-        const branch = await prisma.siteBranch.findFirst({
-            where: { siteId: newSite.siteId },
-            orderBy: { createdAt: 'desc' },
-        })
-
-        if (!branch) {
-            throw new Error('Failed to create branch for new site')
-        }
-
-        // Create a new chat for the user on the new branch
-        const newChat = await prisma.chat.create({
-            data: {
-                userId,
-                branchId: branch.branchId,
-                title: 'New Chat',
-            },
-        })
-
-        // Clear the landing page cookie and redirect to the new site chat
-        const redirectUrl = new URL(
-            href('/org/:orgId/site/:siteId/chat/:chatId', {
-                orgId,
-                siteId: newSite.siteId,
-                chatId: newChat.chatId,
-            }),
-            process.env.PUBLIC_URL,
-        )
-
-        // Create response with redirect and clear the landing page cookie
-        const response = new Response(null, {
-            status: 302,
-            headers: {
-                Location: redirectUrl.pathname + url.search,
-                'Set-Cookie': cookie.serialize(DID_USER_CLICK_LANDING_PAGE_PROMPT, '', {
-                    path: '/',
-                    maxAge: 0, // Clear the cookie
-                }),
-            },
-        })
-        throw response
+        throw redirect(href('/org/:orgId/onboarding', { orgId }))
     }
     // Use one Prisma query to fetch latest site, its latest branch, and the user's latest chat for that org
     const site = await prisma.site.findFirst({

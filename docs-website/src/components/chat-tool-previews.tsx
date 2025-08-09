@@ -16,13 +16,13 @@ function Highlight({ children }: { children: ReactNode }) {
 }
 
 export function ErrorPreview({ error }) {
-    const truncatedError = truncateText(String(error), 300)
+    const truncatedError = truncateText(String(error), 500)
     return (
         <div className='flex flex-row gap-2'>
             <div className='shrink-0'>⎿</div>
             <span>
                 Error:{' '}
-                <span className='dark:text-red-300 text-red-500'>
+                <span className='dark:text-red-300 text-red-500 whitespace-pre-line'>
                     {truncatedError}
                 </span>
             </span>
