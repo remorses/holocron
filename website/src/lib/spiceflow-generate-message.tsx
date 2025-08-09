@@ -1,4 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic'
+import yaml from 'js-yaml'
 import fs from 'fs'
 import { AnySpiceflow, preventProcessExitIfBusy } from 'spiceflow'
 import { groq } from '@ai-sdk/groq'
@@ -268,7 +269,7 @@ export async function* generateMessageStream({
     })
 
     // let model = groq('moonshotai/kimi-k2-instruct')
-    let model = deepinfra('moonshotai/Kimi-K2-Instruct')
+    let model = anthropic('claude-sonnet-4-20250514')
 
     // if (modelId && modelProvider) {
     //     if (modelProvider.startsWith('openai')) {
@@ -699,9 +700,9 @@ export async function* generateMessageStream({
 
     const idGenerator = createIdGenerator()
     const stream = result.toUIMessageStream({
-        onError: (error) => {
-            console.error(`Error in toUIMessageStream:`, error)
-            throw error
+        onError: (error: any) => {
+            notifyError(error, 'toUIMessageStream')
+            return error.message || error
         },
 
         originalMessages: messages,
@@ -715,6 +716,13 @@ export async function* generateMessageStream({
             debugMessages(uiMessages, 'scripts/ui-result-messages.json')
 
             if (onFinish) {
+                console.log(
+                    yaml.dump(uiMessages, {
+                        noRefs: true,
+                        sortKeys: false,
+                        lineWidth: 120,
+                    }),
+                )
                 await onFinish({
                     uiMessages,
                     isAborted,
@@ -725,6 +733,9 @@ export async function* generateMessageStream({
     })
     for await (const chunk of stream) {
         // console.log(chunk)
+        if (chunk.type === 'error') {
+            notifyError(new Error(chunk.errorText), 'generate ai message')
+        }
         yield chunk
     }
     await result.content
@@ -803,10 +814,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 where: {
                     id: lastUserMessage.id,
                 },
-                update: {
-                    createdAt: new Date(),
-                    role: 'user',
-                },
+                update: {},
                 create: {
                     chatId,
                     createdAt: new Date(),

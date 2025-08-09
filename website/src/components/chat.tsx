@@ -273,7 +273,21 @@ export default function Chat({
                         ...fileParts,
                     ]
                         .flat()
-                        .sort((a, b) => a.index - b.index) as any,
+                        .sort((a, b) => a.index - b.index)
+                        // add step start messages. required for claude
+                        .flatMap((part, index) => {
+                            if (msg.role !== 'assistant') return [part]
+                            if (index === 0)
+                                return [{ type: 'step-start' }, part]
+                            if (
+                                part.type === 'text' ||
+                                isToolUIPart(part as any)
+                            ) {
+                                return [{ type: 'step-start' }, part]
+                            } else {
+                                return [part]
+                            }
+                        }) as any,
                 }
                 return message
             }),
