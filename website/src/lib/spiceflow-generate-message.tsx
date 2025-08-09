@@ -271,7 +271,7 @@ export async function* generateMessageStream({
 
     // let model = groq('moonshotai/kimi-k2-instruct')
     // let model = anthropic('claude-sonnet-4-20250514')
-    let model = google('gemini-2.5-flash')
+    let model = openai('gpt-5-mini')
 
     // if (modelId && modelProvider) {
     //     if (modelProvider.startsWith('openai')) {
@@ -630,6 +630,7 @@ export async function* generateMessageStream({
             description:
                 'Rename or move a file within the website. This updates the file path while preserving its content. Ensure the parent directory exists before moving a file to a new location.',
             inputSchema: renameFileSchema,
+
             execute: async ({ oldPath, newPath }) => {
                 try {
                     await fileSystem.move(oldPath, newPath)
@@ -673,8 +674,7 @@ export async function* generateMessageStream({
         model,
         tools,
         onError: (error) => {
-            console.log(`Error in streamText:`, error)
-            throw error
+            notifyError(error, `Error in streamText:`)
         },
         experimental_transform: process.env.VITEST
             ? undefined
@@ -688,11 +688,11 @@ export async function* generateMessageStream({
         providerOptions: {
             google: {
                 threshold: 'OFF',
-                structuredOutputs: true,
+                // structuredOutputs: true,
                 responseModalities: ['TEXT'],
 
                 thinkingConfig: {
-                    // includeThoughts: true,
+                    includeThoughts: true,
                     thinkingBudget: 0,
                 },
             } satisfies GoogleGenerativeAIProviderOptions,
@@ -751,6 +751,7 @@ export async function* generateMessageStream({
         if (chunk.type === 'error') {
             notifyError(new Error(chunk.errorText), 'generate ai message')
         }
+
         yield chunk
     }
     await result.content

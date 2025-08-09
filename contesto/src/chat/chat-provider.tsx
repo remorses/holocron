@@ -201,7 +201,7 @@ const ChatProvider = (props: {
                 `Message element with id ${userMessageId} not found for scrolling initial message`,
             )
         }
-    }, [stableInitialState])
+    }, [])
 
     useEffect(() => {
         // Load initial text from cookies if not provided in props
