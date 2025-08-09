@@ -5,6 +5,7 @@ import { DocsToolPart } from 'docs-website/src/lib/types'
 import { capitalize, cn } from 'docs-website/src/lib/utils'
 import { ReactNode, useMemo } from 'react'
 import { ShowMore } from './show-more'
+import { ChatMarkdown } from './docs-chat'
 
 function Highlight({ children }: { children: ReactNode }) {
     return (
@@ -110,7 +111,7 @@ export function EditorToolPreview({
                     {error ? (
                         <ErrorPreview error={error} />
                     ) : (
-                        <Markdown
+                        <ChatMarkdown
                             className='block'
                             isStreaming={isChatGenerating}
                             markdown={markdown}

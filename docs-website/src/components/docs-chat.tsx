@@ -92,7 +92,7 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
             abortController: new AbortController(),
             isGenerating: false,
         }),
-        [loaderData, chatId],
+        [chatId],
     )
     const drawerState = usePersistentDocsState((x) => x.drawerState)
 
@@ -405,7 +405,7 @@ function Chat({}) {
 }
 
 export function ChatMarkdown({ ...rest }: MarkdownRendererProps) {
-    return <MarkdownRuntime extension='md' {...rest} />
+    return <MarkdownRuntime isStreaming={true} {...rest} extension='md' />
 }
 
 function WelcomeMessage() {

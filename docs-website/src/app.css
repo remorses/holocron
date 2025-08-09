@@ -120,5 +120,5 @@ mark {
 
 
 .fd-steps {
-    content-visibility: visible;
+    content-visibility: visible !important;
 }

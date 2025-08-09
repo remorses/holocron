@@ -33,14 +33,11 @@ export async function getFilesForSource({
 
     const files = allPages
         .map((x) => {
-            let githubPath = x.githubPath
-            if (githubPath.startsWith(githubFolder)) {
-                githubPath = githubPath.slice(githubFolder.length)
-            }
-            githubPath = removeFrontSlash(githubPath)
+            let p = removeGithubFolder(x.githubPath, githubFolder)
+
             const res: MyVirtualFile = {
                 data: { ...(x.frontmatter as any) },
-                path: githubPath,
+                path: p,
                 type: 'page',
 
                 // slugs
@@ -49,10 +46,7 @@ export async function getFilesForSource({
         })
         .concat(
             metaFiles.map((x) => {
-                let githubPath = x.githubPath
-                if (githubPath.startsWith(githubFolder)) {
-                    githubPath = githubPath.slice(githubFolder.length)
-                }
+                let githubPath = removeGithubFolder(x.githubPath, githubFolder)
                 githubPath = removeFrontSlash(githubPath)
                 const res: MyVirtualFile = {
                     data: x.jsonData as any,
@@ -91,8 +85,13 @@ export async function getFilesForSource({
         // Remove deleted files
         for (const [githubPath, draft] of Object.entries(filesInDraft)) {
             if (draft?.content == null) {
-                const normalizedPath = removeGithubFolder(githubPath, githubFolder)
-                const fileIndex = allFiles.findIndex((f) => f.path === normalizedPath)
+                const normalizedPath = removeGithubFolder(
+                    githubPath,
+                    githubFolder,
+                )
+                const fileIndex = allFiles.findIndex(
+                    (f) => f.path === normalizedPath,
+                )
                 if (fileIndex >= 0) {
                     allFiles.splice(fileIndex, 1)
                 }
@@ -114,12 +113,11 @@ export function removeFrontSlash(path: string): string {
     }
     return path
 }
-
 export function removeGithubFolder(path: string, githubFolder: string): string {
     if (githubFolder && path.startsWith(githubFolder)) {
-        return path.slice(githubFolder.length + 1)
+        return removeFrontSlash(path.slice(githubFolder.length))
     }
-    return path
+    return removeFrontSlash(path)
 }
 
 /**
@@ -128,7 +126,7 @@ export function removeGithubFolder(path: string, githubFolder: string): string {
  */
 export function getFilesFromFilesInDraft(
     filesInDraft: FilesInDraft,
-    githubFolder: string = ''
+    githubFolder: string = '',
 ): Array<MyVirtualFile> {
     const files: MyVirtualFile[] = []
 
@@ -141,7 +139,8 @@ export function getFilesFromFilesInDraft(
         const normalizedPath = removeGithubFolder(githubPath, githubFolder)
 
         // Determine file type based on extension
-        const isMetaFile = githubPath.endsWith('.json') || githubPath.endsWith('_meta.json')
+        const isMetaFile =
+            githubPath.endsWith('.json') || githubPath.endsWith('_meta.json')
 
         files.push({
             path: normalizedPath,

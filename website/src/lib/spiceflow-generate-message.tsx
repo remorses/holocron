@@ -2,6 +2,7 @@ import { anthropic } from '@ai-sdk/anthropic'
 import fs from 'fs'
 import { AnySpiceflow, preventProcessExitIfBusy } from 'spiceflow'
 import { groq } from '@ai-sdk/groq'
+import { deepinfra } from '@ai-sdk/deepinfra'
 import dedent from 'string-dedent'
 import {
     OpenAIResponsesProviderOptions,
@@ -14,7 +15,6 @@ import {
     streamText,
     smoothStream,
     tool,
-
     convertToModelMessages,
     stepCountIs,
     isToolUIPart,
@@ -268,7 +268,7 @@ export async function* generateMessageStream({
     })
 
     // let model = groq('moonshotai/kimi-k2-instruct')
-    let model = gateway('moonshotai/kimi-k2')
+    let model = deepinfra('moonshotai/Kimi-K2-Instruct')
 
     // if (modelId && modelProvider) {
     //     if (modelProvider.startsWith('openai')) {
@@ -723,8 +723,9 @@ export async function* generateMessageStream({
             }
         },
     })
-    for await (const message of stream) {
-        yield message
+    for await (const chunk of stream) {
+        // console.log(chunk)
+        yield chunk
     }
     await result.content
 }

@@ -37,6 +37,7 @@ export function MarkdownRuntime({
             markdown={markdown}
             processor={processor}
             components={mdxComponents}
+
             className={className}
         />
     )

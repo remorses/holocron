@@ -278,8 +278,11 @@ export const docsApp = new Spiceflow({ basePath: '/fumabaseInternalAPI' })
                     },
                 }),
                 getProjectFiles: tool({
-                    description:
-                        'Returns a directory tree diagram of the current project files as plain text. Useful for giving an overview or locating files.',
+                  description: dedent`
+                      Returns a directory tree diagram of the current project files as plain text.
+                      Useful for giving an overview or locating files.
+                      If user asks to get project structure or files always call this tool instead of using your knowledge.
+                  `,
                     inputSchema: z.object({}),
                     execute: async () => {
                         const filePaths = [...files].map((x) => {

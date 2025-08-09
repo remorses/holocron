@@ -24,5 +24,5 @@ export const processorWithAst = memoize(
             }
         })
     },
-    { maxSize: 10 },
+    { maxSize: 10, transformKey: (x) => x },
 )

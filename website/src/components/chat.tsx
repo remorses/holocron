@@ -8,7 +8,7 @@ import {
     ChatUserMessage,
 } from 'contesto/src/chat/chat-message'
 import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
-import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
+
 import {
     CSSProperties,
     Fragment,

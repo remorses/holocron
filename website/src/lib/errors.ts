@@ -23,7 +23,7 @@ init({
 
 export async function notifyError(error: any, msg?: string) {
 
-  console.error(msg || '"no notifyError message"', error?.stack || error);
+  console.error(msg || '"no notifyError message"',  error);
   captureException(error, { extra: { msg } });
   await flush(1000);
 }
