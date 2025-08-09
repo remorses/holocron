@@ -21,9 +21,15 @@ type RenderFieldProps = {
     field: UIField
     disabled?: boolean
     messageId?: string
+    uploadFunction?: (file: File) => Promise<string>
 }
 
-function RenderField({ field, disabled, messageId }: RenderFieldProps) {
+function RenderField({
+    field,
+    disabled,
+    messageId,
+    uploadFunction,
+}: RenderFieldProps) {
     const { control, getValues, register, setValue } = useFormContext()
 
     const name = field.name
@@ -268,6 +274,10 @@ function RenderField({ field, disabled, messageId }: RenderFieldProps) {
                                         : ({ src }) => onChange(src)
                                 }
                                 disabled={disabled}
+                                uploadFunction={
+                                    uploadFunction ||
+                                    (async (file) => URL.createObjectURL(file))
+                                }
                             />
                         </>
                     )}
@@ -308,12 +318,14 @@ export function RenderFormPreview({
     message,
     showSubmitButton = false,
     className,
+    uploadFunction,
 }: {
     input?: DeepPartial<RenderFormParameters>
     output?: any
     className?: string
     message: UIMessage
     showSubmitButton?: boolean
+    uploadFunction?: (file: File) => Promise<string>
 }) {
     const { messages, isGenerating } = useChatContext()
 
@@ -400,6 +412,7 @@ export function RenderFormPreview({
                                             field={f}
                                             disabled={disabled}
                                             messageId={message.id}
+                                            uploadFunction={uploadFunction}
                                         />
                                         {f.description &&
                                             f.type !== 'button' && (
@@ -430,6 +443,7 @@ export function RenderFormPreview({
                                 disabled={disabled}
                                 messageId={message.id}
                                 field={f}
+                                uploadFunction={uploadFunction}
                             />
                             {f.description && f.type !== 'button' && (
                                 <p className='text-xs text-muted-foreground'>

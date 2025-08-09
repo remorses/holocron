@@ -6,7 +6,7 @@ export interface UploadButtonProps {
     children?: React.ReactNode
     accept?: string
     onUploadFinished: (data: { src: string }) => void
-    uploadFunction?: (file: File) => Promise<string>
+    uploadFunction: (file: File) => Promise<string>
 }
 
 export function UploadButton({

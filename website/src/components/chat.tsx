@@ -556,6 +556,10 @@ function Messages({ ref }) {
 function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
     const { isGenerating: isChatGenerating, messages } = useChatContext()
     const hideBrowser = useShouldHideBrowser()
+    const siteData = useRouteLoaderData(
+        'routes/org.$orgId.site.$siteId',
+    ) as SiteRoute.ComponentProps['loaderData']
+    const { siteId } = siteData
 
     const isLastMessage = messages[messages.length - 1]?.id === message.id
     if (message.role === 'user') {
@@ -588,6 +592,10 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                                 message={message}
                                 {...part}
                                 showSubmitButton={hideBrowser}
+                                uploadFunction={async (file) => {
+                                    const result = await uploadFileToSite(file, siteId)
+                                    return result.url
+                                }}
                             />
                         )
                     }
@@ -611,6 +619,10 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                                 key={index}
                                 {...part}
                                 showSubmitButton={hideBrowser}
+                                uploadFunction={async (file) => {
+                                    const result = await uploadFileToSite(file, siteId)
+                                    return result.url
+                                }}
                             />
                         )
                     }

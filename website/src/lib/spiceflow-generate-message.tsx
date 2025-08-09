@@ -271,7 +271,7 @@ export async function* generateMessageStream({
 
     // let model = groq('moonshotai/kimi-k2-instruct')
     // let model = anthropic('claude-sonnet-4-20250514')
-    let model = openai('gpt-5-mini')
+    let model = google('gemini-2.5-flash')
 
     // if (modelId && modelProvider) {
     //     if (modelProvider.startsWith('openai')) {
@@ -630,7 +630,6 @@ export async function* generateMessageStream({
             description:
                 'Rename or move a file within the website. This updates the file path while preserving its content. Ensure the parent directory exists before moving a file to a new location.',
             inputSchema: renameFileSchema,
-
             execute: async ({ oldPath, newPath }) => {
                 try {
                     await fileSystem.move(oldPath, newPath)
@@ -674,7 +673,8 @@ export async function* generateMessageStream({
         model,
         tools,
         onError: (error) => {
-            notifyError(error, `Error in streamText:`)
+            console.log(`Error in streamText:`, error)
+            throw error
         },
         experimental_transform: process.env.VITEST
             ? undefined
@@ -688,7 +688,7 @@ export async function* generateMessageStream({
         providerOptions: {
             google: {
                 threshold: 'OFF',
-                // structuredOutputs: true,
+                structuredOutputs: true,
                 responseModalities: ['TEXT'],
 
                 thinkingConfig: {
@@ -716,7 +716,6 @@ export async function* generateMessageStream({
     const stream = result.toUIMessageStream({
         onError: (error: any) => {
             notifyError(error, 'toUIMessageStream')
-            throw error
             return error.message || error
         },
 
@@ -731,13 +730,13 @@ export async function* generateMessageStream({
             debugMessages(uiMessages, 'scripts/ui-result-messages.json')
 
             if (onFinish) {
-                // console.log(
-                //     yaml.dump(uiMessages, {
-                //         noRefs: true,
-                //         sortKeys: false,
-                //         lineWidth: 120,
-                //     }),
-                // )
+                console.log(
+                    yaml.dump(uiMessages, {
+                        noRefs: true,
+                        sortKeys: false,
+                        lineWidth: 120,
+                    }),
+                )
                 await onFinish({
                     uiMessages,
                     isAborted,
@@ -751,7 +750,6 @@ export async function* generateMessageStream({
         if (chunk.type === 'error') {
             notifyError(new Error(chunk.errorText), 'generate ai message')
         }
-
         yield chunk
     }
     await result.content
