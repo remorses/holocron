@@ -564,7 +564,7 @@ frontmatter should always be at the top of the file, it MUST be present in all f
 ---
 title: concise title. max 65 characters title for the page
 description: 150 characters description of the page
-icon: home # lucide valid icon name, see https://fumabase.com/lucide-icons.json for valid icon names
+icon: house # lucide valid icon name, see https://fumabase.com/lucide-icons.json for valid icon names
 full: true
 ---
 

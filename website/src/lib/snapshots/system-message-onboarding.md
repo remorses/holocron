@@ -564,7 +564,7 @@ frontmatter should always be at the top of the file, it MUST be present in all f
 ---
 title: concise title. max 65 characters title for the page
 description: 150 characters description of the page
-icon: home # lucide valid icon name, see https://fumabase.com/lucide-icons.json for valid icon names
+icon: house # lucide valid icon name, see https://fumabase.com/lucide-icons.json for valid icon names
 full: true
 ---
 
@@ -1733,16 +1733,16 @@ async function updateUserProfile(userId, updates) {
         const user = await prisma.user.findUnique({
             where: { id: userId }
         });
-        
+
         if (!user) {
             throw new Error(`User with ID ${userId} not found`);
         }
-        
+
         const updatedUser = await prisma.user.update({
             where: { id: userId },
             data: updates
         });
-        
+
         return updatedUser;
     } catch (error) {
         console.error('Failed to update user:', error);
@@ -1768,11 +1768,11 @@ Show realistic error handling, not just the happy path. This teaches users about
         if (!apiKey) {
             throw new Error('API key is required');
         }
-        
+
         if (!userId) {
             throw new Error('User ID is required');
         }
-        
+
         try {
             const response = await fetch(`/api/users/${userId}`, {
                 headers: {
@@ -1780,20 +1780,20 @@ Show realistic error handling, not just the happy path. This teaches users about
                     'Content-Type': 'application/json'
                 }
             });
-            
+
             // Handle different HTTP status codes
             if (response.status === 401) {
                 throw new Error('Invalid API key');
             }
-            
+
             if (response.status === 404) {
                 throw new Error('User not found');
             }
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error: ${response.status}`);
             }
-            
+
             return await response.json();
         } catch (error) {
             if (error.name === 'TypeError') {
@@ -1902,17 +1902,17 @@ const createUser = async ({ email, name, role = 'user' }) => {
         createdAt: new Date().toISOString(),
         id: crypto.randomUUID()
     };
-    
+
     const response = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData)
     });
-    
+
     if (!response.ok) {
         throw new Error(`Failed to create user: ${response.statusText}`);
     }
-    
+
     return response.json();
 };
 ```
@@ -1925,8 +1925,8 @@ import uuid
 from datetime import datetime
 
 def create_user(
-    email: str, 
-    name: str, 
+    email: str,
+    name: str,
     role: str = "user"
 ) -> Dict[str, Any]:
     """Create a new user with the provided information."""
@@ -1937,7 +1937,7 @@ def create_user(
         "created_at": datetime.utcnow().isoformat(),
         "id": str(uuid.uuid4())
     }
-    
+
     try:
         response = requests.post(
             "/api/users",
@@ -1947,7 +1947,7 @@ def create_user(
         )
         response.raise_for_status()
         return response.json()
-    
+
     except requests.exceptions.RequestException as e:
         raise RuntimeError(f"Failed to create user: {e}")
 ```
@@ -1976,19 +1976,19 @@ func CreateUser(email, name, role string) (*User, error) {
     if role == "" {
         role = "user"
     }
-    
+
     user := User{
         Email:     email,
         Name:      name,
         Role:      role,
         CreatedAt: time.Now().UTC(),
     }
-    
+
     jsonData, err := json.Marshal(user)
     if err != nil {
         return nil, fmt.Errorf("failed to marshal user data: %w", err)
     }
-    
+
     resp, err := http.Post(
         "/api/users",
         "application/json",
@@ -1998,16 +1998,16 @@ func CreateUser(email, name, role string) (*User, error) {
         return nil, fmt.Errorf("failed to send request: %w", err)
     }
     defer resp.Body.Close()
-    
+
     if resp.StatusCode != http.StatusOK {
         return nil, fmt.Errorf("request failed with status: %s", resp.Status)
     }
-    
+
     var createdUser User
     if err := json.NewDecoder(resp.Body).Decode(&createdUser); err != nil {
         return nil, fmt.Errorf("failed to decode response: %w", err)
     }
-    
+
     return &createdUser, nil
 }
 ```
@@ -2032,14 +2032,14 @@ test('documentation examples work correctly', async () => {
         email: 'test@example.com',
         name: 'Test User'
     });
-    
+
     expect(user.id).toBeDefined();
     expect(user.email).toBe('test@example.com');
-    
+
     const updated = await updateUserProfile(user.id, {
         name: 'Updated Name'
     });
-    
+
     expect(updated.name).toBe('Updated Name');
 });
 ```
