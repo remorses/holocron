@@ -14,6 +14,7 @@ import {
     streamText,
     smoothStream,
     tool,
+
     convertToModelMessages,
     stepCountIs,
     isToolUIPart,
@@ -22,6 +23,7 @@ import {
     ModelMessage,
     wrapLanguageModel,
 } from 'ai'
+import { gateway } from '@ai-sdk/gateway'
 import { type LanguageModelV2Middleware } from '@ai-sdk/provider'
 import { prisma, Prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
@@ -266,7 +268,7 @@ export async function* generateMessageStream({
     })
 
     // let model = groq('moonshotai/kimi-k2-instruct')
-    let model = openai.responses('gpt-5-mini')
+    let model = gateway('moonshotai/kimi-k2')
 
     // if (modelId && modelProvider) {
     //     if (modelProvider.startsWith('openai')) {
@@ -679,6 +681,11 @@ export async function* generateMessageStream({
         stopWhen: stepCountIs(100),
 
         providerOptions: {
+            zai: {
+                thinking: {
+                    type: 'disabled',
+                },
+            },
             openai: {
                 reasoningSummary: 'detailed',
                 strictJsonSchema: true,

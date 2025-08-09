@@ -1473,8 +1473,8 @@ importers:
         specifier: 0.18.3
         version: 0.18.3
       ai:
-        specifier: ^5.0.8
-        version: 5.0.8(zod@4.0.15)
+        specifier: ^4.3.16
+        version: 4.3.19(react@19.1.1)(zod@4.0.15)
       ajv:
         specifier: ^8.17.1
         version: 8.17.1
@@ -1884,7 +1884,7 @@ importers:
         version: 1.17.0
       '@playwright/mcp':
         specifier: latest
-        version: 0.0.32(zod@3.25.76)
+        version: 0.0.33
       patchright-core:
         specifier: ^1.52.5
         version: 1.52.5
@@ -1965,6 +1965,9 @@ importers:
       '@ai-sdk/anthropic':
         specifier: 2.0.1
         version: 2.0.1(zod@4.0.5)
+      '@ai-sdk/gateway':
+        specifier: ^1.0.4
+        version: 1.0.4(zod@4.0.5)
       '@ai-sdk/groq':
         specifier: ^2.0.3
         version: 2.0.3(zod@4.0.5)
@@ -5417,8 +5420,8 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@playwright/mcp@0.0.32':
-    resolution: {integrity: sha512-1pEULH5zF+NuUCBGRDEei7+Qv1pbkscaR0z3fKjAp7CsrS1DAgu62DHwCSbkTulXkd5nY1TdCCr4oK+shCB7Eg==}
+  '@playwright/mcp@0.0.33':
+    resolution: {integrity: sha512-/rKAyty60sCP4nsUi8z1d+nY76MPVtncqUc6Oyxh8qaN4neifwKB5KTjo68v/d61sKaOhNJIxQjXeVUvnYRF+Q==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -8192,6 +8195,11 @@ packages:
 
   ajv-formats@3.0.1:
     resolution: {integrity: sha512-8iUql50EUR+uUcdRQ3HDqa6EVyo3docL8g5WJ3FNcWmu62IbkGUue/pEyLBW8VGKKucTPgqeks4fIU1DA4yowQ==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
 
   ajv-keywords@5.1.0:
     resolution: {integrity: sha512-YCS/JNFAUyr5vAuhk1DWm1CBxRHW9LbJ2ozWeemrIqpbsqKjHVxYPyi5GC0rjZIT5JxJ3virVTS8wk4i/Z+krw==}
@@ -12211,13 +12219,13 @@ packages:
   pkg-types@2.2.0:
     resolution: {integrity: sha512-2SM/GZGAEkPp3KWORxQZns4M+WSeXbC2HEvmOIJe3Cmiv6ieAJvdVhDldtHqM5J1Y7MrR1XhkBT/rMlhh9FdqQ==}
 
-  playwright-core@1.55.0-alpha-1752701791000:
-    resolution: {integrity: sha512-mQhzhjJMiqnGNnYZv7M4yk1OcNTt1E72jrTLO7EqZuoeat4+qpcU0/mbK+RcTEass5a9YheoVFh6OIhruFMGVg==}
+  playwright-core@1.55.0-alpha-2025-08-07:
+    resolution: {integrity: sha512-NUuC6R0/dLk1QKiYoJL8NUsQAC6Je0C2BpuIg5h4wcvBwJ5TFldslmik17Txg3TXBSqwgG76DAl4Q6UdHGn54Q==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.55.0-alpha-1752701791000:
-    resolution: {integrity: sha512-PA3TvDz7uQ+Pde0uaii5/WpU5vntRJsYFsaSPoBzywIqzYFO1ugk1ZZ0q6z4/xHq0ha1UClvsv3P77B+u1fi+w==}
+  playwright@1.55.0-alpha-2025-08-07:
+    resolution: {integrity: sha512-rH8kdQOZzhjxC6FOL9zSEDwPl88ZqQq9QEvRDONWhzKwRQ/jOXlEZRxm8QRCBdrLqBMTGHx/YOaP7MIV//rtIA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -14805,6 +14813,13 @@ snapshots:
       secure-json-parse: 2.7.0
       zod: 3.25.76
 
+  '@ai-sdk/provider-utils@2.2.8(zod@4.0.15)':
+    dependencies:
+      '@ai-sdk/provider': 1.1.3
+      nanoid: 3.3.11
+      secure-json-parse: 2.7.0
+      zod: 4.0.15
+
   '@ai-sdk/provider-utils@2.2.8(zod@4.0.5)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
@@ -14858,6 +14873,16 @@ snapshots:
     optionalDependencies:
       zod: 3.25.76
 
+  '@ai-sdk/react@1.2.12(react@19.1.1)(zod@4.0.15)':
+    dependencies:
+      '@ai-sdk/provider-utils': 2.2.8(zod@4.0.15)
+      '@ai-sdk/ui-utils': 1.2.11(zod@4.0.15)
+      react: 19.1.1
+      swr: 2.3.4(react@19.1.1)
+      throttleit: 2.1.0
+    optionalDependencies:
+      zod: 4.0.15
+
   '@ai-sdk/react@2.0.8(react@19.1.1)(zod@4.0.5)':
     dependencies:
       '@ai-sdk/provider-utils': 3.0.1(zod@4.0.5)
@@ -14874,6 +14899,13 @@ snapshots:
       '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
       zod: 3.25.76
       zod-to-json-schema: 3.24.6(zod@3.25.76)
+
+  '@ai-sdk/ui-utils@1.2.11(zod@4.0.15)':
+    dependencies:
+      '@ai-sdk/provider': 1.1.3
+      '@ai-sdk/provider-utils': 2.2.8(zod@4.0.15)
+      zod: 4.0.15
+      zod-to-json-schema: 3.24.6(zod@4.0.15)
 
   '@ai-sdk/ui-utils@1.2.11(zod@4.0.5)':
     dependencies:
@@ -18167,22 +18199,22 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@playwright/mcp@0.0.32(zod@3.25.76)':
+  '@playwright/mcp@0.0.33':
     dependencies:
       '@modelcontextprotocol/sdk': 1.17.0
       commander: 13.1.0
       debug: 4.4.1
       dotenv: 17.2.1
       mime: 4.0.7
-      playwright: 1.55.0-alpha-1752701791000
-      playwright-core: 1.55.0-alpha-1752701791000
+      playwright: 1.55.0-alpha-2025-08-07
+      playwright-core: 1.55.0-alpha-2025-08-07
       ws: 8.18.2
+      zod: 3.25.76
       zod-to-json-schema: 3.24.6(zod@3.25.76)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
-      - zod
 
   '@polka/url@1.0.0-next.29': {}
 
@@ -19829,7 +19861,7 @@ snapshots:
     dependencies:
       ajv: 8.17.1
       ajv-draft-04: 1.0.0(ajv@8.17.1)
-      ajv-formats: 3.0.1
+      ajv-formats: 3.0.1(ajv@8.17.1)
       jsonpointer: 5.0.1
       leven: 4.0.0
       yaml: 2.8.0
@@ -19839,7 +19871,7 @@ snapshots:
       '@scalar/openapi-types': 0.3.7
       ajv: 8.17.1
       ajv-draft-04: 1.0.0(ajv@8.17.1)
-      ajv-formats: 3.0.1
+      ajv-formats: 3.0.1(ajv@8.17.1)
       jsonpointer: 5.0.1
       leven: 4.0.0
       yaml: 2.8.0
@@ -19849,7 +19881,7 @@ snapshots:
       '@scalar/openapi-types': 0.3.7
       ajv: 8.17.1
       ajv-draft-04: 1.0.0(ajv@8.17.1)
-      ajv-formats: 3.0.1
+      ajv-formats: 3.0.1(ajv@8.17.1)
       jsonpointer: 5.0.1
       leven: 4.0.0
       yaml: 2.8.0
@@ -22143,6 +22175,18 @@ snapshots:
     optionalDependencies:
       react: 19.1.1
 
+  ai@4.3.19(react@19.1.1)(zod@4.0.15):
+    dependencies:
+      '@ai-sdk/provider': 1.1.3
+      '@ai-sdk/provider-utils': 2.2.8(zod@4.0.15)
+      '@ai-sdk/react': 1.2.12(react@19.1.1)(zod@4.0.15)
+      '@ai-sdk/ui-utils': 1.2.11(zod@4.0.15)
+      '@opentelemetry/api': 1.9.0
+      jsondiffpatch: 0.6.0
+      zod: 4.0.15
+    optionalDependencies:
+      react: 19.1.1
+
   ai@5.0.8(zod@4.0.15):
     dependencies:
       '@ai-sdk/gateway': 1.0.4(zod@4.0.15)
@@ -22167,8 +22211,8 @@ snapshots:
     dependencies:
       ajv: 8.17.1
 
-  ajv-formats@3.0.1:
-    dependencies:
+  ajv-formats@3.0.1(ajv@8.17.1):
+    optionalDependencies:
       ajv: 8.17.1
 
   ajv-keywords@5.1.0(ajv@8.17.1):
@@ -27181,11 +27225,11 @@ snapshots:
       exsolve: 1.0.7
       pathe: 2.0.3
 
-  playwright-core@1.55.0-alpha-1752701791000: {}
+  playwright-core@1.55.0-alpha-2025-08-07: {}
 
-  playwright@1.55.0-alpha-1752701791000:
+  playwright@1.55.0-alpha-2025-08-07:
     dependencies:
-      playwright-core: 1.55.0-alpha-1752701791000
+      playwright-core: 1.55.0-alpha-2025-08-07
     optionalDependencies:
       fsevents: 2.3.2
 

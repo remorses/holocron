@@ -21,7 +21,7 @@ import {
 } from 'contesto/src/chat/chat-provider'
 import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
 import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
-import { MarkdownRuntime as Markdown } from 'docs-website/src/lib/markdown-runtime'
+import { MarkdownRuntime } from 'docs-website/src/lib/markdown-runtime'
 import { startTransition } from 'react'
 import { AnimatePresence, motion } from 'unframer'
 import { Button } from '../components/ui/button'
@@ -65,7 +65,7 @@ import { DocsUIMessage } from '../lib/types'
 import { capitalize, spaceCase, throttle, truncateText } from '../lib/utils'
 import type { Route } from '../routes/_catchall'
 import { usePreservedNavigate } from './preserved-search-link'
-import { RenderFormPreview } from 'contesto'
+import { MarkdownRendererProps, RenderFormPreview } from 'contesto'
 import {
     ErrorPreview,
     EditorToolPreview,
@@ -404,11 +404,15 @@ function Chat({}) {
     )
 }
 
+export function ChatMarkdown({ ...rest }: MarkdownRendererProps) {
+    return <MarkdownRuntime extension='md' {...rest} />
+}
+
 function WelcomeMessage() {
     const { messages } = useChatContext()
     if (messages?.length) return null
     return (
-        <Markdown
+        <ChatMarkdown
             markdown={
                 'Hi, I am fumabase, I can help you search and explain the docs\n'
             }
@@ -477,7 +481,7 @@ export function MessagePartRenderer({
 
     if (part.type === 'text') {
         return (
-            <Markdown
+            <ChatMarkdown
                 isStreaming={isChatGenerating}
                 className=''
                 markdown={part.text}
@@ -491,7 +495,7 @@ export function MessagePartRenderer({
             <ShowMore>
                 <div className='flex flex-row text-sm  opacity-80 tracking-wide gap-[1ch]'>
                     <Dot />
-                    <Markdown
+                    <ChatMarkdown
                         isStreaming={isChatGenerating}
                         className='prose-sm text-sm  '
                         markdown={part.text}
@@ -521,7 +525,7 @@ export function MessagePartRenderer({
                 <ToolPreviewContainer>
                     <Dot toolCallId={part.toolCallId} /> Getting file structure
                     <br />
-                    <Markdown
+                    <ChatMarkdown
                         isStreaming={isChatGenerating}
                         className='pt-[1em] block'
                         markdown={`\`\`\`sh lineNumbers=true\n${code}\n\`\`\``}

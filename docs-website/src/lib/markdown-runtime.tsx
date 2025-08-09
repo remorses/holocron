@@ -1,6 +1,6 @@
 'use client'
 
-import { Markdown } from 'contesto/src/lib/markdown'
+import { Markdown, MarkdownRendererProps } from 'contesto/src/lib/markdown'
 import { diffWordsWithSpace } from 'diff'
 import { useMemo } from 'react'
 import { mdxComponents } from '../components/mdx-components'
@@ -15,11 +15,14 @@ export function MarkdownRuntime({
     showDiff = false,
     previousMarkdown = '',
     className = '',
-
+}: MarkdownRendererProps & {
+    extension?: string
+    showDiff?: boolean
+    previousMarkdown?: string
 }) {
     const onAst = (ast) => {
         if (showDiff && previousMarkdown) {
-            const diffs = diffWordsWithSpace(previousMarkdown, markdown)
+            const diffs = diffWordsWithSpace(previousMarkdown, markdown || '')
             markAddedNodes(diffs, ast)
         }
     }
@@ -34,7 +37,6 @@ export function MarkdownRuntime({
             markdown={markdown}
             processor={processor}
             components={mdxComponents}
-
             className={className}
         />
     )
