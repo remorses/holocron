@@ -21,6 +21,7 @@ import {
     CONTESTO_DRAFT_MESSAGE_KEY,
     CONTESTO_SUBMIT_ON_LOAD,
 } from 'contesto/src/lib/constants'
+import { DID_USER_CLICK_LANDING_PAGE_PROMPT } from 'website/src/lib/constants'
 
 export async function loader({ request }: Route.LoaderArgs) {
     const { userId, redirectTo } = await getSession({ request })
@@ -61,6 +62,15 @@ export default function App() {
                         },
                     )
                 }
+                // Mark that login was initiated from landing page form
+                document.cookie = cookie.serialize(
+                    DID_USER_CLICK_LANDING_PAGE_PROMPT,
+                    'true',
+                    {
+                        path: '/',
+                        maxAge: 60, // 1 minute max as requested
+                    },
+                )
             }}
             className='flex dark bg-black text-white flex-col items-center '
         >
