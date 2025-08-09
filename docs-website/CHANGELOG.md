@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-08-09 10:30
+
+- Fixed missing pages showing empty content instead of 404 not found page
+- Changed markdown initialization to use `null` instead of empty string when page is not found
+- Updated BaseLoaderData type to allow `markdown?: string | null`
+
 ## 2025-08-04 10:00
 
 - Refactored chat-tool-previews.tsx to use ShowMore component directly instead of embedding it in markdown

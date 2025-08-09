@@ -200,7 +200,6 @@ export const app = new Spiceflow({ basePath: '/api' })
                 basePath: githubFolder,
                 branch: githubBranch,
                 forceFullSync: true,
-                // forceFullSync: true,
             })
             await syncSite({
                 siteId,
@@ -1343,7 +1342,6 @@ export const app = new Spiceflow({ basePath: '/api' })
             if (!site) {
                 throw new AppError('Site not found or user has no access')
             }
-
 
             // Delete the site and all related data (cascading deletes will handle branches, pages, etc.)
             await prisma.site.delete({

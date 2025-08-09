@@ -35,7 +35,7 @@ type BaseLoaderData = {
     toc: any[]
     title: string
     description: string
-    markdown?: string
+    markdown?: string | null
     ast: any
     githubPath: string
     slugs: string[]
@@ -464,7 +464,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     }
 
     // Initialize with normal flow values (page content or defaults)
-    let markdown = page?.content?.markdown || ''
+    let markdown = page?.content?.markdown ?? null
     let frontmatter: ProcessorDataFrontmatter = (page?.frontmatter as any) || {}
     let ast: Root | null = page?.content?.mdast as any
     let toc: any[] | null = null

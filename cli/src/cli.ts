@@ -503,10 +503,16 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                     }
 
                     // Handle files with downloadUrl (media files)
-                    if ('downloadUrl' in file && file.downloadUrl && !file.content) {
+                    if (
+                        'downloadUrl' in file &&
+                        file.downloadUrl &&
+                        !file.content
+                    ) {
                         try {
                             console.log(pc.gray(`  → Downloading ${filePath}`))
-                            const response = await fetch((file as any).downloadUrl)
+                            const response = await fetch(
+                                (file as any).downloadUrl,
+                            )
                             if (!response.ok) {
                                 console.error(
                                     `Failed to download ${filePath}: ${response.statusText}`,
@@ -737,6 +743,17 @@ cli.command('init', 'Initialize or deploy a fumabase project')
 cli.command('login', 'Login to fumabase')
     .option('--no-browser', 'Skip automatic browser opening')
     .action(async (options) => {
+        // Check if there's an existing user logged in
+        const existingConfig = getUserConfig()
+        if (existingConfig?.userEmail) {
+            console.log(
+                pc.yellow(
+                    `\nNote: You are currently logged in as ${existingConfig.userEmail}`,
+                ),
+            )
+            console.log(pc.gray('This will replace the existing login.\n'))
+        }
+
         const cliSessionSecret = Array.from({ length: 6 }, () =>
             randomInt(0, 10),
         ).join('')
@@ -836,13 +853,32 @@ cli.command('login', 'Login to fumabase')
                         userId: data.userId,
                         userEmail: data.userEmail,
                         orgs: data.orgs || [],
+                        // Reset websocketIds when logging in as a new user
+                        websocketIds:
+                            existingConfig?.userId === data.userId
+                                ? existingConfig.websocketIds
+                                : undefined,
                     }
 
                     await fs.promises.writeFile(
                         configPath,
                         JSON.stringify(config, null, 2),
                     )
-                    console.log(pc.green('\nLogin successful!'))
+
+                    if (
+                        existingConfig?.userEmail &&
+                        existingConfig.userEmail !== data.userEmail
+                    ) {
+                        console.log(pc.green('\nLogin successful!'))
+                        console.log(
+                            pc.gray(
+                                `Replaced previous login (${existingConfig.userEmail})`,
+                            ),
+                        )
+                    } else {
+                        console.log(pc.green('\nLogin successful!'))
+                    }
+
                     console.log(pc.gray(`API key saved to: ${configPath}`))
                     console.log(pc.blue(`Logged in as: ${data.userEmail}`))
                     console.log(
@@ -1072,7 +1108,10 @@ cli.command('dev', 'Preview your fumabase website')
             })
 
             // Watch for file changes and additions
-            const handleFileUpdate = async (filePath: string, revalidate: boolean) => {
+            const handleFileUpdate = async (
+                filePath: string,
+                revalidate: boolean,
+            ) => {
                 const fullPath = path.resolve(dir, filePath)
 
                 // Check if it's a media file
@@ -1146,125 +1185,156 @@ cli.command('dev', 'Preview your fumabase website')
         }
     })
 
-cli.command('sync', 'Sync current branch with GitHub').action(async () => {
-    try {
-        const config = getUserConfig()
+cli.command('sync', 'Sync current branch with GitHub')
+    .option(
+        '--force',
+        'Force sync even with uncommitted changes or unpushed commits',
+    )
+    .action(async (options) => {
+        try {
+            const config = getUserConfig()
 
-        if (!config || !config.apiKey) {
-            console.error(pc.red('You need to be logged in to sync a project.'))
-            console.error(pc.cyan('Please run: fumabase login'))
-            process.exit(1)
-        }
+            if (!config || !config.apiKey) {
+                console.error(
+                    pc.red('You need to be logged in to sync a project.'),
+                )
+                console.error(pc.cyan('Please run: fumabase login'))
+                process.exit(1)
+            }
 
-        // Get current git branch
-        const gitBranch = await getCurrentGitBranch()
-        if (!gitBranch) {
-            console.error(pc.red('Error: Cannot determine current git branch'))
+            // Get current git branch
+            const gitBranch = await getCurrentGitBranch()
+            if (!gitBranch) {
+                console.error(
+                    pc.red('Error: Cannot determine current git branch'),
+                )
+                console.error(
+                    pc.yellow(
+                        'Make sure you are in a git repository with a valid branch',
+                    ),
+                )
+                process.exit(1)
+            }
+
+            // Check git status using improved function
+            const gitStatus = checkGitStatus()
+
+            if (gitStatus.error) {
+                console.error(
+                    pc.red('Error checking git status: ' + gitStatus.error),
+                )
+                process.exit(1)
+            }
+
+            if (!options.force && gitStatus.hasUncommittedChanges) {
+                console.error(pc.red('Error: You have uncommitted changes'))
+                console.error(
+                    pc.yellow(
+                        'The sync command only syncs files that are already pushed to GitHub',
+                    ),
+                )
+                console.error(
+                    pc.yellow(
+                        'Please commit and push your changes first before running sync',
+                    ),
+                )
+                console.error(pc.yellow('Or use --force to sync anyway'))
+                process.exit(1)
+            }
+
+            if (!options.force && gitStatus.hasUnpushedCommits) {
+                console.error(pc.red('Error: You have unpushed commits'))
+                console.error(
+                    pc.yellow(
+                        'The sync command only syncs files that are already pushed to GitHub',
+                    ),
+                )
+                console.error(
+                    pc.yellow(
+                        'Please push your commits first before running sync',
+                    ),
+                )
+                console.error(pc.yellow('Or use --force to sync anyway'))
+                process.exit(1)
+            }
+
+            if (
+                options.force &&
+                (gitStatus.hasUncommittedChanges ||
+                    gitStatus.hasUnpushedCommits)
+            ) {
+                console.log(
+                    pc.yellow('Warning: Force syncing with local changes'),
+                )
+            }
+
+            // Get GitHub info to validate this is a GitHub repo
+            const githubInfo = getGitHubInfo()
+            if (!githubInfo) {
+                console.error(
+                    pc.red(
+                        'Error: Cannot determine GitHub repository information',
+                    ),
+                )
+                console.error(
+                    pc.yellow(
+                        'Make sure you are in a GitHub repository with a valid remote origin',
+                    ),
+                )
+                process.exit(1)
+            }
+
+            // Read fumabase.jsonc to get siteId
+            const docsJson = await readTopLevelDocsJson(process.cwd())
+            if (!docsJson?.siteId) {
+                console.error(
+                    pc.red('Error: fumabase.jsonc not found or missing siteId'),
+                )
+                console.error(
+                    pc.cyan('Run "fumabase init" to initialize this project'),
+                )
+                process.exit(1)
+            }
+
+            const siteId = docsJson.siteId
+
+            console.log(
+                pc.blue(`Syncing branch "${gitBranch}" for site ${siteId}...`),
+            )
+
+            // Call the sync API
+            const { data, error } = await apiClient.api.githubSync.post({
+                siteId,
+                githubBranch: gitBranch,
+            })
+
+            if (error) {
+                console.error(
+                    pc.red(
+                        'Sync failed: ' + (error.message || 'Unknown error'),
+                    ),
+                )
+                process.exit(1)
+            }
+
+            if (data?.success) {
+                console.log(pc.green('Sync completed successfully!'))
+                console.log(pc.gray(`Site ID: ${data.siteId}`))
+                console.log(pc.gray(`Branch ID: ${data.branchId}`))
+                console.log(pc.gray(`GitHub Branch: ${data.githubBranch}`))
+            } else {
+                console.error(
+                    pc.red('Sync failed: Invalid response from server'),
+                )
+                process.exit(1)
+            }
+        } catch (error) {
             console.error(
-                pc.yellow(
-                    'Make sure you are in a git repository with a valid branch',
-                ),
+                pc.red('Error during sync: ' + (error.message || error)),
             )
             process.exit(1)
         }
-
-        // Check git status using improved function
-        const gitStatus = checkGitStatus()
-
-        if (gitStatus.error) {
-            console.error(
-                pc.red('Error checking git status: ' + gitStatus.error),
-            )
-            process.exit(1)
-        }
-
-        if (gitStatus.hasUncommittedChanges) {
-            console.error(pc.red('Error: You have uncommitted changes'))
-            console.error(
-                pc.yellow(
-                    'The sync command only syncs files that are already pushed to GitHub',
-                ),
-            )
-            console.error(
-                pc.yellow(
-                    'Please commit and push your changes first before running sync',
-                ),
-            )
-            process.exit(1)
-        }
-
-        if (gitStatus.hasUnpushedCommits) {
-            console.error(pc.red('Error: You have unpushed commits'))
-            console.error(
-                pc.yellow(
-                    'The sync command only syncs files that are already pushed to GitHub',
-                ),
-            )
-            console.error(
-                pc.yellow('Please push your commits first before running sync'),
-            )
-            process.exit(1)
-        }
-
-        // Get GitHub info to validate this is a GitHub repo
-        const githubInfo = getGitHubInfo()
-        if (!githubInfo) {
-            console.error(
-                pc.red('Error: Cannot determine GitHub repository information'),
-            )
-            console.error(
-                pc.yellow(
-                    'Make sure you are in a GitHub repository with a valid remote origin',
-                ),
-            )
-            process.exit(1)
-        }
-
-        // Read fumabase.jsonc to get siteId
-        const docsJson = await readTopLevelDocsJson(process.cwd())
-        if (!docsJson?.siteId) {
-            console.error(
-                pc.red('Error: fumabase.jsonc not found or missing siteId'),
-            )
-            console.error(
-                pc.cyan('Run "fumabase init" to initialize this project'),
-            )
-            process.exit(1)
-        }
-
-        const siteId = docsJson.siteId
-
-        console.log(
-            pc.blue(`Syncing branch "${gitBranch}" for site ${siteId}...`),
-        )
-
-        // Call the sync API
-        const { data, error } = await apiClient.api.githubSync.post({
-            siteId,
-            githubBranch: gitBranch,
-        })
-
-        if (error) {
-            console.error(
-                pc.red('Sync failed: ' + (error.message || 'Unknown error')),
-            )
-            process.exit(1)
-        }
-
-        if (data?.success) {
-            console.log(pc.green('Sync completed successfully!'))
-            console.log(pc.gray(`Site ID: ${data.siteId}`))
-            console.log(pc.gray(`Branch ID: ${data.branchId}`))
-            console.log(pc.gray(`GitHub Branch: ${data.githubBranch}`))
-        } else {
-            console.error(pc.red('Sync failed: Invalid response from server'))
-            process.exit(1)
-        }
-    } catch (error) {
-        console.error(pc.red('Error during sync: ' + (error.message || error)))
-        process.exit(1)
-    }
-})
+    })
 
 cli.command('delete', 'Delete the current fumabase website')
     .option('--confirm', 'Skip confirmation prompt')

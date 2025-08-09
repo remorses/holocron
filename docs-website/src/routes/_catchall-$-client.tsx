@@ -557,7 +557,7 @@ function DocsMarkdown(): any {
 
     // Default preview mode
     if (!ast) {
-        const previousMarkdown = loaderData.markdown
+        const previousMarkdown = loaderData.markdown || undefined
         return (
             <MarkdownRuntime
                 className='page-content-markdown'
