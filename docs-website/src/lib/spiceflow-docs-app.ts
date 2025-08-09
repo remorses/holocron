@@ -114,8 +114,7 @@ export const docsApp = new Spiceflow({ basePath: '/fumabaseInternalAPI' })
             })
             const pages = source.getPages(locale)
 
-            // let model = openai.responses('gpt-4.1')
-            let model = groq('qwen/qwen3-32b')
+            let model = openai.responses('gpt-5-mini')
 
             const linksText = pages
                 .map((page) => {
@@ -278,7 +277,7 @@ export const docsApp = new Spiceflow({ basePath: '/fumabaseInternalAPI' })
                     },
                 }),
                 getProjectFiles: tool({
-                  description: dedent`
+                    description: dedent`
                       Returns a directory tree diagram of the current project files as plain text.
                       Useful for giving an overview or locating files.
                       If user asks to get project structure or files always call this tool instead of using your knowledge.
