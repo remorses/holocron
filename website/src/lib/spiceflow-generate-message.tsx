@@ -260,8 +260,10 @@ export async function* generateMessageStream({
     }) => Promise<void>
     middlewares?: LanguageModelV2Middleware[]
 }) {
-    // Auto-detect onboarding mode based on filesInDraft
-    const isOnboardingChat = Object.keys(filesInDraft).length === 0
+    const isOnboardingChat =
+        [...files.map((x) => x.path)].filter(
+            (x) => !x.endsWith('fumabase.jsonc'),
+        ).length === 0
     const source = getFumadocsSource({
         files,
         defaultLanguage: defaultLocale,
