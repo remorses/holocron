@@ -420,7 +420,7 @@ export const DocsConfigSchema = z
         tabs: z
             .array(NavigationTabSchema)
             .optional()
-            .describe('Navigation tabs'),
+            .describe('Navigation tabs. This setting is still experimental and discouraged. It does not work currently'),
 
         footer: FooterSchema.optional().describe('Footer content, shown at the bottom of the website in all pages'),
         // search: SearchSchema.optional().describe('Search behavior'),
