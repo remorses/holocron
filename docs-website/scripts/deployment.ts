@@ -18,10 +18,10 @@ async function main() {
     env.FORCE_COLOR = '1'
     await shell(`pnpm react-router typegen`)
     await Promise.all([
-        shell(`pnpm build`, {
+        shell(`pnpm build-ci`, {
             env,
         }),
-        await shell(`pnpm tsc --incremental`, {
+        shell(`pnpm tsc --incremental`, {
             env,
         }),
     ])
