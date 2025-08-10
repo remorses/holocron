@@ -1,5 +1,10 @@
 # Changelog
 
+## 2025-08-10 12:00
+
+- **Added validation to updateFumabaseJsonc tool**: Checks that LLM has read fumabase.jsonc file before allowing updates
+- **Better error handling**: Returns clear error message when tool is called without first reading the file
+
 ## 2025-08-09 14:30
 
 - **Fix foreign key constraint error**: Set `githubSha` to null for pages with parse errors instead of invalid empty string

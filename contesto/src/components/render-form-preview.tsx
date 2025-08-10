@@ -386,7 +386,7 @@ export function RenderFormPreview({
                     return (
                         <div
                             key={`group-${groupIndex}`}
-                            className='flex flex-col p-4 gap-6'
+                            className='flex flex-col gap-6'
                         >
                             <h3 className='font-medium text-sm text-muted-foreground'>
                                 {group.title}
@@ -427,7 +427,7 @@ export function RenderFormPreview({
                     )
                 } else {
                     return group.fields.map((f) => (
-                        <div key={f.name} className='flex flex-col p-4 gap-6'>
+                        <div key={f.name} className='flex flex-col gap-6'>
                             {f.type !== 'button' &&
                                 f.type !== 'color_picker' && (
                                     <label className='font-medium text-sm'>
@@ -456,7 +456,7 @@ export function RenderFormPreview({
             })}
             {showSubmitButton &&
                 args.fields.some((f) => f && f.type !== 'button') && (
-                    <div className='p-4'>
+                    <div>
                         <Button
                             type='submit'
                             className='w-full'

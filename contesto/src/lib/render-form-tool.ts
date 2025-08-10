@@ -14,6 +14,7 @@ export interface RenderFormToolConfig {
     replaceOptionalsWithNulls?: boolean
     description?: string
     notifyError?: (error: any, msg?: string) => void
+    onExecute?: (params: any) => void | Promise<void>
 }
 
 export function createRenderFormTool({
@@ -22,6 +23,7 @@ export function createRenderFormTool({
     replaceOptionalsWithNulls,
     notifyError = (err, msg) =>
         console.error(msg || 'Error in createRenderFormTool', err),
+    onExecute,
 }: RenderFormToolConfig) {
     let uiFieldsSchema = UIFieldSchema
     if (replaceOptionalsWithNulls) {
@@ -48,43 +50,52 @@ export function createRenderFormTool({
                 .split('.')
                 .map((part) => (isNaN(Number(part)) ? part : 'items'))
                 .join('/')
-        console.log(pointer)
         const { node, error } = compiledSchema.getNode(pointer)
         return node?.schema
     }
 
     // Create execute function
     async function execute(params: z.infer<typeof RenderFormParameters>) {
-        if (!jsonSchema) {
-            return 'Rendered form to the user, the response will be sent back as a message from the user. DO NOT RENDER THE SAME FORM TWICE'
-        }
-        const errors: string[] = []
         try {
-            for (const field of params.fields) {
-                if (field.name.match(/\[\s*index\s*\]/)) {
-                    errors.push(
-                        `field.name "${field.name}" contains "[index]" syntax; please use field.index instead.`,
-                    )
-                }
-                const schema = getTypeForNameInSchema(field.name)
-                if (!schema) {
-                    errors.push(
-                        `name ${field.name} is not valid for the schema`,
-                    )
-                }
-                if (!isScalarSchema(schema)) {
-                    errors.push(
-                        `name ${field.name} is not a scalar, instead it has the following schema: ${JSON.stringify(schema)}`,
-                    )
-                }
+            // Call onExecute callback if provided
+            if (onExecute) {
+                await onExecute(params)
             }
-            return errors.length > 0 ? { errors } : `Rendered form to the user. You can now assume the user has made the update to the data in the next message. To see the latest data read the file again.`
+            
+            if (!jsonSchema) {
+                return 'Rendered form to the user, the response will be sent back as a message from the user. DO NOT RENDER THE SAME FORM TWICE'
+            }
+            const errors: string[] = []
+            try {
+                for (const field of params.fields) {
+                    if (field.name.match(/\[\s*index\s*\]/)) {
+                        errors.push(
+                            `field.name "${field.name}" contains "[index]" syntax; please use field.index instead.`,
+                        )
+                    }
+                    const schema = getTypeForNameInSchema(field.name)
+                    if (!schema) {
+                        errors.push(
+                            `name ${field.name} is not valid for the schema`,
+                        )
+                    }
+                    if (!isScalarSchema(schema)) {
+                        errors.push(
+                            `name ${field.name} is not a scalar, instead it has the following schema: ${JSON.stringify(schema)}`,
+                        )
+                    }
+                }
+                return errors.length > 0 ? { errors } : `Rendered form to the user. You can now assume the user has made the update to the data in the next message. To see the latest data read the file again.`
+            } catch (err) {
+                notifyError(err, 'createRenderFormExecute')
+                errors.push(
+                    `Unexpected error: ${err instanceof Error ? err.message : String(err)}`,
+                )
+                return { errors }
+            }
         } catch (err) {
-            notifyError(err, 'createRenderFormExecute')
-            errors.push(
-                `Unexpected error: ${err instanceof Error ? err.message : String(err)}`,
-            )
-            return { errors }
+            // Return error from onExecute callback
+            return `Error: ${err instanceof Error ? err.message : String(err)}`
         }
     }
 

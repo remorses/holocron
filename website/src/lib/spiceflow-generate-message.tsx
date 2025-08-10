@@ -70,6 +70,7 @@ import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
 import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
 import fm from 'front-matter'
 import { isValidLucideIconName } from './icons'
+import { WebsiteUIMessage } from './types'
 
 /**
  * Generate the system message content for the AI
@@ -243,7 +244,7 @@ export async function* generateMessageStream({
     onFinish,
     middlewares,
 }: {
-    messages: UIMessage[]
+    messages: WebsiteUIMessage[]
     currentSlug: string
     filesInDraft: Record<string, FileUpdate>
     fileSystem: FileSystemEmulator
@@ -298,7 +299,7 @@ export async function* generateMessageStream({
         })
     }
 
-    const docsJsonRenderFormTool = createRenderFormTool({
+    const updateFumabaseJsonc = createRenderFormTool({
         jsonSchema: docsJsonSchema,
         notifyError,
         description: `
@@ -307,6 +308,27 @@ export async function* generateMessageStream({
         This is VERY IMPORTANT for array values, if you don't read the array values from the current fumabase.jsonc file and render an array form to the user values that are not in the array will be deleted!
         `,
         replaceOptionalsWithNulls: model.provider.startsWith('openai'),
+        onExecute: async (params) => {
+            // Check if the LLM has read a fumabase.jsonc file in previous messages
+            const hasReadFumabaseFile = messages.some((msg) => {
+                if (msg.role !== 'assistant') return false
+                const parts = msg.parts || []
+                return parts.some((part) => {
+                    // Check for strReplaceEditor tool invocation with fumabase.jsonc
+                    if (part.type === 'tool-strReplaceEditor' && part.state === 'output-available') {
+                        const input = part.input as any
+                        if (input?.githubPath?.endsWith('fumabase.jsonc')) {
+                            return true
+                        }
+                    }
+                    return false
+                })
+            })
+
+            if (!hasReadFumabaseFile) {
+                throw new Error('You need to first read the fumabase.jsonc file before calling this tool, to know what are the existing values')
+            }
+        },
     })
     // model = anthropic('claude-3-5-haiku-latest')
     const strReplaceEditor = createEditTool({
@@ -441,7 +463,7 @@ export async function* generateMessageStream({
                   }),
               }
             : {
-                  updateFumabaseJsonc: docsJsonRenderFormTool,
+                  updateFumabaseJsonc,
               }),
 
         getProjectFiles: tool({
