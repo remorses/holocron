@@ -188,12 +188,12 @@ function ChatForm({ children }: { children: React.ReactNode }) {
     const { siteBranch, githubFolder } =
         useLoaderData() as Route.ComponentProps['loaderData']
 
-    const defaultValues = useMemo(() => {
-        return getCurrentDocsJson({ chatId, siteBranch })
-    }, [chatId, siteBranch?.docsJson])
+    // const defaultValues = useMemo(() => {
+    //     return getCurrentDocsJson({ chatId, siteBranch })
+    // }, [chatId, siteBranch?.docsJson])
 
     const formMethods = useForm({
-        defaultValues,
+        // defaultValues,
     })
     const { submit, messages, setMessages, setDraftText } = useChatContext()
 
