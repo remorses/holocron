@@ -31,7 +31,7 @@ import { prisma, Prisma } from 'db'
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import path from 'path'
 import { Spiceflow } from 'spiceflow'
-import z from 'zod'
+import z, { ZodType } from 'zod'
 import { printDirectoryTree } from 'docs-website/src/lib/directory-tree'
 import {
     createEditTool,
@@ -308,16 +308,20 @@ export async function* generateMessageStream({
         This is VERY IMPORTANT for array values, if you don't read the array values from the current fumabase.jsonc file and render an array form to the user values that are not in the array will be deleted!
         `,
         replaceOptionalsWithNulls: model.provider.startsWith('openai'),
-        onExecute: async (params) => {
+        onExecute: async ({ messages }) => {
             // Check if the LLM has read a fumabase.jsonc file in previous messages
             const hasReadFumabaseFile = messages.some((msg) => {
                 if (msg.role !== 'assistant') return false
-                const parts = msg.parts || []
-                return parts.some((part) => {
-                    // Check for strReplaceEditor tool invocation with fumabase.jsonc
-                    if (part.type === 'tool-strReplaceEditor' && part.state === 'output-available') {
-                        const input = part.input as any
-                        if (input?.githubPath?.endsWith('fumabase.jsonc')) {
+                // ignore if content is a string
+                if (typeof msg.content === 'string') return false
+                // handle tool-call interface
+                return msg.content.some((part) => {
+                    if (
+                        part.type === 'tool-call' &&
+                        part.toolName === 'strReplaceEditor'
+                    ) {
+                        const input = part.input as EditToolParamSchema
+                        if (input?.path?.endsWith('fumabase.jsonc')) {
                             return true
                         }
                     }
@@ -326,7 +330,9 @@ export async function* generateMessageStream({
             })
 
             if (!hasReadFumabaseFile) {
-                throw new Error('You need to first read the fumabase.jsonc file before calling this tool, to know what are the existing values')
+                throw new Error(
+                    'You need to first read the fumabase.jsonc file before calling this tool, to know what are the existing values',
+                )
             }
         },
     })
@@ -790,7 +796,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
     method: 'POST',
     path: '/generateMessage',
     request: z.object({
-        messages: z.array(z.custom<UIMessage>()),
+        messages: z.array(z.any() as ZodType<WebsiteUIMessage>),
         siteId: z.string(),
         chatId: z.string(),
         branchId: z.string(),

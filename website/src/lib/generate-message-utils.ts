@@ -13,17 +13,18 @@ import { asyncIterableToReadableStream } from 'contesto/src/lib/utils'
 import { printDirectoryTree } from 'docs-website/src/lib/directory-tree'
 import { getFilesFromFilesInDraft } from 'docs-website/src/lib/source.server'
 import * as yaml from 'js-yaml'
+import { WebsiteUIMessage } from './types'
 
 /**
  * Truncate object fields or string to max length
  */
 function truncateObjectOrString(value: unknown, maxLength = 1000): unknown {
     if (typeof value === 'string') {
-        return value.length > maxLength 
+        return value.length > maxLength
             ? value.substring(0, maxLength) + '...'
             : value
     }
-    
+
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
         const truncated: Record<string, unknown> = {}
         for (const [key, val] of Object.entries(value)) {
@@ -35,7 +36,7 @@ function truncateObjectOrString(value: unknown, maxLength = 1000): unknown {
         }
         return truncated
     }
-    
+
     return value
 }
 
@@ -203,7 +204,7 @@ export async function* testGenerateMessage({
     currentSlug = '/',
 }: TestGenerateMessageInput): AsyncGenerator<TestGenerateMessageResult> {
     // Convert CoreMessages to UIMessages format
-    const uiMessages: UIMessage[] = messages.map((msg, idx) => ({
+    const uiMessages: WebsiteUIMessage[] = messages.map((msg, idx) => ({
         id: `msg-${idx}`,
         role: msg.role as 'user' | 'assistant',
         parts: [

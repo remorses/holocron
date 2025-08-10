@@ -1,4 +1,4 @@
-import { tool } from 'ai'
+import { ModelMessage, tool, UIMessage,  } from 'ai'
 import dedent from 'string-dedent'
 import type { JSONSchema7 } from 'json-schema'
 import * as schemaLib from 'json-schema-library'
@@ -14,7 +14,7 @@ export interface RenderFormToolConfig {
     replaceOptionalsWithNulls?: boolean
     description?: string
     notifyError?: (error: any, msg?: string) => void
-    onExecute?: (params: any) => void | Promise<void>
+    onExecute?: (params: { messages: ModelMessage[] }) => void | Promise<void>
 }
 
 export function createRenderFormTool({
@@ -54,12 +54,37 @@ export function createRenderFormTool({
         return node?.schema
     }
 
-    // Create execute function
-    async function execute(params: z.infer<typeof RenderFormParameters>) {
-        try {
+    return tool({
+        description: dedent`
+        Render a form to the user can provide structured data. NEVER render more than 1 form input at a time, except for list of fields (arrays of strings or objects)
+
+        Array-style names such as items.0.color are supported. When the user wants to add an item to the array you MUST also render all the other items in the array, otherwise the other items will be deleted on change. To delete an item from an array you can simply skip rendering it.
+
+        Use radio type for small number of options (less than 4) where you want to show option descriptions alongside the choices.
+
+        If your workflow requires asking for a lot of fields, split the form into many messages, each one with 1 form field ideally.
+
+        NEVER ask the user to fill more than 1 or 2 fields. Instead ask for 1 input and deduce the rest. For example NEVER ask the user to provide both company name and domain, deduce the company name from the domain. Or use web search and fetch to find related information.
+
+        Only render many form fields in the case of list of items or fields that are part of an object.
+
+        Render one form field at a time. Split your forms into many messages.
+
+        If the user submits a form without adding the fields you want DO NOT ask the user to fill the form again. Instead render another form in a new message.
+        Previous messages forms are disabled and the user cannot submit them again. Render a simpler shorter form the user can fill in. Use relevant default values.
+
+        Always try to fill in the default values so the user has less things to type and check.
+
+        ${description || ''}
+      `,
+        inputSchema: RenderFormParameters,
+        async execute(
+            params: z.infer<typeof RenderFormParameters>,
+            { messages },
+        ) {
             // Call onExecute callback if provided
             if (onExecute) {
-                await onExecute(params)
+                await onExecute({ messages })
             }
 
             if (!jsonSchema) {
@@ -85,7 +110,9 @@ export function createRenderFormTool({
                         )
                     }
                 }
-                return errors.length > 0 ? { errors } : `Rendered form to the user. You can now assume the user has made the update to the data in the next message. To see the latest data read the file again.`
+                return errors.length > 0
+                    ? { errors }
+                    : `Rendered form to the user. You can now assume the user has made the update to the data in the next message. To see the latest data read the file again.`
             } catch (err) {
                 notifyError(err, 'createRenderFormExecute')
                 errors.push(
@@ -93,37 +120,7 @@ export function createRenderFormTool({
                 )
                 return { errors }
             }
-        } catch (err) {
-            // Return error from onExecute callback
-            return `Error: ${err instanceof Error ? err.message : String(err)}`
-        }
-    }
-
-    return tool({
-        description: dedent`
-        Render a form to the user can provide structured data. NEVER render more than 1 form input at a time, except for list of fields (arrays of strings or objects)
-
-        Array-style names such as items.0.color are supported. When the user wants to add an item to the array you MUST also render all the other items in the array, otherwise the other items will be deleted on change. To delete an item from an array you can simply skip rendering it.
-
-        Use radio type for small number of options (less than 4) where you want to show option descriptions alongside the choices.
-
-        If your workflow requires asking for a lot of fields, split the form into many messages, each one with 1 form field ideally.
-
-        NEVER ask the user to fill more than 1 or 2 fields. Instead ask for 1 input and deduce the rest. For example NEVER ask the user to provide both company name and domain, deduce the company name from the domain. Or use web search and fetch to find related information.
-
-        Only render many form fields in the case of list of items or fields that are part of an object.
-
-        Render one form field at a time. Split your forms into many messages.
-
-        If the user submits a form without adding the fields you want DO NOT ask the user to fill the form again. Instead render another form in a new message.
-        Previous messages forms are disabled and the user cannot submit them again. Render a simpler shorter form the user can fill in. Use relevant default values.
-
-        Always try to fill in the default values so the user has less things to type and check.
-
-        ${description ||''}
-      `,
-        inputSchema: RenderFormParameters,
-        execute,
+        },
     })
 }
 
@@ -200,7 +197,11 @@ const FieldTypeEnum = z.enum([
 export const UIFieldSchema = z.object({
     name: z.string(),
     type: FieldTypeEnum,
-    label: z.string().describe('Label describing what this field does to the user. Show an index for array items, start from index 1'),
+    label: z
+        .string()
+        .describe(
+            'Label describing what this field does to the user. For array items use First, Second, Third prefixes',
+        ),
     description: z.string().optional(),
     // Common fields
     required: z.boolean().optional(),

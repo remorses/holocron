@@ -506,10 +506,10 @@ export function MessagePartRenderer({
     }
     if (part && 'errorText' in part && part.errorText) {
         return (
-            <Fragment>
+            <ToolPreviewContainer>
                 <Dot /> {part.type}
                 <ErrorPreview error={part.errorText} />
-            </Fragment>
+            </ToolPreviewContainer>
         )
     }
     if (part.type === 'tool-strReplaceEditor') {

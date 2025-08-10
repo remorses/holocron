@@ -512,3 +512,9 @@ the website package has a dependency on docs-website. instead of duplicating cod
 you can run control the browser using the playwriter mcp tools. these tools let you control the browser to get information or accomplish actions
 
 if i ask you to test something in the browser, know that the website dev server is already running at http://localhost:7664 for website and :7777 for docs-website (but docs-website need to use the website domain specifically, for example name-hash.localhost:7777)
+
+## Zod
+
+Use zod to create schemas and types that needs to be used for tool inputs or Spiceflow API routes.
+
+When you need to create a complex type that comes from Prisma table do not create a new schema that tries to recreate the Prisma table structure, instead just use `z.any() as ZodType<PrismaTable>)` to get type safety but leave any in the schema. This gets most of the benefits of Zod without having to define a new Zod schema that can easily go out of sync.

@@ -593,7 +593,10 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                                 {...part}
                                 showSubmitButton={hideBrowser}
                                 uploadFunction={async (file) => {
-                                    const result = await uploadFileToSite(file, siteId)
+                                    const result = await uploadFileToSite(
+                                        file,
+                                        siteId,
+                                    )
                                     return result.url
                                 }}
                             />
@@ -612,7 +615,10 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                             </ToolPreviewContainer>
                         )
                     }
-                    if (part.type === 'tool-updateFumabaseJsonc') {
+                    if (
+                        part.type === 'tool-updateFumabaseJsonc' &&
+                        part.state === 'output-available'
+                    ) {
                         return (
                             <RenderFormPreview
                                 message={message}
@@ -620,7 +626,10 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                                 {...part}
                                 showSubmitButton={hideBrowser}
                                 uploadFunction={async (file) => {
-                                    const result = await uploadFileToSite(file, siteId)
+                                    const result = await uploadFileToSite(
+                                        file,
+                                        siteId,
+                                    )
                                     return result.url
                                 }}
                             />

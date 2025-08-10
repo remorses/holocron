@@ -18,7 +18,7 @@ function Highlight({ children }: { children: ReactNode }) {
 export function ErrorPreview({ error }) {
     const truncatedError = truncateText(String(error), 500)
     return (
-        <div className='flex flex-row gap-2'>
+        <div className='flex flex-row  gap-2'>
             <div className='shrink-0'>⎿</div>
             <span>
                 Error:{' '}
