@@ -2,7 +2,7 @@
     // the logo shown in the top left
     "logo": {
         "dark": "/logo/light.svg",
-        "light": "/logo/dark.svg",
+        "light": "/logo/dark.svg"
     },
     "name": "fumabase",
     "footer": {
@@ -11,16 +11,16 @@
                 "items": [
                     {
                         "href": "https://fumabase.com",
-                        "label": "Fumabase",
-                    },
+                        "label": "Fumabase"
+                    }
                 ],
-                "header": "Documentation",
-            },
+                "header": "Documentation"
+            }
         ],
         "socials": {
             "github": "https://github.com/remorses",
-            "twitter": "https://x.com/__morse",
-        },
+            "twitter": "https://x.com/__morse"
+        }
     },
     "navbar": {
         // the links shown in the top right
@@ -28,15 +28,15 @@
             {
                 "href": "https://fumabase.com",
                 "icon": "document",
-                "label": "Home",
-            },
+                "label": "Home"
+            }
         ],
         // a button shown on the top right
         "primary": {
             "href": "https://fumabase.com/login",
             "type": "button",
-            "label": "Get Started",
-        },
+            "label": "Get Started"
+        }
     },
     "siteId": "cmclpd3km0000htompzockfgx",
     "$schema": "https://fumabase.com/fumabase.json",
@@ -45,9 +45,10 @@
         "fumabase-o4f79efs.localhost",
         "docs.fumabase.com",
         "fumabase-o4f79efs.fumabase.com",
+        "fumabase-docs-prod-base-path-docs.fly.dev"
     ],
     "favicon": {
         "dark": "/favicon.svg",
-        "light": "/favicon.svg",
-    },
+        "light": "/favicon.svg"
+    }
 }
