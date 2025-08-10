@@ -50,7 +50,7 @@ instead of adding packages directly in package.json use `pnpm install package` i
 
 - NEVER start the development server with pnpm dev yourself. there is not reason to do so, even with &
 
-- if you encounter typescript lint errors for a npm package, read the node_modules/package/*.d.ts files to understand the typescript types of the package. If you cannot understand them, ask me to help you with it.
+- if you encounter typescript lint errors for a npm package, read the node_modules/package/\*.d.ts files to understand the typescript types of the package. If you cannot understand them, ask me to help you with it.
 
 ```ts
 // BAD. DO NOT DO THIS
@@ -92,7 +92,6 @@ const favicon: string = () => {
 - hooks, all functions that start with use, MUST ALWAYS be called in the component render scope, never inside other closures in the component or event handlers. Follow react rules of hooks.
 
 - always put all hooks at the start of component functions. Put hooks that are bigger and longer later if possible. all other non hooks logic should go after hooks section, things like conditionals, expressions, etc
-
 
 # testing
 
@@ -177,7 +176,6 @@ never use react-router or remix `createCookieSessionStorage`, instead just use t
 
 if you want to store json data in cookies remember to use encodeURIComponent to encode the data before storing it in the cookie, and decodeURIComponent to decode it when reading it back. This is because cookies can only store string values.
 
-
 ## website, react-routes
 
 website routes use the flat routes filesystem routes, inside src/routes. these files encode the routing logic in the filename, using $id for params and dot . for slashes.
@@ -245,7 +243,41 @@ The only case where you should not use href is for urls outside of current app o
 
 > if you cannot use `href` simply because the route you would like to link to does not exist you should do the following: list all the files in the src/routes folder first, to see if it already exists but not with the name you would expect. If still you can't find one, create a simple placeholder react-router route with a simple Page component and a simple loader that does what you would expect. do not write too much code. you can improve on it in later messages.
 
-## missing routes you would like to redirect to
+## showing spinner while loader does work and then redirect
+
+sometimes it's useful to do work in a loader that then redirects the user to an url. For example imagine a button to open a PR on GitHub, this action is very slow, you cannot do the wor directly in the loader without showing any page comopnent because the user would not see any feedback. Instead you can use this pattern: do the work in the loader in a promise and return this promise in the loader data. Then the page component will do the redirect when the promise completes:
+
+```tsx
+export async function loader({
+    request,
+    params: { chatId },
+}: Route.LoaderArgs) {
+    const { userId } = await getSession({ request })
+
+    const prPromise = createPrSuggestionForChat({
+        chatId,
+        userId,
+    })
+    return { prPromise }
+}
+
+export default function Page({ loaderData }: Route.ComponentProps) {
+    useEffect(() => {
+        loaderData.prPromise.then(({ prUrl }) => {
+            console.log(`navigating to ${prUrl}`)
+            window.location.href = prUrl
+        })
+    }, [loaderData.prPromise])
+    return (
+        <div className='flex h-screen flex-col items-center justify-center gap-4'>
+            <Loader2Icon className='h-6 w-6 animate-spin' />
+            <p>pushing files to GitHub PR</p>
+        </div>
+    )
+}
+```
+
+## do not redirect to missing routes that do not exist
 
 never redirect or link to a route that does not exist, instead create a simple placeholder route with a simple loader and component instead. then redirect there using type safe path with `href`
 
@@ -392,9 +424,7 @@ If you need to use complex logic to construct the array of operations, create a 
 
 > IMPORTANT! while constructing the operations array you should never call await in between, this would cause the prisma query to start and would make the transaction invalid.
 
-
-
-```typescript
+````typescript
 
 ## errors
 
@@ -411,7 +441,7 @@ if (!user.subscription) {
         JSON.stringify({ message: `user has no subscription` }),
     )
 }
-```
+````
 
 ## react code
 
@@ -518,3 +548,4 @@ if i ask you to test something in the browser, know that the website dev server 
 Use zod to create schemas and types that needs to be used for tool inputs or Spiceflow API routes.
 
 When you need to create a complex type that comes from Prisma table do not create a new schema that tries to recreate the Prisma table structure, instead just use `z.any() as ZodType<PrismaTable>)` to get type safety but leave any in the schema. This gets most of the benefits of Zod without having to define a new Zod schema that can easily go out of sync.
+```

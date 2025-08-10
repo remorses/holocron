@@ -30,7 +30,7 @@ import { getTabFilesWithoutContents } from '../lib/spiceflow-generate-message'
 
 import { State, useWebsiteState, WebsiteStateProvider } from '../lib/state'
 import { cn } from '../lib/utils'
-import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId'
+import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId._index'
 import type { Route as SiteRoute } from './org.$orgId.site.$siteId'
 
 import { UIMessage } from 'ai'
@@ -465,7 +465,7 @@ function GitHubSyncButton() {
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
     const chatData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId.chat.$chatId',
+        'routes/org.$orgId.site.$siteId.chat.$chatId._index',
     ) as Route.ComponentProps['loaderData'] | undefined
     const githubBranch = chatData?.siteBranch?.githubBranch
 
@@ -534,7 +534,7 @@ function InstallGithubAppToolbar() {
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
     const chatData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId.chat.$chatId',
+        'routes/org.$orgId.site.$siteId.chat.$chatId._index',
     ) as Route.ComponentProps['loaderData'] | undefined
 
     const githubOwner = siteData.site.githubOwner

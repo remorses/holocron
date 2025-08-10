@@ -4,6 +4,10 @@
 
 - **Added validation to updateFumabaseJsonc tool**: Checks that LLM has read fumabase.jsonc file before allowing updates
 - **Better error handling**: Returns clear error message when tool is called without first reading the file
+## 2025-08-10 12:23
+
+- Create PR and push actions now open spinner page in new tab and redirect to GitHub
+- PR spinner routes use internal GitHub logic without Spiceflow client
 
 ## 2025-08-09 14:30
 

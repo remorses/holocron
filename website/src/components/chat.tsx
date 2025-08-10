@@ -107,7 +107,7 @@ import {
     transcribeAudio,
     uploadFileToSite,
 } from '../lib/utils'
-import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId'
+import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId._index'
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import { TruncatedText } from './truncated-text'
 import { MessagePartRenderer } from 'docs-website/src/components/docs-chat'

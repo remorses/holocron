@@ -3,7 +3,7 @@ import { useRouteLoaderData } from 'react-router'
 import { v4 } from 'uuid'
 
 import { useThrowingFn } from 'website/src/lib/hooks'
-import type { Route as ChatRoute } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId'
+import type { Route as ChatRoute } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId._index'
 
 import { apiClient } from '../lib/spiceflow-client'
 import { slugKebabCaseKeepExtension } from '../lib/utils'
@@ -21,7 +21,7 @@ export function UploadButton({
     onUploadFinished: (data: { src: string }) => void
 } & ComponentPropsWithoutRef<typeof Button>) {
     const chatData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId.chat.$chatId',
+        'routes/org.$orgId.site.$siteId.chat.$chatId._index',
     ) as ChatRoute.ComponentProps['loaderData']
 
     const branchId = chatData.branchId

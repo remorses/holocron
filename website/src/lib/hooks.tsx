@@ -1,5 +1,5 @@
 import React, { RefObject, useEffect, useRef } from 'react'
-import type { Route as ChatRoute } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId'
+import type { Route as ChatRoute } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId._index'
 
 import { useRouteLoaderData } from 'react-router'
 import { toast } from 'sonner'
@@ -121,7 +121,7 @@ export function useTemporaryState<T>(
 
 export function useShouldHideBrowser() {
     const chatData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId.chat.$chatId',
+        'routes/org.$orgId.site.$siteId.chat.$chatId._index',
     ) as ChatRoute.ComponentProps['loaderData'] | undefined
     const { mentionOptions = [] } = chatData || {}
     let hasNoFilesInLoader = !mentionOptions.length
