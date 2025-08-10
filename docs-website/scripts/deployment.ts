@@ -35,7 +35,7 @@ async function main() {
     const port = 7777
     
     const appNameSuffix = basePath ? `-base-path-${basePath.replace(/^\//, '').replace(/\//g, '-')}` : ''
-    const appName = `fumabase-docs${stage === 'production' ? '-prod' : `-${stage}`}${appNameSuffix}`
+    const appName = `fumabase-docs-prod${appNameSuffix}`
     
     await deployFly({
         appName,
