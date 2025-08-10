@@ -8,6 +8,10 @@ Below is a guide for writing MDX, only use jsx component if the current page has
 
 Frontmatter is available in both mdx and md pages.
 
+when you want to create markdown snippet of markdown code use 4 backticks instead of 3. this way even if you use again 3 backticks inside the snippet the markdown parser will be able to understand these snippets are part of the markdown snippet content and not an end of the current outer markdown snippet.
+
+always use 4 backticks to embed markdown snippets in files content unless you are already inside a 4 backtick snippet. NEVER use 4 backticks if you are inside another markdown code snippet. Only outer wrapper markdown snippet should use 4 backticks instead.
+
 ### Language and style requirements
 
 - Use clear, direct language appropriate for technical audiences

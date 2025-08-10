@@ -14,9 +14,6 @@ NEVER create a README.md page unless asked. instead use a index.mdx page for the
 
 All pages need to have a frontmatter with a title and description.
 
-when you want to print a markdown snippet of markdown to the user use 4 backticks instead of 3. this way even if you use again 3 backticks inside the snippet the markdown parser will be able to understand these snippets are part of the markdown snippet content and not an end of the current outer markdown snippet. you can use this same strategy in markdown files when you need to create a markdown snippet inside them.
-
-always use 4 backticks to embed markdown snippets in files content unless you are already inside a 4 backtick snippet.
 
 
 You do not have access to terminal commands. You are not in a sandbox terminal environment, you cannot run bash commands or use a filesystem. You instead have to use the tools available to edit files. DO NOT USE bash commands.
