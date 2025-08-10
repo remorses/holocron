@@ -12,11 +12,13 @@ const compileSchema =
 export interface RenderFormToolConfig {
     jsonSchema?: JSONSchema7
     replaceOptionalsWithNulls?: boolean
+    description?: string
     notifyError?: (error: any, msg?: string) => void
 }
 
 export function createRenderFormTool({
     jsonSchema,
+    description,
     replaceOptionalsWithNulls,
     notifyError = (err, msg) =>
         console.error(msg || 'Error in createRenderFormTool', err),
@@ -90,7 +92,7 @@ export function createRenderFormTool({
         description: dedent`
         Render a form to the user can provide structured data. NEVER render more than 1 form input at a time, except for list of fields (arrays of strings or objects)
 
-        Array-style names such as items.0.color are supported.
+        Array-style names such as items.0.color are supported. When the user wants to add an item to the array you MUST also render all the other items in the array, otherwise the other items will be deleted on change. To delete an item from an array you can simply skip rendering it.
 
         Use radio type for small number of options (less than 4) where you want to show option descriptions alongside the choices.
 
@@ -106,6 +108,8 @@ export function createRenderFormTool({
         Previous messages forms are disabled and the user cannot submit them again. Render a simpler shorter form the user can fill in. Use relevant default values.
 
         Always try to fill in the default values so the user has less things to type and check.
+
+        ${description ||''}
       `,
         inputSchema: RenderFormParameters,
         execute,
@@ -185,7 +189,7 @@ const FieldTypeEnum = z.enum([
 export const UIFieldSchema = z.object({
     name: z.string(),
     type: FieldTypeEnum,
-    label: z.string(),
+    label: z.string().describe('Label describing what this field does to the user. Show an index for array items, start from index 1'),
     description: z.string().optional(),
     // Common fields
     required: z.boolean().optional(),
@@ -194,7 +198,7 @@ export const UIFieldSchema = z.object({
         .string()
         .optional()
         .describe(
-            `Optional group title. When consecutive fields share the same groupTitle, they will be wrapped in a container with this title. ONLY use this for array of objects to put each object in the array into its own group. `,
+            `Optional group title. When consecutive fields share the same groupTitle, they will be wrapped in a container with this title. ALWAYS and ONLY use this for array of objects to put each object in the array into its own group. `,
         ),
     // Input/textarea/password fields
     placeholder: z.string().optional(),

@@ -376,7 +376,7 @@ export function RenderFormPreview({
     return (
         <div
             className={cn(
-                'flex not-prose my-8 font-sans bg-background rounded-lg flex-col gap-6 animate-in fade-in',
+                'flex not-prose my-4 font-sans rounded-lg flex-col gap-4 animate-in fade-in',
                 disabled && 'opacity-50 pointer-events-none',
                 className,
             )}
@@ -386,12 +386,12 @@ export function RenderFormPreview({
                     return (
                         <div
                             key={`group-${groupIndex}`}
-                            className='flex flex-col gap-6'
+                            className='flex flex-col p-4 gap-6'
                         >
                             <h3 className='font-medium text-sm text-muted-foreground'>
                                 {group.title}
                             </h3>
-                            <div className='flex flex-col gap-6 bg-background p-6 rounded border-r-2 border-border'>
+                            <div className='flex flex-col gap-6 rounded border-r-2 border-border'>
                                 {group.fields.map((f) => (
                                     <div
                                         key={f.name}
@@ -427,7 +427,7 @@ export function RenderFormPreview({
                     )
                 } else {
                     return group.fields.map((f) => (
-                        <div key={f.name} className='flex flex-col p-6 gap-6 '>
+                        <div key={f.name} className='flex flex-col p-4 gap-6'>
                             {f.type !== 'button' &&
                                 f.type !== 'color_picker' && (
                                     <label className='font-medium text-sm'>
@@ -456,10 +456,10 @@ export function RenderFormPreview({
             })}
             {showSubmitButton &&
                 args.fields.some((f) => f && f.type !== 'button') && (
-                    <div className='p-6'>
+                    <div className='p-4'>
                         <Button
                             type='submit'
-                            className='w-full '
+                            className='w-full'
                             disabled={disabled || isGenerating}
                         >
                             {isGenerating ? 'Loading...' : 'Submit'}
