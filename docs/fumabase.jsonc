@@ -45,7 +45,8 @@
         "fumabase-test.akarso.co",
         "docs.fumabase.com",
         "fumabase-o4f79efs.fumabase.com",
-        "test-fumabase.akarso.co"
+        "test-fumabase.akarso.co",
+        "fumabase-docs-prod-base-path-docs.fly.dev"
     ],
     "favicon": {
         "dark": "/favicon.svg",
