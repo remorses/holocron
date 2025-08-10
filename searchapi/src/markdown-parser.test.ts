@@ -533,7 +533,7 @@ MDX allows mixing markdown and JSX seamlessly.`;
     const frontmatterSection = result.sections.find(s => s.headingSlug === "");
     expect(frontmatterSection).toBeDefined();
     expect(frontmatterSection?.content).toContain('title: Advanced MDX Example');
-    expect(frontmatterSection?.weight).toMatchInlineSnapshot(2`2`);
+    expect(frontmatterSection?.weight).toMatchInlineSnapshot(`2`);
 
     // Imports become part of the Introduction section
     const introSection = result.sections.find(s => s.headingSlug === "introduction");

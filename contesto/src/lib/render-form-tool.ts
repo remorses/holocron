@@ -61,7 +61,7 @@ export function createRenderFormTool({
             if (onExecute) {
                 await onExecute(params)
             }
-            
+
             if (!jsonSchema) {
                 return 'Rendered form to the user, the response will be sent back as a message from the user. DO NOT RENDER THE SAME FORM TWICE'
             }

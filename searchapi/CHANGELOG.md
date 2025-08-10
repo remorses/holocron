@@ -1,5 +1,19 @@
 # Changelog
 
+## 2025-01-10 15:30
+
+- **Added proper TypeScript types** - Created `SectionRecord` and `SectionWithScore` interfaces to replace `any[]` types
+- **Typed all database queries** - Added type assertions to all `.toArray()` calls for type safety
+- **Improved code maintainability** - Replaced untyped arrays with properly typed interfaces throughout search functionality
+
+## 2025-01-10 15:17
+
+- **Simplified table management** - Refactored `getOrCreateTable` to automatically create tables with schema when missing
+- **Removed complex existence checks** - Eliminated all `!table` null checks throughout the codebase
+- **Added predefined table schema** - Defined table structure using Apache Arrow types for consistent table creation
+- **Improved error handling** - Tables are now always guaranteed to exist, removing need for defensive checks
+- **Fixed test issue** - Corrected inline snapshot syntax error in markdown parser test
+
 ## 2025-08-10 11:55
 
 - delete old file rows before inserting updates to prevent duplicate sections
