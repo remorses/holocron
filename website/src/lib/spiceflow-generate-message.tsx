@@ -98,6 +98,7 @@ export async function generateSystemMessage({
                 (x) => x.default,
             )),
         isOnboardingChat && generateExampleTemplateFilesPrompt(),
+        await import('../prompts/capabilities.md?raw').then((x) => x.default),
     ]
         .filter(Boolean)
         .join('\n\n')
