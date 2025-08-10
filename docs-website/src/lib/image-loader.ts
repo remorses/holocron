@@ -1,6 +1,7 @@
 import { prisma } from 'db'
 import { getKeyForMediaAsset, s3 } from '../lib/s3'
 import { getCacheTagForMediaAsset } from '../lib/cache-tags'
+import { withoutBasePath } from './utils'
 
 export async function imageLoader({ request }) {
     const url = new URL(request.url)
@@ -27,7 +28,7 @@ export async function imageLoader({ request }) {
         return new Response('Not Found', { status: 404 })
     }
 
-    const slug = new URL(request.url).pathname
+    const slug = withoutBasePath(new URL(request.url).pathname)
     const siteId = siteBranch.siteId
 
     const mediaAsset = await prisma.mediaAsset.findFirst({

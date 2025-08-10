@@ -3,6 +3,7 @@ import { getFilesForSource } from './source.server'
 import { LOCALES } from './locales'
 import { getFumadocsSource } from './source'
 import { getCacheTagForPage } from './cache-tags'
+import { withoutBasePath } from './utils'
 
 export async function serveRawMarkdown({
     domain,
@@ -57,9 +58,9 @@ export async function serveRawMarkdown({
         languages,
     })
 
-    let slugs = path.split('/').filter((v) => v.length > 0) || []
-
-    // Remove the .md or .mdx extension from the last slug
+    const processedPath = withoutBasePath(path)
+    
+    let slugs = processedPath.split('/').filter((v) => v.length > 0) || []
     if (slugs.length > 0) {
         const lastSlug = slugs[slugs.length - 1]
         if (lastSlug.endsWith('.md') || lastSlug.endsWith('.mdx')) {
@@ -85,7 +86,7 @@ export async function serveRawMarkdown({
                         branchId: siteBranch.branchId,
                     },
                     {
-                        githubPath: path,
+                        githubPath: processedPath,
                         branchId: siteBranch.branchId,
                     },
                 ],
@@ -97,7 +98,6 @@ export async function serveRawMarkdown({
     ])
 
     if (!page && slug === '/') {
-        // try to find index page if no page found
         let [indexPage] = await Promise.all([
             prisma.markdownPage.findFirst({
                 where: {

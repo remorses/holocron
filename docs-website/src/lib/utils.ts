@@ -237,28 +237,28 @@ export function getDocsJson({ filesInDraft, docsJson }): DocsJsonType {
 
 export const lucideVersion = '0.525.0'
 
-/**
- * Get the base path for the application
- * Returns empty string if PUBLIC_BASE_PATH is not defined
- */
 export function getBasePath(): string {
     return process.env.PUBLIC_BASE_PATH || ''
 }
 
-/**
- * Prepend the base path to a given path
- * Handles edge cases like empty paths and ensures proper formatting
- */
 export function withBasePath(path: string): string {
     const basePath = getBasePath()
     if (!basePath) return path
     
-    // Handle absolute URLs - don't prepend base path
     if (isAbsoluteUrl(path)) return path
     
-    // Ensure path starts with /
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
     
-    // Avoid double slashes
     return `${basePath}${normalizedPath}`
+}
+
+export function withoutBasePath(path: string): string {
+    const basePath = getBasePath()
+    if (!basePath) return path
+    
+    if (path.startsWith(basePath)) {
+        return path.slice(basePath.length) || '/'
+    }
+    
+    return path
 }

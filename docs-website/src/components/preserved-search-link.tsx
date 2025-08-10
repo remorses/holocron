@@ -58,7 +58,6 @@ export const usePreservedNavigate = () => {
     }
 }
 
-// Global navigate function that preserves search params
 type GlobalNavigateFunction = (to: string | number, options?: NavigateOptions) => void
 
 export let globalNavigate: GlobalNavigateFunction = (to, options) => {
@@ -67,21 +66,17 @@ export let globalNavigate: GlobalNavigateFunction = (to, options) => {
         return
     }
 
-    // Fallback: preserve search params manually with window.location
     const currentSearch = window.location.search
     if (currentSearch && typeof to === 'string' && !to.includes('?')) {
         const separator = '?'
-        // Apply basePath to the URL if it's a relative path
         const url = to.startsWith('/') ? withBasePath(to) : to
         window.location.href = `${url}${separator}${currentSearch.slice(1)}`
     } else {
-        // Apply basePath to the URL if it's a relative path
         const url = typeof to === 'string' && to.startsWith('/') ? withBasePath(to) : to
         window.location.href = url
     }
 }
 
-// This should be called in the root component to set the proper navigate function
 export function setGlobalNavigate(navigateFn: GlobalNavigateFunction) {
     globalNavigate = navigateFn
 }

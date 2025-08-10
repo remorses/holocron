@@ -3,15 +3,15 @@ import { createHonoServer } from 'react-router-hono-server/node'
 import { prisma } from 'db'
 import { imageLoader } from './lib/image-loader'
 import { serveRawMarkdown } from './lib/serve-raw-markdown'
+import { withoutBasePath } from './lib/utils'
 
 export default await createHonoServer({
     port: Number(process.env.PORT) || 7777,
     configure: (server) => {
         server.use(async (c, next) => {
-            const url = c.req.path
+            const url = withoutBasePath(c.req.path)
             const host = c.req.header('host')?.split(':')[0] || ''
 
-            // Check if URL ends with .md or .mdx
             if (url.endsWith('.md') || url.endsWith('.mdx')) {
                 const query = c.req.query()
                 const showLineNumbers = query.showLineNumbers != undefined && query.showLineNumbers !== 'false'
@@ -33,7 +33,6 @@ export default await createHonoServer({
                         'Cache-Tag': result.cacheTag,
                     })
                 }
-                // If markdown not found, continue to next handler
                 return next()
             }
 
