@@ -157,13 +157,49 @@ const setDocsJsonState = ({
     })
 }
 
+function getCurrentDocsJson({ chatId, siteBranch }) {
+    // First check localStorage
+    const persistedValues =
+        typeof localStorage !== 'undefined'
+            ? localStorage.getItem(keyForDocsJson({ chatId }))
+            : undefined
+
+    // Then check filesInDraft
+    const docsJsonString =
+        Object.entries(useWebsiteState.getState()?.filesInDraft || {}).find(
+            ([key]) => key.endsWith('fumabase.jsonc'),
+        )?.[1]?.content || ''
+
+    // Use persisted > filesInDraft > siteBranch.docsJson
+    if (persistedValues) {
+        return safeJsoncParse(persistedValues) || {}
+    }
+    if (docsJsonString) {
+        return safeJsoncParse(docsJsonString) || {}
+    }
+
+    // Fall back to siteBranch.docsJson
+    const docsJson = siteBranch?.docsJson
+    if (!docsJson || typeof docsJson !== 'object' || Array.isArray(docsJson)) {
+        return {}
+    }
+    return docsJson as Record<string, any>
+}
+
 function ChatForm({ children }: { children: React.ReactNode }) {
     const { chatId } = useParams()
-    const formMethods = useForm({})
-    const { submit, messages, setMessages, setDraftText } = useChatContext()
-
     const { siteBranch, githubFolder } =
         useLoaderData() as Route.ComponentProps['loaderData']
+
+    const defaultValues = useMemo(() => {
+        return getCurrentDocsJson({ chatId, siteBranch })
+    }, [chatId, siteBranch?.docsJson])
+
+    const formMethods = useForm({
+        defaultValues,
+    })
+    const { submit, messages, setMessages, setDraftText } = useChatContext()
+
     const isOnboardingChat = useShouldHideBrowser()
 
     const previousJsonString = useMemo(() => {
@@ -188,21 +224,11 @@ function ChatForm({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         if (isOnboardingChat) return
-        const persistedValues =
-            typeof localStorage !== 'undefined'
-                ? localStorage.getItem(keyForDocsJson({ chatId }))
-                : undefined
-        const docsJsonString =
-            Object.entries(useWebsiteState.getState()?.filesInDraft || {}).find(
-                ([key]) => key.endsWith('fumabase.jsonc'),
-            )?.[1]?.content || ''
-        const data = safeJsoncParse(persistedValues || docsJsonString) || null
-        if (persistedValues) {
-            console.log(`localStorage fumabase.jsonc: `, data)
-        } else {
-            console.log('fumabase.jsonc', data)
-        }
-        if (!data) return
+
+        const data = getCurrentDocsJson({ chatId, siteBranch })
+        console.log('fumabase.jsonc', data)
+
+        if (!data || Object.keys(data).length === 0) return
 
         formMethods.reset(data, { keepDefaultValues: true })
         setDocsJsonState({
