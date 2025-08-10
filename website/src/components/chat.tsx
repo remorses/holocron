@@ -188,12 +188,10 @@ function ChatForm({ children }: { children: React.ReactNode }) {
     const { siteBranch, githubFolder } =
         useLoaderData() as Route.ComponentProps['loaderData']
 
-    // const defaultValues = useMemo(() => {
-    //     return getCurrentDocsJson({ chatId, siteBranch })
-    // }, [chatId, siteBranch?.docsJson])
-
     const formMethods = useForm({
-        // defaultValues,
+        // https://chatgpt.com/share/689903d5-2624-800e-870c-a1e226fd230d
+        // do not pass defaultValues here otherwise setValue calls will not trigger subscribe callback if value does not change. meaning the state is not updated for filesInDraft for fumabase.jsonc
+        // reset() call instead will trigger subscribe callback so we can use it in useEffect instead
     })
     const { submit, messages, setMessages, setDraftText } = useChatContext()
 
