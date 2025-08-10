@@ -1,9 +1,9 @@
 import { prisma } from 'db'
 import { getFilesForSource } from './source.server'
 import {
-    searchDocsWithEyecrest,
-    formatEyecrestSearchResults,
-} from './eyecrest-search'
+    searchDocsWithSearchApi,
+    formatSearchApiSearchResults,
+} from './search-api-search'
 import { getFumadocsSource } from './source'
 
 export async function generateLlmsFullTxt({
@@ -45,14 +45,14 @@ export async function generateLlmsFullTxt({
     }
 
     if (searchQuery?.length) {
-        // Use Eyecrest search for search queries
-        const searchResults = await searchDocsWithEyecrest({
+        // Use search API for search queries
+        const searchResults = await searchDocsWithSearchApi({
             query: searchQuery,
             branchId: siteBranch.branchId,
             // exact: true,
         })
 
-        output += formatEyecrestSearchResults({
+        output += formatSearchApiSearchResults({
             results: searchResults,
             baseUrl,
         })

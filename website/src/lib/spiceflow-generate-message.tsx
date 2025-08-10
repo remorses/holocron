@@ -55,9 +55,9 @@ import {
     type SelectTextInput,
 } from './shared-docs-tools'
 import {
-    searchDocsWithEyecrest,
-    formatEyecrestSearchResults,
-} from 'docs-website/src/lib/eyecrest-search'
+    searchDocsWithSearchApi,
+    formatSearchApiSearchResults,
+} from 'docs-website/src/lib/search-api-search'
 import { cleanSlug } from 'docs-website/src/lib/slug-utils'
 import { getFilesForSource } from 'docs-website/src/lib/source.server'
 import { getFumadocsSource } from 'docs-website/src/lib/source'
@@ -520,20 +520,19 @@ export async function* generateMessageStream({
         searchDocs: tool({
             inputSchema: searchDocsInputSchema,
             execute: async ({ terms, searchType = 'fulltext' }) => {
-                // Try using Eyecrest search if available, otherwise fallback to simple search
                 try {
-                    const results = await searchDocsWithEyecrest({
+                    const results = await searchDocsWithSearchApi({
                         branchId: branchId,
                         query: terms,
                         exact: searchType === 'fulltext',
                     })
-                    return formatEyecrestSearchResults({
+                    return formatSearchApiSearchResults({
                         results,
                         baseUrl: `${process.env.PUBLIC_URL || 'https://fumabase.com'}`,
                     })
                 } catch (error) {
                     console.error(
-                        'Eyecrest search failed, falling back to simple search:',
+                        'Search API failed, falling back to simple search:',
                         error,
                     )
                 }

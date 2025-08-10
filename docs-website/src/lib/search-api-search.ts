@@ -1,5 +1,5 @@
 import { SortedResult as BaseSortedResult } from 'fumadocs-core/server'
-import { client } from './eyecrest'
+import { client } from './search-api'
 import type { SearchSectionsResponse } from 'searchapi/sdk'
 
 export interface SortedResult extends BaseSortedResult {
@@ -8,7 +8,7 @@ export interface SortedResult extends BaseSortedResult {
     fragment?: string
 }
 
-export async function searchDocsWithEyecrest({
+export async function searchDocsWithSearchApi({
     query,
     branchId,
     exact,
@@ -43,14 +43,14 @@ export async function searchDocsWithEyecrest({
             maxChunksPerFile: 4,
         })
 
-        return formatEyecrestResults(result)
+        return formatSearchApiResults(result)
     } catch (error) {
-        console.error('Error searching with Eyecrest:', error)
+        console.error('Error searching with search API:', error)
         return []
     }
 }
 
-function formatEyecrestResults(response: SearchSectionsResponse): SortedResult[] {
+function formatSearchApiResults(response: SearchSectionsResponse): SortedResult[] {
     const grouped: SortedResult[] = []
     const pageGroups = new Map<string, typeof response.results>()
 
@@ -96,7 +96,7 @@ function formatEyecrestResults(response: SearchSectionsResponse): SortedResult[]
     return grouped
 }
 
-export function formatEyecrestSearchResults({
+export function formatSearchApiSearchResults({
     results,
     baseUrl,
 }: {

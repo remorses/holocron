@@ -20,9 +20,9 @@ import { preventProcessExitIfBusy } from 'spiceflow'
 import { notifyError } from './errors'
 import { getFilesForSource } from './source.server'
 import {
-    searchDocsWithEyecrest,
-    formatEyecrestSearchResults,
-} from './eyecrest-search'
+    searchDocsWithSearchApi,
+    formatSearchApiSearchResults,
+} from './search-api-search'
 import { getFumadocsSource } from './source'
 import {
     searchDocsInputSchema,
@@ -192,11 +192,11 @@ export const docsApp = new Spiceflow({ basePath: '/fumabaseInternalAPI' })
                     inputSchema: searchDocsInputSchema,
                     execute: async ({ terms, searchType = 'fulltext' }) => {
                         let tag = ''
-                        const results = await searchDocsWithEyecrest({
+                        const results = await searchDocsWithSearchApi({
                             branchId: branchId,
                             query: terms,
                         })
-                        return formatEyecrestSearchResults({
+                        return formatSearchApiSearchResults({
                             results,
                             baseUrl: currentOrigin,
                         })

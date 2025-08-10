@@ -50,7 +50,7 @@ import {
     extractJsonCComments,
     JsonCComments,
 } from './json-c-comments'
-import { client as eyecrest } from 'docs-website/src/lib/eyecrest'
+import { client as searchApi } from 'docs-website/src/lib/search-api'
 
 export function gitBlobSha(
     content: string | Buffer,
@@ -314,7 +314,7 @@ export async function syncSite({
         return micromatch.isMatch(pathForMatching, ignorePatterns)
     }
 
-    // Files to sync to Eyecrest
+    // Files to sync to search API
     let allFilesToSync: SearchApiFile[] = []
     let deletedFilenames: string[] = []
     const cacheTagsToInvalidate = [] as string[]
@@ -753,7 +753,7 @@ export async function syncSite({
 
         const structuredData = data.structuredData
 
-        // Create Eyecrest file for this page
+        // Create search API file for this page
         if (asset.markdown) {
             filesToSync.push({
                 filename: asset.githubPath,
@@ -899,7 +899,7 @@ export async function syncSite({
                 cacheTagsToInvalidate.push(pageCacheTag)
             }
 
-            // Deletion from Eyecrest will be handled after collecting all deleted files
+            // Deletion from search API will be handled after collecting all deleted files
 
             // Delete from database
             const deleteResult = await prisma.markdownPage.deleteMany({
@@ -1003,48 +1003,48 @@ export async function syncSite({
     }
 
     // Ensure dataset exists before syncing files
-    console.log(`Ensuring dataset ${branchId} exists in Eyecrest...`)
+    console.log(`Ensuring dataset ${branchId} exists in search API...`)
     try {
-        await eyecrest.upsertDataset({
+        await searchApi.upsertDataset({
             datasetId: branchId, // Use branchId as dataset ID
         })
         console.log('Dataset created/updated successfully.')
     } catch (error) {
-        console.error('Error creating/updating dataset in Eyecrest:', error)
-        notifyError(error, 'eyecrest dataset creation')
+        console.error('Error creating/updating dataset in search API:', error)
+        notifyError(error, 'search API dataset creation')
     }
 
-    // Upload all files to Eyecrest
+    // Upload all files to search API
     if (allFilesToSync.length > 0) {
-        console.log(`Syncing ${allFilesToSync.length} files to Eyecrest...`)
+        console.log(`Syncing ${allFilesToSync.length} files to search API...`)
         try {
-            await eyecrest.upsertFiles({
+            await searchApi.upsertFiles({
                 datasetId: branchId, // Use branchId as dataset ID
                 files: allFilesToSync,
             })
-            console.log('Files synced to Eyecrest successfully.')
+            console.log('Files synced to search API successfully.')
         } catch (error) {
-            console.error('Error syncing files to Eyecrest:', error)
-            notifyError(error, 'eyecrest sync')
+            console.error('Error syncing files to search API:', error)
+            notifyError(error, 'search API sync')
         }
     } else {
-        console.log('No files to sync to Eyecrest.')
+        console.log('No files to sync to search API.')
     }
 
-    // Delete files from Eyecrest
+    // Delete files from search API
     if (deletedFilenames.length > 0) {
         console.log(
-            `Deleting ${deletedFilenames.length} files from Eyecrest...`,
+            `Deleting ${deletedFilenames.length} files from search API...`,
         )
         try {
-            await eyecrest.deleteFiles({
+            await searchApi.deleteFiles({
                 datasetId: branchId, // Use branchId as dataset ID
                 filenames: deletedFilenames,
             })
-            console.log('Files deleted from Eyecrest successfully.')
+            console.log('Files deleted from search API successfully.')
         } catch (error) {
-            console.error('Error deleting files from Eyecrest:', error)
-            notifyError(error, 'eyecrest delete')
+            console.error('Error deleting files from search API:', error)
+            notifyError(error, 'search API delete')
         }
     }
 
@@ -1053,7 +1053,7 @@ export async function syncSite({
         await cloudflareClient.invalidateCacheTags(cacheTagsToInvalidate)
     }
 
-    // No cleanup needed for Eyecrest as it handles file updates automatically
+    // No cleanup needed for search API as it handles file updates automatically
 
     console.log('Import script finished.')
 }
@@ -1477,7 +1477,7 @@ export async function deletePages({
         `Deleting pages with slugs: ${slugs.join(', ')} from branch ${branchId} in site ${siteId}`,
     )
 
-    // Collect all githubPaths to delete from Eyecrest
+    // Collect all githubPaths to delete from search API
     const filesToDelete: string[] = []
 
     // For each slug, find all pages that have that slug or start with that slug + "/"
@@ -1510,7 +1510,7 @@ export async function deletePages({
             `Found ${pagesToDelete.length} pages to delete for slug ${rootSlug}`,
         )
 
-        // Collect githubPaths for Eyecrest deletion
+        // Collect githubPaths for search API deletion
         for (const page of pagesToDelete) {
             filesToDelete.push(page.githubPath)
         }
@@ -1532,27 +1532,27 @@ export async function deletePages({
         )
     }
 
-    // Delete files from Eyecrest
+    // Delete files from search API
     if (filesToDelete.length > 0) {
-        console.log(`Deleting ${filesToDelete.length} files from Eyecrest...`)
+        console.log(`Deleting ${filesToDelete.length} files from search API...`)
         try {
-            await eyecrest.deleteFiles({
+            await searchApi.deleteFiles({
                 datasetId: branchId, // Use branchId as dataset ID
                 filenames: filesToDelete,
             })
-            console.log('Files deleted from Eyecrest successfully.')
+            console.log('Files deleted from search API successfully.')
         } catch (error) {
-            console.error('Error deleting files from Eyecrest:', error)
-            notifyError(error, 'eyecrest delete')
+            console.error('Error deleting files from search API:', error)
+            notifyError(error, 'search API delete')
         }
     }
 
     console.log('Page deletion completed')
 }
 
-// processForTrieve function removed - now using Eyecrest SDK directly
+// processForTrieve function removed - now using search API SDK directly
 
-// createTrieveDataset function removed - now using branchId as dataset ID in Eyecrest
+// createTrieveDataset function removed - now using branchId as dataset ID in search API
 
 export async function publicFileMapUrl({
     owner,

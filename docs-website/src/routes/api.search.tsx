@@ -1,7 +1,7 @@
 import type { Route } from './+types/api.search'
 
 import { prisma } from 'db'
-import { searchDocsWithEyecrest } from '../lib/eyecrest-search'
+import { searchDocsWithSearchApi } from '../lib/search-api-search'
 
 export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url)
@@ -38,7 +38,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     const defaultLanguage = site?.defaultLocale
     const languages = site?.locales?.map((x) => x.locale)
 
-    const results = await searchDocsWithEyecrest({
+    const results = await searchDocsWithSearchApi({
         branchId: branchId,
         query,
     })
