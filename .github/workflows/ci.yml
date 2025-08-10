@@ -19,7 +19,10 @@ jobs:
     ci:
         strategy:
             matrix:
-                package: [website, docs-website]
+                command:
+                    - pnpm --filter website deployment
+                    - pnpm --filter docs-website deployment
+                    - PUBLIC_BASE_PATH=/docs pnpm --filter docs-website deployment
         env:
             DOPPLER_TOKEN: ${{ github.ref_name == 'main' && secrets.DOPPLER_PRODUCTION_TOKEN ||  secrets.DOPPLER_PREVIEW_TOKEN }}
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -45,7 +48,7 @@ jobs:
             - uses: superfly/flyctl-actions/setup-flyctl@master
             - run: pnpm install --frozen-lockfile=false
             - run: pnpm bootstrap
-            - run: pnpm --filter ${{ matrix.package }} deployment
+            - run: ${{ matrix.command }}
             # - uses: remorses/buildmedic@opencode
             #   env:
             #       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

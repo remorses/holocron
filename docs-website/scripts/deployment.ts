@@ -16,6 +16,12 @@ async function main() {
     }
     const env = await getDopplerEnv({ stage, project: 'website' })
     env.FORCE_COLOR = '1'
+    
+    const basePath = process.env.PUBLIC_BASE_PATH || ''
+    if (basePath) {
+        env.PUBLIC_BASE_PATH = basePath
+    }
+    
     await shell(`pnpm react-router typegen`)
     await Promise.all([
         shell(`pnpm build`, {
@@ -27,8 +33,12 @@ async function main() {
     ])
 
     const port = 7777
+    
+    const appNameSuffix = basePath ? `-base-path-${basePath.replace(/^\//, '').replace(/\//g, '-')}` : ''
+    const appName = `fumabase-docs${stage === 'production' ? '-prod' : `-${stage}`}${appNameSuffix}`
+    
     await deployFly({
-        appName: 'fumabase-docs-prod',
+        appName,
         port,
         buildRemotely: true,
         dockerfile: 'Dockerfile',
