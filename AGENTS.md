@@ -26,7 +26,7 @@ instead of adding packages directly in package.json use `pnpm install package` i
 
 - always add the {} block body in arrow functions: arrow functions should never be written as `onClick={(x) => setState('')}`. NEVER. Instead you should ALWAYS write `onClick={() => {setState('')}}`. This way it's easy to add new statements in the arrow function without refactoring it.
 
-- minimize usless comments: do not add useless comments if the code is self descriptive. only add comments if requested or if this was a change that i asked for, meaning it is not obvious code and needs some inline documentation. if a comment is required because the part of the code was result of difficult back and forth with me, keep it very short.
+- minimize useless comments: do not add useless comments if the code is self descriptive. only add comments if requested or if this was a change that i asked for, meaning it is not obvious code and needs some inline documentation. if a comment is required because the part of the code was result of difficult back and forth with me, keep it very short.
 
 - ALWAYS add all information encapsulated in my prompt to comments: when my prompt is super detailed and in depth all this information should be added to comments in your code. this is because if the prompt is very detailed it must be fruit of a lot of research, all this information would be lost if you don't put it in the code. next LLMs calls would misinterpret the code and miss context.
 
@@ -38,7 +38,7 @@ instead of adding packages directly in package.json use `pnpm install package` i
 
 - do not use any: you must NEVER use any, if you find yourself using `as any` or `:any` use the @think tool to think hard if there are types you can import instead. do even a search in the project for what the type could be. any should be used as a last resort.
 
-- NEVER do `(x as any).field` or `'field' in x` before trying to accessing the property and checking if the code compiles first. the code probably doesn't need any or the in check. even if it does not, use @think tool first! Before adding (x as any).something ALWAYS read the .d.ts
+- NEVER do `(x as any).field` or `'field' in x` before checking if the code compiles first without it. the code probably doesn't need any or the in check. even if it does not compile, use think tool first! Before adding (x as any).something ALWAYS read the .d.ts to understand the types
 
 - after any change to typescript code ALWAYS run the `pnpm typecheck` script of that package, or if there is no typecheck script run `pnpm tsc` yourself
 
