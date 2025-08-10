@@ -45,7 +45,7 @@ async function main() {
         minInstances: 1,
         forceHttps: false,
         maxInstances: 3,
-        healthCheckPath: '/api/health',
+        healthCheckPath: `${basePath}/api/health`,
         memorySize: '1gb',
         machineType: 'shared-cpu-2x',
         depot: true,
