@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-01-10 16:45
+
+- **Fixed dataset not found error** - Check if table exists before attempting delete operations
+- **Improved deleteFiles robustness** - Return early if table doesn't exist instead of creating empty table
+- **Fixed deleteDataset** - Skip deletion gracefully when table doesn't exist in LanceDB
+
 ## 2025-01-10 15:30
 
 - **Added proper TypeScript types** - Created `SectionRecord` and `SectionWithScore` interfaces to replace `any[]` types

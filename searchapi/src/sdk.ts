@@ -381,9 +381,19 @@ export class SearchClient implements DatasetsInterface {
         const { datasetId, filenames } = params
         const tableName = this.sanitizeTableName(datasetId)
 
-        // Get or create table
-        const table = await this.getOrCreateTable(tableName)
+        // Check if table exists first
+        const db = await this.getConnection()
+        const tables = await db.tableNames()
+        
+        if (!tables.includes(tableName)) {
+            // Table doesn't exist, nothing to delete
+            console.log(`[deleteFiles] Table ${tableName} doesn't exist, skipping deletion`)
+            return
+        }
 
+        // Table exists, open it and delete files
+        const table = await db.openTable(tableName)
+        
         // Delete all rows (files and sections) for the given filenames
         for (const filename of filenames) {
             await table.delete(`filename = '${filename}'`)
@@ -396,11 +406,20 @@ export class SearchClient implements DatasetsInterface {
         const { datasetId } = params
         const tableName = this.sanitizeTableName(datasetId)
 
-        // Get or create table
-        const table = await this.getOrCreateTable(tableName)
+        // Check if table exists first
+        const db = await this.getConnection()
+        const tables = await db.tableNames()
+        
+        if (!tables.includes(tableName)) {
+            // Table doesn't exist, nothing to delete
+            console.log(`[deleteDataset] Table ${tableName} doesn't exist, skipping deletion`)
+            // Still clear caches just in case
+            this.tableCache.delete(tableName)
+            this.ftsIndexCache.delete(tableName)
+            return
+        }
 
         // Drop the entire table
-        const db = await this.getConnection()
         await db.dropTable(tableName)
 
         // Clear caches for this table
