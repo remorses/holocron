@@ -74,7 +74,6 @@
     "domhandler": "^5.0.3",
     "domutils": "^3.2.2",
     "durablefetch": "^0.1.0",
-    "eyecrest": "workspace:*",
     "fast-json-stable-stringify": "^2.1.0",
     "flat-cache": "^6.1.10",
     "front-matter": "^4.0.2",
