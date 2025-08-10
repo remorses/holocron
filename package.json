@@ -7,7 +7,7 @@
         "bootstrap": "pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm ",
         "watch": "pnpm -r watch",
         "typecheck": "pnpm -r --parallel --stream typecheck",
-        "ci": "pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm && pnpm --filter './*' build",
+        "ci": "pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm && pnpm --filter '!website' --filter '!docs-website' --filter './*' build",
         "release": "pnpm build && changeset"
     },
     "devDependencies": {
