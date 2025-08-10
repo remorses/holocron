@@ -112,10 +112,7 @@ import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import { TruncatedText } from './truncated-text'
 import { MessagePartRenderer } from 'docs-website/src/components/docs-chat'
 import { useSearchParams } from 'react-router'
-
-function keyForDocsJson({ chatId }) {
-    return `fumabase.jsonc-${chatId}`
-}
+import { keyForDocsJsonFormLocalStorage } from '../lib/constants'
 
 const setDocsJsonState = ({
     values,
@@ -150,7 +147,7 @@ const setDocsJsonState = ({
         ...newChanges,
     }
     useWebsiteState.setState({ filesInDraft: newFilesInDraft })
-    localStorage.setItem(keyForDocsJson({ chatId }), newJson)
+    localStorage.setItem(keyForDocsJsonFormLocalStorage({ chatId }), newJson)
     docsRpcClient.setDocsState({
         // revalidate: true, // TODO
         state: { filesInDraft: newChanges },
@@ -161,7 +158,7 @@ function getCurrentDocsJson({ chatId, siteBranch }) {
     // First check localStorage
     const persistedValues =
         typeof localStorage !== 'undefined'
-            ? localStorage.getItem(keyForDocsJson({ chatId }))
+            ? localStorage.getItem(keyForDocsJsonFormLocalStorage({ chatId }))
             : undefined
 
     // Then check filesInDraft

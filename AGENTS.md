@@ -243,37 +243,29 @@ The only case where you should not use href is for urls outside of current app o
 
 > if you cannot use `href` simply because the route you would like to link to does not exist you should do the following: list all the files in the src/routes folder first, to see if it already exists but not with the name you would expect. If still you can't find one, create a simple placeholder react-router route with a simple Page component and a simple loader that does what you would expect. do not write too much code. you can improve on it in later messages.
 
-## showing spinner while loader does work and then redirect
+## showing spinner while action does work and then redirect
 
-sometimes it's useful to do work in a loader that then redirects the user to an url. For example imagine a button to open a PR on GitHub, this action is very slow, you cannot do the wor directly in the loader without showing any page comopnent because the user would not see any feedback. Instead you can use this pattern: do the work in the loader in a promise and return this promise in the loader data. Then the page component will do the redirect when the promise completes:
+For routes that do slow operations like creating PRs and then redirect, show a spinner while submitting to an action that redirects. The component submits data on mount and shows loading state
+
+This is a useful pattern to implement slow operations that need to redirect at the end. The buttons instead of doing the operation themselves redirect to a route that does the work via an action.
 
 ```tsx
-export async function loader({
-    request,
-    params: { chatId },
-}: Route.LoaderArgs) {
-    const { userId } = await getSession({ request })
-
-    const prPromise = createPrSuggestionForChat({
-        chatId,
-        userId,
-    })
-    return { prPromise }
+export async function action({ request, params: { id } }: Route.ActionArgs) {
+    const formData = await request.formData()
+    const result = await doSlowWork(id, formData.get('data'))
+    return redirect(result.url)
 }
 
-export default function Page({ loaderData }: Route.ComponentProps) {
+export default function Page({ params }: Route.ComponentProps) {
+    const submit = useSubmit()
     useEffect(() => {
-        loaderData.prPromise.then(({ prUrl }) => {
-            console.log(`navigating to ${prUrl}`)
-            window.location.href = prUrl
-        })
-    }, [loaderData.prPromise])
-    return (
-        <div className='flex h-screen flex-col items-center justify-center gap-4'>
-            <Loader2Icon className='h-6 w-6 animate-spin' />
-            <p>pushing files to GitHub PR</p>
-        </div>
-    )
+        const data = localStorage.getItem(`data-${params.id}`)
+        const formData = new FormData()
+        formData.append('data', data || '')
+        submit(formData, { method: 'post' })
+    }, [params.id, submit])
+
+    return <Loader2Icon className='h-6 w-6 animate-spin' />
 }
 ```
 

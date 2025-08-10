@@ -1,7 +1,7 @@
 import { Prisma, prisma } from 'db'
-import { Loader2, Loader2Icon } from 'lucide-react'
-import { use, useEffect } from 'react'
-import { useNavigate } from 'react-router'
+import { Loader2Icon } from 'lucide-react'
+import { useEffect } from 'react'
+import { redirect, useSubmit } from 'react-router'
 import { getSession } from '../lib/better-auth'
 import type { FileUpdate } from 'docs-website/src/lib/edit-tool'
 import { env } from '../lib/env'
@@ -14,13 +14,16 @@ import {
 import { applyJsonCComments, JsonCComments } from '../lib/json-c-comments'
 import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId.create-pr'
 import { FilesInDraft } from 'docs-website/src/lib/docs-state'
+import { keyForDocsJsonFormLocalStorage } from '../lib/constants'
 
 async function createPrSuggestionForChat({
     chatId,
     userId,
+    fumabaseJsonc,
 }: {
     chatId: string
     userId: string
+    fumabaseJsonc?: string
 }): Promise<{ prUrl: string; action: 'created' | 'pushed' }> {
     const [chat] = await Promise.all([
         prisma.chat.findFirst({
@@ -42,8 +45,33 @@ async function createPrSuggestionForChat({
         }),
     ])
 
-    const filesInDraft = chat?.filesInDraft as FilesInDraft
+    let filesInDraft = chat?.filesInDraft as FilesInDraft
     const prBranchRow = chat?.branch
+
+    // If fumabaseJsonc is provided from persisted form data, update it
+    if (fumabaseJsonc && filesInDraft && prBranchRow) {
+        const site = prBranchRow.site
+        const githubFolder = site.githubFolder || ''
+        const githubPath = githubFolder
+            ? `${githubFolder}/fumabase.jsonc`
+            : 'fumabase.jsonc'
+
+        filesInDraft = {
+            ...filesInDraft,
+            [githubPath]: {
+                ...(filesInDraft[githubPath] || {}),
+                content: fumabaseJsonc,
+                githubPath,
+            },
+        }
+        // Update the chat with the new filesInDraft
+        await prisma.chat.update({
+            where: { chatId, userId },
+            data: {
+                filesInDraft: filesInDraft as Prisma.InputJsonValue,
+            },
+        })
+    }
 
     if (!prBranchRow) {
         throw new AppError('Branch not found or access denied')
@@ -135,35 +163,42 @@ async function createPrSuggestionForChat({
     return { prUrl: url, action: 'created' }
 }
 
-export async function loader({
+export async function action({
     request,
     params: { chatId },
-}: Route.LoaderArgs): Promise<{
-    prPromise: Promise<{ prUrl: string; action: 'created' | 'pushed' }>
-}> {
+}: Route.ActionArgs) {
     const { userId } = await getSession({ request })
+    const formData = await request.formData()
+    const fumabaseJsonc = formData.get('fumabaseJsonc') as string | undefined
 
-    const chat = await prisma.chat.findUnique({
-        where: { chatId, userId },
-        select: { branchId: true, filesInDraft: true, prNumber: true },
-    })
-    if (!chat) {
-        throw new Error('Chat not found')
-    }
-    const prPromise = createPrSuggestionForChat({
+    const { prUrl } = await createPrSuggestionForChat({
         chatId,
         userId,
+        fumabaseJsonc,
     })
-    return { prPromise }
+
+    return redirect(prUrl)
 }
 
-export default function Page({ loaderData }: Route.ComponentProps) {
+export default function Page({ params }: Route.ComponentProps) {
+    const submit = useSubmit()
+    const { chatId } = params
+
     useEffect(() => {
-        loaderData.prPromise.then(({ prUrl }) => {
-            console.log(`navigating to ${prUrl}`)
-            window.location.href = prUrl
-        })
-    }, [loaderData.prPromise])
+        // Get persisted fumabase.jsonc from localStorage
+        const persistedFumabase = localStorage.getItem(
+            keyForDocsJsonFormLocalStorage({ chatId }),
+        )
+
+        // Submit form with fumabase.jsonc data
+        const formData = new FormData()
+        if (persistedFumabase) {
+            formData.append('fumabaseJsonc', persistedFumabase)
+        }
+
+        submit(formData, { method: 'post' })
+    }, [chatId, submit])
+
     return (
         <div className='flex h-screen flex-col items-center justify-center gap-4'>
             <Loader2Icon className='h-6 w-6 animate-spin' />
