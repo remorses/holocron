@@ -256,7 +256,7 @@ model MarkdownPage {
   branchId     String
   branch       SiteBranch @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
 
-  content      MarkdownBlob? @relation(fields: [githubSha], references: [githubSha], onDelete: Cascade)
+  content      MarkdownBlob? @relation(fields: [githubSha], references: [githubSha], onDelete: SetNull)
   createdAt    DateTime   @default(now())
 
   lastEditedAt DateTime?  @updatedAt
