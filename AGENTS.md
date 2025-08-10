@@ -6,6 +6,8 @@ NEVER run command with & at the end to run them in the background. This is leaky
 
 NEVER commit yourself unless asked to do so. I will commit the code myself.
 
+NEVER add comments unless I tell you
+
 # package manager: pnpm with workspace
 
 This project uses pnpm workspaces to manage dependencies. Important scripts are in the root package.json or various packages package.json
