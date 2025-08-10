@@ -1,5 +1,6 @@
 import { ComponentProps } from 'react'
 import { Link, useNavigate, useSearchParams, To, NavigateOptions } from 'react-router'
+import { withBasePath } from 'docs-website/src/lib/utils'
 
 export function PreservedSearchLink({ to, ...props }: ComponentProps<typeof Link>) {
     const [searchParams] = useSearchParams()
@@ -70,9 +71,13 @@ export let globalNavigate: GlobalNavigateFunction = (to, options) => {
     const currentSearch = window.location.search
     if (currentSearch && typeof to === 'string' && !to.includes('?')) {
         const separator = '?'
-        window.location.href = `${to}${separator}${currentSearch.slice(1)}`
+        // Apply basePath to the URL if it's a relative path
+        const url = to.startsWith('/') ? withBasePath(to) : to
+        window.location.href = `${url}${separator}${currentSearch.slice(1)}`
     } else {
-        window.location.href = to
+        // Apply basePath to the URL if it's a relative path
+        const url = typeof to === 'string' && to.startsWith('/') ? withBasePath(to) : to
+        window.location.href = url
     }
 }
 

@@ -541,3 +541,10 @@ Use zod to create schemas and types that needs to be used for tool inputs or Spi
 
 When you need to create a complex type that comes from Prisma table do not create a new schema that tries to recreate the Prisma table structure, instead just use `z.any() as ZodType<PrismaTable>)` to get type safety but leave any in the schema. This gets most of the benefits of Zod without having to define a new Zod schema that can easily go out of sync.
 ```
+
+
+## tailwind v4
+
+this project uses tailwind v4. this new tailwind version does not use tailwind.config.js. instead it does all configuration in css files.
+
+read https://tailwindcss.com/docs/upgrade-guide to understand the updates landed in tailwind v4 if you do not have tailwind v4 in your training context. Ignore the parts that talk about running the upgrade cli. this project already uses tailwind v4 so no need to upgrade anything.

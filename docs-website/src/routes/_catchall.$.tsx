@@ -25,7 +25,7 @@ import { getFilesForSource, removeGithubFolder } from '../lib/source.server'
 import { ClientPage, ClientErrorBoundary } from './_catchall-$-client'
 import { getCacheTagForPage } from 'docs-website/src/lib/cache-tags'
 import { FilesInDraft } from '../lib/docs-state'
-import { getDocsJson } from '../lib/utils'
+import { getDocsJson, withBasePath } from '../lib/utils'
 const openapiPath = `/api-reference`
 
 type MediaAssetProp = PageMediaAsset & { asset?: MediaAsset }
@@ -87,10 +87,10 @@ export function meta({ data, matches }: Route.MetaArgs): any {
             return undefined
         }
         if (typeof docsJson.favicon === 'string') {
-            return docsJson.favicon
+            return withBasePath(docsJson.favicon)
         }
         if (docsJson.favicon?.light) {
-            return docsJson.favicon.light
+            return withBasePath(docsJson.favicon.light)
         }
         return undefined
     })()
@@ -100,10 +100,10 @@ export function meta({ data, matches }: Route.MetaArgs): any {
             return undefined
         }
         if (typeof docsJson.favicon === 'string') {
-            return docsJson.favicon
+            return withBasePath(docsJson.favicon)
         }
         if (docsJson.favicon?.dark) {
-            return docsJson.favicon.dark
+            return withBasePath(docsJson.favicon.dark)
         }
         return undefined
     })()
