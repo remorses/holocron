@@ -19,7 +19,7 @@ This is the intro section.
 Here's how to get started.`;
 
     const result = parseMarkdownIntoSections(content);
-    
+
     expect(result.sections).toMatchInlineSnapshot(`
       [
         {
@@ -33,7 +33,7 @@ Here's how to get started.`;
           "level": 0,
           "orderIndex": 0,
           "startLine": 1,
-          "weight": 1.3,
+          "weight": 2,
         },
         {
           "content": "# Introduction
@@ -43,6 +43,7 @@ Here's how to get started.`;
           "level": 1,
           "orderIndex": 1,
           "startLine": 8,
+          "weight": 1.2,
         },
         {
           "content": "## Getting Started
@@ -52,6 +53,7 @@ Here's how to get started.`;
           "level": 2,
           "orderIndex": 2,
           "startLine": 12,
+          "weight": 1.1,
         },
       ]
     `);
@@ -92,6 +94,7 @@ Set up your config file.`;
           "level": 1,
           "orderIndex": 0,
           "startLine": 1,
+          "weight": 1.2,
         },
         {
           "content": "## Getting Started
@@ -104,6 +107,7 @@ Set up your config file.`;
           "level": 2,
           "orderIndex": 1,
           "startLine": 5,
+          "weight": 1.1,
         },
         {
           "content": "### Installation
@@ -117,6 +121,7 @@ Set up your config file.`;
           "level": 3,
           "orderIndex": 2,
           "startLine": 12,
+          "weight": 1.05,
         },
         {
           "content": "## Configuration
@@ -126,6 +131,7 @@ Set up your config file.`;
           "level": 2,
           "orderIndex": 3,
           "startLine": 20,
+          "weight": 1.1,
         },
       ]
     `);
@@ -159,7 +165,7 @@ And some **formatting**.`;
 
   test('handles empty content', () => {
     const result = parseMarkdownIntoSections('');
-    
+
     expect(result.sections).toMatchInlineSnapshot(`[]`);
   });
 
@@ -198,6 +204,7 @@ All responses are in JSON format.`;
           "level": 1,
           "orderIndex": 0,
           "startLine": 1,
+          "weight": 1.2,
         },
         {
           "content": "## Endpoints
@@ -210,6 +217,7 @@ All responses are in JSON format.`;
           "level": 2,
           "orderIndex": 1,
           "startLine": 5,
+          "weight": 1.1,
         },
         {
           "content": "### Code Example
@@ -222,6 +230,7 @@ All responses are in JSON format.`;
           "level": 3,
           "orderIndex": 2,
           "startLine": 12,
+          "weight": 1.05,
         },
         {
           "content": "## Response Format
@@ -231,6 +240,7 @@ All responses are in JSON format.`;
           "level": 2,
           "orderIndex": 3,
           "startLine": 19,
+          "weight": 1.1,
         },
       ]
     `);
@@ -260,7 +270,7 @@ Content 4`;
     expect(result.sections[1].level).toBe(2);
     expect(result.sections[2].level).toBe(3);
     expect(result.sections[3].level).toBe(2);
-    
+
     expect(result.sections.map(s => s.orderIndex)).toEqual([0, 1, 2, 3]);
   });
 
@@ -296,6 +306,7 @@ Some important information:
           "level": 1,
           "orderIndex": 0,
           "startLine": 1,
+          "weight": 1.2,
         },
         {
           "content": "## Todo List
@@ -310,6 +321,7 @@ Some important information:
           "level": 2,
           "orderIndex": 1,
           "startLine": 8,
+          "weight": 1.1,
         },
       ]
     `);
@@ -329,10 +341,10 @@ This MDX file demonstrates how sections are split with JSX content.
 
 <Card className="mb-4">
   <h2>Interactive Card</h2>
-  
+
   <p>Content inside JSX components with newlines.</p>
-  
-  <Button 
+
+  <Button
     variant="primary"
     onClick={() => console.log('clicked')}
   >
@@ -350,7 +362,7 @@ Here's a React component within MDX:
     { x: 2, y: 4 },
     { x: 3, y: 6 }
   ]}
-  
+
   options={{
     title: "Sample Chart",
     showGrid: true
@@ -371,7 +383,7 @@ function Component() {
   return (
     <div>
       <h1>Hello</h1>
-      
+
       <p>World</p>
     </div>
   )
@@ -398,7 +410,7 @@ MDX allows mixing markdown and JSX seamlessly.`;
           "level": 0,
           "orderIndex": 0,
           "startLine": 1,
-          "weight": 1.3,
+          "weight": 2,
         },
         {
           "content": "import { Button, Card } from '@/components/ui'
@@ -415,10 +427,10 @@ MDX allows mixing markdown and JSX seamlessly.`;
 
       <Card className="mb-4">
         <h2>Interactive Card</h2>
-        
+
         <p>Content inside JSX components with newlines.</p>
-        
-        <Button 
+
+        <Button
           variant="primary"
           onClick={() => console.log('clicked')}
         >
@@ -429,6 +441,7 @@ MDX allows mixing markdown and JSX seamlessly.`;
           "level": 1,
           "orderIndex": 2,
           "startLine": 8,
+          "weight": 1.2,
         },
         {
           "content": "## Code Examples
@@ -441,7 +454,7 @@ MDX allows mixing markdown and JSX seamlessly.`;
           { x: 2, y: 4 },
           { x: 3, y: 6 }
         ]}
-        
+
         options={{
           title: "Sample Chart",
           showGrid: true
@@ -451,6 +464,7 @@ MDX allows mixing markdown and JSX seamlessly.`;
           "level": 2,
           "orderIndex": 3,
           "startLine": 25,
+          "weight": 1.1,
         },
         {
           "content": "### Inline JSX
@@ -460,6 +474,7 @@ MDX allows mixing markdown and JSX seamlessly.`;
           "level": 3,
           "orderIndex": 4,
           "startLine": 42,
+          "weight": 1.05,
         },
         {
           "content": "## Mixed Content
@@ -472,7 +487,7 @@ MDX allows mixing markdown and JSX seamlessly.`;
         return (
           <div>
             <h1>Hello</h1>
-            
+
             <p>World</p>
           </div>
         )
@@ -486,6 +501,7 @@ MDX allows mixing markdown and JSX seamlessly.`;
           "level": 2,
           "orderIndex": 5,
           "startLine": 46,
+          "weight": 1.1,
         },
         {
           "content": "## Conclusion
@@ -495,6 +511,7 @@ MDX allows mixing markdown and JSX seamlessly.`;
           "level": 2,
           "orderIndex": 6,
           "startLine": 67,
+          "weight": 1.1,
         },
       ]
     `);
@@ -516,7 +533,7 @@ MDX allows mixing markdown and JSX seamlessly.`;
     const frontmatterSection = result.sections.find(s => s.headingSlug === "");
     expect(frontmatterSection).toBeDefined();
     expect(frontmatterSection?.content).toContain('title: Advanced MDX Example');
-    expect(frontmatterSection?.weight).toBe(1.3);
+    expect(frontmatterSection?.weight).toMatchInlineSnapshot(2`2`);
 
     // Imports become part of the Introduction section
     const introSection = result.sections.find(s => s.headingSlug === "introduction");

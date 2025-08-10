@@ -60,7 +60,7 @@ Even more rocket content here.
         expect(searchResults.results).toMatchInlineSnapshot(`
           [
             {
-              "cleanedSnippet": "",
+              "cleanedSnippet": "Test Page About Rockets This page explains rocket science",
               "filename": "page-with-frontmatter.md",
               "metadata": undefined,
               "score": 2,
@@ -268,7 +268,7 @@ More content about weights.
         expect(searchResults.results).toMatchInlineSnapshot(`
           [
             {
-              "cleanedSnippet": "",
+              "cleanedSnippet": "Important Document About Weights Test Author",
               "filename": "with-title.md",
               "metadata": undefined,
               "score": 2,
@@ -292,7 +292,7 @@ More content about weights.
               "startLine": 6,
             },
             {
-              "cleanedSnippet": "",
+              "cleanedSnippet": "Another Author weights testing",
               "filename": "without-title.md",
               "metadata": undefined,
               "score": 2,

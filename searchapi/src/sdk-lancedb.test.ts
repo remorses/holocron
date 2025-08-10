@@ -358,4 +358,47 @@ Please observe API rate limits.
         const size2 = await client.getDatasetSize({ datasetId })
         expect(size2.uploadedContentSizeBytes).toBe(size1.uploadedContentSizeBytes)
     })
+
+    test('should replace sections when file changes', async () => {
+        await client.upsertFiles({
+            datasetId,
+            files: [{
+                filename: 'dup.md',
+                content: `# Doc\n\n## First\n\nalpha\n\n## Second\n\nbeta`,
+            }],
+        })
+
+        let searchResult = await client.searchSections({
+            datasetId,
+            query: 'alpha',
+            page: 0,
+            perPage: 10,
+        })
+        expect(searchResult.results.some(r => r.filename === 'dup.md')).toBe(true)
+
+        await client.upsertFiles({
+            datasetId,
+            files: [{
+                filename: 'dup.md',
+                content: `# Doc\n\n## Second\n\nbeta updated`,
+            }],
+        })
+
+        searchResult = await client.searchSections({
+            datasetId,
+            query: 'alpha',
+            page: 0,
+            perPage: 10,
+        })
+        expect(searchResult.results.some(r => r.filename === 'dup.md')).toBe(false)
+
+        const betaResults = await client.searchSections({
+            datasetId,
+            query: 'beta',
+            page: 0,
+            perPage: 10,
+        })
+        const dupSections = betaResults.results.filter(r => r.filename === 'dup.md')
+        expect(dupSections).toHaveLength(1)
+    })
 })

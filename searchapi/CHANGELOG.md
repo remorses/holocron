@@ -1,5 +1,9 @@
 # Changelog
 
+## 2025-08-10 11:55
+
+- delete old file rows before inserting updates to prevent duplicate sections
+
 ## 2025-08-04 20:17
 
 - **Enhanced search ranking with weight system** - Implemented custom weight-based ranking for search results

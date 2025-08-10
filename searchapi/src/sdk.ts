@@ -242,87 +242,50 @@ export class SearchClient implements DatasetsInterface {
         }
 
         // Create or update table
-        if (allRows.length > 0) {
-            if (!table) {
-                // Create new table with all rows
+        if (allRows.length === 0) {
+            console.log('[upsert] No files to process after SHA check')
+        } else if (!table) {
+            // Create new table with all rows
+            try {
+                table = await db.createTable(tableName, allRows)
+                // Cache the new table
+                this.tableCache.set(tableName, table)
+
+                console.log('[upsert] Creating btree index on filename column...')
                 try {
-                    table = await db.createTable(tableName, allRows)
-                    // Cache the new table
-                    this.tableCache.set(tableName, table)
-
-                    // Create a btree index on filename for efficient mergeInsert operations
-                    console.log(`[upsert] Creating btree index on filename column...`)
-                    try {
-                        await table.createIndex('filename', {
-                            config: lancedb.Index.btree(),
-                            replace: true,
-                        })
-                    } catch (indexError) {
-                        console.warn('[upsert] Failed to create filename index:', indexError)
-                    }
-
-                    // Delay FTS index creation - will be created later for better bulk performance
-                    console.log(`[upsert] Delaying FTS index creation for bulk upload performance`)
-                } catch (createError: any) {
-                    // Table might already exist due to race condition or eventual consistency
-                    if (createError.message?.includes('already exists')) {
-                        console.log(`[upsert] Table already exists, opening it...`)
-                        table = await db.openTable(tableName)
-                        // Cache the opened table
-                        this.tableCache.set(tableName, table)
-                        // Add the rows to existing table
-                        await table.add(allRows, { mode: 'append' })
-                    } else {
-                        throw createError
-                    }
+                    await table.createIndex('filename', {
+                        config: lancedb.Index.btree(),
+                        replace: true,
+                    })
+                } catch (indexError) {
+                    console.warn('[upsert] Failed to create filename index:', indexError)
                 }
-            } else {
-                // Use mergeInsert for much better performance (single operation instead of delete + add)
-                console.log(`[upsert] Using mergeInsert for ${allRows.length} rows...`)
 
-                try {
-                    await table
-                        .mergeInsert('filename')
-                        .whenMatchedUpdateAll()
-                        .whenNotMatchedInsertAll()
-                        .execute(allRows)
-                } catch (mergeError: any) {
-                    // Check if error is due to missing index on filename
-                    if (mergeError.message?.includes('Please create an index on the join column filename')) {
-                        console.log('[upsert] Creating btree index on filename column for mergeInsert...')
-                        try {
-                            await table.createIndex('filename', {
-                                config: lancedb.Index.btree(),
-                                replace: true,
-                            })
-                            // Retry mergeInsert after creating index
-                            await table
-                                .mergeInsert('filename')
-                                .whenMatchedUpdateAll()
-                                .whenNotMatchedInsertAll()
-                                .execute(allRows)
-                        } catch (retryError) {
-                            // If still fails, use fallback
-                            console.warn('[upsert] mergeInsert failed after index creation, falling back to delete + add:', retryError)
-                            const filenames = shaComputations.map(sc => sc.file.filename)
-                            if (filenames.length > 0) {
-                                const deleteQuery = filenames.map(f => `filename = '${f.replace(/'/g, "''")}'`).join(' OR ')
-                                await table.delete(deleteQuery)
-                            }
-                            await table.add(allRows, { mode: 'append' })
-                        }
-                    } else {
-                        // Other error, use fallback
-                        console.warn('[upsert] mergeInsert failed, falling back to delete + add:', mergeError)
-                        const filenames = shaComputations.map(sc => sc.file.filename)
-                        if (filenames.length > 0) {
-                            const deleteQuery = filenames.map(f => `filename = '${f.replace(/'/g, "''")}'`).join(' OR ')
-                            await table.delete(deleteQuery)
-                        }
-                        await table.add(allRows, { mode: 'append' })
-                    }
+                // Delay FTS index creation - will be created later for better bulk performance
+                console.log('[upsert] Delaying FTS index creation for bulk upload performance')
+            } catch (createError: any) {
+                // Table might already exist due to race condition or eventual consistency
+                if (!createError.message?.includes('already exists')) {
+                    throw createError
                 }
+                console.log('[upsert] Table already exists, opening it...')
+                table = await db.openTable(tableName)
+                this.tableCache.set(tableName, table)
+                await table.add(allRows, { mode: 'append' })
             }
+        } else {
+            // Delete all rows for changed files and add fresh ones
+            const filenames = shaComputations
+                .filter(sc => existingFilesMap.get(sc.file.filename) !== sc.computedSHA)
+                .map(sc => sc.file.filename)
+            if (filenames.length > 0) {
+                const deleteQuery = filenames
+                    .map(f => `filename = '${f.replace(/'/g, "''")}'`)
+                    .join(' OR ')
+                console.log(`[upsert] Deleting existing rows for ${filenames.length} files...`)
+                await table.delete(deleteQuery)
+            }
+            await table.add(allRows, { mode: 'append' })
         }
 
         console.log(`[upsert] Processing files (${processedCount} processed, ${skippedCount} skipped): ${Date.now() - startTime}ms`)
