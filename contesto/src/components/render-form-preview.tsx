@@ -391,7 +391,7 @@ export function RenderFormPreview({
                             <h3 className='font-medium text-sm text-muted-foreground'>
                                 {group.title}
                             </h3>
-                            <div className='flex flex-col gap-6 rounded border-r-2 border-border'>
+                            <div className='flex flex-col gap-6 rounded border-border'>
                                 {group.fields.map((f) => (
                                     <div
                                         key={f.name}
