@@ -8,7 +8,7 @@
         "bootstrap": "pnpm install-doppler && pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm ",
         "watch": "pnpm -r watch",
         "typecheck": "pnpm -r --parallel --stream typecheck",
-        "ci": "pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm && pnpm --filter './*' build",
+        "ci": "pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm && pnpm --filter './*' --exclude website --exclude docs-website build && pnpm --filter website build-ci && pnpm --filter docs-website build-ci",
         "release": "pnpm build && changeset"
     },
     "devDependencies": {
