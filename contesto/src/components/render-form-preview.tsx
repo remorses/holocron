@@ -30,9 +30,45 @@ function RenderField({
     messageId,
     uploadFunction,
 }: RenderFieldProps) {
-    const { control, getValues, register, setValue } = useFormContext()
+    const form = useFormContext()
+    const { control, getValues, register, setValue } = form
 
     const name = field.name
+    const fieldKey = name ? `form-field-${messageId}-${name}` : null
+
+    useEffect(() => {
+        if (disabled || !name || !fieldKey) return
+        
+        const persistedValue = localStorage.getItem(fieldKey)
+        if (persistedValue) {
+            try {
+                const parsed = JSON.parse(persistedValue)
+                setValue(name, parsed)
+                return
+            } catch {}
+        }
+        
+        if ('initialValue' in field && field.initialValue !== undefined) {
+            setValue(name, field.initialValue)
+        }
+    }, [name, fieldKey, field, setValue, disabled])
+
+    useEffect(() => {
+        if (disabled || !name || !fieldKey) return
+        
+        const subscription = form.watch((value, { name: changedName }) => {
+            if (changedName === name) {
+                const fieldValue = form.getValues(name)
+                if (fieldValue !== undefined && fieldValue !== null) {
+                    localStorage.setItem(fieldKey, JSON.stringify(fieldValue))
+                }
+            }
+        })
+        
+        return () => {
+            subscription.unsubscribe()
+        }
+    }, [name, fieldKey, disabled, form])
 
     useEffect(() => {
         if (disabled) return

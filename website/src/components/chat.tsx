@@ -112,14 +112,8 @@ import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
 import { TruncatedText } from './truncated-text'
 import { MessagePartRenderer } from 'docs-website/src/components/docs-chat'
 import { useSearchParams } from 'react-router'
-import { keyForDocsJsonFormLocalStorage } from '../lib/constants'
 
-const setDocsJsonState = ({
-    values,
-    githubFolder,
-    previousJsonString,
-    chatId,
-}) => {
+const setDocsJsonState = ({ values, githubFolder, previousValues }) => {
     console.log(`form values changed, sending state to docs iframe`)
     let githubPath = 'fumabase.jsonc'
     if (githubFolder) {
@@ -128,7 +122,7 @@ const setDocsJsonState = ({
 
     const newJson = JSON.stringify(
         {
-            ...safeJsoncParse(previousJsonString),
+            ...previousValues,
             ...values,
         },
         null,
@@ -147,47 +141,17 @@ const setDocsJsonState = ({
         ...newChanges,
     }
     useWebsiteState.setState({ filesInDraft: newFilesInDraft })
-    localStorage.setItem(keyForDocsJsonFormLocalStorage({ chatId }), newJson)
     docsRpcClient.setDocsState({
         // revalidate: true, // TODO
         state: { filesInDraft: newChanges },
     })
 }
 
-function getCurrentDocsJson({ chatId, siteBranch }) {
-    // First check localStorage
-    const persistedValues =
-        typeof localStorage !== 'undefined'
-            ? localStorage.getItem(keyForDocsJsonFormLocalStorage({ chatId }))
-            : undefined
-
-    // Then check filesInDraft
-    const docsJsonString =
-        Object.entries(useWebsiteState.getState()?.filesInDraft || {}).find(
-            ([key]) => key.endsWith('fumabase.jsonc'),
-        )?.[1]?.content || ''
-
-    // Use persisted > filesInDraft > siteBranch.docsJson
-    if (persistedValues) {
-        return safeJsoncParse(persistedValues) || {}
-    }
-    if (docsJsonString) {
-        return safeJsoncParse(docsJsonString) || {}
-    }
-
-    // Fall back to siteBranch.docsJson
-    const docsJson = siteBranch?.docsJson
-    if (!docsJson || typeof docsJson !== 'object' || Array.isArray(docsJson)) {
-        return {}
-    }
-    return docsJson as Record<string, any>
-}
-
 function ChatForm({ children, disabled }) {
     const { chatId } = useParams()
-    const filesInDraft = useWebsiteState((state) => state.filesInDraft)
     const { siteBranch, githubFolder } =
         useLoaderData() as Route.ComponentProps['loaderData']
+    const { submit, messages, setMessages, setDraftText } = useChatContext()
 
     const formMethods = useForm({
         disabled,
@@ -195,22 +159,33 @@ function ChatForm({ children, disabled }) {
         // do not pass defaultValues here otherwise setValue calls will not trigger subscribe callback if value does not change. meaning the state is not updated for filesInDraft for fumabase.jsonc
         // reset() call instead will trigger subscribe callback so we can use it in useEffect instead
     })
-    const { submit, messages, setMessages, setDraftText } = useChatContext()
 
     const isOnboardingChat = useShouldHideBrowser()
 
-    const previousJsonString = useMemo(() => {
-        // find the fumabase.jsonc file in filesInDraft, iterate the keys and match ends with
-        if (filesInDraft) {
-            const entry = Object.entries(filesInDraft).find(([key]) =>
+    const docsJsonString = useWebsiteState((state) => {
+        return (
+            Object.entries(state.filesInDraft || {}).find(([key]) =>
                 key.endsWith('fumabase.jsonc'),
-            )
-            if (entry) {
-                return entry[1].content
+            )?.[1]?.content || ''
+        )
+    })
+
+    const currentDocsJson = useMemo(() => {
+        function getCurrentDocsJson({ siteBranch }) {
+            // Use filesInDraft > siteBranch.docsJson
+            if (docsJsonString) {
+                return safeJsoncParse(docsJsonString) || {}
             }
+
+            // Fall back to siteBranch.docsJson
+            const docsJson = siteBranch?.docsJson
+            if (!docsJson || typeof docsJson !== 'object') {
+                return {}
+            }
+            return docsJson
         }
-        return JSON.stringify(siteBranch.docsJson, null, 2)
-    }, [siteBranch?.docsJson, filesInDraft])
+        return getCurrentDocsJson({ siteBranch })
+    }, [docsJsonString, siteBranch])
 
     useEffect(() => {
         if (isOnboardingChat) return
@@ -220,9 +195,8 @@ function ChatForm({ children, disabled }) {
             callback: () =>
                 setDocsJsonState({
                     values: formMethods.getValues(),
-                    previousJsonString,
                     githubFolder,
-                    chatId,
+                    previousValues: currentDocsJson,
                 }),
         })
 
@@ -231,27 +205,22 @@ function ChatForm({ children, disabled }) {
         disabled,
         formMethods.subscribe,
         isOnboardingChat,
-        chatId,
-        previousJsonString,
+        currentDocsJson,
+        githubFolder,
     ])
 
+    // reset the form values on the first visit with the docs json values. it also resets the form values when the fumabase.jsonc file is updated via the strReplaceEditor tool
     useEffect(() => {
         if (isOnboardingChat) return
         if (disabled) return
 
-        const data = getCurrentDocsJson({ chatId, siteBranch })
-        console.log('fumabase.jsonc', data)
+        console.log('fumabase.jsonc', currentDocsJson)
 
-        if (!data || Object.keys(data).length === 0) return
+        if (!currentDocsJson || Object.keys(currentDocsJson).length === 0)
+            return
 
-        formMethods.reset(data, { keepDefaultValues: true })
-        setDocsJsonState({
-            values: data,
-            githubFolder,
-            previousJsonString,
-            chatId,
-        })
-    }, [disabled, isOnboardingChat, chatId, previousJsonString])
+        formMethods.reset(currentDocsJson, { keepDefaultValues: true })
+    }, [disabled, isOnboardingChat, currentDocsJson, githubFolder])
 
     return (
         <form

@@ -5,6 +5,7 @@ here is a non exhaustive list of things you can do. use this list to suggest the
 - add a page based on a web search or fetch of a website url
 - change theme of the website, via updateFumabaseJsonc tool
 - change the name of the website via updateFumabaseJsonc tool
+- delete a domain using the `strReplaceEditor` tool (editing fumabase.jsonc file)
 - change navbar links, showing a list of links to add
 - change footer links
 - add a banner to the website, for example for news or announcements

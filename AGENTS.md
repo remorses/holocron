@@ -245,28 +245,29 @@ The only case where you should not use href is for urls outside of current app o
 
 > if you cannot use `href` simply because the route you would like to link to does not exist you should do the following: list all the files in the src/routes folder first, to see if it already exists but not with the name you would expect. If still you can't find one, create a simple placeholder react-router route with a simple Page component and a simple loader that does what you would expect. do not write too much code. you can improve on it in later messages.
 
-## showing spinner while action does work and then redirect
+## showing spinner while loader does work and then redirect
 
-For routes that do slow operations like creating PRs and then redirect, show a spinner while submitting to an action that redirects. The component submits data on mount and shows loading state
-
-This is a useful pattern to implement slow operations that need to redirect at the end. The buttons instead of doing the operation themselves redirect to a route that does the work via an action.
+For routes that do slow operations like creating PRs and then redirect, use a loader that returns a promise. The component uses window.location.replace when the promise resolves.
 
 ```tsx
-export async function action({ request, params: { id } }: Route.ActionArgs) {
-    const formData = await request.formData()
-    const result = await doSlowWork(id, formData.get('data'))
-    return redirect(result.url)
+export async function loader({ request, params: { id } }: Route.LoaderArgs) {
+    const url = new URL(request.url)
+    const data = url.searchParams.get('data')
+    const promise = doSlowWork(id, data)
+    return { promise }
 }
 
-export default function Page({ params }: Route.ComponentProps) {
-    const submit = useSubmit()
+export default function Page() {
+    const { promise } = useLoaderData<typeof loader>()
+    const [error, setError] = useState('')
+    
     useEffect(() => {
-        const data = localStorage.getItem(`data-${params.id}`)
-        const formData = new FormData()
-        formData.append('data', data || '')
-        submit(formData, { method: 'post' })
-    }, [params.id, submit])
-
+        promise.then(({ url }) => {
+            window.location.replace(url)
+        }).catch(e => setError(e.message))
+    }, [promise])
+    
+    if (error) return <p className='text-red-600'>Error: {error}</p>
     return <Loader2Icon className='h-6 w-6 animate-spin' />
 }
 ```

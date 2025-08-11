@@ -28,8 +28,15 @@ export function PrButton({ className = '' }) {
     const { chatId, chat, prUrl } = useLoaderData<typeof import('../routes/org.$orgId.site.$siteId.chat.$chatId._index').loader>()
     const siteData = useRouteLoaderData<typeof import('../routes/org.$orgId.site.$siteId').loader>(
         'routes/org.$orgId.site.$siteId',
-    )
-    if (!siteData) return null
+    )!
+    const fumabaseJsonc = useWebsiteState((x) => {
+        const fumabaseKey = Object.keys(x?.filesInDraft || {}).find((path) =>
+            path.endsWith('fumabase.jsonc'),
+        )
+        return fumabaseKey ? x?.filesInDraft[fumabaseKey]?.content : undefined
+    })
+
+
     const { siteId } = siteData
     const orgId = siteData.site.org.orgId
 
@@ -39,15 +46,26 @@ export function PrButton({ className = '' }) {
         return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
     }, [filesInDraft, lastPushedFiles])
 
+    if (!siteData) return null
     if (!siteData.site.githubInstallations?.length) return null
     if (!siteData.site.githubOwner || !siteData.site.githubRepo) return null
     if (!messages?.length) return null
 
-    const prHref = href('/org/:orgId/site/:siteId/chat/:chatId/create-pr', {
-        orgId,
-        siteId,
-        chatId,
-    })
+
+    const prHref = (() => {
+        const basePath = href('/org/:orgId/site/:siteId/chat/:chatId/create-pr', {
+            orgId,
+            siteId,
+            chatId,
+        })
+        if (fumabaseJsonc) {
+            const params = new URLSearchParams({
+                fumabaseJsonc: fumabaseJsonc,
+            })
+            return `${basePath}?${params.toString()}`
+        }
+        return basePath
+    })()
 
     const { to, text, isButtonDisabled, tooltipMessage } = (() => {
         if (chat.prNumber) {

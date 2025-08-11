@@ -1,7 +1,7 @@
 import { Prisma, prisma } from 'db'
 import { Loader2Icon } from 'lucide-react'
-import { useEffect } from 'react'
-import { redirect, useSubmit } from 'react-router'
+import { useEffect, useState } from 'react'
+import { useLoaderData } from 'react-router'
 import { getSession } from '../lib/better-auth'
 import type { FileUpdate } from 'docs-website/src/lib/edit-tool'
 import { env } from '../lib/env'
@@ -14,7 +14,6 @@ import {
 import { applyJsonCComments, JsonCComments } from '../lib/json-c-comments'
 import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId.create-pr'
 import { FilesInDraft } from 'docs-website/src/lib/docs-state'
-import { keyForDocsJsonFormLocalStorage } from '../lib/constants'
 
 async function createPrSuggestionForChat({
     chatId,
@@ -163,41 +162,44 @@ async function createPrSuggestionForChat({
     return { prUrl: url, action: 'created' }
 }
 
-export async function action({
+export async function loader({
     request,
     params: { chatId },
-}: Route.ActionArgs) {
+}: Route.LoaderArgs) {
     const { userId } = await getSession({ request })
-    const formData = await request.formData()
-    const fumabaseJsonc = formData.get('fumabaseJsonc') as string | undefined
+    const url = new URL(request.url)
+    const fumabaseJsonc = url.searchParams.get('fumabaseJsonc') || undefined
 
-    const { prUrl } = await createPrSuggestionForChat({
+    // Return a promise that will resolve with the PR URL
+    const prPromise = createPrSuggestionForChat({
         chatId,
         userId,
         fumabaseJsonc,
     })
 
-    return redirect(prUrl)
+    return { prPromise }
 }
 
-export default function Page({ params }: Route.ComponentProps) {
-    const submit = useSubmit()
-    const { chatId } = params
+export default function Page() {
+    const { prPromise } = useLoaderData<typeof loader>()
+    const [error, setError] = useState<string>('')
 
     useEffect(() => {
-        // Get persisted fumabase.jsonc from localStorage
-        const persistedFumabase = localStorage.getItem(
-            keyForDocsJsonFormLocalStorage({ chatId }),
+        prPromise.then(({ prUrl }) => {
+            window.location.replace(prUrl)
+        }).catch((error) => {
+            console.error('Failed to create PR:', error)
+            setError(error instanceof Error ? error.message : 'Failed to create PR')
+        })
+    }, [prPromise])
+
+    if (error) {
+        return (
+            <div className='flex h-screen flex-col items-center justify-center gap-4'>
+                <p className='text-red-600'>Error: {error}</p>
+            </div>
         )
-
-        // Submit form with fumabase.jsonc data
-        const formData = new FormData()
-        if (persistedFumabase) {
-            formData.append('fumabaseJsonc', persistedFumabase)
-        }
-
-        submit(formData, { method: 'post' })
-    }, [chatId, submit])
+    }
 
     return (
         <div className='flex h-screen flex-col items-center justify-center gap-4'>
