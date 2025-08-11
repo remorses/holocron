@@ -1,5 +1,9 @@
 import { describe, test, expect } from 'vitest'
-import { validateMarkdownLinks, formatErrorWithContext, createFormattedError } from './lint'
+import {
+    validateMarkdownLinks,
+    formatErrorWithContext,
+    createFormattedError,
+} from './lint'
 import { getProcessor } from './mdx-heavy'
 
 describe('validateMarkdownLinks', () => {
@@ -16,9 +20,9 @@ Also a [relative link](./relative-path) that doesn't exist.
         const tree = processor.parse({ value: content })
         const validSlugs = ['/docs/getting-started', '/docs/installation']
 
-        const errors = await validateMarkdownLinks(tree, { 
+        const errors = await validateMarkdownLinks(tree, {
             validSlugs,
-            resolveDir: '/docs'
+            resolveDir: '/docs',
         })
 
         expect(errors).toMatchInlineSnapshot(`
@@ -153,9 +157,9 @@ Invalid with fragment: [invalid](/docs/non-existent#section)
             '/docs/other',
         ]
 
-        const errors = await validateMarkdownLinks(tree, { 
+        const errors = await validateMarkdownLinks(tree, {
             validSlugs,
-            resolveDir: '/docs/guide'
+            resolveDir: '/docs/guide',
         })
 
         expect(errors).toMatchInlineSnapshot(`
@@ -201,13 +205,13 @@ Line 2
 Line 3 with error here
 Line 4
 Line 5`
-        
+
         const error = new Error('Something went wrong') as any
         error.line = 3
         error.column = 14
-        
+
         const formatted = formatErrorWithContext(error, content, 'Test Error')
-        
+
         expect(formatted).toMatchInlineSnapshot(`
           "Test Error at line 3, column 14:
           Something went wrong
@@ -227,13 +231,13 @@ Line 5`
         const content = `First line with error
 Second line
 Third line`
-        
+
         const error = new Error('Invalid syntax') as any
         error.line = 1
         error.column = 7
-        
+
         const formatted = formatErrorWithContext(error, content, 'Syntax Error')
-        
+
         expect(formatted).toMatchInlineSnapshot(`
           "Syntax Error at line 1, column 7:
           Invalid syntax
@@ -253,13 +257,13 @@ Line 2
 Line 3
 Line 4
 Last line with error`
-        
+
         const error = new Error('Unexpected end') as any
         error.line = 5
         error.column = 11
-        
+
         const formatted = formatErrorWithContext(error, content)
-        
+
         expect(formatted).toMatchInlineSnapshot(`
           "Error at line 5, column 11:
           Unexpected end
@@ -279,17 +283,17 @@ Last line with error`
         const content = `Some content
 Error line here
 More content`
-        
+
         const error = new Error('Position error') as any
         error.position = {
             start: {
                 line: 2,
-                column: 7
-            }
+                column: 7,
+            },
         }
-        
+
         const formatted = formatErrorWithContext(error, content, 'MDX Error')
-        
+
         expect(formatted).toMatchInlineSnapshot(`
           "MDX Error at line 2, column 7:
           Position error
@@ -309,19 +313,19 @@ describe('createFormattedError', () => {
         const content = `Line 1
 Line 2 with error
 Line 3`
-        
+
         const error = new Error('Original error') as any
         error.line = 2
         error.column = 8
         error.reason = 'Invalid token'
-        
+
         const formattedError = createFormattedError(
             error,
             content,
             'Parse Error',
-            'Please fix the syntax error and try again.'
+            'Please fix the syntax error and try again.',
         )
-        
+
         expect(formattedError.line).toBe(2)
         expect(formattedError.column).toBe(8)
         expect(formattedError.reason).toBe('Invalid token')
@@ -345,14 +349,21 @@ Line 3`
 Here is a [broken link](/docs/missing) in the text.
 
 And another [invalid link](../escape) that goes outside.`
-        
-        const linkError = new Error('Found 2 invalid links in the markdown') as any
+
+        const linkError = new Error(
+            'Found 2 invalid links in the markdown',
+        ) as any
         linkError.line = 3
         linkError.column = 11
-        linkError.reason = 'Line 3: "/docs/missing" - Link not found\nLine 5: "../escape" - Path escapes root'
-        
-        const formatted = formatErrorWithContext(linkError, content, 'Link Validation Error')
-        
+        linkError.reason =
+            'Line 3: "/docs/missing" - Link not found\nLine 5: "../escape" - Path escapes root'
+
+        const formatted = formatErrorWithContext(
+            linkError,
+            content,
+            'Link Validation Error',
+        )
+
         expect(formatted).toMatchInlineSnapshot(`
           "Link Validation Error at line 3, column 11:
           Line 3: "/docs/missing" - Link not found
@@ -360,10 +371,10 @@ And another [invalid link](../escape) that goes outside.`
 
           Error Context:
             1 | # Documentation
-            2 | 
+            2 |
             3 | Here is a [broken link](/docs/missing) in the text.
                          ^
-            4 | 
+            4 |
             5 | And another [invalid link](../escape) that goes outside.
           "
         `)
@@ -379,14 +390,18 @@ title: Test Page
 <Component prop={invalid syntax} />
 
 Some more content here`
-        
+
         const mdxError = new Error('Unexpected token') as any
         mdxError.line = 7
         mdxError.column = 26
         mdxError.reason = 'Expected "}" but found "syntax"'
-        
-        const formatted = formatErrorWithContext(mdxError, content, 'MDX Compilation Error')
-        
+
+        const formatted = formatErrorWithContext(
+            mdxError,
+            content,
+            'MDX Compilation Error',
+        )
+
         expect(formatted).toMatchInlineSnapshot(`
           "MDX Compilation Error at line 7, column 26:
           Expected "}" but found "syntax"
@@ -394,12 +409,12 @@ Some more content here`
           Error Context:
             2 | title: Test Page
             3 | ---
-            4 | 
+            4 |
             5 | # Header
-            6 | 
+            6 |
             7 | <Component prop={invalid syntax} />
                                         ^
-            8 | 
+            8 |
             9 | Some more content here
           "
         `)
@@ -411,13 +426,19 @@ Some more content here`
   "version": "1.0.0",
   "invalid": true,
 }`
-        
-        const jsonError = new Error('Unexpected token } in JSON at position 52') as any
+
+        const jsonError = new Error(
+            'Unexpected token } in JSON at position 52',
+        ) as any
         jsonError.line = 5
         jsonError.column = 1
-        
-        const formatted = formatErrorWithContext(jsonError, content, 'JSON Parse Error')
-        
+
+        const formatted = formatErrorWithContext(
+            jsonError,
+            content,
+            'JSON Parse Error',
+        )
+
         expect(formatted).toMatchInlineSnapshot(`
           "JSON Parse Error at line 5, column 1:
           Unexpected token } in JSON at position 52
@@ -439,13 +460,13 @@ Some more content here`
             lines.push(`Line ${i}`)
         }
         const content = lines.join('\n')
-        
+
         const error = new Error('Error in the middle') as any
         error.line = 10
         error.column = 3
-        
+
         const formatted = formatErrorWithContext(error, content, 'Test Error')
-        
+
         // Should show 5 lines before and after
         expect(formatted).toMatchInlineSnapshot(`
           "Test Error at line 10, column 3:
