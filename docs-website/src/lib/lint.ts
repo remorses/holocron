@@ -38,7 +38,11 @@ export async function validateMarkdownLinks(
         if (!node.position) return
         const pos = node.position
 
-        const result = detectInvalidLink(node.url, validSlugSet, config.resolveDir)
+        const result = detectInvalidLink(
+            node.url,
+            validSlugSet,
+            config.resolveDir,
+        )
         if (result) {
             detected.push({
                 url: node.url,
@@ -154,7 +158,7 @@ export function createFormattedError(
     additionalMessage?: string,
 ): ErrorWithPosition {
     const formattedMessage = formatErrorWithContext(error, content, errorType)
-    const fullMessage = additionalMessage 
+    const fullMessage = additionalMessage
         ? `${formattedMessage}\n${additionalMessage}`
         : formattedMessage
 
@@ -162,6 +166,6 @@ export function createFormattedError(
     formattedError.line = error.line || error.position?.start?.line
     formattedError.column = error.column || error.position?.start?.column
     formattedError.reason = error.reason
-    
+
     return formattedError
 }
