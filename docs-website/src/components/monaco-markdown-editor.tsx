@@ -54,6 +54,7 @@ export function MonacoMarkdownEditor({
     const resolvedTheme = forcedTheme || theme
     const monaco = useMonaco()
     const editorRef = useRef<Parameters<OnMount>[0] | null>(null)
+    const [ready, setReady] = useState(false)
 
     const defineCustomTheme = useCallback(() => {
         if (!monaco) return
@@ -108,6 +109,9 @@ export function MonacoMarkdownEditor({
 
         // Set up custom theme with CSS variable background
         defineCustomTheme()
+        
+        // Mark editor as ready after mount and theme setup
+        setReady(true)
     }
 
     // Update theme when resolvedTheme changes
@@ -164,6 +168,10 @@ export function MonacoMarkdownEditor({
                 onChange={onChange}
                 onMount={handleEditorMount}
                 theme='docs-theme'
+                loading={null}
+                wrapperProps={{
+                    style: { visibility: ready ? 'visible' : 'hidden' },
+                }}
                 options={{
                     minimap: { enabled: false },
                     scrollbar: {
