@@ -550,3 +550,8 @@ When you need to create a complex type that comes from Prisma table do not creat
 this project uses tailwind v4. this new tailwind version does not use tailwind.config.js. instead it does all configuration in css files.
 
 read https://tailwindcss.com/docs/upgrade-guide to understand the updates landed in tailwind v4 if you do not have tailwind v4 in your training context. Ignore the parts that talk about running the upgrade cli. this project already uses tailwind v4 so no need to upgrade anything.
+
+
+## writing docs
+
+when generating a .md or .mdx file to document things, always add a frontmatter with title and description. also add a prompt field with the exact prompt used to generate the doc. use @ to reference files and urls and provide any context necessary to be able to recreate this file from scratch using a model. if you used urls also reference them. reference all files you ad to read to create the doc. use yaml | syntax to add this prompt and never go over the column width of 80
