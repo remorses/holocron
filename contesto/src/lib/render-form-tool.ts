@@ -58,7 +58,13 @@ export function createRenderFormTool({
         description: dedent`
         Render a form to the user can provide structured data. NEVER render more than 1 form input at a time, except for list of fields (arrays of strings or objects)
 
-        Array-style names such as items.0.color are supported. When the user wants to add an item to the array you MUST also render all the other items in the array, otherwise the other items will be deleted on change. To delete an item from an array you can simply skip rendering it.
+        IMPORTANT: Do NOT use this tool to:
+        - Remove array fields or array items
+        - Remove/delete any fields from the data
+        - Perform bulk deletions or removals
+        Instead modify the file directly with string and replace for those operations.
+
+        Array-style names such as items.0.color are supported. When the user wants to add an item to the array you MUST also render all the other items in the array.
 
         Use radio type for small number of options (less than 4) where you want to show option descriptions alongside the choices.
 
@@ -90,7 +96,7 @@ export function createRenderFormTool({
             if (!jsonSchema) {
                 return 'Rendered form to the user, the response will be sent back as a message from the user. DO NOT RENDER THE SAME FORM TWICE'
             }
-            
+
             const errors: string[] = []
             for (const field of params.fields) {
                 if (field.name.match(/\[\s*index\s*\]/)) {
@@ -110,11 +116,11 @@ export function createRenderFormTool({
                     )
                 }
             }
-            
+
             if (errors.length > 0) {
                 throw new Error(errors.map(err => `• ${err}`).join('\n'))
             }
-            
+
             return `Rendered form to the user. You can now assume the user has made the update to the data in the next message. To see the latest data read the file again.`
         },
     })

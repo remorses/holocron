@@ -183,12 +183,14 @@ function getCurrentDocsJson({ chatId, siteBranch }) {
     return docsJson as Record<string, any>
 }
 
-function ChatForm({ children }: { children: React.ReactNode }) {
+function ChatForm({ children, disabled }) {
     const { chatId } = useParams()
+    const filesInDraft = useWebsiteState((state) => state.filesInDraft)
     const { siteBranch, githubFolder } =
         useLoaderData() as Route.ComponentProps['loaderData']
 
     const formMethods = useForm({
+        disabled,
         // https://chatgpt.com/share/689903d5-2624-800e-870c-a1e226fd230d
         // do not pass defaultValues here otherwise setValue calls will not trigger subscribe callback if value does not change. meaning the state is not updated for filesInDraft for fumabase.jsonc
         // reset() call instead will trigger subscribe callback so we can use it in useEffect instead
@@ -198,11 +200,21 @@ function ChatForm({ children }: { children: React.ReactNode }) {
     const isOnboardingChat = useShouldHideBrowser()
 
     const previousJsonString = useMemo(() => {
+        // find the fumabase.jsonc file in filesInDraft, iterate the keys and match ends with
+        if (filesInDraft) {
+            const entry = Object.entries(filesInDraft).find(([key]) =>
+                key.endsWith('fumabase.jsonc'),
+            )
+            if (entry) {
+                return entry[1].content
+            }
+        }
         return JSON.stringify(siteBranch.docsJson, null, 2)
-    }, [siteBranch?.docsJson])
+    }, [siteBranch?.docsJson, filesInDraft])
 
     useEffect(() => {
         if (isOnboardingChat) return
+        if (disabled) return
         const unSub = formMethods.subscribe({
             formState: { values: true },
             callback: () =>
@@ -215,10 +227,17 @@ function ChatForm({ children }: { children: React.ReactNode }) {
         })
 
         return unSub
-    }, [formMethods.subscribe, isOnboardingChat, chatId, previousJsonString])
+    }, [
+        disabled,
+        formMethods.subscribe,
+        isOnboardingChat,
+        chatId,
+        previousJsonString,
+    ])
 
     useEffect(() => {
         if (isOnboardingChat) return
+        if (disabled) return
 
         const data = getCurrentDocsJson({ chatId, siteBranch })
         console.log('fumabase.jsonc', data)
@@ -232,12 +251,13 @@ function ChatForm({ children }: { children: React.ReactNode }) {
             previousJsonString,
             chatId,
         })
-    }, [isOnboardingChat, chatId, previousJsonString])
+    }, [disabled, isOnboardingChat, chatId, previousJsonString])
 
     return (
         <form
             className='flex flex-col grow'
             onSubmit={formMethods.handleSubmit(() => {
+                if (disabled) return
                 if (isOnboardingChat) {
                     const currentValues = formMethods.getValues()
 
@@ -600,7 +620,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
     let minHeight = isLastMessage ? 'calc(-248px + 100dvh)' : '0px'
 
     return (
-        <ChatForm>
+        <ChatForm disabled={messages[messages.length - 1]?.id !== message.id}>
             <ChatAssistantMessage style={{ minHeight }} message={message}>
                 {message.parts.map((part, index) => {
                     if (
