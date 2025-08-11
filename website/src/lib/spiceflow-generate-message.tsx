@@ -342,7 +342,9 @@ export async function* generateMessageStream({
         fileSystem,
         model: { provider: model.provider },
         async validateNewContent(x) {
-            // Validate frontmatter icons for MDX/MD files
+            if (githubFolder && !x.githubPath.startsWith(githubFolder)) {
+                throw new  Error(`githubPath should always start with ${githubFolder}. This site is in ${githubFolder} base directory`)
+            }
             if (mdxOrMdRegex.test(x.githubPath)) {
                 const parsed = fm(x.content)
                 const frontmatter = parsed.attributes as any
