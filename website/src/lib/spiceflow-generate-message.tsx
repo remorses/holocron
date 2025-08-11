@@ -397,7 +397,7 @@ export async function* generateMessageStream({
                         throw createFormattedError(linkError, x.content, 'Link Validation Error', additionalMessage)
                     }
                 } catch (error: any) {
-                    if (error?.line != null) {
+                    if (error?.line != null || error.position?.start?.line != null) {
                       // Format MDX compilation errors
                       throw createFormattedError(
                           error as ErrorWithPosition,
