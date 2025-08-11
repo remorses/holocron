@@ -33,6 +33,7 @@ import path from 'path'
 import { Spiceflow } from 'spiceflow'
 import z, { ZodType } from 'zod'
 import { printDirectoryTree } from 'docs-website/src/lib/directory-tree'
+import { validateMarkdownLinks, createFormattedError, type ErrorWithPosition } from 'docs-website/src/lib/lint'
 import {
     createEditTool,
     EditToolParamSchema,
@@ -358,54 +359,54 @@ export async function* generateMessageStream({
 
             if (mdxOrMdRegex.test(x.githubPath)) {
                 try {
-                    await processMdxInServer({
+                    const result = await processMdxInServer({
                         markdown: x.content,
                         githubPath: x.githubPath,
                         extension: path.extname(x.githubPath),
                     })
-                } catch (error: any) {
-                    // Extract error details
-                    const errorLine =
-                        error.line || error.position?.start?.line || 1
-                    const errorColumn =
-                        error.column || error.position?.start?.column || 1
-                    const errorMessage =
-                        error.reason || error.message || 'Unknown MDX error'
 
-                    // Split markdown into lines
-                    const lines = x.content.split('\n')
+                    // Validate markdown links
+                    const validSlugs = source.getPages().map(page => page.url)
+                    const linkErrors = await validateMarkdownLinks(result.data.ast, {
+                        validSlugs,
+                        resolveDir: path.dirname(cleanSlug(x.githubPath))
+                    })
 
-                    // Calculate line range to show (5 lines before and after the error)
-                    const contextRange = 5
-                    const startLine = Math.max(1, errorLine - contextRange)
-                    const endLine = Math.min(
-                        lines.length,
-                        errorLine + contextRange,
-                    )
+                    if (linkErrors.length > 0) {
+                        // Use the first error for line/column info
+                        const firstError = linkErrors[0]
+                        const linkError: ErrorWithPosition = new Error(
+                            `Found ${linkErrors.length} invalid link${linkErrors.length > 1 ? 's' : ''} in the markdown`
+                        )
+                        linkError.line = firstError.line
+                        linkError.column = firstError.column
+                        linkError.reason = linkErrors.map(e =>
+                            `Line ${e.line}: "${e.url}" - ${e.reason}`
+                        ).join('\n')
 
-                    // Build context message
-                    let contextMessage = `MDX Compilation Error at line ${errorLine}, column ${errorColumn}:\n${errorMessage}\n\n`
-                    contextMessage += 'Error Context:\n'
-
-                    for (let i = startLine - 1; i < endLine; i++) {
-                        const lineNumber = i + 1
-                        const isErrorLine = lineNumber === errorLine
-                        const line = lines[i] || ''
-
-                        // Add line with line number
-                        contextMessage += `${lineNumber.toString().padStart(3, ' ')} | ${line}\n`
-
-                        // Add error indicator for the error line
-                        if (isErrorLine && errorColumn) {
-                            const padding = ' '.repeat(5 + errorColumn)
-                            contextMessage += `${padding}^\n`
+                        // Add available slugs hint
+                        const availableSlugs = validSlugs.slice(0, 10).join(', ')
+                        const additionalMessage = dedent`
+                        Available page slugs include: ${availableSlugs}${
+                            validSlugs.length > 10 ? ` and ${validSlugs.length - 10} more...` : ''
                         }
+                        Please fix the invalid links and submit the tool call again.
+                        If you want to reference a page you plan to create later, first create it with empty content and only frontmatter
+                        `
+
+                        throw createFormattedError(linkError, x.content, 'Link Validation Error', additionalMessage)
                     }
-
-                    contextMessage +=
-                        '\nPlease fix the MDX syntax error and submit the tool call again.'
-
-                    throw new Error(contextMessage)
+                } catch (error: any) {
+                    if (error?.line != null) {
+                      // Format MDX compilation errors
+                      throw createFormattedError(
+                          error as ErrorWithPosition,
+                          x.content,
+                          'MDX Compilation Error',
+                          'Please fix the MDX syntax error and submit the tool call again.'
+                      )
+                    }
+                    throw error
                 }
             }
             if (x.githubPath.endsWith('.json')) {
@@ -427,32 +428,16 @@ export async function* generateMessageStream({
                         column = lines[lines.length - 1].length + 1
                     }
 
-                    // Build context for JSON error
-                    const lines = x.content.split('\n')
-                    const contextRange = 5
-                    const startLine = Math.max(1, line - contextRange)
-                    const endLine = Math.min(lines.length, line + contextRange)
+                    const jsonError: ErrorWithPosition = new Error(e.message)
+                    jsonError.line = line
+                    jsonError.column = column
 
-                    let contextMessage = `JSON Parse Error at line ${line}:\n${e.message}\n\n`
-                    contextMessage += 'Error Context:\n'
-
-                    for (let i = startLine - 1; i < endLine; i++) {
-                        const lineNumber = i + 1
-                        const isErrorLine = lineNumber === line
-                        const lineContent = lines[i] || ''
-
-                        contextMessage += `${lineNumber.toString().padStart(3, ' ')} | ${lineContent}\n`
-
-                        if (isErrorLine && column) {
-                            const padding = ' '.repeat(5 + column - 1)
-                            contextMessage += `${padding}^\n`
-                        }
-                    }
-
-                    contextMessage +=
-                        '\nPlease fix the JSON syntax error and submit the tool call again.'
-
-                    throw new Error(contextMessage)
+                    throw createFormattedError(
+                        jsonError,
+                        x.content,
+                        'JSON Parse Error',
+                        'Please fix the JSON syntax error and submit the tool call again.'
+                    )
                 }
             }
         },

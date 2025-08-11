@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-08-11 13:25
+
+- Added markdown link validation utility for checking internal links against valid slugs
+- Created formatErrorWithContext function for consistent error formatting with line numbers and context
+- Added comprehensive tests with inline snapshots for error formatting scenarios
+
 ## 2025-08-09 10:30
 
 - Fixed missing pages showing empty content instead of 404 not found page

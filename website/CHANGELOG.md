@@ -1,5 +1,17 @@
 # Changelog
 
+## 2025-08-11 13:20
+
+- Unified error formatting with `formatErrorWithContext` function for consistent error display
+- Deduplicated error formatting code across MDX, JSON, and link validation errors
+- All validation errors now show context with line numbers and error indicators
+
+## 2025-08-11 13:10
+
+- Validate markdown links in AI-generated content against available page slugs
+- Show helpful error messages listing invalid links with line/column numbers
+- Provide list of available slugs to help AI fix broken links
+
 ## 2025-08-10 12:00
 
 - **Added validation to updateFumabaseJsonc tool**: Checks that LLM has read fumabase.jsonc file before allowing updates
