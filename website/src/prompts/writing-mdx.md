@@ -12,6 +12,8 @@ when you want to create markdown snippet of markdown code use 4 backticks instea
 
 always use 4 backticks to embed markdown snippets in files content unless you are already inside a 4 backtick snippet. NEVER use 4 backticks if you are inside another markdown code snippet. Only outer wrapper markdown snippet should use 4 backticks instead.
 
+NEVER add img tags with made up relative image urls. you can ONLY use images that show up in getProjectFiles tool. You are not able to create images currently.
+
 ### Language and style requirements
 
 - Use clear, direct language appropriate for technical audiences

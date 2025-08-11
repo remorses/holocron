@@ -1464,91 +1464,91 @@ export async function* filesFromGithub({
     }
 }
 
-export async function deletePages({
-    slugs,
-    siteId,
-    branchId,
-}: {
-    slugs: string[]
-    siteId: string
-    branchId: string
-}) {
-    console.log(
-        `Deleting pages with slugs: ${slugs.join(', ')} from branch ${branchId} in site ${siteId}`,
-    )
+// export async function deletePages({
+//     slugs,
+//     siteId,
+//     branchId,
+// }: {
+//     slugs: string[]
+//     siteId: string
+//     branchId: string
+// }) {
+//     console.log(
+//         `Deleting pages with slugs: ${slugs.join(', ')} from branch ${branchId} in site ${siteId}`,
+//     )
 
-    // Collect all githubPaths to delete from search API
-    const filesToDelete: string[] = []
+//     // Collect all githubPaths to delete from search API
+//     const filesToDelete: string[] = []
 
-    // For each slug, find all pages that have that slug or start with that slug + "/"
-    for (const rootSlug of slugs) {
-        // Find the main page and all its children
-        console.log(`Finding pages for slug ${rootSlug} in branch ${branchId}`)
-        const pagesToDelete = await prisma.markdownPage.findMany({
-            where: {
-                branchId,
-                OR: [
-                    { slug: rootSlug },
-                    { slug: { startsWith: `${rootSlug}/` } },
-                ],
-            },
-            select: {
-                pageId: true,
-                slug: true,
-                githubPath: true,
-            },
-        })
+//     // For each slug, find all pages that have that slug or start with that slug + "/"
+//     for (const rootSlug of slugs) {
+//         // Find the main page and all its children
+//         console.log(`Finding pages for slug ${rootSlug} in branch ${branchId}`)
+//         const pagesToDelete = await prisma.markdownPage.findMany({
+//             where: {
+//                 branchId,
+//                 OR: [
+//                     { slug: rootSlug },
+//                     { slug: { startsWith: `${rootSlug}/` } },
+//                 ],
+//             },
+//             select: {
+//                 pageId: true,
+//                 slug: true,
+//                 githubPath: true,
+//             },
+//         })
 
-        if (pagesToDelete.length === 0) {
-            console.log(
-                `No pages found for slug ${rootSlug} in branch ${branchId}`,
-            )
-            continue
-        }
+//         if (pagesToDelete.length === 0) {
+//             console.log(
+//                 `No pages found for slug ${rootSlug} in branch ${branchId}`,
+//             )
+//             continue
+//         }
 
-        console.log(
-            `Found ${pagesToDelete.length} pages to delete for slug ${rootSlug}`,
-        )
+//         console.log(
+//             `Found ${pagesToDelete.length} pages to delete for slug ${rootSlug}`,
+//         )
 
-        // Collect githubPaths for search API deletion
-        for (const page of pagesToDelete) {
-            filesToDelete.push(page.githubPath)
-        }
+//         // Collect githubPaths for search API deletion
+//         for (const page of pagesToDelete) {
+//             filesToDelete.push(page.githubPath)
+//         }
 
-        // Delete pages from database
-        console.log(`Deleting pages from database for slug ${rootSlug}`)
-        const deleteResult = await prisma.markdownPage.deleteMany({
-            where: {
-                branchId,
-                OR: [
-                    { slug: rootSlug },
-                    { slug: { startsWith: `${rootSlug}/` } },
-                ],
-            },
-        })
+//         // Delete pages from database
+//         console.log(`Deleting pages from database for slug ${rootSlug}`)
+//         const deleteResult = await prisma.markdownPage.deleteMany({
+//             where: {
+//                 branchId,
+//                 OR: [
+//                     { slug: rootSlug },
+//                     { slug: { startsWith: `${rootSlug}/` } },
+//                 ],
+//             },
+//         })
 
-        console.log(
-            `Deleted ${deleteResult.count} pages from database for slug ${rootSlug}`,
-        )
-    }
+//         console.log(
+//             `Deleted ${deleteResult.count} pages from database for slug ${rootSlug}`,
+//         )
+//     }
 
-    // Delete files from search API
-    if (filesToDelete.length > 0) {
-        console.log(`Deleting ${filesToDelete.length} files from search API...`)
-        try {
-            await searchApi.deleteFiles({
-                datasetId: branchId, // Use branchId as dataset ID
-                filenames: filesToDelete,
-            })
-            console.log('Files deleted from search API successfully.')
-        } catch (error) {
-            console.error('Error deleting files from search API:', error)
-            notifyError(error, 'search API delete')
-        }
-    }
+//     // Delete files from search API
+//     if (filesToDelete.length > 0) {
+//         console.log(`Deleting ${filesToDelete.length} files from search API...`)
+//         try {
+//             await searchApi.deleteFiles({
+//                 datasetId: branchId, // Use branchId as dataset ID
+//                 filenames: filesToDelete,
+//             })
+//             console.log('Files deleted from search API successfully.')
+//         } catch (error) {
+//             console.error('Error deleting files from search API:', error)
+//             notifyError(error, 'search API delete')
+//         }
+//     }
 
-    console.log('Page deletion completed')
-}
+//     console.log('Page deletion completed')
+// }
 
 // processForTrieve function removed - now using search API SDK directly
 
