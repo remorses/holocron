@@ -33,7 +33,11 @@ import path from 'path'
 import { Spiceflow } from 'spiceflow'
 import z, { ZodType } from 'zod'
 import { printDirectoryTree } from 'docs-website/src/lib/directory-tree'
-import { validateMarkdownLinks, createFormattedError, type ErrorWithPosition } from 'docs-website/src/lib/lint'
+import {
+    validateMarkdownLinks,
+    createFormattedError,
+    type ErrorWithPosition,
+} from 'docs-website/src/lib/lint'
 import {
     createEditTool,
     EditToolParamSchema,
@@ -343,7 +347,9 @@ export async function* generateMessageStream({
         model: { provider: model.provider },
         async validateNewContent(x) {
             if (githubFolder && !x.githubPath.startsWith(githubFolder)) {
-                throw new  Error(`githubPath should always start with ${githubFolder}. This site is in ${githubFolder} base directory`)
+                throw new Error(
+                    `githubPath should always start with ${githubFolder}. This site is in ${githubFolder} base directory`,
+                )
             }
             if (mdxOrMdRegex.test(x.githubPath)) {
                 const parsed = fm(x.content)
@@ -368,45 +374,63 @@ export async function* generateMessageStream({
                     })
 
                     // Validate markdown links
-                    const validSlugs = source.getPages().map(page => page.url)
-                    const linkErrors = await validateMarkdownLinks(result.data.ast, {
-                        validSlugs,
-                        resolveDir: path.dirname(cleanSlug(x.githubPath))
-                    })
+                    const validSlugs = source.getPages().map((page) => page.url)
+                    const linkErrors = await validateMarkdownLinks(
+                        result.data.ast,
+                        {
+                            validSlugs,
+                            resolveDir: path.dirname(cleanSlug(x.githubPath)),
+                        },
+                    )
 
                     if (linkErrors.length > 0) {
                         // Use the first error for line/column info
                         const firstError = linkErrors[0]
                         const linkError: ErrorWithPosition = new Error(
-                            `Found ${linkErrors.length} invalid link${linkErrors.length > 1 ? 's' : ''} in the markdown`
+                            `Found ${linkErrors.length} invalid link${linkErrors.length > 1 ? 's' : ''} in the markdown`,
                         )
                         linkError.line = firstError.line
                         linkError.column = firstError.column
-                        linkError.reason = linkErrors.map(e =>
-                            `Line ${e.line}: "${e.url}" - ${e.reason}`
-                        ).join('\n')
+                        linkError.reason = linkErrors
+                            .map(
+                                (e) =>
+                                    `Line ${e.line}: "${e.url}" - ${e.reason}`,
+                            )
+                            .join('\n')
 
                         // Add available slugs hint
-                        const availableSlugs = validSlugs.slice(0, 10).join(', ')
+                        const availableSlugs = validSlugs
+                            .slice(0, 10)
+                            .join(', ')
                         const additionalMessage = dedent`
                         Available page slugs include: ${availableSlugs}${
-                            validSlugs.length > 10 ? ` and ${validSlugs.length - 10} more...` : ''
+                            validSlugs.length > 10
+                                ? ` and ${validSlugs.length - 10} more...`
+                                : ''
                         }
                         Please fix the invalid links and submit the tool call again.
                         If you want to reference a page you plan to create later, first create it with empty content and only frontmatter
                         `
 
-                        throw createFormattedError(linkError, x.content, 'Link Validation Error', additionalMessage)
+                        throw createFormattedError(
+                            linkError,
+                            x.content,
+                            'Link Validation Error',
+                            additionalMessage,
+                        )
                     }
                 } catch (error: any) {
-                    if (error?.line != null || error.position?.start?.line != null) {
-                      // Format MDX compilation errors
-                      throw createFormattedError(
-                          error as ErrorWithPosition,
-                          x.content,
-                          'MDX Compilation Error',
-                          'Please fix the MDX syntax error and submit the tool call again.'
-                      )
+                    if (
+                        error?.line != null ||
+                        error.position?.start?.line != null
+                    ) {
+                        // Format MDX compilation errors
+                        throw createFormattedError(
+                            error as ErrorWithPosition,
+                            x.content,
+                            'MDX Compilation Error',
+                            'Please fix the MDX syntax error and submit the tool call again.',
+                        )
                     }
                     throw error
                 }
@@ -438,7 +462,7 @@ export async function* generateMessageStream({
                         jsonError,
                         x.content,
                         'JSON Parse Error',
-                        'Please fix the JSON syntax error and submit the tool call again.'
+                        'Please fix the JSON syntax error and submit the tool call again.',
                     )
                 }
             }
