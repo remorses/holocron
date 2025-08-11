@@ -109,7 +109,7 @@ export function MonacoMarkdownEditor({
 
         // Set up custom theme with CSS variable background
         defineCustomTheme()
-        
+
         // Mark editor as ready after mount and theme setup
         setReady(true)
     }
@@ -168,9 +168,12 @@ export function MonacoMarkdownEditor({
                 onChange={onChange}
                 onMount={handleEditorMount}
                 theme='docs-theme'
-                loading={null}
+                // loading={null}
                 wrapperProps={{
-                    style: { visibility: ready ? 'visible' : 'hidden' },
+                    className: cn(
+                        'h-full transition-opacity duration-300',
+                        !ready && 'opacity-0',
+                    ),
                 }}
                 options={{
                     minimap: { enabled: false },
