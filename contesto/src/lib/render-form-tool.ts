@@ -90,36 +90,32 @@ export function createRenderFormTool({
             if (!jsonSchema) {
                 return 'Rendered form to the user, the response will be sent back as a message from the user. DO NOT RENDER THE SAME FORM TWICE'
             }
+            
             const errors: string[] = []
-            try {
-                for (const field of params.fields) {
-                    if (field.name.match(/\[\s*index\s*\]/)) {
-                        errors.push(
-                            `field.name "${field.name}" contains "[index]" syntax; please use field.index instead.`,
-                        )
-                    }
-                    const schema = getTypeForNameInSchema(field.name)
-                    if (!schema) {
-                        errors.push(
-                            `name ${field.name} is not valid for the schema`,
-                        )
-                    }
-                    if (!isScalarSchema(schema)) {
-                        errors.push(
-                            `name ${field.name} is not a scalar, instead it has the following schema: ${JSON.stringify(schema)}`,
-                        )
-                    }
+            for (const field of params.fields) {
+                if (field.name.match(/\[\s*index\s*\]/)) {
+                    errors.push(
+                        `field.name "${field.name}" contains "[index]" syntax; please use field.index instead`,
+                    )
                 }
-                return errors.length > 0
-                    ? { errors }
-                    : `Rendered form to the user. You can now assume the user has made the update to the data in the next message. To see the latest data read the file again.`
-            } catch (err) {
-                notifyError(err, 'createRenderFormExecute')
-                errors.push(
-                    `Unexpected error: ${err instanceof Error ? err.message : String(err)}`,
-                )
-                return { errors }
+                const schema = getTypeForNameInSchema(field.name)
+                if (!schema) {
+                    errors.push(
+                        `name ${field.name} is not valid for the schema`,
+                    )
+                }
+                if (!isScalarSchema(schema)) {
+                    errors.push(
+                        `name ${field.name} is not a scalar, instead it has the following schema: ${JSON.stringify(schema)}`,
+                    )
+                }
             }
+            
+            if (errors.length > 0) {
+                throw new Error(errors.map(err => `• ${err}`).join('\n'))
+            }
+            
+            return `Rendered form to the user. You can now assume the user has made the update to the data in the next message. To see the latest data read the file again.`
         },
     })
 }

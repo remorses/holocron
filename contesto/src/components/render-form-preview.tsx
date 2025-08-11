@@ -338,18 +338,6 @@ export function RenderFormPreview({
             </div>
         )
     }
-    if (result?.errors?.length) {
-        return (
-            <div className='bg-red-100 border border-red-300 text-red-600 rounded p-3 mb-3 text-sm'>
-                {result.errors.map((err: any, idx: number) => (
-                    <div key={idx}>
-                        {typeof err === 'string' ? err : JSON.stringify(err)}
-                    </div>
-                ))}
-            </div>
-        )
-        return null
-    }
 
     // Group fields by consecutive groupTitle
     const fieldGroups: { title: string | null; fields: UIField[] }[] = []
