@@ -77,6 +77,7 @@ import {
     truncateText,
 } from 'docs-website/src/lib/utils'
 import {
+    ArrowRightIcon,
     FilePlus2Icon,
     ImageIcon,
     ListTreeIcon,

@@ -76,6 +76,7 @@ import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
 import fm from 'front-matter'
 import { isValidLucideIconName } from './icons'
 import { WebsiteUIMessage } from './types'
+import { applyJsonCComments } from './json-c-comments'
 
 /**
  * Generate the system message content for the AI
@@ -1221,15 +1222,25 @@ export async function getPageContent({ githubPath, branchId }) {
     if (githubPath.endsWith('fumabase.jsonc')) {
         const branch = await prisma.siteBranch.findFirst({
             where: { branchId },
-            select: { docsJson: true },
+            select: { docsJson: true, docsJsonComments: true },
         })
         if (!branch || !branch.docsJson) {
             throw new Error(`Cannot find fumabase.jsonc for branch ${branchId}`)
         }
-        return (
-            `> Notice that this is the fumabase.jsonc file before any form updates. Form updates are not saved on the filesystem until save! There is no need to inspect that your changes where succesful. \n\n` +
-            JSON.stringify(branch.docsJson, null, 2)
-        )
+
+        // Apply comments if they exist, otherwise use regular JSON stringify
+        let content: string
+        if (branch.docsJsonComments) {
+            content = applyJsonCComments(
+                branch.docsJson,
+                branch.docsJsonComments as any,
+                2,
+            )
+        } else {
+            content = JSON.stringify(branch.docsJson, null, 2)
+        }
+
+        return content
     }
     if (githubPath.endsWith('/styles.css') || githubPath === 'styles.css') {
         const branch = await prisma.siteBranch.findFirst({
