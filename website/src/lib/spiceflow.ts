@@ -1115,7 +1115,10 @@ export const app = new Spiceflow({ basePath: '/api' })
 
                 // Use the ai package to transcribe
                 const result = await transcribe({
-                    model: openai.transcription('whisper-1'),
+                    model: openai.transcription('gpt-4o-transcribe'),
+                    // providerOptions: {
+                    //     openai: {},
+                    // },
                     audio: buffer,
                 })
 

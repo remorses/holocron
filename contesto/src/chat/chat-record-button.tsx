@@ -103,7 +103,7 @@ export function ChatRecordButton({ transcribeAudio }: RecordButtonProps) {
     const handleTranscription = async (audioBlob: Blob) => {
         setIsTranscribing(true)
         try {
-            const audioFile = new File([audioBlob], 'recording.webm', {
+            const audioFile = new File([audioBlob], 'audio.webm', {
                 type: 'audio/webm',
             })
             const text = await transcribeAudio(audioFile)

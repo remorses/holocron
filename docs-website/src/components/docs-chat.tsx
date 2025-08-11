@@ -40,7 +40,7 @@ import {
 } from '../components/ui/popover'
 import { Sheet, SheetContent } from '../components/ui/sheet'
 
-import { Trash2Icon, XIcon } from 'lucide-react'
+import { ArrowUpIcon, Trash2Icon, XIcon } from 'lucide-react'
 import { useLocation, useRouteLoaderData } from 'react-router'
 import { FileSystemEmulator } from 'website/src/lib/file-system-emulator'
 import { cn } from '../lib/cn'
@@ -752,11 +752,13 @@ function Footer() {
                             </Button>
                         ) : (
                             <Button
-                                className='rounded-md h-8'
+                                className='rounded-md h-8 w-8 p-0'
                                 onClick={submit}
                                 disabled={!draftText?.trim()}
+                                size="icon"
+                                variant={!draftText?.trim() ? 'outline' : 'default'}
                             >
-                                Generate
+                                <ArrowUpIcon className='size-4' />
                             </Button>
                         )}
                     </div>

@@ -21,7 +21,6 @@ export default defineConfig({
         exclude: ['@lancedb/lancedb'],
     },
 
-
     test: {
         pool: 'threads',
         exclude: ['**/dist/**', '**/esm/**', '**/node_modules/**', '**/e2e/**'],
@@ -31,6 +30,10 @@ export default defineConfig({
                 isolate: false,
             },
         },
+    },
+    esbuild: {
+        // https://github.com/pacocoursey/next-themes/issues/349
+        keepNames: false,
     },
     build: {
         rollupOptions: {

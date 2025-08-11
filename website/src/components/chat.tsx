@@ -77,7 +77,7 @@ import {
     truncateText,
 } from 'docs-website/src/lib/utils'
 import {
-    ArrowRightIcon,
+    ArrowUpIcon,
     FilePlus2Icon,
     ImageIcon,
     ListTreeIcon,
@@ -847,11 +847,13 @@ function Footer() {
                                     </Button>
                                 ) : (
                                     <Button
-                                        className='rounded-full h-8'
+                                        className='rounded-full h-8 w-8 p-0'
                                         onClick={submit}
                                         disabled={!text?.trim()}
+                                        size="icon"
+                                        variant={!text?.trim() ? 'outline' : 'default'}
                                     >
-                                        Generate
+                                        <ArrowUpIcon className='size-4' />
                                     </Button>
                                 )}
                             </div>
