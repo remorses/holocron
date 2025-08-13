@@ -26,5 +26,5 @@ export const apiClientWithDurableFetch = createSpiceflowClient(process.env.PUBLI
             return { headers: { Authorization: `Bearer ${authToken}` } };
         }
     },
-    fetch: durableFetchClient.fetch,
+    // fetch: durableFetchClient.fetch,
 });

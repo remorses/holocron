@@ -677,6 +677,31 @@ export const app = new Spiceflow({ basePath: '/api' })
     })
     .route({
         method: 'POST',
+        path: '/updateChatFilesInDraft',
+        request: z.object({
+            chatId: z.string().min(1, 'chatId is required'),
+            filesInDraft: z.record(z.string(), fileUpdateSchema),
+        }),
+        async handler({ request, state: { userId } }) {
+            const { chatId, filesInDraft } = await request.json()
+
+            if (!userId) {
+                throw new AppError('Missing userId')
+            }
+
+            // Update only filesInDraft, not lastPushedFiles
+            await prisma.chat.update({
+                where: { chatId, userId },
+                data: {
+                    filesInDraft: filesInDraft as any,
+                },
+            })
+
+            return { success: true }
+        },
+    })
+    .route({
+        method: 'POST',
         path: '/saveChangesForChat',
         request: z.object({
             branchId: z.string().min(1, 'branchId is required'),

@@ -42,7 +42,7 @@ export declare const apiClient: {
         };
         generateMessage: {
             post: (request: {
-                messages: import("ai").UIMessage<unknown, import("ai").UIDataTypes, import("ai").UITools>[];
+                messages: import("./types").WebsiteUIMessage[];
                 siteId: string;
                 chatId: string;
                 branchId: string;
@@ -58,7 +58,7 @@ export declare const apiClient: {
                 query?: Record<string, unknown> | undefined;
                 fetch?: RequestInit | undefined;
             } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                200: AsyncGenerator<import("ai").InferUIMessageChunk<import("ai").UIMessage<unknown, import("ai").UIDataTypes, import("ai").UITools>>, void, any>;
+                200: AsyncGenerator<import("ai").InferUIMessageChunk<import("./types").WebsiteUIMessage>, void, unknown>;
             }>>;
         };
         githubSync: {
@@ -155,9 +155,8 @@ export declare const apiClient: {
                 };
             }>>;
         };
-        createPrSuggestionForChat: {
+        updateChatFilesInDraft: {
             post: (request: {
-                branchId: string;
                 chatId: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
@@ -171,7 +170,7 @@ export declare const apiClient: {
                 fetch?: RequestInit | undefined;
             } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
                 200: {
-                    prUrl: string;
+                    success: boolean;
                 };
             }>>;
         };
@@ -255,13 +254,13 @@ export declare const apiClient: {
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
+                    orgId?: string | undefined;
                     name?: string | null | undefined;
                     createdAt?: Date | undefined;
-                    orgId?: string | undefined;
-                    defaultLocale?: string | undefined;
-                    githubFolder?: string | undefined;
                     githubOwner?: string | null | undefined;
                     githubRepo?: string | null | undefined;
+                    githubFolder?: string | undefined;
+                    defaultLocale?: string | undefined;
                     githubRepoId?: number | undefined;
                 };
             }>>;
@@ -372,7 +371,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
         };
         generateMessage: {
             post: (request: {
-                messages: import("ai").UIMessage<unknown, import("ai").UIDataTypes, import("ai").UITools>[];
+                messages: import("./types").WebsiteUIMessage[];
                 siteId: string;
                 chatId: string;
                 branchId: string;
@@ -388,7 +387,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                 query?: Record<string, unknown> | undefined;
                 fetch?: RequestInit | undefined;
             } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                200: AsyncGenerator<import("ai").InferUIMessageChunk<import("ai").UIMessage<unknown, import("ai").UIDataTypes, import("ai").UITools>>, void, any>;
+                200: AsyncGenerator<import("ai").InferUIMessageChunk<import("./types").WebsiteUIMessage>, void, unknown>;
             }>>;
         };
         githubSync: {
@@ -485,9 +484,8 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                 };
             }>>;
         };
-        createPrSuggestionForChat: {
+        updateChatFilesInDraft: {
             post: (request: {
-                branchId: string;
                 chatId: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
@@ -501,7 +499,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                 fetch?: RequestInit | undefined;
             } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
                 200: {
-                    prUrl: string;
+                    success: boolean;
                 };
             }>>;
         };
@@ -585,13 +583,13 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
+                    orgId?: string | undefined;
                     name?: string | null | undefined;
                     createdAt?: Date | undefined;
-                    orgId?: string | undefined;
-                    defaultLocale?: string | undefined;
-                    githubFolder?: string | undefined;
                     githubOwner?: string | null | undefined;
                     githubRepo?: string | null | undefined;
+                    githubFolder?: string | undefined;
+                    defaultLocale?: string | undefined;
                     githubRepoId?: number | undefined;
                 };
             }>>;
@@ -703,7 +701,7 @@ export declare const apiClientWithDurableFetch: {
         };
         generateMessage: {
             post: (request: {
-                messages: import("ai").UIMessage<unknown, import("ai").UIDataTypes, import("ai").UITools>[];
+                messages: import("./types").WebsiteUIMessage[];
                 siteId: string;
                 chatId: string;
                 branchId: string;
@@ -719,7 +717,7 @@ export declare const apiClientWithDurableFetch: {
                 query?: Record<string, unknown> | undefined;
                 fetch?: RequestInit | undefined;
             } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
-                200: AsyncGenerator<import("ai").InferUIMessageChunk<import("ai").UIMessage<unknown, import("ai").UIDataTypes, import("ai").UITools>>, void, any>;
+                200: AsyncGenerator<import("ai").InferUIMessageChunk<import("./types").WebsiteUIMessage>, void, unknown>;
             }>>;
         };
         githubSync: {
@@ -816,9 +814,8 @@ export declare const apiClientWithDurableFetch: {
                 };
             }>>;
         };
-        createPrSuggestionForChat: {
+        updateChatFilesInDraft: {
             post: (request: {
-                branchId: string;
                 chatId: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
@@ -832,7 +829,7 @@ export declare const apiClientWithDurableFetch: {
                 fetch?: RequestInit | undefined;
             } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
                 200: {
-                    prUrl: string;
+                    success: boolean;
                 };
             }>>;
         };
@@ -916,13 +913,13 @@ export declare const apiClientWithDurableFetch: {
                         errorMessage: string;
                         errorType: import("db/src/generated/enums").MarkdownPageSyncErrorType;
                     }[];
+                    orgId?: string | undefined;
                     name?: string | null | undefined;
                     createdAt?: Date | undefined;
-                    orgId?: string | undefined;
-                    defaultLocale?: string | undefined;
-                    githubFolder?: string | undefined;
                     githubOwner?: string | null | undefined;
                     githubRepo?: string | null | undefined;
+                    githubFolder?: string | undefined;
+                    defaultLocale?: string | undefined;
                     githubRepoId?: number | undefined;
                 };
             }>>;

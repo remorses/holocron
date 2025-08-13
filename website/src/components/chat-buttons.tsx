@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react'
+import { memo, useMemo, useState, useCallback } from 'react'
 import { Button } from 'website/src/components/ui/button'
 import {
     Popover,
@@ -11,7 +11,12 @@ import {
     TooltipTrigger,
 } from 'website/src/components/ui/tooltip'
 import { AlertCircle, GitBranch, Save, X } from 'lucide-react'
-import { Link, useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
+import {
+    Link,
+    useLoaderData,
+    useRevalidator,
+    useRouteLoaderData,
+} from 'react-router'
 import { href } from 'react-router'
 import { useChatContext } from 'contesto/src/chat/chat-provider'
 import { useTemporaryState } from '../lib/hooks'
@@ -20,22 +25,22 @@ import { doFilesInDraftNeedPush, useWebsiteState } from '../lib/state'
 import { cn } from '../lib/utils'
 
 import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
-import { FileUpdate, calculateLineChanges } from 'docs-website/src/lib/edit-tool'
+import {
+    FileUpdate,
+    calculateLineChanges,
+} from 'docs-website/src/lib/edit-tool'
 import { useQuery } from '@tanstack/react-query'
 
 export function PrButton({ className = '' }) {
     const { messages, isGenerating: isChatGenerating } = useChatContext()
-    const { chatId, chat, prUrl } = useLoaderData<typeof import('../routes/org.$orgId.site.$siteId.chat.$chatId._index').loader>()
-    const siteData = useRouteLoaderData<typeof import('../routes/org.$orgId.site.$siteId').loader>(
-        'routes/org.$orgId.site.$siteId',
-    )!
-    const fumabaseJsonc = useWebsiteState((x) => {
-        const fumabaseKey = Object.keys(x?.filesInDraft || {}).find((path) =>
-            path.endsWith('fumabase.jsonc'),
-        )
-        return fumabaseKey ? x?.filesInDraft[fumabaseKey]?.content : undefined
-    })
-
+    const { chatId, chat, prUrl } =
+        useLoaderData<
+            typeof import('../routes/org.$orgId.site.$siteId.chat.$chatId._index').loader
+        >()
+    const siteData = useRouteLoaderData<
+        typeof import('../routes/org.$orgId.site.$siteId').loader
+    >('routes/org.$orgId.site.$siteId')!
+    const [isUpdating, setIsUpdating] = useState(false)
 
     const { siteId } = siteData
     const orgId = siteData.site.org.orgId
@@ -51,23 +56,53 @@ export function PrButton({ className = '' }) {
     if (!siteData.site.githubOwner || !siteData.site.githubRepo) return null
     if (!messages?.length) return null
 
+    const prHref = href('/org/:orgId/site/:siteId/chat/:chatId/create-pr', {
+        orgId,
+        siteId,
+        chatId,
+    })
 
-    const prHref = (() => {
-        const basePath = href('/org/:orgId/site/:siteId/chat/:chatId/create-pr', {
-            orgId,
-            siteId,
-            chatId,
-        })
-        if (fumabaseJsonc) {
-            const params = new URLSearchParams({
-                fumabaseJsonc: fumabaseJsonc,
-            })
-            return `${basePath}?${params.toString()}`
-        }
-        return basePath
-    })()
+    const handlePrClick = useCallback(
+        async (e: React.MouseEvent<HTMLAnchorElement>) => {
+            e.preventDefault()
+            setIsUpdating(true)
+
+            try {
+                const currentFilesInDraft =
+                    useWebsiteState.getState().filesInDraft
+                const { data, error } =
+                    await apiClient.api.updateChatFilesInDraft.post({
+                        chatId,
+                        filesInDraft: currentFilesInDraft,
+                    })
+
+                if (error) {
+                    console.error(
+                        'Failed to update filesInDraft before PR:',
+                        error,
+                    )
+                }
+
+                // Navigate to PR page (create or push)
+                window.open(prHref, '_blank')
+            } catch (error) {
+                console.error('Failed to update filesInDraft:', error)
+            } finally {
+                setIsUpdating(false)
+            }
+        },
+        [hasNonPushedChanges, chat.prNumber, chatId, prHref],
+    )
 
     const { to, text, isButtonDisabled, tooltipMessage } = (() => {
+        if (isUpdating) {
+            return {
+                to: prHref,
+                text: 'Updating...',
+                isButtonDisabled: true,
+                tooltipMessage: 'Saving changes to database',
+            }
+        }
         if (chat.prNumber) {
             if (!hasNonPushedChanges) {
                 return {
@@ -127,7 +162,12 @@ export function PrButton({ className = '' }) {
                         disabled={isButtonDisabled}
                         asChild
                     >
-                        <Link to={to} target='_blank' rel='noreferrer'>
+                        <Link
+                            to={to}
+                            target='_blank'
+                            rel='noreferrer'
+                            onClick={handlePrClick}
+                        >
                             <div className='flex items-center gap-2'>
                                 <GitBranch className='size-4' />
                                 {text}
@@ -135,7 +175,9 @@ export function PrButton({ className = '' }) {
                         </Link>
                     </Button>
                 </TooltipTrigger>
-                {tooltipMessage && <TooltipContent>{tooltipMessage}</TooltipContent>}
+                {tooltipMessage && (
+                    <TooltipContent>{tooltipMessage}</TooltipContent>
+                )}
             </Tooltip>
         </div>
     )
@@ -147,10 +189,13 @@ export function SaveChangesButton({ className = '' }) {
     const [buttonText, setButtonText] = useTemporaryState('', 2000)
     const { messages, isGenerating: isChatGenerating } = useChatContext()
 
-    const { chatId, branchId } = useLoaderData<typeof import('../routes/org.$orgId.site.$siteId.chat.$chatId._index').loader>()
-    const siteData = useRouteLoaderData<typeof import('../routes/org.$orgId.site.$siteId').loader>(
-        'routes/org.$orgId.site.$siteId',
-    )
+    const { chatId, branchId } =
+        useLoaderData<
+            typeof import('../routes/org.$orgId.site.$siteId.chat.$chatId._index').loader
+        >()
+    const siteData = useRouteLoaderData<
+        typeof import('../routes/org.$orgId.site.$siteId').loader
+    >('routes/org.$orgId.site.$siteId')
     if (!siteData) return null
 
     const filesInDraft = useWebsiteState((x) => x?.filesInDraft || {})
@@ -180,7 +225,6 @@ export function SaveChangesButton({ className = '' }) {
         if (errorMessage) {
             return true
         }
-
 
         return false
     })()
@@ -315,16 +359,21 @@ export const DiffStats = memo(function DiffStats({
     filesInDraft,
     className = '',
 }: DiffStatsProps) {
-    const { branchId } = useLoaderData<typeof import('../routes/org.$orgId.site.$siteId.chat.$chatId._index').loader>()
+    const { branchId } =
+        useLoaderData<
+            typeof import('../routes/org.$orgId.site.$siteId.chat.$chatId._index').loader
+        >()
 
     const { data: resolvedStats = [] } = useQuery({
         queryKey: ['diffStats', branchId, filesInDraft],
         queryFn: async () => {
             const getPageContent = async (githubPath: string) => {
-                const { data, error } = await apiClient.api.getPageContent.post({
-                    branchId,
-                    githubPath,
-                })
+                const { data, error } = await apiClient.api.getPageContent.post(
+                    {
+                        branchId,
+                        githubPath,
+                    },
+                )
                 if (error) return ''
                 return data?.content || ''
             }
@@ -335,15 +384,17 @@ export const DiffStats = memo(function DiffStats({
                 return calculateLineChanges(originalContent, currentContent)
             }
 
-            const statsPromises = Object.entries(filesInDraft).map(async ([path, file]) => {
-                const stats = await computeStatsForFile(file)
-                return {
-                    path,
-                    file,
-                    addedLines: stats.addedLines,
-                    deletedLines: stats.deletedLines,
-                }
-            })
+            const statsPromises = Object.entries(filesInDraft).map(
+                async ([path, file]) => {
+                    const stats = await computeStatsForFile(file)
+                    return {
+                        path,
+                        file,
+                        addedLines: stats.addedLines,
+                        deletedLines: stats.deletedLines,
+                    }
+                },
+            )
 
             return Promise.all(statsPromises)
         },

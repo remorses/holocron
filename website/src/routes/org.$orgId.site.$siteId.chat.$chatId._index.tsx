@@ -28,7 +28,7 @@ import { getSession } from '../lib/better-auth'
 import { createIframeRpcClient, docsRpcClient } from '../lib/docs-setstate'
 import { getTabFilesWithoutContents } from '../lib/spiceflow-generate-message'
 
-import { State, useWebsiteState, WebsiteStateProvider } from '../lib/state'
+import { State, useWebsiteState, WebsiteStateProvider, useFilesInDraftAutoSave } from '../lib/state'
 import { cn } from '../lib/utils'
 import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId._index'
 import type { Route as SiteRoute } from './org.$orgId.site.$siteId'
@@ -211,6 +211,10 @@ export default function Page({
 
 function ChatContent() {
     const hideBrowser = useShouldHideBrowser()
+    const { chatId } = useLoaderData<typeof loader>()
+    
+    // Enable auto-saving of filesInDraft to database
+    useFilesInDraftAutoSave(chatId)
 
     return (
         <div className='dark:bg-black flex h-full gap-2 py-4 px-3'>

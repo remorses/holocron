@@ -3,15 +3,16 @@ import { UIMessage } from 'ai'
 import { DocsState } from 'docs-website/src/lib/docs-state'
 import { createZustandContext } from 'docs-website/src/lib/zustand-context'
 import { create } from 'zustand'
-import { useDeferredValue, useMemo } from 'react'
+import { useDeferredValue, useMemo, useEffect, useRef } from 'react'
 import { FileUpdate } from 'docs-website/src/lib/edit-tool'
 import { FileSystemEmulator } from './file-system-emulator'
+import { apiClient } from './spiceflow-client'
 
 export type State = {
     currentSlug: string
     filesInDraft: DocsState['filesInDraft']
-
     lastPushedFiles: Record<string, FileUpdate>
+    filesInDraftNeedSave?: boolean
 }
 
 export const [WebsiteStateProvider, useWebsiteState] =
@@ -51,4 +52,58 @@ export function doFilesInDraftNeedPush(
     })
 
     return hasNonPushedChanges
+}
+
+// Hook to handle debounced saving of filesInDraft to database
+export function useFilesInDraftAutoSave(chatId: string | undefined) {
+    const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
+    const savingRef = useRef(false)
+
+    useEffect(() => {
+        if (!chatId) return
+
+        // Subscribe to filesInDraft changes using Zustand's subscribe
+        const unsubscribe = useWebsiteState.subscribe(
+            (state, prevState) => {
+                // Check if filesInDraft changed
+                if (state.filesInDraft !== prevState.filesInDraft) {
+                    // Skip if already saving
+                    if (savingRef.current) return
+
+                    // Clear existing timeout
+                    if (timeoutRef.current) {
+                        clearTimeout(timeoutRef.current)
+                    }
+
+                    // Set new timeout for debounced save
+                    timeoutRef.current = setTimeout(async () => {
+                        savingRef.current = true
+                        try {
+                            const currentFilesInDraft = useWebsiteState.getState().filesInDraft
+                            const { data, error } = await apiClient.api.updateChatFilesInDraft.post({
+                                chatId,
+                                filesInDraft: currentFilesInDraft,
+                            })
+
+                            if (error) {
+                                console.error('Failed to auto-save filesInDraft:', error)
+                            }
+                        } catch (error) {
+                            console.error('Failed to auto-save filesInDraft:', error)
+                        } finally {
+                            savingRef.current = false
+                        }
+                    }, 500) // 300ms debounce
+                }
+            }
+        )
+
+        // Cleanup on unmount
+        return () => {
+            unsubscribe()
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current)
+            }
+        }
+    }, [chatId])
 }

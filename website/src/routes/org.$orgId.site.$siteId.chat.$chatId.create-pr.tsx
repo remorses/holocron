@@ -18,11 +18,9 @@ import { FilesInDraft } from 'docs-website/src/lib/docs-state'
 async function createPrSuggestionForChat({
     chatId,
     userId,
-    fumabaseJsonc,
 }: {
     chatId: string
     userId: string
-    fumabaseJsonc?: string
 }): Promise<{ prUrl: string; action: 'created' | 'pushed' }> {
     const [chat] = await Promise.all([
         prisma.chat.findFirst({
@@ -44,33 +42,8 @@ async function createPrSuggestionForChat({
         }),
     ])
 
-    let filesInDraft = chat?.filesInDraft as FilesInDraft
+    const filesInDraft = chat?.filesInDraft as FilesInDraft
     const prBranchRow = chat?.branch
-
-    // If fumabaseJsonc is provided from persisted form data, update it
-    if (fumabaseJsonc && filesInDraft && prBranchRow) {
-        const site = prBranchRow.site
-        const githubFolder = site.githubFolder || ''
-        const githubPath = githubFolder
-            ? `${githubFolder}/fumabase.jsonc`
-            : 'fumabase.jsonc'
-
-        filesInDraft = {
-            ...filesInDraft,
-            [githubPath]: {
-                ...(filesInDraft[githubPath] || {}),
-                content: fumabaseJsonc,
-                githubPath,
-            },
-        }
-        // Update the chat with the new filesInDraft
-        await prisma.chat.update({
-            where: { chatId, userId },
-            data: {
-                filesInDraft: filesInDraft as Prisma.InputJsonValue,
-            },
-        })
-    }
 
     if (!prBranchRow) {
         throw new AppError('Branch not found or access denied')
@@ -167,14 +140,11 @@ export async function loader({
     params: { chatId },
 }: Route.LoaderArgs) {
     const { userId } = await getSession({ request })
-    const url = new URL(request.url)
-    const fumabaseJsonc = url.searchParams.get('fumabaseJsonc') || undefined
 
     // Return a promise that will resolve with the PR URL
     const prPromise = createPrSuggestionForChat({
         chatId,
         userId,
-        fumabaseJsonc,
     })
 
     return { prPromise }
