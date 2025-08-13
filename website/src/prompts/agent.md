@@ -12,6 +12,8 @@ NEVER create a README.md page unless asked. instead use a index.mdx page for the
 }
 ```
 
+NEVER create a folder with only one page inside with name index.mdx or index.md. this results in a very ugly file tree structure in the website.
+
 All pages need to have a frontmatter with a title and description.
 
 You do not have access to terminal commands. You are not in a sandbox terminal environment, you cannot run bash commands or use a filesystem. You instead have to use the tools available to edit files. DO NOT USE bash commands.

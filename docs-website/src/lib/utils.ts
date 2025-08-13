@@ -91,7 +91,7 @@ export function generateSlugFromPath(
     if (pathWithFrontSlash.endsWith('.json') || pathWithFrontSlash.endsWith('.jsonc')) {
         return ''
     }
-    
+
     if (isAbsoluteUrl(pathWithFrontSlash)) {
         return pathWithFrontSlash
     }
@@ -220,6 +220,15 @@ export type DeepPartial<T> = {
 
 
 
+
+export const safeJsoncParse = <T = unknown>(json: string): T | null => {
+    try {
+        return JSONC.parse(json)
+    } catch {
+        return null
+    }
+}
+
 export function getDocsJson({ filesInDraft, docsJson }): DocsJsonType {
     const key = Object.keys(filesInDraft || {}).find((k) =>
         k.endsWith('fumabase.jsonc'),
@@ -227,11 +236,8 @@ export function getDocsJson({ filesInDraft, docsJson }): DocsJsonType {
     if (!key) {
         return docsJson
     }
-    try {
-        return JSONC.parse(filesInDraft?.[key]?.content) || docsJson
-    } catch {
-        return docsJson
-    }
+    const parsed = safeJsoncParse(filesInDraft?.[key]?.content)
+    return parsed || docsJson
 }
 
 
@@ -244,21 +250,21 @@ export function getBasePath(): string {
 export function withBasePath(path: string): string {
     const basePath = getBasePath()
     if (!basePath) return path
-    
+
     if (isAbsoluteUrl(path)) return path
-    
+
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
-    
+
     return `${basePath}${normalizedPath}`
 }
 
 export function withoutBasePath(path: string): string {
     const basePath = getBasePath()
     if (!basePath) return path
-    
+
     if (path.startsWith(basePath)) {
         return path.slice(basePath.length) || '/'
     }
-    
+
     return path
 }

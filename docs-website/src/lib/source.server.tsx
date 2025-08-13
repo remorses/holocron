@@ -1,9 +1,11 @@
 import { prisma } from 'db'
+import frontMatter from 'front-matter'
+
 import { loader, MetaData, PageData, VirtualFile } from 'fumadocs-core/source'
 import { getIconJsx } from './icons.server'
 import { I18nConfig } from 'fumadocs-core/i18n'
 import { ProcessorDataFrontmatter, StructuredData } from './mdx-heavy'
-import { deduplicateBy } from './utils'
+import { deduplicateBy, safeJsoncParse } from './utils'
 import { FilesInDraft } from './docs-state'
 
 type MyVirtualFile = VirtualFile & { data?: ProcessorDataFrontmatter }
@@ -138,15 +140,30 @@ export function getFilesFromFilesInDraft(
 
         const normalizedPath = removeGithubFolder(githubPath, githubFolder)
 
-        // Determine file type based on extension
-        const isMetaFile =
-            githubPath.endsWith('.json') || githubPath.endsWith('_meta.json')
+        const isMetaFile = githubPath.endsWith('meta.json')
 
-        files.push({
-            path: normalizedPath,
-            data: isMetaFile ? {} : {}, // Empty data for now, could parse frontmatter if needed
-            type: isMetaFile ? 'meta' : 'page',
-        })
+        const isPage = githubPath.endsWith('.md') || githubPath.endsWith('.mdx')
+
+        if (isPage) {
+            let data: ProcessorDataFrontmatter = {}
+            try {
+                data =
+                    frontMatter<ProcessorDataFrontmatter>(draft.content || '')
+                        .attributes || {}
+            } catch {}
+            files.push({
+                path: normalizedPath,
+                data,
+                type: 'page',
+            })
+        }
+        if (isMetaFile) {
+            files.push({
+                path: normalizedPath,
+                data: safeJsoncParse(draft.content) || {},
+                type: 'meta',
+            })
+        }
     }
 
     return files
