@@ -20,6 +20,7 @@ export type MarkdownRendererProps = {
     processor?: any
     onAst?: (ast: any) => void
     renderNode?: RenderNode
+    addMarkdownLineNumbers?: boolean
 }
 
 const reactQueryClient = new QueryClient({
@@ -47,7 +48,7 @@ export const Markdown = function MarkdownRender(props: MarkdownRendererProps) {
             )}
         >
             <SafeMdxRenderer
-                addMarkdownLineNumbers
+                addMarkdownLineNumbers={props.addMarkdownLineNumbers ?? true}
                 allowClientEsmImports
                 renderNode={props.renderNode}
                 components={props.components}

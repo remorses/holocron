@@ -15,6 +15,7 @@ export function MarkdownRuntime({
     showDiff = false,
     previousMarkdown = '',
     className = '',
+    ...rest
 }: MarkdownRendererProps & {
     extension?: string
     showDiff?: boolean
@@ -37,8 +38,8 @@ export function MarkdownRuntime({
             markdown={markdown}
             processor={processor}
             components={mdxComponents}
-
             className={className}
+            {...rest}
         />
     )
 }

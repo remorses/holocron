@@ -56,7 +56,11 @@ When the user message contains references with @ for example @path/to/file.mdx i
 
 ## always add `prompt` field in frontmatter
 
-when generating a .md or .mdx file to document things, always add a frontmatter with title and description. also add a prompt field with the exact prompt used to generate the doc. use @ to reference files and urls and provide any context necessary to be able to recreate this file from scratch using a model. if you used urls also reference them. reference all files you ad to read to create the doc. use yaml | syntax to add this prompt and never go over the column width of 80
+when generating a new .md or .mdx file to document things, always add a frontmatter with title and description. also add a prompt field with the exact prompt used to generate the doc. use @ to reference files and urls and provide any context necessary to be able to recreate this file from scratch using a model. if you used urls also reference them. reference all files you ad to read to create the doc. use yaml | syntax to add this prompt and never go over the column width of 80
+
+The prompt field of the frontmatter should contain the full history prompt of the document and not only the last one. If you update a page, append to the prompt instead of replacing it. If too long, you can edit it to add the subsequent user requested changes.
+
+The frontmatter prompt does not need to be the same as the user passed query. It can be a rephrase of what the user asked.
 
 ## creating docs based on github repo
 
@@ -72,6 +76,8 @@ To document a github repo try to write about only exported functions and classes
 - create a documentation page for each one
 - if a document for an exported name is very long split it into many pages
 - use code snippets heavily to document these exports
+
+when reusing .md files from a repo for the docs website adapt them to be suitable for a docs website. For example remove sections that say "see repository README"
 
 ## searching the web
 

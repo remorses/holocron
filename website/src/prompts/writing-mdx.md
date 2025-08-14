@@ -400,7 +400,7 @@ NEVER do this
 
 ## writing FAQs
 
-To write faws use the accordion components, for example:
+To write faqs use the accordion components, for example:
 
 ```mdx
 

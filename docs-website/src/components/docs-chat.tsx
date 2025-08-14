@@ -405,7 +405,14 @@ function Chat({}) {
 }
 
 export function ChatMarkdown({ ...rest }: MarkdownRendererProps) {
-    return <MarkdownRuntime isStreaming={true} {...rest} extension='md' />
+    return (
+        <MarkdownRuntime
+            addMarkdownLineNumbers={false}
+            isStreaming={true}
+            {...rest}
+            extension='md'
+        />
+    )
 }
 
 function WelcomeMessage() {
@@ -755,8 +762,10 @@ function Footer() {
                                 className='rounded-md h-8 w-8 p-0'
                                 onClick={submit}
                                 disabled={!draftText?.trim()}
-                                size="icon"
-                                variant={!draftText?.trim() ? 'outline' : 'default'}
+                                size='icon'
+                                variant={
+                                    !draftText?.trim() ? 'outline' : 'default'
+                                }
                             >
                                 <ArrowUpIcon className='size-4' />
                             </Button>
