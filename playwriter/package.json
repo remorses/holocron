@@ -1,11 +1,12 @@
 {
     "name": "playwriter",
-    "private": true,
     "description": "",
+    "version": "0.0.1",
     "type": "module",
     "repository": "https://github.com/remorses/",
     "scripts": {
-        "build": "tsc ",
+        "build": "rm -rf dist && tsc",
+        "prepublishOnly": "pnpm build",
         "watch": "tsc -w",
         "typecheck": "tsc --noEmit",
         "mcp": "vite-node src/mcp.ts",
