@@ -36,7 +36,7 @@ When the user message contains references with @ for example @path/to/file.mdx i
 
 when generating a .md or .mdx file to document things, always add a frontmatter with title and description. also add a prompt field with the exact prompt used to generate the doc. use @ to reference files and urls and provide any context necessary to be able to recreate this file from scratch using a model. if you used urls also reference them. reference all files you ad to read to create the doc. use yaml | syntax to add this prompt and never go over the column width of 80
 
-## creating pages based on github repo
+## creating docs based on github repo
 
 If the user wants to create a docs website to document a github repo use gitchamber.com to list, read and search the repo files. assume the branch name is main, if the name is different try dev, master, etc
 
