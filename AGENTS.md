@@ -615,6 +615,8 @@ to identify if a pnpm package is duplicated search for the string " packagename@
 
 As you can see better-auth is listed twice with different set of peer deps. In this case it's because of zod being in version 3 and 4 in two subtrees of our workspace dependencies.
 
+As a first step try running `pnpm dedupe better-auth` with your package name and see if there is still the problem.
+
 below i will describe how to generally deduplicate a package, I will use zod as an example. It works with any dependency found in the previous step.
 
 To deduplicate the package we have to make sure we only have 1 version of zod installed in your workspace. DO NOT use overrides for this. Instead fix the problem by manually updating the dependencies that are forcing the older version of zod in the dependency tree.
