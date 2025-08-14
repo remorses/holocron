@@ -260,13 +260,13 @@ export async function loader({ request, params: { id } }: Route.LoaderArgs) {
 export default function Page() {
     const { promise } = useLoaderData<typeof loader>()
     const [error, setError] = useState('')
-    
+
     useEffect(() => {
         promise.then(({ url }) => {
             window.location.replace(url)
         }).catch(e => setError(e.message))
     }, [promise])
-    
+
     if (error) return <p className='text-red-600'>Error: {error}</p>
     return <Loader2Icon className='h-6 w-6 animate-spin' />
 }
@@ -474,7 +474,10 @@ if (!user.subscription) {
 
 I use the vercel ai sdk to interact with LLMs, also know as the npm package `ai`. never use the openai sdk or provider specific sdks, always use the vercel ai sdk, npm package `ai`. streamText is preferred over generateText, unless the model used is very small and fast and the current code doesn't care about streaming tokens or showing a preview to the user. `streamObject` is also preferred over generateObject.
 
-ALWAYS fetch the latest docs for the ai sdk using this url with @fetch tool: https://context7.com/ai-sdk.dev/llmstxt/llms.txt?topic=streamText&tokens=10000
+ALWAYS fetch the latest docs for the ai sdk using this url with curl:
+https://gitchamber.com/repos/vercel/ai/main/files
+
+use gitchamber to read the .md files using curl
 
 You can swap out the topic with text you want to search docs for. You can also limit the total results returned with the param token to limit the tokens that will be added to the context window
 
@@ -556,3 +559,7 @@ read https://tailwindcss.com/docs/upgrade-guide to understand the updates landed
 ## writing docs
 
 when generating a .md or .mdx file to document things, always add a frontmatter with title and description. also add a prompt field with the exact prompt used to generate the doc. use @ to reference files and urls and provide any context necessary to be able to recreate this file from scratch using a model. if you used urls also reference them. reference all files you ad to read to create the doc. use yaml | syntax to add this prompt and never go over the column width of 80
+
+## reading github repositories
+
+You can use gitchamber.com to read repos files. run `curl https://gitchamber.com` to see how the API works. Always use curl to fetch the responses of gitchamber.com
