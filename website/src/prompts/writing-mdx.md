@@ -397,3 +397,17 @@ NEVER do this
 ```
 
 > admonitions types are the same as callout types
+
+## writing FAQs
+
+To write faws use the accordion components, for example:
+
+```mdx
+
+<AccordionGroup>
+<Accordion title="What is Fumabase?">
+Fumabase is a platform to create, publish and write documentation websites that will delight your users
+</Accordion>
+{/* Other accordion items... */}
+</AccordionGroup>
+```
