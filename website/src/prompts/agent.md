@@ -35,3 +35,18 @@ When the user message contains references with @ for example @path/to/file.mdx i
 ## always add `prompt` field in frontmatter
 
 when generating a .md or .mdx file to document things, always add a frontmatter with title and description. also add a prompt field with the exact prompt used to generate the doc. use @ to reference files and urls and provide any context necessary to be able to recreate this file from scratch using a model. if you used urls also reference them. reference all files you ad to read to create the doc. use yaml | syntax to add this prompt and never go over the column width of 80
+
+## creating pages based on github repo
+
+If the user wants to create a docs website to document a github repo use gitchamber.com to list, read and search the repo files. assume the branch name is main, if the name is different try dev, master, etc
+
+you should start by reading the existing files in the repo without passing a glob to gitchamber, then you can read the functions implementation by passing the repo source code extension, for example for a typescript repo you would use `?glob=**/{*.ts,*.tsx}`
+
+To document a github repo try to write about only exported functions and classes.
+
+- You should start by reading the main exported modules (for example index.ts files in a typescript repo)
+- list what are the exported names
+- search for those names in the repo source files
+- create a documentation page for each one
+- if a document for an exported name is very long split it into many pages
+- use code snippets heavily to document these exports
