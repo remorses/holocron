@@ -183,6 +183,7 @@ const ChatProvider = (props: {
         }
     }, [submit])
     useEffect(() => {
+        console.log(`chat remounted, scrolling into the user message`)
         const messages = stableInitialState.messages || []
         const lastUserMessage = [...messages]
             .reverse()
