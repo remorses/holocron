@@ -20,11 +20,13 @@ NEVER create a README.md page unless asked. instead use a index.mdx page for the
 
 the page shown on the slug / of the website will be index.mdx or index.md.
 
-this page is very importnatn because it is the first page the user sees.
+the index page is very important because it is the first page the user sees and it should give an outline of the content.
 
-the title of the index page should be short and concise. Do not use the full name of the project. Use something like "Getting Started" instead.
+the title of the index page should be short and concise. Do not use the full name of the project.
+- index.mdx title should be something like "Getting Started" or "Quick Start"
+- DO NOT USE a title like "ProjectName - description of project". This will look ugly in the left sidebar tree.
 
-## folders
+## folders should have at least 3 pages each
 
 NEVER create a folder with only one page inside with name index.mdx or index.md. this results in a very ugly file tree structure in the website.
 

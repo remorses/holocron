@@ -210,7 +210,7 @@ export function createEditExecute({
                 if (occurrences === 0) {
                     return {
                         success: false,
-                        error: `No match found for replacement. Old string "${old_str}" not found in the document.`,
+                        error: `No match found for replacement. Old string not found in the document. Here is the document actual content:\n\n${currentContent}`,
                     }
                 }
                 // if (occurrences > 1) {
