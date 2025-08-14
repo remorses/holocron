@@ -16,6 +16,10 @@ NEVER create a README.md page unless asked. instead use a index.mdx page for the
 }
 ```
 
+## mdx is preferred over md
+
+unless the user specifies otherwise use .mdx for new pages. mdx is preferred as it allows for more rich content and features.
+
 ## first page of the docs website: index.mdx
 
 the page shown on the slug / of the website will be index.mdx or index.md.
