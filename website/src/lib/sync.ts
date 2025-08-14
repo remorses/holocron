@@ -1,6 +1,6 @@
 import { createHash } from 'crypto'
 import { lookup } from 'mime-types'
-import { MarkdownExtension, Prisma, prisma } from 'db'
+import { MarkdownExtension, MarkdownPage, Prisma, prisma } from 'db'
 import { Sema } from 'async-sema'
 import { request } from 'undici'
 import { Readable } from 'node:stream'
@@ -774,31 +774,43 @@ export async function syncSite({
         errors = deduplicateBy(errors, (x) => String(x.line || 0))
 
         // Execute all operations in a single transaction array for data consistency
-        // Always put page upsert first for consistent access at results[0]
-        const [page] = await prisma.$transaction([
+        // Create MarkdownBlob FIRST to satisfy foreign key constraint
+        const transactionOps: Prisma.PrismaPromise<any>[] = []
+
+        // First create/update MarkdownBlob if we have a valid githubSha
+        if (effectiveGithubSha) {
+            transactionOps.push(
+                prisma.markdownBlob.upsert({
+                    where: { githubSha: effectiveGithubSha },
+                    update: {
+                        markdown,
+                        mdast,
+                        structuredData: data.structuredData as any,
+                    },
+                    create: {
+                        githubSha: effectiveGithubSha,
+                        markdown,
+                        mdast,
+                        structuredData: data.structuredData as any,
+                    },
+                })
+            )
+        }
+
+        // Then create/update MarkdownPage (which references the blob)
+        transactionOps.push(
             prisma.markdownPage.upsert({
                 where: {
                     branchId_slug: { branchId, slug: slug },
                 },
                 update: pageInput,
                 create: { ...pageInput, branchId },
-            }),
-            // Only create/update MarkdownBlob if we have a valid githubSha
-            effectiveGithubSha && prisma.markdownBlob.upsert({
-                where: { githubSha: effectiveGithubSha },
-                update: {
-                    markdown,
-                    mdast,
-                    structuredData: data.structuredData as any,
-                },
-                create: {
-                    githubSha: effectiveGithubSha,
-                    markdown,
-                    mdast,
-                    structuredData: data.structuredData as any,
-                },
             })
-        ].filter(Boolean) as Prisma.PrismaPromise<any>[])
+        )
+
+        const results = await prisma.$transaction(transactionOps)
+        // Get the page from the results (last item if blob was created, otherwise first)
+        const page: MarkdownPage = effectiveGithubSha ? results[1] : results[0]
 
         // Now handle all relation operations in a single atomic transaction
         const relationOps: Prisma.PrismaPromise<any>[] = [
