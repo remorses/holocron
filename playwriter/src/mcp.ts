@@ -146,8 +146,8 @@ async function ensureConnection(): Promise<{ browser: Browser; page: Page }> {
     }
 
     // Generate user agent and set it on context
-    const ua = require('user-agents')
-    const userAgent = new ua({
+    const { default: UserAgent } = await import('user-agents')
+    const userAgent = new UserAgent({
         platform: 'MacIntel',
         deviceCategory: 'desktop',
     })
@@ -270,8 +270,8 @@ server.tool(
             const newPage = await context.newPage()
 
             // Set user agent on new page
-            const ua = require('user-agents')
-            const userAgent = new ua({
+            const { default: UserAgent } = await import('user-agents')
+            const userAgent = new UserAgent({
                 platform: 'MacIntel',
                 deviceCategory: 'desktop',
             })

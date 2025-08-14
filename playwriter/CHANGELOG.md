@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.3
+
+### Patch Changes
+
+- Replace CommonJS `require` with ESM `import` for user-agents module
+
 ## 2025-07-24 22:15
 
 - Changed Chrome process stdio from 'ignore' to 'inherit' to print Chrome logs

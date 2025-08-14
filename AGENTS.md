@@ -282,6 +282,8 @@ also keep in mind it's preferable to throw redirects in loaders instead of retur
 
 ## typescript
 
+NEVER use require. always esm imports
+
 Always try to use non relative imports, each package has a absolute import with the package name, you can find it in the tsconfig.json paths section, for example paths inside website can be imported from website. Notice these paths also need to include the src directory.
 
 This is preferable other aliases like @/ because i can easily move the code from one package to another without changing the import paths. This way you can even move a file and import paths do not change much.
