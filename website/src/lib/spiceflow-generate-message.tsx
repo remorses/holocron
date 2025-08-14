@@ -90,6 +90,7 @@ export async function generateSystemMessage({
         await import('../prompts/writing-mdx.md?raw').then((x) => x.default),
         await import('../prompts/css-variables.md?raw').then((x) => x.default),
         await import('../prompts/frontmatter.md?raw').then((x) => x.default),
+        await import('../prompts/gitchamber.md?raw').then((x) => x.default),
         dedent`
         ## fumabase.jsonc
 
