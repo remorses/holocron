@@ -16,7 +16,7 @@ importers:
         version: 24.0.1
       unframer:
         specifier: latest
-        version: 3.0.6(@modelcontextprotocol/sdk@1.17.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 3.0.6(@modelcontextprotocol/sdk@1.17.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
     devDependencies:
       '@changesets/cli':
         specifier: ^2.29.4
@@ -80,7 +80,7 @@ importers:
         version: 0.1.3
       spiceflow:
         specifier: ^1.17.8
-        version: 1.17.8(@modelcontextprotocol/sdk@1.17.0)
+        version: 1.17.8(@modelcontextprotocol/sdk@1.17.3)
       tiny-jsonc:
         specifier: ^1.0.2
         version: 1.0.2
@@ -117,16 +117,16 @@ importers:
     dependencies:
       '@ai-sdk/openai':
         specifier: 2.0.14
-        version: 2.0.14(zod@4.0.5)
+        version: 2.0.14(zod@4.0.17)
       '@ai-sdk/provider':
         specifier: 2.0.0
         version: 2.0.0
       '@ai-sdk/react':
         specifier: 2.0.14
-        version: 2.0.14(react@19.1.1)(zod@4.0.5)
+        version: 2.0.14(react@19.1.1)(zod@4.0.17)
       '@ai-sdk/ui-utils':
         specifier: ^1.2.11
-        version: 1.2.11(zod@4.0.5)
+        version: 1.2.11(zod@4.0.17)
       '@ariakit/react':
         specifier: ^0.4.17
         version: 0.4.17(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -162,10 +162,10 @@ importers:
         version: 4.0.9
       '@uiw/react-color':
         specifier: ^2.6.0
-        version: 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       ai:
         specifier: 5.0.14
-        version: 5.0.14(zod@4.0.5)
+        version: 5.0.14(zod@4.0.17)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -272,8 +272,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.2.1)(@vitest/ui@3.2.4)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.3)(yaml@2.8.0)
       zod:
-        specifier: 4.0.5
-        version: 4.0.5
+        specifier: 4.0.17
+        version: 4.0.17
       zustand:
         specifier: ^5.0.6
         version: 5.0.6(@types/react@19.1.10)(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))
@@ -329,13 +329,13 @@ importers:
     dependencies:
       '@ai-sdk/anthropic':
         specifier: 2.0.4
-        version: 2.0.4(zod@4.0.5)
+        version: 2.0.4(zod@4.0.17)
       '@ai-sdk/groq':
         specifier: ^2.0.9
-        version: 2.0.9(zod@4.0.5)
+        version: 2.0.9(zod@4.0.17)
       '@ai-sdk/openai':
         specifier: 2.0.14
-        version: 2.0.14(zod@4.0.5)
+        version: 2.0.14(zod@4.0.17)
       '@ai-sdk/provider':
         specifier: 2.0.0
         version: 2.0.0
@@ -443,7 +443,7 @@ importers:
         version: 8.5.2
       ai:
         specifier: 5.0.14
-        version: 5.0.14(zod@4.0.5)
+        version: 5.0.14(zod@4.0.17)
       async-sema:
         specifier: ^3.1.1
         version: 3.1.1
@@ -656,7 +656,7 @@ importers:
         version: 3.6.0
       spiceflow:
         specifier: ^1.17.8
-        version: 1.17.8(@modelcontextprotocol/sdk@1.17.0)
+        version: 1.17.8(@modelcontextprotocol/sdk@1.17.3)
       string-dedent:
         specifier: ^3.0.1
         version: 3.0.1
@@ -671,7 +671,7 @@ importers:
         version: 1.3.4
       unframer:
         specifier: ^3.0.6
-        version: 3.0.6(@modelcontextprotocol/sdk@1.17.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 3.0.6(@modelcontextprotocol/sdk@1.17.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       unified:
         specifier: ^11.0.5
         version: 11.0.5
@@ -700,8 +700,8 @@ importers:
         specifier: ^0.1.0
         version: 0.1.0
       zod:
-        specifier: ^4.0.5
-        version: 4.0.5
+        specifier: ^4.0.17
+        version: 4.0.17
       zustand:
         specifier: ^5.0.5
         version: 5.0.5(@types/react@19.1.10)(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))
@@ -756,7 +756,7 @@ importers:
         version: 4.24.3(@cloudflare/workers-types@4.20250712.0)
       zod-to-json-schema:
         specifier: ^3.24.5
-        version: 3.24.5(zod@4.0.5)
+        version: 3.24.5(zod@4.0.17)
 
   fumadocs:
     devDependencies:
@@ -1385,8 +1385,8 @@ importers:
         specifier: ^1.1.3
         version: 1.1.3
       '@modelcontextprotocol/sdk':
-        specifier: ^1.15.0
-        version: 1.16.0
+        specifier: ^1.17.3
+        version: 1.17.3
       '@radix-ui/react-accordion':
         specifier: ^1.2.11
         version: 1.2.11(@types/react-dom@19.1.7(@types/react@19.1.10))(@types/react@19.1.10)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -1737,8 +1737,8 @@ importers:
   mcp:
     dependencies:
       '@modelcontextprotocol/sdk':
-        specifier: ^1.16.0
-        version: 1.16.0
+        specifier: ^1.17.3
+        version: 1.17.3
       ai:
         specifier: 5.0.14
         version: 5.0.14(zod@4.0.17)
@@ -1810,8 +1810,8 @@ importers:
   playwriter:
     dependencies:
       '@modelcontextprotocol/sdk':
-        specifier: ^1.17.0
-        version: 1.17.0
+        specifier: ^1.17.3
+        version: 1.17.3
       '@playwright/mcp':
         specifier: latest
         version: 0.0.33
@@ -1822,8 +1822,8 @@ importers:
         specifier: ^1.1.610
         version: 1.1.610
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       '@vitest/ui':
         specifier: ^3.2.4
@@ -1844,8 +1844,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0
       agents:
-        specifier: ^0.0.109
-        version: 0.0.109(@cloudflare/workers-types@4.20250712.0)(react@19.1.1)
+        specifier: ^0.0.113
+        version: 0.0.113(@cloudflare/workers-types@4.20250712.0)(react@19.1.1)
       ajv:
         specifier: ^8.17.1
         version: 8.17.1
@@ -1866,10 +1866,10 @@ importers:
         version: 15.0.12
       spiceflow:
         specifier: ^1.17.8
-        version: 1.17.8(@modelcontextprotocol/sdk@1.17.0)
+        version: 1.17.8(@modelcontextprotocol/sdk@1.17.3)
       zod:
-        specifier: ^4.0.5
-        version: 4.0.14
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       '@types/js-yaml':
         specifier: ^4.0.9
@@ -1894,37 +1894,37 @@ importers:
     dependencies:
       '@ai-sdk/anthropic':
         specifier: 2.0.4
-        version: 2.0.4(zod@4.0.5)
+        version: 2.0.4(zod@4.0.17)
       '@ai-sdk/deepinfra':
         specifier: ^1.0.7
-        version: 1.0.7(zod@4.0.5)
+        version: 1.0.7(zod@4.0.17)
       '@ai-sdk/gateway':
         specifier: ^1.0.6
-        version: 1.0.6(zod@4.0.5)
+        version: 1.0.6(zod@4.0.17)
       '@ai-sdk/google':
         specifier: ^2.0.6
-        version: 2.0.6(zod@4.0.5)
+        version: 2.0.6(zod@4.0.17)
       '@ai-sdk/groq':
         specifier: ^2.0.9
-        version: 2.0.9(zod@4.0.5)
+        version: 2.0.9(zod@4.0.17)
       '@ai-sdk/openai':
         specifier: 2.0.14
-        version: 2.0.14(zod@4.0.5)
+        version: 2.0.14(zod@4.0.17)
       '@ai-sdk/provider':
         specifier: 2.0.0
         version: 2.0.0
       '@ai-sdk/react':
         specifier: 2.0.14
-        version: 2.0.14(react@19.1.1)(zod@4.0.5)
+        version: 2.0.14(react@19.1.1)(zod@4.0.17)
       '@ai-sdk/ui-utils':
         specifier: ^1.2.11
-        version: 1.2.11(zod@4.0.5)
+        version: 1.2.11(zod@4.0.17)
       '@ariakit/react':
         specifier: ^0.4.17
         version: 0.4.17(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@better-auth/stripe':
-        specifier: ^1.2.10
-        version: 1.2.10(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        specifier: ^1.3.6
+        version: 1.3.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(zod@4.0.17)
       '@cloudflare/vite-plugin':
         specifier: ^1.9.4
         version: 1.9.4(rollup@4.43.0)(vite@6.3.5(@types/node@24.0.1)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.3)(yaml@2.8.0))(workerd@1.20250709.0)(wrangler@4.24.3(@cloudflare/workers-types@4.20250712.0))
@@ -2023,7 +2023,7 @@ importers:
         version: 0.2.3
       '@uiw/react-color':
         specifier: ^2.6.0
-        version: 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@upstash/qstash':
         specifier: ^2.8.1
         version: 2.8.1
@@ -2032,16 +2032,16 @@ importers:
         version: 2.0.1
       ai:
         specifier: 5.0.14
-        version: 5.0.14(zod@4.0.5)
+        version: 5.0.14(zod@4.0.17)
       ai-fallback:
         specifier: ^1.0.2
-        version: 1.0.2(zod@4.0.5)
+        version: 1.0.2(zod@4.0.17)
       async-sema:
         specifier: ^3.1.1
         version: 3.1.1
       better-auth:
-        specifier: ^1.3.4
-        version: 1.3.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        specifier: ^1.3.6
+        version: 1.3.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(zod@4.0.17)
       canvas-confetti:
         specifier: ^1.9.3
         version: 1.9.3
@@ -2188,7 +2188,7 @@ importers:
         version: 2.0.5(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       spiceflow:
         specifier: ^1.17.8
-        version: 1.17.8(@modelcontextprotocol/sdk@1.17.0)
+        version: 1.17.8(@modelcontextprotocol/sdk@1.17.3)
       string-dedent:
         specifier: ^3.0.1
         version: 3.0.1
@@ -2218,7 +2218,7 @@ importers:
         version: 7.10.0
       unframer:
         specifier: latest
-        version: 3.0.6(@modelcontextprotocol/sdk@1.17.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 3.0.6(@modelcontextprotocol/sdk@1.17.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       use-stick-to-bottom:
         specifier: ^1.1.1
         version: 1.1.1(react@19.1.1)
@@ -2229,8 +2229,8 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.1.7(@types/react@19.1.10))(@types/react@19.1.10)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       zod:
-        specifier: ^4.0.5
-        version: 4.0.5
+        specifier: ^4.0.17
+        version: 4.0.17
       zustand:
         specifier: ^5.0.5
         version: 5.0.5(@types/react@19.1.10)(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))
@@ -2739,12 +2739,16 @@ packages:
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
-  '@babel/runtime-corejs3@7.28.0':
-    resolution: {integrity: sha512-nlIXnSqLcBij8K8TtkxbBJgfzfvi75V1pAKSM7dUXejGw12vJAqez74jZrHTsJ3Z+Aczc5Q/6JgNjKRMsVU44g==}
+  '@babel/runtime-corejs3@7.28.3':
+    resolution: {integrity: sha512-LKYxD2CIfocUFNREQ1yk+dW+8OH8CRqmgatBZYXb+XhuObO8wsDpEoCNri5bKld9cnj8xukqZjxSX8p1YiRF8Q==}
     engines: {node: '>=6.9.0'}
 
   '@babel/runtime@7.27.6':
     resolution: {integrity: sha512-vbavdySgbTTrmFE+EsiqUTzlOr5bzlnJtUv9PynGCAKvfQqjIXbvFdumPM/GxMDfyuGMJaJAU6TO4zc1Jf1i8Q==}
+    engines: {node: '>=6.9.0'}
+
+  '@babel/runtime@7.28.3':
+    resolution: {integrity: sha512-9uIQ10o0WGdpP6GDhXcdOJPJuDgFtIDtN/9+ArJQ2NAfAmiuhTQdzkaTGR33v43GYS2UrSA0eX2pPPHoFVvpxA==}
     engines: {node: '>=6.9.0'}
 
   '@babel/template@7.27.2':
@@ -2771,11 +2775,13 @@ packages:
     resolution: {integrity: sha512-ruv7Ae4J5dUYULmeXw1gmb7rYRz57OWCPM57pHojnLq/3Z1CK2lNSLTCVjxVk1F/TZHwOZZrOWi0ur95BbLxNQ==}
     engines: {node: '>=6.9.0'}
 
-  '@better-auth/stripe@1.2.10':
-    resolution: {integrity: sha512-ZWPJNICiT1xaWHnmVswGLVsVik60dmlozsJv71dBGWd5ua3Cdz74r+OCaCvbalGyVn1nZPBPaGvCCd71U5Tliw==}
+  '@better-auth/stripe@1.3.6':
+    resolution: {integrity: sha512-f4tsO5DLEOS1FhzpEE5QxtYjgxaAluy9ut9QsBp5uXx3dh38iFUOfrUuJTwxo2EdoqsEiRyIcFxH9ikMuzPrpQ==}
+    peerDependencies:
+      zod: ^3.25.0 || ^4.0.0
 
-  '@better-auth/utils@0.2.5':
-    resolution: {integrity: sha512-uI2+/8h/zVsH8RrYdG8eUErbuGBk16rZKQfz8CjxQOyCE6v7BqFYEbFwvOkvl1KbUdxhqOnXp78+uE5h8qVEgQ==}
+  '@better-auth/utils@0.2.6':
+    resolution: {integrity: sha512-3y/vaL5Ox33dBwgJ6ub3OPkVqr6B5xL2kgxNHG8eHZuryLyG/4JSPGqjbdRSgjuy9kALUZYDFl+ORIAxlWMSuA==}
 
   '@better-fetch/fetch@1.1.18':
     resolution: {integrity: sha512-rEFOE1MYIsBmoMJtQbl32PGHHXuG2hDxvEd7rUHE0vCBoFQVSDqaVs9hkZEtHCxRoY+CljXKFCOuJ8uxqw1LcA==}
@@ -4496,12 +4502,8 @@ packages:
   '@mjackson/node-fetch-server@0.7.0':
     resolution: {integrity: sha512-un8diyEBKU3BTVj3GzlTPA1kIjCkGdD+AMYQy31Gf9JCkfoZzwgJ79GUtHrF2BN3XPNMLpubbzPcxys+a3uZEw==}
 
-  '@modelcontextprotocol/sdk@1.16.0':
-    resolution: {integrity: sha512-8ofX7gkZcLj9H9rSd50mCgm3SSF8C7XoclxJuLoV0Cz3rEQ1tv9MZRYYvJtm9n1BiEQQMzSmE/w2AEkNacLYfg==}
-    engines: {node: '>=18'}
-
-  '@modelcontextprotocol/sdk@1.17.0':
-    resolution: {integrity: sha512-qFfbWFA7r1Sd8D697L7GkTd36yqDuTkvz0KfOGkgXR8EUhQn3/EDNIR/qUdQNMT8IjmasBvHWuXeisxtXTQT2g==}
+  '@modelcontextprotocol/sdk@1.17.3':
+    resolution: {integrity: sha512-JPwUKWSsbzx+DLFznf/QZ32Qa+ptfbUlHhRLrBQBAFu9iI1iYvizM4p+zhhRDceSsPutXp4z+R/HPVphlIiclg==}
     engines: {node: '>=18'}
 
   '@monaco-editor/loader@1.5.0':
@@ -8111,8 +8113,8 @@ packages:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
 
-  agents@0.0.109:
-    resolution: {integrity: sha512-QExGnLWyQZ0JzYOv3QAKM2LM8jmnGi+WhCASQhsCtARoGk1xfo0ho0aSjXUmPbcL0OnTsqZm3W/Lu6fygCTQgA==}
+  agents@0.0.113:
+    resolution: {integrity: sha512-PnUjSwFGYMcOWTcewo4NJZqN8gU2u1LFD17OhOzc83LZHa01P2o/qjLOVT338jWPzkPalXTj0RO19s0Lgyl6Ig==}
     peerDependencies:
       react: '*'
 
@@ -8353,11 +8355,12 @@ packages:
   before-after-hook@4.0.0:
     resolution: {integrity: sha512-q6tR3RPqIB1pMiTRMFcZwuG5T8vwp+vUvEG0vuI6B+Rikh5BfPp2fQ82c925FOs+b0lcFQ8CFrL+KbilfZFhOQ==}
 
-  better-auth@1.3.4:
-    resolution: {integrity: sha512-JbZYam6Cs3Eu5CSoMK120zSshfaKvrCftSo/+v7524H1RvhryQ7UtMbzagBcXj0Digjj8hZtVkkR4tTZD/wK2g==}
+  better-auth@1.3.6:
+    resolution: {integrity: sha512-zjwbz9GpgGt3LuvJ8ZXfQeowSRpzdGojVvkhxvXjhCLwGOaOrZmFiNdEVyIKWTraN4oBtgNimcxUIQTGs6OKYg==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
+      zod: ^3.25.0 || ^4.0.0
     peerDependenciesMeta:
       react:
         optional: true
@@ -8538,6 +8541,10 @@ packages:
 
   chalk@5.4.1:
     resolution: {integrity: sha512-zgVZuo2WcZgfUEmsn6eO3kINexW8RAE4maiQ8QNs8CtpPCSyMiYsULR3HQYkm3w8FIA3SberyMJMSldGsW+U3w==}
+    engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
+
+  chalk@5.5.0:
+    resolution: {integrity: sha512-1tm8DTaJhPBG3bIkVeZt1iZM9GfSX2lzOeDVZH9R9ffRHpmHvxZ/QhgQH/aDTkswQVt+YHdXAdS/In/30OjCbg==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
 
   character-entities-html4@2.1.0:
@@ -8850,8 +8857,8 @@ packages:
     resolution: {integrity: sha512-mFsNh/DIANLqFt5VHZoGirdg7bK5+oTWlhnGu6tgRhzBlnEKWaPX2xrFaLltii/6rmhqFMJqffUgknuRdpYlHw==}
     engines: {node: '>=18'}
 
-  core-js-pure@3.44.0:
-    resolution: {integrity: sha512-gvMQAGB4dfVUxpYD0k3Fq8J+n5bB6Ytl15lqlZrOIXFzxOhtPaObfkQGHtMRdyjIf7z2IeNULwi1jEwyS+ltKQ==}
+  core-js-pure@3.45.0:
+    resolution: {integrity: sha512-OtwjqcDpY2X/eIIg1ol/n0y/X8A9foliaNt1dSK0gV3J2/zw+89FcNG3mPK+N8YWts4ZFUPxnrAzsxs/lf8yDA==}
 
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
@@ -10750,8 +10757,8 @@ packages:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
 
-  js-base64@3.7.7:
-    resolution: {integrity: sha512-7rCnleh0z2CkXhH67J8K1Ytz0b2Y+yxTPL+/KOJoa20hfnVQ/3/T6W/KflYI4bRHRagNeXeU2bkNGI3v1oS/lw==}
+  js-base64@3.7.8:
+    resolution: {integrity: sha512-hNngCeKxIUQiEUN3GPJOkz4wF/YvdUdbNL9hsBcMQTkKzboD7T/q3OYOuuPZLUE6dBxSGpwhk5mwuDud7JVAow==}
 
   js-beautify@1.15.4:
     resolution: {integrity: sha512-9/KXeZUKKJwqCXUdBxFJ3vPh467OCckSBmYDwSK/EtV090K+iMJ7zx2S3HLVDIWFQdqMIsZWbnaGiba18aWhaA==}
@@ -10904,8 +10911,8 @@ packages:
   kuler@2.0.0:
     resolution: {integrity: sha512-Xq9nH7KlWZmXAtodXDDRE7vs6DU1gTU8zYDHDiWLSip45Egwq3plLHzPn27NgvzL2r1LMPC1vdqh98sQxtqj4A==}
 
-  kysely@0.28.4:
-    resolution: {integrity: sha512-pfQj8/Bo3KSzC1HIZB5MeeYRWcDmx1ZZv8H25LsyeygqXE+gfsbUAgPT1GSYZFctB1cdOVlv+OifuCls2mQSnw==}
+  kysely@0.28.5:
+    resolution: {integrity: sha512-rlB0I/c6FBDWPcQoDtkxi9zIvpmnV5xoIalfCMSMCa7nuA6VGA3F54TW9mEgX4DVf10sXAWCF5fDbamI/5ZpKA==}
     engines: {node: '>=20.0.0'}
 
   lambda-local@2.2.0:
@@ -11990,8 +11997,8 @@ packages:
     peerDependencies:
       '@cloudflare/workers-types': ^4.20240729.0
 
-  partysocket@1.1.4:
-    resolution: {integrity: sha512-jXP7PFj2h5/v4UjDS8P7MZy6NJUQ7sspiFyxL4uc/+oKOL+KdtXzHnTV8INPGxBrLTXgalyG3kd12Qm7WrYc3A==}
+  partysocket@1.1.5:
+    resolution: {integrity: sha512-8uw9foq9bij4sKLCtTSHvyqMrMTQ5FJjrHc7BjoM2s95Vu7xYCN63ABpI7OZHC7ZMP5xaom/A+SsoFPXmTV6ZQ==}
 
   patchright-core@1.52.5:
     resolution: {integrity: sha512-8rnLVEK9jDZWzFPy2hCQrp4xhU7zgE8IqseZyjGkgxf+jpAWTuGNgIAlcsKZMfQrDL8j1mZgRIGNAQT00nk6QA==}
@@ -14600,17 +14607,8 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.0.14:
-    resolution: {integrity: sha512-nGFJTnJN6cM2v9kXL+SOBq3AtjQby3Mv5ySGFof5UGRHrRioSJ5iG680cYNjE/yWk671nROcpPj4hAS8nyLhSw==}
-
-  zod@4.0.15:
-    resolution: {integrity: sha512-2IVHb9h4Mt6+UXkyMs0XbfICUh1eUrlJJAOupBHUhLRnKkruawyDddYRCs0Eizt900ntIMk9/4RksYl+FgSpcQ==}
-
   zod@4.0.17:
     resolution: {integrity: sha512-1PHjlYRevNxxdy2JZ8JcNAw7rX8V9P1AKkP+x/xZfxB0K5FYfuV+Ug6P/6NVSR2jHQ+FzDDoDHS04nYUsOIyLQ==}
-
-  zod@4.0.5:
-    resolution: {integrity: sha512-/5UuuRPStvHXu7RS+gmvRf4NXrNxpSllGwDnCBcJZtQsKrviYXm54yDGV2KYNLT5kq0lHGcl7lqWJLgSaG+tgA==}
 
   zustand@5.0.5:
     resolution: {integrity: sha512-mILtRfKW9xM47hqxGIxCv12gXusoY/xTSHBYApXozR0HmQv299whhBeeAcRy+KrPPybzosvJBCOmVjq6x12fCg==}
@@ -14689,18 +14687,18 @@ snapshots:
 
   '@actions/io@1.1.3': {}
 
-  '@ai-sdk/anthropic@2.0.4(zod@4.0.5)':
+  '@ai-sdk/anthropic@2.0.4(zod@4.0.17)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.5)
-      zod: 4.0.5
+      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.17)
+      zod: 4.0.17
 
-  '@ai-sdk/deepinfra@1.0.7(zod@4.0.5)':
+  '@ai-sdk/deepinfra@1.0.7(zod@4.0.17)':
     dependencies:
-      '@ai-sdk/openai-compatible': 1.0.7(zod@4.0.5)
+      '@ai-sdk/openai-compatible': 1.0.7(zod@4.0.17)
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.5)
-      zod: 4.0.5
+      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.17)
+      zod: 4.0.17
 
   '@ai-sdk/gateway@1.0.6(zod@4.0.17)':
     dependencies:
@@ -14708,35 +14706,29 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.3(zod@4.0.17)
       zod: 4.0.17
 
-  '@ai-sdk/gateway@1.0.6(zod@4.0.5)':
+  '@ai-sdk/google@2.0.6(zod@4.0.17)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.5)
-      zod: 4.0.5
+      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.17)
+      zod: 4.0.17
 
-  '@ai-sdk/google@2.0.6(zod@4.0.5)':
+  '@ai-sdk/groq@2.0.9(zod@4.0.17)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.5)
-      zod: 4.0.5
+      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.17)
+      zod: 4.0.17
 
-  '@ai-sdk/groq@2.0.9(zod@4.0.5)':
+  '@ai-sdk/openai-compatible@1.0.7(zod@4.0.17)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.5)
-      zod: 4.0.5
+      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.17)
+      zod: 4.0.17
 
-  '@ai-sdk/openai-compatible@1.0.7(zod@4.0.5)':
+  '@ai-sdk/openai@2.0.14(zod@4.0.17)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.5)
-      zod: 4.0.5
-
-  '@ai-sdk/openai@2.0.14(zod@4.0.5)':
-    dependencies:
-      '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.5)
-      zod: 4.0.5
+      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.17)
+      zod: 4.0.17
 
   '@ai-sdk/provider-utils@2.2.8(zod@3.25.76)':
     dependencies:
@@ -14745,20 +14737,20 @@ snapshots:
       secure-json-parse: 2.7.0
       zod: 3.25.76
 
-  '@ai-sdk/provider-utils@2.2.8(zod@4.0.5)':
+  '@ai-sdk/provider-utils@2.2.8(zod@4.0.17)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
       nanoid: 3.3.11
       secure-json-parse: 2.7.0
-      zod: 4.0.5
+      zod: 4.0.17
 
-  '@ai-sdk/provider-utils@3.0.0-beta.1(zod@4.0.5)':
+  '@ai-sdk/provider-utils@3.0.0-beta.1(zod@4.0.17)':
     dependencies:
       '@ai-sdk/provider': 2.0.0-beta.1
       '@standard-schema/spec': 1.0.0
       eventsource-parser: 3.0.3
-      zod: 4.0.5
-      zod-to-json-schema: 3.24.6(zod@4.0.5)
+      zod: 4.0.17
+      zod-to-json-schema: 3.24.6(zod@4.0.17)
 
   '@ai-sdk/provider-utils@3.0.3(zod@4.0.17)':
     dependencies:
@@ -14767,14 +14759,6 @@ snapshots:
       eventsource-parser: 3.0.3
       zod: 4.0.17
       zod-to-json-schema: 3.24.6(zod@4.0.17)
-
-  '@ai-sdk/provider-utils@3.0.3(zod@4.0.5)':
-    dependencies:
-      '@ai-sdk/provider': 2.0.0
-      '@standard-schema/spec': 1.0.0
-      eventsource-parser: 3.0.3
-      zod: 4.0.5
-      zod-to-json-schema: 3.24.6(zod@4.0.5)
 
   '@ai-sdk/provider@1.1.3':
     dependencies:
@@ -14798,15 +14782,15 @@ snapshots:
     optionalDependencies:
       zod: 3.25.76
 
-  '@ai-sdk/react@2.0.14(react@19.1.1)(zod@4.0.5)':
+  '@ai-sdk/react@2.0.14(react@19.1.1)(zod@4.0.17)':
     dependencies:
-      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.5)
-      ai: 5.0.14(zod@4.0.5)
+      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.17)
+      ai: 5.0.14(zod@4.0.17)
       react: 19.1.1
       swr: 2.3.6(react@19.1.1)
       throttleit: 2.1.0
     optionalDependencies:
-      zod: 4.0.5
+      zod: 4.0.17
 
   '@ai-sdk/ui-utils@1.2.11(zod@3.25.76)':
     dependencies:
@@ -14815,12 +14799,12 @@ snapshots:
       zod: 3.25.76
       zod-to-json-schema: 3.24.6(zod@3.25.76)
 
-  '@ai-sdk/ui-utils@1.2.11(zod@4.0.5)':
+  '@ai-sdk/ui-utils@1.2.11(zod@4.0.17)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
-      '@ai-sdk/provider-utils': 2.2.8(zod@4.0.5)
-      zod: 4.0.5
-      zod-to-json-schema: 3.24.6(zod@4.0.5)
+      '@ai-sdk/provider-utils': 2.2.8(zod@4.0.17)
+      zod: 4.0.17
+      zod-to-json-schema: 3.24.6(zod@4.0.17)
 
   '@algolia/abtesting@1.1.0':
     dependencies:
@@ -15414,11 +15398,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/runtime-corejs3@7.28.0':
+  '@babel/runtime-corejs3@7.28.3':
     dependencies:
-      core-js-pure: 3.44.0
+      core-js-pure: 3.45.0
 
   '@babel/runtime@7.27.6': {}
+
+  '@babel/runtime@7.28.3': {}
 
   '@babel/template@7.27.2':
     dependencies:
@@ -15465,17 +15451,16 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.27.1
 
-  '@better-auth/stripe@1.2.10(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@better-auth/stripe@1.3.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(zod@4.0.17)':
     dependencies:
-      better-auth: 1.3.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      zod: 3.25.76
+      better-auth: 1.3.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(zod@4.0.17)
+      zod: 4.0.17
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@better-auth/utils@0.2.5':
+  '@better-auth/utils@0.2.6':
     dependencies:
-      typescript: 5.9.2
       uncrypto: 0.1.3
 
   '@better-fetch/fetch@1.1.18': {}
@@ -17126,24 +17111,7 @@ snapshots:
 
   '@mjackson/node-fetch-server@0.7.0': {}
 
-  '@modelcontextprotocol/sdk@1.16.0':
-    dependencies:
-      ajv: 6.12.6
-      content-type: 1.0.5
-      cors: 2.8.5
-      cross-spawn: 7.0.6
-      eventsource: 3.0.7
-      eventsource-parser: 3.0.3
-      express: 5.1.0
-      express-rate-limit: 7.5.1(express@5.1.0)
-      pkce-challenge: 5.0.0
-      raw-body: 3.0.0
-      zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
-    transitivePeerDependencies:
-      - supports-color
-
-  '@modelcontextprotocol/sdk@1.17.0':
+  '@modelcontextprotocol/sdk@1.17.3':
     dependencies:
       ajv: 6.12.6
       content-type: 1.0.5
@@ -18043,7 +18011,7 @@ snapshots:
 
   '@playwright/mcp@0.0.33':
     dependencies:
-      '@modelcontextprotocol/sdk': 1.17.0
+      '@modelcontextprotocol/sdk': 1.17.3
       commander: 13.1.0
       debug: 4.4.1
       dotenv: 17.2.1
@@ -21202,203 +21170,203 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@uiw/color-convert@2.6.0(@babel/runtime@7.27.6)':
+  '@uiw/color-convert@2.6.0(@babel/runtime@7.28.3)':
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.3
 
-  '@uiw/react-color-alpha@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-alpha@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-drag-event-interactive': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-drag-event-interactive': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color-block@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-block@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-color-editable-input': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-swatch': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-color-editable-input': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-swatch': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color-chrome@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-chrome@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-color-alpha': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-editable-input': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-editable-input-hsla': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-editable-input-rgba': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-github': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-hue': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-saturation': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-color-alpha': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-editable-input': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-editable-input-hsla': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-editable-input-rgba': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-github': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-hue': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-saturation': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color-circle@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-circle@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-color-swatch': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-color-swatch': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color-colorful@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-colorful@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-color-alpha': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-hue': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-saturation': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-color-alpha': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-hue': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-saturation': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color-compact@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-compact@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-color-editable-input': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-editable-input-rgba': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-swatch': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-color-editable-input': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-editable-input-rgba': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-swatch': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color-editable-input-hsla@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-editable-input-hsla@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-color-editable-input-rgba': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-color-editable-input-rgba': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color-editable-input-rgba@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-editable-input-rgba@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-color-editable-input': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-color-editable-input': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color-editable-input@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-editable-input@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.3
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color-github@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-github@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-color-swatch': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-color-swatch': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color-hue@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-hue@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-color-alpha': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-color-alpha': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color-material@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-material@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-color-editable-input': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-editable-input-rgba': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-color-editable-input': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-editable-input-rgba': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color-name@2.6.0(@babel/runtime@7.27.6)':
+  '@uiw/react-color-name@2.6.0(@babel/runtime@7.28.3)':
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.3
       colors-named: 1.0.2
       colors-named-hex: 1.0.2
 
-  '@uiw/react-color-saturation@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-saturation@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-drag-event-interactive': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-drag-event-interactive': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color-shade-slider@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-shade-slider@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-color-alpha': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-color-alpha': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color-sketch@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-sketch@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-color-alpha': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-editable-input': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-editable-input-rgba': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-hue': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-saturation': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-swatch': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-color-alpha': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-editable-input': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-editable-input-rgba': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-hue': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-saturation': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-swatch': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color-slider@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-slider@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-color-alpha': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-color-alpha': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color-swatch@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-swatch@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color-wheel@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color-wheel@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-drag-event-interactive': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-drag-event-interactive': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-color@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-color@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@uiw/color-convert': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-color-alpha': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-block': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-chrome': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-circle': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-colorful': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-compact': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-editable-input': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-editable-input-hsla': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-editable-input-rgba': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-github': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-hue': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-material': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-name': 2.6.0(@babel/runtime@7.27.6)
-      '@uiw/react-color-saturation': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-shade-slider': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-sketch': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-slider': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-swatch': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@uiw/react-color-wheel': 2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@babel/runtime': 7.28.3
+      '@uiw/color-convert': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-color-alpha': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-block': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-chrome': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-circle': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-colorful': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-compact': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-editable-input': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-editable-input-hsla': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-editable-input-rgba': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-github': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-hue': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-material': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-name': 2.6.0(@babel/runtime@7.28.3)
+      '@uiw/react-color-saturation': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-shade-slider': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-sketch': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-slider': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-swatch': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@uiw/react-color-wheel': 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@uiw/react-drag-event-interactive@2.6.0(@babel/runtime@7.27.6)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@uiw/react-drag-event-interactive@2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.3
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
@@ -22049,25 +22017,25 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  agents@0.0.109(@cloudflare/workers-types@4.20250712.0)(react@19.1.1):
+  agents@0.0.113(@cloudflare/workers-types@4.20250712.0)(react@19.1.1):
     dependencies:
-      '@modelcontextprotocol/sdk': 1.16.0
+      '@modelcontextprotocol/sdk': 1.17.3
       ai: 4.3.19(react@19.1.1)(zod@3.25.76)
       cron-schedule: 5.0.4
       mimetext: 3.0.27
       nanoid: 5.1.5
       partyserver: 0.0.72(@cloudflare/workers-types@4.20250712.0)
-      partysocket: 1.1.4
+      partysocket: 1.1.5
       react: 19.1.1
       zod: 3.25.76
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
       - supports-color
 
-  ai-fallback@1.0.2(zod@4.0.5):
+  ai-fallback@1.0.2(zod@4.0.17):
     dependencies:
       '@ai-sdk/provider': 2.0.0-beta.1
-      '@ai-sdk/provider-utils': 3.0.0-beta.1(zod@4.0.5)
+      '@ai-sdk/provider-utils': 3.0.0-beta.1(zod@4.0.17)
     transitivePeerDependencies:
       - zod
 
@@ -22090,14 +22058,6 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.3(zod@4.0.17)
       '@opentelemetry/api': 1.9.0
       zod: 4.0.17
-
-  ai@5.0.14(zod@4.0.5):
-    dependencies:
-      '@ai-sdk/gateway': 1.0.6(zod@4.0.5)
-      '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.5)
-      '@opentelemetry/api': 1.9.0
-      zod: 4.0.5
 
   ajv-draft-04@1.0.0(ajv@8.17.1):
     optionalDependencies:
@@ -22365,9 +22325,9 @@ snapshots:
 
   before-after-hook@4.0.0: {}
 
-  better-auth@1.3.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+  better-auth@1.3.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(zod@4.0.17):
     dependencies:
-      '@better-auth/utils': 0.2.5
+      '@better-auth/utils': 0.2.6
       '@better-fetch/fetch': 1.1.18
       '@noble/ciphers': 0.6.0
       '@noble/hashes': 1.8.0
@@ -22376,7 +22336,7 @@ snapshots:
       better-call: 1.0.13
       defu: 6.1.4
       jose: 5.10.0
-      kysely: 0.28.4
+      kysely: 0.28.5
       nanostores: 0.11.4
       zod: 4.0.17
     optionalDependencies:
@@ -22610,6 +22570,8 @@ snapshots:
       supports-color: 7.2.0
 
   chalk@5.4.1: {}
+
+  chalk@5.5.0: {}
 
   character-entities-html4@2.1.0: {}
 
@@ -22947,7 +22909,7 @@ snapshots:
       graceful-fs: 4.2.11
       p-event: 6.0.1
 
-  core-js-pure@3.44.0: {}
+  core-js-pure@3.45.0: {}
 
   core-util-is@1.0.3: {}
 
@@ -25225,7 +25187,7 @@ snapshots:
 
   joycon@3.1.1: {}
 
-  js-base64@3.7.7: {}
+  js-base64@3.7.8: {}
 
   js-beautify@1.15.4:
     dependencies:
@@ -25295,7 +25257,7 @@ snapshots:
   jsondiffpatch@0.6.0:
     dependencies:
       '@types/diff-match-patch': 1.0.36
-      chalk: 5.4.1
+      chalk: 5.5.0
       diff-match-patch: 1.0.5
 
   jsonfile@4.0.0:
@@ -25353,7 +25315,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  kysely@0.28.4: {}
+  kysely@0.28.5: {}
 
   lambda-local@2.2.0:
     dependencies:
@@ -26126,9 +26088,9 @@ snapshots:
 
   mimetext@3.0.27:
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@babel/runtime-corejs3': 7.28.0
-      js-base64: 3.7.7
+      '@babel/runtime': 7.28.3
+      '@babel/runtime-corejs3': 7.28.3
+      js-base64: 3.7.8
       mime-types: 2.1.35
 
   mimic-fn@4.0.0: {}
@@ -26955,7 +26917,7 @@ snapshots:
       '@cloudflare/workers-types': 4.20250712.0
       nanoid: 5.1.5
 
-  partysocket@1.1.4:
+  partysocket@1.1.5:
     dependencies:
       event-target-polyfill: 0.0.4
 
@@ -28489,7 +28451,7 @@ snapshots:
 
   spdx-license-ids@3.0.21: {}
 
-  spiceflow@1.17.8(@modelcontextprotocol/sdk@1.17.0):
+  spiceflow@1.17.8(@modelcontextprotocol/sdk@1.17.3):
     dependencies:
       '@medley/router': 0.2.1
       '@standard-schema/spec': 1.0.0
@@ -28497,10 +28459,10 @@ snapshots:
       eventsource-parser: 3.0.3
       openapi-types: 12.1.3
       superjson: 2.2.2
-      zod: 4.0.15
-      zod-to-json-schema: 3.24.6(zod@4.0.15)
+      zod: 4.0.17
+      zod-to-json-schema: 3.24.6(zod@4.0.17)
     optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.17.0
+      '@modelcontextprotocol/sdk': 1.17.3
 
   split2@4.2.0: {}
 
@@ -29184,7 +29146,7 @@ snapshots:
       pathe: 2.0.3
       ufo: 1.6.1
 
-  unframer@3.0.6(@modelcontextprotocol/sdk@1.17.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+  unframer@3.0.6(@modelcontextprotocol/sdk@1.17.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       '@antfu/ni': 25.0.0
       '@babel/core': 7.28.0
@@ -29199,7 +29161,7 @@ snapshots:
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
       real-framer-motion: framer-motion@12.23.12(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      spiceflow: 1.17.8(@modelcontextprotocol/sdk@1.17.0)
+      spiceflow: 1.17.8(@modelcontextprotocol/sdk@1.17.3)
       string-dedent: 3.0.2
       undici: 7.13.0
     transitivePeerDependencies:
@@ -30259,25 +30221,17 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.7.0
 
-  zod-to-json-schema@3.24.5(zod@4.0.5):
+  zod-to-json-schema@3.24.5(zod@4.0.17):
     dependencies:
-      zod: 4.0.5
+      zod: 4.0.17
 
   zod-to-json-schema@3.24.6(zod@3.25.76):
     dependencies:
       zod: 3.25.76
 
-  zod-to-json-schema@3.24.6(zod@4.0.15):
-    dependencies:
-      zod: 4.0.15
-
   zod-to-json-schema@3.24.6(zod@4.0.17):
     dependencies:
       zod: 4.0.17
-
-  zod-to-json-schema@3.24.6(zod@4.0.5):
-    dependencies:
-      zod: 4.0.5
 
   zod@3.22.3: {}
 
@@ -30285,13 +30239,7 @@ snapshots:
 
   zod@3.25.76: {}
 
-  zod@4.0.14: {}
-
-  zod@4.0.15: {}
-
   zod@4.0.17: {}
-
-  zod@4.0.5: {}
 
   zustand@5.0.5(@types/react@19.1.10)(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1)):
     optionalDependencies:
