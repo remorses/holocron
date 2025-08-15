@@ -54,7 +54,8 @@ const remarkCodeToHtml = () => async (tree: Root, file) => {
     const promises: Promise<void>[] = []
     visit(tree, 'code', (node) => {
         const p = (async () => {
-            const language = node.lang || 'text'
+            let language = node.lang || 'text'
+            // if (language === 'jsonc') language = 'json'
 
             // if (!trySync(() => highlighter.getLanguage(language))?.data) {
             //     onMissingLanguage(highlighter, language)
@@ -78,6 +79,7 @@ const remarkCodeToHtml = () => async (tree: Root, file) => {
                         light: 'github-light',
                         dark: 'github-dark',
                     },
+
                     // experimentalJSEngine: false,
                     defaultColor: false,
                     transformers: [

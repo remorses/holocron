@@ -149,6 +149,12 @@ export async function loader({
     return { prPromise }
 }
 
+import { Suspense } from 'react'
+
+export function Layout({ children }: { children: React.ReactNode }) {
+    return <Suspense fallback={null}>{children}</Suspense>
+}
+
 export default function Page() {
     const { prPromise } = useLoaderData<typeof loader>()
     const [error, setError] = useState<string>('')

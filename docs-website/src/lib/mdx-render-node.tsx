@@ -3,7 +3,6 @@
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
 import { useState, useEffect } from 'react'
 import { RenderNode } from 'safe-mdx'
-import { codeToHtml } from 'shiki'
 
 export const renderNode: RenderNode = (node, transform) => {
     // TODO only enable colored bold in chat?
