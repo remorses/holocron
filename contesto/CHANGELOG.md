@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-08-15 18:56
+
+- Added URL constructor support in isolated environment using ivm.Callback
+- URL properties are explicitly mapped to ensure proper serialization across isolation boundary
+- Added test to verify URL functionality with both absolute and relative URL creation
+
 ## 2025-08-15 18:43
 
 - Convert tool names to camelCase when injecting into isolated environment and generating TypeScript types

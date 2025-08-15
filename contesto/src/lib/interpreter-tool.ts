@@ -104,7 +104,7 @@ export async function createInterpreterTool(options?: CreateInterpreterToolOptio
                 // Set up URL constructor via callback
                 const urlConstructor = new ivm.Callback(
                     { sync: true } as any,
-                    (urlString: string, base?: string) => {
+                    ((urlString: string, base?: string) => {
                         try {
                             const url = base ? new URL(urlString, base) : new URL(urlString)
                             return {
@@ -124,7 +124,7 @@ export async function createInterpreterTool(options?: CreateInterpreterToolOptio
                         } catch (error: any) {
                             throw new Error(`Invalid URL: ${error.message}`)
                         }
-                    } as any
+                    }) as any
                 )
 
                 await jail.set('_urlConstructor', urlConstructor)
