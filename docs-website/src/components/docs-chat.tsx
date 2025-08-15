@@ -543,9 +543,9 @@ export function MessagePartRenderer({
     }
     if (part.type === 'tool-jsInterpreter') {
         const code = part.input?.code || '\n'
-
+        const title = part.input?.title
         if (!code) return null
-
+        const output = String(part.output || '')
         return (
             <ShowMore>
                 <ToolPreviewContainer>
@@ -554,8 +554,15 @@ export function MessagePartRenderer({
                     <ChatMarkdown
                         isStreaming={isChatGenerating}
                         className='pt-[1em] block'
-                        markdown={`\`\`\`js lineNumbers=true\n${code}\n\`\`\``}
+                        markdown={`\`\`\`js title="${title}" lineNumbers=true\n${code}\n\`\`\``}
                     />
+                    {output && (
+                        <ChatMarkdown
+                            isStreaming={isChatGenerating}
+                            className='block'
+                            markdown={`\`\`\`txt title="output logs"\n${output}\n\`\`\``}
+                        />
+                    )}
                 </ToolPreviewContainer>
             </ShowMore>
         )

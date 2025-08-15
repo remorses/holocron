@@ -6,14 +6,12 @@ import camelCase from 'camelcase'
 import dedent from 'string-dedent'
 
 export const interpreterToolParamsSchema = z.object({
-    title: z.string().describe('A descriptive title for this code execution'),
-    code: z.string().describe('JavaScript code to execute in an isolated environment. DO NOT use typescript or jsx. Only plain javascript is supported. No imports or require. Running on the server.'),
+    title: z.string().describe('A descriptive very short title for this code execution'),
+    code: z.string().describe('JavaScript code to execute in an isolated environment. DO NOT use typescript or jsx. Only plain javascript is supported. No imports or require. Running on the server. Top level await is supported. Do not use an iife.'),
     timeout: z.number()
         .min(100)
         .max(300000)
-        .default(5000)
-        .optional()
-        .describe('Timeout in milliseconds (default: 5000ms, max: 300000ms/5 minutes)'),
+        .describe('Timeout in milliseconds'),
 })
 
 export type InterpreterToolParamSchema = z.infer<typeof interpreterToolParamsSchema>
@@ -80,6 +78,13 @@ async function generateToolsTypeDefinition(tools: Record<string, Tool<any, any>>
 
       For example you can fetch a page and then write it to a file if you have a fetch and an editor tool.
 
+      Before running this tool you should have a good idea of the outputs of the tools you will call. For example when using fetch you should try first calling fetch normally to see what is the format of the url response
+
+      DO NOT wrap your code in a main function, just put your code in the top level scope and use top level await.
+
+      DO NOT use import or require.
+
+      NEVER suppress errors with empty catch statements. Always log the errors.
 
     `
 }
@@ -89,6 +94,7 @@ export async function createInterpreterTool(options?: CreateInterpreterToolOptio
 
     const availableTools = Object.entries(tools)
         .filter(([_, toolDef]) => toolDef.execute)
+        .filter(([_, toolDef]) => toolDef.inputSchema !== interpreterToolParamsSchema)
         .map(([name]) => name)
 
     let toolsDescription = ''
@@ -98,8 +104,9 @@ export async function createInterpreterTool(options?: CreateInterpreterToolOptio
         toolsDescription = typeDefinition || `\n\nAvailable tools in the 'tools' object:\n${availableTools.map(name => `- tools.${name}(...)`).join('\n')}`
     }
 
+    const description =  `Execute JavaScript code in an isolated sandbox environment with console.log capture\n\n${toolsDescription}`
     return tool({
-        description: `Execute JavaScript code in an isolated sandbox environment with console.log capture\n\n${toolsDescription}`,
+        description,
         inputSchema: interpreterToolParamsSchema,
         execute: async ({ title, code, timeout = 5000 }) => {
             const logs: string[] = []

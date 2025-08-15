@@ -720,7 +720,7 @@ export async function* generateMessageStream({
         }),
 
         ...(model.provider.startsWith('openai') && {
-            webSearchOpenAI: openai.tools.webSearchPreview({
+            web_search_preview: openai.tools.webSearchPreview({
                 searchContextSize: 'high',
             }),
         }),
@@ -729,7 +729,7 @@ export async function* generateMessageStream({
         }),
     }
 
-    tools['jsInterpreter'] = createInterpreterTool({ tools })
+    tools['jsInterpreter'] = await createInterpreterTool({ tools })
 
     const allMessages: ModelMessage[] = [
         {

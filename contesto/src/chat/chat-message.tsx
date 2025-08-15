@@ -324,7 +324,7 @@ export function ChatUserMessage({
                 <motion.div
                     layoutId={`content-${message.id}`}
                     layout='position'
-                    className='full isolate max-w-full'
+                    className='full isolate whitespace-pre-wrap max-w-full'
                 >
                     {children}
                 </motion.div>
