@@ -90,8 +90,10 @@ export async function loader({
                 },
             },
         }),
-        // Fetch the siteBranch directly with site included
         prisma.siteBranch.findFirst({
+            where: {
+                branchId,
+            },
             include: {
                 domains: true,
                 site: {

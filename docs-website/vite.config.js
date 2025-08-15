@@ -18,7 +18,7 @@ export default defineConfig({
         'process.env.NODE_ENV': NODE_ENV,
     },
     optimizeDeps: {
-        exclude: ['@lancedb/lancedb'],
+        exclude: ['@lancedb/lancedb', 'isolated-vm'],
     },
 
     test: {
@@ -76,6 +76,7 @@ export default defineConfig({
                 'shiki',
                 'json-schema-library',
                 '@lancedb/lancedb',
+                'isolated-vm',
             ],
         }),
         tailwindcss(),
