@@ -480,7 +480,7 @@ Tabs.displayName = 'Tabs'
 export const mdxComponents = {
     CodeBlockTab: fumadocsComponents.CodeBlockTab,
     CodeBlockTabs: fumadocsComponents.CodeBlockTabs,
-
+    figcaption: 'figcaption',
     pre: fumadocsComponents.pre,
     ShowMore,
     a: fumadocsComponents.a,
