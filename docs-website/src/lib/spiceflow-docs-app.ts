@@ -1,4 +1,5 @@
 import { OpenAIResponsesProviderOptions, openai } from '@ai-sdk/openai'
+import { google } from '@ai-sdk/google'
 import dedent from 'string-dedent'
 import { anthropic } from '@ai-sdk/anthropic'
 import { groq } from '@ai-sdk/groq'
@@ -114,7 +115,7 @@ export const docsApp = new Spiceflow({ basePath: '/fumabaseInternalAPI' })
             })
             const pages = source.getPages(locale)
 
-            let model = openai.responses('gpt-5-mini')
+            let model = google('gemini-2.5-flash')
 
             const linksText = pages
                 .map((page) => {

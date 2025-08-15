@@ -361,6 +361,7 @@ export async function* generateMessageStream({
     const strReplaceEditor = createEditTool({
         fileSystem,
         model: { provider: model.provider },
+
         async validateNewContent(x): Promise<ValidateNewContentResult> {
             if (githubFolder && !x.githubPath.startsWith(githubFolder)) {
                 return {
@@ -920,6 +921,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
         // Create FileSystemEmulator instance
         const fileSystem = new FileSystemEmulator({
             filesInDraft,
+            baseDir: githubFolder || undefined,
             getPageContent: async (githubPath) => {
                 const content = await getPageContent({ githubPath, branchId })
                 return content

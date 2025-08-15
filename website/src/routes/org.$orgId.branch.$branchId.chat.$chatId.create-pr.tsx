@@ -1,4 +1,5 @@
 import { Prisma, prisma } from 'db'
+import JSONC from 'tiny-jsonc'
 import { Loader2Icon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useLoaderData } from 'react-router'
@@ -77,7 +78,7 @@ async function createPrSuggestionForChat({
     )
     if (docsJsonFile) {
         docsJsonFile.content = applyJsonCComments(
-            JSON.parse(docsJsonFile.content || '{}'),
+            JSONC.parse(docsJsonFile.content || '{}'),
             (prBranchRow.docsJsonComments as JsonCComments) || {},
         )
     }

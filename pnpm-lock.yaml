@@ -192,7 +192,7 @@ importers:
         version: 12.23.12(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       fumadocs-ui:
         specifier: ^15.6.1
-        version: 15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.10))(@types/react@19.1.10)(algoliasearch@5.35.0)(next@15.4.6(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11)
+        version: 15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.10))(@types/react@19.1.10)(algoliasearch@5.35.0)(next@15.4.6(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11)
       isolated-vm:
         specifier: ^6.0.1
         version: 6.0.1
@@ -339,6 +339,9 @@ importers:
       '@ai-sdk/anthropic':
         specifier: 2.0.4
         version: 2.0.4(zod@4.0.17)
+      '@ai-sdk/google':
+        specifier: ^2.0.6
+        version: 2.0.6(zod@4.0.17)
       '@ai-sdk/groq':
         specifier: ^2.0.9
         version: 2.0.9(zod@4.0.17)
@@ -1759,7 +1762,7 @@ importers:
         version: link:../fumadocs/packages/openapi
       fumadocs-ui:
         specifier: ^15.6.1
-        version: 15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.10))(@types/react@19.1.10)(algoliasearch@5.35.0)(next@15.4.6(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11)
+        version: 15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.10))(@types/react@19.1.10)(algoliasearch@5.35.0)(next@15.4.6(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11)
       react:
         specifier: ^19.1.1
         version: 19.1.1
@@ -22339,7 +22342,7 @@ snapshots:
   fsevents@2.3.3:
     optional: true
 
-  fumadocs-core@15.6.1(@oramacloud/client@2.1.4)(@types/react@19.1.10)(algoliasearch@5.35.0)(next@15.4.6(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+  fumadocs-core@15.6.1(@oramacloud/client@2.1.4)(@types/react@19.1.10)(algoliasearch@5.35.0)(next@15.4.6(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       '@formatjs/intl-localematcher': 0.6.1
       '@orama/orama': 3.1.11
@@ -22377,7 +22380,7 @@ snapshots:
       unist-util-visit: 5.0.0
       zod: 3.25.76
 
-  fumadocs-ui@15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.10))(@types/react@19.1.10)(algoliasearch@5.35.0)(next@15.4.6(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11):
+  fumadocs-ui@15.6.1(@oramacloud/client@2.1.4)(@types/react-dom@19.1.7(@types/react@19.1.10))(@types/react@19.1.10)(algoliasearch@5.35.0)(next@15.4.6(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.11):
     dependencies:
       '@radix-ui/react-accordion': 1.2.11(@types/react-dom@19.1.7(@types/react@19.1.10))(@types/react@19.1.10)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@radix-ui/react-collapsible': 1.1.11(@types/react-dom@19.1.7(@types/react@19.1.10))(@types/react@19.1.10)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -22390,7 +22393,7 @@ snapshots:
       '@radix-ui/react-slot': 1.2.3(@types/react@19.1.10)(react@19.1.1)
       '@radix-ui/react-tabs': 1.1.12(@types/react-dom@19.1.7(@types/react@19.1.10))(@types/react@19.1.10)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       class-variance-authority: 0.7.1
-      fumadocs-core: 15.6.1(@oramacloud/client@2.1.4)(@types/react@19.1.10)(algoliasearch@5.35.0)(next@15.4.6(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      fumadocs-core: 15.6.1(@oramacloud/client@2.1.4)(@types/react@19.1.10)(algoliasearch@5.35.0)(next@15.4.6(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       lodash.merge: 4.6.2
       next-themes: 0.4.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       postcss-selector-parser: 7.1.0
