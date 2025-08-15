@@ -572,8 +572,8 @@ export function MessagePartRenderer({
         if (!part.input) return null
         return (
             <ToolPreviewContainer>
-                <Dot /> Selecting lines ${part.input?.slug}:$
-                {part.input?.startLine || 0}-${part.input?.endLine || ''}
+                <Dot /> Selecting lines {part.input?.slug}:
+                {part.input?.startLine || 0}-{part.input?.endLine || ''}
             </ToolPreviewContainer>
         )
     }
