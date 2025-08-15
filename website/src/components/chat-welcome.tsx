@@ -51,15 +51,15 @@ function TodosActions() {
 
     const onboardingItems = [
         'Create a docs website for my company',
-        'Add a custom domain for the docs site',
-        'Add a new page about the company mission',
-        'Customize the colors of the website',
+        'Create a website based on a GitHub repo',
+        'Create a site based on a web search about my project',
     ]
 
     const updateItems = [
         'Add a new page to my docs based on a web research',
         'Add icons to all the pages',
         'Remove a page from the docs',
+        'Add a new page about the company mission',
         'Add tables to docs pages that contain complex tabular information',
     ]
 
