@@ -6,7 +6,7 @@ import { z } from 'zod'
 describe('createInterpreterTool', () => {
     test('executes simple code and captures console.log', async () => {
         const tool = await createInterpreterTool()
-        
+
         const startTime = Date.now()
         const result = await tool.execute!({
             title: 'Simple calculation',
@@ -22,9 +22,9 @@ describe('createInterpreterTool', () => {
             `
         }, {} as any) as string
         const executionTime = Date.now() - startTime
-        
+
         console.log(`Tool execution time: ${executionTime}ms`)
-        
+
         expect(result).toMatchInlineSnapshot(`
           "Starting calculation
           a = 5
@@ -32,10 +32,10 @@ describe('createInterpreterTool', () => {
           sum = 8"
         `)
     })
-    
+
     test('handles errors gracefully', async () => {
         const tool = await createInterpreterTool()
-        
+
         const result = await tool.execute!({
             title: 'Error test',
             code: `
@@ -44,15 +44,15 @@ describe('createInterpreterTool', () => {
                 console.log('After error')
             `
         }, {} as any) as string
-        
+
         expect(result).toContain('Test error')
         expect(result).toContain('Before error')
         expect(result).toContain('Stack trace')
     })
-    
+
     test('handles JSON objects in console.log', async () => {
         const tool = await createInterpreterTool()
-        
+
         const result = await tool.execute!({
             title: 'JSON logging',
             code: `
@@ -61,7 +61,7 @@ describe('createInterpreterTool', () => {
                 console.log('Array:', [1, 2, 3])
             `
         }, {} as any) as string
-        
+
         expect(result).toMatchInlineSnapshot(`
           "Object: {
             "name": "test",
@@ -77,10 +77,10 @@ describe('createInterpreterTool', () => {
           ]"
         `)
     })
-    
+
     test('enforces timeout', async () => {
         const tool = await createInterpreterTool()
-        
+
         const result = await tool.execute!({
             title: 'Timeout test',
             code: `
@@ -90,13 +90,13 @@ describe('createInterpreterTool', () => {
             `,
             timeout: 100
         }, {} as any) as string
-        
+
         expect(result).toContain('Script execution timed out')
     })
-    
+
     test('handles async code', async () => {
         const tool = await createInterpreterTool()
-        
+
         const result = await tool.execute!({
             title: 'Async test',
             code: `
@@ -109,16 +109,16 @@ describe('createInterpreterTool', () => {
                 return 'done'
             `
         }, {} as any) as string
-        
+
         expect(result).toMatchInlineSnapshot(`
           "Start
           Promise value: resolved"
         `)
     })
-    
+
     test('respects custom timeout', async () => {
         const tool = await createInterpreterTool()
-        
+
         const startTime = Date.now()
         const result = await tool.execute!({
             title: 'Custom timeout test',
@@ -131,15 +131,15 @@ describe('createInterpreterTool', () => {
             timeout: 100
         }, {} as any) as string
         const elapsed = Date.now() - startTime
-        
+
         expect(result).toContain('Script execution timed out')
         expect(elapsed).toBeGreaterThanOrEqual(90)
         expect(elapsed).toBeLessThan(200)
     })
-    
+
     test('returns "no console logs" when no output', async () => {
         const tool = await createInterpreterTool()
-        
+
         const result = await tool.execute!({
             title: 'No output test',
             code: `
@@ -149,13 +149,13 @@ describe('createInterpreterTool', () => {
                 return sum
             `
         }, {} as any) as string
-        
+
         expect(result).toBe('no console logs')
     })
-    
+
     test('shows stack trace for errors thrown in functions', async () => {
         const tool = await createInterpreterTool()
-        
+
         const result = await tool.execute!({
             title: 'Error with stack trace',
             code: `
@@ -163,17 +163,17 @@ describe('createInterpreterTool', () => {
                     console.log('About to throw')
                     throw new Error('Something went wrong in doSomething')
                 }
-                
+
                 function main() {
                     console.log('Starting main')
                     doSomething()
                     console.log('This should not run')
                 }
-                
+
                 main()
             `
         }, {} as any) as string
-        
+
         expect(result).toMatchInlineSnapshot(`
           "Logs before error:
           Starting main
@@ -188,7 +188,7 @@ describe('createInterpreterTool', () => {
               at <isolated-vm>:55:23"
         `)
     })
-    
+
     test('can execute tools passed to the interpreter', async () => {
         const addTool = tool({
             description: 'Add two numbers',
@@ -200,7 +200,7 @@ describe('createInterpreterTool', () => {
                 return { result: a + b }
             }
         })
-        
+
         const greetTool = tool({
             description: 'Greet someone',
             inputSchema: z.object({
@@ -210,29 +210,29 @@ describe('createInterpreterTool', () => {
                 return `Hello, ${name}!`
             }
         })
-        
+
         const interpreterTool = await createInterpreterTool({
             tools: {
                 add: addTool,
                 greet: greetTool,
             }
         })
-        
+
         const result = await interpreterTool.execute!({
             title: 'Tool execution test',
             code: `
                 console.log('Testing tools')
-                
+
                 const sum = await tools.add({ a: 5, b: 3 })
                 console.log('Sum result:', sum)
-                
+
                 const greeting = await tools.greet({ name: 'Alice' })
                 console.log('Greeting:', greeting)
-                
+
                 console.log('Done')
             `
         }, {} as any) as string
-        
+
         expect(result).toMatchInlineSnapshot(`
           "Testing tools
           Sum result: {
@@ -242,7 +242,7 @@ describe('createInterpreterTool', () => {
           Done"
         `)
     })
-    
+
     test('validates tool input schemas', async () => {
         const mathTool = tool({
             description: 'Multiply numbers',
@@ -252,13 +252,13 @@ describe('createInterpreterTool', () => {
             }),
             execute: async ({ x, y }) => x * y
         })
-        
+
         const interpreterTool = await createInterpreterTool({
             tools: {
                 multiply: mathTool,
             }
         })
-        
+
         const result = await interpreterTool.execute!({
             title: 'Invalid tool input test',
             code: `
@@ -269,13 +269,13 @@ describe('createInterpreterTool', () => {
                 }
             `
         }, {} as any) as string
-        
+
         expect(result).toContain('Invalid input for tool multiply')
     })
-    
+
     test('supports various console methods', async () => {
         const tool = await createInterpreterTool()
-        
+
         const result = await tool.execute!({
             title: 'Console methods test',
             code: `
@@ -284,7 +284,7 @@ describe('createInterpreterTool', () => {
                 console.warn('This is warn')
                 console.info('This is info')
                 console.debug('This is debug')
-                
+
                 console.time('myTimer')
                 // Simulate some work
                 let sum = 0
@@ -292,11 +292,11 @@ describe('createInterpreterTool', () => {
                     sum += i
                 }
                 console.timeEnd('myTimer')
-                
+
                 console.log('Sum calculated:', sum)
             `
         }, {} as any) as string
-        
+
         expect(result).toMatch(/This is log/)
         expect(result).toMatch(/This is error/)
         expect(result).toMatch(/This is warn/)
@@ -305,7 +305,7 @@ describe('createInterpreterTool', () => {
         expect(result).toMatch(/myTimer: \d+ms/)
         expect(result).toMatch(/Sum calculated: 499500/)
     })
-    
+
     test('handles tools without execute function', async () => {
         const schemaTool = tool({
             description: 'Schema-only tool',
@@ -316,13 +316,13 @@ describe('createInterpreterTool', () => {
                 result: z.string(),
             }),
         })
-        
+
         const interpreterTool = await createInterpreterTool({
             tools: {
                 schemaOnly: schemaTool,
             }
         })
-        
+
         const result = await interpreterTool.execute!({
             title: 'Non-executable tool test',
             code: `
@@ -330,35 +330,40 @@ describe('createInterpreterTool', () => {
                 console.log('No tools should be available')
             `
         }, {} as any) as string
-        
+
         expect(result).toMatchInlineSnapshot(`
           "Tools available: []
           No tools should be available"
         `)
     })
-    
+
     test('includes available tools in description with TypeScript types', async () => {
         const mockFetch = tool({
             description: 'Fetch data',
             inputSchema: z.object({ url: z.string() }),
             execute: async ({ url }) => `Data from ${url}`
         })
-        
+
         const mockEditor = tool({
             description: 'Edit files',
-            inputSchema: z.object({ 
+            inputSchema: z.object({
+                command: z.enum(['view', 'create', 'str_replace', 'insert', 'undo_edit']),
                 path: z.string(),
-                content: z.string().optional()
+                file_text: z.string().optional(),
+                insert_line: z.number().int().optional().describe('description here'),
+                new_str: z.string().optional(),
+                old_str: z.string().optional(),
+                view_range: z.array(z.number()).length(2).optional(),
             }),
-            execute: async ({ path, content }) => `Edited ${path}`
+            execute: async ({ path, }) => ``
         })
-        
+
         const schemaOnly = tool({
             description: 'Schema only',
             inputSchema: z.object({ value: z.string() }),
             outputSchema: z.object({ result: z.string() })
         })
-        
+
         const interpreterTool = await createInterpreterTool({
             tools: {
                 'fetch-data': mockFetch,
@@ -366,28 +371,40 @@ describe('createInterpreterTool', () => {
                 'schema-only': schemaOnly
             }
         })
-        
+
         expect(interpreterTool.description).toMatchInlineSnapshot(`
           "Execute JavaScript code in an isolated sandbox environment with console.log capture
 
           Available tools object type:
 
           interface Tools {
-          fetchData: (args: {
-            url: string
-          }) => Promise<any>;
-          editFile: (args: {
-            path: string
-            content?: string
-          }) => Promise<any>;
+            fetchData: (args: {
+              url: string
+            }) => Promise<any>;
+            editFile: (args: {
+              command: ("view" | "create" | "str_replace" | "insert" | "undo_edit")
+              path: string
+              file_text?: string
+              /**
+               * description here
+               */
+              insert_line?: number
+              new_str?: string
+              old_str?: string
+              /**
+               * @minItems 2
+               * @maxItems 2
+               */
+              view_range?: [number, number]
+            }) => Promise<any>;
           }
           "
         `)
     })
-    
+
     test('supports URL constructor', async () => {
         const tool = await createInterpreterTool()
-        
+
         const result = await tool.execute!({
             title: 'URL test',
             code: `
@@ -398,12 +415,12 @@ describe('createInterpreterTool', () => {
                 console.log('Pathname:', url.pathname)
                 console.log('Search:', url.search)
                 console.log('Hash:', url.hash)
-                
+
                 const relative = new URL('/api/users', 'https://api.example.com')
                 console.log('Full URL:', relative.href)
             `
         }, {} as any) as string
-        
+
         expect(result).toMatchInlineSnapshot(`
           "URL object: {"href":"https://example.com/path?query=value#hash","protocol":"https:","hostname":"example.com","host":"example.com","port":"","pathname":"/path","search":"?query=value","searchParams":{"query":"value"},"hash":"#hash","origin":"https://example.com","username":"","password":""}
           Protocol: https:
@@ -414,10 +431,10 @@ describe('createInterpreterTool', () => {
           Full URL: https://api.example.com/api/users"
         `)
     })
-    
+
     test('real-world example with fetch and editor tools', async () => {
         const files: Record<string, string> = {}
-        
+
         const fetchTool = tool({
             description: 'Fetch data from a URL',
             inputSchema: z.object({
@@ -435,7 +452,7 @@ describe('createInterpreterTool', () => {
                 throw new Error(`Unknown URL: ${url}`)
             }
         })
-        
+
         const editToolSchema = z.object({
             command: z.enum(['view', 'create', 'str_replace', 'insert', 'undo_edit']),
             path: z.string(),
@@ -445,41 +462,41 @@ describe('createInterpreterTool', () => {
             old_str: z.string().optional(),
             view_range: z.array(z.number()).length(2).optional(),
         })
-        
+
         const strReplaceEditor = tool({
             description: 'Edit files with various commands',
             inputSchema: editToolSchema,
             execute: async (params) => {
                 const { command, path, file_text, old_str, new_str } = params
-                
+
                 switch (command) {
                     case 'view':
                         return files[path] || `File not found: ${path}`
-                    
+
                     case 'create':
                         if (!file_text) return 'Error: file_text is required'
                         files[path] = file_text
                         return `Created: ${path}`
-                    
+
                     case 'str_replace':
                         if (!files[path]) return `File not found: ${path}`
                         if (!old_str) return 'Error: old_str is required'
                         files[path] = files[path].replace(old_str, new_str || '')
                         return `Updated: ${path}`
-                    
+
                     default:
                         return `Unknown command: ${command}`
                 }
             }
         })
-        
+
         const interpreterTool = await createInterpreterTool({
             tools: {
                 'fetch-tool': fetchTool,
                 'editor_tool': strReplaceEditor
             }
         })
-        
+
         const result = await interpreterTool.execute!({
             title: 'Parallel fetch and write',
             code: `
@@ -489,9 +506,9 @@ describe('createInterpreterTool', () => {
                     'https://api.example.com/posts/5.md',
                     'https://api.example.com/posts/10.md'
                 ]
-                
+
                 console.log('Fetching', urls.length, 'URLs...')
-                
+
                 const results = await Promise.all(
                     urls.map(async url => {
                         const content = await tools.fetchTool({ url })
@@ -499,11 +516,11 @@ describe('createInterpreterTool', () => {
                         return { path, content }
                     })
                 )
-                
+
                 console.log('Fetched all data')
-                
+
                 const writeResults = await Promise.all(
-                    results.map(({ path, content }) => 
+                    results.map(({ path, content }) =>
                         tools.editorTool({
                             command: 'create',
                             path: path,
@@ -511,18 +528,18 @@ describe('createInterpreterTool', () => {
                         })
                     )
                 )
-                
+
                 console.log('Created', writeResults.length, 'files')
-                
+
                 const userFile = await tools.editorTool({
                     command: 'view',
                     path: 'users/1.md'
                 })
-                
+
                 console.log('User 1 file:', userFile.substring(0, 20) + '...')
             `
         }, {} as any) as string
-        
+
         expect(result).toMatchInlineSnapshot(`
           "Fetching 4 URLs...
           Fetched all data
@@ -532,7 +549,7 @@ describe('createInterpreterTool', () => {
           - ID: 1
           - ..."
         `)
-        
+
         expect(files['users/1.md']).toContain('# User 1')
         expect(files['users/2.md']).toContain('# User 2')
         expect(files['posts/5.md']).toContain('Views:** 500')

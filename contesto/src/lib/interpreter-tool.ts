@@ -21,6 +21,10 @@ export interface CreateInterpreterToolOptions {
     tools?: Record<string, Tool<any, any>>
 }
 
+function indentString(str: string, indent: string = '  '): string {
+    return str.split('\n').map(line => indent + line).join('\n')
+}
+
 
 async function generateToolsTypeDefinition(tools: Record<string, Tool<any, any>>): Promise<string> {
     const toolMethods: string[] = []
@@ -56,7 +60,8 @@ async function generateToolsTypeDefinition(tools: Record<string, Tool<any, any>>
 
     if (toolMethods.length === 0) return ''
 
-    return `\n\nAvailable tools object type:\n\ninterface Tools {\n${toolMethods.join('\n')}\n}\n`
+    const indentedMethods = indentString(toolMethods.join('\n'))
+    return `\n\nAvailable tools object type:\n\ninterface Tools {\n${indentedMethods}\n}\n`
 }
 
 export async function createInterpreterTool(options?: CreateInterpreterToolOptions) {
