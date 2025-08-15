@@ -64,7 +64,7 @@ export function createAiCacheMiddleware({
                     },
                 }
             }
-            console.log(`skipping cache for ai request with model ${model.modelId}`)
+            console.log(`not using cache for ai request with model ${model.modelId}`)
 
             const result = await doGenerate()
 
@@ -112,7 +112,7 @@ export function createAiCacheMiddleware({
                     rawCall: { rawPrompt: null, rawSettings: {} },
                 }
             }
-            console.log(`skipping cache for ai request with model ${model.modelId}`)
+            console.log(`not using cache for ai request with model ${model.modelId}`)
 
             // If not cached, proceed with streaming
             const { stream, ...rest } = await doStream()

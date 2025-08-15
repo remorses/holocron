@@ -5,7 +5,7 @@ import { z } from 'zod'
 
 describe('createInterpreterTool', () => {
     test('executes simple code and captures console.log', async () => {
-        const tool = createInterpreterTool()
+        const tool = await createInterpreterTool()
         
         const startTime = Date.now()
         const result = await tool.execute!({
@@ -34,7 +34,7 @@ describe('createInterpreterTool', () => {
     })
     
     test('handles errors gracefully', async () => {
-        const tool = createInterpreterTool()
+        const tool = await createInterpreterTool()
         
         const result = await tool.execute!({
             title: 'Error test',
@@ -51,7 +51,7 @@ describe('createInterpreterTool', () => {
     })
     
     test('handles JSON objects in console.log', async () => {
-        const tool = createInterpreterTool()
+        const tool = await createInterpreterTool()
         
         const result = await tool.execute!({
             title: 'JSON logging',
@@ -79,7 +79,7 @@ describe('createInterpreterTool', () => {
     })
     
     test('enforces timeout', async () => {
-        const tool = createInterpreterTool()
+        const tool = await createInterpreterTool()
         
         const result = await tool.execute!({
             title: 'Timeout test',
@@ -95,7 +95,7 @@ describe('createInterpreterTool', () => {
     })
     
     test('handles async code', async () => {
-        const tool = createInterpreterTool()
+        const tool = await createInterpreterTool()
         
         const result = await tool.execute!({
             title: 'Async test',
@@ -117,7 +117,7 @@ describe('createInterpreterTool', () => {
     })
     
     test('respects custom timeout', async () => {
-        const tool = createInterpreterTool()
+        const tool = await createInterpreterTool()
         
         const startTime = Date.now()
         const result = await tool.execute!({
@@ -138,7 +138,7 @@ describe('createInterpreterTool', () => {
     })
     
     test('returns "no console logs" when no output', async () => {
-        const tool = createInterpreterTool()
+        const tool = await createInterpreterTool()
         
         const result = await tool.execute!({
             title: 'No output test',
@@ -154,7 +154,7 @@ describe('createInterpreterTool', () => {
     })
     
     test('shows stack trace for errors thrown in functions', async () => {
-        const tool = createInterpreterTool()
+        const tool = await createInterpreterTool()
         
         const result = await tool.execute!({
             title: 'Error with stack trace',
@@ -182,10 +182,10 @@ describe('createInterpreterTool', () => {
           Error: Something went wrong in doSomething
           Stack trace:
           Error: Something went wrong in doSomething
-              at doSomething (<isolated-vm>:33:27)
-              at main (<isolated-vm>:38:21)
-              at <isolated-vm>:42:17
-              at <isolated-vm>:44:23"
+              at doSomething (<isolated-vm>:44:27)
+              at main (<isolated-vm>:49:21)
+              at <isolated-vm>:53:17
+              at <isolated-vm>:55:23"
         `)
     })
     
@@ -211,7 +211,7 @@ describe('createInterpreterTool', () => {
             }
         })
         
-        const interpreterTool = createInterpreterTool({
+        const interpreterTool = await createInterpreterTool({
             tools: {
                 add: addTool,
                 greet: greetTool,
@@ -253,7 +253,7 @@ describe('createInterpreterTool', () => {
             execute: async ({ x, y }) => x * y
         })
         
-        const interpreterTool = createInterpreterTool({
+        const interpreterTool = await createInterpreterTool({
             tools: {
                 multiply: mathTool,
             }
@@ -274,7 +274,7 @@ describe('createInterpreterTool', () => {
     })
     
     test('supports various console methods', async () => {
-        const tool = createInterpreterTool()
+        const tool = await createInterpreterTool()
         
         const result = await tool.execute!({
             title: 'Console methods test',
@@ -317,7 +317,7 @@ describe('createInterpreterTool', () => {
             }),
         })
         
-        const interpreterTool = createInterpreterTool({
+        const interpreterTool = await createInterpreterTool({
             tools: {
                 schemaOnly: schemaTool,
             }
@@ -334,6 +334,84 @@ describe('createInterpreterTool', () => {
         expect(result).toMatchInlineSnapshot(`
           "Tools available: []
           No tools should be available"
+        `)
+    })
+    
+    test('includes available tools in description with TypeScript types', async () => {
+        const mockFetch = tool({
+            description: 'Fetch data',
+            inputSchema: z.object({ url: z.string() }),
+            execute: async ({ url }) => `Data from ${url}`
+        })
+        
+        const mockEditor = tool({
+            description: 'Edit files',
+            inputSchema: z.object({ 
+                path: z.string(),
+                content: z.string().optional()
+            }),
+            execute: async ({ path, content }) => `Edited ${path}`
+        })
+        
+        const schemaOnly = tool({
+            description: 'Schema only',
+            inputSchema: z.object({ value: z.string() }),
+            outputSchema: z.object({ result: z.string() })
+        })
+        
+        const interpreterTool = await createInterpreterTool({
+            tools: {
+                'fetch-data': mockFetch,
+                'edit_file': mockEditor,
+                'schema-only': schemaOnly
+            }
+        })
+        
+        expect(interpreterTool.description).toMatchInlineSnapshot(`
+          "Execute JavaScript code in an isolated sandbox environment with console.log capture
+
+          Available tools object type:
+
+          interface Tools {
+          fetchData: (args: {
+            url: string
+          }) => Promise<any>;
+          editFile: (args: {
+            path: string
+            content?: string
+          }) => Promise<any>;
+          }
+          "
+        `)
+    })
+    
+    test('supports URL constructor', async () => {
+        const tool = await createInterpreterTool()
+        
+        const result = await tool.execute!({
+            title: 'URL test',
+            code: `
+                const url = new URL('https://example.com/path?query=value#hash')
+                console.log('URL object:', JSON.stringify(url))
+                console.log('Protocol:', url.protocol)
+                console.log('Hostname:', url.hostname)
+                console.log('Pathname:', url.pathname)
+                console.log('Search:', url.search)
+                console.log('Hash:', url.hash)
+                
+                const relative = new URL('/api/users', 'https://api.example.com')
+                console.log('Full URL:', relative.href)
+            `
+        }, {} as any) as string
+        
+        expect(result).toMatchInlineSnapshot(`
+          "URL object: {"href":"https://example.com/path?query=value#hash","protocol":"https:","hostname":"example.com","host":"example.com","port":"","pathname":"/path","search":"?query=value","searchParams":{"query":"value"},"hash":"#hash","origin":"https://example.com","username":"","password":""}
+          Protocol: https:
+          Hostname: example.com
+          Pathname: /path
+          Search: ?query=value
+          Hash: #hash
+          Full URL: https://api.example.com/api/users"
         `)
     })
     
@@ -395,10 +473,10 @@ describe('createInterpreterTool', () => {
             }
         })
         
-        const interpreterTool = createInterpreterTool({
+        const interpreterTool = await createInterpreterTool({
             tools: {
-                fetch: fetchTool,
-                editor: strReplaceEditor
+                'fetch-tool': fetchTool,
+                'editor_tool': strReplaceEditor
             }
         })
         
@@ -416,7 +494,7 @@ describe('createInterpreterTool', () => {
                 
                 const results = await Promise.all(
                     urls.map(async url => {
-                        const content = await tools.fetch({ url })
+                        const content = await tools.fetchTool({ url })
                         const path = url.split('//')[1].split('/').slice(1).join('/')
                         return { path, content }
                     })
@@ -426,7 +504,7 @@ describe('createInterpreterTool', () => {
                 
                 const writeResults = await Promise.all(
                     results.map(({ path, content }) => 
-                        tools.editor({
+                        tools.editorTool({
                             command: 'create',
                             path: path,
                             file_text: content
@@ -436,7 +514,7 @@ describe('createInterpreterTool', () => {
                 
                 console.log('Created', writeResults.length, 'files')
                 
-                const userFile = await tools.editor({
+                const userFile = await tools.editorTool({
                     command: 'view',
                     path: 'users/1.md'
                 })
@@ -445,10 +523,15 @@ describe('createInterpreterTool', () => {
             `
         }, {} as any) as string
         
-        expect(result).toMatch(/Fetching 4 URLs/)
-        expect(result).toMatch(/Fetched all data/)
-        expect(result).toMatch(/Created 4 files/)
-        expect(result).toMatch(/User 1 file: # User 1/)
+        expect(result).toMatchInlineSnapshot(`
+          "Fetching 4 URLs...
+          Fetched all data
+          Created 4 files
+          User 1 file: # User 1
+
+          - ID: 1
+          - ..."
+        `)
         
         expect(files['users/1.md']).toContain('# User 1')
         expect(files['users/2.md']).toContain('# User 2')

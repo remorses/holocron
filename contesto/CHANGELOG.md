@@ -1,5 +1,17 @@
 # Changelog
 
+## 2025-08-15 18:43
+
+- Convert tool names to camelCase when injecting into isolated environment and generating TypeScript types
+- Updated tests to use inline snapshots for tool descriptions and real-world examples
+- Added camelcase package for consistent naming convention
+
+## 2025-08-15 18:40
+
+- Updated `createInterpreterTool` to use Zod v4's built-in `toJSONSchema` function instead of custom implementation
+- Fixed TypeScript type generation using json-schema-to-typescript-lite for tool input schemas
+- Fixed async function signature by making `createInterpreterTool` return a Promise
+
 ## 2025-08-10 12:00
 
 - Added `onExecute` callback to `createRenderFormTool` configuration

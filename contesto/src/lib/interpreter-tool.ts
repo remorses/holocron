@@ -1,6 +1,8 @@
-import z from 'zod'
+import z, { toJSONSchema } from 'zod'
 import { tool, Tool } from 'ai'
 import ivm from 'isolated-vm'
+import { compile } from 'json-schema-to-typescript-lite'
+import camelCase from 'camelcase'
 
 const interpreterToolParamsSchema = z.object({
     title: z.string().describe('A descriptive title for this code execution'),
@@ -19,11 +21,60 @@ export interface CreateInterpreterToolOptions {
     tools?: Record<string, Tool<any, any>>
 }
 
-export function createInterpreterTool(options?: CreateInterpreterToolOptions) {
+
+async function generateToolsTypeDefinition(tools: Record<string, Tool<any, any>>): Promise<string> {
+    const toolMethods: string[] = []
+
+    for (const [name, toolDef] of Object.entries(tools)) {
+        if (!toolDef.execute) continue
+
+        const camelCaseName = camelCase(name)
+
+        try {
+            let inputType = 'any'
+
+            if (toolDef.inputSchema) {
+                if ('_def' in toolDef.inputSchema) {
+                    const zodSchema = toolDef.inputSchema as any
+                    const jsonSchema = toJSONSchema(zodSchema) as any
+                    const typeScript = await compile(jsonSchema, `${camelCaseName}Input`, {
+                        strictIndexSignatures: false
+                    })
+
+                    const match = typeScript.match(/export interface \w+ ({[\s\S]*?})/m)
+                    if (match) {
+                        inputType = match[1]
+                    }
+                }
+            }
+
+            toolMethods.push(`${camelCaseName}: (args: ${inputType}) => Promise<any>;`)
+        } catch {
+            toolMethods.push(`${camelCaseName}: (args: any) => Promise<any>;`)
+        }
+    }
+
+    if (toolMethods.length === 0) return ''
+
+    return `\n\nAvailable tools object type:\n\ninterface Tools {\n${toolMethods.join('\n')}\n}\n`
+}
+
+export async function createInterpreterTool(options?: CreateInterpreterToolOptions) {
     const tools = options?.tools || {}
 
+    const availableTools = Object.entries(tools)
+        .filter(([_, toolDef]) => toolDef.execute)
+        .map(([name]) => name)
+
+    let toolsDescription = ''
+
+    if (availableTools.length > 0) {
+        const typeDefinition = await generateToolsTypeDefinition(tools)
+        toolsDescription = typeDefinition || `\n\nAvailable tools in the 'tools' object:\n${availableTools.map(name => `- tools.${name}(...)`).join('\n')}`
+    }
+
     return tool({
-        description: 'Execute JavaScript code in an isolated sandbox environment with console.log capture',
+        description: `Execute JavaScript code in an isolated sandbox environment with console.log capture${toolsDescription}`,
         inputSchema: interpreterToolParamsSchema,
         execute: async ({ title, code, timeout = 5000 }) => {
             const logs: string[] = []
@@ -50,11 +101,40 @@ export function createInterpreterTool(options?: CreateInterpreterToolOptions) {
 
                 await jail.set('_consoleLog', consoleLog)
 
+                // Set up URL constructor via callback
+                const urlConstructor = new ivm.Callback(
+                    { sync: true } as any,
+                    (urlString: string, base?: string) => {
+                        try {
+                            const url = base ? new URL(urlString, base) : new URL(urlString)
+                            return {
+                                href: url.href,
+                                protocol: url.protocol,
+                                hostname: url.hostname,
+                                host: url.host,
+                                port: url.port,
+                                pathname: url.pathname,
+                                search: url.search,
+                                searchParams: Object.fromEntries(url.searchParams.entries()),
+                                hash: url.hash,
+                                origin: url.origin,
+                                username: url.username,
+                                password: url.password
+                            }
+                        } catch (error: any) {
+                            throw new Error(`Invalid URL: ${error.message}`)
+                        }
+                    } as any
+                )
+
+                await jail.set('_urlConstructor', urlConstructor)
+
                 // Set up tools
                 const toolExecutors: Record<string, ivm.Reference<(args: any) => Promise<any>>> = {}
                 for (const [name, toolDef] of Object.entries(tools)) {
                     if (toolDef.execute) {
-                        toolExecutors[name] = new ivm.Reference(async (args: any) => {
+                        const camelCaseName = camelCase(name)
+                        toolExecutors[camelCaseName] = new ivm.Reference(async (args: any) => {
                             try {
                                 // Validate input using the tool's inputSchema if it's a Zod schema
                                 if (toolDef.inputSchema && 'parse' in toolDef.inputSchema) {
@@ -113,13 +193,26 @@ export function createInterpreterTool(options?: CreateInterpreterToolOptions) {
                         }
                     };
 
-                    const tools = {};
-                    ${Object.entries(tools).filter(([_, toolDef]) => toolDef.execute).map(([name]) => `
-                    tools.${name} = async function(args) {
-                        if (!_toolExecutors.${name}) {
-                            throw new Error('Tool ${name} is not executable');
+                    class URL {
+                        constructor(urlString, base) {
+                            const result = _urlConstructor(urlString, base);
+                            Object.assign(this, result);
                         }
-                        const result = await _toolExecutors.${name}.apply(undefined, [args], {
+
+                        toString() {
+                            return this.href;
+                        }
+                    }
+
+                    const tools = {};
+                    ${Object.entries(tools).filter(([_, toolDef]) => toolDef.execute).map(([name]) => {
+                        const camelCaseName = camelCase(name)
+                        return `
+                    tools.${camelCaseName} = async function(args) {
+                        if (!_toolExecutors.${camelCaseName}) {
+                            throw new Error('Tool ${camelCaseName} is not executable');
+                        }
+                        const result = await _toolExecutors.${camelCaseName}.apply(undefined, [args], {
                             arguments: { copy: true },
                             result: { promise: true, copy: true }
                         });
@@ -129,7 +222,8 @@ export function createInterpreterTool(options?: CreateInterpreterToolOptions) {
                         }
 
                         return result && result.__result ? result.value : result;
-                    };`).join('')}
+                    };`
+                    }).join('')}
 
                     (async () => {
                         ${code}

@@ -54,7 +54,7 @@ describe('process-chat', () => {
                 {
                   "providerMetadata": {
                     "openai": {
-                      "itemId": "msg_688e048b39a8819bbd4830724d08e11e0b43efd0c990efa1",
+                      "itemId": "msg_689f64c0ce348194bc0ad7d9456a78280cc51a2a46b731da",
                     },
                   },
                   "state": "done",
@@ -120,7 +120,7 @@ describe('process-chat', () => {
                 {
                   "providerMetadata": {
                     "openai": {
-                      "itemId": "msg_688e048c3598819994e1a598699aee18067d7e424d3e2306",
+                      "itemId": "msg_689f64c1bb5c81959ee37f1ddf6231e10581cc665f78b4d1",
                     },
                   },
                   "state": "done",
@@ -251,7 +251,7 @@ describe('process-chat', () => {
                 {
                   "providerMetadata": {
                     "openai": {
-                      "itemId": "msg_688e048f3e70819a9606fe51d866adbe0a0395efd2a6fc32",
+                      "itemId": "msg_689f64c49b5c8195b530f30705f9ea2404033889365a13a6",
                     },
                   },
                   "state": "done",
@@ -330,7 +330,7 @@ describe('process-chat', () => {
                 {
                   "providerMetadata": {
                     "openai": {
-                      "itemId": "msg_688e0490398c819bb17d76ed97726068081bb26617ec147b",
+                      "itemId": "msg_689f64c5bd588193ad0d7fe3e363b09304f867a09319fd6e",
                     },
                   },
                   "state": "done",
@@ -422,7 +422,9 @@ describe('process-chat', () => {
                     "timezone": "UTC",
                   },
                   "output": "Current time is 2024-01-01T12:00:00.000Z in UTC",
+                  "preliminary": undefined,
                   "providerExecuted": true,
+                  "rawInput": undefined,
                   "state": "output-available",
                   "toolCallId": "call-1",
                   "type": "tool-getCurrentTime",
@@ -502,7 +504,7 @@ describe('process-chat', () => {
                 {
                   "callProviderMetadata": {
                     "openai": {
-                      "itemId": "fc_688e04914810819a828c8471dc50d53b0c2dffb6b9f4e4fb",
+                      "itemId": "fc_689f64c7821c8193b134d4f534f2510306c1dda6f6bbb7dd",
                     },
                   },
                   "errorText": undefined,
@@ -510,9 +512,11 @@ describe('process-chat', () => {
                     "timezone": "UTC",
                   },
                   "output": "Current time is 2024-01-01T12:00:00.000Z in UTC",
+                  "preliminary": undefined,
                   "providerExecuted": undefined,
+                  "rawInput": undefined,
                   "state": "output-available",
-                  "toolCallId": "call_xr74HH9FWdrLMi6jGy5Hz4nC",
+                  "toolCallId": "call_dETZQwXedzjbUaeIdd2x11nI",
                   "type": "tool-getCurrentTime",
                 },
               ],
@@ -580,7 +584,7 @@ describe('process-chat', () => {
             {
               "providerMetadata": {
                 "openai": {
-                  "itemId": "rs_688e049252bc8199948a9edff93a35280b751baed0bd9b28",
+                  "itemId": "rs_689f64c8da78819489a3588c1fabe4e70507bd6150f0c009",
                   "reasoningEncryptedContent": null,
                 },
               },
@@ -591,7 +595,7 @@ describe('process-chat', () => {
             {
               "providerMetadata": {
                 "openai": {
-                  "itemId": "msg_688e04943dcc8199b24142c3c336de5c0b751baed0bd9b28",
+                  "itemId": "msg_689f64ca30fc8194a219fefa34271cc60507bd6150f0c009",
                 },
               },
               "state": "done",
@@ -612,7 +616,7 @@ describe('process-chat', () => {
                 {
                   "providerMetadata": {
                     "openai": {
-                      "itemId": "rs_688e049252bc8199948a9edff93a35280b751baed0bd9b28",
+                      "itemId": "rs_689f64c8da78819489a3588c1fabe4e70507bd6150f0c009",
                       "reasoningEncryptedContent": null,
                     },
                   },
@@ -623,7 +627,7 @@ describe('process-chat', () => {
                 {
                   "providerMetadata": {
                     "openai": {
-                      "itemId": "msg_688e04943dcc8199b24142c3c336de5c0b751baed0bd9b28",
+                      "itemId": "msg_689f64ca30fc8194a219fefa34271cc60507bd6150f0c009",
                     },
                   },
                   "state": "done",
@@ -707,33 +711,18 @@ describe('process-chat', () => {
                 {
                   "providerMetadata": {
                     "openai": {
-                      "itemId": "rs_688e0495ded0819aa94982a58b65b8420176387a5cb06ae9",
+                      "itemId": "rs_689f64cbc9a48196b9e56ebc4bec502b006bb401c328ac80",
                       "reasoningEncryptedContent": null,
                     },
                   },
                   "state": "done",
-                  "text": "**Planning the process**
-
-          I'm outlining a two-step process for the user. First, I’ll get the current time in the UTC timezone. After that, I'll calculate the difference between 150 and 75. They want to see my reasoning for each step, so I’ll write out the plan before executing it. Once I have the current time, I’ll proceed to calculate the difference. Finally, I'll summarize the results for the user. Let's get started!",
-                  "type": "reasoning",
-                },
-                {
-                  "providerMetadata": {
-                    "openai": {
-                      "itemId": "rs_688e0495ded0819aa94982a58b65b8420176387a5cb06ae9",
-                      "reasoningEncryptedContent": null,
-                    },
-                  },
-                  "state": "done",
-                  "text": "**Outlining my steps**
-
-          I need to follow the developer instructions: any calls to defined tools must go through the commentary channel. I’ll start by planning in the analysis channel. My plan will include getting the current time in UTC and then calculating the difference between two numbers. I’ll write a message detailing each step and the reasoning before calling the functions. After that, I’ll wait for the result and then proceed to the next calculation. Let’s execute that plan!",
+                  "text": "",
                   "type": "reasoning",
                 },
                 {
                   "callProviderMetadata": {
                     "openai": {
-                      "itemId": "fc_688e049d5630819a8f8237b3c24e8b080176387a5cb06ae9",
+                      "itemId": "fc_689f64d6591c8196b8163dd6b6c1041e006bb401c328ac80",
                     },
                   },
                   "errorText": undefined,
@@ -741,9 +730,11 @@ describe('process-chat', () => {
                     "timezone": "UTC",
                   },
                   "output": "Current time is 2024-01-01T12:00:00.000Z in UTC",
+                  "preliminary": undefined,
                   "providerExecuted": undefined,
+                  "rawInput": undefined,
                   "state": "output-available",
-                  "toolCallId": "call_w9Qd4x2WOMh0c21KOhClHQpT",
+                  "toolCallId": "call_xIOmGfEG9QxQPU0WQNGtPmU2",
                   "type": "tool-getCurrentTime",
                 },
               ],
