@@ -1,4 +1,9 @@
 import { tool } from 'ai'
+import {
+    interpreterToolParamsSchema,
+    createInterpreterTool,
+    InterpreterToolParamSchema,
+} from 'contesto/src/lib/interpreter-tool'
 import z from 'zod'
 import { EditToolParamSchema } from 'docs-website/src/lib/edit-tool'
 
@@ -91,5 +96,9 @@ export type DocsTools = {
             endLine?: number
             error?: string
         }
+    }
+    jsInterpreter: {
+        input: InterpreterToolParamSchema
+        output: string
     }
 }

@@ -73,6 +73,10 @@ import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
 
 import exampleDocs from 'website/scripts/example-docs.json'
 import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
+import {
+    interpreterToolParamsSchema,
+    createInterpreterTool,
+} from 'contesto/src/lib/interpreter-tool'
 import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
 import fm from 'front-matter'
 import { isValidLucideIconName } from './icons'
@@ -232,6 +236,10 @@ export type WebsiteTools = {
             success: boolean
             error?: string
         }
+    }
+    jsInterpreter: {
+        input: z.infer<typeof interpreterToolParamsSchema>
+        output: string
     }
 }
 
@@ -720,6 +728,8 @@ export async function* generateMessageStream({
             webSearchAnthropic: anthropic.tools.webSearch_20250305({}),
         }),
     }
+
+    tools['jsInterpreter'] = createInterpreterTool({ tools })
 
     const allMessages: ModelMessage[] = [
         {

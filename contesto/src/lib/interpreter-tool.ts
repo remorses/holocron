@@ -5,9 +5,9 @@ import { compile } from 'json-schema-to-typescript-lite'
 import camelCase from 'camelcase'
 import dedent from 'string-dedent'
 
-const interpreterToolParamsSchema = z.object({
+export const interpreterToolParamsSchema = z.object({
     title: z.string().describe('A descriptive title for this code execution'),
-    code: z.string().describe('JavaScript code to execute in an isolated environment'),
+    code: z.string().describe('JavaScript code to execute in an isolated environment. DO NOT use typescript or jsx. Only plain javascript is supported. No imports or require. Running on the server.'),
     timeout: z.number()
         .min(100)
         .max(300000)

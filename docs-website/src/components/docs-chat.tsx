@@ -541,6 +541,25 @@ export function MessagePartRenderer({
             </ShowMore>
         )
     }
+    if (part.type === 'tool-jsInterpreter') {
+        const code = part.input?.code || '\n'
+
+        if (!code) return null
+
+        return (
+            <ShowMore>
+                <ToolPreviewContainer>
+                    <Dot toolCallId={part.toolCallId} /> Running JavaScript
+                    <br />
+                    <ChatMarkdown
+                        isStreaming={isChatGenerating}
+                        className='pt-[1em] block'
+                        markdown={`\`\`\`js lineNumbers=true\n${code}\n\`\`\``}
+                    />
+                </ToolPreviewContainer>
+            </ShowMore>
+        )
+    }
 
     if (part.type === 'tool-selectText') {
         if (!part.input) return null
