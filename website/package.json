@@ -41,7 +41,7 @@
     "@motionone/dom": "^10.18.0",
     "@motionone/easing": "^10.18.0",
     "@octokit/webhooks": "^14.0.2",
-    "@prisma/client": "^6.12.0",
+    "@prisma/client": "^6.14.0",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-checkbox": "^1.3.2",

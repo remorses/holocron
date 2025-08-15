@@ -307,7 +307,7 @@ export default function Chat({
 
         console.log('Using new initial chat state', state)
         return state
-    }, [loaderData, searchParams])
+    }, [loaderData.chatId, searchParams])
 
     const submitMessages = async ({
         messages,

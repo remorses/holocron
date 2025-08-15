@@ -26,9 +26,13 @@ import { BrowserWindow } from '../components/browser-window'
 import { SidebarInset, SidebarProvider } from '../components/ui/sidebar'
 import { getSession } from '../lib/better-auth'
 import { createIframeRpcClient, docsRpcClient } from '../lib/docs-setstate'
-import { getTabFilesWithoutContents } from '../lib/spiceflow-generate-message'
 
-import { State, useWebsiteState, WebsiteStateProvider, useFilesInDraftAutoSave } from '../lib/state'
+import {
+    State,
+    useWebsiteState,
+    WebsiteStateProvider,
+    useFilesInDraftAutoSave,
+} from '../lib/state'
 import { cn } from '../lib/utils'
 import type { Route } from './+types/org.$orgId.branch.$branchId.chat.$chatId._index'
 import type { Route as BranchRoute } from './org.$orgId.branch.$branchId'
@@ -45,6 +49,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
 import Chat from '../components/chat'
 import { useStickToBottom } from 'use-stick-to-bottom'
 import { href } from 'react-router'
+import { getFumadocsSource } from 'docs-website/src/lib/source'
+import { getFilesForSource } from 'docs-website/src/lib/source.server'
 
 export type { Route }
 
@@ -86,27 +92,11 @@ export async function loader({
         }),
         // Fetch the siteBranch directly with site included
         prisma.siteBranch.findFirst({
-            where: {
-                branchId,
-                site: {
-                    org: {
-                        users: { some: { userId } },
-                    },
-                },
-            },
-            select: {
-                branchId: true,
+            include: {
                 domains: true,
-                docsJson: true,
-                githubBranch: true,
-                lastGithubSyncAt: true,
-                lastGithubSyncCommit: true,
                 site: {
-                    select: {
-                        siteId: true,
-                        githubOwner: true,
-                        githubRepo: true,
-                        githubFolder: true,
+                    include: {
+                        locales: true,
                     },
                 },
             },
@@ -127,7 +117,17 @@ export async function loader({
         ? `https://github.com/${site.githubOwner}/${site.githubRepo}/pull/${chat.prNumber}`
         : undefined
 
-    // Create mention options from branch pages using getTabFilesWithoutContents
+    const languages = site.locales.map((x) => x.locale)
+    const files = await getFilesForSource({
+        branchId: siteBranch.branchId,
+        githubFolder: site.githubFolder || '',
+        filesInDraft: {},
+    })
+    const source = getFumadocsSource({
+        defaultLanguage: site.defaultLocale,
+        files,
+        languages,
+    })
     const fileNames: string[] = await (async () => {
         const branchId = chat.branchId
         if (!branchId) return []
@@ -137,8 +137,8 @@ export async function loader({
             throw new Error('Request aborted')
         }
 
-        const allFiles = await getTabFilesWithoutContents({ branchId })
-        return allFiles.map((file) => `@${file.githubPath}`).sort()
+        const allFiles = source.getPages()
+        return allFiles.map((file) => `@${file.file}`).sort()
     })()
 
     const host = siteBranch.domains
@@ -207,7 +207,7 @@ export default function Page({
 function ChatContent() {
     const hideBrowser = useShouldHideBrowser()
     const { chatId } = useLoaderData<typeof loader>()
-    
+
     // Enable auto-saving of filesInDraft to database
     useFilesInDraftAutoSave(chatId)
 

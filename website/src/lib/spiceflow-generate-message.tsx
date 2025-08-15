@@ -1212,34 +1212,6 @@ async function generateAndSaveChatTitle(params: {
     return chatInfo
 }
 
-export async function getTabFilesWithoutContents({ branchId }) {
-    const [pages, metaFiles, mediaAssets] = await Promise.all([
-        prisma.markdownPage.findMany({
-            where: {
-                branchId,
-            },
-        }),
-        prisma.metaFile.findMany({
-            where: {
-                branchId,
-            },
-            omit: {
-                jsonData: true,
-            },
-        }),
-        prisma.mediaAsset.findMany({
-            where: {
-                branchId,
-            },
-        }),
-    ])
-    const allFiles = [
-        ...pages.map((x) => ({ ...x, type: 'page' }) as const),
-        ...metaFiles.map((x) => ({ ...x, type: 'meta' }) as const),
-        ...mediaAssets.map((x) => ({ ...x, type: 'media' }) as const),
-    ].flat()
-    return allFiles
-}
 
 export async function getPageContent({ githubPath, branchId }) {
     // Support for special files: fumabase.jsonc and styles.css

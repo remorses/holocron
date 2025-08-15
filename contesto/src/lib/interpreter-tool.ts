@@ -108,7 +108,7 @@ export async function createInterpreterTool(options?: CreateInterpreterToolOptio
     return tool({
         description,
         inputSchema: interpreterToolParamsSchema,
-        execute: async ({ title, code, timeout = 5000 }) => {
+        execute: async ({ title, code, timeout = 5000 }, secondArg) => {
             const logs: string[] = []
             let result: any
 
@@ -179,7 +179,7 @@ export async function createInterpreterTool(options?: CreateInterpreterToolOptio
                                 }
 
                                 // Execute the tool
-                                const result = await toolDef.execute!(args, { abortSignal: undefined } as any)
+                                const result = await toolDef.execute!(args, secondArg)
 
                                 // Handle async iterables
                                 if (result && typeof result === 'object' && Symbol.asyncIterator in result) {
