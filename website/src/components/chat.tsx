@@ -348,6 +348,7 @@ export default function Chat({
         }
         const globalFileSystem = new FileSystemEmulator({
             filesInDraft,
+            baseDir: githubFolder || undefined,
             getPageContent,
             onFilesDraftChange: async () => {},
         })
@@ -473,6 +474,7 @@ export default function Chat({
                     let updatedPagesCopy = { ...filesInDraft }
                     const previewFileSystem = new FileSystemEmulator({
                         filesInDraft: updatedPagesCopy,
+                        baseDir: githubFolder || undefined,
                         getPageContent,
                     })
                     const localExecute = createEditExecute({
