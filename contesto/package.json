@@ -53,6 +53,7 @@
         "flat-cache": "^6.1.10",
         "framer-motion": "latest",
         "fumadocs-ui": "^15.6.1",
+        "isolated-vm": "^6.0.1",
         "js-yaml": "^4.1.0",
         "json-schema": "^0.4.0",
         "json-schema-library": "^10.1.2",

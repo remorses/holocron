@@ -24,4 +24,7 @@ export * from './lib/schema-path-utils.js'
 export * from './lib/zod.js'
 export * from './components/edit-preview.js'
 
+// Interpreter tool
+export * from './lib/interpreter-tool.js'
+
 export { jsxDedent }
