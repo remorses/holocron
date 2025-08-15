@@ -97,7 +97,7 @@ export function EditorToolPreview({
             code = code?.['error'] || JSON.stringify(code, null, 2)
         }
 
-        const markdown = `\`\`\`\`${language} lineNumbers=true data-last-lines=5  \n${code}\n\`\`\`\``
+        const markdown = `\`\`\`\`${language} lineNumbers=true \n${code}\n\`\`\`\``
 
         let actionText = capitalize(command)
         if (command === 'str_replace') actionText = 'Replacing content in'

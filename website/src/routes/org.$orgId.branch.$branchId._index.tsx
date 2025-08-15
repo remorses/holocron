@@ -2,11 +2,11 @@ import { prisma } from 'db'
 import { redirect } from 'react-router'
 import { href } from 'react-router'
 import { getSession } from '../lib/better-auth'
-import type { Route } from './+types/org.$orgId.site.$siteId._index'
+import type { Route } from './+types/org.$orgId.branch.$branchId._index'
 
 export async function loader({
     request,
-    params: { orgId, siteId },
+    params: { orgId, branchId },
 }: Route.LoaderArgs) {
     const { userId, redirectTo } = await getSession({ request })
     if (redirectTo) {
@@ -27,25 +27,24 @@ export async function loader({
         throw redirect(href('/org/:orgId/onboarding', { orgId }))
     }
 
-    // Get the site and its first branch
-    const site = await prisma.site.findUnique({
-        where: { siteId },
-        include: {
-            branches: {
-                take: 1,
-                orderBy: {
-                    createdAt: 'asc',
+    // Get the branch directly
+    const branch = await prisma.siteBranch.findFirst({
+        where: { 
+            branchId,
+            site: {
+                org: {
+                    users: {
+                        some: { userId },
+                    },
                 },
             },
         },
+        include: {
+            site: true,
+        },
     })
 
-    if (!site) {
-        throw redirect(href('/org/:orgId/onboarding', { orgId }))
-    }
-
-    const branchId = site.branches[0]?.branchId
-    if (!branchId) {
+    if (!branch) {
         throw redirect(href('/org/:orgId/onboarding', { orgId }))
     }
 

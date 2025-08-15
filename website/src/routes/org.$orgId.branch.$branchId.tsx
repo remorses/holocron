@@ -1,14 +1,14 @@
 import { prisma } from 'db'
 import { Outlet } from 'react-router'
 import { getSession } from '../lib/better-auth'
-import type { Route } from './+types/org.$orgId.site.$siteId'
+import type { Route } from './+types/org.$orgId.branch.$branchId'
 import { env } from '../lib/env'
 
 export type { Route }
 
 export async function loader({
     request,
-    params: { orgId, siteId },
+    params: { orgId, branchId },
 }: Route.LoaderArgs) {
     // Check if request is aborted early
     if (request.signal.aborted) {
@@ -23,21 +23,27 @@ export async function loader({
         throw new Error('Request aborted')
     }
 
-    const [site, chatHistory, siteBranches] = await Promise.all([
-        prisma.site.findUnique({
+    const [siteBranch, chatHistory, siteBranches] = await Promise.all([
+        prisma.siteBranch.findFirst({
             where: {
-                siteId: siteId,
-                org: {
-                    users: {
-                        some: { userId },
+                branchId: branchId,
+                site: {
+                    org: {
+                        users: {
+                            some: { userId },
+                        },
                     },
                 },
             },
             include: {
-                org: true,
-                githubInstallations: {
-                    where: {
-                        appId: env.GITHUB_APP_ID!,
+                site: {
+                    include: {
+                        org: true,
+                        githubInstallations: {
+                            where: {
+                                appId: env.GITHUB_APP_ID!,
+                            },
+                        },
                     },
                 },
             },
@@ -45,9 +51,7 @@ export async function loader({
         prisma.chat.findMany({
             where: {
                 userId,
-                branch: {
-                    siteId,
-                },
+                branchId,
             },
             select: {
                 chatId: true,
@@ -63,7 +67,7 @@ export async function loader({
         }),
         prisma.siteBranch.findMany({
             where: {
-                siteId,
+                siteId: branchId,
             },
             select: {
                 branchId: true,
@@ -75,15 +79,34 @@ export async function loader({
         }),
     ])
 
-    if (!site) {
-        throw new Error('Site not found')
+    if (!siteBranch) {
+        throw new Error('Branch not found')
     }
+
+    const site = siteBranch.site
+    const siteId = site.siteId
+
+    // Get all branches for this site
+    const allSiteBranches = await prisma.siteBranch.findMany({
+        where: {
+            siteId,
+        },
+        select: {
+            branchId: true,
+            githubBranch: true,
+        },
+        orderBy: {
+            createdAt: 'asc',
+        },
+    })
 
     return {
         site,
         siteId,
+        branchId,
+        siteBranch,
         chatHistory,
-        siteBranches,
+        siteBranches: allSiteBranches,
     }
 }
 export function Component({ loaderData }: Route.ComponentProps) {

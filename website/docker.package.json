@@ -7,6 +7,6 @@
     "@sentry/node": "^9.28.1",
     "json-schema-library": "^10.1.2",
     "pg": "^8.13.1",
-    "shiki": "^3.6.0"
+    "shiki": "^3.9.2"
   }
 }

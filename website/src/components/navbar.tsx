@@ -13,8 +13,8 @@ import {
 import { useThrowingFn } from '../lib/hooks'
 import { apiClient } from '../lib/spiceflow-client'
 import { useParams, useRouteLoaderData } from 'react-router'
-import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
-import type { Route as ChatRoute } from '../routes/org.$orgId.site.$siteId.chat.$chatId._index'
+import type { Route as BranchRoute } from '../routes/org.$orgId.branch.$branchId'
+import type { Route as ChatRoute } from '../routes/org.$orgId.branch.$branchId.chat.$chatId._index'
 
 // Navigation links array to be used in both desktop and mobile menus
 const navigationLinks = [

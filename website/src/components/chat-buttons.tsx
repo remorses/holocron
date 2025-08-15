@@ -24,7 +24,7 @@ import { apiClient } from '../lib/spiceflow-client'
 import { doFilesInDraftNeedPush, useWebsiteState } from '../lib/state'
 import { cn } from '../lib/utils'
 
-import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
+import type { Route as BranchRoute } from '../routes/org.$orgId.branch.$branchId'
 import {
     FileUpdate,
     calculateLineChanges,
@@ -35,15 +35,15 @@ export function PrButton({ className = '' }) {
     const { messages, isGenerating: isChatGenerating } = useChatContext()
     const { chatId, chat, prUrl } =
         useLoaderData<
-            typeof import('../routes/org.$orgId.site.$siteId.chat.$chatId._index').loader
+            typeof import('../routes/org.$orgId.branch.$branchId.chat.$chatId._index').loader
         >()
-    const siteData = useRouteLoaderData<
-        typeof import('../routes/org.$orgId.site.$siteId').loader
-    >('routes/org.$orgId.site.$siteId')!
+    const branchData = useRouteLoaderData<
+        typeof import('../routes/org.$orgId.branch.$branchId').loader
+    >('routes/org.$orgId.branch.$branchId')!
     const [isUpdating, setIsUpdating] = useState(false)
 
-    const { siteId } = siteData
-    const orgId = siteData.site.org.orgId
+    const { siteId, branchId } = branchData
+    const orgId = branchData.site.org.orgId
 
     const filesInDraft = useWebsiteState((x) => x?.filesInDraft || {})
     const lastPushedFiles = useWebsiteState((x) => x.lastPushedFiles)
@@ -53,9 +53,9 @@ export function PrButton({ className = '' }) {
 
 
 
-    const prHref = href('/org/:orgId/site/:siteId/chat/:chatId/create-pr', {
+    const prHref = href('/org/:orgId/branch/:branchId/chat/:chatId/create-pr', {
         orgId,
-        siteId,
+        branchId,
         chatId,
     })
 
@@ -148,9 +148,9 @@ export function PrButton({ className = '' }) {
         }
     })()
 
-    if (!siteData) return null
-    if (!siteData.site.githubInstallations?.length) return null
-    if (!siteData.site.githubOwner || !siteData.site.githubRepo) return null
+    if (!branchData) return null
+    if (!branchData.site.githubInstallations?.length) return null
+    if (!branchData.site.githubOwner || !branchData.site.githubRepo) return null
     if (!messages?.length) return null
 
     return (
@@ -193,12 +193,12 @@ export function SaveChangesButton({ className = '' }) {
 
     const { chatId, branchId } =
         useLoaderData<
-            typeof import('../routes/org.$orgId.site.$siteId.chat.$chatId._index').loader
+            typeof import('../routes/org.$orgId.branch.$branchId.chat.$chatId._index').loader
         >()
-    const siteData = useRouteLoaderData<
-        typeof import('../routes/org.$orgId.site.$siteId').loader
-    >('routes/org.$orgId.site.$siteId')
-    if (!siteData) return null
+    const branchData = useRouteLoaderData<
+        typeof import('../routes/org.$orgId.branch.$branchId').loader
+    >('routes/org.$orgId.branch.$branchId')
+    if (!branchData) return null
 
     const filesInDraft = useWebsiteState((x) => x?.filesInDraft || {})
     const lastPushedFiles = useWebsiteState((x) => x.lastPushedFiles)
@@ -209,7 +209,7 @@ export function SaveChangesButton({ className = '' }) {
     const revalidator = useRevalidator()
 
     // Only show if site has NO GitHub installation
-    if (!!siteData.site.githubInstallations?.length) return null
+    if (!!branchData.site.githubInstallations?.length) return null
 
     // Only show if there are files in draft with content
     const hasFilesWithContent = Object.values(filesInDraft).some((file) =>
@@ -363,7 +363,7 @@ export const DiffStats = memo(function DiffStats({
 }: DiffStatsProps) {
     const { branchId } =
         useLoaderData<
-            typeof import('../routes/org.$orgId.site.$siteId.chat.$chatId._index').loader
+            typeof import('../routes/org.$orgId.branch.$branchId.chat.$chatId._index').loader
         >()
 
     const { data: resolvedStats = [] } = useQuery({

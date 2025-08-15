@@ -108,8 +108,8 @@ import {
     transcribeAudio,
     uploadFileToSite,
 } from '../lib/utils'
-import { Route } from '../routes/+types/org.$orgId.site.$siteId.chat.$chatId._index'
-import type { Route as SiteRoute } from '../routes/org.$orgId.site.$siteId'
+import { Route } from '../routes/+types/org.$orgId.branch.$branchId.chat.$chatId._index'
+import type { Route as BranchRoute } from '../routes/org.$orgId.branch.$branchId'
 import { TruncatedText } from './truncated-text'
 import { MessagePartRenderer } from 'docs-website/src/components/docs-chat'
 import { useSearchParams } from 'react-router'
@@ -567,10 +567,10 @@ function Messages({ ref }) {
 function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
     const { isGenerating: isChatGenerating, messages } = useChatContext()
     const hideBrowser = useShouldHideBrowser()
-    const siteData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId',
-    ) as SiteRoute.ComponentProps['loaderData']
-    const { siteId } = siteData
+    const branchData = useRouteLoaderData(
+        'routes/org.$orgId.branch.$branchId',
+    ) as BranchRoute.ComponentProps['loaderData']
+    const { siteId } = branchData
 
     const isLastMessage = messages[messages.length - 1]?.id === message.id
     if (message.role === 'user') {
@@ -736,10 +736,10 @@ function Footer() {
     const { isGenerating: isPending, draftText: text, stop, submit, messages } = useChatContext()
     const { chat, chatId, githubFolder, prUrl, mentionOptions, branchId } =
         useLoaderData() as Route.ComponentProps['loaderData']
-    const siteData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId',
-    ) as SiteRoute.ComponentProps['loaderData']
-    const { siteId } = siteData
+    const branchData = useRouteLoaderData(
+        'routes/org.$orgId.branch.$branchId',
+    ) as BranchRoute.ComponentProps['loaderData']
+    const { siteId } = branchData
 
     const filesInDraft = useWebsiteState((x) => x?.filesInDraft || {})
     const lastPushedFiles = useWebsiteState((x) => x.lastPushedFiles)

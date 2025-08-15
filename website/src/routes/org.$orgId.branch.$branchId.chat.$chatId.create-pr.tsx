@@ -12,7 +12,7 @@ import {
     createPullRequestSuggestion,
 } from '../lib/github.server'
 import { applyJsonCComments, JsonCComments } from '../lib/json-c-comments'
-import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId.create-pr'
+import type { Route } from './+types/org.$orgId.branch.$branchId.chat.$chatId.create-pr'
 import { FilesInDraft } from 'docs-website/src/lib/docs-state'
 
 async function createPrSuggestionForChat({

@@ -32,21 +32,21 @@ import {
 } from './ui/command'
 import { useRouteLoaderData, useParams, useNavigate } from 'react-router'
 import { href } from 'react-router'
-import type { Route as SiteRoute } from 'website/src/routes/org.$orgId.site.$siteId'
+import type { Route as BranchRoute } from 'website/src/routes/org.$orgId.branch.$branchId'
 import type { Route as OrgRoute } from 'website/src/routes/org.$orgId'
-import type { Route as ChatRoute } from 'website/src/routes/org.$orgId.site.$siteId.chat.$chatId._index'
+import type { Route as ChatRoute } from 'website/src/routes/org.$orgId.branch.$branchId.chat.$chatId._index'
 import { apiClient } from 'website/src/lib/spiceflow-client'
 import { useStickToBottom } from 'use-stick-to-bottom'
 import { useShouldHideBrowser } from '../lib/hooks'
 
 function ChatCombobox({ chatId }: { chatId?: string }) {
-    const siteData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId',
-    ) as SiteRoute.ComponentProps['loaderData']
+    const branchData = useRouteLoaderData(
+        'routes/org.$orgId.branch.$branchId',
+    ) as BranchRoute.ComponentProps['loaderData']
     const params = useParams()
     const navigate = useNavigate()
-    const { orgId, siteId } = params
-    const { chatHistory } = siteData
+    const { orgId, branchId } = params
+    const { chatHistory } = branchData
 
     const chatHistoryItems = chatHistory.map((chat) => ({
         value: chat.chatId,
@@ -60,9 +60,9 @@ function ChatCombobox({ chatId }: { chatId?: string }) {
             onValueChange={(value) => {
                 if (value && value !== chatId) {
                     navigate(
-                        href('/org/:orgId/site/:siteId/chat/:chatId', {
+                        href('/org/:orgId/branch/:branchId/chat/:chatId', {
                             orgId: orgId!,
-                            siteId: siteId!,
+                            branchId: branchId!,
                             chatId: value,
                         }),
                     )
@@ -78,18 +78,18 @@ function ChatCombobox({ chatId }: { chatId?: string }) {
 }
 
 function NewChatButton() {
-    const siteData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId',
-    ) as SiteRoute.ComponentProps['loaderData']
+    const branchData = useRouteLoaderData(
+        'routes/org.$orgId.branch.$branchId',
+    ) as BranchRoute.ComponentProps['loaderData']
     const params = useParams()
     const navigate = useNavigate()
-    const { orgId, siteId } = params
+    const { orgId, branchId } = params
     const [open, setOpen] = React.useState(false)
     const [isCreatingChat, setIsCreatingChat] = React.useState(false)
-    const { siteBranches } = siteData
+    const { siteBranches } = branchData
 
-    const handleNewChat = async (branchId: string) => {
-        if (!orgId || !siteId || isCreatingChat) return
+    const handleNewChat = async (selectedBranchId: string) => {
+        if (!orgId || !branchId || isCreatingChat) return
 
         setIsCreatingChat(true)
         setOpen(false)
@@ -97,7 +97,7 @@ function NewChatButton() {
         try {
             const { data, error } = await apiClient.api.newChat.post({
                 orgId,
-                branchId,
+                branchId: selectedBranchId,
             })
 
             if (error) {
@@ -107,9 +107,9 @@ function NewChatButton() {
 
             if (data?.success && data.chatId) {
                 navigate(
-                    href('/org/:orgId/site/:siteId/chat/:chatId', {
+                    href('/org/:orgId/branch/:branchId/chat/:chatId', {
                         orgId,
-                        siteId,
+                        branchId: selectedBranchId,
                         chatId: data.chatId,
                     }),
                 )

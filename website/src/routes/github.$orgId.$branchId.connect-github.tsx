@@ -13,7 +13,7 @@ import type { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { apiClient } from '../lib/spiceflow-client'
 import { ulid } from 'ulid'
 import { href } from 'react-router'
-import type { Route } from './+types/github.$orgId.$siteId.connect-github'
+import type { Route } from './+types/github.$orgId.$branchId.connect-github'
 import { GithubLoginRequestData } from '../lib/types'
 import { GITHUB_LOGIN_DATA_COOKIE } from './api.github.webhooks'
 import { Button } from '../components/ui/button'
@@ -30,7 +30,7 @@ const COOKIE_OPTIONS = {
 
 export async function loader({ request, params }: Route.LoaderArgs) {
     const { userId, headers } = await getSession({ request })
-    const { orgId, siteId } = params
+    const { orgId, branchId } = params
 
     if (!userId) {
         throw new Response('Unauthorized', { status: 401 })
@@ -51,29 +51,28 @@ export async function loader({ request, params }: Route.LoaderArgs) {
         throw new Response('Missing GitHub account login', { status: 400 })
     }
 
-    // Get site and check if already connected
-    const site = await prisma.site.findFirst({
+    // Get branch and check if already connected
+    const branch = await prisma.siteBranch.findFirst({
         where: {
-            siteId,
-            org: {
-                orgId,
-                users: { some: { userId } },
-            },
-        },
-        include: {
-            branches: {
-                orderBy: { createdAt: 'desc' },
-                take: 1,
-                include: {
-                    domains: true,
+            branchId,
+            site: {
+                org: {
+                    orgId,
+                    users: { some: { userId } },
                 },
             },
         },
+        include: {
+            site: true,
+            domains: true,
+        },
     })
 
-    if (!site) {
-        throw new Response('Site not found', { status: 404 })
+    if (!branch) {
+        throw new Response('Branch not found', { status: 404 })
     }
+
+    const site = branch.site
 
     // If already connected to GitHub, create the installation connection and redirect
     if (site.githubOwner && site.githubRepo) {
@@ -100,13 +99,13 @@ export async function loader({ request, params }: Route.LoaderArgs) {
                 installationId_appId_siteId: {
                     installationId: githubInstallation.installationId,
                     appId: env.GITHUB_APP_ID!,
-                    siteId,
+                    siteId: site.siteId,
                 },
             },
             create: {
                 installationId: githubInstallation.installationId,
                 appId: env.GITHUB_APP_ID!,
-                siteId,
+                siteId: site.siteId,
             },
             update: {},
         })
@@ -118,9 +117,9 @@ export async function loader({ request, params }: Route.LoaderArgs) {
         })
 
 
-        const redirectUrl = href('/org/:orgId/site/:siteId', {
+        const redirectUrl = href('/org/:orgId/branch/:branchId', {
             orgId,
-            siteId
+            branchId
         })
 
         return redirect(redirectUrl, {
@@ -185,7 +184,7 @@ export default function ConnectGitHub() {
 
 export async function action({ request, params }: Route.ActionArgs) {
     const { userId, headers } = await getSession({ request })
-    const { orgId, siteId } = params
+    const { orgId, branchId } = params
 
     if (!userId) {
         throw new Response('Unauthorized', { status: 401 })
@@ -210,24 +209,21 @@ export async function action({ request, params }: Route.ActionArgs) {
     const data: GithubLoginRequestData = JSON.parse(decodeURIComponent(githubDataStr))
     const githubAccountLogin = data.githubAccountLogin
 
-    // Get site and GitHub installation
-    const [site, githubInstallation] = await Promise.all([
-        prisma.site.findFirst({
+    // Get branch and GitHub installation
+    const [branch, githubInstallation] = await Promise.all([
+        prisma.siteBranch.findFirst({
             where: {
-                siteId,
-                org: {
-                    orgId,
-                    users: { some: { userId } },
+                branchId,
+                site: {
+                    org: {
+                        orgId,
+                        users: { some: { userId } },
+                    },
                 },
             },
             include: {
-                branches: {
-                    orderBy: { createdAt: 'desc' },
-                    take: 1,
-                    include: {
-                        domains: true,
-                    },
-                },
+                site: true,
+                domains: true,
             },
         }),
         prisma.githubInstallation.findFirst({
@@ -243,11 +239,13 @@ export async function action({ request, params }: Route.ActionArgs) {
         }),
     ])
 
-    if (!site || !githubInstallation) {
-        throw new Response('Site or GitHub installation not found', { status: 404 })
+    if (!branch || !githubInstallation) {
+        throw new Response('Branch or GitHub installation not found', { status: 404 })
     }
 
-    const existingBranch = site.branches[0]
+    const site = branch.site
+    const siteId = site.siteId
+    const existingBranch = branch
 
     // Always update githubOwner when connecting
     const updateData: Prisma.SiteUpdateInput = {
@@ -299,11 +297,11 @@ export async function action({ request, params }: Route.ActionArgs) {
     // Get all pages and meta files
     const [pages, metaFiles] = await Promise.all([
         prisma.markdownPage.findMany({
-            where: { branchId: existingBranch?.branchId },
+            where: { branchId: branch.branchId },
             include: { content: true },
         }),
         prisma.metaFile.findMany({
-            where: { branchId: existingBranch?.branchId },
+            where: { branchId: branch.branchId },
         }),
     ])
 
@@ -379,12 +377,10 @@ export async function action({ request, params }: Route.ActionArgs) {
         data: updateData,
     })
 
-    // Find the last chat for this site to redirect to
+    // Find the last chat for this branch to redirect to
     const lastChat = await prisma.chat.findFirst({
         where: {
-            branch: {
-                siteId,
-            },
+            branchId,
             userId,
         },
         orderBy: {
@@ -401,16 +397,16 @@ export async function action({ request, params }: Route.ActionArgs) {
         maxAge: 0,
     })
 
-    // Redirect to the last chat or site page
+    // Redirect to the last chat or branch page
     const redirectUrl = lastChat
-        ? href('/org/:orgId/site/:siteId/chat/:chatId', {
+        ? href('/org/:orgId/branch/:branchId/chat/:chatId', {
             orgId,
-            siteId,
+            branchId,
             chatId: lastChat.chatId
         })
-        : href('/org/:orgId/site/:siteId', {
+        : href('/org/:orgId/branch/:branchId', {
             orgId,
-            siteId
+            branchId
         })
 
     return redirect(redirectUrl, {

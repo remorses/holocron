@@ -83,9 +83,9 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     })
     const chatId = chat.chatId
     throw redirect(
-        href('/org/:orgId/site/:siteId/chat/:chatId', {
+        href('/org/:orgId/branch/:branchId/chat/:chatId', {
             orgId,
-            siteId,
+            branchId,
             chatId,
         }),
     )

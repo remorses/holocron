@@ -125,9 +125,9 @@ export async function loader({ request }) {
         chatId = newChat.chatId
     }
     const redirectUrl = new URL(
-        href('/org/:orgId/site/:siteId/chat/:chatId', {
+        href('/org/:orgId/branch/:branchId/chat/:chatId', {
             orgId,
-            siteId,
+            branchId: latestBranch.branchId,
             chatId,
         }),
         process.env.PUBLIC_URL,

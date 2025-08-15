@@ -41,7 +41,7 @@ export function TeamSwitcher({
 }) {
     const navigation = useNavigation()
     const params = useParams()
-    const { siteId: currentSiteId } = params
+    const { siteId: currentSiteId, branchId } = params
 
     const activeSite =
         sites.find((site) => site.siteId === currentSiteId) || sites[0] || null

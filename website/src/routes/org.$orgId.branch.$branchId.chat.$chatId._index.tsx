@@ -30,8 +30,8 @@ import { getTabFilesWithoutContents } from '../lib/spiceflow-generate-message'
 
 import { State, useWebsiteState, WebsiteStateProvider, useFilesInDraftAutoSave } from '../lib/state'
 import { cn } from '../lib/utils'
-import type { Route } from './+types/org.$orgId.site.$siteId.chat.$chatId._index'
-import type { Route as SiteRoute } from './org.$orgId.site.$siteId'
+import type { Route } from './+types/org.$orgId.branch.$branchId.chat.$chatId._index'
+import type { Route as BranchRoute } from './org.$orgId.branch.$branchId'
 
 import { UIMessage } from 'ai'
 import { ChatProvider, ChatState } from 'contesto/src/chat/chat-provider'
@@ -50,7 +50,7 @@ export type { Route }
 
 export async function loader({
     request,
-    params: { orgId, siteId, chatId },
+    params: { orgId, branchId, chatId },
 }: Route.LoaderArgs) {
     // Check if request is aborted early
     if (request.signal.aborted) {
@@ -64,8 +64,8 @@ export async function loader({
         throw new Error('Request aborted')
     }
 
-    // Fetch chat and site info separately
-    const [chat, site, siteBranch] = await Promise.all([
+    // Fetch chat and branch info
+    const [chat, siteBranch] = await Promise.all([
         prisma.chat.findUnique({
             where: {
                 chatId: chatId,
@@ -84,26 +84,14 @@ export async function loader({
                 },
             },
         }),
-        prisma.site.findUnique({
-            where: {
-                siteId,
-                org: {
-                    users: { some: { userId } },
-                },
-            },
-            select: {
-                siteId: true,
-                githubOwner: true,
-                githubRepo: true,
-                githubFolder: true,
-            },
-        }),
-        // Fetch the siteBranch that this chat is part of
+        // Fetch the siteBranch directly with site included
         prisma.siteBranch.findFirst({
             where: {
-                siteId,
-                chats: {
-                    some: { chatId },
+                branchId,
+                site: {
+                    org: {
+                        users: { some: { userId } },
+                    },
                 },
             },
             select: {
@@ -113,6 +101,14 @@ export async function loader({
                 githubBranch: true,
                 lastGithubSyncAt: true,
                 lastGithubSyncCommit: true,
+                site: {
+                    select: {
+                        siteId: true,
+                        githubOwner: true,
+                        githubRepo: true,
+                        githubFolder: true,
+                    },
+                },
             },
         }),
     ])
@@ -120,12 +116,11 @@ export async function loader({
     if (!chat) {
         throw new Error('Chat not found')
     }
-    if (!site) {
-        throw new Error('Site not found')
-    }
     if (!siteBranch) {
-        throw new Error('siteBranch not found')
+        throw new Error('Branch not found')
     }
+
+    const site = siteBranch.site
 
     // Create PR URL if chat has a PR number
     const prUrl = chat.prNumber
@@ -171,8 +166,8 @@ export async function loader({
 
     iframeUrl.searchParams.set('chatId', chat.chatId)
 
-    const branchId = chat.branchId
     const githubFolder = site.githubFolder
+    const siteId = site.siteId
     return {
         chatId,
         chat,
@@ -189,7 +184,7 @@ export async function loader({
 
 export default function Page({
     loaderData,
-    params: { siteId, orgId },
+    params: { branchId, orgId },
 }: Route.ComponentProps) {
     const { chat } = loaderData
 
@@ -231,9 +226,9 @@ function ChatContent() {
 
 function RightSide() {
     const { chat, iframeUrl, host, siteBranch } = useLoaderData<typeof loader>()
-    const siteData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId',
-    ) as SiteRoute.ComponentProps['loaderData']
+    const branchData = useRouteLoaderData(
+        'routes/org.$orgId.branch.$branchId',
+    ) as BranchRoute.ComponentProps['loaderData']
     const iframeRef = useRef<HTMLIFrameElement>(null)
     const [activeTab, setActiveTab] = useState<'preview' | 'editor'>('preview')
     const previewMode = activeTab
@@ -363,13 +358,13 @@ const scaleDownElement = memoize(function (iframeScale) {
 })
 
 function GithubRepoButton() {
-    const siteData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId',
-    ) as SiteRoute.ComponentProps['loaderData']
+    const branchData = useRouteLoaderData(
+        'routes/org.$orgId.branch.$branchId',
+    ) as BranchRoute.ComponentProps['loaderData']
 
-    const githubOwner = siteData?.site.githubOwner
-    const githubRepo = siteData?.site.githubRepo
-    const githubFolder = siteData?.site.githubFolder
+    const githubOwner = branchData?.site.githubOwner
+    const githubRepo = branchData?.site.githubRepo
+    const githubFolder = branchData?.site.githubFolder
 
     const hasGithubRepo = githubOwner && githubRepo
 
@@ -390,12 +385,12 @@ function GithubRepoButton() {
 
 function GitHubSyncStatus() {
     const { siteBranch } = useLoaderData<typeof loader>()
-    const siteData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId',
-    ) as SiteRoute.ComponentProps['loaderData']
+    const branchData = useRouteLoaderData(
+        'routes/org.$orgId.branch.$branchId',
+    ) as BranchRoute.ComponentProps['loaderData']
 
-    const githubOwner = siteData?.site.githubOwner
-    const githubRepo = siteData?.site.githubRepo
+    const githubOwner = branchData?.site.githubOwner
+    const githubRepo = branchData?.site.githubRepo
 
     if (
         !siteBranch?.lastGithubSyncAt ||
@@ -405,7 +400,7 @@ function GitHubSyncStatus() {
     ) {
         return null
     }
-    if (!siteData.site.githubInstallations?.length) return null
+    if (!branchData.site.githubInstallations?.length) return null
 
     const timeAgo = formatDistanceToNow(new Date(siteBranch.lastGithubSyncAt), {
         addSuffix: true,
@@ -464,12 +459,12 @@ function InlineErrorMessagePopoverContent({
 }
 
 function GitHubSyncButton() {
-    const { siteId } = useParams()
-    const siteData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId',
-    ) as SiteRoute.ComponentProps['loaderData']
+    const { branchId } = useParams()
+    const branchData = useRouteLoaderData(
+        'routes/org.$orgId.branch.$branchId',
+    ) as BranchRoute.ComponentProps['loaderData']
     const chatData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId.chat.$chatId._index',
+        'routes/org.$orgId.branch.$branchId.chat.$chatId._index',
     ) as Route.ComponentProps['loaderData'] | undefined
     const githubBranch = chatData?.siteBranch?.githubBranch
 
@@ -479,6 +474,7 @@ function GitHubSyncButton() {
     const { fn: sync, isLoading } = useThrowingFn({
         async fn() {
             try {
+                const siteId = branchData?.siteId
                 if (!siteId || !githubBranch) return
                 const { error } = await apiClient.api.githubSync.post({
                     siteId,
@@ -497,7 +493,7 @@ function GitHubSyncButton() {
         return null
     }
 
-    if (!siteData.site.githubInstallations?.length) return null
+    if (!branchData.site.githubInstallations?.length) return null
 
     return (
         <Popover
@@ -533,20 +529,20 @@ function GitHubSyncButton() {
 }
 
 function InstallGithubAppToolbar() {
-    const { orgId, siteId } = useParams()
-    const siteData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId',
-    ) as SiteRoute.ComponentProps['loaderData']
+    const { orgId, branchId } = useParams()
+    const branchData = useRouteLoaderData(
+        'routes/org.$orgId.branch.$branchId',
+    ) as BranchRoute.ComponentProps['loaderData']
     const chatData = useRouteLoaderData(
-        'routes/org.$orgId.site.$siteId.chat.$chatId._index',
+        'routes/org.$orgId.branch.$branchId.chat.$chatId._index',
     ) as Route.ComponentProps['loaderData'] | undefined
 
-    const githubOwner = siteData.site.githubOwner
+    const githubOwner = branchData.site.githubOwner
 
     // Create install URL with next parameter pointing to connect-github
-    const nextPath = href('/github/:orgId/:siteId/connect-github', {
+    const nextPath = href('/github/:orgId/:branchId/connect-github', {
         orgId: orgId!,
-        siteId: siteId!,
+        branchId: branchId!,
     })
     const installUrl = new URL(href('/api/github/install'), env.PUBLIC_URL)
     installUrl.searchParams.set('next', nextPath)
@@ -557,7 +553,7 @@ function InstallGithubAppToolbar() {
     }
 
     // Only show if site has NO GitHub installation
-    if (!!siteData.site.githubInstallations?.length) return null
+    if (!!branchData.site.githubInstallations?.length) return null
 
     return (
         <Tooltip>
