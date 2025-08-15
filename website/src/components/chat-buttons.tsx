@@ -51,10 +51,7 @@ export function PrButton({ className = '' }) {
         return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
     }, [filesInDraft, lastPushedFiles])
 
-    if (!siteData) return null
-    if (!siteData.site.githubInstallations?.length) return null
-    if (!siteData.site.githubOwner || !siteData.site.githubRepo) return null
-    if (!messages?.length) return null
+
 
     const prHref = href('/org/:orgId/site/:siteId/chat/:chatId/create-pr', {
         orgId,
@@ -150,6 +147,11 @@ export function PrButton({ className = '' }) {
             tooltipMessage: null,
         }
     })()
+
+    if (!siteData) return null
+    if (!siteData.site.githubInstallations?.length) return null
+    if (!siteData.site.githubOwner || !siteData.site.githubRepo) return null
+    if (!messages?.length) return null
 
     return (
         <div className={cn('flex items-center gap-2', className)}>
