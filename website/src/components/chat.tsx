@@ -733,22 +733,20 @@ function ContextButton({
 }
 
 function Footer() {
-    const { isGenerating: isPending, draftText: text } = useChatContext()
-
+    const { isGenerating: isPending, draftText: text, stop, submit, messages } = useChatContext()
     const { chat, chatId, githubFolder, prUrl, mentionOptions, branchId } =
         useLoaderData() as Route.ComponentProps['loaderData']
     const siteData = useRouteLoaderData(
         'routes/org.$orgId.site.$siteId',
     ) as SiteRoute.ComponentProps['loaderData']
     const { siteId } = siteData
-    const [searchParams] = useSearchParams()
 
     const filesInDraft = useWebsiteState((x) => x?.filesInDraft || {})
     const lastPushedFiles = useWebsiteState((x) => x.lastPushedFiles)
     const hasNonPushedChanges = useMemo(() => {
         return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
     }, [filesInDraft, lastPushedFiles])
-    const { stop, submit, messages } = useChatContext()
+
     useEffect(() => {
         const lastMessageId = messages[messages!.length - 1]?.id || ''
         const durableUrl = `/api/generateMessage?lastMessageId=${lastMessageId}`
