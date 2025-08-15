@@ -141,7 +141,6 @@ export async function loader({
 }: Route.LoaderArgs) {
     const { userId } = await getSession({ request })
 
-    // Return a promise that will resolve with the PR URL
     const prPromise = createPrSuggestionForChat({
         chatId,
         userId,

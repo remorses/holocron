@@ -71,13 +71,14 @@ export function isStrReplaceParameterComplete(
 
 // Export callback argument types
 export type ValidateNewContentArgs = { githubPath: string; content: string }
+export type ValidateNewContentResult = { error?: string; warning?: string } | undefined
 export type GetPageContentArgs = { githubPath: string }
 
 export function createEditExecute({
     fileSystem,
     validateNewContent,
 }: {
-    validateNewContent?: (x: ValidateNewContentArgs) => any
+    validateNewContent?: (x: ValidateNewContentArgs) => Promise<ValidateNewContentResult>
     fileSystem: FileSystemEmulator
 }) {
     const previousEdits = [] as FileUpdate[]
@@ -158,16 +159,20 @@ export function createEditExecute({
                             githubPath: path,
                             content: file_text,
                         })
-                        if (result && result.error) {
+                        if (result?.error) {
                             return {
                                 success: false,
-                                error: `result content is invalid: create: ${result.error}`,
+                                error: `Page not created! The page creation failed with the following error:\n${result.error}`,
                             }
+                        }
+                        if (result?.warning) {
+                            await fileSystem.write(path, file_text)
+                            return `Page created with following warning, fix it:\n${result.warning}\n\nFile content:\n\n${file_text}`
                         }
                     } catch (e: any) {
                         return {
                             success: false,
-                            error: e && e.message ? e.message : String(e),
+                            error: `Page not created! The page creation failed with the following error:\n${e && e.message ? e.message : String(e)}`,
                         }
                     }
                 }
@@ -220,18 +225,20 @@ export function createEditExecute({
                 //     }
                 // }
                 const replacedContent = currentContent.replace(old_str, new_str)
+                let warning: string | undefined
                 if (validateNewContent) {
                     try {
                         const result = await validateNewContent({
                             githubPath: path,
                             content: replacedContent,
                         })
-                        if (result && result.error) {
+                        if (result?.error) {
                             return {
                                 success: false,
                                 error: `result content is invalid: str_replace: ${result.error}`,
                             }
                         }
+                        warning = result?.warning
                     } catch (e: any) {
                         return {
                             success: false,
@@ -255,6 +262,9 @@ export function createEditExecute({
                 let result = `Here is the diff of the changes made`
                 if (occurrences > 1) {
                     result += `, notice that you replaced more than one match, if that was not desired undo the change or add back the old content you want to keep`
+                }
+                if (warning) {
+                    result += `\n\nWarning: ${warning}`
                 }
                 result += `\n\n${cleanPatch}`
                 return result
@@ -295,18 +305,20 @@ export function createEditExecute({
                 const insertAt = Math.min(insert_line, lines.length)
                 lines.splice(insertAt, 0, new_str)
                 const newContent = lines.join('\n')
+                let warning: string | undefined
                 if (validateNewContent) {
                     try {
                         const result = await validateNewContent({
                             githubPath: path,
                             content: newContent,
                         })
-                        if (result && result.error) {
+                        if (result?.error) {
                             return {
                                 success: false,
                                 error: `result content is invalid: insert: ${result.error}`,
                             }
                         }
+                        warning = result?.warning
                     } catch (e: any) {
                         return {
                             success: false,
@@ -327,7 +339,12 @@ export function createEditExecute({
                     /\\ No newline at end of file\n?/g,
                     '',
                 )
-                return `Here is the diff of the changes made:\n\n${cleanPatch}`
+                let result = `Here is the diff of the changes made`
+                if (warning) {
+                    result += `\n\nWarning: ${warning}`
+                }
+                result += `:\n\n${cleanPatch}`
+                return result
             }
             case 'undo_edit': {
                 const previous = previousEdits.pop()
@@ -345,7 +362,7 @@ export function createEditExecute({
                             githubPath: path,
                             content: previous.content,
                         })
-                        if (result && result.error) {
+                        if (result?.error) {
                             return {
                                 success: false,
                                 error: `result content is invalid: undo_edit: ${result.error}`,
@@ -387,7 +404,7 @@ export function createEditTool({
     model,
 }: {
     fileSystem: FileSystemEmulator
-    validateNewContent?: (x: ValidateNewContentArgs) => any
+    validateNewContent?: (x: ValidateNewContentArgs) => Promise<ValidateNewContentResult>
     model?: { provider?: string }
 }) {
     const execute = createEditExecute({

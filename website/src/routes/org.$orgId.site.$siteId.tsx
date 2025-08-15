@@ -23,7 +23,6 @@ export async function loader({
         throw new Error('Request aborted')
     }
 
-    // TODO change params to be branchId instead of siteId! then get the branch here
     const [site, chatHistory, siteBranches] = await Promise.all([
         prisma.site.findUnique({
             where: {

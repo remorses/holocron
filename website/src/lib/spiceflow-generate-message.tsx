@@ -44,6 +44,7 @@ import {
     editToolParamsSchema,
     fileUpdateSchema,
     type FileUpdate,
+    type ValidateNewContentResult,
 } from 'docs-website/src/lib/edit-tool'
 import { FileSystemEmulator } from './file-system-emulator'
 import { notifyError } from './errors'
@@ -91,6 +92,7 @@ export async function generateSystemMessage({
         await import('../prompts/css-variables.md?raw').then((x) => x.default),
         await import('../prompts/frontmatter.md?raw').then((x) => x.default),
         await import('../prompts/gitchamber.md?raw').then((x) => x.default),
+        await import('../prompts/migrating.md?raw').then((x) => x.default),
         dedent`
         ## fumabase.jsonc
 
@@ -347,12 +349,15 @@ export async function* generateMessageStream({
     const strReplaceEditor = createEditTool({
         fileSystem,
         model: { provider: model.provider },
-        async validateNewContent(x) {
+        async validateNewContent(x): Promise<ValidateNewContentResult> {
             if (githubFolder && !x.githubPath.startsWith(githubFolder)) {
-                throw new Error(
-                    `githubPath should always start with ${githubFolder}. This site is in ${githubFolder} base directory`,
-                )
+                return {
+                    error: `githubPath should always start with ${githubFolder}. This site is in ${githubFolder} base directory`,
+                }
             }
+
+            let warning: string | undefined
+
             if (mdxOrMdRegex.test(x.githubPath)) {
                 const parsed = fm(x.content)
                 const frontmatter = parsed.attributes as any
@@ -360,9 +365,7 @@ export async function* generateMessageStream({
                 if (frontmatter && frontmatter.icon) {
                     const iconName = String(frontmatter.icon)
                     if (!isValidLucideIconName(iconName)) {
-                        throw new Error(
-                            `you used an invalid icon "${iconName}", to see the possible icons fetch the url https://fumabase.com/lucide-icons.json`,
-                        )
+                        warning = `you used an invalid icon "${iconName}", to see the possible icons fetch the url https://fumabase.com/lucide-icons.json`
                     }
                 }
             }
@@ -414,12 +417,13 @@ export async function* generateMessageStream({
                         If you want to reference a page you plan to create later, first create it with empty content and only frontmatter
                         `
 
-                        throw createFormattedError(
+                        const errorMessage = createFormattedError(
                             linkError,
                             x.content,
                             'Link Validation Error',
                             additionalMessage,
                         )
+                        return { error: errorMessage.message }
                     }
                 } catch (error: any) {
                     if (
@@ -427,14 +431,15 @@ export async function* generateMessageStream({
                         error.position?.start?.line != null
                     ) {
                         // Format MDX compilation errors
-                        throw createFormattedError(
+                        const errorMessage = createFormattedError(
                             error as ErrorWithPosition,
                             x.content,
                             'MDX Compilation Error',
                             'Please fix the MDX syntax error and submit the tool call again.',
                         )
+                        return { error: errorMessage.message }
                     }
-                    throw error
+                    return { error: error.message || String(error) }
                 }
             }
             if (x.githubPath.endsWith('.json')) {
@@ -460,14 +465,18 @@ export async function* generateMessageStream({
                     jsonError.line = line
                     jsonError.column = column
 
-                    throw createFormattedError(
+                    const errorMessage = createFormattedError(
                         jsonError,
                         x.content,
                         'JSON Parse Error',
                         'Please fix the JSON syntax error and submit the tool call again.',
                     )
+                    return { error: errorMessage.message }
                 }
             }
+
+            // Return warning if we found one, or undefined if everything is ok
+            return warning ? { warning } : undefined
         },
     })
 
@@ -503,7 +512,7 @@ export async function* generateMessageStream({
                         githubFolder || '.',
                         'fumabase.jsonc',
                     ),
-                    title: 'Use the renderForm tool to update these values',
+                    title: 'Use the updateFumabaseJsonc tool to update these values',
                 })
                 // filePaths.push({ path: 'styles.css', title: 'The CSS styles for the website. Only update this file for advanced CSS customisations' })
                 return printDirectoryTree({
