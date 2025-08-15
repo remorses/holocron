@@ -140,17 +140,27 @@ export class SearchClient implements DatasetsInterface {
         if (!tables.includes(tableName)) {
             // Table doesn't exist, create it with schema
             console.log(`[table] Creating new table ${tableName} with schema`)
-            table = await db.createEmptyTable(tableName, this.tableSchema)
-            
-            // Create btree index on filename column for faster lookups
-            console.log('[table] Creating btree index on filename column...')
             try {
-                await table.createIndex('filename', {
-                    config: lancedb.Index.btree(),
-                    replace: true,
-                })
-            } catch (indexError) {
-                console.warn('[table] Failed to create filename index:', indexError)
+                table = await db.createEmptyTable(tableName, this.tableSchema)
+                
+                // Create btree index on filename column for faster lookups
+                console.log('[table] Creating btree index on filename column...')
+                try {
+                    await table.createIndex('filename', {
+                        config: lancedb.Index.btree(),
+                        replace: true,
+                    })
+                } catch (indexError) {
+                    console.warn('[table] Failed to create filename index:', indexError)
+                }
+            } catch (createError: any) {
+                // Table might have been created by another concurrent request
+                if (createError.message?.includes('already exists')) {
+                    console.log(`[table] Table ${tableName} was created by another request, opening it instead`)
+                    table = await db.openTable(tableName)
+                } else {
+                    throw createError
+                }
             }
         } else {
             // Table exists but not cached, open it

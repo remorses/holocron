@@ -311,10 +311,13 @@ export async function* generateMessageStream({
     const updateFumabaseJsonc = createRenderFormTool({
         jsonSchema: docsJsonSchema,
         notifyError,
-        description: `
-        Before calling this tool ALWAYS read the current fumabase.jsonc file, then use the fumabase.jsonc values as defaults.
 
-        This is VERY IMPORTANT for array values, if you don't read the array values from the current fumabase.jsonc file and render an array form to the user values that are not in the array will be deleted!
+        description: `
+        Before calling this tool ALWAYS read the current fumabase.jsonc file, then use the fumabase.jsonc you read as default initial values.
+
+        This is VERY IMPORTANT for array values, you should show existing array items in form fields.
+
+        Notice that after calling this tool the fumabase.jsonc file will not updated right away so don't expect to read again the fumabase.jsonc file and find your initial values set. Values will be set in the next message, possibly with edits from the user.
         `,
         replaceOptionalsWithNulls: model.provider.startsWith('openai'),
         onExecute: async ({ messages }) => {
@@ -343,6 +346,7 @@ export async function* generateMessageStream({
                     'You need to first read the fumabase.jsonc file before calling this tool, to know what are the existing values',
                 )
             }
+            return `do not read again fumabase.jsonc, updates will be there only in the next message.`
         },
     })
     // model = anthropic('claude-3-5-haiku-latest')

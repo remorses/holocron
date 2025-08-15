@@ -1,5 +1,9 @@
 # Changelog
 
+## 2025-08-15
+
+- **Fixed race condition in table creation** - Handle concurrent table creation attempts by catching "already exists" error and opening existing table instead
+
 ## 2025-01-10 16:45
 
 - **Fixed dataset not found error** - Check if table exists before attempting delete operations

@@ -14,7 +14,7 @@ export interface RenderFormToolConfig {
     replaceOptionalsWithNulls?: boolean
     description?: string
     notifyError?: (error: any, msg?: string) => void
-    onExecute?: (params: { messages: ModelMessage[] }) => void | Promise<void>
+    onExecute?: (params: { messages: ModelMessage[] }) => string | undefined | Promise<string | undefined>
 }
 
 export function createRenderFormTool({
@@ -88,13 +88,16 @@ export function createRenderFormTool({
             params: z.infer<typeof RenderFormParameters>,
             { messages },
         ) {
-            // Call onExecute callback if provided
+            let appendToPrompt = ''
             if (onExecute) {
-                await onExecute({ messages })
+                const res = await onExecute({ messages })
+                if (typeof res === 'string' && res) {
+                  appendToPrompt = res
+                }
             }
 
             if (!jsonSchema) {
-                return 'Rendered form to the user, the response will be sent back as a message from the user. DO NOT RENDER THE SAME FORM TWICE'
+                return 'Rendered form to the user, the response will be sent back as a message from the user. DO NOT RENDER THE SAME FORM TWICE\n' + appendToPrompt
             }
 
             const errors: string[] = []
@@ -121,7 +124,7 @@ export function createRenderFormTool({
                 throw new Error(errors.map(err => `• ${err}`).join('\n'))
             }
 
-            return `Rendered form to the user. You can now assume the user has made the update to the data in the next message. To see the latest data read the file again.`
+            return `Rendered form to the user. You can now assume the user has made the update to the data in the next message (do not read the associated file again now, updates are reflected only in the next message).\n` + appendToPrompt
         },
     })
 }
