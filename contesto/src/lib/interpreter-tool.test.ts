@@ -375,7 +375,7 @@ describe('createInterpreterTool', () => {
         expect(interpreterTool.description).toMatchInlineSnapshot(`
           "Execute JavaScript code in an isolated sandbox environment with console.log capture
 
-          Available tools object type:
+          You have access to a global tools object to call the chat available tools, here is the typescript definition of the tools object:
 
           interface Tools {
             fetchData: (args: {
@@ -398,6 +398,12 @@ describe('createInterpreterTool', () => {
               view_range?: [number, number]
             }) => Promise<any>;
           }
+
+          declare global {
+            var tools: Tools
+          }
+
+          You can use \`await tools.toolName({ param: 1 })\` to compose tools together (feeding the result of one tool to another) and call tools concurrently with Promise.all
           "
         `)
     })

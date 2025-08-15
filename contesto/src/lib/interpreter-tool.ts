@@ -3,6 +3,7 @@ import { tool, Tool } from 'ai'
 import ivm from 'isolated-vm'
 import { compile } from 'json-schema-to-typescript-lite'
 import camelCase from 'camelcase'
+import dedent from 'string-dedent'
 
 const interpreterToolParamsSchema = z.object({
     title: z.string().describe('A descriptive title for this code execution'),
@@ -61,7 +62,26 @@ async function generateToolsTypeDefinition(tools: Record<string, Tool<any, any>>
     if (toolMethods.length === 0) return ''
 
     const indentedMethods = indentString(toolMethods.join('\n'))
-    return `\n\nAvailable tools object type:\n\ninterface Tools {\n${indentedMethods}\n}\n`
+    return dedent`
+      You have access to a global tools object to call the chat available tools, here is the typescript definition of the tools object:
+
+      // exhaustive list of tools available. These are all the available methods on tools object
+      interface Tools {
+      ${indentedMethods}
+      }
+
+      declare global {
+        var tools: Tools
+      }
+
+      You can use \`await tools.toolName({ param: 1 })\` to compose tools together (feeding the result of one tool to another) and call tools concurrently with Promise.all
+
+      Use this interpreter tool when you want to chain together multiple tool calls and do so without repeating the whole output to the next tool.
+
+      For example you can fetch a page and then write it to a file if you have a fetch and an editor tool.
+
+
+    `
 }
 
 export async function createInterpreterTool(options?: CreateInterpreterToolOptions) {
@@ -79,7 +99,7 @@ export async function createInterpreterTool(options?: CreateInterpreterToolOptio
     }
 
     return tool({
-        description: `Execute JavaScript code in an isolated sandbox environment with console.log capture${toolsDescription}`,
+        description: `Execute JavaScript code in an isolated sandbox environment with console.log capture\n\n${toolsDescription}`,
         inputSchema: interpreterToolParamsSchema,
         execute: async ({ title, code, timeout = 5000 }) => {
             const logs: string[] = []
