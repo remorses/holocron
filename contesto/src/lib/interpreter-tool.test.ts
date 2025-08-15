@@ -182,10 +182,10 @@ describe('createInterpreterTool', () => {
           Error: Something went wrong in doSomething
           Stack trace:
           Error: Something went wrong in doSomething
-              at doSomething (<isolated-vm>:44:27)
-              at main (<isolated-vm>:49:21)
-              at <isolated-vm>:53:17
-              at <isolated-vm>:55:23"
+              at doSomething (<isolated-vm>:57:27)
+              at main (<isolated-vm>:62:21)
+              at <isolated-vm>:66:17
+              at <isolated-vm>:68:23"
         `)
     })
 
@@ -377,6 +377,7 @@ describe('createInterpreterTool', () => {
 
           You have access to a global tools object to call the chat available tools, here is the typescript definition of the tools object:
 
+          // exhaustive list of tools available. These are all the available methods on tools object
           interface Tools {
             fetchData: (args: {
               url: string
@@ -404,6 +405,18 @@ describe('createInterpreterTool', () => {
           }
 
           You can use \`await tools.toolName({ param: 1 })\` to compose tools together (feeding the result of one tool to another) and call tools concurrently with Promise.all
+
+          Use this interpreter tool when you want to chain together multiple tool calls and do so without repeating the whole output to the next tool.
+
+          For example you can fetch a page and then write it to a file if you have a fetch and an editor tool.
+
+          Before running this tool you should have a good idea of the outputs of the tools you will call. For example when using fetch you should try first calling fetch normally to see what is the format of the url response
+
+          DO NOT wrap your code in a main function, just put your code in the top level scope and use top level await.
+
+          DO NOT use import or require.
+
+          NEVER suppress errors with empty catch statements. Always log the errors.
           "
         `)
     })

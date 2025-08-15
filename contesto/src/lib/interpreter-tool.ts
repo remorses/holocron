@@ -11,7 +11,8 @@ export const interpreterToolParamsSchema = z.object({
     timeout: z.number()
         .min(100)
         .max(300000)
-        .describe('Timeout in milliseconds'),
+        .describe('Timeout in milliseconds')
+        .optional(),
 })
 
 export type InterpreterToolParamSchema = z.infer<typeof interpreterToolParamsSchema>
@@ -117,17 +118,7 @@ export async function createInterpreterTool(options?: CreateInterpreterToolOptio
                 const context = await isolate.createContext()
                 const jail = context.global
 
-                const consoleLog = new ivm.Reference((args: any[]) => {
-                    const message = args.map((arg: any) => {
-                        if (typeof arg === 'object' && arg !== null) {
-                            try {
-                                return JSON.stringify(arg, null, 2)
-                            } catch {
-                                return String(arg)
-                            }
-                        }
-                        return String(arg)
-                    }).join(' ')
+                const consoleLog = new ivm.Reference((message: string) => {
                     logs.push(message)
                 })
 
@@ -202,7 +193,20 @@ export async function createInterpreterTool(options?: CreateInterpreterToolOptio
 
                 const wrappedCode = `
                     const _log = function(...args) {
-                        _consoleLog.apply(undefined, [args], { arguments: { copy: true } })
+                        const message = args.map((arg) => {
+                            if (arg instanceof Error) {
+                                return arg.stack || arg.message || String(arg)
+                            }
+                            if (typeof arg === 'object' && arg !== null) {
+                                try {
+                                    return JSON.stringify(arg, null, 2)
+                                } catch (e) {
+                                    return String(arg)
+                                }
+                            }
+                            return String(arg)
+                        }).join(' ')
+                        _consoleLog.apply(undefined, [message], { arguments: { copy: true } })
                     };
 
                     const _timers = {};
