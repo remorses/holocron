@@ -59,28 +59,21 @@ export async function getFilesForSource({
             }),
         )
 
-    // Get draft files
+
     const draftFiles = getFilesFromFilesInDraft(filesInDraft, githubFolder)
 
-    // Merge files with draft files
-    const allFiles = [...files]
 
     if (draftFiles.length > 0) {
         for (const draftFile of draftFiles) {
-            // Check if this file already exists in the files array
-            const existingFileIndex = allFiles.findIndex(
+
+            const existingFileIndex = files.findIndex(
                 (f) => f.path === draftFile.path,
             )
 
             if (existingFileIndex >= 0) {
-                // Update existing file with draft file (preserving original data)
-                allFiles[existingFileIndex] = {
-                    ...allFiles[existingFileIndex],
-                    // Keep original data (frontmatter/meta) from database
-                }
+                files[existingFileIndex] = draftFile
             } else {
-                // Add new draft file
-                allFiles.push(draftFile)
+                files.push(draftFile)
             }
         }
 
@@ -91,17 +84,17 @@ export async function getFilesForSource({
                     githubPath,
                     githubFolder,
                 )
-                const fileIndex = allFiles.findIndex(
+                const fileIndex = files.findIndex(
                     (f) => f.path === normalizedPath,
                 )
                 if (fileIndex >= 0) {
-                    allFiles.splice(fileIndex, 1)
+                    files.splice(fileIndex, 1)
                 }
             }
         }
     }
 
-    return deduplicateBy(allFiles, (file) => file.path)
+    return deduplicateBy(files, (file) => file.path)
 }
 
 /**
