@@ -707,12 +707,12 @@ export async function* generateMessageStream({
             },
         }),
 
-        ...(model.provider === 'openai' && {
+        ...(model.provider.startsWith('openai') && {
             webSearchOpenAI: openai.tools.webSearchPreview({
                 searchContextSize: 'high',
             }),
         }),
-        ...(model.provider === 'anthropic' && {
+        ...(model.provider.startsWith('anthropic') && {
             webSearchAnthropic: anthropic.tools.webSearch_20250305({}),
         }),
     }
