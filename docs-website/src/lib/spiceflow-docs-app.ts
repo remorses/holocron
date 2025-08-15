@@ -310,6 +310,8 @@ export const docsApp = new Spiceflow({ basePath: '/fumabaseInternalAPI' })
                     This is the preferred way to show information to the user instead of quoting the page again in a message.
 
                     Your messages should always be super short and concise.
+
+                    NEVER select the first heading of the page. The first \`# heading\` will be removed from the page.
                     `,
                     execute: async ({ slug, startLine, endLine }) => {
                         // Clean the slug using the utility function
