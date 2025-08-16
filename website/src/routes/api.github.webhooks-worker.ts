@@ -9,9 +9,10 @@ import { getOctokit } from 'website/src/lib/github.server'
 import { isDocsJsonFile, syncSite, filesFromGithub } from 'website/src/lib/sync'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
+import { WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
 
 const logger = console
-const DEFAULT_DOCS_URL = 'https://docs.fumabase.com'
+const DEFAULT_DOCS_URL = `https://docs.${WEBSITE_DOMAIN}`
 
 export const webhookWorkerRequestSchema = z.object({
     SERVICE_SECRET: z.string(),

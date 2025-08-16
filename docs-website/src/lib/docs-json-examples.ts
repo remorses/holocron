@@ -1,7 +1,8 @@
 import type { DocsJsonType } from './docs-json'
+import { WEBSITE_DOMAIN } from './env'
 
 export const defaultDocsJsonComments = {
-    domains: `// to add new domains you can simply add them here, then add a CNAME record pointing to cname.fumabase.com`,
+    domains: `// to add new domains you can simply add them here, then add a CNAME record pointing to cname.${WEBSITE_DOMAIN}`,
     logo: `// the logo shown in the top left`,
     'navbar.links': `// the links shown in the top right`,
     'navbar.links.0.icon': `// you can use any lucide valid icon names: https://lucide.dev/icons/`,
@@ -9,7 +10,7 @@ export const defaultDocsJsonComments = {
 }
 
 export const defaultStartingFumabaseJson: DocsJsonType = {
-    $schema: `https://fumabase.com/fumabase.json`,
+    $schema: `https://${WEBSITE_DOMAIN}/fumabase.json`,
     siteId: '',
     name: 'Docs',
     favicon: {
@@ -24,14 +25,14 @@ export const defaultStartingFumabaseJson: DocsJsonType = {
         links: [
             {
                 label: 'Home',
-                href: 'https://fumabase.com',
+                href: `https://${WEBSITE_DOMAIN}`,
                 icon: 'document',
             },
         ],
         primary: {
             type: 'button',
             label: 'Get Started',
-            href: 'https://fumabase.com/login',
+            href: `https://${WEBSITE_DOMAIN}/login`,
         },
     },
 
@@ -46,7 +47,7 @@ export const defaultStartingFumabaseJson: DocsJsonType = {
                 items: [
                     {
                         label: 'Fumabase',
-                        href: 'https://fumabase.com',
+                        href: `https://${WEBSITE_DOMAIN}`,
                     },
                 ],
             },

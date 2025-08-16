@@ -1,4 +1,5 @@
 import { cn } from '../lib/cn'
+import { WEBSITE_DOMAIN } from '../lib/env'
 
 export function PoweredBy({ className }: { className?: string }) {
     return (
@@ -6,7 +7,7 @@ export function PoweredBy({ className }: { className?: string }) {
             Powered by{' '}
             <b>
                 <a
-                    href='https://fumabase.com'
+                    href={`https://${WEBSITE_DOMAIN}`}
                     target='_blank'
                     className={cn('text-fd-muted-foreground')}
                 >

@@ -330,8 +330,8 @@ test('system message input', async () => {
     )
 
     // Test both onboarding and non-onboarding modes
-    const onboardingSystemMessage = await generateSystemMessage({isOnboardingChat: true})
-    const regularSystemMessage = await generateSystemMessage({ isOnboardingChat: false })
+    const onboardingSystemMessage = await generateSystemMessage({isOnboardingChat: true, githubFolder: ''})
+    const regularSystemMessage = await generateSystemMessage({ isOnboardingChat: false, githubFolder: '' })
 
     // Save system messages as snapshots
     await expect(onboardingSystemMessage).toMatchFileSnapshot(

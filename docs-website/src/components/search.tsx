@@ -23,6 +23,7 @@ import {
 import { ChevronDown } from 'lucide-react'
 import { buttonVariants } from 'fumadocs-ui/components/ui/button'
 import { cn } from '../lib/cn'
+import { WEBSITE_DOMAIN } from '../lib/env'
 
 const tags = [
     {
@@ -125,7 +126,7 @@ export function CustomSearchDialog(props: SharedProps) {
                         </PopoverContent>
                     </Popover>
                     <a
-                        href='https://fumabase.com'
+                        href={`https://${WEBSITE_DOMAIN}`}
                         rel='noreferrer noopener'
                         className='text-xs text-nowrap text-fd-muted-foreground'
                     >

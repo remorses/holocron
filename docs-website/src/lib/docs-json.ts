@@ -4,6 +4,7 @@ import { extractNamePathsFromSchema } from 'contesto'
 import dedent from 'dedent'
 import { themeNames } from './themes.js'
 import { DOCS_JSON_BASENAME } from './constants.js'
+import { WEBSITE_DOMAIN } from './env.js'
 
 
 // === Primitive helper schemas ===
@@ -440,7 +441,7 @@ export const DocsConfigSchema = z
             .array(z.string())
             .optional()
             .describe(
-                `Custom domains to connect to this documentation site. Each domain should point to cname.fumabase.com via CNAME record. Domains will be connected when ${DOCS_JSON_BASENAME} is pushed to the main branch.`,
+                `Custom domains to connect to this documentation site. Each domain should point to cname.${WEBSITE_DOMAIN} via CNAME record. Domains will be connected when ${DOCS_JSON_BASENAME} is pushed to the main branch.`,
             ),
         hideSidebar: z
             .boolean()

@@ -10,6 +10,7 @@ import { cn } from 'docs-website/src/lib/cn'
 import type { Route as RootRoute } from './_catchall'
 import type { Route } from './+types/_catchall.$'
 import { Markdown } from 'contesto/src/lib/markdown'
+import { WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
 
 // Remove chatId cookie on page unload at module level
 if (typeof window !== 'undefined') {
@@ -223,7 +224,7 @@ function PageContent(props: Route.ComponentProps): any {
                     onRateAction={async (url, feedback) => {
                         const apiUrl = new URL(
                             '/api/submitRateFeedback',
-                            process.env.PUBLIC_URL || 'https://fumabase.com',
+                            process.env.PUBLIC_URL || `https://${WEBSITE_DOMAIN}`,
                         )
                         const response = await fetch(apiUrl.toString(), {
                             method: 'POST',

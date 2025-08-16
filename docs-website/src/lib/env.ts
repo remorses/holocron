@@ -48,4 +48,6 @@ if (typeof window !== 'undefined') {
     ;(window as any).env = env
 }
 
-export const supportEmail = 'tommy@fumabase.com'
+export const WEBSITE_DOMAIN = new URL(env.PUBLIC_URL!).host
+
+export const supportEmail = `tommy@${WEBSITE_DOMAIN}`

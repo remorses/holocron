@@ -4,6 +4,7 @@ import { App, Octokit, RequestError } from 'octokit'
 import { AppError, notifyError } from 'website/src/lib/errors'
 import { isTruthy } from 'website/src/lib/utils'
 import { env } from './env'
+import { WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
 
 type OctokitRest = Octokit['rest']
 
@@ -826,7 +827,7 @@ async function pushChangesToBranch({
 
 export const committer = {
     name: 'Fumabase',
-    email: 'info@fumabase.com',
+    email: `info@${WEBSITE_DOMAIN}`,
 }
 
 export function getCommitMessage({ filePaths = [] as string[] }) {
@@ -1047,7 +1048,7 @@ export async function createPullRequestSuggestion({
         title = `Update ${files.map((x) => '`' + x.filePath + '`').join(', ')}`
     }
     if (!body) {
-        body = `I created this PR with [Fumabase](https://fumabase.com).`
+        body = `I created this PR with [Fumabase](https://${WEBSITE_DOMAIN}).`
     }
     const { data: pr } = await octokit.rest.pulls.create({
         owner,

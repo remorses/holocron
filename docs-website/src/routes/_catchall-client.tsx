@@ -10,6 +10,7 @@ import type { Option } from 'fumadocs-ui/components/layout/root-toggle'
 import { RootProvider } from 'fumadocs-ui/provider/base'
 import { GithubIcon, XIcon } from 'lucide-react'
 import { ThemeProvider, useTheme } from 'next-themes'
+import { WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
 import {
     lazy,
     startTransition,
@@ -192,7 +193,7 @@ async function websocketIdHandling(websocketId: string) {
     globalThis.websocketHandlingDone = true
 
     console.log('connecting over preview websocketId', websocketId)
-    const websocketUrl = `wss://fumabase.com/_tunnel/client?id=${websocketId}`
+    const websocketUrl = `wss://${WEBSITE_DOMAIN}/_tunnel/client?id=${websocketId}`
     const ws = new WebSocket(websocketUrl)
     ws.onopen = () => {
         useDocsState.setState({

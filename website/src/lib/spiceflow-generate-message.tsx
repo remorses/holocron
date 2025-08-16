@@ -13,6 +13,7 @@ import {
     openai,
     createOpenAI,
 } from '@ai-sdk/openai'
+import { WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
 import {
     UIMessage,
     generateObject,
@@ -381,7 +382,7 @@ export async function* generateMessageStream({
                 if (frontmatter && frontmatter.icon) {
                     const iconName = String(frontmatter.icon)
                     if (!isValidLucideIconName(iconName)) {
-                        warning = `you used an invalid icon "${iconName}", to see the possible icons fetch the url https://fumabase.com/lucide-icons.json`
+                        warning = `you used an invalid icon "${iconName}", to see the possible icons fetch the url https://${WEBSITE_DOMAIN}/lucide-icons.json`
                     }
                 }
             }
@@ -566,7 +567,7 @@ export async function* generateMessageStream({
                     })
                     return formatSearchApiSearchResults({
                         results,
-                        baseUrl: `${process.env.PUBLIC_URL || 'https://fumabase.com'}`,
+                        baseUrl: `${process.env.PUBLIC_URL || `https://${WEBSITE_DOMAIN}`}`,
                     })
                 } catch (error) {
                     console.error(
