@@ -209,7 +209,7 @@ async function uploadMediaFiles({
 
             const response = await fetch(fileInfo.signedUrl, {
                 method: 'PUT',
-                body: fileBuffer,
+                body: fileBuffer as any,
                 headers: {
                     'Content-Type': contentType,
                 },
