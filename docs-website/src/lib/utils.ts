@@ -1,8 +1,14 @@
 import JSONC from 'tiny-jsonc';
-import { cn } from './cn'
-import { DocsJsonType } from './docs-json';
+import { cn } from './cn.js'
+import { DocsJsonType } from './docs-json.js';
+import { DOCS_JSON_BASENAME } from './constants.js';
 
 export { cn }
+
+export function isDocsJson(path: string): boolean {
+    if (!path) return false
+    return path === DOCS_JSON_BASENAME || path.endsWith(`/${DOCS_JSON_BASENAME}`)
+}
 
 export function trySync<T>(fn: () => T): { data: T | undefined; error: any } {
     try {
@@ -231,7 +237,7 @@ export const safeJsoncParse = <T = unknown>(json: string): T | null => {
 
 export function getDocsJson({ filesInDraft, docsJson }): DocsJsonType {
     const key = Object.keys(filesInDraft || {}).find((k) =>
-        k.endsWith('fumabase.jsonc'),
+        isDocsJson(k),
     )
     if (!key) {
         return docsJson

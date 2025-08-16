@@ -263,41 +263,6 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     const localRevalidator = useRevalidator()
     revalidator = localRevalidator
 
-    // const navigation = useNavigation()
-    // const revalidator = useRevalidator()
-    // const [searchParams, setSearchParams] = useSearchParams()
-    // const filesInDraft = useDocsState((state) => state.filesInDraft)
-    // Watch for changes to fumabase.jsonc file in draft and revalidate
-    // useDebouncedEffect(
-    //     () => {
-    //         // Check if fumabase.jsonc file exists in draft files
-    //         const fumabaseJsoncPath = Object.keys(filesInDraft).find((path) =>
-    //             path.endsWith('fumabase.jsonc')
-    //         )
-
-    //         if (fumabaseJsoncPath && filesInDraft[fumabaseJsoncPath]?.content) {
-    //             try {
-    //                 const docsJsonContent = filesInDraft[fumabaseJsoncPath].content
-    //                 const encodedContent = encodeURIComponent(docsJsonContent)
-    //                 const currentParam = searchParams.get('fumabase.jsonc')
-
-    //                 // Only update if the content is different
-    //                 if (currentParam !== encodedContent) {
-    //                     const newSearchParams = new URLSearchParams(searchParams)
-    //                     newSearchParams.set('fumabase.jsonc', encodedContent)
-    //                     setSearchParams(newSearchParams, { replace: true })
-    //                 }
-    //             } catch (error) {
-    //                 console.error('Error encoding fumabase.jsonc content:', error)
-    //             }
-    //         }
-    //     },
-    //     [filesInDraft],
-    //     500, // 500ms debounce
-    //     revalidator.state === 'idle' && navigation.state === 'idle'
-    // )
-    //
-    // // --- Start insert: useNavigation + effect on path change ---
 
     const navigation = useNavigation()
 
@@ -385,13 +350,13 @@ export function ClientApp() {
     // Inline DocsProvider
     const { i18n, cssStyles, themeCSS: initialThemeCSS } = loaderData || {}
     const locale = i18n?.defaultLanguage
-    
+
     // Use React Query to dynamically import theme CSS
     const { data: themeCSS = initialThemeCSS || '' } = useQuery({
         queryKey: ['theme-css', docsJson?.theme],
         queryFn: async () => {
             if (!docsJson?.theme) return ''
-            
+
             try {
                 // Dynamically import themeModules
                 const { themeModules } = await import('../lib/themes')

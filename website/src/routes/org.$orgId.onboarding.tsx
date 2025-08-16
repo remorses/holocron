@@ -50,7 +50,6 @@ export async function loader({ request, params }: Route.LoaderArgs) {
                 create: {
                     branchId,
                     title: 'Main',
-                    // domain will be created based on fumabase.jsonc by syncSite
                 },
             },
         },

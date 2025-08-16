@@ -196,7 +196,7 @@ export default function Page({
             filesInDraft: chat.filesInDraft as any,
             currentSlug: chat.currentSlug || '',
         }),
-        // only reset website state on chat navigation. keep client state on revalidate because fumabase.jsonc is not updated in filesInDraft server side in the renderForm tool
+        // only reset website state on chat navigation. keep client state on revalidate because jsonc is not updated in filesInDraft server side in the renderForm tool
         [loaderData.chatId],
     )
     return (

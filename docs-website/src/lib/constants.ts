@@ -1,0 +1,1 @@
+export const DOCS_JSON_BASENAME = 'fumabase.jsonc'

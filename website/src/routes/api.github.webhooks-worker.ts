@@ -8,6 +8,7 @@ import { notifyError } from 'website/src/lib/errors'
 import { getOctokit } from 'website/src/lib/github.server'
 import { isDocsJsonFile, syncSite, filesFromGithub } from 'website/src/lib/sync'
 import { DocsJsonType } from 'docs-website/src/lib/docs-json'
+import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
 
 const logger = console
 const DEFAULT_DOCS_URL = 'https://docs.fumabase.com'
@@ -138,12 +139,11 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
                 `No branch found for ${githubBranch} in ${owner}/${repoName}`,
             )
 
-            // Check if there's a fumabase.jsonc in the commits with a new domain
             const newBranch = await tryCreateBranchFromDocsJson(args)
 
             if (!newBranch) {
                 logger.log(
-                    `No fumabase.jsonc with available domain found for ${githubBranch}`,
+                    `No ${DOCS_JSON_BASENAME} with available domain found for ${githubBranch}`,
                 )
                 // Report failure for unknown branch
                 await reportFailureToGithub({
@@ -218,7 +218,6 @@ async function tryCreateBranchFromDocsJson(args: WebhookWorkerRequest) {
         args
     const octokit = await getOctokit({ installationId })
 
-    // Look for fumabase.jsonc in the commits
     const docsJsonFiles: string[] = []
     for (const commit of commits) {
         const added = commit.added || []
@@ -235,8 +234,7 @@ async function tryCreateBranchFromDocsJson(args: WebhookWorkerRequest) {
         return null
     }
 
-    // Get the latest fumabase.jsonc content
-    const docsJsonPath = docsJsonFiles[0] // Use first found fumabase.jsonc
+    const docsJsonPath = docsJsonFiles[0]
     try {
         const { data } = await octokit.rest.repos.getContent({
             owner,
@@ -252,14 +250,14 @@ async function tryCreateBranchFromDocsJson(args: WebhookWorkerRequest) {
         const content = Buffer.from(data.content, 'base64').toString('utf-8')
         const docsJson: DocsJsonType = safeJsoncParse(content, {})
 
-        // Check if fumabase.jsonc has domains field with at least one domain
+
         if (
             !docsJson.domains ||
             !Array.isArray(docsJson.domains) ||
             docsJson.domains.length === 0
         ) {
             logger.log(
-                `fumabase.jsonc found but no valid domains field in ${githubBranch}`,
+                `${DOCS_JSON_BASENAME} found but no valid domains field in ${githubBranch}`,
             )
             return null
         }
@@ -336,7 +334,7 @@ async function tryCreateBranchFromDocsJson(args: WebhookWorkerRequest) {
         )
         return newBranch
     } catch (error) {
-        logger.error(`Error creating branch from fumabase.jsonc:`, error)
+        logger.error(`Error creating branch from ${DOCS_JSON_BASENAME}:`, error)
         return null
     }
 }

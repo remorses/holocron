@@ -4,6 +4,7 @@ import type { Route as ChatRoute } from 'website/src/routes/org.$orgId.branch.$b
 import { useRouteLoaderData } from 'react-router'
 import { toast } from 'sonner'
 import { useWebsiteState } from './state'
+import { isDocsJson } from 'docs-website/src/lib/utils'
 
 export function useThrowingFn({
     fn: fnToWrap,
@@ -128,7 +129,7 @@ export function useShouldHideBrowser() {
     const filesInDraft = useWebsiteState((x) => x.filesInDraft || {})
     // console.log('filesInDraft', filesInDraft)
     const hasDraftFiles = Object.values(filesInDraft)?.some((x) => {
-        if (x.githubPath.endsWith('fumabase.jsonc')) {
+        if (isDocsJson(x.githubPath)) {
             return false
         }
         return !!x.content

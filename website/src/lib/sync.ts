@@ -22,7 +22,8 @@ import {
     getPresignedUrl,
     s3,
 } from 'docs-website/src/lib/s3'
-import { deduplicateBy, generateSlugFromPath } from 'docs-website/src/lib/utils'
+import { deduplicateBy, generateSlugFromPath, isDocsJson } from 'docs-website/src/lib/utils'
+import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
 import path from 'path'
 import type { SearchApiFile } from 'searchapi/sdk'
 import { cloudflareClient } from './cloudflare'
@@ -160,15 +161,15 @@ export async function* assetsFromFilesList({
     docsJson?: DocsJsonType
     docsJsonComments?: JsonCComments
 }): AsyncGenerator<AssetForSync> {
-    // Check if fumabase.jsonc exists in the files
-    const fumabaseJsonFile = files.find(f => f.relativePath.endsWith('fumabase.jsonc'))
+    // Check if docs json exists in the files
+    const fumabaseJsonFile = files.find(f => isDocsJson(f.relativePath))
 
-    // Use fumabase.jsonc from files if present, otherwise use defaults
+    // Use docs json from files if present, otherwise use defaults
     let docsJson: DocsJsonType | undefined
     let docsJsonComments: JsonCComments | undefined
 
     if (fumabaseJsonFile?.contents) {
-        // Extract docsJson and comments from the fumabase.jsonc file
+        // Extract docsJson and comments from the docs json file
         const { comments, data } = extractJsonCComments(fumabaseJsonFile.contents)
         docsJson = data
         docsJsonComments = comments
@@ -191,7 +192,7 @@ export async function* assetsFromFilesList({
         }
     }
 
-    // Now yield fumabase.jsonc if provided
+    // Now yield docs json if provided
     if (docsJson !== undefined) {
         if (docsJson.hideSidebar !== false && files.length === 1) {
             docsJson.hideSidebar = true
@@ -210,9 +211,9 @@ export async function* assetsFromFilesList({
         yield {
             type: 'docsJson',
             content,
-            githubPath: path.posix.join(githubFolder, 'fumabase.jsonc'),
+            githubPath: path.posix.join(githubFolder, DOCS_JSON_BASENAME),
             githubSha: gitBlobSha(content),
-            // filePath: path.posix.join(githubFolder, 'fumabase.jsonc'),
+            // filePath: path.posix.join(githubFolder, DOCS_JSON_BASENAME),
         }
     }
 
@@ -1093,8 +1094,7 @@ export function isMetaFile(path: string) {
 }
 
 export function isDocsJsonFile(path: string): boolean {
-    if (!path) return false
-    return path === 'fumabase.jsonc' || path.endsWith('/fumabase.jsonc')
+    return isDocsJson(path)
 }
 
 export function isStylesCssFile(path: string): boolean {
@@ -1221,7 +1221,7 @@ export async function* filesFromGithub({
                 !isStylesCssFile(pathWithFrontSlash)
             ) {
                 console.log(
-                    `Skipping file ${file.path} because it is not a markdown, meta, fumabase.jsonc, or styles.css file`,
+                    `Skipping file ${file.path} because it is not a markdown, meta, docs json, or styles.css file`,
                 )
                 return false
             }
@@ -1339,7 +1339,7 @@ export async function* filesFromGithub({
         yield meta
     }
 
-    // Process fumabase.jsonc file (root only)
+    // Process docs json file (root only)
     const docsJsonFile = files.find((x) => {
         if (
             x.content == null ||

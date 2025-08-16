@@ -6,6 +6,8 @@ import { AnySpiceflow, preventProcessExitIfBusy } from 'spiceflow'
 import { groq } from '@ai-sdk/groq'
 import { deepinfra } from '@ai-sdk/deepinfra'
 import dedent from 'string-dedent'
+import { isDocsJson } from 'docs-website/src/lib/utils'
+import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
 import {
     OpenAIResponsesProviderOptions,
     openai,
@@ -88,6 +90,7 @@ import { applyJsonCComments } from './json-c-comments'
  */
 export async function generateSystemMessage({
     isOnboardingChat,
+    githubFolder,
 }): Promise<string> {
     return [
         await import('../prompts/agent.md?raw').then((x) => x.default),
@@ -98,13 +101,15 @@ export async function generateSystemMessage({
         await import('../prompts/gitchamber.md?raw').then((x) => x.default),
         await import('../prompts/migrating.md?raw').then((x) => x.default),
         dedent`
-        ## fumabase.jsonc
+        ## ${DOCS_JSON_BASENAME}
 
-        You can edit a top level fumabase.jsonc file to customize website settings, this file has the following json schema:
+        You can edit a ${githubFolder}/${DOCS_JSON_BASENAME} file to customize website settings, this file has the following json schema:
 
         <fumabaseJsonSchema>
         ${JSON.stringify(docsJsonSchema, null, 2)}
         </fumabaseJsonSchema>
+
+        Notice that this project is located in the base folder ${githubFolder}, all your files should be put inside ${githubFolder}
         `,
         isOnboardingChat && '## Onboarding Instructions',
         isOnboardingChat &&
@@ -280,9 +285,7 @@ export async function* generateMessageStream({
     middlewares?: LanguageModelV2Middleware[]
 }) {
     const isOnboardingChat =
-        [...files.map((x) => x.path)].filter(
-            (x) => !x.endsWith('fumabase.jsonc'),
-        ).length === 0
+        [...files.map((x) => x.path)].filter((x) => !isDocsJson(x)).length === 0
     const source = getFumadocsSource({
         files,
         defaultLanguage: defaultLocale,
@@ -321,15 +324,15 @@ export async function* generateMessageStream({
         notifyError,
 
         description: `
-        Before calling this tool ALWAYS read the current fumabase.jsonc file, then use the fumabase.jsonc you read as default initial values.
+        Before calling this tool ALWAYS read the current ${DOCS_JSON_BASENAME} file, then use the ${DOCS_JSON_BASENAME} you read as default initial values.
 
         This is VERY IMPORTANT for array values, you should show existing array items in form fields.
 
-        Notice that after calling this tool the fumabase.jsonc file will not updated right away so don't expect to read again the fumabase.jsonc file and find your initial values set. Values will be set in the next message, possibly with edits from the user.
+        Notice that after calling this tool the ${DOCS_JSON_BASENAME} file will not updated right away so don't expect to read again the ${DOCS_JSON_BASENAME} file and find your initial values set. Values will be set in the next message, possibly with edits from the user.
         `,
         replaceOptionalsWithNulls: model.provider.startsWith('openai'),
         onExecute: async ({ messages }) => {
-            // Check if the LLM has read a fumabase.jsonc file in previous messages
+            // Check if the LLM has read a docs json file in previous messages
             const hasReadFumabaseFile = messages.some((msg) => {
                 if (msg.role !== 'assistant') return false
                 // ignore if content is a string
@@ -341,7 +344,7 @@ export async function* generateMessageStream({
                         part.toolName === 'strReplaceEditor'
                     ) {
                         const input = part.input as EditToolParamSchema
-                        if (input?.path?.endsWith('fumabase.jsonc')) {
+                        if (input?.path && isDocsJson(input.path)) {
                             return true
                         }
                     }
@@ -351,10 +354,10 @@ export async function* generateMessageStream({
 
             if (!hasReadFumabaseFile) {
                 throw new Error(
-                    'You need to first read the fumabase.jsonc file before calling this tool, to know what are the existing values',
+                    `You need to first read the ${DOCS_JSON_BASENAME} file before calling this tool, to know what are the existing values`,
                 )
             }
-            return `do not read again fumabase.jsonc, updates will be there only in the next message.`
+            return `do not read again ${DOCS_JSON_BASENAME}, updates will be there only in the next message.`
         },
     })
     // model = anthropic('claude-3-5-haiku-latest')
@@ -523,7 +526,7 @@ export async function* generateMessageStream({
                 filePaths.push({
                     path: path.posix.join(
                         githubFolder || '.',
-                        'fumabase.jsonc',
+                        DOCS_JSON_BASENAME,
                     ),
                     title: 'Use the updateFumabaseJsonc tool to update these values',
                 })
@@ -735,7 +738,10 @@ export async function* generateMessageStream({
     const allMessages: ModelMessage[] = [
         {
             role: 'system',
-            content: await generateSystemMessage({ isOnboardingChat }),
+            content: await generateSystemMessage({
+                isOnboardingChat,
+                githubFolder,
+            }),
         },
         ...convertToModelMessages(messages.filter((x) => x.role !== 'system')),
     ]
@@ -1214,16 +1220,17 @@ async function generateAndSaveChatTitle(params: {
     return chatInfo
 }
 
-
 export async function getPageContent({ githubPath, branchId }) {
-    // Support for special files: fumabase.jsonc and styles.css
-    if (githubPath.endsWith('fumabase.jsonc')) {
+    // Support for special files: docs json and styles.css
+    if (isDocsJson(githubPath)) {
         const branch = await prisma.siteBranch.findFirst({
             where: { branchId },
             select: { docsJson: true, docsJsonComments: true },
         })
         if (!branch || !branch.docsJson) {
-            throw new Error(`Cannot find fumabase.jsonc for branch ${branchId}`)
+            throw new Error(
+                `Cannot find ${DOCS_JSON_BASENAME} for branch ${branchId}`,
+            )
         }
 
         // Apply comments if they exist, otherwise use regular JSON stringify

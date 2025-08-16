@@ -1,4 +1,5 @@
 import type { DocsJsonType } from 'docs-website/src/lib/docs-json.js'
+import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants.js'
 import os from 'node:os'
 import JSONC from 'tiny-jsonc'
 import fs from 'node:fs'
@@ -7,7 +8,7 @@ import path from 'node:path'
 import { execSync } from 'node:child_process'
 
 export async function readTopLevelDocsJson(dir) {
-    const docsJsonPath = path.resolve(dir, 'fumabase.jsonc')
+    const docsJsonPath = path.resolve(dir, DOCS_JSON_BASENAME)
     if (!fs.existsSync(docsJsonPath)) {
         return
     }
@@ -15,7 +16,7 @@ export async function readTopLevelDocsJson(dir) {
     try {
         return JSONC.parse(content) as DocsJsonType
     } catch (e) {
-        console.error('Error parsing fumabase.jsonc:', e.message)
+        console.error(`Error parsing ${DOCS_JSON_BASENAME}:`, e.message)
         return
     }
 }

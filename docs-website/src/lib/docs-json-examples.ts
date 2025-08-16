@@ -105,7 +105,7 @@ export const footerLinksOnlyExample: DocsJsonType = {
 export const completeDocsConfigExample: DocsJsonType = {
     name: 'Example Documentation',
     description:
-        'Complete example of fumabase.jsonc configuration showcasing all available options',
+        'Complete example of docs json configuration showcasing all available options',
     siteId: '',
     logo: {
         light: '/logo-light.svg',

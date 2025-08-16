@@ -15,6 +15,7 @@ import {
 import { applyJsonCComments, JsonCComments } from '../lib/json-c-comments'
 import type { Route } from './+types/org.$orgId.branch.$branchId.chat.$chatId.create-pr'
 import { FilesInDraft } from 'docs-website/src/lib/docs-state'
+import { isDocsJson } from 'docs-website/src/lib/utils'
 
 async function createPrSuggestionForChat({
     chatId,
@@ -74,7 +75,7 @@ async function createPrSuggestionForChat({
     )
 
     const docsJsonFile = files.find((x) =>
-        x.filePath.endsWith('fumabase.jsonc'),
+        isDocsJson(x.filePath),
     )
     if (docsJsonFile) {
         docsJsonFile.content = applyJsonCComments(

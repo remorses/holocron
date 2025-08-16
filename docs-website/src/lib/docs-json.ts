@@ -3,6 +3,7 @@ import { toJSONSchema, z } from 'zod'
 import { extractNamePathsFromSchema } from 'contesto'
 import dedent from 'dedent'
 import { themeNames } from './themes.js'
+import { DOCS_JSON_BASENAME } from './constants.js'
 
 
 // === Primitive helper schemas ===
@@ -439,7 +440,7 @@ export const DocsConfigSchema = z
             .array(z.string())
             .optional()
             .describe(
-                'Custom domains to connect to this documentation site. Each domain should point to cname.fumabase.com via CNAME record. Domains will be connected when fumabase.jsonc is pushed to the main branch.',
+                `Custom domains to connect to this documentation site. Each domain should point to cname.fumabase.com via CNAME record. Domains will be connected when ${DOCS_JSON_BASENAME} is pushed to the main branch.`,
             ),
         hideSidebar: z
             .boolean()
@@ -459,7 +460,7 @@ export const DocsConfigSchema = z
             .describe('Color theme for the documentation site. This is the preferred way to customize the website, it is much simpler and easier to use compared to custom css variables which are discouraged'),
     })
     .strict()
-    .describe('Schema for fumabase.jsonc configuration')
+
 
 export type DocsJsonType = z.infer<typeof DocsConfigSchema>
 

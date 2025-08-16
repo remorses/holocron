@@ -8,6 +8,8 @@ import {
     ChatUserMessage,
 } from 'contesto/src/chat/chat-message'
 import { ChatAutocomplete, ChatTextarea } from 'contesto/src/chat/chat-textarea'
+import { isDocsJson } from 'docs-website/src/lib/utils'
+import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
 
 import {
     CSSProperties,
@@ -116,9 +118,9 @@ import { useSearchParams } from 'react-router'
 
 const setDocsJsonState = ({ values, githubFolder, previousValues }) => {
     console.log(`form values changed, sending state to docs iframe`)
-    let githubPath = 'fumabase.jsonc'
+    let githubPath = DOCS_JSON_BASENAME
     if (githubFolder) {
-        githubPath = `${githubFolder}/fumabase.jsonc`
+        githubPath = `${githubFolder}/${DOCS_JSON_BASENAME}`
     }
 
     const newJson = JSON.stringify(
@@ -129,7 +131,7 @@ const setDocsJsonState = ({ values, githubFolder, previousValues }) => {
         null,
         2,
     )
-    console.log(`updating fumabase.jsonc`, newJson)
+    console.log(`updating ${DOCS_JSON_BASENAME}`, newJson)
 
     const newChanges = {
         [githubPath]: {
@@ -157,7 +159,7 @@ function ChatForm({ children, disabled }) {
     const formMethods = useForm({
         disabled,
         // https://chatgpt.com/share/689903d5-2624-800e-870c-a1e226fd230d
-        // do not pass defaultValues here otherwise setValue calls will not trigger subscribe callback if value does not change. meaning the state is not updated for filesInDraft for fumabase.jsonc
+        // do not pass defaultValues here otherwise setValue calls will not trigger subscribe callback if value does not change. meaning the state is not updated for filesInDraft for docs json
         // reset() call instead will trigger subscribe callback so we can use it in useEffect instead
     })
 
@@ -166,7 +168,7 @@ function ChatForm({ children, disabled }) {
     const docsJsonString = useWebsiteState((state) => {
         return (
             Object.entries(state.filesInDraft || {}).find(([key]) =>
-                key.endsWith('fumabase.jsonc'),
+                isDocsJson(key),
             )?.[1]?.content || ''
         )
     })
@@ -210,12 +212,12 @@ function ChatForm({ children, disabled }) {
         githubFolder,
     ])
 
-    // reset the form values on the first visit with the docs json values. it also resets the form values when the fumabase.jsonc file is updated via the strReplaceEditor tool
+    // reset the form values on the first visit with the docs json values. it also resets the form values when the docs json file is updated via the strReplaceEditor tool
     useEffect(() => {
         if (isOnboardingChat) return
         if (disabled) return
 
-        console.log('fumabase.jsonc', currentDocsJson)
+        console.log(DOCS_JSON_BASENAME, currentDocsJson)
 
         if (!currentDocsJson || Object.keys(currentDocsJson).length === 0)
             return

@@ -12,6 +12,7 @@ import { Route } from '../routes/_catchall'
 import { useLoaderData, useRouteLoaderData } from 'react-router'
 import { useDocsState } from './docs-state'
 import { DocsJsonType } from './docs-json'
+import { isDocsJson } from './utils'
 
 export function useDebounce<T>(value: T, delayMs = 1000): T {
     const [debouncedValue, setDebouncedValue] = useState(value)
@@ -50,7 +51,7 @@ export function useDocsJson(): DocsJsonType {
     // Check for state overrides for docsJson
     const docsJsonString = useDocsState((state) => {
         const key = Object.keys(state.filesInDraft).find((k) =>
-            k.endsWith('fumabase.jsonc'),
+            isDocsJson(k),
         )
         return key ? state.filesInDraft[key]?.content : undefined
     })

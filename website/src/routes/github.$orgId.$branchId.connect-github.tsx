@@ -10,6 +10,7 @@ import {
 } from '../lib/github.server'
 import { defaultStartingFumabaseJson } from 'docs-website/src/lib/docs-json-examples'
 import type { DocsJsonType } from 'docs-website/src/lib/docs-json'
+import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
 import { apiClient } from '../lib/spiceflow-client'
 import { ulid } from 'ulid'
 import { href } from 'react-router'
@@ -323,19 +324,19 @@ export async function action({ request, params }: Route.ActionArgs) {
         })
     }
 
-    // Add fumabase.jsonc with existing docsJson or default
+    // Add docs json with existing docsJson or default
     const docsJson = existingBranch?.docsJson || {
         ...defaultStartingFumabaseJson,
         siteId: site.siteId,
         name: site.name || 'Docs',
     }
     files.push({
-        filePath: 'fumabase.jsonc',
+        filePath: DOCS_JSON_BASENAME,
         content: JSON.stringify(docsJson, null, 2),
     })
 
     // If no files exist, use starter template as fallback
-    if (files.length === 1) { // Only fumabase.jsonc
+    if (files.length === 1) { // Only docs json
         const { data: exampleDocsResponse, error } = await apiClient.api.getStarterTemplate.get()
         if (error) {
             throw new Error('Failed to get example docs')
