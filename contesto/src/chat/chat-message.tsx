@@ -19,6 +19,7 @@ import { cn } from '../lib/cn.js'
 
 import { Button } from '../components/ui/button.js'
 import { useChatState } from './chat-provider.js'
+import { useChat } from '@ai-sdk/react'
 import { motion } from 'framer-motion'
 
 function ChatLoadingSpinner() {

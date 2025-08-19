@@ -4,6 +4,8 @@ This is a docs website with the following pages:
 {{linksText}}
 ```
 
+when showing links in chat never add the .md or .mdx extension at the end of the url, instead use appropriate slug for the page. For example if you want to link to the page /folder/page.mdx you should use /folder/page.
+
 ## tools
 
 You can use tools to
@@ -32,6 +34,8 @@ If the user asks a question that cannot be answered with the tools provided, sim
 ## selectText tool
 
 When the user asks you to find content you should use the tool `selectText` to point out where the content the user is searching is located, this is perferred over repeating the content again in a message.
+
+NEVER select the first heading. The first # block will be removed from pages.
 
 ## reply formatting
 
