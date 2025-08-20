@@ -257,13 +257,18 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     // Initialize docs state with editor preview mode if provided
     useEffect(() => {
         if (editorPreviewMode) {
-            useDocsState.setState({ previewMode: 'editor' })
+            // Check if editor is not disabled before setting editor mode
+            const docsJson = loaderData?.docsJson as DocsJsonType
+            const isEditorDisabled = docsJson?.disableEditButton === true
+
+            if (!isEditorDisabled) {
+                useDocsState.setState({ previewMode: 'editor' })
+            }
         }
-    }, [editorPreviewMode])
+    }, [editorPreviewMode, loaderData])
 
     const localRevalidator = useRevalidator()
     revalidator = localRevalidator
-
 
     const navigation = useNavigation()
 
@@ -375,8 +380,6 @@ export function ClientApp() {
         enabled: !!docsJson?.theme,
         staleTime: Infinity, // Theme CSS doesn't change often
     })
-
-
 
     return (
         <>

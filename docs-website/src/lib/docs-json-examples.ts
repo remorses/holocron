@@ -13,6 +13,7 @@ export const defaultStartingFumabaseJson: DocsJsonType = {
     $schema: `https://${WEBSITE_DOMAIN}/fumabase.json`,
     siteId: '',
     name: 'Docs',
+    disableEditButton: false,
     favicon: {
         light: '/favicon.svg',
         dark: '/favicon.svg',
@@ -58,6 +59,7 @@ export const defaultStartingFumabaseJson: DocsJsonType = {
 export const footerSocialsOnlyExample: DocsJsonType = {
     siteId: '',
     name: 'Documentation with Social Links',
+    disableEditButton: false,
 
     footer: {
         socials: {
@@ -71,6 +73,7 @@ export const footerSocialsOnlyExample: DocsJsonType = {
 export const footerLinksOnlyExample: DocsJsonType = {
     name: 'Documentation with Footer Links',
     siteId: '',
+    disableEditButton: false,
     footer: {
         links: [
             {
@@ -108,6 +111,7 @@ export const completeDocsConfigExample: DocsJsonType = {
     description:
         'Complete example of docs json configuration showcasing all available options',
     siteId: '',
+    disableEditButton: false,
     logo: {
         light: '/logo-light.svg',
         dark: '/logo-dark.svg',

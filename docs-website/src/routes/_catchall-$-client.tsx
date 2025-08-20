@@ -148,9 +148,10 @@ function PageContent(props: Route.ComponentProps): any {
     const tableOfContentStyle = 'clerk'
 
     const docsJson = useDocsJson()
+    const isEditorDisabled = docsJson?.disableEditButton === true
 
-    // Early return for editor mode
-    if (previewMode === 'editor') {
+    // Early return for editor mode (only if editor is not disabled)
+    if (previewMode === 'editor' && !isEditorDisabled) {
         return (
             <PageRoot
                 toc={{
@@ -212,7 +213,7 @@ function PageContent(props: Route.ComponentProps): any {
                         githubUrl={`https://github.com/${owner}/${repo}/blob/${githubBranch}/${githubPath}`}
                         contextual={docsJson?.contextual}
                     />
-                    <EditorToggle />
+                    {!isEditorDisabled && <EditorToggle />}
                     <AskAIButton />
                 </div>
 
@@ -224,7 +225,8 @@ function PageContent(props: Route.ComponentProps): any {
                     onRateAction={async (url, feedback) => {
                         const apiUrl = new URL(
                             '/api/submitRateFeedback',
-                            process.env.PUBLIC_URL || `https://${WEBSITE_DOMAIN}`,
+                            process.env.PUBLIC_URL ||
+                                `https://${WEBSITE_DOMAIN}`,
                         )
                         const response = await fetch(apiUrl.toString(), {
                             method: 'POST',
@@ -586,6 +588,13 @@ function DocsMarkdown(): any {
 
 function EditorToggle() {
     const contentMode = useDocsState((state) => state.previewMode)
+    const docsJson = useDocsJson()
+    const isEditorDisabled = docsJson?.disableEditButton === true
+
+    // Don't render anything if editor is disabled
+    if (isEditorDisabled) {
+        return null
+    }
 
     return (
         <button

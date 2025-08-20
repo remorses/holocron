@@ -6,7 +6,6 @@ import { themeNames } from './themes.js'
 import { DOCS_JSON_BASENAME } from './constants.js'
 import { WEBSITE_DOMAIN } from './env.js'
 
-
 // === Primitive helper schemas ===
 const Color = z
     .string()
@@ -411,20 +410,36 @@ export const DocsConfigSchema = z
             .describe(
                 `The site id for this folder. This field is required and should never be manually updated. This field should never by created instead it is automatically assigned.`,
             ),
-        name: z.string().min(1).describe('Project or product name. This will be used in fumabase dashboard to list the user websites. It has no other use case than that.'),
+        name: z
+            .string()
+            .min(1)
+            .describe(
+                'Project or product name. This will be used in fumabase dashboard to list the user websites. It has no other use case than that.',
+            ),
 
         // navTopLinks: z.array(NavigationAnchorItem).optional(),
-        description: z.string().optional().describe('default SEO description for pages that do not have a description frontmatter'),
-        logo: LogoSchema.optional().describe('Logo config, shown in the top left in the navbar'),
+        description: z
+            .string()
+            .optional()
+            .describe(
+                'default SEO description for pages that do not have a description frontmatter',
+            ),
+        logo: LogoSchema.optional().describe(
+            'Logo config, shown in the top left in the navbar',
+        ),
         favicon: FaviconSchema.optional().describe('Favicon config'),
         // api: ApiSchema.optional().describe('API reference settings'),
         navbar: NavbarSchema.optional().describe('Top navbar settings'),
         tabs: z
             .array(NavigationTabSchema)
             .optional()
-            .describe('Navigation tabs. This setting is still experimental and discouraged. It does not work currently'),
+            .describe(
+                'Navigation tabs. This setting is still experimental and discouraged. It does not work currently',
+            ),
 
-        footer: FooterSchema.optional().describe('Footer content, shown at the bottom of the website in all pages'),
+        footer: FooterSchema.optional().describe(
+            'Footer content, shown at the bottom of the website in all pages',
+        ),
         // search: SearchSchema.optional().describe('Search behavior'),
         // // TODO
         seo: SeoSchema.optional().describe('SEO meta & indexing settings'),
@@ -432,9 +447,13 @@ export const DocsConfigSchema = z
             .array(RedirectSchema)
             .optional()
             .describe('Redirect rules'),
-        banner: BannerSchema.optional().describe('Site-wide banner for announcements or news'),
+        banner: BannerSchema.optional().describe(
+            'Site-wide banner for announcements or news',
+        ),
         // errors: ErrorsSchema.optional().describe('Error page config'),
-        contextual: ContextualSchema.optional().describe('Contextual actions shown in the buttons at the top of a docs page'),
+        contextual: ContextualSchema.optional().describe(
+            'Contextual actions shown in the buttons at the top of a docs page',
+        ),
         cssVariables: CSSVariablesSchema.optional().describe('CSS variables'),
         // integrations: IntegrationsSchema.optional().describe('Integrations'),
         domains: z
@@ -458,10 +477,17 @@ export const DocsConfigSchema = z
         theme: z
             .enum(themeNames as [string, ...string[]])
             .optional()
-            .describe('Color theme for the documentation site. This is the preferred way to customize the website, it is much simpler and easier to use compared to custom css variables which are discouraged'),
+            .describe(
+                'Color theme for the documentation site. This is the preferred way to customize the website, it is much simpler and easier to use compared to custom css variables which are discouraged',
+            ),
+        disableEditButton: z
+            .boolean()
+            .optional()
+            .describe(
+                'Whether to disable the edit button and Monaco editor functionality',
+            ),
     })
     .strict()
-
 
 export type DocsJsonType = z.infer<typeof DocsConfigSchema>
 
