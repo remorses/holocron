@@ -41,6 +41,7 @@
     "@motionone/dom": "^10.18.0",
     "@motionone/easing": "^10.18.0",
     "@octokit/webhooks": "^14.0.2",
+    "@openrouter/ai-sdk-provider": "^1.1.2",
     "@prisma/client": "^6.14.0",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-avatar": "^1.1.10",

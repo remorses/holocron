@@ -13,7 +13,7 @@ import {
     openai,
     createOpenAI,
 } from '@ai-sdk/openai'
-import { WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
+import { env, WEBSITE_DOMAIN } from 'docs-website/src/lib/env'
 import {
     UIMessage,
     generateObject,
@@ -85,6 +85,11 @@ import fm from 'front-matter'
 import { isValidLucideIconName } from './icons'
 import { WebsiteUIMessage } from './types'
 import { applyJsonCComments } from './json-c-comments'
+import { createOpenRouter } from '@openrouter/ai-sdk-provider'
+
+const openrouter = createOpenRouter({
+    apiKey: env.OPENROUTER_API_KEY,
+})
 
 /**
  * Generate the system message content for the AI
@@ -297,6 +302,14 @@ export async function* generateMessageStream({
     // let model = groq('moonshotai/kimi-k2-instruct')
     // let model = anthropic('claude-sonnet-4-20250514')
     let model = openai('gpt-5-mini')
+    // let model = openrouter('qwen/qwen3-coder', {
+    //     extraBody: {
+    //         provider: {
+    //             order: ['cerebras'],
+    //             allow_fallbacks: false,
+    //         },
+    //     },
+    // })
 
     // if (modelId && modelProvider) {
     //     if (modelProvider.startsWith('openai')) {
