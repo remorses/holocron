@@ -23,7 +23,7 @@ async function main() {
         shell(`pnpm build`, {
             env,
         }),
-        await shell(`pnpm tsc --incremental`, {
+        shell(`pnpm tsc --incremental`, {
             env,
         }),
     ])

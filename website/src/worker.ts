@@ -1,8 +1,9 @@
-import { createRequestHandler } from 'react-router'
 import {
-    R2Bucket,
-    Request as CloudflareRequest,
-} from '@cloudflare/workers-types'
+    createRequestHandler,
+    unstable_createContext,
+    unstable_RouterContextProvider,
+} from 'react-router'
+import { R2Bucket } from '@cloudflare/workers-types'
 
 declare global {
     interface Env {
@@ -15,8 +16,13 @@ declare global {
 
 interface ExecutionContext {}
 
+const cloudflareContext = unstable_createContext<{
+    env: CloudflareEnvironment
+    ctx: ExecutionContext
+}>()
+
 declare module 'react-router' {
-    export interface AppLoadContext {
+    export interface unstable_RouterContextProvider {
         cloudflare: {
             env: CloudflareEnvironment
             ctx: ExecutionContext
@@ -30,9 +36,10 @@ const requestHandler = createRequestHandler(
 )
 
 export default {
-    async fetch(request, env, ctx) {
-        return requestHandler(request, {
-            cloudflare: { env, ctx },
-        })
+    async fetch(request: any, env: any, ctx: any) {
+        const contextProvider = new unstable_RouterContextProvider()
+        contextProvider.set(cloudflareContext, { env, ctx })
+        Object.assign(contextProvider, { cloudflare: { env, ctx } })
+        return requestHandler(request, contextProvider)
     },
 }

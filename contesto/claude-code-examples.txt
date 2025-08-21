@@ -104,3 +104,14 @@
      3. For MCP usage: Claude Desktop or another MCP-compatible client
 
      ## Installation
+
+
+[✓] Read existing server.ts files to understand current middleware logic
+[✓] Create React Router config with unstable_middleware enabled
+[✓] Convert docs-website server middleware to React Router unstable_middleware
+[✓] Update docs-website vite.config.js to use deployment-utils plugin
+[✓] Remove react router server plugin from docs-website vite config
+[ ] Delete docs-website server.ts file
+[ ] Convert website server.ts (minimal) to React Router middleware if needed
+[ ] Delete website server.ts file
+[ ] Update website vite.config.js to use deployment-utils plugin

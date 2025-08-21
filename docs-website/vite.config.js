@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 import { reactRouter } from '@react-router/dev/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { viteExternalsPlugin } from '@xmorse/deployment-utils/dist/vite-externals-plugin.js'
-import { reactRouterHonoServer } from 'react-router-hono-server/dev'
+import { reactRouterServerPlugin } from '@xmorse/deployment-utils/dist/react-router.js'
 import { defineConfig } from 'vite'
 import EnvironmentPlugin from 'vite-plugin-environment'
 import tsconfigPaths from 'vite-tsconfig-paths'
@@ -67,7 +67,7 @@ export default defineConfig({
         // cloudflare({ viteEnvironment: { name: 'ssr' } }),
         EnvironmentPlugin('all', { prefix: 'PUBLIC' }),
         EnvironmentPlugin('all', { prefix: 'NEXT_PUBLIC' }),
-        !process.env.VITEST && reactRouterHonoServer(),
+        reactRouterServerPlugin({  port: process.env.PORT || '7777' }),
         !process.env.VITEST ? reactRouter() : react(),
         // tsconfigPaths(),
         viteExternalsPlugin({
