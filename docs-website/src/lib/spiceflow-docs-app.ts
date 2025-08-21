@@ -115,7 +115,8 @@ export const docsApp = new Spiceflow({ basePath: '/fumabaseInternalAPI' })
             })
             const pages = source.getPages(locale)
 
-            let model = google('gemini-2.5-flash')
+            // let model = google('gemini-2.5-flash')
+            let model = groq('moonshotai/kimi-k2-instruct')
 
             const linksText = pages
                 .map((page) => {

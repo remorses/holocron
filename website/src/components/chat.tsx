@@ -89,6 +89,7 @@ import React from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import {
     useLoaderData,
+    useLocation,
     useParams,
     useRevalidator,
     useRouteLoaderData,
@@ -257,6 +258,8 @@ export default function Chat({
     const loaderData = useLoaderData() as Route.ComponentProps['loaderData']
     const { chat, siteId, branchId } = loaderData
     const revalidator = useRevalidator()
+    const location = useLocation()
+    const { stop } = useChatContext()
 
     const [searchParams] = useSearchParams()
     const initialChatState = useMemo(() => {
@@ -310,6 +313,13 @@ export default function Chat({
         console.log('Using new initial chat state', state)
         return state
     }, [loaderData.chatId, searchParams])
+
+    // Abort ongoing generation when route changes
+    useEffect(() => {
+        if (stop) {
+            stop()
+        }
+    }, [location.pathname, stop])
 
     const submitMessages = async ({
         messages,
@@ -737,7 +747,13 @@ function ContextButton({
 }
 
 function Footer() {
-    const { isGenerating: isPending, draftText: text, stop, submit, messages } = useChatContext()
+    const {
+        isGenerating: isPending,
+        draftText: text,
+        stop,
+        submit,
+        messages,
+    } = useChatContext()
     const { chat, chatId, githubFolder, prUrl, mentionOptions, branchId } =
         useLoaderData() as Route.ComponentProps['loaderData']
     const branchData = useRouteLoaderData(
@@ -852,8 +868,12 @@ function Footer() {
                                         className='rounded-full h-8 w-8 p-0'
                                         onClick={submit}
                                         disabled={!text?.trim()}
-                                        size="icon"
-                                        variant={!text?.trim() ? 'outline' : 'default'}
+                                        size='icon'
+                                        variant={
+                                            !text?.trim()
+                                                ? 'outline'
+                                                : 'default'
+                                        }
                                     >
                                         <ArrowUpIcon className='size-4' />
                                     </Button>
