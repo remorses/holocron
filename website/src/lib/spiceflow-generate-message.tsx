@@ -299,9 +299,9 @@ export async function* generateMessageStream({
         languages: locales,
     })
 
-    // let model = groq('moonshotai/kimi-k2-instruct')
+    let model = groq('moonshotai/kimi-k2-instruct')
     // let model = anthropic('claude-sonnet-4-20250514')
-    let model = openai('gpt-5-mini')
+    // let model = openai('gpt-5-mini')
     // let model = openrouter('qwen/qwen3-coder', {
     //     extraBody: {
     //         provider: {
