@@ -29,7 +29,7 @@ export const renderNode: RenderNode = (node, transform) => {
     }
     if (node.type === 'inlineCode') {
         return (
-            <span className='dark:text-red-200 dark:bg-red-950/30 px-1 rounded font-mono text-[0.8em]'>
+            <span className='dark:text-red-200 dark:bg-red-950/30 px-1 rounded font-mono text-[0.9em]'>
                 {node.value}
             </span>
         )
