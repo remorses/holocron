@@ -27,7 +27,7 @@ function ChatLoadingSpinner() {
     // We use a span for each sequence, only one visible at a time via keyframes.
     // Inline style for keyframes to avoid external CSS dependencies.
     return (
-        <span className='ml-2 mt-2 inline-flex h-3 select-none text-base text-muted-foreground'>
+        <span className='mt-2 font-mono inline-flex h-3 select-none text-base text-muted-foreground flex'>
             <style>
                 {`
                     @keyframes chatDot1 {
@@ -48,23 +48,18 @@ function ChatLoadingSpinner() {
                 `}
             </style>
             <span style={{ animation: 'chatDot1 1.2s linear infinite' }}>
-                .
+                ・
             </span>
-            <span
-                style={{ animation: 'chatDot2 1.2s linear infinite' }}
-                className='ml-0.5'
-            >
-                .
+            <span style={{ animation: 'chatDot2 1.2s linear infinite' }}>
+                ・
             </span>
-            <span
-                style={{ animation: 'chatDot3 1.2s linear infinite' }}
-                className='ml-0.5'
-            >
-                .
+            <span style={{ animation: 'chatDot3 1.2s linear infinite' }}>
+                ・
             </span>
         </span>
     )
 }
+
 function isMessageAlmostEmpty(message: UIMessage) {
     if (message.parts.length === 0) {
         return true
@@ -112,14 +107,13 @@ export const ChatAssistantMessage = memo(function ChatMessage({
             message.role === 'assistant',
     )
 
-    let content = children
-    if (
-        isLastAssistantMessage &&
-        isChatGenerating &&
-        isMessageAlmostEmpty(message)
-    ) {
-        content = <ChatLoadingSpinner />
-    }
+    // if (
+    //     isLastAssistantMessage &&
+    //     isChatGenerating &&
+    //     isMessageAlmostEmpty(message)
+    // ) {
+    //     content = <ChatLoadingSpinner />
+    // }
 
     return (
         <article
@@ -137,7 +131,10 @@ export const ChatAssistantMessage = memo(function ChatMessage({
                     'space-y-4 w-full',
                 )}
             >
-                {content}
+                {children}
+                {isLastAssistantMessage && isChatGenerating && (
+                    <ChatLoadingSpinner />
+                )}
             </div>
         </article>
     )
