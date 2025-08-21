@@ -259,7 +259,7 @@ export default function Chat({
     const { chat, siteId, branchId } = loaderData
     const revalidator = useRevalidator()
     const location = useLocation()
-    const { stop } = useChatContext()
+
 
     const [searchParams] = useSearchParams()
     const initialChatState = useMemo(() => {
@@ -314,12 +314,6 @@ export default function Chat({
         return state
     }, [loaderData.chatId, searchParams])
 
-    // Abort ongoing generation when route changes
-    useEffect(() => {
-        if (stop) {
-            stop()
-        }
-    }, [location.pathname, stop])
 
     const submitMessages = async ({
         messages,
@@ -559,7 +553,14 @@ export default function Chat({
 }
 
 function Messages({ ref }) {
-    const { messages } = useChatContext()
+    const { messages, stop } = useChatContext()
+
+    const location = useLocation()
+    useEffect(() => {
+        if (stop) {
+            stop()
+        }
+    }, [location.pathname, stop])
 
     if (!messages.length) return null
     return (
