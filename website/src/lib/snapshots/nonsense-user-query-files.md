@@ -1,15 +1,303 @@
 # File Tree
 
+├── customization
+│   ├── configuration.mdx
+│   └── meta.json
 ├── essentials
 │   ├── code.mdx
 │   ├── frontmatter.mdx
 │   ├── images.mdx
-│   └── markdown.mdx
-├── README.md
+│   └── meta.json
+├── index.mdx
 └── writing
-    ├── accessibility.mdx
-    ├── code-examples.mdx
-    └── content-structure.mdx
+    ├── best-practices.mdx
+    └── meta.json
+
+
+==================================================
+FILE: customization/configuration.mdx
+==================================================
+---
+title: 'Site Configuration'
+description: 'Customize your documentation site with branding, navigation, and theme settings'
+icon: 'settings'
+---
+
+# Site Configuration
+
+Customize your documentation website through the `fumabase.jsonc` configuration file.
+
+## Basic Configuration
+
+### Site Identity
+
+Set your site name and description:
+
+```jsonc title="fumabase.jsonc"
+{
+    "name": "Your Product Name",
+    "description": "Brief description of your product or service"
+}
+```
+
+### Logo Configuration
+
+Add your logo for light and dark modes:
+
+```jsonc title="fumabase.jsonc"
+{
+    "logo": {
+        "light": "/logo-light.png",
+        "dark": "/logo-dark.png",
+        "href": "/",
+        "text": "Your Brand"
+    }
+}
+```
+
+<Tip>
+If you don't have logo images, use the `text` property to display your brand name as text.
+</Tip>
+
+## Navigation Settings
+
+### Navbar Links
+
+Add custom links to your navigation bar:
+
+```jsonc title="fumabase.jsonc"
+{
+    "navbar": {
+        "links": [
+            {
+                "label": "Pricing",
+                "href": "https://your-site.com/pricing"
+            },
+            {
+                "label": "Blog",
+                "href": "https://your-site.com/blog"
+            },
+            {
+                "label": "Support",
+                "href": "https://your-site.com/support"
+            }
+        ],
+        "primary": {
+            "type": "button",
+            "label": "Get Started",
+            "href": "https://your-site.com/signup"
+        }
+    }
+}
+```
+
+### Primary Action Button
+
+Choose between a custom button or GitHub link:
+
+<CodeGroup>
+```jsonc Custom Button
+"primary": {
+    "type": "button",
+    "label": "Sign Up",
+    "href": "https://your-site.com/signup"
+}
+```
+
+```jsonc GitHub Link
+"primary": {
+    "type": "github",
+    "href": "https://github.com/your-org/your-repo"
+}
+```
+</CodeGroup>
+
+## Footer Configuration
+
+### Social Media Links
+
+Add social media profiles to your footer:
+
+```jsonc title="fumabase.jsonc"
+{
+    "footer": {
+        "socials": {
+            "twitter": "https://twitter.com/yourhandle",
+            "github": "https://github.com/your-org",
+            "linkedin": "https://linkedin.com/company/your-company"
+        }
+    }
+}
+```
+
+### Footer Link Sections
+
+Organize footer links into sections:
+
+```jsonc title="fumabase.jsonc"
+{
+    "footer": {
+        "links": [
+            {
+                "header": "Product",
+                "items": [
+                    { "label": "Features", "href": "/features" },
+                    { "label": "Pricing", "href": "/pricing" },
+                    { "label": "API", "href": "/api" }
+                ]
+            },
+            {
+                "header": "Company",
+                "items": [
+                    { "label": "About", "href": "/about" },
+                    { "label": "Blog", "href": "/blog" },
+                    { "label": "Careers", "href": "/careers" }
+                ]
+            }
+        ]
+    }
+}
+```
+
+## Theme and Styling
+
+### Color Themes
+
+Choose from predefined color themes:
+
+```jsonc title="fumabase.jsonc"
+{
+    "theme": "ocean"
+}
+```
+
+Available themes: `black`, `catppuccin`, `dusk`, `neutral`, `ocean`, `purple`, `vitepress`
+
+### Custom CSS Variables
+
+For advanced customization, define custom CSS variables:
+
+```jsonc title="fumabase.jsonc"
+{
+    "cssVariables": {
+        "light": {
+            "--color-fd-primary": "hsl(220, 90%, 50%)",
+            "--color-fd-background": "hsl(0, 0%, 98%)"
+        },
+        "dark": {
+            "--color-fd-primary": "hsl(220, 90%, 70%)",
+            "--color-fd-background": "hsl(220, 15%, 10%)"
+        }
+    }
+}
+```
+
+## SEO and Metadata
+
+### Custom Meta Tags
+
+Add custom meta tags for SEO:
+
+```jsonc title="fumabase.jsonc"
+{
+    "seo": {
+        "metatags": {
+            "keywords": "documentation, api, developer tools",
+            "author": "Your Company Name"
+        }
+    }
+}
+```
+
+### Indexing Settings
+
+Control search engine indexing:
+
+```jsonc title="fumabase.jsonc"
+{
+    "seo": {
+        "indexing": "navigable"
+    }
+}
+```
+
+Options: `navigable` (only main pages) or `all` (all pages)
+
+## Advanced Features
+
+### Custom Domains
+
+Connect custom domains to your documentation:
+
+```jsonc title="fumabase.jsonc"
+{
+    "domains": [
+        "docs.your-company.com",
+        "help.your-product.com"
+    ]
+}
+```
+
+<Warning>
+After adding domains, you'll need to configure DNS records to point to Fumabase's servers.
+</Warning>
+
+### Redirects
+
+Set up URL redirects for moved content:
+
+```jsonc title="fumabase.jsonc"
+{
+    "redirects": [
+        {
+            "source": "/old-path",
+            "destination": "/new-path",
+            "permanent": true
+        }
+    ]
+}
+```
+
+### Site Banner
+
+Add a site-wide announcement banner:
+
+```jsonc title="fumabase.jsonc"
+{
+    "banner": {
+        "content": "🚀 New feature released! Check out our latest updates.",
+        "dismissible": true
+    }
+}
+```
+
+## Configuration Best Practices
+
+### Version Control
+
+- Keep your `fumabase.jsonc` file in version control
+- Test configuration changes locally before deploying
+- Use comments in the JSONC file for documentation
+
+### Performance Considerations
+
+- Optimize images before uploading
+- Use external hosting for large media files
+- Minimize custom CSS for faster loading
+
+<Tip>
+Start with the basic configuration and gradually add features as needed. Most sites work well with just the name, description, and logo configured.
+</Tip>
+
+
+==================================================
+FILE: customization/meta.json
+==================================================
+{
+    "title": "Customization",
+    "icon": "sliders",
+    "pages": ["configuration"]
+}
 
 
 ==================================================
@@ -17,11 +305,11 @@ FILE: essentials/code.mdx
 ==================================================
 ---
 title: 'Code Blocks'
-description: 'Display inline code and code blocks'
+description: 'Display inline code and code blocks with syntax highlighting'
 icon: 'code'
 ---
 
-## Basic
+## Basic Code Examples
 
 ### Inline Code
 
@@ -31,9 +319,9 @@ To denote a `word` or `phrase` as code, enclose it in backticks (`).
 To denote a `word` or `phrase` as code, enclose it in backticks (`).
 ```
 
-### Code Block
+### Code Blocks
 
-Use [fenced code blocks](https://www.markdownguide.org/extended-syntax/#fenced-code-blocks) by enclosing code in three backticks and follow the leading ticks with the programming language of your snippet to get syntax highlighting. Optionally, you can also write the name of your code after the programming language.
+Use fenced code blocks by enclosing code in three backticks and specify the programming language for syntax highlighting.
 
 ```java HelloWorld.java
 class HelloWorld {
@@ -53,6 +341,47 @@ class HelloWorld {
 ```
 ````
 
+## Advanced Features
+
+### Code Groups
+
+Show multiple language examples side by side:
+
+<CodeGroup>
+```javascript Node.js
+const response = await fetch('/api/data');
+const data = await response.json();
+```
+
+```python Python
+import requests
+response = requests.get('/api/data')
+data = response.json()
+```
+
+```bash cURL
+curl -X GET '/api/data'
+```
+</CodeGroup>
+
+### Line Numbers
+
+Add line numbers to your code examples:
+
+```javascript title="config.js" lineNumbers=true
+const config = {
+    apiUrl: 'https://api.example.com',
+    timeout: 5000,
+    retries: 3
+};
+```
+
+## Best Practices
+
+- Always include the language for proper syntax highlighting
+- Use descriptive titles for code blocks
+- Keep examples focused and relevant
+- Test your code examples before publishing
 
 
 ==================================================
@@ -60,27 +389,43 @@ FILE: essentials/frontmatter.mdx
 ==================================================
 ---
 title: 'Frontmatter'
-description: 'Configure page metadata and display properties'
+description: 'Configure page metadata and display properties using YAML frontmatter'
 icon: 'file-text'
 ---
 
-## Overview
+# Frontmatter Configuration
 
-Frontmatter is YAML metadata placed at the beginning of your markdown files. It controls how your page is displayed and indexed.
+Frontmatter is YAML metadata placed at the beginning of your markdown files that controls how pages are displayed and indexed.
+
+## Basic Frontmatter
+
+### Required Properties
+
+Every page should include at minimum:
 
 ```yaml
 ---
 title: 'Page Title'
-description: 'Brief description of the page content'
-icon: 'file'
+description: 'Brief description of page content'
 ---
 ```
 
-## Required Properties
+### Complete Example
+
+```yaml
+---
+title: 'API Reference'
+description: 'Complete API documentation with examples and response schemas'
+icon: 'code'
+full: false
+---
+```
+
+## Property Reference
 
 ### title
 
-The page title that appears in the sidebar navigation and as the main H1 heading on the page.
+The page title that appears in the sidebar navigation and as the main H1 heading.
 
 ```yaml
 title: 'Getting Started'
@@ -88,439 +433,567 @@ title: 'Getting Started'
 
 ### description
 
-Meta description used for SEO and displayed in search results. Also shown in the document overview.
+Meta description used for SEO and displayed in search results.
 
 ```yaml
-description: 'Learn how to set up and configure your project'
+description: 'Learn how to set up and configure your project in minutes'
 ```
-
-## Optional Properties
 
 ### icon
 
-Icon name from [Lucide icons](https://lucide.dev) displayed next to the page title in the sidebar.
+Icon name from [Lucide icons](https://lucide.dev) displayed next to the page title.
 
 ```yaml
 icon: 'rocket'        # Shows rocket icon
-icon: 'book-open'     # Shows book-open icon
 icon: 'settings'      # Shows settings icon
+icon: 'book-open'     # Shows book-open icon
 ```
 
+### full
+
+Boolean that determines if the page uses full width layout.
+
+```yaml
+full: true   # Full width layout
+full: false  # Default centered layout
+```
+
+## Icon Reference
+
+Commonly used icons for documentation:
+
+<CardGroup cols={3}>
+<Card title="Getting Started" icon="rocket">
+`icon: 'rocket'`
+</Card>
+
+<Card title="API Reference" icon="code">
+`icon: 'code'`
+</Card>
+
+<Card title="Configuration" icon="settings">
+`icon: 'settings'`
+</Card>
+
+<Card title="Guides" icon="book-open">
+`icon: 'book-open'`
+</Card>
+
+<Card title="Tutorials" icon="graduation-cap">
+`icon: 'graduation-cap'`
+</Card>
+
+<Card title="Troubleshooting" icon="help-circle">
+`icon: 'help-circle'`
+</Card>
+</CardGroup>
+
 <Tip>
-
-Browse the full icon library at [lucide.dev](https://lucide.dev) to find the perfect icon for your page.
-
+Browse the full icon library at [lucide.dev](https://lucide.dev) to find the perfect icon for your content.
 </Tip>
 
-## Example
+## Advanced Usage
 
-Here's a complete frontmatter example:
+### Custom Properties
+
+You can add custom properties for your own use:
 
 ```yaml
 ---
-title: 'API Reference'
-description: 'Complete API documentation with examples and response schemas'
-icon: 'code'
+title: 'Advanced Configuration'
+description: 'Custom settings and advanced options'
+icon: 'settings'
+version: '2.0'
+author: 'Your Team'
+reviewed: true
 ---
 ```
 
-This creates a page with:
-- "API Reference" in the sidebar and as the H1
-- SEO description for search engines
-- Code icon in the sidebar
+### Multi-line Descriptions
 
+Use YAML multi-line syntax for longer descriptions:
+
+```yaml
+description: |
+  This comprehensive guide covers everything you need to know
+  about configuring advanced settings, including performance
+  optimization, security considerations, and best practices
+  for production deployments.
+```
+
+## Best Practices
+
+### Consistent Naming
+
+Use consistent naming patterns for similar content:
+
+```yaml
+# Good
+icon: 'api'
+icon: 'api-reference'
+
+# Avoid
+icon: 'api'
+icon: 'reference-api'
+icon: 'API'
+```
+
+### Descriptive Titles
+
+Make titles clear and action-oriented:
+
+```yaml
+# Good
+title: 'Setting Up Authentication'
+title: 'Deploying to Production'
+
+# Less clear
+title: 'Authentication'
+title: 'Production'
+```
+
+### SEO Optimization
+
+Write descriptions that work well in search results:
+
+```yaml
+# Good
+description: 'Step-by-step guide to set up OAuth 2.0 authentication with examples for Node.js, Python, and Ruby'
+
+# Less effective
+description: 'How to set up auth'
+```
+
+<Warning>
+Always include both title and description. Missing these can hurt your SEO and make navigation difficult for users.
+</Warning>
+
+## Validation
+
+Fumabase validates frontmatter and will show warnings for:
+- Missing required fields
+- Invalid icon names
+- Malformed YAML syntax
+
+<Check>
+Proper frontmatter configuration ensures your documentation is well-organized, searchable, and provides a great user experience.
+</Check>
 
 
 ==================================================
 FILE: essentials/images.mdx
 ==================================================
 ---
-title: 'Images and Embeds'
-description: 'Add image, video, and other HTML elements'
+title: 'Images and Media'
+description: 'Add images, videos, and other media elements to your documentation'
 icon: 'image'
 ---
 
-<img
-  style={{ borderRadius: '0.5rem' }}
-  src="https://uploads.fumabase.com/Gui86K8XoAAZRb_.jpeg"
-/>
+## Adding Images
 
-## Image
+### Using Markdown Syntax
 
-### Using Markdown
-
-The [markdown syntax](https://www.markdownguide.org/basic-syntax/#images) lets you add images using the following code
+The standard markdown syntax lets you add images:
 
 ```md
-![title](/path/image.jpg)
+![Alt text describing the image](/path/to/image.jpg)
 ```
 
-Note that the image file size must be less than 5MB. Otherwise, we recommend hosting on a service like [Cloudinary](https://cloudinary.com/) or [S3](https://aws.amazon.com/s3/). You can then use that URL and embed.
+### Using HTML img Tags
 
-### Using Embeds
-
-To get more customizability with images, you can also use [embeds](/writing-content/embed) to add images
+For more control over images, use HTML img tags:
 
 ```html
-<img height="200" src="/path/image.jpg" />
+<img 
+  src="/path/to/image.jpg" 
+  alt="Descriptive alt text"
+  style={{ width: '100%', borderRadius: '0.5rem' }}
+/>
 ```
 
-## Embeds and HTML elements
+## Image Best Practices
 
+### Alt Text
+
+Always provide meaningful alt text for accessibility:
+
+```md
+<!-- Good -->
+![Dashboard showing user analytics](/images/dashboard.png)
+
+<!-- Poor -->
+![Screenshot](/images/dashboard.png)
+```
+
+### Responsive Images
+
+Make images responsive by setting appropriate styles:
+
+```html
+<img 
+  src="/images/example.jpg" 
+  alt="Example image"
+  style={{ 
+    maxWidth: '100%', 
+    height: 'auto',
+    borderRadius: '0.5rem'
+  }}
+/>
+```
+
+## Embedded Content
+
+### Videos
+
+Embed videos using iframe elements:
+
+```html
 <iframe
   width="560"
   height="315"
-  src="https://www.youtube.com/embed/4KzFe50RQkQ"
+  src="https://www.youtube.com/embed/VIDEO_ID"
   title="YouTube video player"
   frameBorder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
   allowFullScreen
   style={{ width: '100%', borderRadius: '0.5rem' }}
 ></iframe>
+```
 
-<br />
+### Frames for Images
+
+Wrap images in frames for better presentation:
+
+<Frame caption="Example dashboard showing key metrics">
+<img 
+  src="/images/dashboard-example.jpg" 
+  alt="Dashboard with analytics charts and user statistics"
+  style={{ borderRadius: '0.5rem' }}
+/>
+</Frame>
+
+## File Size Considerations
+
+- Keep images under 5MB for optimal performance
+- Use modern formats like WebP when possible
+- Compress images before uploading
+- Consider using external hosting for large files
 
 <Tip>
-
-Fumabase supports [HTML tags in Markdown](https://www.markdownguide.org/basic-syntax/#html). This is helpful if you prefer HTML tags to Markdown syntax, and lets you create documentation with infinite flexibility.
-
+For large images or videos, consider using external hosting services like Cloudinary, S3, or YouTube and embedding them instead of uploading directly.
 </Tip>
 
-### iFrames
 
-Loads another HTML page within the document. Most commonly used for embedding videos.
-
-```html
-<iframe src="https://www.youtube.com/watch?v=EpX1_YJPGAY"> </iframe>
-```
-
+==================================================
+FILE: essentials/meta.json
+==================================================
+{
+    "title": "Essentials",
+    "icon": "book",
+    "pages": ["code", "images", "frontmatter", "markdown"]
+}
 
 
 ==================================================
-FILE: essentials/markdown.mdx
+FILE: index.mdx
 ==================================================
 ---
-title: 'Markdown Syntax'
-description: 'Text, title, and styling in standard markdown'
-icon: 'text'
+title: 'Getting Started'
+description: 'Quick start guide to get up and running with your new documentation website'
+icon: 'rocket'
 ---
 
-## Titles
+# Welcome to Your Documentation
 
-Best used for section headers.
+This is your new documentation website built with Fumabase. Here's how to get started:
 
-```md
-## Titles
-```
+## 1. Explore the Documentation
 
-### Subtitles
+Browse through the sections on the left to learn about:
+- **Essentials**: Core documentation components and syntax
+- **Writing**: Best practices for creating great documentation
+- **Customization**: How to personalize your website
 
-Best use to subsection headers.
+## 2. Customize Your Content
 
-```md
-### Subtitles
-```
+Edit any page by clicking the edit button in the top right corner. You can:
+- Update text and examples
+- Add your own content
+- Customize the structure
 
-<Tip>
+## 3. Configure Your Site
 
-Each **title** and **subtitle** creates an anchor and also shows up on the table of contents on the right.
+Edit the `fumabase.jsonc` file to:
+- Set your site name and description
+- Add your logo and branding
+- Configure navigation and footer
 
-</Tip>
+## 4. Preview and Publish
 
-## Text Formatting
+Use the Fumabase CLI to preview your site locally:
 
-We support most markdown formatting. Simply add `**`, `_`, or `~` around text to format it.
-
-| Style         | How to write it   | Result          |
-| ------------- | ----------------- | --------------- |
-| Bold          | `**bold**`        | **bold**        |
-| Italic        | `_italic_`        | _italic_        |
-| Strikethrough | `~strikethrough~` | ~strikethrough~ |
-
-You can combine these. For example, write `**_bold and italic_**` to get **_bold and italic_** text.
-
-You need to use HTML to write superscript and subscript text. That is, add `<sup>` or `<sub>` around your text.
-
-| Text Size   | How to write it          | Result                 |
-| ----------- | ------------------------ | ---------------------- |
-| Superscript | `<sup>superscript</sup>` | <sup>superscript</sup> |
-| Subscript   | `<sub>subscript</sub>`   | <sub>subscript</sub>   |
-
-## Linking to Pages
-
-You can add a link by wrapping text in `[]()`. You would write `[link to google](https://google.com)` to [link to google](https://google.com).
-
-Links to pages in your docs need to be root-relative. Basically, you should include the entire folder path. For example, `[link to text](/writing-content/text)` links to the page "Text" in our components section.
-
-Relative links like `[link to text](../text)` will open slower because we cannot optimize them as easily.
-
-## Blockquotes
-
-### Singleline
-
-To create a blockquote, add a `>` in front of a paragraph.
-
-> Dorothy followed her through many of the beautiful rooms in her castle.
-
-```md
-> Dorothy followed her through many of the beautiful rooms in her castle.
-```
-
-### Multiline
-
-> Dorothy followed her through many of the beautiful rooms in her castle.
->
-> The Witch bade her clean the pots and kettles and sweep the floor and keep the fire fed with wood.
-
-```md
-> Dorothy followed her through many of the beautiful rooms in her castle.
->
-> The Witch bade her clean the pots and kettles and sweep the floor and keep the fire fed with wood.
-```
-
-### LaTeX
-
-Fumabase supports [LaTeX](https://www.latex-project.org) through the Latex component.
-
-<Latex>8 x (vk x H1 - H2) = (0,1)</Latex>
-
-```md
-<Latex>8 x (vk x H1 - H2) = (0,1)</Latex>
-```
-
-
-
-==================================================
-FILE: README.md
-==================================================
-# Fumabase Starter Kit
-
-### Development
-
-## 1. Install the Fumabase CLI
-
-To preview your documentation changes locally, first install the [Fumabase CLI](https://www.npmjs.com/package/fumabase). Use the following command:
-
-```
-npm i -g fumabase
-```
-
-## 2. Start the Local Development Server
-
-At the root of your documentation project (where `fumabase.jsonc` is located), start the development server with:
-
-```
+```bash
+npm install -g fumabase
 fumabase dev
 ```
 
-### Publishing Changes
+Your changes will be automatically deployed when you push to your repository.
 
-## 3. Set Up Automatic Deployments
+## Need Help?
 
-Install our GitHub App to enable automated deployments from your repository. After pushing changes to your default branch, your documentation will be deployed to production automatically. You can find the installation link on your dashboard.
-
+Check out our comprehensive guides on documentation best practices and Fumabase features to create an outstanding documentation experience for your users.
 
 
 ==================================================
-FILE: writing/accessibility.mdx
+FILE: writing/best-practices.mdx
 ==================================================
 ---
-title: 'Writing Accessible Documentation'
-description: 'Create documentation that works for everyone by following accessibility principles and inclusive design practices.'
+title: 'Documentation Best Practices'
+description: 'Learn how to create effective, user-focused documentation that helps users succeed'
+icon: 'book-open'
 ---
 
-# Writing Accessible Documentation
+# Documentation Best Practices
 
-Accessible documentation isn't just about compliance—it creates better experiences for all users by prioritizing clarity, structure, and multiple ways to consume information.
+Great documentation is more than just accurate information—it's about helping users achieve their goals efficiently.
 
-## Clear Language and Structure
+## User-Focused Writing
 
-Accessible writing starts with clear, direct language that reduces cognitive load for all readers.
+### Start with User Goals
 
-### Write for Clarity
-
-Use simple, direct language that communicates efficiently:
+Focus on what users want to accomplish, not just feature descriptions:
 
 <CodeGroup>
-```markdown ❌ Complex Language
-Subsequently, in order to implement the aforementioned functionality,
-it is necessary to instantiate the configuration object with the
-appropriate parameters as delineated in the following example.
+```markdown ❌ Feature-Focused
+# API Endpoints
+
+- GET /users - Returns user list
+- POST /users - Creates new user
+- PUT /users/{id} - Updates user
+- DELETE /users/{id} - Deletes user
 ```
 
-```markdown ✅ Clear Language
-Next, create a configuration object with these settings:
-```
+```markdown ✅ User-Focused
+# Managing Users
 
+Learn how to manage user accounts in your application:
+
+- **View all users**: List and search user accounts
+- **Add new users**: Create user accounts with custom permissions
+- **Update user information**: Modify user details and settings
+- **Remove users**: Delete user accounts securely
+```
 </CodeGroup>
 
-### Meaningful Headings
+### Write for Different Experience Levels
 
-Write headings that describe content accurately and help users navigate efficiently:
+Provide pathways for both beginners and experts:
+
+<Steps>
+<Step title="Quick Start">
+Begin with the simplest approach that works for most users.
+
+```javascript
+// Simple example that just works
+const result = await api.call('method');
+```
+</Step>
+
+<Step title="Advanced Options">
+Provide advanced configuration for power users.
+
+<Accordion title="Advanced configuration">
+```javascript
+// Advanced options with error handling
+const result = await api.call('method', {
+    timeout: 30000,
+    retries: 3,
+    onRetry: (attempt) => console.log(`Retry ${attempt}`)
+});
+```
+</Accordion>
+</Step>
+</Steps>
+
+## Clear and Concise Content
+
+### Use Plain Language
+
+Avoid jargon and technical terms when simpler words work:
+
+<CodeGroup>
+```markdown ❌ Technical Jargon
+The asynchronous invocation paradigm facilitates non-blocking I/O operations.
+```
+
+```markdown ✅ Plain Language
+Async calls let your program do other work while waiting for responses.
+```
+</CodeGroup>
+
+### Break Down Complex Concepts
+
+Use progressive disclosure to reveal complexity gradually:
 
 <Tabs>
-<Tab title="Poor Headings">
-```markdown
-# Introduction
-## Getting Started
-## More Information
-## Advanced Stuff
+<Tab title="Basic Example">
+```javascript
+// Start simple
+const user = await getUser(userId);
 ```
 </Tab>
 
-<Tab title="Descriptive Headings">
-```markdown
-# User Authentication Setup
-## Installing the Authentication SDK
-## Configuring Your First Login Flow
-## Handling Authentication Errors
-## Multi-Factor Authentication Options
+<Tab title="With Error Handling">
+```javascript
+// Add error handling
+try {
+    const user = await getUser(userId);
+} catch (error) {
+    console.error('Failed to get user:', error);
+}
+```
+</Tab>
+
+<Tab title="Production Ready">
+```javascript
+// Full production implementation
+async function getUserSafe(userId, options = {}) {
+    const { timeout = 5000, retries = 3 } = options;
+    
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            
+            const user = await getUser(userId, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            return user;
+        } catch (error) {
+            if (attempt === retries) throw error;
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
+    }
+}
 ```
 </Tab>
 </Tabs>
 
-<Tip>
-    **Screen Reader Test:** Read only your headings aloud. Can someone
-    understand your document structure and find what they need?
-</Tip>
+## Effective Code Examples
 
-## Alternative Text and Media
+### Complete, Runnable Examples
 
-Provide meaningful descriptions for all visual content so information isn't lost for users who can't see images.
+Always provide examples that users can copy and run:
 
-### Effective Alt Text
+```javascript
+// Complete example with all required parts
+import { API } from 'your-library';
 
-Write alt text that conveys the same information the image provides:
+// Initialize with realistic configuration
+const api = new API({
+    apiKey: process.env.API_KEY,
+    baseURL: 'https://api.example.com',
+    timeout: 30000
+});
 
-<Steps>
-<Step title="Describe the purpose, not appearance">
-    Focus on what information the image conveys, not how it looks.
-
-    ```markdown
-    ❌ "Screenshot of a dashboard"
-    ✅ "Dashboard showing 3 active integrations, 1,247 API calls today,
-        and 99.8% uptime status"
-    ```
-
-</Step>
-
-<Step title="Include relevant text content">
-    If the image contains important text, include it in the alt text.
-
-    ```markdown
-    ❌ "Error message dialog box"
-    ✅ "Error dialog stating 'Invalid API key. Please check your
-        configuration and try again.' with a retry button"
-    ```
-
-</Step>
-</Steps>
-
-
-
-==================================================
-FILE: writing/code-examples.mdx
-==================================================
----
-title: 'Writing Effective Code Examples'
-description: 'Create code examples that users can trust, understand, and successfully implement in their projects.'
----
-
-# Writing Effective Code Examples
-
-Code examples are often the first thing developers look for in documentation. Make them count by ensuring they're accurate, complete, and genuinely helpful.
-
-## Complete and Runnable Examples
-
-Never show partial code that won't work in isolation. Users should be able to copy your example and see it work immediately.
-
-<CodeGroup>
-```javascript ❌ Incomplete
-// Don't do this - missing imports and setup
-const user = await getUser(userId);
-updateProfile(user.id, { name: 'John' });
-```
-
-```javascript ✅ Complete
-// Do this - everything needed to run
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
-async function updateUserProfile(userId, updates) {
+// Example usage with error handling
+async function getUsers() {
     try {
-        const user = await prisma.user.findUnique({
-            where: { id: userId }
-        });
-        
-        if (!user) {
-            throw new Error(`User with ID ${userId} not found`);
-        }
-        
-        const updatedUser = await prisma.user.update({
-            where: { id: userId },
-            data: updates
-        });
-        
-        return updatedUser;
+        const users = await api.get('/users');
+        console.log('Users:', users);
+        return users;
     } catch (error) {
-        console.error('Failed to update user:', error);
+        console.error('Failed to fetch users:', error);
         throw error;
     }
 }
 
-// Usage
-const result = await updateUserProfile('user_123', { name: 'John Doe' });
+// Call the function
+getUsers();
 ```
-</CodeGroup>
 
+### Show Expected Output
 
+Always include what users should expect to see:
 
-==================================================
-FILE: writing/content-structure.mdx
-==================================================
----
-title: 'Content Structure That Works'
-description: 'Learn how to organize documentation that guides users to success with clear hierarchy and logical flow.'
----
+**Example Response:**
+```json
+{
+    "users": [
+        {
+            "id": "user_123",
+            "email": "user@example.com",
+            "name": "Example User",
+            "created": "2024-01-15T10:30:00Z"
+        }
+    ],
+    "total": 1,
+    "has_more": false
+}
+```
 
-# Content Structure That Works
+## Accessibility Considerations
 
-Great documentation isn't just about having the right information—it's about organizing that information so users can find and understand it quickly.
+### Descriptive Headings
 
-## Start with User Intent
+Use headings that clearly describe the content:
 
-Before writing a single word, understand what your users are trying to accomplish. Are they trying to solve a problem, learn a concept, or complete a task?
+```markdown
+# ❌ Section 1
+# ✅ User Authentication Setup
+
+## ❌ Details
+## ✅ Configuring OAuth 2.0
+```
+
+### Alt Text for Images
+
+Provide meaningful descriptions for all images:
+
+```markdown
+<!-- Good -->
+![Dashboard showing 5 active users and 3 pending requests](/images/dashboard.png)
+
+<!-- Poor -->
+![Image](/images/dashboard.png)
+```
+
+## Testing Your Documentation
+
+### Verify Code Examples
+
+Test every code example before publishing:
+
+<Checklist>
+- [ ] Code runs without errors
+- [ ] All required imports are included
+- [ ] Environment variables are documented
+- [ ] Expected output matches actual output
+- [ ] Error handling works as described
+</Checklist>
+
+### User Testing
+
+Get feedback from real users:
+
+<CardGroup cols={2}>
+<Card title="New Users" icon="user-plus">
+Can they complete basic tasks without help?
+</Card>
+
+<Card title="Experienced Users" icon="user-check">
+Can they find advanced features easily?
+</Card>
+</CardGroup>
 
 <Tip>
-Always lead with the outcome. Tell users what they'll achieve before explaining how to do it.
+The best documentation anticipates user questions and provides clear, actionable answers before users even know they need them.
 </Tip>
 
-### The Inverted Pyramid Approach
 
-Structure your content like a news article—most important information first, supporting details after.
-
-<Steps>
-<Step title="Lead with the outcome">
-    Start each section by describing what the user will accomplish or learn.
-
-    ```markdown
-    # Setting Up Authentication
-
-    By the end of this guide, you'll have secure API authentication
-    working in your application with proper error handling.
-    ```
-</Step>
-
-<Step title="Provide essential context">
-    Give users the background they need to understand the instructions.
-
-    <Note>
-    Include prerequisites, assumptions, and any important warnings upfront.
-    </Note>
-</Step>
-
-<Step title="Detail the implementation">
-    Break down the actual steps, code examples, and configuration details.
-</Step>
-</Steps>
+==================================================
+FILE: writing/meta.json
+==================================================
+{
+    "title": "Writing Guides",
+    "icon": "edit-3",
+    "pages": ["best-practices", "user-focused", "content-structure", "code-examples", "visual-design", "accessibility"]
+}

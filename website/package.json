@@ -25,6 +25,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "2.0.5",
     "@ai-sdk/deepinfra": "^1.0.10",
+    "@ai-sdk/deepseek": "^1.0.11",
     "@ai-sdk/gateway": "^1.0.9",
     "@ai-sdk/google": "^2.0.7",
     "@ai-sdk/groq": "^2.0.11",

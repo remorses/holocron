@@ -13,7 +13,8 @@ FILE: api/overview.mdx
 ==================================================
 ---
 title: API Overview
-icon: server
+description: Overview of our API endpoints and functionality
+icon: code
 ---
 
 # API Overview
@@ -26,6 +27,7 @@ FILE: getting-started.mdx
 ==================================================
 ---
 title: Getting Started
+description: Learn how to get started with our product
 icon: rocket
 ---
 
@@ -39,6 +41,7 @@ FILE: guides/configuration.mdx
 ==================================================
 ---
 title: Configuration
+description: How to configure the application settings
 icon: settings
 ---
 
@@ -52,6 +55,7 @@ FILE: index.mdx
 ==================================================
 ---
 title: Home
+description: Welcome to our documentation website
 icon: house
 ---
 

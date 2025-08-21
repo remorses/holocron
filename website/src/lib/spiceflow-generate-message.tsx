@@ -1,4 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic'
+import { deepseek } from '@ai-sdk/deepseek'
+
 import { google, GoogleGenerativeAIProviderOptions } from '@ai-sdk/google'
 import yaml from 'js-yaml'
 import fs from 'fs'
@@ -299,7 +301,9 @@ export async function* generateMessageStream({
         languages: locales,
     })
 
-    let model = groq('moonshotai/kimi-k2-instruct')
+    // let model = groq('moonshotai/kimi-k2-instruct')
+    let model = deepseek('deepseek-chat')
+
     // let model = anthropic('claude-sonnet-4-20250514')
     // let model = openai('gpt-5-mini')
     // let model = openrouter('qwen/qwen3-coder', {
@@ -577,6 +581,7 @@ export async function* generateMessageStream({
                         branchId: branchId,
                         query: terms,
                         exact: searchType === 'fulltext',
+                        filesInDraft: filesInDraft,
                     })
                     return formatSearchApiSearchResults({
                         results,

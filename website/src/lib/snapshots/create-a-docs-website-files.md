@@ -1,847 +1,529 @@
 # File Tree
 
-├── essentials
-│   ├── code.mdx
-│   ├── frontmatter.mdx
-│   ├── images.mdx
-│   └── markdown.mdx
-├── README.md
-└── writing
-    ├── accessibility.mdx
-    ├── code-examples.mdx
-    ├── content-structure.mdx
-    ├── user-focused.mdx
-    └── visual-design.mdx
+├── api
+│   └── index.mdx
+├── examples
+│   └── index.mdx
+├── guides
+│   └── index.mdx
+├── index.mdx
+├── meta.json
+└── troubleshooting
+    └── index.mdx
 
 
 ==================================================
-FILE: essentials/code.mdx
+FILE: api/index.mdx
 ==================================================
 ---
-title: 'Code Blocks'
-description: 'Display inline code and code blocks'
-icon: 'code'
+title: "API Reference"
+description: "Complete API documentation with endpoints, parameters, and examples"
+icon: "code"
 ---
 
-## Basic
+# API Reference
 
-### Inline Code
+Our REST API provides programmatic access to all platform features. All API endpoints require authentication and return JSON responses.
 
-To denote a `word` or `phrase` as code, enclose it in backticks (`).
+## Base URL
 
 ```
-To denote a `word` or `phrase` as code, enclose it in backticks (`).
+https://api.example.com/v1
 ```
 
-### Code Block
+## Authentication
 
-Use [fenced code blocks](https://www.markdownguide.org/extended-syntax/#fenced-code-blocks) by enclosing code in three backticks and follow the leading ticks with the programming language of your snippet to get syntax highlighting. Optionally, you can also write the name of your code after the programming language.
+All API requests must include an API key in the Authorization header:
 
-```java HelloWorld.java
-class HelloWorld {
-    public static void main(String[] args) {
-        System.out.println("Hello, World!");
-    }
+```http
+Authorization: Bearer your-api-key-here
+```
+
+<Warning>
+Keep your API keys secure and never commit them to version control. Use environment variables for configuration.
+</Warning>
+
+## Rate Limits
+
+- **Free tier:** 100 requests per minute
+- **Pro tier:** 1,000 requests per minute
+- **Enterprise:** Custom limits available
+
+Rate limit headers are included in all responses:
+
+```http
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1633046400
+```
+
+## Common Parameters
+
+### Pagination
+
+Many list endpoints support pagination:
+
+```http
+GET /users?limit=50&offset=100
+```
+
+- `limit`: Number of items to return (default: 20, max: 100)
+- `offset`: Number of items to skip (default: 0)
+
+### Filtering
+
+Filter results using query parameters:
+
+```http
+GET /users?status=active&role=admin
+```
+
+### Sorting
+
+Sort results with the `sort` parameter:
+
+```http
+GET /users?sort=-created_at,email
+```
+
+## Response Format
+
+All successful responses follow this structure:
+
+```json
+{
+  "data": {},
+  "meta": {
+    "total": 100,
+    "limit": 20,
+    "offset": 0
+  }
 }
 ```
 
-````md
-```java HelloWorld.java
-class HelloWorld {
-    public static void main(String[] args) {
-        System.out.println("Hello, World!");
+## Error Handling
+
+Errors return appropriate HTTP status codes and detailed error messages:
+
+```json
+{
+  "error": {
+    "code": "invalid_api_key",
+    "message": "Invalid API key provided",
+    "details": {
+      "key": "sk_test_123..."
     }
+  }
 }
 ```
-````
-
-
-
-==================================================
-FILE: essentials/frontmatter.mdx
-==================================================
----
-title: 'Frontmatter'
-description: 'Configure page metadata and display properties'
-icon: 'file-text'
----
-
-## Overview
-
-Frontmatter is YAML metadata placed at the beginning of your markdown files. It controls how your page is displayed and indexed.
-
-```yaml
----
-title: 'Page Title'
-description: 'Brief description of the page content'
-icon: 'file'
----
-```
-
-## Required Properties
-
-### title
-
-The page title that appears in the sidebar navigation and as the main H1 heading on the page.
-
-```yaml
-title: 'Getting Started'
-```
-
-### description
-
-Meta description used for SEO and displayed in search results. Also shown in the document overview.
-
-```yaml
-description: 'Learn how to set up and configure your project'
-```
-
-## Optional Properties
-
-### icon
-
-Icon name from [Lucide icons](https://lucide.dev) displayed next to the page title in the sidebar.
-
-```yaml
-icon: 'rocket'        # Shows rocket icon
-icon: 'book-open'     # Shows book-open icon
-icon: 'settings'      # Shows settings icon
-```
-
-<Tip>
-
-Browse the full icon library at [lucide.dev](https://lucide.dev) to find the perfect icon for your page.
-
-</Tip>
-
-## Example
-
-Here's a complete frontmatter example:
-
-```yaml
----
-title: 'API Reference'
-description: 'Complete API documentation with examples and response schemas'
-icon: 'code'
----
-```
-
-This creates a page with:
-- "API Reference" in the sidebar and as the H1
-- SEO description for search engines
-- Code icon in the sidebar
-
 
 
 ==================================================
-FILE: essentials/images.mdx
+FILE: examples/index.mdx
 ==================================================
 ---
-title: 'Images and Embeds'
-description: 'Add image, video, and other HTML elements'
-icon: 'image'
+title: "Examples"
+description: "Real-world code examples and implementation patterns"
+icon: "code"
 ---
 
-<img
-  style={{ borderRadius: '0.5rem' }}
-  src="https://uploads.fumabase.com/Gui86K8XoAAZRb_.jpeg"
-/>
+# Examples
 
-## Image
+Explore practical code examples that demonstrate common use cases and implementation patterns. All examples are production-ready and include proper error handling.
 
-### Using Markdown
+## Quick Start Examples
 
-The [markdown syntax](https://www.markdownguide.org/basic-syntax/#images) lets you add images using the following code
+<CardGroup cols={2}>
+<Card title="Basic API Client" icon="code" href="/examples/basic-client">
+    Simple API client with authentication and error handling
+</Card>
 
-```md
-![title](/path/image.jpg)
-```
+<Card title="User Management" icon="users" href="/examples/user-management">
+    Complete user CRUD operations with validation
+</Card>
 
-Note that the image file size must be less than 5MB. Otherwise, we recommend hosting on a service like [Cloudinary](https://cloudinary.com/) or [S3](https://aws.amazon.com/s3/). You can then use that URL and embed.
+<Card title="File Upload" icon="upload" href="/examples/file-upload">
+    Handle file uploads with progress tracking
+</Card>
 
-### Using Embeds
+<Card title="Real-time Updates" icon="refresh-cw" href="/examples/realtime">
+    Implement real-time data synchronization
+</Card>
+</CardGroup>
 
-To get more customizability with images, you can also use [embeds](/writing-content/embed) to add images
+## Framework Examples
 
-```html
-<img height="200" src="/path/image.jpg" />
-```
+<CardGroup cols={2}>
+<Card title="React Hook" icon="react" href="/examples/react-hook">
+    Custom React hook for API integration
+</Card>
 
-## Embeds and HTML elements
+<Card title="Next.js API Route" icon="nextjs" href="/examples/nextjs-api">
+    Serverless API route implementation
+</Card>
 
-<iframe
-  width="560"
-  height="315"
-  src="https://www.youtube.com/embed/4KzFe50RQkQ"
-  title="YouTube video player"
-  frameBorder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  allowFullScreen
-  style={{ width: '100%', borderRadius: '0.5rem' }}
-></iframe>
+<Card title="Express Middleware" icon="server" href="/examples/express-middleware">
+    Authentication middleware for Express.js
+</Card>
 
-<br />
+<Card title="Vue Composition API" icon="vue" href="/examples/vue-composition">
+    Vue 3 composition API integration
+</Card>
+</CardGroup>
 
-<Tip>
+## Advanced Patterns
 
-Fumabase supports [HTML tags in Markdown](https://www.markdownguide.org/basic-syntax/#html). This is helpful if you prefer HTML tags to Markdown syntax, and lets you create documentation with infinite flexibility.
+<CardGroup cols={2}>
+<Card title="Rate Limiting" icon="clock" href="/examples/rate-limiting">
+    Implement client-side rate limiting
+</Card>
 
-</Tip>
+<Card title="Retry Logic" icon="repeat" href="/examples/retry-logic">
+    Exponential backoff and retry strategies
+</Card>
 
-### iFrames
+<Card title="Batch Operations" icon="layers" href="/examples/batch-operations">
+    Process multiple items efficiently
+</Card>
 
-Loads another HTML page within the document. Most commonly used for embedding videos.
+<Card title="Webhook Handler" icon="bell" href="/examples/webhook-handler">
+    Secure webhook endpoint implementation
+</Card>
+</CardGroup>
 
-```html
-<iframe src="https://www.youtube.com/watch?v=EpX1_YJPGAY"> </iframe>
-```
+## Language Examples
 
+<CardGroup cols={2}>
+<Card title="JavaScript/Node.js" icon="nodejs" href="/examples/javascript">
+    Node.js and modern JavaScript examples
+</Card>
 
+<Card title="Python" icon="python" href="/examples/python">
+    Python client and async examples
+</Card>
 
-==================================================
-FILE: essentials/markdown.mdx
-==================================================
----
-title: 'Markdown Syntax'
-description: 'Text, title, and styling in standard markdown'
-icon: 'text'
----
+<Card title="Go" icon="go" href="/examples/go">
+    Go client with concurrency patterns
+</Card>
 
-## Titles
-
-Best used for section headers.
-
-```md
-## Titles
-```
-
-### Subtitles
-
-Best use to subsection headers.
-
-```md
-### Subtitles
-```
-
-<Tip>
-
-Each **title** and **subtitle** creates an anchor and also shows up on the table of contents on the right.
-
-</Tip>
-
-## Text Formatting
-
-We support most markdown formatting. Simply add `**`, `_`, or `~` around text to format it.
-
-| Style         | How to write it   | Result          |
-| ------------- | ----------------- | --------------- |
-| Bold          | `**bold**`        | **bold**        |
-| Italic        | `_italic_`        | _italic_        |
-| Strikethrough | `~strikethrough~` | ~strikethrough~ |
-
-You can combine these. For example, write `**_bold and italic_**` to get **_bold and italic_** text.
-
-You need to use HTML to write superscript and subscript text. That is, add `<sup>` or `<sub>` around your text.
-
-| Text Size   | How to write it          | Result                 |
-| ----------- | ------------------------ | ---------------------- |
-| Superscript | `<sup>superscript</sup>` | <sup>superscript</sup> |
-| Subscript   | `<sub>subscript</sub>`   | <sub>subscript</sub>   |
-
-## Linking to Pages
-
-You can add a link by wrapping text in `[]()`. You would write `[link to google](https://google.com)` to [link to google](https://google.com).
-
-Links to pages in your docs need to be root-relative. Basically, you should include the entire folder path. For example, `[link to text](/writing-content/text)` links to the page "Text" in our components section.
-
-Relative links like `[link to text](../text)` will open slower because we cannot optimize them as easily.
-
-## Blockquotes
-
-### Singleline
-
-To create a blockquote, add a `>` in front of a paragraph.
-
-> Dorothy followed her through many of the beautiful rooms in her castle.
-
-```md
-> Dorothy followed her through many of the beautiful rooms in her castle.
-```
-
-### Multiline
-
-> Dorothy followed her through many of the beautiful rooms in her castle.
->
-> The Witch bade her clean the pots and kettles and sweep the floor and keep the fire fed with wood.
-
-```md
-> Dorothy followed her through many of the beautiful rooms in her castle.
->
-> The Witch bade her clean the pots and kettles and sweep the floor and keep the fire fed with wood.
-```
-
-### LaTeX
-
-Fumabase supports [LaTeX](https://www.latex-project.org) through the Latex component.
-
-<Latex>8 x (vk x H1 - H2) = (0,1)</Latex>
-
-```md
-<Latex>8 x (vk x H1 - H2) = (0,1)</Latex>
-```
-
+<Card title="Java" icon="java" href="/examples/java">
+    Java Spring Boot integration
+</Card>
+</CardGroup>
 
 
 ==================================================
-FILE: README.md
-==================================================
-# Fumabase Starter Kit
-
-### Development
-
-## 1. Install the Fumabase CLI
-
-To preview your documentation changes locally, first install the [Fumabase CLI](https://www.npmjs.com/package/fumabase). Use the following command:
-
-```
-npm i -g fumabase
-```
-
-## 2. Start the Local Development Server
-
-At the root of your documentation project (where `fumabase.jsonc` is located), start the development server with:
-
-```
-fumabase dev
-```
-
-### Publishing Changes
-
-## 3. Set Up Automatic Deployments
-
-Install our GitHub App to enable automated deployments from your repository. After pushing changes to your default branch, your documentation will be deployed to production automatically. You can find the installation link on your dashboard.
-
-
-
-==================================================
-FILE: writing/accessibility.mdx
+FILE: guides/index.mdx
 ==================================================
 ---
-title: 'Writing Accessible Documentation'
-description: 'Create documentation that works for everyone by following accessibility principles and inclusive design practices.'
+title: "Guides"
+description: "Step-by-step tutorials and comprehensive guides for common use cases"
+icon: "book-open"
 ---
 
-# Writing Accessible Documentation
+# Guides
 
-Accessible documentation isn't just about compliance—it creates better experiences for all users by prioritizing clarity, structure, and multiple ways to consume information.
+Learn how to implement common scenarios and integrate our platform into your applications with these comprehensive guides.
 
-## Clear Language and Structure
-
-Accessible writing starts with clear, direct language that reduces cognitive load for all readers.
-
-### Write for Clarity
-
-Use simple, direct language that communicates efficiently:
-
-<CodeGroup>
-```markdown ❌ Complex Language
-Subsequently, in order to implement the aforementioned functionality,
-it is necessary to instantiate the configuration object with the
-appropriate parameters as delineated in the following example.
-```
-
-```markdown ✅ Clear Language
-Next, create a configuration object with these settings:
-```
-
-</CodeGroup>
-
-### Meaningful Headings
-
-Write headings that describe content accurately and help users navigate efficiently:
-
-<Tabs>
-<Tab title="Poor Headings">
-```markdown
-# Introduction
 ## Getting Started
-## More Information
-## Advanced Stuff
-```
-</Tab>
 
-<Tab title="Descriptive Headings">
-```markdown
-# User Authentication Setup
-## Installing the Authentication SDK
-## Configuring Your First Login Flow
-## Handling Authentication Errors
-## Multi-Factor Authentication Options
-```
-</Tab>
-</Tabs>
+<CardGroup cols={2}>
+<Card title="Authentication Setup" icon="key" href="/guides/authentication">
+    Configure secure authentication for your application
+</Card>
 
-<Tip>
-    **Screen Reader Test:** Read only your headings aloud. Can someone
-    understand your document structure and find what they need?
-</Tip>
+<Card title="First Integration" icon="zap" href="/guides/first-integration">
+    Build your first complete integration from scratch
+</Card>
 
-## Alternative Text and Media
+<Card title="Webhook Configuration" icon="bell" href="/guides/webhooks">
+    Set up real-time event notifications with webhooks
+</Card>
 
-Provide meaningful descriptions for all visual content so information isn't lost for users who can't see images.
+<Card title="Error Handling" icon="alert-triangle" href="/guides/error-handling">
+    Implement robust error handling and recovery
+</Card>
+</CardGroup>
 
-### Effective Alt Text
+## Advanced Topics
 
-Write alt text that conveys the same information the image provides:
+<CardGroup cols={2}>
+<Card title="Performance Optimization" icon="trending-up" href="/guides/performance">
+    Optimize API usage for speed and efficiency
+</Card>
+
+<Card title="Security Best Practices" icon="shield" href="/guides/security">
+    Follow security best practices for production applications
+</Card>
+
+<Card title="Testing Strategies" icon="test-tube" href="/guides/testing">
+    Implement comprehensive testing for your integration
+</Card>
+
+<Card title="Deployment Checklist" icon="cloud" href="/guides/deployment">
+    Prepare your application for production deployment
+</Card>
+</CardGroup>
+
+## Platform-Specific Guides
+
+<CardGroup cols={2}>
+<Card title="React Integration" icon="react" href="/guides/react">
+    Build React applications with our SDK
+</Card>
+
+<Card title="Node.js Backend" icon="server" href="/guides/nodejs">
+    Implement server-side functionality with Node.js
+</Card>
+
+<Card title="Mobile Apps" icon="smartphone" href="/guides/mobile">
+    Integrate with iOS and Android applications
+</Card>
+
+<Card title="CLI Tools" icon="terminal" href="/guides/cli">
+    Build command-line interfaces using our API
+</Card>
+</CardGroup>
+
+
+==================================================
+FILE: index.mdx
+==================================================
+---
+title: "Getting Started"
+description: "Quick start guide to set up and use our platform"
+icon: "rocket"
+---
+
+# Welcome to Our Platform
+
+Build amazing applications with our comprehensive suite of tools and APIs. This documentation will guide you through everything from initial setup to advanced features.
+
+## Quick Start
 
 <Steps>
-<Step title="Describe the purpose, not appearance">
-    Focus on what information the image conveys, not how it looks.
-
-    ```markdown
-    ❌ "Screenshot of a dashboard"
-    ✅ "Dashboard showing 3 active integrations, 1,247 API calls today,
-        and 99.8% uptime status"
-    ```
-
+<Step title="Create an account">
+    Sign up at our [dashboard](https://app.example.com) to get your API keys and access credentials.
+    
+    <Check>
+    You'll receive a confirmation email with your account details.
+    </Check>
 </Step>
 
-<Step title="Include relevant text content">
-    If the image contains important text, include it in the alt text.
-
-    ```markdown
-    ❌ "Error message dialog box"
-    ✅ "Error dialog stating 'Invalid API key. Please check your
-        configuration and try again.' with a retry button"
+<Step title="Install the SDK">
+    Add our SDK to your project using your preferred package manager:
+    
+    <CodeGroup>
+    ```bash npm
+    npm install @company/sdk
     ```
+    
+    ```bash yarn
+    yarn add @company/sdk
+    ```
+    
+    ```bash pnpm
+    pnpm add @company/sdk
+    ```
+    </CodeGroup>
+</Step>
 
+<Step title="Make your first API call">
+    Test your setup with a simple authentication check:
+    
+    ```javascript
+    import { Client } from '@company/sdk';
+    
+    const client = new Client('your-api-key');
+    const health = await client.health.check();
+    console.log(health);
+    ```
+    
+    <Check>
+    Expected response: `{ status: "healthy", timestamp: "2024-01-15T10:30:00Z" }`
+    </Check>
 </Step>
 </Steps>
 
-### Video and Interactive Content
+## What's Next?
 
-Provide text alternatives for multimedia content:
+<CardGroup cols={2}>
+<Card title="API Reference" icon="code" href="/api">
+    Explore all available endpoints, parameters, and response formats
+</Card>
+
+<Card title="Guides" icon="book-open" href="/guides">
+    Step-by-step tutorials for common use cases and integrations
+</Card>
+
+<Card title="Examples" icon="layout" href="/examples">
+    Real-world code samples and implementation patterns
+</Card>
+
+<Card title="Troubleshooting" icon="help-circle" href="/troubleshooting">
+    Solutions to common issues and error handling guidance
+</Card>
+</CardGroup>
+
+
+==================================================
+FILE: meta.json
+==================================================
+{
+    "title": "Documentation",
+    "pages": ["index", "api", "guides", "examples", "troubleshooting", "..."]
+}
+
+
+==================================================
+FILE: troubleshooting/index.mdx
+==================================================
+---
+title: "Troubleshooting"
+description: "Solutions to common issues and error handling guidance"
+icon: "help-circle"
+---
+
+# Troubleshooting
+
+Find solutions to common problems and learn how to handle errors effectively. This guide covers frequent issues and their resolutions.
+
+## Common Issues
 
 <AccordionGroup>
-<Accordion title="Video transcripts">
-Include complete transcripts for instructional videos:
+<Accordion title="Authentication Errors">
+### Symptoms
+- HTTP 401 Unauthorized responses
+- "Invalid API key" error messages
+- Authentication failures
 
-```markdown
-## Video: Setting Up Webhooks (3:42)
+### Causes
+- Incorrect or expired API key
+- Missing Authorization header
+- Key not activated
+- IP restrictions
 
-[Full transcript available]
-
-**0:00 - 0:15** Introduction: "In this video, we'll configure webhooks
-to receive real-time notifications when events occur in your application."
-
-**0:16 - 0:45** Navigate to dashboard: "First, log into your dashboard
-and click the 'Webhooks' tab in the sidebar. You'll see a list of
-existing webhooks or an empty state if this is your first time."
-
-**0:46 - 1:20** Creating a webhook: "Click 'Add Webhook' and enter your
-endpoint URL. This should be a publicly accessible HTTPS URL that can
-receive POST requests..."
-```
-
+### Solutions
+1. **Verify API key format**: Ensure it starts with `sk_` for secret keys or `pk_` for publishable keys
+2. **Check key status**: Visit your dashboard to confirm the key is active
+3. **Validate header format**: Use `Authorization: Bearer your-key-here`
+4. **Check IP restrictions**: Ensure your IP is whitelisted if using IP restrictions
+5. **Regenerate key**: If compromised, generate a new key from the dashboard
 </Accordion>
 
-<Accordion title="Interactive demonstrations">
-Provide step-by-step text instructions alongside interactive demos:
+<Accordion title="Rate Limit Exceeded">
+### Symptoms
+- HTTP 429 Too Many Requests
+- "Rate limit exceeded" error messages
+- Temporary blocking
 
-```markdown
-## Interactive Demo: API Testing
+### Causes
+- Exceeding free tier limits
+- Bursty traffic patterns
+- Missing retry logic
 
-Try our live API explorer below, or follow these equivalent steps:
+### Solutions
+1. **Upgrade plan**: Consider upgrading for higher limits
+2. **Implement retry logic**: Use exponential backoff with jitter
+3. **Batch requests**: Combine multiple operations into single requests
+4. **Cache responses**: Cache frequently accessed data
+5. **Monitor usage**: Track your API usage in the dashboard
+</Accordion>
 
-1. **Set your API key:** Enter your test key in the authorization field
-2. **Choose an endpoint:** Select 'GET /users' from the dropdown
-3. **Add parameters:** Set limit=10 for the first 10 users
-4. **Send request:** Click 'Execute' to see the live response
-5. **Review response:** Examine the returned JSON structure
+<Accordion title="Network Connectivity">
+### Symptoms
+- Timeout errors
+- Connection refused
+- SSL certificate issues
 
-[Interactive API Explorer Component]
-```
+### Causes
+- Firewall restrictions
+- DNS resolution problems
+- Network outages
+- SSL/TLS configuration
 
+### Solutions
+1. **Check firewall rules**: Ensure outbound HTTPS (443) is allowed
+2. **Test DNS resolution**: Use `nslookup api.example.com`
+3. **Verify SSL**: Check certificate validity with OpenSSL
+4. **Test connectivity**: Use `curl -v https://api.example.com/health`
+5. **Check network status**: Visit status.example.com for platform status
+</Accordion>
+
+<Accordion title="Unexpected Responses">
+### Symptoms
+- Incorrect data returned
+- Missing fields
+- Unexpected error codes
+
+### Causes
+- API version mismatch
+- Incorrect parameters
+- Data format issues
+
+### Solutions
+1. **Check API version**: Ensure you're using the latest API version
+2. **Validate parameters**: Review required and optional parameters
+3. **Inspect response format**: Check the response structure documentation
+4. **Enable debug logging**: Use verbose mode to see raw requests/responses
+5. **Test with curl**: Reproduce the issue with direct curl commands
 </Accordion>
 </AccordionGroup>
 
-<Check>
-    Accessible documentation creates better experiences for everyone—users with
-    disabilities, non-native speakers, people in low-bandwidth environments, and
-    anyone trying to quickly find information.
-</Check>
+## Error Codes Reference
 
+| Code | HTTP Status | Description | Solution |
+|------|-------------|-------------|----------|
+| `invalid_api_key` | 401 | Invalid or missing API key | Check key format and header |
+| `rate_limit_exceeded` | 429 | Too many requests | Implement retry logic |
+| `validation_error` | 400 | Invalid request parameters | Review parameter documentation |
+| `not_found` | 404 | Resource doesn't exist | Check resource ID |
+| `internal_error` | 500 | Server-side error | Retry with exponential backoff |
+| `service_unavailable` | 503 | Temporary outage | Retry after delay |
 
+## Debugging Techniques
 
-==================================================
-FILE: writing/code-examples.mdx
-==================================================
----
-title: 'Writing Effective Code Examples'
-description: 'Create code examples that users can trust, understand, and successfully implement in their projects.'
----
-
-# Writing Effective Code Examples
-
-Code examples are often the first thing developers look for in documentation. Make them count by ensuring they're accurate, complete, and genuinely helpful.
-
-## Complete and Runnable Examples
-
-Never show partial code that won't work in isolation. Users should be able to copy your example and see it work immediately.
-
-<CodeGroup>
-```javascript ❌ Incomplete
-// Don't do this - missing imports and setup
-const user = await getUser(userId);
-updateProfile(user.id, { name: 'John' });
-```
-
-```javascript ✅ Complete
-// Do this - everything needed to run
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
-async function updateUserProfile(userId, updates) {
-    try {
-        const user = await prisma.user.findUnique({
-            where: { id: userId }
-        });
-        
-        if (!user) {
-            throw new Error(`User with ID ${userId} not found`);
-        }
-        
-        const updatedUser = await prisma.user.update({
-            where: { id: userId },
-            data: updates
-        });
-        
-        return updatedUser;
-    } catch (error) {
-        console.error('Failed to update user:', error);
-        throw error;
-    }
-}
-
-// Usage
-const result = await updateUserProfile('user_123', { name: 'John Doe' });
-```
-</CodeGroup>
-
-## Error Handling That Teaches
-
-Show realistic error handling, not just the happy path. This teaches users about edge cases and builds more robust applications.
-
-<Steps>
-<Step title="Show common failure scenarios">
-    Include examples of what happens when things go wrong.
-
-    ```javascript
-    async function fetchUserData(apiKey, userId) {
-        if (!apiKey) {
-            throw new Error('API key is required');
-        }
-        
-        if (!userId) {
-            throw new Error('User ID is required');
-        }
-        
-        try {
-            const response = await fetch(`/api/users/${userId}`, {
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            // Handle different HTTP status codes
-            if (response.status === 401) {
-                throw new Error('Invalid API key');
-            }
-            
-            if (response.status === 404) {
-                throw new Error('User not found');
-            }
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error: ${response.status}`);
-            }
-            
-            return await response.json();
-        } catch (error) {
-            if (error.name === 'TypeError') {
-                throw new Error('Network error - check your connection');
-            }
-            throw error; // Re-throw other errors
-        }
-    }
-    ```
-</Step>
-
-<Step title="Demonstrate recovery strategies">
-    Show users how to handle errors gracefully in their applications.
-
-    <Tip>
-    Include retry logic, fallback values, and user-friendly error messages.
-    </Tip>
-</Step>
-</Steps>
-
-
-
-==================================================
-FILE: writing/content-structure.mdx
-==================================================
----
-title: 'Content Structure That Works'
-description: 'Learn how to organize documentation that guides users to success with clear hierarchy and logical flow.'
----
-
-# Content Structure That Works
-
-Great documentation isn't just about having the right information—it's about organizing that information so users can find and understand it quickly.
-
-## Start with User Intent
-
-Before writing a single word, understand what your users are trying to accomplish. Are they trying to solve a problem, learn a concept, or complete a task?
-
-<Tip>
-Always lead with the outcome. Tell users what they'll achieve before explaining how to do it.
-</Tip>
-
-### The Inverted Pyramid Approach
-
-Structure your content like a news article—most important information first, supporting details after.
-
-<Steps>
-<Step title="Lead with the outcome">
-    Start each section by describing what the user will accomplish or learn.
-
-    ```markdown
-    # Setting Up Authentication
-
-    By the end of this guide, you'll have secure API authentication
-    working in your application with proper error handling.
-    ```
-</Step>
-
-<Step title="Provide essential context">
-    Give users the background they need to understand the instructions.
-
-    <Note>
-    Include prerequisites, assumptions, and any important warnings upfront.
-    </Note>
-</Step>
-
-<Step title="Detail the implementation">
-    Break down the actual steps, code examples, and configuration details.
-</Step>
-</Steps>
-
-## Progressive Information Disclosure
-
-Reveal complexity gradually. Start with the simplest case that works, then build up to more sophisticated scenarios.
-
-<Tabs>
-<Tab title="Basic Example">
-```javascript
-// Start with the minimal working example
-const response = await fetch('/api/users');
-const users = await response.json();
-```
-</Tab>
-
-<Tab title="With Error Handling">
-```javascript
-// Then show error handling
-try {
-    const response = await fetch('/api/users');
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const users = await response.json();
-} catch (error) {
-    console.error('Failed to fetch users:', error);
-}
-```
-</Tab>
-
-<Tab title="Production Ready">
-```javascript
-// Finally, show production-ready implementation
-const fetchUsers = async (options = {}) => {
-    const { timeout = 5000, retries = 3 } = options;
-
-    for (let attempt = 1; attempt <= retries; attempt++) {
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-            const response = await fetch('/api/users', {
-                signal: controller.signal,
-                headers: {
-                    'Authorization': `Bearer ${getToken()}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            clearTimeout(timeoutId);
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            if (attempt === retries) throw error;
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-        }
-    }
-};
-```
-</Tab>
-</Tabs>
-
-## Scannable Content Design
-
-Most users scan before they read. Design your content to support this behavior.
-
-### Effective Heading Hierarchy
-
-Use headings to create a clear content outline:
-
-```markdown
-# Main Topic (H1)
-## Primary Sections (H2)
-### Subsections (H3)
-#### Details (H4 - use sparingly)
-```
-
-<Warning>
-Never skip heading levels. Going from H2 to H4 breaks screen readers and confuses users.
-</Warning>
-
-
-
-==================================================
-FILE: writing/user-focused.mdx
-==================================================
----
-title: 'User-Focused Documentation'
-description: 'Write documentation that solves real problems by understanding your users goals, context, and challenges.'
----
-
-# User-Focused Documentation
-
-The best documentation doesn't just explain features—it helps users accomplish their goals. Focus on outcomes, not just functionality.
-
-## Understanding User Intent
-
-Before documenting any feature, understand the jobs users are trying to do. Documentation should bridge the gap between what users want to achieve and how your product helps them get there.
-
-## Write for Different Experience Levels
-
-Lead with the simplest path that works, then provide advanced options for power users. Always include a short quick-start that gets users running in minutes.
-
-### Quick Start Example
+### Enable Debug Logging
 
 ```javascript
-import { EmailAPI } from '@company/sdk';
-const client = new EmailAPI('your-api-key');
-await client.send({
-  to: 'user@example.com',
-  subject: 'Hello World',
-  html: '<h1>It works!</h1>'
+const client = new Client('your-api-key', {
+    debug: true, // Enable verbose logging
+    logLevel: 'debug'
 });
 ```
 
-## Anticipate Questions
+### Test with curl
 
-Include troubleshooting, common errors, and success indicators so users can verify their setup quickly.
+```bash
+curl -v https://api.example.com/v1/health \
+  -H "Authorization: Bearer your-api-key" \
+  -H "Content-Type: application/json"
+```
 
+### Check Response Headers
 
+Inspect headers for rate limiting, caching, and debugging information:
 
-==================================================
-FILE: writing/visual-design.mdx
-==================================================
----
-title: 'Visual Design for Documentation'
-description: 'Use visual elements strategically to improve comprehension, reduce cognitive load, and guide users through complex information.'
----
+```http
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1633046400
+X-Request-Id: req_123456789
+```
 
-# Visual Design for Documentation
+## Getting Help
 
-Good visual design in documentation isn't about making things pretty—it's about making complex information easier to understand and act upon.
+If you're still experiencing issues:
 
-## Strategic Use of Visual Components
+1. **Check our status page**: status.example.com
+2. **Search existing issues**: docs.example.com/search
+3. **Contact support**: support@example.com
+4. **Provide debugging information**: Include request IDs and error details
 
-Every visual element should serve a purpose: reducing cognitive load, highlighting important information, or guiding user attention.
-
-### Callouts That Guide Decision Making
-
-Use callouts to break users out of autopilot reading and draw attention to critical information.
-
-<Tabs>
-<Tab title="Poor Usage">
-<Note>
-You can also use the advanced configuration options.
-</Note>
-
-<Warning>This might not work in all cases.</Warning>
-
-<Tip>
-There are several ways to do this.
-</Tip>
-</Tab>
-
-<Tab title="Strategic Usage">
-<Warning>
-**Data Loss Risk:** This action permanently deletes all user data and cannot be undone. Only proceed if you have confirmed backups.
-</Warning>
-
-<Tip>
-    **Performance Optimization:** Set `batchSize: 100` for datasets larger than
-    10,000 records to avoid memory issues and improve processing speed.
-</Tip>
-
-<Check>
-**Verification Complete:** Your SSL certificate is properly configured. Users will see the secure lock icon when accessing your application.
-</Check>
-</Tab>
-</Tabs>
-
-### Visual Hierarchy with Typography
-
-Create clear information hierarchy using heading levels, text styling, and spacing.
-
-<Steps>
-<Step title="Establish clear heading levels">
-    Use consistent heading hierarchy to create scannable content structure.
-
-    ```markdown
-    # Main Feature (H1)
-    ## Setup Process (H2)
-    ### Individual Steps (H3)
-    #### Implementation Details (H4)
-    ```
-
-    <Info>
-    **Heading Strategy:** Users scan headings first. Make them descriptive and outcome-focused rather than feature-focused.
-    </Info>
-
-</Step>
-
-<Step title="Use emphasis purposefully">
-    **Bold text** for critical terms and concepts users need to remember.
-
-    *Italic text* for emphasis within sentences and technical terms.
-
-    `Code formatting` for exact values, filenames, and commands.
-
-    <Note>
-    Avoid overusing emphasis—when everything is highlighted, nothing stands out.
-    </Note>
-
-</Step>
-</Steps>
+<Info>
+When contacting support, include:
+- Request ID from `X-Request-Id` header
+- Timestamp of the error
+- Full error message and stack trace
+- Code snippet reproducing the issue
+</Info>

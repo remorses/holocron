@@ -162,22 +162,22 @@ describe('DocsConfigSchema', () => {
     test('name', () => {
         expect(getTypeForNameInSchema('name', compiledDocsJsonSchema))
             .toMatchInlineSnapshot(`
-          {
-            "description": "Project or product name",
-            "minLength": 1,
-            "type": "string",
-          }
-        `)
+              {
+                "description": "Project or product name. This will be used in fumabase dashboard to list the user websites. It has no other use case than that.",
+                "minLength": 1,
+                "type": "string",
+              }
+            `)
     })
 
     test('description', () => {
         expect(getTypeForNameInSchema('description', compiledDocsJsonSchema))
             .toMatchInlineSnapshot(`
-          {
-            "description": "SEO description",
-            "type": "string",
-          }
-        `)
+              {
+                "description": "default SEO description for pages that do not have a description frontmatter",
+                "type": "string",
+              }
+            `)
     })
 
     // logo
@@ -477,7 +477,7 @@ test('render form tool schema is readable', () => {
                   "type": "string",
                 },
                 "groupTitle": {
-                  "description": "Optional group title. When consecutive fields share the same groupTitle, they will be wrapped in a container with this title. ONLY use this for array of objects to put each object in the array into its own group. ",
+                  "description": "Optional group title. When consecutive fields share the same groupTitle, they will be wrapped in a container with this title. ALWAYS and ONLY use this for array of objects to put each object in the array into its own group. ",
                   "type": "string",
                 },
                 "href": {
@@ -494,9 +494,13 @@ test('render form tool schema is readable', () => {
                     {
                       "type": "boolean",
                     },
+                    {
+                      "type": "null",
+                    },
                   ],
                 },
                 "label": {
+                  "description": "Label describing what this field does to the user. For array items use First, Second, Third prefixes",
                   "type": "string",
                 },
                 "max": {
@@ -561,6 +565,7 @@ test('render form tool schema is readable', () => {
                 "name",
                 "type",
                 "label",
+                "initialValue",
               ],
               "type": "object",
             },
