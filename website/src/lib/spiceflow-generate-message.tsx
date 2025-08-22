@@ -301,8 +301,8 @@ export async function* generateMessageStream({
         languages: locales,
     })
 
-    // let model = groq('moonshotai/kimi-k2-instruct')
-    let model = deepseek('deepseek-chat')
+    let model = groq('moonshotai/kimi-k2-instruct')
+    // let model = deepseek('deepseek-chat')
 
     // let model = anthropic('claude-sonnet-4-20250514')
     // let model = openai('gpt-5-mini')
