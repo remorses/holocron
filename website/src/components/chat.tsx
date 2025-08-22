@@ -334,6 +334,7 @@ export default function Chat({
                     branchId,
                     currentSlug,
                     filesInDraft,
+                    githubFolder,
                     chatId: chat.chatId,
                 },
                 {

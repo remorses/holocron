@@ -881,10 +881,11 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
         siteId: z.string(),
         chatId: z.string(),
         branchId: z.string(),
+        githubFolder: z.string(),
         currentSlug: z.string(),
         filesInDraft: z.record(z.string(), fileUpdateSchema),
     }),
-    async *handler({ request, waitUntil, state: { userId } }) {
+    async *handler({  request, waitUntil, state: { userId } }) {
         const {
             messages,
             currentSlug,
@@ -892,10 +893,10 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             siteId,
             branchId,
             filesInDraft,
+            githubFolder,
         } = await request.json()
-        // First, check if the user can access the requested branch
-        // Fetch branch and chat in parallel for efficiency
-        const [branch, chat, pageCount] = await Promise.all([
+
+        const [branch, chat, files] = await Promise.all([
             prisma.siteBranch.findFirst({
                 where: {
                     branchId,
@@ -920,13 +921,15 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             prisma.chat.findFirst({
                 where: {
                     chatId,
+                    userId,
                 },
             }),
-            prisma.markdownPage.count({
-                where: {
-                    branchId,
-                },
-            }),
+             getFilesForSource({
+                branchId,
+                filesInDraft,
+                githubFolder,
+            })
+
         ])
         if (!branch) {
             throw new Error('You do not have access to this branch')
@@ -941,8 +944,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 .map((part) => part.text)
                 .join('')
 
-            // create the user message so it shows up when resuming chat
-            await prisma.chatMessage.upsert({
+             waitUntil(prisma.chatMessage.upsert({
                 where: {
                     id: lastUserMessage.id,
                 },
@@ -953,15 +955,9 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     id: lastUserMessage.id,
                     role: 'user',
                 },
-            })
+             }))
         }
 
-        const githubFolder = branch.site.githubFolder || ''
-        const files = await getFilesForSource({
-            branchId,
-            filesInDraft,
-            githubFolder,
-        })
 
         // Create FileSystemEmulator instance
         const fileSystem = new FileSystemEmulator({
