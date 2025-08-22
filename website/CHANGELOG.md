@@ -1,5 +1,17 @@
 # Changelog
 
+## 2025-01-24 20:10
+
+- Switch to JSONC parser for meta.json validation instead of extractJsonCComments
+- Check if pages array is missing "..." anywhere (not just at the end)
+- Remove unused test file for meta.json validation
+
+## 2025-01-24 20:00
+
+- Validate meta.json files to ensure "..." is always the last item in pages array
+- Use JSONC parser to handle comments in meta.json files correctly
+- Show clear error message when meta.json is missing the "..." wildcard
+
 ## 2025-08-11 13:20
 
 - Unified error formatting with `formatErrorWithContext` function for consistent error display
@@ -16,6 +28,7 @@
 
 - **Added validation to updateFumabaseJsonc tool**: Checks that LLM has read fumabase.jsonc file before allowing updates
 - **Better error handling**: Returns clear error message when tool is called without first reading the file
+
 ## 2025-08-10 12:23
 
 - Create PR and push actions now open spinner page in new tab and redirect to GitHub

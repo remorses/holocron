@@ -348,6 +348,7 @@ You can add or control the order of items using `pages`, items are not included 
 > Notice how the file extension is not referenced, just use the basename of the file.
 > `---My Separator---` will be used to show a text `My Separator` in the sidebar above the pages on its right, you can use many, use it as a way to add a separator title for a group of pages in the sidebar. Use separators only if the user asks so. It should be rarely used.
 
+
 #### Rest
 
 Add a `...` item to include remaining pages (sorted alphabetically), or `z...a` for descending order.

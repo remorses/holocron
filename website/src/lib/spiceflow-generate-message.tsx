@@ -87,6 +87,7 @@ import fm from 'front-matter'
 import { isValidLucideIconName } from './icons'
 import { WebsiteUIMessage } from './types'
 import { applyJsonCComments } from './json-c-comments'
+import JSONC from 'jsonc-parser'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 
 const openrouter = createOpenRouter({
@@ -506,6 +507,25 @@ export async function* generateMessageStream({
                         'Please fix the JSON syntax error and submit the tool call again.',
                     )
                     return { error: errorMessage.message }
+                }
+            }
+
+            // Check for meta.json files
+            if (x.githubPath.endsWith('/meta.json')) {
+                try {
+                    // Parse with JSONC to handle comments
+                    const parsed = JSONC.parse(x.content)
+
+                    // Check if it has a pages array and is missing ...
+                    if (parsed?.pages && Array.isArray(parsed.pages)) {
+                        if (!parsed.pages.includes('...')) {
+                            return {
+                                error: 'meta.json files must include "..." in the pages array. This ensures that new pages are automatically included without manual updates.',
+                            }
+                        }
+                    }
+                } catch (e: any) {
+                    // JSON parse error is already handled above for .json files
                 }
             }
 
