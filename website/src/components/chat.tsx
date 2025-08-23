@@ -260,7 +260,6 @@ export default function Chat({
     const revalidator = useRevalidator()
     const location = useLocation()
 
-
     const [searchParams] = useSearchParams()
     const initialChatState = useMemo(() => {
         // Get prompt from URL search params
@@ -313,7 +312,6 @@ export default function Chat({
         console.log('Using new initial chat state', state)
         return state
     }, [loaderData.chatId, searchParams])
-
 
     const submitMessages = async ({
         messages,
@@ -558,10 +556,8 @@ function Messages({ ref }) {
 
     const location = useLocation()
     useEffect(() => {
-        if (stop) {
-            stop()
-        }
-    }, [location.pathname, stop])
+        return () => stop?.()
+    }, [location.pathname])
 
     if (!messages.length) return null
     return (

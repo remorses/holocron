@@ -80,7 +80,6 @@ export function ChatTextarea({
             return
         }
 
-        // Handle ESC to stop generation
         if (event.key === 'Escape') {
             const isGenerating = useChatState.getState().isGenerating
             if (isGenerating) {

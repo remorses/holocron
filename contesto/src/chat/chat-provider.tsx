@@ -47,7 +47,12 @@ const ChatProvider = (props: {
                 return submit()
             },
             stop() {
-                store.getState().abortController.abort('stop generation')
+                // console.trace('stop')
+                store
+                    .getState()
+                    .abortController.abort(
+                        'called stop() to stop ai generation',
+                    )
             },
             setDraftText(text) {
                 store.setState({ draftText: text })

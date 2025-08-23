@@ -89,9 +89,18 @@ import { WebsiteUIMessage } from './types'
 import { applyJsonCComments } from './json-c-comments'
 import JSONC from 'tiny-jsonc'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 
 const openrouter = createOpenRouter({
     apiKey: env.OPENROUTER_API_KEY,
+})
+
+const baseten = createOpenAICompatible({
+    name: 'baseten',
+    baseURL: 'https://inference.baseten.co/v1',
+    headers: {
+        Authorization: `Bearer ${env.BASETEN_API_KEY ?? ''}`,
+    },
 })
 
 /**
@@ -302,7 +311,9 @@ export async function* generateMessageStream({
         languages: locales,
     })
 
+    // let model = baseten('moonshotai/Kimi-K2-Instruct')
     let model = groq('moonshotai/kimi-k2-instruct')
+    // let model = groq('moonshotai/kimi-k2-instruct')
     // let model = deepseek('deepseek-chat')
 
     // let model = anthropic('claude-sonnet-4-20250514')
@@ -848,13 +859,13 @@ export async function* generateMessageStream({
             debugMessages(uiMessages, 'scripts/ui-result-messages.json')
 
             if (onFinish) {
-                console.log(
-                    yaml.dump(uiMessages, {
-                        noRefs: true,
-                        sortKeys: false,
-                        lineWidth: 120,
-                    }),
-                )
+                // console.log(
+                //     yaml.dump(uiMessages, {
+                //         noRefs: true,
+                //         sortKeys: false,
+                //         lineWidth: 120,
+                //     }),
+                // )
                 await onFinish({
                     uiMessages,
                     isAborted,

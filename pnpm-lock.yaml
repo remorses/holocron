@@ -17,7 +17,7 @@ importers:
         version: 24.2.1
       unframer:
         specifier: latest
-        version: 3.1.0(@modelcontextprotocol/sdk@1.17.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 3.2.0(@modelcontextprotocol/sdk@1.17.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
     devDependencies:
       '@changesets/cli':
         specifier: ^2.29.4
@@ -944,7 +944,7 @@ importers:
         specifier: ^11.0.5
         version: 11.0.5
       zod:
-        specifier: ^4.1.0
+        specifier: ^4.0.17
         version: 4.1.0
 
   fumadocs/packages/core:
@@ -1222,7 +1222,7 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       zod:
-        specifier: ^4.1.0
+        specifier: ^4.0.17
         version: 4.1.0
     devDependencies:
       '@mdx-js/mdx':
@@ -1300,7 +1300,7 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       zod:
-        specifier: ^4.1.0
+        specifier: ^4.0.17
         version: 4.1.0
     devDependencies:
       '@fumadocs/mdx-remote':
@@ -1364,7 +1364,7 @@ importers:
         specifier: ^4.0.3
         version: 4.0.3
       zod:
-        specifier: ^4.1.0
+        specifier: ^4.0.17
         version: 4.1.0
     devDependencies:
       '@types/mdx':
@@ -1932,6 +1932,9 @@ importers:
       '@ai-sdk/openai':
         specifier: 2.0.18
         version: 2.0.18(zod@4.1.0)
+      '@ai-sdk/openai-compatible':
+        specifier: ^1.0.11
+        version: 1.0.11(zod@4.1.0)
       '@ai-sdk/provider':
         specifier: 2.0.0
         version: 2.0.0
@@ -2246,7 +2249,7 @@ importers:
         version: 7.13.0
       unframer:
         specifier: latest
-        version: 3.1.0(@modelcontextprotocol/sdk@1.17.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 3.2.0(@modelcontextprotocol/sdk@1.17.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       use-stick-to-bottom:
         specifier: ^1.1.1
         version: 1.1.1(react@19.1.1)
@@ -7633,6 +7636,11 @@ packages:
 
   ajv-formats@3.0.1:
     resolution: {integrity: sha512-8iUql50EUR+uUcdRQ3HDqa6EVyo3docL8g5WJ3FNcWmu62IbkGUue/pEyLBW8VGKKucTPgqeks4fIU1DA4yowQ==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
 
   ajv-keywords@5.1.0:
     resolution: {integrity: sha512-YCS/JNFAUyr5vAuhk1DWm1CBxRHW9LbJ2ozWeemrIqpbsqKjHVxYPyi5GC0rjZIT5JxJ3virVTS8wk4i/Z+krw==}
@@ -13130,6 +13138,14 @@ packages:
       react: '*'
       react-dom: '*'
 
+  unframer@3.2.0:
+    resolution: {integrity: sha512-aUoDtMo4FdA9gkmZuaBU3xYp4qmpSIhzShChxpoMVzcVFrOsUlEeJGjeEdiT56/F4gUyNwTStJJDgFDLEg2Cug==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+    peerDependencies:
+      react: '*'
+      react-dom: '*'
+
   unhead@1.11.20:
     resolution: {integrity: sha512-3AsNQC0pjwlLqEYHLjtichGWankK8yqmocReITecmpB1H0aOabeESueyy+8X1gyJx4ftZVwo9hqQ4O3fPWffCA==}
 
@@ -18547,7 +18563,7 @@ snapshots:
     dependencies:
       ajv: 8.17.1
       ajv-draft-04: 1.0.0(ajv@8.17.1)
-      ajv-formats: 3.0.1
+      ajv-formats: 3.0.1(ajv@8.17.1)
       jsonpointer: 5.0.1
       leven: 4.0.0
       yaml: 2.8.0
@@ -18557,7 +18573,7 @@ snapshots:
       '@scalar/openapi-types': 0.3.7
       ajv: 8.17.1
       ajv-draft-04: 1.0.0(ajv@8.17.1)
-      ajv-formats: 3.0.1
+      ajv-formats: 3.0.1(ajv@8.17.1)
       jsonpointer: 5.0.1
       leven: 4.0.0
       yaml: 2.8.0
@@ -18567,7 +18583,7 @@ snapshots:
       '@scalar/openapi-types': 0.3.7
       ajv: 8.17.1
       ajv-draft-04: 1.0.0(ajv@8.17.1)
-      ajv-formats: 3.0.1
+      ajv-formats: 3.0.1(ajv@8.17.1)
       jsonpointer: 5.0.1
       leven: 4.0.0
       yaml: 2.8.0
@@ -20651,8 +20667,8 @@ snapshots:
     dependencies:
       ajv: 8.17.1
 
-  ajv-formats@3.0.1:
-    dependencies:
+  ajv-formats@3.0.1(ajv@8.17.1):
+    optionalDependencies:
       ajv: 8.17.1
 
   ajv-keywords@5.1.0(ajv@8.17.1):
@@ -27357,6 +27373,31 @@ snapshots:
       ufo: 1.6.1
 
   unframer@3.1.0(@modelcontextprotocol/sdk@1.17.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+    dependencies:
+      '@antfu/ni': 25.0.0
+      '@babel/core': 7.28.0
+      '@biomejs/js-api': 0.7.1(@biomejs/wasm-nodejs@1.9.4)
+      '@biomejs/wasm-nodejs': 1.9.4
+      async-sema: 3.1.1
+      cac: 6.7.14
+      esbuild: 0.25.8
+      esbuild-plugins-node-modules-polyfill: 1.7.1(esbuild@0.25.8)
+      nanospinner: 1.2.2
+      picocolors: 1.1.1
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
+      real-framer-motion: framer-motion@12.23.12(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      spiceflow: 1.17.8(@modelcontextprotocol/sdk@1.17.3)
+      string-dedent: 3.0.2
+      undici: 7.13.0
+    transitivePeerDependencies:
+      - '@biomejs/wasm-bundler'
+      - '@biomejs/wasm-web'
+      - '@emotion/is-prop-valid'
+      - '@modelcontextprotocol/sdk'
+      - supports-color
+
+  unframer@3.2.0(@modelcontextprotocol/sdk@1.17.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       '@antfu/ni': 25.0.0
       '@babel/core': 7.28.0
