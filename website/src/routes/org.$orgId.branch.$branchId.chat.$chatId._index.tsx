@@ -336,7 +336,7 @@ function RightSide() {
                     <iframe
                         ref={iframeRefCallback}
                         key={chat.chatId}
-                        // style={scaleDownElement(0.75)}
+                        style={scaleDownElement(1)}
                         className={cn(' inset-0 bg-transparent', 'absolute')}
                         frameBorder={0}
                         allowTransparency={true}

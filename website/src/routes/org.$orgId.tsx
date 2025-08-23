@@ -3,6 +3,7 @@ import { redirect, Outlet } from 'react-router'
 import { getSession } from '../lib/better-auth'
 import { href } from 'react-router'
 import type { Route } from './+types/org.$orgId'
+import { ClientOnly } from 'website/src/components/client-only'
 
 export type { Route }
 
@@ -68,5 +69,9 @@ export async function loader({ request, params: { orgId } }: Route.LoaderArgs) {
     }
 }
 export function Component({ loaderData }: Route.ComponentProps) {
-    return <Outlet />
+    return (
+        <ClientOnly>
+            <Outlet />
+        </ClientOnly>
+    )
 }
