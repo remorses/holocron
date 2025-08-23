@@ -367,6 +367,8 @@ prisma upsert calls are preferable over updates, so that you also handle the cas
 
 never make changes to schema.prisma yourself, instead propose a change with a message and ask me to do it. this file is too important to be edited by agents.
 
+NEVER run `pnpm push` in db or commands like `pnpm prisma db push` or other prisma commands that mutate the database!
+
 ### prisma queries for relations
 
 - NEVER add more than 1 include nesting. This is very bad for performance because prisma will have to do the query to get the relation sequentially. Instead of adding a new nested `include` you should add a new prisma query and wrap them in a `Promise.all`

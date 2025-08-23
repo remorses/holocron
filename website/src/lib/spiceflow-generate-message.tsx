@@ -87,7 +87,7 @@ import fm from 'front-matter'
 import { isValidLucideIconName } from './icons'
 import { WebsiteUIMessage } from './types'
 import { applyJsonCComments } from './json-c-comments'
-import JSONC from 'jsonc-parser'
+import JSONC from 'tiny-jsonc'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 
 const openrouter = createOpenRouter({

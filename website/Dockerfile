@@ -17,4 +17,4 @@ ENV NODE_ENV=production
 
 EXPOSE $PORT
 
-CMD ["node", "./build/server/index.js"]
+CMD ["node", "./build/server/server.js"]

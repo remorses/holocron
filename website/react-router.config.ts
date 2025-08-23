@@ -8,4 +8,5 @@ export default {
         unstable_optimizeDeps: true,
         unstable_middleware: true,
     },
+    serverBuildFile: '[name].js',
 } satisfies Config

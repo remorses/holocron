@@ -3,7 +3,7 @@
 import react from '@vitejs/plugin-react'
 import { reactRouter } from '@react-router/dev/vite'
 import tailwindcss from '@tailwindcss/vite'
-import { viteExternalsPlugin } from '@xmorse/deployment-utils/dist/vite-externals-plugin.js'
+import { viteExternalsPlugin, enablePreserveModulesPlugin } from '@xmorse/deployment-utils/dist/vite-externals-plugin.js'
 import { reactRouterServerPlugin } from '@xmorse/deployment-utils/dist/react-router.js'
 import { defineConfig } from 'vite'
 import EnvironmentPlugin from 'vite-plugin-environment'
@@ -67,8 +67,9 @@ export default defineConfig({
         // cloudflare({ viteEnvironment: { name: 'ssr' } }),
         EnvironmentPlugin('all', { prefix: 'PUBLIC' }),
         EnvironmentPlugin('all', { prefix: 'NEXT_PUBLIC' }),
-        reactRouterServerPlugin({  port: process.env.PORT || '7777' }),
+
         !process.env.VITEST ? reactRouter() : react(),
+
         // tsconfigPaths(),
         viteExternalsPlugin({
             externals: [
@@ -82,6 +83,8 @@ export default defineConfig({
         tailwindcss(),
         process.env.ANALYZE &&
             analyzer({ openAnalyzer: false, analyzerMode: 'static' }),
+        reactRouterServerPlugin({ port: process.env.PORT || '7777' }),
+        enablePreserveModulesPlugin(),
     ],
 
     // legacy: {
