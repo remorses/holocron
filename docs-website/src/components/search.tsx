@@ -24,6 +24,7 @@ import { ChevronDown } from 'lucide-react'
 import { buttonVariants } from 'fumadocs-ui/components/ui/button'
 import { cn } from '../lib/cn'
 import { WEBSITE_DOMAIN } from '../lib/env'
+import { usePersistentDocsState } from '../lib/docs-state'
 
 const tags = [
     {
@@ -36,8 +37,11 @@ const tags = [
 export function CustomSearchDialog(props: SharedProps) {
     const [open, setOpen] = useState(false)
     const [tag, setTag] = useState<string | undefined>()
+    const chatId = usePersistentDocsState((state) => state.chatId)
+    
     const { search, setSearch, query } = useDocsSearch({
         type: 'fetch',
+        api: chatId ? `/api/search?chatId=${chatId}` : '/api/search',
         tag,
     })
 

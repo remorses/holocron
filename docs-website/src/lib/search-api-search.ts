@@ -39,21 +39,16 @@ export async function searchDocsWithSearchApi({
 
     let searchResults: SortedResult[] = []
 
-    // Search in LanceDB if branchId is available
     if (branchId) {
-        try {
-            const result = await client.searchSections({
-                datasetId: branchId,
-                query: finalQuery,
-                page: 0,
-                perPage: 20,
-                maxChunksPerFile: 4,
-            })
+        const result = await client.searchSections({
+            datasetId: branchId,
+            query: finalQuery,
+            page: 0,
+            perPage: 20,
+            maxChunksPerFile: 4,
+        })
 
-            searchResults = formatSearchApiResults(result)
-        } catch (error) {
-            console.error('Error searching with search API:', error)
-        }
+        searchResults = formatSearchApiResults(result)
     }
 
     // Search in filesInDraft if provided

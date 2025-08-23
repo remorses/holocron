@@ -393,7 +393,6 @@ export function ClientApp() {
             <CustomReactRouterProvider>
                 <RootProvider
                     search={{
-                        options: {},
                         SearchDialog: CustomSearchDialog,
                     }}
                     i18n={{
