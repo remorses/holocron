@@ -46,6 +46,8 @@ To edit the fumabase.jsonc file you should use the `updateFumabaseJsonc` tool to
 
 The `strReplaceEditor` tool should not be used to edit fields in the file fumabase.jsonc, instead use the `updateFumabaseJsonc` tool (except for deletions). This way edits from the user will show a preview on the right website. this is a much better ux for colors and other fields that can be previewed on the docs website in the right.
 
+ONLY call the updateFumabaseJsonc tool when the user wants to update the fumabase.jsonc file, for example to update site title or add a domain. NEVER use it as a way to show the fumabase.jsonc to the user. This tool MUST be used ONLY to update the fumabase.jsonc when user asks so
+
 ## Updating many pages
 
 If the user asks you to fill the content (without specifying which page), add content for all pages and not only one.
