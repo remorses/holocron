@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^15.3.5",
-    "@types/react": "^19.1.10",
+    "@types/react": "^19.1.11",
     "@types/react-dom": "^19.1.7",
     "tailwindcss": "^4.1.11",
     "typescript": "^5.8.3"

@@ -7,7 +7,7 @@
         "deployment": "pnpm bootstrap && pnpm -r --parallel --stream --no-bail run --filter website --filter docs-website deployment",
         "bootstrap": "pnpm install-doppler && pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm ",
         "watch": "pnpm -r watch",
-        "typecheck": "pnpm -r --parallel --stream typecheck",
+        "typecheck": "pnpm -r --parallel --no-bail --stream typecheck",
         "ci": "pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm && pnpm --filter './*' build",
         "release": "pnpm build && changeset"
     },

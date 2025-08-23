@@ -292,7 +292,7 @@ importers:
         specifier: ^4.0.4
         version: 4.0.4
       '@types/react':
-        specifier: ^19.1.10
+        specifier: ^19.1.11
         version: 19.1.11
       '@types/react-dom':
         specifier: ^19.1.7
@@ -741,7 +741,7 @@ importers:
         specifier: ^24.0.1
         version: 24.3.0
       '@types/react':
-        specifier: ^19.1.10
+        specifier: ^19.1.11
         version: 19.1.11
       '@types/react-dom':
         specifier: ^19.1.7
@@ -1775,7 +1775,7 @@ importers:
         version: 19.1.1
     devDependencies:
       '@types/react':
-        specifier: ^19.1.10
+        specifier: ^19.1.11
         version: 19.1.11
 
   mcp-demo:
@@ -1812,7 +1812,7 @@ importers:
         specifier: ^15.3.5
         version: 15.3.5
       '@types/react':
-        specifier: ^19.1.10
+        specifier: ^19.1.11
         version: 19.1.11
       '@types/react-dom':
         specifier: ^19.1.7
@@ -2291,7 +2291,7 @@ importers:
         specifier: ^24.0.1
         version: 24.3.0
       '@types/react':
-        specifier: ^19.1.10
+        specifier: ^19.1.11
         version: 19.1.11
       '@types/react-dom':
         specifier: ^19.1.7

@@ -21,7 +21,7 @@
     "license": "",
     "devDependencies": {
         "@types/mdast": "^4.0.4",
-        "@types/react": "^19.1.10",
+        "@types/react": "^19.1.11",
         "@types/react-dom": "^19.1.7",
         "mdast-util-to-markdown": "^2.1.2",
         "react-hook-form": "*",
