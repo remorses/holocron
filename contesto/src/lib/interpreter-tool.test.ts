@@ -19,7 +19,8 @@ describe('createInterpreterTool', () => {
                 const sum = a + b
                 console.log('sum =', sum)
                 return sum
-            `
+            `,
+            timeout: 5000
         }, {} as any) as string
         const executionTime = Date.now() - startTime
 
@@ -42,7 +43,8 @@ describe('createInterpreterTool', () => {
                 console.log('Before error')
                 throw new Error('Test error')
                 console.log('After error')
-            `
+            `,
+            timeout: 5000
         }, {} as any) as string
 
         expect(result).toContain('Test error')
@@ -59,7 +61,8 @@ describe('createInterpreterTool', () => {
                 const obj = { name: 'test', value: 42, nested: { key: 'value' } }
                 console.log('Object:', obj)
                 console.log('Array:', [1, 2, 3])
-            `
+            `,
+            timeout: 5000
         }, {} as any) as string
 
         expect(result).toMatchInlineSnapshot(`
@@ -107,7 +110,8 @@ describe('createInterpreterTool', () => {
                 const value = await promise
                 console.log('Promise value:', value)
                 return 'done'
-            `
+            `,
+            timeout: 5000
         }, {} as any) as string
 
         expect(result).toMatchInlineSnapshot(`
@@ -147,7 +151,8 @@ describe('createInterpreterTool', () => {
                 const b = 10
                 const sum = a + b
                 return sum
-            `
+            `,
+            timeout: 5000
         }, {} as any) as string
 
         expect(result).toBe('no console logs')
@@ -171,7 +176,8 @@ describe('createInterpreterTool', () => {
                 }
 
                 main()
-            `
+            `,
+            timeout: 5000
         }, {} as any) as string
 
         expect(result).toMatchInlineSnapshot(`
@@ -230,7 +236,8 @@ describe('createInterpreterTool', () => {
                 console.log('Greeting:', greeting)
 
                 console.log('Done')
-            `
+            `,
+            timeout: 5000
         }, {} as any) as string
 
         expect(result).toMatchInlineSnapshot(`
@@ -267,7 +274,8 @@ describe('createInterpreterTool', () => {
                 } catch (error) {
                     console.log('Error caught:', error.message)
                 }
-            `
+            `,
+            timeout: 5000
         }, {} as any) as string
 
         expect(result).toContain('Invalid input for tool multiply')
@@ -294,7 +302,8 @@ describe('createInterpreterTool', () => {
                 console.timeEnd('myTimer')
 
                 console.log('Sum calculated:', sum)
-            `
+            `,
+            timeout: 5000
         }, {} as any) as string
 
         expect(result).toMatch(/This is log/)
@@ -328,7 +337,8 @@ describe('createInterpreterTool', () => {
             code: `
                 console.log('Tools available:', Object.keys(tools))
                 console.log('No tools should be available')
-            `
+            `,
+            timeout: 5000
         }, {} as any) as string
 
         expect(result).toMatchInlineSnapshot(`
@@ -437,7 +447,8 @@ describe('createInterpreterTool', () => {
 
                 const relative = new URL('/api/users', 'https://api.example.com')
                 console.log('Full URL:', relative.href)
-            `
+            `,
+            timeout: 5000
         }, {} as any) as string
 
         expect(result).toMatchInlineSnapshot(`
@@ -556,7 +567,8 @@ describe('createInterpreterTool', () => {
                 })
 
                 console.log('User 1 file:', userFile.substring(0, 20) + '...')
-            `
+            `,
+            timeout: 5000
         }, {} as any) as string
 
         expect(result).toMatchInlineSnapshot(`

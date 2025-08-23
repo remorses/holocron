@@ -28,8 +28,6 @@ import {
     PageTOCItems,
     PageTOCPopoverItems,
     PageTOCTitle,
-} from 'fumadocs-ui/layouts/docs/page'
-import {
     PageBreadcrumb,
     PageFooter,
     PageLastUpdate,
@@ -37,7 +35,7 @@ import {
     PageTOCPopover,
     PageTOCPopoverContent,
     PageTOCPopoverTrigger,
-} from 'fumadocs-ui/layouts/docs/page-client'
+} from 'fumadocs-ui/layouts/docs/page'
 import {
     ExternalLinkIcon,
     GithubIcon,
