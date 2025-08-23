@@ -312,7 +312,7 @@ You can wrap the folder name in parentheses to avoid impacting the slugs of chil
 
 ## Meta
 
-Customise folders by creating a `meta.json` file in the folder.
+If you want to customize order of pages in the left sidebar or add separators or hide certain pages you can add a `meta.json` file
 
 ```json title="meta.json"
 {
@@ -323,12 +323,21 @@ Customise folders by creating a `meta.json` file in the folder.
 }
 ```
 
+> IMPORTANT! only create a meta.json if strictly necessary! do not create a meta.json for every folder unless strictly needed
+
 | name          | description                           |
 | ------------- | ------------------------------------- |
 | `title`       | Display name                          |
 | `icon`        | The name of icon, see [Icons](#icons) |
 | `pages`       | Folder items (see below)              |
 | `defaultOpen` | Open the folder by default            |
+
+ONLY add a meta.json if
+- add separators (non clickable titles between page blocks in the sidebar)
+- user wants to update ordering of pages in the sidebar tree (try to not mention all pages in this case and use `...` instead)
+- put pages that are inside folders in the root sidebar tree. You can use this method to prevent showing collapsible folders in the sidebar tree and use separators instead.
+- user wants to add links in the sidebar that are not website pages in the sidebar (only do this at the root meta.json)
+- user wants to add an icon to a folder (never do this by default)
 
 ### Pages
 
@@ -343,7 +352,7 @@ You can add or control the order of items using `pages`, items are not included 
 }
 ```
 
-> IMPORTANT! always use ... to reference other pages. Otherwise future added pages not listed in pages array will not be shown!
+> IMPORTANT! always add `...` to add non mentioned pages in the sidebar tree. Otherwise future added pages will not listed in pages array and will not be shown!
 
 > Notice how the file extension is not referenced, just use the basename of the file.
 > `---My Separator---` will be used to show a text `My Separator` in the sidebar above the pages on its right, you can use many, use it as a way to add a separator title for a group of pages in the sidebar. Use separators only if the user asks so. It should be rarely used.
