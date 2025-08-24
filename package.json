@@ -24,7 +24,7 @@
     },
     "pnpm": {
         "overrides": {
-            "ai": "npm:@xmorse/ai@5.0.13",
+            "ai": "npm:@xmorse/ai@5.0.23",
             "rollup": "4.43.0"
         }
     },
