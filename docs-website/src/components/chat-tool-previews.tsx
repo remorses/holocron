@@ -124,7 +124,7 @@ export function EditorToolPreview({
 
     return (
         <ToolPreviewContainer>
-            <Dot toolCallId={toolCallId} /> Processing{' '}
+            <Dot toolCallId={toolCallId} /> Loading files{' '}
             <Highlight>{args?.path}</Highlight>
             {error && <ErrorPreview error={error} />}
         </ToolPreviewContainer>
