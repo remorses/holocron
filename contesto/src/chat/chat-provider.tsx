@@ -5,7 +5,14 @@ import { createTrackedSelector } from 'react-tracked'
 
 import * as Ariakit from '@ariakit/react'
 import { create } from 'zustand'
-import { createContext, useContext, useMemo, useEffect, useRef } from 'react'
+import {
+    createContext,
+    useContext,
+    useMemo,
+    useEffect,
+    useRef,
+    useLayoutEffect,
+} from 'react'
 import type { StoreApi, UseBoundStore } from 'zustand'
 import { ComboboxStore } from '@ariakit/react'
 import { cn } from '../lib/cn.js'
@@ -187,7 +194,7 @@ const ChatProvider = (props: {
             window.removeEventListener('chatRegenerate', handleChatRegenerate)
         }
     }, [submit])
-    useEffect(() => {
+    useLayoutEffect(() => {
         console.log(`chat remounted, scrolling into the user message`)
         const messages = stableInitialState.messages || []
         const lastUserMessage = [...messages]
@@ -234,27 +241,15 @@ const ChatProvider = (props: {
         // Subscribe to text changes and persist to cookies
         const unsubscribe = store.subscribe((state, prevState) => {
             if (state.draftText !== prevState.draftText) {
-                if (state.draftText) {
-                    const encodedDraft = encodeURIComponent(state.draftText)
-                    document.cookie = cookie.serialize(
-                        CONTESTO_DRAFT_MESSAGE_KEY,
-                        encodedDraft,
-                        {
-                            path: '/',
-                            maxAge: 60 * 60 * 24 * 7, // 7 days
-                        },
-                    )
-                } else {
-                    // Remove the cookie
-                    document.cookie = cookie.serialize(
-                        CONTESTO_DRAFT_MESSAGE_KEY,
-                        '',
-                        {
-                            maxAge: 0,
-                            path: '/',
-                        },
-                    )
-                }
+                const encodedDraft = encodeURIComponent(state.draftText || '')
+                document.cookie = cookie.serialize(
+                    CONTESTO_DRAFT_MESSAGE_KEY,
+                    encodedDraft,
+                    {
+                        path: '/',
+                        maxAge: 60 * 60 * 24 * 7, // 7 days
+                    },
+                )
             }
         })
 
