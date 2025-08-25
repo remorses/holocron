@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  ai: npm:@xmorse/ai@5.0.23
+  ai: npm:@xmorse/ai@5.0.26
   rollup: 4.43.0
 
 importers:
@@ -165,8 +165,8 @@ importers:
         specifier: ^2.6.0
         version: 2.6.0(@babel/runtime@7.28.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       ai:
-        specifier: npm:@xmorse/ai@5.0.23
-        version: '@xmorse/ai@5.0.23(zod@4.1.1)'
+        specifier: npm:@xmorse/ai@5.0.26
+        version: '@xmorse/ai@5.0.26(zod@4.1.1)'
       camelcase:
         specifier: ^8.0.0
         version: 8.0.0
@@ -375,7 +375,7 @@ importers:
         version: 4.7.0(monaco-editor@0.52.2)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@openrouter/ai-sdk-provider':
         specifier: ^1.1.2
-        version: 1.1.2(@xmorse/ai@5.0.23(zod@4.1.1))(zod@4.1.1)
+        version: 1.1.2(@xmorse/ai@5.0.26(zod@4.1.1))(zod@4.1.1)
       '@orama/tokenizers':
         specifier: ^3.1.7
         version: 3.1.7
@@ -461,8 +461,8 @@ importers:
         specifier: ^8.5.2
         version: 8.5.2
       ai:
-        specifier: npm:@xmorse/ai@5.0.23
-        version: '@xmorse/ai@5.0.23(zod@4.1.1)'
+        specifier: npm:@xmorse/ai@5.0.26
+        version: '@xmorse/ai@5.0.26(zod@4.1.1)'
       async-sema:
         specifier: ^3.1.1
         version: 3.1.1
@@ -910,7 +910,7 @@ importers:
         specifier: ^26.0.0
         version: 26.0.0
       zod:
-        specifier: ^4.1.1
+        specifier: ^4.1.0
         version: 4.1.1
     devDependencies:
       '@types/node':
@@ -950,7 +950,7 @@ importers:
         specifier: ^11.0.5
         version: 11.0.5
       zod:
-        specifier: ^4.1.1
+        specifier: ^4.1.0
         version: 4.1.1
 
   fumadocs/packages/core:
@@ -1228,7 +1228,7 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       zod:
-        specifier: ^4.1.1
+        specifier: ^4.1.0
         version: 4.1.1
     devDependencies:
       '@mdx-js/mdx':
@@ -1306,7 +1306,7 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       zod:
-        specifier: ^4.1.1
+        specifier: ^4.1.0
         version: 4.1.1
     devDependencies:
       '@fumadocs/mdx-remote':
@@ -1370,7 +1370,7 @@ importers:
         specifier: ^4.0.3
         version: 4.0.3
       zod:
-        specifier: ^4.1.1
+        specifier: ^4.1.0
         version: 4.1.1
     devDependencies:
       '@types/mdx':
@@ -1425,8 +1425,8 @@ importers:
         specifier: 0.18.3
         version: 0.18.3
       ai:
-        specifier: npm:@xmorse/ai@5.0.23
-        version: '@xmorse/ai@5.0.23(zod@4.1.1)'
+        specifier: npm:@xmorse/ai@5.0.26
+        version: '@xmorse/ai@5.0.26(zod@4.1.1)'
       ajv:
         specifier: ^8.17.1
         version: 8.17.1
@@ -1759,8 +1759,8 @@ importers:
         specifier: ^1.17.3
         version: 1.17.3
       ai:
-        specifier: npm:@xmorse/ai@5.0.23
-        version: '@xmorse/ai@5.0.23(zod@4.1.1)'
+        specifier: npm:@xmorse/ai@5.0.26
+        version: '@xmorse/ai@5.0.26(zod@4.1.1)'
       contesto:
         specifier: workspace:*
         version: link:../contesto
@@ -1973,7 +1973,7 @@ importers:
         version: 14.0.2
       '@openrouter/ai-sdk-provider':
         specifier: ^1.1.2
-        version: 1.1.2(@xmorse/ai@5.0.23(zod@4.1.1))(zod@4.1.1)
+        version: 1.1.2(@xmorse/ai@5.0.26(zod@4.1.1))(zod@4.1.1)
       '@prisma/client':
         specifier: ^6.14.0
         version: 6.14.0(prisma@6.14.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2)
@@ -2059,8 +2059,8 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       ai:
-        specifier: npm:@xmorse/ai@5.0.23
-        version: '@xmorse/ai@5.0.23(zod@4.1.1)'
+        specifier: npm:@xmorse/ai@5.0.26
+        version: '@xmorse/ai@5.0.26(zod@4.1.1)'
       ai-fallback:
         specifier: ^1.0.2
         version: 1.0.2(zod@4.1.1)
@@ -7648,8 +7648,8 @@ packages:
     resolution: {integrity: sha512-ueFCcIPaMgtuYDS9u0qlUoEvj6GiSsKrwnOLPp9SshqjtcRaR1IEHRjoReq3sXNydsF5i0ZnmuYgXq9dV53t0g==}
     engines: {node: '>=18.0.0'}
 
-  '@xmorse/ai@5.0.23':
-    resolution: {integrity: sha512-dQVlpn0BEMTA9OWNZZf3Z/lqfL6/LO1MwWweKtyH2bXItStpBIBricZ8ygDww1olMGCxZltEHcYosDLx0ED3wA==}
+  '@xmorse/ai@5.0.26':
+    resolution: {integrity: sha512-D4dLP/epAL6K9PavTjrq7p1leb5gBzLLtM1MqV5j9fuw8xtjeI6WoWTj0rafhms9fpGc7psvNd20sR/dGxiBjg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4
@@ -14397,7 +14397,7 @@ snapshots:
   '@ai-sdk/react@2.0.22(react@19.1.1)(zod@4.1.1)':
     dependencies:
       '@ai-sdk/provider-utils': 3.0.5(zod@4.1.1)
-      ai: '@xmorse/ai@5.0.23(zod@4.1.1)'
+      ai: '@xmorse/ai@5.0.26(zod@4.1.1)'
       react: 19.1.1
       swr: 2.3.6(react@19.1.1)
       throttleit: 2.1.0
@@ -16711,9 +16711,9 @@ snapshots:
 
   '@open-draft/until@2.1.0': {}
 
-  '@openrouter/ai-sdk-provider@1.1.2(@xmorse/ai@5.0.23(zod@4.1.1))(zod@4.1.1)':
+  '@openrouter/ai-sdk-provider@1.1.2(@xmorse/ai@5.0.26(zod@4.1.1))(zod@4.1.1)':
     dependencies:
-      ai: '@xmorse/ai@5.0.23(zod@4.1.1)'
+      ai: '@xmorse/ai@5.0.26(zod@4.1.1)'
       zod: 4.1.1
 
   '@opentelemetry/api-logs@0.57.2':
@@ -20903,7 +20903,7 @@ snapshots:
       '@whatwg-node/promise-helpers': 1.3.2
       tslib: 2.8.1
 
-  '@xmorse/ai@5.0.23(zod@3.25.76)':
+  '@xmorse/ai@5.0.26(zod@3.25.76)':
     dependencies:
       '@ai-sdk/gateway': 1.0.11(zod@3.25.76)
       '@ai-sdk/provider': 2.0.0
@@ -20911,7 +20911,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       zod: 3.25.76
 
-  '@xmorse/ai@5.0.23(zod@4.1.1)':
+  '@xmorse/ai@5.0.26(zod@4.1.1)':
     dependencies:
       '@ai-sdk/gateway': 1.0.11(zod@4.1.1)
       '@ai-sdk/provider': 2.0.0
@@ -21046,7 +21046,7 @@ snapshots:
   agents@0.0.113(@cloudflare/workers-types@4.20250712.0)(react@19.1.1):
     dependencies:
       '@modelcontextprotocol/sdk': 1.17.3
-      ai: '@xmorse/ai@5.0.23(zod@3.25.76)'
+      ai: '@xmorse/ai@5.0.26(zod@3.25.76)'
       cron-schedule: 5.0.4
       mimetext: 3.0.27
       nanoid: 5.1.5
