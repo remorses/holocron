@@ -365,7 +365,7 @@ async function createPendingCheckRun({
         await octokit.rest.checks.create({
             owner,
             repo: repoName,
-            name: 'Fumabase Sync',
+            name: 'Holocron Sync',
             head_sha: commitSha,
             status: 'in_progress',
             output: {
@@ -400,7 +400,7 @@ async function reportFailureToGithub({
         await octokit.rest.checks.create({
             owner,
             repo: repoName,
-            name: 'Fumabase Sync',
+            name: 'Holocron Sync',
             head_sha: commitSha,
             status: 'completed',
             conclusion: 'failure',
@@ -485,7 +485,7 @@ async function reportErrorsToGithub({
             await octokit.rest.checks.create({
                 owner,
                 repo: repoName,
-                name: 'Fumabase Sync',
+                name: 'Holocron Sync',
                 head_sha: commitSha,
                 status: 'completed',
                 conclusion: 'success',
@@ -532,7 +532,7 @@ async function reportErrorsToGithub({
             await octokit.rest.checks.create({
                 owner,
                 repo: repoName,
-                name: 'Fumabase Sync',
+                name: 'Holocron Sync',
                 head_sha: commitSha,
                 status: 'completed',
                 conclusion: 'neutral',
@@ -547,7 +547,7 @@ async function reportErrorsToGithub({
             await octokit.rest.checks.create({
                 owner,
                 repo: repoName,
-                name: 'Fumabase Sync',
+                name: 'Holocron Sync',
                 head_sha: commitSha,
                 status: 'completed',
                 conclusion: 'failure',

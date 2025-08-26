@@ -48,7 +48,7 @@ export default function ChooseOrg() {
             <div className='flex flex-col gap-4 text-center'>
                 <p className='opacity-70 max-w-md text-center text-medium text-balance'>
                     Choose which GitHub organization or account you want to
-                    connect to Fumabase
+                    connect to Holocron
                 </p>
             </div>
             <Form className='flex  flex-col gap-6'>
@@ -181,7 +181,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     if (installations.some((x) => x.accountLogin === chosenOrg)) {
         let url = new URL(afterInstall, env.PUBLIC_URL)
         let data: GithubLoginRequestData = { githubAccountLogin: chosenOrg }
-        
+
         // Set cookie with GitHub login data
         const githubDataCookie = cookie.serialize(
             GITHUB_LOGIN_DATA_COOKIE,
@@ -194,8 +194,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
                 path: '/',
             }
         )
-        
-        return redirect(url.toString(), { 
+
+        return redirect(url.toString(), {
             headers: {
                 ...headers,
                 'Set-Cookie': githubDataCookie,
