@@ -258,8 +258,24 @@ export function ChatUserMessage({
     const isEditing = editingMessageId === messageId
     const messageRef = useRef<HTMLElement>(null)
     const [scrollStyle, setScrollStyle] = useState<React.CSSProperties>({})
+    const [isExpanded, setIsExpanded] = useState(false)
 
     const MESSAGE_HEIGHT_THRESHOLD = 100 // Height threshold for considering a message "too tall"
+    const CHARACTER_LIMIT = 300 // Character limit for truncation
+
+    const messageContent = (() => {
+        const textContent = message.parts
+            .filter((part) => part.type === 'text')
+            .map((part) => part['text'])
+            .join('')
+
+        return textContent
+    })()
+
+    const shouldTruncate = messageContent.length > CHARACTER_LIMIT
+    const displayContent = shouldTruncate && !isExpanded
+        ? messageContent.slice(0, CHARACTER_LIMIT) + '...'
+        : messageContent
 
     useEffect(() => {
         if (messageRef.current) {
@@ -273,10 +289,14 @@ export function ChatUserMessage({
                 setScrollStyle({ scrollMarginTop: '24px' })
             }
         }
-    }, [children])
+    }, [children, isExpanded])
 
     const handleEditStart = () => {
         useChatState.setState({ editingMessageId: messageId })
+    }
+
+    const handleToggleExpanded = () => {
+        setIsExpanded(!isExpanded)
     }
 
     if (message.role === 'user' && isEditing) {
@@ -293,7 +313,7 @@ export function ChatUserMessage({
             )}
             style={scrollStyle}
         >
-            <div className=' max-w-[80%] relative group/message  px-4 py-2 rounded-xl'>
+            <div className='flex flex-col max-w-[80%] relative group/message  px-4 py-2 rounded-xl'>
                 <motion.div
                     className='inset-0 bg-muted absolute rounded-xl'
                     layout
@@ -322,9 +342,21 @@ export function ChatUserMessage({
                 <motion.div
                     layoutId={`content-${message.id}`}
                     layout='position'
-                    className='full isolate whitespace-pre-wrap max-w-full'
+                    className='full isolate flex flex-col whitespace-pre-wrap max-w-full'
                 >
-                    {children}
+                    <div className='flex flex-col gap-2'>
+                        <div>{shouldTruncate && !isExpanded ? displayContent : children}</div>
+                        {shouldTruncate && (
+                            <Button
+                                variant='ghost'
+                                size='sm'
+                                onClick={handleToggleExpanded}
+                                className='text-xs underline'
+                            >
+                                {isExpanded ? 'Show less' : 'Read more'}
+                            </Button>
+                        )}
+                    </div>
                 </motion.div>
             </div>
         </article>
