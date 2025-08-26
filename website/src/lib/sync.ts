@@ -162,15 +162,15 @@ export async function* assetsFromFilesList({
     docsJsonComments?: JsonCComments
 }): AsyncGenerator<AssetForSync> {
     // Check if docs json exists in the files
-    const fumabaseJsonFile = files.find(f => isDocsJson(f.relativePath))
+    const holocronJsonFile = files.find(f => isDocsJson(f.relativePath))
 
     // Use docs json from files if present, otherwise use defaults
     let docsJson: DocsJsonType | undefined
     let docsJsonComments: JsonCComments | undefined
 
-    if (fumabaseJsonFile?.contents) {
+    if (holocronJsonFile?.contents) {
         // Extract docsJson and comments from the docs json file
-        const { comments, data } = extractJsonCComments(fumabaseJsonFile.contents)
+        const { comments, data } = extractJsonCComments(holocronJsonFile.contents)
         docsJson = data
         docsJsonComments = comments
     } else {

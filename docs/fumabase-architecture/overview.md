@@ -1,8 +1,8 @@
 ---
-title: Fumabase Editing Architecture Overview
-description: High-level overview of how Fumabase manages file editing, state management, and database synchronization
+title: Holocron Editing Architecture Overview
+description: High-level overview of how Holocron manages file editing, state management, and database synchronization
 prompt: |
-  Generate documentation about how Fumabase's filesInDraft and database schema for pages, media assets
+  Generate documentation about how Holocron's filesInDraft and database schema for pages, media assets
   and meta json files works. Document the two-way flow: files to database handled by @website/src/lib/sync.ts
   and database to file content handled by getPageContent function passed to FileSystemEmulator in
   @website/src/lib/file-system-emulator.ts. Reference @website/src/lib/spiceflow-generate-message.tsx
@@ -11,9 +11,9 @@ prompt: |
   postMessage synchronization. Create comprehensive architecture documentation with multiple markdown files.
 ---
 
-# Fumabase Editing Architecture Overview
+# Holocron Editing Architecture Overview
 
-Fumabase uses a sophisticated two-way data flow architecture to manage documentation websites. This system allows real-time editing through an AI chat interface while maintaining consistency between in-memory drafts, database storage, and live preview rendering.
+Holocron uses a sophisticated two-way data flow architecture to manage documentation websites. This system allows real-time editing through an AI chat interface while maintaining consistency between in-memory drafts, database storage, and live preview rendering.
 
 ## Core Components
 

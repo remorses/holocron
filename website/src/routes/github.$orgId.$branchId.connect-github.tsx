@@ -8,7 +8,7 @@ import {
     createNewRepo,
     doesRepoExist,
 } from '../lib/github.server'
-import { defaultStartingFumabaseJson } from 'docs-website/src/lib/docs-json-examples'
+import { defaultStartingHolocronJson } from 'docs-website/src/lib/docs-json-examples'
 import type { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
 import { apiClient } from '../lib/spiceflow-client'
@@ -326,7 +326,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 
     // Add docs json with existing docsJson or default
     const docsJson = existingBranch?.docsJson || {
-        ...defaultStartingFumabaseJson,
+        ...defaultStartingHolocronJson,
         siteId: site.siteId,
         name: site.name || 'Docs',
     }

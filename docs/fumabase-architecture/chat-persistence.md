@@ -4,14 +4,14 @@ description: How chat sessions are persisted, the current limitations, and futur
 prompt: |
   Document chat persistence from @website/src/lib/spiceflow-generate-message.tsx focusing on the onFinish
   handler that saves chat to database. Explain the limitation that filesInDraft is only updated when chat
-  finishes, not during the session. Show how this creates the need to pass filesInDraft and fumabase.jsonc
+  finishes, not during the session. Show how this creates the need to pass filesInDraft and holocron.jsonc
   content manually. Discuss the future improvement of debounced updates during chat. Include chat message
   storage with ChatMessage, ChatPartText, ChatPartTool tables.
 ---
 
 # Chat Persistence and Limitations
 
-The chat persistence system in Fumabase has a critical limitation: `filesInDraft` is only saved to the database when a chat completes, not during the session. This creates challenges for state management and requires workarounds.
+The chat persistence system in Holocron has a critical limitation: `filesInDraft` is only saved to the database when a chat completes, not during the session. This creates challenges for state management and requires workarounds.
 
 ## Current Persistence Model
 
@@ -89,9 +89,9 @@ const files = await getFilesForSource({
     githubFolder,
 })
 
-// Must pass fumabase.jsonc content manually:
-const fumabaseContent = filesInDraft['fumabase.jsonc']?.content || 
-                        await getPageContent({ githubPath: 'fumabase.jsonc' })
+// Must pass holocron.jsonc content manually:
+const holocronContent = filesInDraft['holocron.jsonc']?.content || 
+                        await getPageContent({ githubPath: 'holocron.jsonc' })
 ```
 
 ## Current Workarounds
@@ -216,7 +216,7 @@ onFilesDraftChange: () => {
 
 #### 1. Update Sources
 Multiple places can update filesInDraft:
-- **Form Editor**: updateFumabaseJsonc tool
+- **Form Editor**: updateHolocronJsonc tool
 - **Monaco Editor**: Direct text editing
 - **AI Tools**: strReplaceEditor tool
 - **File Operations**: Delete, rename tools
@@ -231,7 +231,7 @@ fileSystem.write(path, content)  // Triggers update
 updateFileInDocsEditor(path, content)  // Sends postMessage
 
 // 3. Form preview changes
-updateFumabaseJsonc({ values })  // Updates config
+updateHolocronJsonc({ values })  // Updates config
 ```
 
 #### 3. Conflict Resolution

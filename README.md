@@ -1,7 +1,7 @@
 <div align='center'>
     <br/>
     <br/>
-    <h3>Fumabase</h3>
+    <h3>Holocron</h3>
     <p>Built on Fumadocs. Now in beta</p>
     <br/>
     <br/>
@@ -9,8 +9,8 @@
 
 ## Getting starter
 
-Go to https://fumabase.com to create a new repo for your docs, or run the following command to deploy existing docs or start from a template
+Go to https://holocron.com to create a new repo for your docs, or run the following command to deploy existing docs or start from a template
 
 ```sh
-npx fumabase init
+npx holocron init
 ```

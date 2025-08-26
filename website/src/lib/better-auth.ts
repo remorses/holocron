@@ -92,7 +92,7 @@ export const auth = betterAuth({
             },
             // Default key settings
             defaultKeyLength: 64,
-            defaultPrefix: 'fuma_', // Prefix to identify fumabase API keys
+            defaultPrefix: 'fuma_', // Prefix to identify holocron API keys
             // Rate limiting defaults
             rateLimit: {
                 enabled: true,

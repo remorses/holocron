@@ -3,7 +3,7 @@
 I'll help you change the theme of the website. Let me first check the current configuration and then show you the available theme options.
 ````yaml tool-getProjectFiles
 input: {}
-output: '└── fumabase.jsonc # Use the updateFumabaseJsonc tool to update these values'
+output: '└── holocron.jsonc # Use the updateHolocronJsonc tool to update these values'
 
 ````
 
@@ -12,30 +12,30 @@ output: '└── fumabase.jsonc # Use the updateFumabaseJsonc tool to update t
 ````yaml tool-strReplaceEditor
 input:
   command: view
-  path: fumabase.jsonc
+  path: holocron.jsonc
 output:
   success: false
-  error: 'File not found: fumabase.jsonc'
+  error: 'File not found: holocron.jsonc'
 
 ````
 
 --- step-start ---
 
-Let me create the fumabase.jsonc file first and then update it with the theme options:
+Let me create the holocron.jsonc file first and then update it with the theme options:
 ````yaml tool-strReplaceEditor
 input:
   command: create
-  path: fumabase.jsonc
+  path: holocron.jsonc
   file_text: |-
     {
-      "$schema": "https://fumabase.com/schema.json",
+      "$schema": "https://holocron.com/schema.json",
       "siteId": "",
       "name": "My Documentation",
       "description": "Documentation website"
     }
 output: |-
   {
-    "$schema": "https://fumabase.com/schema.json",
+    "$schema": "https://holocron.com/schema.json",
     "siteId": "",
     "name": "My Documentation",
     "description": "Documentation website"

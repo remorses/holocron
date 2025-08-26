@@ -1,7 +1,7 @@
 import { ulid } from 'ulid'
 import {
     defaultDocsJsonComments,
-    defaultStartingFumabaseJson,
+    defaultStartingHolocronJson,
 } from 'docs-website/src/lib/docs-json-examples'
 
 import { Prisma, prisma, Site } from 'db'
@@ -1015,7 +1015,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                           ]
                         : [internalHost]
                 docsJson = {
-                    ...defaultStartingFumabaseJson,
+                    ...defaultStartingHolocronJson,
                     siteId: finalSiteId,
                     name,
                     domains,

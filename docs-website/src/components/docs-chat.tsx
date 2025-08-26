@@ -112,7 +112,7 @@ export function ChatDrawer({ loaderData }: { loaderData?: unknown }) {
         console.log({ currentSlug, currentOrigin })
         try {
             const { data: generator, error } =
-                await docsApiClientWithDurableFetch.fumabaseInternalAPI.generateMessage.post(
+                await docsApiClientWithDurableFetch.holocronInternalAPI.generateMessage.post(
                     {
                         messages: messages as DocsUIMessage[],
                         currentSlug: currentSlug,
@@ -421,7 +421,7 @@ function WelcomeMessage() {
     return (
         <ChatMarkdown
             markdown={
-                'Hi, I am fumabase, I can help you search and explain the docs\n'
+                'Hi, I am holocron, I can help you search and explain the docs\n'
             }
             className='text-2xl select-none text-center text-balance font-semibold'
             isStreaming={false}

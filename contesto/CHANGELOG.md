@@ -21,7 +21,7 @@
 ## 2025-08-10 12:00
 
 - Added `onExecute` callback to `createRenderFormTool` configuration
-- Added validation for `updateFumabaseJsonc` tool to ensure fumabase.jsonc file is read before calling
+- Added validation for `updateHolocronJsonc` tool to ensure holocron.jsonc file is read before calling
 - Wrapped render form tool execution in try-catch to properly return errors
 
 ## 2025-08-04 17:49

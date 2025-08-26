@@ -6,42 +6,42 @@ describe(
     () => {
         test('example domain', async () => {
             const result = await generateLlmsFullTxt({
-                domain: 'docs.fumabase.com',
+                domain: 'docs.holocron.com',
                 searchQuery: ['markdown'],
             })
 
             expect(result).toMatchInlineSnapshot(`
-              "**Source:** https://docs.fumabase.com/essentials/images.md
+              "**Source:** https://docs.holocron.com/essentials/images.md
 
               Images and Embeds
 
               ━━━
 
-              **Source:** https://docs.fumabase.com/essentials/images.md?startLine=34#embeds-and-html-elements
+              **Source:** https://docs.holocron.com/essentials/images.md?startLine=34#embeds-and-html-elements
 
               src: https://www.youtube.com/embed/4KzFe50RQkQ
 
               ━━━
 
-              **Source:** https://docs.fumabase.com/essentials/images.md?startLine=14#using-markdown
+              **Source:** https://docs.holocron.com/essentials/images.md?startLine=14#using-markdown
 
               Using Markdown
 
               ━━━
 
-              **Source:** https://docs.fumabase.com/sync-architecture.md
+              **Source:** https://docs.holocron.com/sync-architecture.md
 
               FumaBase Sync Architecture
 
               ━━━
 
-              **Source:** https://docs.fumabase.com/sync-architecture.md?startLine=192#assetforsync-syncts67-105
+              **Source:** https://docs.holocron.com/sync-architecture.md?startLine=192#assetforsync-syncts67-105
 
               Union type representing different syncable assets:
 
               ━━━
 
-              **Source:** https://docs.fumabase.com/sync-architecture.md#database-schema-inferred
+              **Source:** https://docs.holocron.com/sync-architecture.md#database-schema-inferred
 
               chart: erDiagram
                   Site ||--o{ SiteBranch : has

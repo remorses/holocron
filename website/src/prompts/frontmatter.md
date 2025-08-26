@@ -6,11 +6,11 @@ frontmatter should always be at the top of the file, it MUST be present in all f
 ---
 title: concise title. max 65 characters title for the page
 description: 150 characters description of the page
-icon: house # lucide valid icon name, see https://fumabase.com/lucide-icons.json for valid icon names
+icon: house # lucide valid icon name, see https://holocron.com/lucide-icons.json for valid icon names
 full: true
 ---
 
-Icon field contains a lucide icon name, you can fetch the full list of available icons at https://fumabase.com/lucide-icons.json
+Icon field contains a lucide icon name, you can fetch the full list of available icons at https://holocron.com/lucide-icons.json
 
 ALWAYS fetch this icons list before setting the icon field in a page frontmatter! otherwise you could end up using an icon that does not exist.
 ```

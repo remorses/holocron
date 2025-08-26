@@ -9,7 +9,7 @@ let aws4fetch = new AwsClient({
     region: '',
 })
 
-const bucket = 'fumabase-uploads'
+const bucket = 'holocron-uploads'
 export async function getPresignedUrl({
     key,
     headers,

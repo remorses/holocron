@@ -41,7 +41,7 @@ async function main() {
 
     const port = 7664
     await deployFly({
-        appName: 'fumabase-website-prod',
+        appName: 'holocron-website-prod',
         port,
         buildRemotely: true,
         dockerfile: 'Dockerfile',

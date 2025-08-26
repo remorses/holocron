@@ -103,7 +103,7 @@ export default function AfterCliLogin() {
                         CLI Authorization Successful
                     </h1>
                     <p className='text-muted-foreground'>
-                        You have successfully authorized the Fumabase CLI. You
+                        You have successfully authorized the Holocron CLI. You
                         can now close this window and return to your terminal.
                     </p>
                 </div>
@@ -115,7 +115,7 @@ export default function AfterCliLogin() {
         <div className='flex min-h-screen items-center justify-center p-4'>
             <div className='max-w-md rounded-lg border bg-card p-8'>
                 <h1 className='mb-6 text-2xl font-bold'>
-                    Authorize Fumabase CLI
+                    Authorize Holocron CLI
                 </h1>
 
                 <div className='mb-6 rounded-lg bg-muted p-4'>

@@ -1,7 +1,7 @@
 {
     "$schema": "./node_modules/wrangler/config-schema.json",
 
-    "name": "fumabase-docs-website-production",
+    "name": "holocron-docs-website-production",
 
     "assets": {
         "directory": "build/client",
@@ -11,12 +11,18 @@
 
     "r2_buckets": [
         {
-            "bucket_name": "fumabase-uploads",
+            "bucket_name": "holocron-uploads",
             "binding": "UPLOADS_BUCKET",
         },
     ],
     "routes": [
         //
+        { "zone_name": "holocron.so", "pattern": "*.holocron.so/*" },
+        {
+            "zone_name": "holocron.so",
+            "custom_domain": true,
+            "pattern": "example.holocron.so",
+        },
         { "zone_name": "fumabase.com", "pattern": "*.fumabase.com/*" },
         {
             "zone_name": "fumabase.com",

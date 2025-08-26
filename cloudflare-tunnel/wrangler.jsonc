@@ -11,6 +11,10 @@
     // ↓ narrower pattern
     "routes": [
         {
+            "pattern": "holocron.so/_tunnel/*",
+            "zone_name": "holocron.so",
+        },
+        {
             "pattern": "fumabase.com/_tunnel/*",
             "zone_name": "fumabase.com",
         },

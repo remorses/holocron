@@ -65,10 +65,10 @@ function TodosActions() {
 
     const items = isOnboardingChat ? onboardingItems : updateItems
     const greeting = isOnboardingChat
-        ? 'Hi! I am Fumabase, your AI docs assistant'
+        ? 'Hi! I am Holocron, your AI docs assistant'
         : "Hi! I'm ready to help update your docs"
     const subtitle = isOnboardingChat
-        ? 'Things you can do with Fumabase:'
+        ? 'Things you can do with Holocron:'
         : 'Try these powerful doc enhancements:'
 
     return (

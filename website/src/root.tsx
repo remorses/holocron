@@ -11,7 +11,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 export function meta() {
     return [
-        { title: 'Fumabase' },
+        { title: 'Holocron' },
         {
             name: 'description',
             content: 'Host Fumadocs websites without effort',

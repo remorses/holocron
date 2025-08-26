@@ -14,7 +14,7 @@ icon: 'rocket'
 
 # Welcome to Your Documentation
 
-This is your new documentation website built with Fumabase. Here you can create comprehensive guides, API references, and tutorials for your users.
+This is your new documentation website built with Holocron. Here you can create comprehensive guides, API references, and tutorials for your users.
 
 ## Quick Start
 

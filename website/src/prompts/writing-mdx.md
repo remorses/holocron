@@ -273,7 +273,7 @@ description: 'Concise description explaining page purpose and value'
 
 - Verify all code examples are syntactically correct and executable
 - Test all links to ensure they are functional and lead to relevant content
-- Validate Fumabase component syntax with all required properties
+- Validate Holocron component syntax with all required properties
 - Confirm proper heading hierarchy with H2 for main sections, H3 for subsections
 - Ensure content flows logically from basic concepts to advanced topics
 - Check for consistency in terminology, formatting, and component usage
@@ -289,9 +289,9 @@ description: 'Concise description explaining page purpose and value'
 
 # Images
 
-To add images you can use the img jsx tag with an src prop. Never add width and height, these will be automatically added by Fumabase.
+To add images you can use the img jsx tag with an src prop. Never add width and height, these will be automatically added by Holocron.
 
-All images src should either be absolute urls or start with / and the subpath to the image relative to the Fumabase site root folder. The fumabase root folder is the folder that contains the `fumabase.jsonc` config file
+All images src should either be absolute urls or start with / and the subpath to the image relative to the Holocron site root folder. The holocron root folder is the folder that contains the `holocron.jsonc` config file
 
 > NEVER reference an image relative path if it does not exist. First check it exists.
 
@@ -415,8 +415,8 @@ To write faqs use the accordion components, for example:
 ```mdx
 
 <AccordionGroup>
-<Accordion title="What is Fumabase?">
-Fumabase is a platform to create, publish and write documentation websites that will delight your users
+<Accordion title="What is Holocron?">
+Holocron is a platform to create, publish and write documentation websites that will delight your users
 </Accordion>
 {/* Other accordion items... */}
 </AccordionGroup>

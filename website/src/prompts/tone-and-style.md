@@ -55,7 +55,7 @@ when printing code snippets always add the language and optionally pass a title 
 
 here is an example
 
-```jsonc title="fumabase.jsonc" lineNumbers=true
+```jsonc title="holocron.jsonc" lineNumbers=true
 {
  "name": "Docs Website",
  // comment

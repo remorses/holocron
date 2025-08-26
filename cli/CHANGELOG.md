@@ -1,4 +1,4 @@
-# fumabase
+# holocron
 
 ## 0.1.5
 
@@ -29,13 +29,13 @@
 
 ### Patch Changes
 
-- use fumabase.jsonc
+- use holocron.jsonc
 
 ## 0.1.0
 
 ### Minor Changes
 
-- use fumabase.jsonc
+- use holocron.jsonc
 
 ## 0.0.1
 

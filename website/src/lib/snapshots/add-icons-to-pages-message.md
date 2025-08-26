@@ -10,7 +10,7 @@ output: |-
   │   └── overview.mdx # API Overview
   ├── guides
   │   └── configuration.mdx # Configuration
-  └── fumabase.jsonc # Use the updateFumabaseJsonc tool to update these values
+  └── holocron.jsonc # Use the updateHolocronJsonc tool to update these values
 
 ````
 
@@ -88,7 +88,7 @@ output: |-
 Now I'll fetch the available lucide icons to choose appropriate ones for each page:
 ````yaml tool-fetchUrl
 input:
-  url: https://fumabase.com/lucide-icons.json
+  url: https://holocron.com/lucide-icons.json
 output: |-
   [
     "a-arrow-down",

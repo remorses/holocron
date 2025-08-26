@@ -9,8 +9,8 @@ export const defaultDocsJsonComments = {
     'navbar.primary': `// a button shown on the top right`,
 }
 
-export const defaultStartingFumabaseJson: DocsJsonType = {
-    $schema: `https://${WEBSITE_DOMAIN}/fumabase.json`,
+export const defaultStartingHolocronJson: DocsJsonType = {
+    $schema: `https://${WEBSITE_DOMAIN}/holocron.json`,
     siteId: '',
     name: 'Docs',
     disableEditButton: false,
@@ -47,7 +47,7 @@ export const defaultStartingFumabaseJson: DocsJsonType = {
                 header: 'Documentation',
                 items: [
                     {
-                        label: 'Fumabase',
+                        label: 'Holocron',
                         href: `https://${WEBSITE_DOMAIN}`,
                     },
                 ],

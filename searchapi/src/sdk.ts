@@ -52,7 +52,7 @@ interface SectionWithScore extends SectionRecord {
 
 export class SearchClient implements DatasetsInterface {
     private db?: lancedb.Connection
-    private dbPath: string = 'db://fumabase-co7ad3' // Default to cloud database
+    private dbPath: string = 'db://holocron-co7ad3' // Default to cloud database
     private pendingIndexCreation: Set<string> = new Set()
     private totalRowsInserted: Map<string, number> = new Map()
     // Cache for table references and index status

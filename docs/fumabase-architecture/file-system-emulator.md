@@ -6,7 +6,7 @@ prompt: |
   @website/src/lib/spiceflow-generate-message.tsx. Explain how FileSystemEmulator abstracts file access,
   checking filesInDraft first then falling back to getPageContent. Show the read, write, delete, move
   operations, batch operations, and how tools use this interface. Include special handling for
-  fumabase.jsonc and styles.css files.
+  holocron.jsonc and styles.css files.
 ---
 
 # FileSystemEmulator and Database-to-File Flow
@@ -167,15 +167,15 @@ The `getPageContent` function retrieves content from the database:
 ### Implementation
 ```typescript
 export async function getPageContent({ githubPath, branchId }) {
-    // 1. Handle special file: fumabase.jsonc
-    if (githubPath.endsWith('fumabase.jsonc')) {
+    // 1. Handle special file: holocron.jsonc
+    if (githubPath.endsWith('holocron.jsonc')) {
         const branch = await prisma.siteBranch.findFirst({
             where: { branchId },
             select: { docsJson: true, docsJsonComments: true },
         })
         
         if (!branch || !branch.docsJson) {
-            throw new Error(`Cannot find fumabase.jsonc for branch ${branchId}`)
+            throw new Error(`Cannot find holocron.jsonc for branch ${branchId}`)
         }
         
         // Preserve JSONC comments if they exist
@@ -222,7 +222,7 @@ export async function getPageContent({ githubPath, branchId }) {
 
 ### Special File Handling
 
-#### fumabase.jsonc
+#### holocron.jsonc
 - Stored in `SiteBranch.docsJson` and `docsJsonComments`
 - Comments preserved using custom JSONC parser
 - Formatted with 2-space indentation

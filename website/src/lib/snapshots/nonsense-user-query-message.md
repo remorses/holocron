@@ -14,7 +14,7 @@ input:
 
     # Welcome to Your Documentation
 
-    This is your new documentation website built with Fumabase. Here's how to get started:
+    This is your new documentation website built with Holocron. Here's how to get started:
 
     ## 1. Explore the Documentation
 
@@ -32,18 +32,18 @@ input:
 
     ## 3. Configure Your Site
 
-    Edit the `fumabase.jsonc` file to:
+    Edit the `holocron.jsonc` file to:
     - Set your site name and description
     - Add your logo and branding
     - Configure navigation and footer
 
     ## 4. Preview and Publish
 
-    Use the Fumabase CLI to preview your site locally:
+    Use the Holocron CLI to preview your site locally:
 
     ```bash
-    npm install -g fumabase
-    fumabase dev
+    npm install -g holocron
+    holocron dev
     ```
     ...
 output: |-
@@ -55,7 +55,7 @@ output: |-
 
   # Welcome to Your Documentation
 
-  This is your new documentation website built with Fumabase. Here's how to get started:
+  This is your new documentation website built with Holocron. Here's how to get started:
 
   ## 1. Explore the Documentation
 
@@ -73,18 +73,18 @@ output: |-
 
   ## 3. Configure Your Site
 
-  Edit the `fumabase.jsonc` file to:
+  Edit the `holocron.jsonc` file to:
   - Set your site name and description
   - Add your logo and branding
   - Configure navigation and footer
 
   ## 4. Preview and Publish
 
-  Use the Fumabase CLI to preview your site locally:
+  Use the Holocron CLI to preview your site locally:
 
   ```bash
-  npm install -g fumabase
-  fumabase dev
+  npm install -g holocron
+  holocron dev
   ```
   ...
 
@@ -569,7 +569,7 @@ input:
 
     # Site Configuration
 
-    Customize your documentation website through the `fumabase.jsonc` configuration file.
+    Customize your documentation website through the `holocron.jsonc` configuration file.
 
     ## Basic Configuration
 
@@ -577,7 +577,7 @@ input:
 
     Set your site name and description:
 
-    ```jsonc title="fumabase.jsonc"
+    ```jsonc title="holocron.jsonc"
     {
         "name": "Your Product Name",
         "description": "Brief description of your product or service"
@@ -588,7 +588,7 @@ input:
 
     Add your logo for light and dark modes:
 
-    ```jsonc title="fumabase.jsonc"
+    ```jsonc title="holocron.jsonc"
     {
         "logo": {
             "light": "/logo-light.png",
@@ -609,7 +609,7 @@ input:
 
     Add custom links to your navigation bar:
 
-    ```jsonc title="fumabase.jsonc"
+    ```jsonc title="holocron.jsonc"
     {
         "navbar": {
             "links": [
@@ -624,7 +624,7 @@ output: |-
 
   # Site Configuration
 
-  Customize your documentation website through the `fumabase.jsonc` configuration file.
+  Customize your documentation website through the `holocron.jsonc` configuration file.
 
   ## Basic Configuration
 
@@ -632,7 +632,7 @@ output: |-
 
   Set your site name and description:
 
-  ```jsonc title="fumabase.jsonc"
+  ```jsonc title="holocron.jsonc"
   {
       "name": "Your Product Name",
       "description": "Brief description of your product or service"
@@ -643,7 +643,7 @@ output: |-
 
   Add your logo for light and dark modes:
 
-  ```jsonc title="fumabase.jsonc"
+  ```jsonc title="holocron.jsonc"
   {
       "logo": {
           "light": "/logo-light.png",
@@ -664,7 +664,7 @@ output: |-
 
   Add custom links to your navigation bar:
 
-  ```jsonc title="fumabase.jsonc"
+  ```jsonc title="holocron.jsonc"
   {
       "navbar": {
           "links": [
@@ -958,7 +958,7 @@ I've created a comprehensive documentation website structure for you. The site i
 
 The website is now ready for customization. You can:
 1. Edit any page to add your specific content
-2. Configure site branding in `fumabase.jsonc`
+2. Configure site branding in `holocron.jsonc`
 3. Add your own pages and sections
 4. Customize colors and styling
 

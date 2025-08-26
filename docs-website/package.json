@@ -6,7 +6,7 @@
     "build": "NODE_OPTIONS=--max-old-space-size=6144 NODE_ENV=production doppler run -c production --preserve-env -- react-router build",
     "dev": "doppler run -- react-router dev --port 7777",
     "dev:prod": "doppler run -c production -- react-router dev --port 7777",
-    "fly": "fly --app fumabase-docs-prod",
+    "fly": "fly --app holocron-docs-prod",
     "deployment": "pnpm vite-node scripts/deployment.ts",
     "dev:wrangler": "doppler secrets download --format=env --no-file > .dev.vars && react-router dev --port 7777",
     "deploy:prod": "pnpm build && wrangler deploy",

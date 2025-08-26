@@ -1,1 +1,1 @@
-export const DOCS_JSON_BASENAME = 'fumabase.jsonc'
+export const DOCS_JSON_BASENAME = 'holocron.jsonc'

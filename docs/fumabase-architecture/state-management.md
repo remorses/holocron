@@ -11,7 +11,7 @@ prompt: |
 
 # State Management and Synchronization
 
-Fumabase uses Zustand for state management with a sophisticated iframe-based synchronization system to keep the editing interface and preview in sync.
+Holocron uses Zustand for state management with a sophisticated iframe-based synchronization system to keep the editing interface and preview in sync.
 
 ## State Architecture
 
@@ -248,7 +248,7 @@ export function saveChatMessages(chatId: string, messages: UIMessage[]) {
 ### LocalStorage Persistence
 ```typescript
 if (typeof window !== 'undefined') {
-    const persistentStateKey = 'fumabase-docs-persistent-state'
+    const persistentStateKey = 'holocron-docs-persistent-state'
     
     // Rehydrate on load
     const savedState = localStorage.getItem(persistentStateKey)

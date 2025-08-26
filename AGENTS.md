@@ -639,7 +639,7 @@ to do so we have first to run the command `pnpm -r why zod@3.25.76` to see the r
 
 ```
 
-website /Users/morse/Documents/GitHub/fumabase/website (PRIVATE)
+website /Users/morse/Documents/GitHub/holocron/website (PRIVATE)
 
 dependencies:
 @better-auth/stripe 1.2.10

@@ -163,7 +163,7 @@ describe('DocsConfigSchema', () => {
         expect(getTypeForNameInSchema('name', compiledDocsJsonSchema))
             .toMatchInlineSnapshot(`
               {
-                "description": "Project or product name. This will be used in fumabase dashboard to list the user websites. It has no other use case than that.",
+                "description": "Project or product name. This will be used in holocron dashboard to list the user websites. It has no other use case than that.",
                 "minLength": 1,
                 "type": "string",
               }

@@ -73,7 +73,7 @@ async function* assetsFromFilesList({
         yield { type: 'metaFile', ... }
     }
     
-    // 2. Yield fumabase.jsonc configuration
+    // 2. Yield holocron.jsonc configuration
     if (docsJson !== undefined) {
         yield { type: 'docsJson', ... }
     }

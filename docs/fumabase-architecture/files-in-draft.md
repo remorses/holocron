@@ -10,7 +10,7 @@ prompt: |
 
 # filesInDraft Structure and Management
 
-The `filesInDraft` structure is the heart of Fumabase's real-time editing system. It maintains all file modifications in memory during an editing session, enabling instant preview updates without database writes.
+The `filesInDraft` structure is the heart of Holocron's real-time editing system. It maintains all file modifications in memory during an editing session, enabling instant preview updates without database writes.
 
 ## Data Structure
 
@@ -149,7 +149,7 @@ export function doFilesInDraftNeedPush(
 ## Special Files Handling
 
 ### Configuration Files
-- `fumabase.jsonc`: Website configuration
+- `holocron.jsonc`: Website configuration
 - `styles.css`: Custom CSS styles
 - `meta.json`: Page metadata
 

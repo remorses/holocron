@@ -1,14 +1,14 @@
 {
-    "name": "fumabase",
+    "name": "holocron",
     "version": "0.1.4",
     "description": "",
     "type": "module",
-    "repository": "https://github.com/remorses/fumabase",
+    "repository": "https://github.com/remorses/holocron",
     "scripts": {
         "build": "tsc ",
         "typecheck": "tsc",
         "prepublishOnly": "tsc",
-        "fumabase": "node bin.js",
+        "holocron": "node bin.js",
         "watch": "tsc -w"
     },
     "bin": "./bin.js",

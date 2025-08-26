@@ -31,7 +31,7 @@ import { DocsJsonType } from 'docs-website/src/lib/docs-json.js'
 import { isDocsJson } from 'docs-website/src/lib/utils.js'
 import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants.js'
 
-export const cli = cac('fumabase')
+export const cli = cac('holocron')
 
 cli.help()
 
@@ -56,7 +56,7 @@ type UserConfig = {
     websocketIds?: Record<string, string> // Map of siteId to websocketId
 }
 
-const url = process.env.SERVER_URL || 'https://fumabase.com'
+const url = process.env.SERVER_URL || 'https://holocron.com'
 const configPath = path.join(homedir(), `.${DOCS_JSON_BASENAME}`)
 
 // Check if running in TTY environment
@@ -271,7 +271,7 @@ async function determineTemplateDownload({
             console.error(
                 'Use --from-template to download starter template files',
             )
-            console.error('Usage: fumabase init --from-template')
+            console.error('Usage: holocron init --from-template')
             process.exit(1)
         }
 
@@ -285,7 +285,7 @@ async function determineTemplateDownload({
 
         if (!response.downloadTemplate) {
             console.log(
-                'Cannot initialize a fumabase project without markdown files.',
+                'Cannot initialize a holocron project without markdown files.',
             )
             process.exit(1)
         }
@@ -301,7 +301,7 @@ async function determineTemplateDownload({
             console.error(
                 'Use --from-template to download starter template files, or add more markdown files',
             )
-            console.error('Usage: fumabase init --from-template')
+            console.error('Usage: holocron init --from-template')
             process.exit(1)
         }
 
@@ -349,7 +349,7 @@ const apiClient = createApiClient(url, {
     },
 })
 
-cli.command('init', 'Initialize or deploy a fumabase project')
+cli.command('init', 'Initialize or deploy a holocron project')
     .option('--name <name>', 'Name for the documentation site')
     .option('--from-template', 'Download starter template files')
     .option('--org <orgId>', 'Organization ID to use')
@@ -389,7 +389,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                         '\nYou need to be logged in to initialize a project.',
                     ),
                 )
-                console.log(pc.cyan('Please run: fumabase login'))
+                console.log(pc.cyan('Please run: holocron login'))
                 process.exit(1)
             }
 
@@ -405,7 +405,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                     console.error(
                         'Error: --name is required in non-interactive environments',
                     )
-                    console.error('Usage: fumabase init --name "My Site Name"')
+                    console.error('Usage: holocron init --name "My Site Name"')
                     process.exit(1)
                 } else {
                     const response = await prompts({
@@ -436,7 +436,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
                             `  ${org.orgId} (${org.name || 'No name'})`,
                         )
                     })
-                    console.error('Usage: fumabase init --org <orgId>')
+                    console.error('Usage: holocron init --org <orgId>')
                     process.exit(1)
                 } else {
                     const response = await prompts({
@@ -726,7 +726,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
             console.log(table.toString())
 
             console.log(pc.cyan('\nNext steps:'))
-            console.log(pc.gray('   1. ') + pc.cyan('Run: fumabase dev'))
+            console.log(pc.gray('   1. ') + pc.cyan('Run: holocron dev'))
             console.log(
                 pc.gray('   2. ') +
                     pc.cyan('Open your browser to preview changes'),
@@ -742,7 +742,7 @@ cli.command('init', 'Initialize or deploy a fumabase project')
         }
     })
 
-cli.command('login', 'Login to fumabase')
+cli.command('login', 'Login to holocron')
     .option('--no-browser', 'Skip automatic browser opening')
     .action(async (options) => {
         // Check if there's an existing user logged in
@@ -760,7 +760,7 @@ cli.command('login', 'Login to fumabase')
             randomInt(0, 10),
         ).join('')
 
-        // Display ASCII art for fumabase
+        // Display ASCII art for holocron
         console.log('\n')
         console.log(
             pc.cyan(
@@ -884,7 +884,7 @@ cli.command('login', 'Login to fumabase')
                     console.log(pc.gray(`API key saved to: ${configPath}`))
                     console.log(pc.blue(`Logged in as: ${data.userEmail}`))
                     console.log(
-                        pc.cyan('\nRun `fumabase init` to start a new project'),
+                        pc.cyan('\nRun `holocron init` to start a new project'),
                     )
                     return
                 }
@@ -902,7 +902,7 @@ cli.command('login', 'Login to fumabase')
         process.exit(1)
     })
 
-cli.command('dev', 'Preview your fumabase website')
+cli.command('dev', 'Preview your holocron website')
     .option('--dir <dir>', `Directory with the ${DOCS_JSON_BASENAME}`)
     .action(async (options) => {
         let { dir = process.cwd() } = options
@@ -975,7 +975,7 @@ cli.command('dev', 'Preview your fumabase website')
             if (!docsJson) {
                 console.error(
                     pc.red(
-                        `${DOCS_JSON_BASENAME} file not found at the project root. Use fumabase init to create a new project`,
+                        `${DOCS_JSON_BASENAME} file not found at the project root. Use holocron init to create a new project`,
                     ),
                 )
                 process.exit(1)
@@ -986,7 +986,7 @@ cli.command('dev', 'Preview your fumabase website')
                 console.error(pc.red(`siteId not found in ${DOCS_JSON_BASENAME}`))
                 process.exit(1)
             }
-            const preferredHost = 'fumabase.com'
+            const preferredHost = 'holocron.com'
             const previewDomain = (docsJson?.domains || []).sort((a, b) => {
                 const aIsFb = a.endsWith(preferredHost)
                 const bIsFb = b.endsWith(preferredHost)
@@ -1094,7 +1094,7 @@ cli.command('dev', 'Preview your fumabase website')
                 )
                 console.log(
                     pc.gray(
-                        `Fumabase will detect the updates and deploy a new version of the site`,
+                        `Holocron will detect the updates and deploy a new version of the site`,
                     ),
                 )
 
@@ -1200,7 +1200,7 @@ cli.command('sync', 'Sync current branch with GitHub')
                 console.error(
                     pc.red('You need to be logged in to sync a project.'),
                 )
-                console.error(pc.cyan('Please run: fumabase login'))
+                console.error(pc.cyan('Please run: holocron login'))
                 process.exit(1)
             }
 
@@ -1293,7 +1293,7 @@ cli.command('sync', 'Sync current branch with GitHub')
                     pc.red(`Error: ${DOCS_JSON_BASENAME} not found or missing siteId`),
                 )
                 console.error(
-                    pc.cyan('Run "fumabase init" to initialize this project'),
+                    pc.cyan('Run "holocron init" to initialize this project'),
                 )
                 process.exit(1)
             }
@@ -1338,7 +1338,7 @@ cli.command('sync', 'Sync current branch with GitHub')
         }
     })
 
-cli.command('delete', 'Delete the current fumabase website')
+cli.command('delete', 'Delete the current holocron website')
     .option('--confirm', 'Skip confirmation prompt')
     .action(async (options) => {
         try {
@@ -1348,7 +1348,7 @@ cli.command('delete', 'Delete the current fumabase website')
                 console.error(
                     pc.red('You need to be logged in to delete a project.'),
                 )
-                console.error(pc.cyan('Please run: fumabase login'))
+                console.error(pc.cyan('Please run: holocron login'))
                 process.exit(1)
             }
 
@@ -1359,7 +1359,7 @@ cli.command('delete', 'Delete the current fumabase website')
                     pc.red(`Error: ${DOCS_JSON_BASENAME} not found or missing siteId`),
                 )
                 console.error(
-                    pc.cyan('Run "fumabase init" to initialize this project'),
+                    pc.cyan('Run "holocron init" to initialize this project'),
                 )
                 process.exit(1)
             }
@@ -1375,7 +1375,7 @@ cli.command('delete', 'Delete the current fumabase website')
                             'Error: --confirm is required in non-interactive environments',
                         ),
                     )
-                    console.error(pc.cyan('Usage: fumabase delete --confirm'))
+                    console.error(pc.cyan('Usage: holocron delete --confirm'))
                     process.exit(1)
                 }
 
@@ -1417,9 +1417,9 @@ cli.command('delete', 'Delete the current fumabase website')
                 )
 
                 // Optionally remove the docs json file
-                const fumabaseJsonPath = path.resolve(DOCS_JSON_BASENAME)
-                if (fs.existsSync(fumabaseJsonPath)) {
-                    fs.unlinkSync(fumabaseJsonPath)
+                const holocronJsonPath = path.resolve(DOCS_JSON_BASENAME)
+                if (fs.existsSync(holocronJsonPath)) {
+                    fs.unlinkSync(holocronJsonPath)
                     console.log(pc.gray(`Local ${DOCS_JSON_BASENAME} file removed.`))
                 }
             } else {

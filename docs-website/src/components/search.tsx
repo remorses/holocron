@@ -134,7 +134,7 @@ export function CustomSearchDialog(props: SharedProps) {
                         rel='noreferrer noopener'
                         className='text-xs text-nowrap text-fd-muted-foreground'
                     >
-                        Powered by Fumabase
+                        Powered by Holocron
                     </a>
                 </SearchDialogFooter>
             </SearchDialogContent>

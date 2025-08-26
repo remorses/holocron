@@ -11,7 +11,7 @@ export function PoweredBy({ className }: { className?: string }) {
                     target='_blank'
                     className={cn('text-fd-muted-foreground')}
                 >
-                    Fumabase
+                    Holocron
                 </a>
             </b>
         </div>

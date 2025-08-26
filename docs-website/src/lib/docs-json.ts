@@ -397,7 +397,7 @@ const CSSVariablesSchema = z
         All keys should start with --. The same keys should be specified to both light and dark.
     `)
 
-// === Main fumabase.jsonc schema ===
+// === Main holocron.jsonc schema ===
 export const DocsConfigSchema = z
     .object({
         $schema: z
@@ -414,7 +414,7 @@ export const DocsConfigSchema = z
             .string()
             .min(1)
             .describe(
-                'Project or product name. This will be used in fumabase dashboard to list the user websites. It has no other use case than that.',
+                'Project or product name. This will be used in holocron dashboard to list the user websites. It has no other use case than that.',
             ),
 
         // navTopLinks: z.array(NavigationAnchorItem).optional(),

@@ -25,7 +25,7 @@ icon: 'settings'
 
 # Site Configuration
 
-Customize your documentation website through the `fumabase.jsonc` configuration file.
+Customize your documentation website through the `holocron.jsonc` configuration file.
 
 ## Basic Configuration
 
@@ -33,7 +33,7 @@ Customize your documentation website through the `fumabase.jsonc` configuration 
 
 Set your site name and description:
 
-```jsonc title="fumabase.jsonc"
+```jsonc title="holocron.jsonc"
 {
     "name": "Your Product Name",
     "description": "Brief description of your product or service"
@@ -44,7 +44,7 @@ Set your site name and description:
 
 Add your logo for light and dark modes:
 
-```jsonc title="fumabase.jsonc"
+```jsonc title="holocron.jsonc"
 {
     "logo": {
         "light": "/logo-light.png",
@@ -65,7 +65,7 @@ If you don't have logo images, use the `text` property to display your brand nam
 
 Add custom links to your navigation bar:
 
-```jsonc title="fumabase.jsonc"
+```jsonc title="holocron.jsonc"
 {
     "navbar": {
         "links": [
@@ -118,7 +118,7 @@ Choose between a custom button or GitHub link:
 
 Add social media profiles to your footer:
 
-```jsonc title="fumabase.jsonc"
+```jsonc title="holocron.jsonc"
 {
     "footer": {
         "socials": {
@@ -134,7 +134,7 @@ Add social media profiles to your footer:
 
 Organize footer links into sections:
 
-```jsonc title="fumabase.jsonc"
+```jsonc title="holocron.jsonc"
 {
     "footer": {
         "links": [
@@ -165,7 +165,7 @@ Organize footer links into sections:
 
 Choose from predefined color themes:
 
-```jsonc title="fumabase.jsonc"
+```jsonc title="holocron.jsonc"
 {
     "theme": "ocean"
 }
@@ -177,7 +177,7 @@ Available themes: `black`, `catppuccin`, `dusk`, `neutral`, `ocean`, `purple`, `
 
 For advanced customization, define custom CSS variables:
 
-```jsonc title="fumabase.jsonc"
+```jsonc title="holocron.jsonc"
 {
     "cssVariables": {
         "light": {
@@ -198,7 +198,7 @@ For advanced customization, define custom CSS variables:
 
 Add custom meta tags for SEO:
 
-```jsonc title="fumabase.jsonc"
+```jsonc title="holocron.jsonc"
 {
     "seo": {
         "metatags": {
@@ -213,7 +213,7 @@ Add custom meta tags for SEO:
 
 Control search engine indexing:
 
-```jsonc title="fumabase.jsonc"
+```jsonc title="holocron.jsonc"
 {
     "seo": {
         "indexing": "navigable"
@@ -229,7 +229,7 @@ Options: `navigable` (only main pages) or `all` (all pages)
 
 Connect custom domains to your documentation:
 
-```jsonc title="fumabase.jsonc"
+```jsonc title="holocron.jsonc"
 {
     "domains": [
         "docs.your-company.com",
@@ -239,14 +239,14 @@ Connect custom domains to your documentation:
 ```
 
 <Warning>
-After adding domains, you'll need to configure DNS records to point to Fumabase's servers.
+After adding domains, you'll need to configure DNS records to point to Holocron's servers.
 </Warning>
 
 ### Redirects
 
 Set up URL redirects for moved content:
 
-```jsonc title="fumabase.jsonc"
+```jsonc title="holocron.jsonc"
 {
     "redirects": [
         {
@@ -262,7 +262,7 @@ Set up URL redirects for moved content:
 
 Add a site-wide announcement banner:
 
-```jsonc title="fumabase.jsonc"
+```jsonc title="holocron.jsonc"
 {
     "banner": {
         "content": "🚀 New feature released! Check out our latest updates.",
@@ -275,7 +275,7 @@ Add a site-wide announcement banner:
 
 ### Version Control
 
-- Keep your `fumabase.jsonc` file in version control
+- Keep your `holocron.jsonc` file in version control
 - Test configuration changes locally before deploying
 - Use comments in the JSONC file for documentation
 
@@ -570,7 +570,7 @@ Always include both title and description. Missing these can hurt your SEO and m
 
 ## Validation
 
-Fumabase validates frontmatter and will show warnings for:
+Holocron validates frontmatter and will show warnings for:
 - Missing required fields
 - Invalid icon names
 - Malformed YAML syntax
@@ -704,7 +704,7 @@ icon: 'rocket'
 
 # Welcome to Your Documentation
 
-This is your new documentation website built with Fumabase. Here's how to get started:
+This is your new documentation website built with Holocron. Here's how to get started:
 
 ## 1. Explore the Documentation
 
@@ -722,25 +722,25 @@ Edit any page by clicking the edit button in the top right corner. You can:
 
 ## 3. Configure Your Site
 
-Edit the `fumabase.jsonc` file to:
+Edit the `holocron.jsonc` file to:
 - Set your site name and description
 - Add your logo and branding
 - Configure navigation and footer
 
 ## 4. Preview and Publish
 
-Use the Fumabase CLI to preview your site locally:
+Use the Holocron CLI to preview your site locally:
 
 ```bash
-npm install -g fumabase
-fumabase dev
+npm install -g holocron
+holocron dev
 ```
 
 Your changes will be automatically deployed when you push to your repository.
 
 ## Need Help?
 
-Check out our comprehensive guides on documentation best practices and Fumabase features to create an outstanding documentation experience for your users.
+Check out our comprehensive guides on documentation best practices and Holocron features to create an outstanding documentation experience for your users.
 
 
 ==================================================

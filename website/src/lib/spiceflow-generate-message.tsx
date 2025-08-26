@@ -123,9 +123,9 @@ export async function generateSystemMessage({
 
         You can edit a ${githubFolder}/${DOCS_JSON_BASENAME} file to customize website settings, this file has the following json schema:
 
-        <fumabaseJsonSchema>
+        <holocronJsonSchema>
         ${JSON.stringify(docsJsonSchema, null, 2)}
-        </fumabaseJsonSchema>
+        </holocronJsonSchema>
 
         Notice that this project is located in the base folder ${githubFolder}, all your files should be put inside ${githubFolder}
         `,
@@ -209,7 +209,7 @@ export type WebsiteTools = {
         input: {}
         output: string
     }
-    updateFumabaseJsonc: {
+    updateHolocronJsonc: {
         input: RenderFormParameters
         output: any
     }
@@ -349,7 +349,7 @@ export async function* generateMessageStream({
         })
     }
 
-    const updateFumabaseJsonc = createRenderFormTool({
+    const updateHolocronJsonc = createRenderFormTool({
         jsonSchema: docsJsonSchema,
         notifyError,
 
@@ -363,7 +363,7 @@ export async function* generateMessageStream({
         replaceOptionalsWithNulls: model.provider.startsWith('openai'),
         onExecute: async ({ messages }) => {
             // Check if the LLM has read a docs json file in previous messages
-            const hasReadFumabaseFile = messages.some((msg) => {
+            const hasReadHolocronFile = messages.some((msg) => {
                 if (msg.role !== 'assistant') return false
                 // ignore if content is a string
                 if (typeof msg.content === 'string') return false
@@ -382,7 +382,7 @@ export async function* generateMessageStream({
                 })
             })
 
-            if (!hasReadFumabaseFile) {
+            if (!hasReadHolocronFile) {
                 throw new Error(
                     `You need to first read the ${DOCS_JSON_BASENAME} file before calling this tool, to know what are the existing values`,
                 )
@@ -556,7 +556,7 @@ export async function* generateMessageStream({
                   }),
               }
             : {
-                  updateFumabaseJsonc,
+                  updateHolocronJsonc,
               }),
 
         getProjectFiles: tool({
@@ -577,7 +577,7 @@ export async function* generateMessageStream({
                         githubFolder || '.',
                         DOCS_JSON_BASENAME,
                     ),
-                    title: 'Use the updateFumabaseJsonc tool to update these values',
+                    title: 'Use the updateHolocronJsonc tool to update these values',
                 })
                 // filePaths.push({ path: 'styles.css', title: 'The CSS styles for the website. Only update this file for advanced CSS customisations' })
                 return printDirectoryTree({

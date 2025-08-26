@@ -1,8 +1,8 @@
 ---
 title: syncSite Function Documentation
-description: Core synchronization function for Fumabase documentation sites
+description: Core synchronization function for Holocron documentation sites
 prompt: |
-  Document the syncSite function and media asset handling in Fumabase.
+  Document the syncSite function and media asset handling in Holocron.
   Read @website/src/lib/sync.ts to understand:
   - How media files are detected and processed
   - The downloadUrl field functionality
@@ -20,7 +20,7 @@ prompt: |
 
 ## Overview
 
-`syncSite` is the core function responsible for synchronizing documentation files to the Fumabase database. It processes markdown files, media assets, and configuration updates to maintain the documentation site state.
+`syncSite` is the core function responsible for synchronizing documentation files to the Holocron database. It processes markdown files, media assets, and configuration updates to maintain the documentation site state.
 
 ## Usage Locations
 
@@ -30,7 +30,7 @@ prompt: |
 
 Creates the initial documentation site when new users join:
 
-- Sets up starter documentation with default `fumabase.jsonc` configuration
+- Sets up starter documentation with default `holocron.jsonc` configuration
 - Creates internal domains (e.g., `username-hash.domain.com`)
 - Initializes the main branch structure
 - Provides a ready-to-use documentation template
@@ -44,7 +44,7 @@ Automatically syncs changes from GitHub repositories:
 - Triggered on GitHub push events via webhooks
 - Updates site content when commits are pushed to connected repos
 - Processes only changed files for efficient updates
-- Maintains sync between GitHub and Fumabase database
+- Maintains sync between GitHub and Holocron database
 
 ### 3. **API Routes (Spiceflow)**
 
@@ -66,7 +66,7 @@ Saves changes made through the chat interface:
 
 Handles complete site creation or updates:
 
-- Used by `fumabase push` CLI command
+- Used by `holocron push` CLI command
 - Creates new sites with initial content
 - Updates existing sites with bulk file changes
 - Processes both markdown and media files
@@ -79,13 +79,13 @@ Syncs changes before creating GitHub pull requests:
 
 - Ensures local changes are saved before PR creation
 - Part of the GitHub integration workflow
-- Maintains consistency between Fumabase and GitHub
+- Maintains consistency between Holocron and GitHub
 
 ## Workflow Summary
 
 ```
 ┌─────────────┐
-│   CLI Tool  │──► fumabase push ──► /upsertSiteFromFiles ──► syncSite
+│   CLI Tool  │──► holocron push ──► /upsertSiteFromFiles ──► syncSite
 └─────────────┘
 
 ┌─────────────┐
@@ -107,7 +107,7 @@ Syncs changes before creating GitHub pull requests:
 - **Incremental Updates**: Processes only changed files when possible
 - **Multi-source Support**: Handles files from GitHub, CLI uploads, and chat edits
 - **Asset Processing**: Manages both markdown content and media files
-- **Configuration Updates**: Processes `fumabase.jsonc` changes including domain updates
+- **Configuration Updates**: Processes `holocron.jsonc` changes including domain updates
 
 ## Media Asset Handling
 
@@ -133,7 +133,7 @@ The `downloadUrl` field determines how media assets are handled:
 
 Assets are uploaded to S3 when (`sync.ts:527-599`):
 - The `downloadUrl` exists AND
-- The URL is NOT already from `UPLOADS_BASE_URL` (Fumabase's S3 bucket)
+- The URL is NOT already from `UPLOADS_BASE_URL` (Holocron's S3 bucket)
 
 Process:
 1. Download the file from the provided `downloadUrl`

@@ -10,7 +10,7 @@ prompt: |
 
 # Database Schema for Content Storage
 
-Fumabase uses PostgreSQL with Prisma ORM to manage content storage. The schema is designed for efficient content deduplication, version control, and multi-branch support.
+Holocron uses PostgreSQL with Prisma ORM to manage content storage. The schema is designed for efficient content deduplication, version control, and multi-branch support.
 
 ## Core Content Tables
 
@@ -117,7 +117,7 @@ model SiteBranch {
     branchId         String   @id @default(cuid())
     siteId           String
     branch           String   // Git branch name
-    docsJson         Json?    // fumabase.jsonc content
+    docsJson         Json?    // holocron.jsonc content
     docsJsonComments Json?    // Preserved JSONC comments
     cssStyles        String?  // Custom CSS
     

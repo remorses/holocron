@@ -1,4 +1,4 @@
-import { Route } from './+types/fumabaseInternalAPI.$'
+import { Route } from './+types/holocronInternalAPI.$'
 import { docsApp } from '../lib/spiceflow-docs-app'
 
 export const loader = async ({ request, context }: Route.LoaderArgs) => {

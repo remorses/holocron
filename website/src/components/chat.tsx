@@ -648,7 +648,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                         )
                     }
                     if (
-                        part.type === 'tool-updateFumabaseJsonc' &&
+                        part.type === 'tool-updateHolocronJsonc' &&
                         part.state === 'output-available'
                     ) {
                         return (

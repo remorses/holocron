@@ -1,6 +1,6 @@
 # E2E Test: Create a New Documentation Website for a Company
 
-This guide explains how to test the creation of a new documentation website through the Fumabase chat interface.
+This guide explains how to test the creation of a new documentation website through the Holocron chat interface.
 
 ## Overview
 
@@ -9,7 +9,7 @@ This test covers the complete flow of creating a new documentation website for a
 ## Prerequisites
 
 - User must be authenticated (Google OAuth)
-- Browser should be at the Fumabase homepage
+- Browser should be at the Holocron homepage
 
 ## Test Steps
 
@@ -32,8 +32,8 @@ await page.getByRole('link', { name: /.*@gmail\.com/ }).click()
 // If permission screen appears, click Continue
 await page.getByRole('button', { name: 'Continua' }).click()
 
-// Wait for redirect back to Fumabase
-await page.waitForURL(/fumabase\.com/, { timeout: 10000 })
+// Wait for redirect back to Holocron
+await page.waitForURL(/holocron\.com/, { timeout: 10000 })
 ```
 
 ### 3. Initiate Website Creation
@@ -107,7 +107,7 @@ for (const file of expectedFiles) {
 }
 
 // Look for the generated site URL
-const siteUrl = await page.locator('a[href*="fumabase.com"]').textContent()
+const siteUrl = await page.locator('a[href*="holocron.com"]').textContent()
 console.log('Created site URL:', siteUrl)
 
 // Verify Save Changes button appears
@@ -207,12 +207,12 @@ When multiple elements match, use:
 ```javascript
 test('Create new documentation site for company', async ({ page }) => {
   // Full test implementation
-  await page.goto('https://fumabase.com')
+  await page.goto('https://holocron.com')
   
   // ... implement all steps above
   
   // Final assertion
-  const siteUrl = await page.locator('a[href*="fumabase.com"]').textContent()
-  expect(siteUrl).toMatch(/[\w-]+\.fumabase\.com/)
+  const siteUrl = await page.locator('a[href*="holocron.com"]').textContent()
+  expect(siteUrl).toMatch(/[\w-]+\.holocron\.com/)
 })
 ```

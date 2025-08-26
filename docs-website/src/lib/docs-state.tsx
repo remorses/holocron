@@ -141,7 +141,7 @@ if (typeof window !== 'undefined') {
     window['useDocsState'] = useDocsState
 
     // Rehydrate from localStorage
-    const persistentStateKey = 'fumabase-docs-persistent-state'
+    const persistentStateKey = 'holocron-docs-persistent-state'
     const savedState = localStorage.getItem(persistentStateKey)
     if (savedState) {
         try {

@@ -1,13 +1,13 @@
 # File Tree
 
-└── fumabase.jsonc
+└── holocron.jsonc
 
 
 ==================================================
-FILE: fumabase.jsonc
+FILE: holocron.jsonc
 ==================================================
 {
-  "$schema": "https://fumabase.com/schema.json",
+  "$schema": "https://holocron.com/schema.json",
   "siteId": "",
   "name": "My Documentation",
   "description": "Documentation website"

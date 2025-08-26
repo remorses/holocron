@@ -1,7 +1,7 @@
 {
     "name": "contesto",
     "private": true,
-    "description": "Chat components and utilities for fumabase",
+    "description": "Chat components and utilities for holocron",
     "type": "module",
     "main": "src/index.ts",
     "repository": "https://github.com/remorses/",

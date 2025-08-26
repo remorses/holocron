@@ -17,7 +17,7 @@ export function startWebSocketWithTunnel(existingWebsocketId?: string) {
                 existingWebsocketId || crypto.randomBytes(8).toString('hex')
 
             // Connect to the upstream WebSocket
-            const upstreamUrl = `wss://fumabase.com/_tunnel/upstream?id=${websocketId}`
+            const upstreamUrl = `wss://holocron.com/_tunnel/upstream?id=${websocketId}`
             const ws = new WebSocket(upstreamUrl)
 
             // Track if we've successfully connected
@@ -60,7 +60,7 @@ export function startWebSocketWithTunnel(existingWebsocketId?: string) {
                         '\n❌ Connection failed: Another upstream is already connected with this ID!',
                     )
                     console.error(
-                        '   This usually means another instance of fumabase dev is running.',
+                        '   This usually means another instance of holocron dev is running.',
                     )
                     console.error('   Solutions:')
                     console.error('   1. Stop the other instance first')

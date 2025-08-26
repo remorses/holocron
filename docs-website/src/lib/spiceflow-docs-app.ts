@@ -49,7 +49,7 @@ import { printDirectoryTree } from './directory-tree'
 
 const agentPromptTemplate = Handlebars.compile(agentPrompt)
 
-export const docsApp = new Spiceflow({ basePath: '/fumabaseInternalAPI' })
+export const docsApp = new Spiceflow({ basePath: '/holocronInternalAPI' })
     .use(preventProcessExitIfBusy())
     .route({
         method: 'POST',

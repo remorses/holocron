@@ -23,7 +23,7 @@ The following CSS custom properties (variables) are always available for the doc
 | `--color-fd-accent-foreground`    | Text/foreground on accent background            | `hsl(0, 0%, 9%)`        |
 | `--color-fd-ring`                 | Ring color for focus states (outline highlight) | `hsl(0, 0%, 63.9%)`     |
 
-To edit these variables you should use the `updateFumabaseJsonc` tool if available and edit the `cssVariables.light` and `cssVariables.dark` objects. These 2 objects should have the custom css properties and keys should always start with `--`. Every time you let the user pick the color for a css variable always show 2 color picker for each variable, 1 for the dark and 1 for the light variant.
+To edit these variables you should use the `updateHolocronJsonc` tool if available and edit the `cssVariables.light` and `cssVariables.dark` objects. These 2 objects should have the custom css properties and keys should always start with `--`. Every time you let the user pick the color for a css variable always show 2 color picker for each variable, 1 for the dark and 1 for the light variant.
 
 Here is an example of good CSS variables:
 
