@@ -2,16 +2,22 @@ import type {
     Request as CFRequest,
     ExecutionContext,
     DurableObjectNamespace,
+    DurableObjectState,
     DurableObjectStub,
 } from '@cloudflare/workers-types'
 
-type TunnelEnv = {
+type Env = {
     TUNNEL_DO: DurableObjectNamespace
 }
+
+type Attachment = {
+    role: 'up' | 'down'
+}
+
 export default {
     async fetch(
         req: CFRequest,
-        env: TunnelEnv,
+        env: Env,
         ctx?: ExecutionContext,
     ): Promise<Response> {
         // Answer CORS pre-flights (OPTIONS) immediately
@@ -38,15 +44,15 @@ export default {
 
 /* ------------ Durable Object ------------ */
 export class Tunnel {
-    constructor(state, env) {
-        this.up = null // single Node process
-        this.downs = new Set() // browsers
-    }
-    up: WebSocket | null
-    downs: Set<WebSocket>
-    // env: any
+    ctx: DurableObjectState
+    env: Env
 
-    async fetch(req) {
+    constructor(state: DurableObjectState, env: Env) {
+        this.ctx = state
+        this.env = env
+    }
+
+    async fetch(req: Request) {
         if (req.headers.get('Upgrade') !== 'websocket')
             return addCors(new Response('Upgrade required', { status: 400 }))
 
@@ -56,52 +62,104 @@ export class Tunnel {
         const [client, server] = Object.values(pair)
 
         if (role === 'up') {
-            if (this.up) {
+            // Check if upstream already exists using live sockets
+            const existingUp = this.getUpstream()
+            if (existingUp) {
                 // Accept the connection but immediately close it with a specific code
                 server.accept()
                 server.close(4009, 'Upstream already connected')
                 // Still return a successful WebSocket upgrade response
                 return addCors(new Response(null, { status: 101, webSocket: client }))
             }
-            this.up = server
-            server.accept()
-            this.bindUp()
+            // Accept with hibernation and tag as upstream
+            this.ctx.acceptWebSocket(server)
+            server.serializeAttachment({ role: 'up' } satisfies Attachment)
         } else {
-            this.downs.add(server)
-            server.accept()
-            this.bindDown(server)
+            // Accept with hibernation and tag as downstream
+            this.ctx.acceptWebSocket(server)
+            server.serializeAttachment({ role: 'down' } satisfies Attachment)
         }
 
         return addCors(new Response(null, { status: 101, webSocket: client }))
     }
 
-    /* ------ wiring helpers ------ */
+    /* ------ WebSocket event handlers for hibernation ------ */
 
-    bindUp() {
-        const ws = this.up
-        if (!ws) return
-
-        ws.addEventListener('message', (ev) => {
-            // Fan-out to every browser
-            for (const c of this.downs) {
+    async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer) {
+        const attachment = ws.deserializeAttachment() as Attachment | undefined
+        
+        if (attachment?.role === 'up') {
+            // Fan-out message from upstream to all downstreams
+            const downs = this.getDownstreams()
+            for (const down of downs) {
                 try {
-                    c.send(ev.data)
+                    down.send(message)
                 } catch {}
             }
-        })
-
-        ws.addEventListener('close', () => {
-            this.up = null
-            for (const c of this.downs) c.close(1012, 'upstream closed')
-            this.downs.clear()
-        })
+        } else if (attachment?.role === 'down') {
+            // Forward message from downstream to upstream
+            const up = this.getUpstream()
+            if (up) {
+                try {
+                    up.send(message)
+                } catch {}
+            }
+        }
     }
 
-    bindDown(ws) {
-        ws.addEventListener('message', (ev) => {
-            if (this.up) this.up.send(ev.data)
-        })
-        ws.addEventListener('close', () => this.downs.delete(ws))
+    async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean) {
+        const attachment = ws.deserializeAttachment() as Attachment | undefined
+        
+        if (attachment?.role === 'up') {
+            // Upstream closed, close all downstreams
+            const downs = this.getDownstreams()
+            for (const down of downs) {
+                try {
+                    down.close(1012, 'upstream closed')
+                } catch {}
+            }
+        }
+        // If downstream closes, it's automatically removed from the live set
+    }
+
+    async webSocketError(ws: WebSocket, error: any) {
+        // Handle the same as close
+        const attachment = ws.deserializeAttachment() as Attachment | undefined
+        
+        if (attachment?.role === 'up') {
+            // Upstream errored, close all downstreams
+            const downs = this.getDownstreams()
+            for (const down of downs) {
+                try {
+                    down.close(1011, 'upstream error')
+                } catch {}
+            }
+        }
+    }
+
+    /* ------ Helper methods to get live sockets ------ */
+
+    private getUpstream(): WebSocket | null {
+        const sockets = this.ctx.getWebSockets()
+        for (const ws of sockets) {
+            const attachment = ws.deserializeAttachment() as Attachment | undefined
+            if (attachment?.role === 'up') {
+                return ws
+            }
+        }
+        return null
+    }
+
+    private getDownstreams(): WebSocket[] {
+        const sockets = this.ctx.getWebSockets()
+        const downs: WebSocket[] = []
+        for (const ws of sockets) {
+            const attachment = ws.deserializeAttachment() as Attachment | undefined
+            if (attachment?.role === 'down') {
+                downs.push(ws)
+            }
+        }
+        return downs
     }
 }
 

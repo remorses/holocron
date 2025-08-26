@@ -25,4 +25,18 @@
     },
 
     "migrations": [{ "tag": "v1", "new_classes": ["Tunnel"] }],
+
+    "env": {
+        "preview": {
+            "routes": [
+                {
+                    "pattern": "preview.fumabase.com/_tunnel/*",
+                    "zone_name": "fumabase.com",
+                },
+            ],
+            "durable_objects": {
+                "bindings": [{ "name": "TUNNEL_DO", "class_name": "Tunnel" }],
+            },
+        },
+    },
 }
