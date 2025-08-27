@@ -249,11 +249,15 @@ The only case where you should not use href is for urls outside of current app o
 
 For routes that do slow operations like creating PRs and then redirect, use a loader that returns a promise. The component uses window.location.replace when the promise resolves.
 
+> IMPORTANT: React Router does not preserve errors thrown in promises returned from loaders. NEVER throw errors inside promises returned from loaders. Instead, catch errors and return them as part of the resolved value, then handle them in useEffect with instanceof checks.
+
 ```tsx
 export async function loader({ request, params: { id } }: Route.LoaderArgs) {
     const url = new URL(request.url)
     const data = url.searchParams.get('data')
     const promise = doSlowWork(id, data)
+        .then(result => ({ success: true as const, ...result }))
+        .catch(error => ({ success: false as const, error }))
     return { promise }
 }
 
@@ -262,9 +266,17 @@ export default function Page() {
     const [error, setError] = useState('')
 
     useEffect(() => {
-        promise.then(({ url }) => {
-            window.location.replace(url)
-        }).catch(e => setError(e.message))
+        promise.then(result => {
+            if (!result.success) {
+                if (result.error instanceof Error) {
+                    setError(result.error.message)
+                } else {
+                    setError(String(result.error))
+                }
+                return
+            }
+            window.location.replace(result.url)
+        })
     }, [promise])
 
     if (error) return <p className='text-red-600'>Error: {error}</p>
