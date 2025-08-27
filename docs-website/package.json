@@ -59,7 +59,7 @@
     "acorn": "^8.15.0",
     "acorn-jsx": "^5.3.2",
     "acorn-loose": "^8.5.2",
-    "ai": "5.0.14",
+    "ai": "5.0.26",
     "async-sema": "^3.1.1",
     "aws4fetch": "^1.0.20",
     "class-variance-authority": "^0.7.1",
