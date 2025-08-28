@@ -540,6 +540,7 @@ function InstallGithubAppToolbar() {
     ) as Route.ComponentProps['loaderData'] | undefined
 
     const githubOwner = branchData.site.githubOwner
+    const isChatGenerating = useWebsiteState((state) => state.isChatGenerating)
 
     // Create install URL with next parameter pointing to connect-github
     const nextPath = href('/github/:orgId/:branchId/connect-github', {
@@ -564,7 +565,8 @@ function InstallGithubAppToolbar() {
                     <Button
                         variant='default'
                         size={'sm'}
-                        className='bg-purple-600 hover:bg-purple-700 text-white'
+                        className='bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50'
+                        disabled={isChatGenerating}
                     >
                         <div className='flex items-center gap-2'>
                             <GithubIcon className='size-4' />
@@ -573,7 +575,11 @@ function InstallGithubAppToolbar() {
                     </Button>
                 </Link>
             </TooltipTrigger>
-            <TooltipContent>Connect GitHub to create PRs</TooltipContent>
+            {isChatGenerating ? (
+                <TooltipContent>Wait for chat to finish generating</TooltipContent>
+            ) : (
+                <TooltipContent>Connect GitHub to create PRs</TooltipContent>
+            )}
         </Tooltip>
     )
 }

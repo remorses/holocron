@@ -13,6 +13,7 @@ export type State = {
     filesInDraft: DocsState['filesInDraft']
     lastPushedFiles: Record<string, FileUpdate>
     filesInDraftNeedSave?: boolean
+    isChatGenerating?: boolean
 }
 
 export const [WebsiteStateProvider, useWebsiteState] =

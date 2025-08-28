@@ -324,6 +324,9 @@ export default function Chat({
         const currentSlug = useWebsiteState.getState()?.currentSlug || ''
         const { githubFolder } = loaderData
 
+        // Set generating state to true when starting
+        useWebsiteState.setState({ isChatGenerating: true })
+
         const { data: generator, error } =
             await apiClientWithDurableFetch.api.generateMessage.post(
                 {
@@ -342,7 +345,11 @@ export default function Chat({
                     fetch: { signal: abortController.signal },
                 },
             )
-        if (error) throw error
+        if (error) {
+            // Set generating state to false on error
+            useWebsiteState.setState({ isChatGenerating: false })
+            throw error
+        }
         async function getPageContent(githubPath: string) {
             const { data, error } = await apiClient.api.getPageContent.post({
                 branchId,
@@ -525,6 +532,8 @@ export default function Chat({
                 })
             }
         } finally {
+            // Set generating state to false when finished
+            useWebsiteState.setState({ isChatGenerating: false })
             console.log('finished streaming message response, revalidating')
             await revalidator.revalidate()
         }
