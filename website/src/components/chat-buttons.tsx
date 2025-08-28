@@ -100,6 +100,14 @@ export function PrButton({ className = '' }) {
                 tooltipMessage: 'Saving changes to database',
             }
         }
+        if (isChatGenerating) {
+            return {
+                to: prHref,
+                text: chat.prNumber ? `Push to PR #${chat.prNumber}` : 'Create Github PR',
+                isButtonDisabled: true,
+                tooltipMessage: 'Wait for chat to finish generating',
+            }
+        }
         if (chat.prNumber) {
             if (!hasNonPushedChanges) {
                 return {
@@ -107,14 +115,6 @@ export function PrButton({ className = '' }) {
                     text: 'Show PR',
                     isButtonDisabled: false,
                     tooltipMessage: null,
-                }
-            }
-            if (isChatGenerating) {
-                return {
-                    to: prHref,
-                    text: `Push to PR #${chat.prNumber}`,
-                    isButtonDisabled: true,
-                    tooltipMessage: 'Wait for chat to finish generating',
                 }
             }
             return {
@@ -130,14 +130,6 @@ export function PrButton({ className = '' }) {
                 text: 'Create Github PR',
                 isButtonDisabled: true,
                 tooltipMessage: 'No unsaved changes to create PR',
-            }
-        }
-        if (isChatGenerating) {
-            return {
-                to: prHref,
-                text: 'Create Github PR',
-                isButtonDisabled: true,
-                tooltipMessage: 'Wait for chat to finish generating',
             }
         }
         return {
@@ -227,6 +219,9 @@ export function SaveChangesButton({ className = '' }) {
         if (errorMessage) {
             return true
         }
+        // if (!hasNonPushedChanges) {
+        //     return true
+        // }
 
         return false
     })()
