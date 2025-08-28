@@ -20,6 +20,10 @@ export function meta() {
     ]
 }
 
+
+
+// export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [holocronMiddleware]
+
 export function Layout({ children }: { children: React.ReactNode }) {
     return (
         <html className='h-full flex dark  flex-col grow' lang='en'>
