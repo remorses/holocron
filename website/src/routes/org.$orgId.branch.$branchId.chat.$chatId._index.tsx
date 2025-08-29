@@ -26,6 +26,8 @@ import { BrowserWindow } from '../components/browser-window'
 import { SidebarInset, SidebarProvider } from '../components/ui/sidebar'
 import { getSession } from '../lib/better-auth'
 import { createIframeRpcClient, docsRpcClient } from '../lib/docs-setstate'
+import { parse } from 'cookie'
+import { PREFERS_EDITOR_VIEW_COOKIE } from '../lib/constants'
 
 import {
     State,
@@ -170,6 +172,12 @@ export async function loader({
 
     const githubFolder = site.githubFolder
     const siteId = site.siteId
+    
+    // Read cookie to determine default tab preference
+    const cookies = parse(request.headers.get('Cookie') || '')
+    const prefersEditorView = cookies[PREFERS_EDITOR_VIEW_COOKIE] === 'true'
+    const initialActiveTab: 'preview' | 'editor' = prefersEditorView ? 'editor' : 'preview'
+    
     return {
         chatId,
         chat,
@@ -181,6 +189,7 @@ export async function loader({
         siteBranch,
         siteId,
         githubFolder,
+        initialActiveTab,
     }
 }
 
@@ -227,12 +236,12 @@ function ChatContent() {
 }
 
 function RightSide() {
-    const { chat, iframeUrl, host, siteBranch } = useLoaderData<typeof loader>()
+    const { chat, iframeUrl, host, siteBranch, initialActiveTab } = useLoaderData<typeof loader>()
     const branchData = useRouteLoaderData(
         'routes/org.$orgId.branch.$branchId',
     ) as BranchRoute.ComponentProps['loaderData']
     const iframeRef = useRef<HTMLIFrameElement>(null)
-    const [activeTab, setActiveTab] = useState<'preview' | 'editor'>('preview')
+    const [activeTab, setActiveTab] = useState<'preview' | 'editor'>(initialActiveTab)
     const previewMode = activeTab
 
     useEffect(() => {
