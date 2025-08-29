@@ -7,18 +7,21 @@ import path from 'node:path'
 
 import { execSync } from 'node:child_process'
 
-export async function readTopLevelDocsJson(dir) {
-    const docsJsonPath = path.resolve(dir, DOCS_JSON_BASENAME)
-    if (!fs.existsSync(docsJsonPath)) {
-        return
+export async function readTopLevelDocsJson(dir: string) {
+    const candidates = [DOCS_JSON_BASENAME, 'fumabase.jsonc']
+    for (const candidate of candidates) {
+        const docsJsonPath = path.resolve(dir, candidate)
+        if (fs.existsSync(docsJsonPath)) {
+            const content = await fs.promises.readFile(docsJsonPath, 'utf-8')
+            try {
+                return JSONC.parse(content) as DocsJsonType
+            } catch (e) {
+                console.error(`Error parsing ${candidate}:`, e.message)
+                return
+            }
+        }
     }
-    const content = await fs.promises.readFile(docsJsonPath, 'utf-8')
-    try {
-        return JSONC.parse(content) as DocsJsonType
-    } catch (e) {
-        console.error(`Error parsing ${DOCS_JSON_BASENAME}:`, e.message)
-        return
-    }
+    return
 }
 
 export async function getCurrentGitBranch(): Promise<string | undefined> {

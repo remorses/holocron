@@ -7,7 +7,13 @@ export { cn }
 
 export function isDocsJson(path: string): boolean {
     if (!path) return false
-    return path === DOCS_JSON_BASENAME || path.endsWith(`/${DOCS_JSON_BASENAME}`)
+    const candidates = [DOCS_JSON_BASENAME, 'fumabase.jsonc'];
+    for (const name of candidates) {
+        if (path === name || path.endsWith(`/${name}`)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 export function trySync<T>(fn: () => T): { data: T | undefined; error: any } {
