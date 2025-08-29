@@ -37,6 +37,10 @@
                     "pattern": "preview.fumabase.com/_tunnel/*",
                     "zone_name": "fumabase.com",
                 },
+                {
+                    "pattern": "preview.holocron.so/_tunnel/*",
+                    "zone_name": "holocron.so",
+                },
             ],
             "durable_objects": {
                 "bindings": [{ "name": "TUNNEL_DO", "class_name": "Tunnel" }],
