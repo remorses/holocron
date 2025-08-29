@@ -4,6 +4,7 @@ import {
     Links,
     Meta,
     Outlet,
+    redirect,
     Scripts,
     ScrollRestoration,
 } from 'react-router'
@@ -20,9 +21,24 @@ export function meta() {
     ]
 }
 
+const redirectMiddleware: Route.unstable_MiddlewareFunction = async (
+    { request },
+    next,
+) => {
+    const url = new URL(request.url)
 
+    const host = url.hostname
+    if (host === 'fumabase.com') {
+        throw redirect(
+            new URL(url.pathname + url.search, env.PUBLIC_URL).toString(),
+        )
+    }
+    return next()
+}
 
-// export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [holocronMiddleware]
+export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
+    redirectMiddleware,
+]
 
 export function Layout({ children }: { children: React.ReactNode }) {
     return (
@@ -57,6 +73,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 import { Route } from './+types/root'
 import { useNProgress } from './components/nprogress'
+import { env } from './lib/env'
 
 const queryClient = new QueryClient({
     defaultOptions: {
