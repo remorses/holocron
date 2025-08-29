@@ -4,6 +4,12 @@
 
 ### Patch Changes
 
+- Initial release
+
+## 0.1.5
+
+### Patch Changes
+
 - Handle WebSocket close code 4009 when another upstream is already connected
 - Show user-friendly error message explaining how to resolve duplicate dev server instances
 

@@ -1,6 +1,7 @@
 {
   "name": "website",
   "private": true,
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "build": "pnpm generate-example-docs-json && NODE_OPTIONS=--max-old-space-size=6144 NODE_ENV=production doppler run -c production --preserve-env -- react-router build",
