@@ -201,7 +201,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 branch: githubBranch,
                 forceFullSync: true,
             })
-            await syncSite({
+            const { pageCount } = await syncSite({
                 siteId,
                 githubFolder,
                 branchId,
@@ -772,7 +772,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             })
 
             // Sync the files as markdown pages
-            await syncSite({
+            const { pageCount } = await syncSite({
                 files: assets,
                 githubFolder: site.githubFolder || '',
                 branchId,
@@ -1040,7 +1040,7 @@ export const app = new Spiceflow({ basePath: '/api' })
                 },
             })
 
-            await syncSite({
+            const { pageCount } = await syncSite({
                 files: assets,
                 githubFolder: githubFolder || '',
                 branchId: finalBranchId,

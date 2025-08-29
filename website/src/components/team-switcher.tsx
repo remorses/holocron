@@ -20,6 +20,7 @@ import {
 } from 'website/src/components/ui/sidebar'
 import { RiExpandUpDownLine, RiAddLine } from '@remixicon/react'
 import { Button } from './ui/button'
+import { GithubIcon } from './icons'
 
 export function TeamSwitcher({
     sites,
@@ -139,7 +140,17 @@ export function TeamSwitcher({
                             size={16}
                             aria-hidden='true'
                         />
-                        <div className='font-medium'>Add site</div>
+                        <div className='font-medium'>Create new site</div>
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem className='gap-2 p-2' asChild>
+                    <Link
+                        to={href('/org/:orgId/onboarding-from-github', {
+                            orgId: activeSite?.org.orgId || sites[0]?.org.orgId,
+                        })}
+                    >
+                        <GithubIcon className='opacity-60 w-4 h-4' />
+                        <div className='font-medium'>New from GitHub</div>
                     </Link>
                 </DropdownMenuItem>
             </DropdownMenuContent>

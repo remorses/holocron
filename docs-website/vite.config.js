@@ -7,7 +7,6 @@ import { viteExternalsPlugin, enablePreserveModulesPlugin } from '@xmorse/deploy
 import { reactRouterServerPlugin } from '@xmorse/deployment-utils/dist/react-router.js'
 import { defineConfig } from 'vite'
 import EnvironmentPlugin from 'vite-plugin-environment'
-import tsconfigPaths from 'vite-tsconfig-paths'
 import { analyzer } from 'vite-bundle-analyzer'
 
 const NODE_ENV = JSON.stringify(process.env.NODE_ENV || 'production')

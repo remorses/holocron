@@ -64,7 +64,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
             ...defaultDocsJsonComments,
         },
     })
-    await syncSite({
+    const { pageCount } = await syncSite({
         files,
         githubFolder: site.githubFolder,
         branchId,

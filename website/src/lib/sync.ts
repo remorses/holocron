@@ -281,9 +281,10 @@ export async function syncSite({
     name: string
     signal?: AbortSignal
     docsJson: DocsJsonType
-}) {
+}): Promise<{ pageCount: number }> {
     const concurrencyLimit = 10
     const semaphore = new Sema(concurrencyLimit)
+    let pageCount = 0
 
     const ignorePatterns = docsJson?.ignore || []
 
@@ -634,7 +635,8 @@ export async function syncSite({
 
     async function syncPage(asset: AssetForSync): Promise<SearchApiFile[]> {
         if (asset.type !== 'page') return []
-
+        
+        pageCount++ // Increment page count
         const filesToSync: SearchApiFile[] = []
         const slug = getSlugFromPath({
             githubPath: asset.githubPath,
@@ -1069,6 +1071,7 @@ export async function syncSite({
     // No cleanup needed for search API as it handles file updates automatically
 
     console.log('Import script finished.')
+    return { pageCount }
 }
 
 function groupByN<T>(array: T[], n: number): T[][] {

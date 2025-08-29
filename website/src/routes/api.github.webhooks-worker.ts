@@ -172,7 +172,7 @@ async function updatePagesFromCommits(args: WebhookWorkerRequest) {
             branch: githubBranch,
         })
 
-        await syncSite({
+        const { pageCount } = await syncSite({
             branchId: siteBranch.branchId,
             siteId: siteBranch.site.siteId,
             githubFolder: siteBranch.site.githubFolder,
