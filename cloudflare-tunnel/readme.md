@@ -1,15 +1,15 @@
-# WebSocket Tunnel for **holocron.com**
+# WebSocket Tunnel for **holocron.so**
 
 This tunnel lets a **single “up-stream” Node process** and **many “down-stream” browsers** talk to each other through Cloudflare Workers + Durable Objects.
 
 ```
-Browser  ⇆  wss://holocron.com/_tunnel/client?id=chat
+Browser  ⇆  wss://holocron.so/_tunnel/client?id=chat
               │
               ▼ (Cloudflare zone)
            Worker ➜ Durable Object “chat” ➜ Worker
               ▲
               │
-Node app ⇆ wss://holocron.com/_tunnel/upstream?id=chat
+Node app ⇆ wss://holocron.so/_tunnel/upstream?id=chat
 ```
 
 ---
@@ -24,7 +24,7 @@ Node app ⇆ wss://holocron.com/_tunnel/upstream?id=chat
 // upstream.ts    npm i ws
 import WebSocket from 'ws'
 
-const ws = new WebSocket('wss://holocron.com/_tunnel/upstream?id=chat')
+const ws = new WebSocket('wss://holocron.so/_tunnel/upstream?id=chat')
 
 ws.on('open', () => {
     console.log('⇈ connected')
@@ -53,7 +53,7 @@ setInterval(() => ws.ping?.(), 20000)
 <input id="out" /><button id="send">send</button>
 
 <script type="module">
-    const ws = new WebSocket('wss://holocron.com/_tunnel/client?id=chat')
+    const ws = new WebSocket('wss://holocron.so/_tunnel/client?id=chat')
 
     const log = (t) => (logEl.value += t + '\n')
     const logEl = document.getElementById('log')

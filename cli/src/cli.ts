@@ -56,7 +56,7 @@ type UserConfig = {
     websocketIds?: Record<string, string> // Map of siteId to websocketId
 }
 
-const url = process.env.SERVER_URL || 'https://holocron.com'
+const url = process.env.SERVER_URL || 'https://holocron.so'
 const configPath = path.join(homedir(), `.${DOCS_JSON_BASENAME}`)
 
 // Check if running in TTY environment
@@ -986,7 +986,7 @@ cli.command('dev', 'Preview your holocron website')
                 console.error(pc.red(`siteId not found in ${DOCS_JSON_BASENAME}`))
                 process.exit(1)
             }
-            const preferredHost = 'holocron.com'
+            const preferredHost = 'holocron.so'
             const previewDomain = (docsJson?.domains || []).sort((a, b) => {
                 const aIsFb = a.endsWith(preferredHost)
                 const bIsFb = b.endsWith(preferredHost)

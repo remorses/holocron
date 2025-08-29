@@ -28,14 +28,14 @@ input:
   path: holocron.jsonc
   file_text: |-
     {
-      "$schema": "https://holocron.com/schema.json",
+      "$schema": "https://holocron.so/schema.json",
       "siteId": "",
       "name": "My Documentation",
       "description": "Documentation website"
     }
 output: |-
   {
-    "$schema": "https://holocron.com/schema.json",
+    "$schema": "https://holocron.so/schema.json",
     "siteId": "",
     "name": "My Documentation",
     "description": "Documentation website"

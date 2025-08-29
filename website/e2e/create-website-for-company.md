@@ -107,7 +107,7 @@ for (const file of expectedFiles) {
 }
 
 // Look for the generated site URL
-const siteUrl = await page.locator('a[href*="holocron.com"]').textContent()
+const siteUrl = await page.locator('a[href*="holocron.so"]').textContent()
 console.log('Created site URL:', siteUrl)
 
 // Verify Save Changes button appears
@@ -207,12 +207,12 @@ When multiple elements match, use:
 ```javascript
 test('Create new documentation site for company', async ({ page }) => {
   // Full test implementation
-  await page.goto('https://holocron.com')
-  
+  await page.goto('https://holocron.so')
+
   // ... implement all steps above
-  
+
   // Final assertion
-  const siteUrl = await page.locator('a[href*="holocron.com"]').textContent()
+  const siteUrl = await page.locator('a[href*="holocron.so"]').textContent()
   expect(siteUrl).toMatch(/[\w-]+\.holocron\.com/)
 })
 ```

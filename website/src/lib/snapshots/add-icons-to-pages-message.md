@@ -25,9 +25,9 @@ output: |-
   1: ---
   2: title: Home
   3: ---
-  4: 
+  4:
   5: # Welcome to our docs
-  6: 
+  6:
   7: This is the home page.
 
 ````
@@ -42,9 +42,9 @@ output: |-
   1: ---
   2: title: Getting Started
   3: ---
-  4: 
+  4:
   5: # Getting Started
-  6: 
+  6:
   7: Learn how to get started with our product.
 
 ````
@@ -59,9 +59,9 @@ output: |-
   1: ---
   2: title: API Overview
   3: ---
-  4: 
+  4:
   5: # API Overview
-  6: 
+  6:
   7: Overview of our API endpoints.
 
 ````
@@ -76,9 +76,9 @@ output: |-
   1: ---
   2: title: Configuration
   3: ---
-  4: 
+  4:
   5: # Configuration Guide
-  6: 
+  6:
   7: How to configure the application.
 
 ````
@@ -88,7 +88,7 @@ output: |-
 Now I'll fetch the available lucide icons to choose appropriate ones for each page:
 ````yaml tool-fetchUrl
 input:
-  url: https://holocron.com/lucide-icons.json
+  url: https://holocron.so/lucide-icons.json
 output: |-
   [
     "a-arrow-down",
@@ -219,7 +219,7 @@ output: "Here is the diff of the changes made\n\nIndex: guides/configuration.mdx
 I've successfully added icons to all pages:
 
 - **Home** (`index.mdx`) - 🏠 `house` icon
-- **Getting Started** - 🚀 `rocket` icon  
+- **Getting Started** - 🚀 `rocket` icon
 - **API Overview** - `</>` `code` icon
 - **Configuration** - ⚙️ `settings` icon
 

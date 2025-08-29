@@ -17,7 +17,7 @@ export function startWebSocketWithTunnel(existingWebsocketId?: string) {
                 existingWebsocketId || crypto.randomBytes(8).toString('hex')
 
             // Connect to the upstream WebSocket
-            const upstreamUrl = `wss://holocron.com/_tunnel/upstream?id=${websocketId}`
+            const upstreamUrl = `wss://holocron.so/_tunnel/upstream?id=${websocketId}`
             const ws = new WebSocket(upstreamUrl)
 
             // Track if we've successfully connected

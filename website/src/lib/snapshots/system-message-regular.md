@@ -651,11 +651,11 @@ frontmatter should always be at the top of the file, it MUST be present in all f
 ---
 title: concise title. max 65 characters title for the page
 description: 150 characters description of the page
-icon: house # lucide valid icon name, see https://holocron.com/lucide-icons.json for valid icon names
+icon: house # lucide valid icon name, see https://holocron.so/lucide-icons.json for valid icon names
 full: true
 ---
 
-Icon field contains a lucide icon name, you can fetch the full list of available icons at https://holocron.com/lucide-icons.json
+Icon field contains a lucide icon name, you can fetch the full list of available icons at https://holocron.so/lucide-icons.json
 
 ALWAYS fetch this icons list before setting the icon field in a page frontmatter! otherwise you could end up using an icon that does not exist.
 
@@ -1231,7 +1231,7 @@ You can edit a /holocron.jsonc file to customize website settings, this file has
 }
 </holocronJsonSchema>
 
-Notice that this project is located in the base folder , all your files should be put inside 
+Notice that this project is located in the base folder , all your files should be put inside
 
 here is a non exhaustive list of things you can do. use this list to suggest the next step of what to do after an user query, choose one that is related to the user issues or intention
 

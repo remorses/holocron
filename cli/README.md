@@ -125,6 +125,6 @@ holocron sync
 
 ## Help
 
-For more help and documentation, visit [holocron.com](https://holocron.com)
+For more help and documentation, visit [holocron.so](https://holocron.so)
 
 To report issues or provide feedback, visit: https://github.com/anthropics/claude-code/issues
