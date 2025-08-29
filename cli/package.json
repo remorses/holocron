@@ -1,5 +1,5 @@
 {
-    "name": "holocron",
+    "name": "@holocron.so/cli",
     "version": "0.1.4",
     "description": "",
     "type": "module",
