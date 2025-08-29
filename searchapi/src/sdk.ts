@@ -52,13 +52,13 @@ interface SectionWithScore extends SectionRecord {
 
 export class SearchClient implements DatasetsInterface {
     private db?: lancedb.Connection
-    private dbPath: string = 'db://holocron-co7ad3' // Default to cloud database
+    private dbPath: string = 'db://fumabase-co7ad3' // Default to cloud database
     private pendingIndexCreation: Set<string> = new Set()
     private totalRowsInserted: Map<string, number> = new Map()
     // Cache for table references and index status
     private tableCache: Map<string, lancedb.Table> = new Map()
     private ftsIndexCache: Map<string, boolean> = new Map()
-    
+
     // Table schema for all datasets
     private readonly tableSchema = new Schema([
         new Field('type', new Utf8()),
@@ -142,7 +142,7 @@ export class SearchClient implements DatasetsInterface {
             console.log(`[table] Creating new table ${tableName} with schema`)
             try {
                 table = await db.createEmptyTable(tableName, this.tableSchema)
-                
+
                 // Create btree index on filename column for faster lookups
                 console.log('[table] Creating btree index on filename column...')
                 try {
@@ -167,7 +167,7 @@ export class SearchClient implements DatasetsInterface {
             console.log(`[table] Opening table ${tableName} (not cached)`)
             table = await db.openTable(tableName)
         }
-        
+
         // Cache the table reference
         this.tableCache.set(tableName, table)
         return table
@@ -394,7 +394,7 @@ export class SearchClient implements DatasetsInterface {
         // Check if table exists first
         const db = await this.getConnection()
         const tables = await db.tableNames()
-        
+
         if (!tables.includes(tableName)) {
             // Table doesn't exist, nothing to delete
             console.log(`[deleteFiles] Table ${tableName} doesn't exist, skipping deletion`)
@@ -403,7 +403,7 @@ export class SearchClient implements DatasetsInterface {
 
         // Table exists, open it and delete files
         const table = await db.openTable(tableName)
-        
+
         // Delete all rows (files and sections) for the given filenames
         for (const filename of filenames) {
             await table.delete(`filename = '${filename}'`)
@@ -419,7 +419,7 @@ export class SearchClient implements DatasetsInterface {
         // Check if table exists first
         const db = await this.getConnection()
         const tables = await db.tableNames()
-        
+
         if (!tables.includes(tableName)) {
             // Table doesn't exist, nothing to delete
             console.log(`[deleteDataset] Table ${tableName} doesn't exist, skipping deletion`)
