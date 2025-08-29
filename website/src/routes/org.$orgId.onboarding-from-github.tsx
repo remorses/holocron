@@ -5,6 +5,7 @@ import {
     defaultDocsJsonComments,
     defaultStartingHolocronJson,
 } from 'docs-website/src/lib/docs-json-examples'
+import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
 import {
     Form,
     href,
@@ -178,6 +179,10 @@ export async function action({ request, params }: Route.ActionArgs) {
             repo || 'holocron-site',
         )
         const internalHost = `${userName}-${randomHash}.${env.APPS_DOMAIN}`
+        const domains =
+            process.env.NODE_ENV === 'development'
+                ? [`${userName}-${randomHash}.localhost`, internalHost]
+                : [internalHost]
 
         // Create the site
         const site = await prisma.site.create({
@@ -238,8 +243,22 @@ export async function action({ request, params }: Route.ActionArgs) {
             ...defaultStartingHolocronJson,
             siteId,
             name: repo,
-            domains: [internalHost],
+            domains,
         }
+
+        // Create fumabase.jsonc file in the repository
+        const docsJsonPath = basePath ? `${basePath}/${DOCS_JSON_BASENAME}` : DOCS_JSON_BASENAME
+        const docsJsonContent = JSON.stringify(docsJson, null, 2)
+        
+        // Create the configuration file
+        await octokit.rest.repos.createOrUpdateFileContents({
+            owner,
+            repo,
+            path: docsJsonPath,
+            message: `Add ${DOCS_JSON_BASENAME} configuration`,
+            content: Buffer.from(docsJsonContent).toString('base64'),
+            branch: defaultBranch,
+        })
 
         const { pageCount } = await syncSite({
             files,
