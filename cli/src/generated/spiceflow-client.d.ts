@@ -46,6 +46,7 @@ export declare const apiClient: {
                 siteId: string;
                 chatId: string;
                 branchId: string;
+                githubFolder: string;
                 currentSlug: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
@@ -294,6 +295,27 @@ export declare const apiClient: {
                 200: {
                     success: boolean;
                     text: string;
+                };
+            }>>;
+        };
+        getRepoBranches: {
+            post: (request: {
+                orgId: string;
+                owner: string;
+                repo: string;
+                installationId: number;
+            }, options?: {
+                headers?: Record<string, unknown> | undefined;
+                query?: Record<string, unknown> | undefined;
+                fetch?: RequestInit | undefined;
+            } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                200: {
+                    success: boolean;
+                    branches: {
+                        name: string;
+                        isDefault: boolean;
+                    }[];
+                    defaultBranch: string;
                 };
             }>>;
         };
@@ -375,6 +397,7 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                 siteId: string;
                 chatId: string;
                 branchId: string;
+                githubFolder: string;
                 currentSlug: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
@@ -623,6 +646,27 @@ export declare function createApiClient(url: string, options?: Parameters<typeof
                 200: {
                     success: boolean;
                     text: string;
+                };
+            }>>;
+        };
+        getRepoBranches: {
+            post: (request: {
+                orgId: string;
+                owner: string;
+                repo: string;
+                installationId: number;
+            }, options?: {
+                headers?: Record<string, unknown> | undefined;
+                query?: Record<string, unknown> | undefined;
+                fetch?: RequestInit | undefined;
+            } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                200: {
+                    success: boolean;
+                    branches: {
+                        name: string;
+                        isDefault: boolean;
+                    }[];
+                    defaultBranch: string;
                 };
             }>>;
         };
@@ -705,6 +749,7 @@ export declare const apiClientWithDurableFetch: {
                 siteId: string;
                 chatId: string;
                 branchId: string;
+                githubFolder: string;
                 currentSlug: string;
                 filesInDraft: Record<string, {
                     githubPath: string;
@@ -953,6 +998,27 @@ export declare const apiClientWithDurableFetch: {
                 200: {
                     success: boolean;
                     text: string;
+                };
+            }>>;
+        };
+        getRepoBranches: {
+            post: (request: {
+                orgId: string;
+                owner: string;
+                repo: string;
+                installationId: number;
+            }, options?: {
+                headers?: Record<string, unknown> | undefined;
+                query?: Record<string, unknown> | undefined;
+                fetch?: RequestInit | undefined;
+            } | undefined) => Promise<import("spiceflow/client").SpiceflowClient.ClientResponse<{
+                200: {
+                    success: boolean;
+                    branches: {
+                        name: string;
+                        isDefault: boolean;
+                    }[];
+                    defaultBranch: string;
                 };
             }>>;
         };
