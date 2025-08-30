@@ -282,7 +282,7 @@ export async function syncSite({
     signal?: AbortSignal
     docsJson: DocsJsonType
 }): Promise<{ pageCount: number }> {
-    const concurrencyLimit = 10
+    const concurrencyLimit = 2
     const semaphore = new Sema(concurrencyLimit)
     let pageCount = 0
 

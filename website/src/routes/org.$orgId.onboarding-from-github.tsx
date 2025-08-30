@@ -16,6 +16,8 @@ import {
     useNavigation,
 } from 'react-router'
 import { useState } from 'react'
+import { apiClient } from '../lib/spiceflow-client'
+import { useQuery } from '@tanstack/react-query'
 import { Button } from '../components/ui/button'
 import {
     Stepper,
@@ -28,7 +30,7 @@ import {
 } from '../components/ui/stepper'
 import { getSession } from '../lib/better-auth'
 import { env, supportEmail } from '../lib/env'
-import { getOctokit } from '../lib/github.server'
+import { getOctokit, createPullRequestSuggestion } from '../lib/github.server'
 import { filesFromGithub, syncSite } from '../lib/sync'
 import type { Route } from './+types/org.$orgId.onboarding-from-github'
 import { SelectNative } from '../components/ui/select-native'
@@ -58,6 +60,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
     let repos: Array<{ name: string; full_name: string; default_branch: string; private: boolean; pushed_at: string | null | undefined }> = []
     let githubAccountLogin = ''
+    let installationId: number | null = null
 
     if (githubDataStr && currentStep === 1) {
         const data: GithubLoginRequestData = JSON.parse(decodeURIComponent(githubDataStr))
@@ -77,9 +80,10 @@ export async function loader({ request, params }: Route.LoaderArgs) {
         })
 
         if (githubInstallation) {
+            installationId = githubInstallation.installationId
             // Get repositories based on account type
             const octokit = await getOctokit(githubInstallation)
-            
+
             if (githubInstallation.accountType === 'ORGANIZATION') {
                 const { data } = await octokit.rest.repos.listForOrg({
                     org: githubInstallation.accountLogin,
@@ -116,7 +120,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
         }
     }
 
-    return { currentStep, orgId, name, repos, githubAccountLogin }
+    return { currentStep, orgId, name, repos, githubAccountLogin, installationId }
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
@@ -128,6 +132,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 
     if (syncRepo) {
         const selectedRepo = formData.get('selectedRepo') as string
+        const selectedBranch = formData.get('selectedBranch') as string || 'main'
         let basePath = formData.get('basePath') as string || ''
 
         // Remove leading and trailing slashes if present
@@ -211,20 +216,14 @@ export async function action({ request, params }: Route.ActionArgs) {
 
         console.log(`created site ${siteId} syncing from ${owner}/${repo}`)
 
-        // Get repo details to find default branch
+        // Get octokit
         const octokit = await getOctokit(githubInstallation)
-        const { data: repoData } = await octokit.rest.repos.get({
-            owner,
-            repo,
-        })
-        const defaultBranch = repoData.default_branch
 
-        // Update branch with correct GitHub branch
+        // Update branch with selected GitHub branch
         await prisma.siteBranch.update({
             where: { branchId },
             data: {
-                githubBranch: defaultBranch,
-
+                githubBranch: selectedBranch,
             },
         })
 
@@ -235,7 +234,7 @@ export async function action({ request, params }: Route.ActionArgs) {
             repo,
             branchId,
             basePath,
-            branch: defaultBranch,
+            branch: selectedBranch,
         })
 
         // Create default docsJson if not exists
@@ -246,22 +245,25 @@ export async function action({ request, params }: Route.ActionArgs) {
             domains,
         }
 
-        // Create fumabase.jsonc file in the repository
+        // Add the docsJson file to the sync manually (to avoid branch protection issues)
         const docsJsonPath = basePath ? `${basePath}/${DOCS_JSON_BASENAME}` : DOCS_JSON_BASENAME
         const docsJsonContent = JSON.stringify(docsJson, null, 2)
-        
-        // Create the configuration file
-        await octokit.rest.repos.createOrUpdateFileContents({
-            owner,
-            repo,
-            path: docsJsonPath,
-            message: `Add ${DOCS_JSON_BASENAME} configuration`,
-            content: Buffer.from(docsJsonContent).toString('base64'),
-            branch: defaultBranch,
-        })
+
+        // Create an async generator that includes the docsJson file
+        async function* filesWithDocsJson() {
+            // First yield the docsJson file
+            yield {
+                type: 'docsJson' as const,
+                content: docsJsonContent,
+                githubPath: docsJsonPath,
+                githubSha: '',
+            }
+            // Then yield all files from the repository
+            yield* files
+        }
 
         const { pageCount } = await syncSite({
-            files,
+            files: filesWithDocsJson(),
             branchId,
             siteId,
             githubFolder: basePath,
@@ -276,6 +278,22 @@ export async function action({ request, params }: Route.ActionArgs) {
             })
             throw new Error('No documentation pages found in the repository. Please ensure your repository contains markdown files.')
         }
+
+        const { url: prUrl } = await createPullRequestSuggestion({
+            files: [{
+                filePath: docsJsonPath,
+                content: docsJsonContent,
+            }],
+            octokit,
+            owner,
+            repo,
+            branch: selectedBranch,
+            accountLogin: githubAccountLogin,
+            fork: false,
+            title: `Add ${DOCS_JSON_BASENAME} configuration`,
+            body: `This PR adds the Holocron configuration file to configure the docs website at [${internalHost}](https://${internalHost}).\n\nThe configuration includes:\n- Site ID: ${siteId}\n- Site name: ${repo}\n- Domain configuration\n\nCreated by [Holocron](https://holocron.so) - Modern documentation platform`,
+        })
+        console.log(`Created PR for ${DOCS_JSON_BASENAME}: ${prUrl}`)
 
         // Create a chat for the branch
         const chat = await prisma.chat.create({
@@ -313,10 +331,34 @@ export async function action({ request, params }: Route.ActionArgs) {
 }
 
 export default function OnboardingFromGithub({ loaderData }: Route.ComponentProps) {
-    const { currentStep, repos, githubAccountLogin, orgId, name } = loaderData
+    const { currentStep, repos, githubAccountLogin, orgId, name, installationId } = loaderData
     const [showAlternative, setShowAlternative] = useState(false)
     const [selectedRepo, setSelectedRepo] = useState(repos[0]?.full_name || '')
+    const [selectedBranch, setSelectedBranch] = useState('main')
     const [basePath, setBasePath] = useState('')
+
+    const [owner, repo] = selectedRepo.split('/') || ['', '']
+    
+    const { data: branchesData, isLoading: loadingBranches } = useQuery({
+        queryKey: ['branches', orgId, owner, repo, installationId],
+        queryFn: async () => {
+            if (!owner || !repo || !installationId) return null
+            const { data, error } = await apiClient.api.getRepoBranches.post({ orgId, owner, repo, installationId })
+            if (error || !data) {
+                console.error('Failed to fetch branches:', error)
+                return null
+            }
+            // Set default branch when branches are loaded
+            const defaultBranch = data.branches.find(b => b.isDefault)
+            if (defaultBranch) {
+                setSelectedBranch(defaultBranch.name)
+            }
+            return data
+        },
+        enabled: !!owner && !!repo && !!installationId,
+    })
+
+    const branches = branchesData?.branches || []
 
     const githubInstallUrl = new URL(
         href('/api/github/install'),
@@ -391,7 +433,7 @@ export default function OnboardingFromGithub({ loaderData }: Route.ComponentProp
                                                     Run this command to download a template docs folder and deploy it:
                                                 </p>
                                                 <div className='bg-black/50 p-3 rounded font-mono text-sm text-green-400'>
-                                                    npx fumabase init
+                                                    npx -y @holocron.so/cli init
                                                 </div>
                                             </div>
                                             <button
@@ -474,6 +516,30 @@ export default function OnboardingFromGithub({ loaderData }: Route.ComponentProp
                                     </div>
 
                                     <div className='flex flex-col gap-2'>
+                                        <Label htmlFor='selectedBranch'>Branch</Label>
+                                        <SelectNative
+                                            id='selectedBranch'
+                                            name='selectedBranch'
+                                            value={selectedBranch}
+                                            onChange={(e) => {setSelectedBranch(e.target.value)}}
+                                            className='w-full'
+                                            disabled={loadingBranches || branches.length === 0}
+                                        >
+                                            {loadingBranches ? (
+                                                <option value=''>Loading branches...</option>
+                                            ) : branches.length === 0 ? (
+                                                <option value='main'>main</option>
+                                            ) : (
+                                                branches.map((branch) => (
+                                                    <option key={branch.name} value={branch.name}>
+                                                        {branch.name} {branch.isDefault && '(default)'}
+                                                    </option>
+                                                ))
+                                            )}
+                                        </SelectNative>
+                                    </div>
+
+                                    <div className='flex flex-col gap-2'>
                                         <Label htmlFor='basePath'>
                                             Base Path (optional)
                                         </Label>
@@ -496,8 +562,11 @@ export default function OnboardingFromGithub({ loaderData }: Route.ComponentProp
                                         type='submit'
                                         disabled={repos.length === 0 || !selectedRepo}
                                     >
-                                        Sync Repository
+                                        Create Site
                                     </Button>
+                                    <p className='text-sm text-muted-foreground'>
+                                        Creating the site will open a pull request to add a {DOCS_JSON_BASENAME} configuration file to your repository
+                                    </p>
                                 </Form>
                             </div>
                         )}

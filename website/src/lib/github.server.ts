@@ -499,7 +499,7 @@ export async function createNewRepo({
     const { data: newCommit } = await octokit.git.createCommit({
         owner: owner,
         repo,
-        message: `Fumabase Initial Commit`,
+        message: `Holocron Initial Commit`,
         tree: newTree.sha,
 
         committer: committer,
@@ -826,7 +826,7 @@ async function pushChangesToBranch({
 }
 
 export const committer = {
-    name: 'Fumabase',
+    name: 'Holocron',
     email: `info@${WEBSITE_DOMAIN}`,
 }
 
@@ -1010,7 +1010,7 @@ export async function createPullRequestSuggestion({
         `creating pr for ${owner}/${repo} branch ${branch}, fork? ${fork}`,
     )
 
-    const branchName = `fumabase/${Date.now()}`
+    const branchName = `holocron/${Date.now()}`
 
     let head = `refs/heads/${branchName}`
     let prOwner = owner
@@ -1048,7 +1048,7 @@ export async function createPullRequestSuggestion({
         title = `Update ${files.map((x) => '`' + x.filePath + '`').join(', ')}`
     }
     if (!body) {
-        body = `I created this PR with [Fumabase](https://${WEBSITE_DOMAIN}).`
+        body = `I created this PR with [Holocron](https://${WEBSITE_DOMAIN}).`
     }
     const { data: pr } = await octokit.rest.pulls.create({
         owner,

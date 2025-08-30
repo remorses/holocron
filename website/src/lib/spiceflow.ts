@@ -1164,6 +1164,87 @@ export const app = new Spiceflow({ basePath: '/api' })
     })
     .route({
         method: 'POST',
+        path: '/getRepoBranches',
+        request: z.object({
+            orgId: z.string().min(1, 'orgId is required'),
+            owner: z.string().min(1, 'owner is required'),
+            repo: z.string().min(1, 'repo is required'),
+            installationId: z.number().min(1, 'installationId is required'),
+        }),
+        async handler({ request, state: { userId } }) {
+            const { orgId, owner, repo, installationId } = await request.json()
+
+            if (!userId) {
+                throw new AppError('User not authenticated')
+            }
+
+            // Check if user has access to the organization
+            const orgUser = await prisma.orgsUsers.findFirst({
+                where: {
+                    userId,
+                    orgId,
+                },
+            })
+
+            if (!orgUser) {
+                throw new AppError('Access denied to organization')
+            }
+
+            // Verify the installation belongs to the org
+            const githubInstallation = await prisma.githubInstallation.findFirst({
+                where: {
+                    installationId,
+                    appId: env.GITHUB_APP_ID,
+                    orgs: {
+                        some: {
+                            orgId,
+                        },
+                    },
+                },
+            })
+
+            if (!githubInstallation) {
+                throw new AppError('GitHub installation not found or access denied')
+            }
+
+            const octokit = await getOctokit({
+                installationId,
+            })
+
+            // Get repository info including default branch
+            const { data: repoData } = await octokit.rest.repos.get({
+                owner,
+                repo,
+            })
+
+            // Get all branches
+            const { data: branches } = await octokit.rest.repos.listBranches({
+                owner,
+                repo,
+                per_page: 100,
+            })
+
+            // Sort branches: default first, then by commit date
+            const sortedBranches = branches.sort((a, b) => {
+                // Default branch always first
+                if (a.name === repoData.default_branch) return -1
+                if (b.name === repoData.default_branch) return 1
+                // Otherwise keep original order (GitHub returns them by last pushed)
+                return 0
+            })
+
+            return {
+                success: true,
+                branches: sortedBranches.map((b) => ({
+                    name: b.name,
+                    isDefault: b.name === repoData.default_branch,
+                })),
+                defaultBranch: repoData.default_branch,
+            }
+        },
+    })
+    .route({
+        method: 'POST',
         path: '/deleteWebsite',
         request: z.object({
             siteId: z.string().min(1, 'siteId is required'),

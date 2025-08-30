@@ -16,7 +16,7 @@ async function checkInstallationActive(installationId: number): Promise<boolean>
             installation_id: installationId,
         })
 
-        console.log(`✓ Installation ${installationId} is active (account: ${installation.data.account?.login})`)
+        console.log(`✓ Installation ${installationId} is active (account: ${installation.data.account && 'login' in installation.data.account ? installation.data.account.login : installation.data.account?.name})`)
         return true
     } catch (error: any) {
         if (error.status === 404) {

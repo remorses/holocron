@@ -125,7 +125,7 @@ async function createPrSuggestionForChat({
         body:
             ('description' in chat
                 ? (chat as { description?: string }).description
-                : undefined) ?? 'Updated content from FumaBase assistant.',
+                : undefined) ?? 'Updated content from Holocron assistant.',
     })
     await prisma.chat.update({
         where: { chatId, userId },
