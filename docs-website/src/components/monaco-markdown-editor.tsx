@@ -133,7 +133,7 @@ export function MonacoMarkdownEditor({
 
     return (
         <div
-            className='not-prose -mx-8 relative'
+            className='not-prose -mx-2 relative'
             style={{ height: 'calc(100vh - var(--fd-nav-height))' }}
         >
             <TooltipProvider>
