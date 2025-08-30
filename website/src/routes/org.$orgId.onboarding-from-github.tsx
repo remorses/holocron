@@ -48,6 +48,8 @@ export async function loader({ request, params }: Route.LoaderArgs) {
         throw redirect(sessionData.redirectTo)
     }
 
+
+
     const url = new URL(request.url)
     const currentStep = parseInt(url.searchParams.get('currentStep') || '0', 10)
     const orgId = params.orgId
@@ -338,7 +340,7 @@ export default function OnboardingFromGithub({ loaderData }: Route.ComponentProp
     const [basePath, setBasePath] = useState('')
 
     const [owner, repo] = selectedRepo.split('/') || ['', '']
-    
+
     const { data: branchesData, isLoading: loadingBranches } = useQuery({
         queryKey: ['branches', orgId, owner, repo, installationId],
         queryFn: async () => {

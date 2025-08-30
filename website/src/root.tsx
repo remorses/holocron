@@ -7,6 +7,7 @@ import {
     redirect,
     Scripts,
     ScrollRestoration,
+    useLocation,
 } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
@@ -35,6 +36,7 @@ const redirectMiddleware: Route.unstable_MiddlewareFunction = async (
     }
     return next()
 }
+
 
 export const unstable_middleware: Route.unstable_MiddlewareFunction[] = [
     redirectMiddleware,
@@ -85,33 +87,60 @@ const queryClient = new QueryClient({
 })
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+    const location = useLocation()
     const containerClass =
         'flex flex-col items-center justify-center min-h-screen px-6 py-12 text-center bg-background text-foreground'
     const titleClass = 'text-3xl font-semibold mb-3 text-primary'
     const messageClass = 'text-base mb-2 text-muted-foreground'
     const preClass =
         'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2'
+    const linkClass = 'text-primary hover:underline mt-4'
+
+    const supportEmail = 'tommy@holocron.com'
+
+    const getMailtoLink = (errorDetails: string) => {
+        const subject = encodeURIComponent('Error Report - Holocron')
+        const body = encodeURIComponent(
+            `Hi,\n\nI encountered the following error:\n\n${errorDetails}\n\nPage URL: ${location.pathname}${location.search}${location.hash}\n\nPlease help!`,
+        )
+        return `mailto:${supportEmail}?subject=${subject}&body=${body}`
+    }
+
     if (isRouteErrorResponse(error)) {
+        const errorDetails = `Error ${error.status} ${error.statusText}: ${error.data}`
         return (
             <div className={containerClass}>
                 <h1 className={titleClass}>
                     {error.status} {error.statusText}
                 </h1>
                 <p className={messageClass}>{error.data}</p>
+                <a href={getMailtoLink(errorDetails)} className={linkClass}>
+                    Contact support →
+                </a>
             </div>
         )
     } else if (error instanceof Error) {
+        const errorDetails = `Error: ${error.message}\n\nStack trace:\n${error.stack}`
         return (
             <div className={containerClass}>
                 <h1 className={titleClass}>Error</h1>
                 <p className={messageClass}>{error.message}</p>
-                <pre className={preClass}>{error.stack}</pre>
+                {error.stack && <pre className={preClass}>{error.stack}</pre>}
+                <a href={getMailtoLink(errorDetails)} className={linkClass}>
+                    Contact support →
+                </a>
             </div>
         )
     } else {
         return (
             <div className={containerClass}>
                 <h1 className={titleClass}>Unknown Error</h1>
+                <a
+                    href={getMailtoLink('Unknown error occurred')}
+                    className={linkClass}
+                >
+                    Contact support →
+                </a>
             </div>
         )
     }
