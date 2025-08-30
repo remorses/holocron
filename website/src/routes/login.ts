@@ -66,6 +66,7 @@ export async function loader({ request }) {
     if (isFromLandingPage) {
         throw redirect(href('/org/:orgId/onboarding', { orgId }))
     }
+
     // Use one Prisma query to fetch latest site, its latest branch, and the user's latest chat for that org
     const site = await prisma.site.findFirst({
         where: {

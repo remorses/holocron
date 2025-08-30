@@ -41,10 +41,10 @@ import type { Route as BranchRoute } from './org.$orgId.branch.$branchId'
 
 import { UIMessage } from 'ai'
 import { ChatProvider, ChatState } from 'contesto/src/chat/chat-provider'
-import { env } from 'docs-website/src/lib/env'
+import { env, supportEmail } from 'docs-website/src/lib/env'
 import { formatDistanceToNow } from 'date-fns'
 import { Button } from '../components/ui/button'
-import { GithubIcon } from 'lucide-react'
+import { GithubIcon, Mail } from 'lucide-react'
 import { useShouldHideBrowser, useThrowingFn } from '../lib/hooks'
 import { apiClient } from '../lib/spiceflow-client'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
@@ -65,7 +65,8 @@ export async function loader({
         throw new Error('Request aborted')
     }
 
-    const { userId } = await getSession({ request })
+    const session = await getSession({ request })
+    const { userId } = session
 
     // Check signal before main database queries
     if (request.signal.aborted) {
@@ -190,6 +191,7 @@ export async function loader({
         siteId,
         githubFolder,
         initialActiveTab,
+        session,
     }
 }
 
@@ -317,6 +319,7 @@ function RightSide() {
                     {/* <TabsTrigger value='errors'>Errors</TabsTrigger> */}
                 </TabsList>
                 <div className='grow'></div>
+                <FeedbackButton />
                 <GithubRepoButton />
                 <GitHubSyncStatus />
                 {/* <GitHubSyncButton /> */}
@@ -367,6 +370,24 @@ const scaleDownElement = memoize(function (iframeScale) {
         height: `${Number(100 / iframeScale).toFixed(1)}%`,
     }
 })
+
+function FeedbackButton() {
+    const { session } = useLoaderData<typeof loader>()
+    
+    const userEmail = session?.user?.email || ''
+    const subject = encodeURIComponent('Feedback for Holocron')
+    const body = encodeURIComponent(`From: ${userEmail}\n\n`)
+    const mailtoLink = `mailto:${supportEmail}?subject=${subject}&body=${body}`
+    
+    return (
+        <Button variant='ghost' asChild>
+            <a href={mailtoLink}>
+                <Mail className='size-4 mr-1' />
+                Feedback
+            </a>
+        </Button>
+    )
+}
 
 function GithubRepoButton() {
     const branchData = useRouteLoaderData(
