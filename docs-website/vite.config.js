@@ -77,6 +77,7 @@ export default defineConfig({
                 'json-schema-library',
                 '@lancedb/lancedb',
                 'isolated-vm',
+
             ],
         }),
         tailwindcss(),

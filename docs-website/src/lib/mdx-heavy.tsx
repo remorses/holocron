@@ -17,7 +17,7 @@ import {
 } from './remark-plugins'
 import remarkStringify from 'remark-stringify'
 
-import { remarkInstall } from 'fumadocs-docgen'
+// Remove fumadocs-docgen import as it uses Node.js modules
 
 import YAML from 'js-yaml'
 import { RenderNode } from 'safe-mdx'
@@ -300,7 +300,7 @@ export const getProcessor = function getProcessor({
                 .use(remarkHeading)
                 // .use(mdxPluginsFumadocs.remarkImage)
                 .use(remarkSteps)
-                .use(remarkInstall)
+                // .use(remarkInstall) // Commented out as it uses Node.js modules
                 .use(remarkMarkAndUnravel)
                 .use(remarkCodeToHtml)
                 .use(remarkExtractFirstHeading)
