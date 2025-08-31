@@ -35,7 +35,9 @@ import { ContextProviders } from "unframer";
 import { WithFramerBreakpoints } from "unframer";
 import { jsx } from "react/jsx-runtime";
 var locales = [];
-var defaultResponsiveVariants = {};
+var defaultResponsiveVariants = {
+	base: "GH92NKo0U",
+};
 /** @type {function(Props): any} */
 function ComponentWithRoot({ locale, ...rest }) {
 	return (

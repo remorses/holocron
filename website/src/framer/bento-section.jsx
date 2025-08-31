@@ -2056,7 +2056,11 @@ addFonts(
 import { WithFramerBreakpoints } from "unframer";
 import { jsx } from "react/jsx-runtime";
 var locales = [];
-var defaultResponsiveVariants = {};
+var defaultResponsiveVariants = {
+	base: "tIr__h7Fj",
+	md: "R_PgnquAW",
+	xl: "YCffmP9Vu",
+};
 /** @type {function(Props): any} */
 function ComponentWithRoot({ locale, ...rest }) {
 	return (
