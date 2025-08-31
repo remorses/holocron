@@ -18,7 +18,7 @@ export function meta() {
             name: 'description',
             content: 'Host Fumadocs websites without effort',
         },
-        { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' },
+        { rel: 'icon', type: 'image/png', href: '/icon.png' },
     ]
 }
 
