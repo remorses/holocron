@@ -7,6 +7,7 @@
     --unframer-orange-800: rgb(62, 32, 19);
     --unframer-orange-400: rgb(204, 61, 0);
     --unframer-gray-250: rgba(255, 255, 255, 0.38);
+    --unframer-neutral-900: rgb(17, 24, 39);
     --unframer-orange-600: rgba(209, 63, 0, 0.5);
     --unframer-black-0: rgba(0, 0, 0, 0);
     --unframer-primary: rgb(255, 77, 0);
@@ -15,8 +16,10 @@
     --unframer-gray-850: rgba(23, 23, 23, 0.7);
     --unframer-gray-800: rgb(28, 28, 28);
     --unframer-yellow: rgb(250, 187, 0);
+    --unframer-neutral-500: rgb(107, 114, 128);
     --unframer-white: rgb(255, 255, 255);
     --unframer-gray-600: rgba(46, 46, 46, 0.4);
+    --unframer-neutral-50: rgb(255, 255, 255);
     --unframer-orange-300: rgb(184, 92, 0);
     --unframer-black: rgb(0, 0, 0);
     --unframer-orange-750: rgba(112, 69, 54, 0.7);
@@ -25,6 +28,7 @@
     --token-18d2a01a-9676-41c1-bf6d-4772415cc68b: rgb(62, 32, 19);
     --token-298b4add-111d-4ff0-82fc-7d5e99a4405b: rgb(204, 61, 0);
     --token-2f086888-2254-42af-8805-28fc6ecd4e26: rgba(255, 255, 255, 0.38);
+    --token-37c8ed4f-2a53-472e-9a87-a130781c4a8e: rgb(17, 24, 39);
     --token-61af1f46-12b4-4cd6-9489-e4165314c405: rgba(209, 63, 0, 0.5);
     --token-73712a6a-57cb-43d7-9c85-ad36472f666c: rgba(0, 0, 0, 0);
     --token-83878271-40bd-4314-b766-4d665555aa78: rgb(255, 77, 0);
@@ -33,8 +37,10 @@
     --token-a72e40d5-b29d-41f2-bb9d-24392d1b3008: rgba(23, 23, 23, 0.7);
     --token-b9018599-27d5-4611-a33e-8b2f64661ff4: rgb(28, 28, 28);
     --token-ba966f44-b096-454c-b9a7-2e7b01439cc6: rgb(250, 187, 0);
+    --token-c2364785-8edf-4554-bf5f-fb11a35f5e74: rgb(107, 114, 128);
     --token-de954fd2-a975-4916-8b85-2e5f2acf6b9e: rgb(255, 255, 255);
     --token-e6cc12f6-2333-405c-a82f-b6c94880d746: rgba(46, 46, 46, 0.4);
+    --token-e9b87438-ffd5-4fe0-8db2-85d90798dd9e: rgb(255, 255, 255);
     --token-ebf207fb-f9e0-4c9c-91c0-517fa05c795c: rgb(184, 92, 0);
     --token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5: rgb(0, 0, 0);
     --token-f799a2df-306e-498f-bee9-a5591c59bc52: rgba(112, 69, 54, 0.7);
@@ -45,6 +51,7 @@
     --unframer-orange-800: rgb(62, 32, 19);
     --unframer-orange-400: rgb(204, 61, 0);
     --unframer-gray-250: rgba(255, 255, 255, 0.38);
+    --unframer-neutral-900: rgb(17, 24, 39);
     --unframer-orange-600: rgba(209, 63, 0, 0.5);
     --unframer-black-0: rgba(0, 0, 0, 0);
     --unframer-primary: rgb(255, 77, 0);
@@ -53,8 +60,10 @@
     --unframer-gray-850: rgba(23, 23, 23, 0.7);
     --unframer-gray-800: rgb(28, 28, 28);
     --unframer-yellow: rgb(250, 187, 0);
+    --unframer-neutral-500: rgb(107, 114, 128);
     --unframer-white: rgb(255, 255, 255);
     --unframer-gray-600: rgba(46, 46, 46, 0.4);
+    --unframer-neutral-50: rgb(255, 255, 255);
     --unframer-orange-300: rgb(184, 92, 0);
     --unframer-black: rgb(0, 0, 0);
     --unframer-orange-750: rgba(112, 69, 54, 0.7);
@@ -63,6 +72,7 @@
     --token-18d2a01a-9676-41c1-bf6d-4772415cc68b: rgb(62, 32, 19);
     --token-298b4add-111d-4ff0-82fc-7d5e99a4405b: rgb(204, 61, 0);
     --token-2f086888-2254-42af-8805-28fc6ecd4e26: rgba(255, 255, 255, 0.38);
+    --token-37c8ed4f-2a53-472e-9a87-a130781c4a8e: rgb(17, 24, 39);
     --token-61af1f46-12b4-4cd6-9489-e4165314c405: rgba(209, 63, 0, 0.5);
     --token-73712a6a-57cb-43d7-9c85-ad36472f666c: rgba(0, 0, 0, 0);
     --token-83878271-40bd-4314-b766-4d665555aa78: rgb(255, 77, 0);
@@ -71,8 +81,10 @@
     --token-a72e40d5-b29d-41f2-bb9d-24392d1b3008: rgba(23, 23, 23, 0.7);
     --token-b9018599-27d5-4611-a33e-8b2f64661ff4: rgb(28, 28, 28);
     --token-ba966f44-b096-454c-b9a7-2e7b01439cc6: rgb(250, 187, 0);
+    --token-c2364785-8edf-4554-bf5f-fb11a35f5e74: rgb(107, 114, 128);
     --token-de954fd2-a975-4916-8b85-2e5f2acf6b9e: rgb(255, 255, 255);
     --token-e6cc12f6-2333-405c-a82f-b6c94880d746: rgba(46, 46, 46, 0.4);
+    --token-e9b87438-ffd5-4fe0-8db2-85d90798dd9e: rgb(255, 255, 255);
     --token-ebf207fb-f9e0-4c9c-91c0-517fa05c795c: rgb(184, 92, 0);
     --token-ee543b93-1210-4c7c-89e5-1da4ab07aeb5: rgb(0, 0, 0);
     --token-f799a2df-306e-498f-bee9-a5591c59bc52: rgba(112, 69, 54, 0.7);
@@ -163,6 +175,38 @@
     font-weight: 500;
 }
 
+@font-face {
+    font-family: 'Inter';
+    src: url('https://framerusercontent.com/assets/gcnfba68tfm7qAyrWRCf9r34jg.woff2');
+    font-style: italic;
+    font-weight: 900;
+    unicodeRange: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2070, U+2074-207E, U+2080-208E, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('https://framerusercontent.com/assets/ia3uin3hQWqDrVloC1zEtYHWw.woff2');
+    font-style: italic;
+    font-weight: 700;
+    unicodeRange: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2070, U+2074-207E, U+2080-208E, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('https://framerusercontent.com/assets/rZ5DdENNqIdFTIyQQiP5isO7M.woff2');
+    font-style: normal;
+    font-weight: 900;
+    unicodeRange: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2070, U+2074-207E, U+2080-208E, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('https://framerusercontent.com/assets/UjlFhCnUjxhNfep4oYBPqnEssyo.woff2');
+    font-style: normal;
+    font-weight: 500;
+    unicodeRange: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2070, U+2074-207E, U+2080-208E, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* used by cta.js, hero-section.js */
 
 @font-face {
@@ -215,26 +259,10 @@
 
 @font-face {
     font-family: 'Inter';
-    src: url('https://framerusercontent.com/assets/g0c8vEViiXNlKAgI4Ymmk3Ig.woff2');
-    font-style: italic;
-    font-weight: 900;
-    unicodeRange: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-@font-face {
-    font-family: 'Inter';
     src: url('https://framerusercontent.com/assets/gQhNpS3tN86g8RcVKYUUaKt2oMQ.woff2');
     font-style: normal;
     font-weight: 900;
     unicodeRange: U+1F00-1FFF;
-}
-
-@font-face {
-    font-family: 'Inter';
-    src: url('https://framerusercontent.com/assets/jn4BtSPLlS0NDp1KiFAtFKiiY0o.woff2');
-    font-style: normal;
-    font-weight: 900;
-    unicodeRange: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @font-face {
@@ -733,5 +761,33 @@
     font-style: italic;
     font-weight: 600;
     unicodeRange: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+/* used by cta.js */
+
+@font-face {
+    font-family: 'Inter';
+    src: url('https://framerusercontent.com/assets/g0c8vEViiXNlKAgI4Ymmk3Ig.woff2');
+    font-style: italic;
+    font-weight: 900;
+    unicodeRange: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('https://framerusercontent.com/assets/jn4BtSPLlS0NDp1KiFAtFKiiY0o.woff2');
+    font-style: normal;
+    font-weight: 900;
+    unicodeRange: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* used by faq-section.js, featuers-with-questions.js, footer.js, hero-section.js, nav-bar.js */
+
+@font-face {
+    font-family: 'Inter';
+    src: url('https://framerusercontent.com/assets/GrgcKwrN6d3Uz8EwcLHZxwEfC4.woff2');
+    font-style: normal;
+    font-weight: 400;
+    unicodeRange: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2070, U+2074-207E, U+2080-208E, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
