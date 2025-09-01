@@ -1,4 +1,5 @@
 import { prisma, Prisma } from 'db'
+import exampleDocs from 'website/scripts/example-docs.json'
 import { redirect, type LoaderFunctionArgs, type ActionFunctionArgs, Form, useNavigation, useLoaderData } from 'react-router'
 import * as cookie from 'cookie'
 import { getSession } from '../lib/better-auth'
@@ -336,12 +337,8 @@ export async function action({ request, params }: Route.ActionArgs) {
     })
 
     // If no files exist, use starter template as fallback
-    if (files.length === 1) { // Only docs json
-        const { data: exampleDocsResponse, error } = await apiClient.api.getStarterTemplate.get()
-        if (error) {
-            throw new Error('Failed to get example docs')
-        }
-        files.push(...exampleDocsResponse.files)
+    if (files.length <= 1) { // Only docs json
+        files.push(...exampleDocs)
     }
 
     // Create the repository
