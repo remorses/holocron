@@ -32,6 +32,8 @@ const document = {
     },
 }
 
+
+
 export const loader = async ({ params, request }) => {
     const processed = await processDocument(document as any, )
     return { processed }
