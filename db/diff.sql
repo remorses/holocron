@@ -1,2 +1,3 @@
--- This is an empty migration.
+-- AlterTable
+ALTER TABLE "public"."User" ADD COLUMN     "signupReason" TEXT;
 

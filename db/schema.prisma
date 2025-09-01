@@ -30,6 +30,7 @@ model User {
   chats            Chat[]
   cliLoginSessions CliLoginSession[]
   apikeys           ApiKey[]
+  signupReason String?
 
   @@unique([email])
   @@unique([username])
