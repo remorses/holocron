@@ -143,7 +143,7 @@ export async function loader({
         }
 
         const allFiles = source.getPages()
-        return allFiles.map((file) => `@${file.file}`).sort()
+        return allFiles.map((page) => page.file.path).sort()
     })()
 
     const host = siteBranch.domains
@@ -183,7 +183,7 @@ export async function loader({
         chatId,
         chat,
         prUrl,
-        mentionOptions: fileNames,
+        projectPagesFilenames: fileNames,
         iframeUrl,
         host,
         branchId,
@@ -571,7 +571,7 @@ function InstallGithubAppToolbar() {
 
     const githubOwner = branchData.site.githubOwner
     const isChatGenerating = useWebsiteState((state) => state.isChatGenerating)
-    const mentionOptions = chatData?.mentionOptions || []
+    const projectPagesFilenames = chatData?.projectPagesFilenames || []
 
     // Create install URL with next parameter pointing to connect-github
     const nextPath = href('/github/:orgId/:branchId/connect-github', {
@@ -587,7 +587,7 @@ function InstallGithubAppToolbar() {
     }
 
     // Hide if user has no pages
-    if (!mentionOptions.length) return null
+    if (!projectPagesFilenames.length) return null
 
     // Only show if site has NO GitHub installation
     if (!!branchData.site.githubInstallations?.length) return null

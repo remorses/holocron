@@ -1,5 +1,5 @@
 import type { DocsJsonType } from './docs-json'
-import { WEBSITE_DOMAIN } from './env'
+import { WEBSITE_DOMAIN, env } from './env'
 
 export const defaultDocsJsonComments = {
     domains: `// to add new domains you can simply add them here, then add a CNAME record pointing to cname.${WEBSITE_DOMAIN}`,
@@ -19,8 +19,8 @@ export const defaultStartingHolocronJson: DocsJsonType = {
         dark: '/favicon.svg',
     },
     logo: {
-        light: '/logo/dark.svg',
-        dark: '/logo/light.svg',
+        light: new URL('/logo/dark.svg', env.PUBLIC_URL).href,
+        dark: new URL('/logo/light.svg', env.PUBLIC_URL).href,
     },
     navbar: {
         links: [

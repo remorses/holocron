@@ -761,7 +761,7 @@ function Footer() {
         submit,
         messages,
     } = useChatContext()
-    const { chat, chatId, githubFolder, prUrl, mentionOptions, branchId } =
+    const { chat, chatId, githubFolder, prUrl, projectPagesFilenames, branchId } =
         useLoaderData() as Route.ComponentProps['loaderData']
     const branchData = useRouteLoaderData(
         'routes/org.$orgId.branch.$branchId',
@@ -829,7 +829,7 @@ function Footer() {
                         <div className='flex'>
                             <ContextButton
                                 textareaRef={textareaRef}
-                                contextOptions={mentionOptions || []}
+                                contextOptions={projectPagesFilenames?.map(f => `@${f}`) || []}
                             />
                         </div>
                         <ChatTextarea
@@ -837,7 +837,7 @@ function Footer() {
                             disabled={false}
                             placeholder='Ask me anything...'
                             className=''
-                            mentionOptions={mentionOptions || []}
+                            mentionOptions={projectPagesFilenames?.map(f => `@${f}`) || []}
                         />
                         {/* Textarea buttons */}
                         <div className='flex items-center justify-between gap-2 p-3'>
