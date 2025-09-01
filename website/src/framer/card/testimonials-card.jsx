@@ -26,9 +26,10 @@
 }} Props
 
  */
-import { stdin_default } from "../chunks/chunk-2DA32EHW.js";
-import "../chunks/chunk-UJNP7OPO.js";
-import "../chunks/chunk-SNH2M5FY.js";
+import { stdin_default } from "../chunks/chunk-EUWWW7VO.js";
+import "../chunks/chunk-QAV64ZEM.js";
+import "../chunks/chunk-EWWPQ2JC.js";
+import "../chunks/chunk-6G2SY433.js";
 import { routes } from "../chunks/chunk-75FLX355.js";
 
 // virtual:card/testimonials-card

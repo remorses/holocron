@@ -31,7 +31,7 @@ import { routes } from "./chunks/chunk-75FLX355.js";
 import { Fragment as Fragment3 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/hfOdlGq2io0nshwQb2T8/rv3HyleCqwbQYQ9OQyG1/FBnWH0oiT.js
+// /:https://framerusercontent.com/modules/hfOdlGq2io0nshwQb2T8/S5oKYwXdyNTQcrSe31NN/FBnWH0oiT.js
 import { jsx as _jsx3, jsxs as _jsxs3 } from "react/jsx-runtime";
 import {
 	addFonts as addFonts2,
@@ -888,7 +888,7 @@ addFonts(
 	},
 );
 
-// /:https://framerusercontent.com/modules/hfOdlGq2io0nshwQb2T8/rv3HyleCqwbQYQ9OQyG1/FBnWH0oiT.js
+// /:https://framerusercontent.com/modules/hfOdlGq2io0nshwQb2T8/S5oKYwXdyNTQcrSe31NN/FBnWH0oiT.js
 var TickerFonts = getFonts(Ticker);
 var MotionSectionWithFX = withFX(motion3.section);
 var ProjectFonts = getFonts(stdin_default2);
@@ -896,7 +896,7 @@ var SmartComponentScopedContainerWithFXWithOptimizedAppearEffect =
 	withOptimizedAppearEffect(withFX(SmartComponentScopedContainer));
 var GridFonts = getFonts(stdin_default);
 var cycleOrder = ["g5OwYKbY3", "syRs9tbA_", "U6_0i5gQQ"];
-var serializationHash2 = "framer-76RSA";
+var serializationHash2 = "framer-NW9gQ";
 var variantClassNames2 = {
 	g5OwYKbY3: "framer-v-9n4rdh",
 	syRs9tbA_: "framer-v-zax2vy",
@@ -1117,7 +1117,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										className={"framer-styles-preset-m4awkb"}
 										data-styles-preset={"YqcGXulro"}
 									>
-										{"powering the fastest teams"}
+										{"Empowering modern teams"}
 									</motion3.h2>
 								</React2.Fragment>
 							</RichText>
@@ -1712,7 +1712,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 										widthType: true,
 									}}
 									slots={[
-										<ComponentViewportProvider height={215} width={"363px"}>
+										<ComponentViewportProvider height={215}>
 											<SmartComponentScopedContainer
 												className={"framer-1f68c6k-container"}
 												inComponentSlot={true}
@@ -1727,9 +1727,9 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 														{
 															pixelHeight: 432,
 															pixelWidth: 768,
-															src: "https://framerusercontent.com/images/5mdQNsHKpm07ejwH4iup800no4.png",
+															src: "https://framerusercontent.com/images/5mdQNsHKpm07ejwH4iup800no4.png?width=768&height=432",
 															srcSet:
-																"https://framerusercontent.com/images/5mdQNsHKpm07ejwH4iup800no4.png?scale-down-to=512 512w,https://framerusercontent.com/images/5mdQNsHKpm07ejwH4iup800no4.png 768w",
+																"https://framerusercontent.com/images/5mdQNsHKpm07ejwH4iup800no4.png?scale-down-to=512&width=768&height=432 512w,https://framerusercontent.com/images/5mdQNsHKpm07ejwH4iup800no4.png?width=768&height=432 768w",
 														},
 														"Project Image",
 													),
@@ -1740,7 +1740,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												})}
 											</SmartComponentScopedContainer>
 										</ComponentViewportProvider>,
-										<ComponentViewportProvider height={215} width={"363px"}>
+										<ComponentViewportProvider height={215}>
 											<SmartComponentScopedContainer
 												className={"framer-1r37jvn-container"}
 												inComponentSlot={true}
@@ -1758,7 +1758,7 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 												})}
 											</SmartComponentScopedContainer>
 										</ComponentViewportProvider>,
-										<ComponentViewportProvider height={215} width={"363px"}>
+										<ComponentViewportProvider height={215}>
 											<SmartComponentScopedContainer
 												className={"framer-vyg56j-container"}
 												inComponentSlot={true}
@@ -1773,9 +1773,9 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 														{
 															pixelHeight: 432,
 															pixelWidth: 768,
-															src: "https://framerusercontent.com/images/SQYu6wIciOsATo1J3dIPbGGQU.png",
+															src: "https://framerusercontent.com/images/SQYu6wIciOsATo1J3dIPbGGQU.png?width=768&height=432",
 															srcSet:
-																"https://framerusercontent.com/images/SQYu6wIciOsATo1J3dIPbGGQU.png?scale-down-to=512 512w,https://framerusercontent.com/images/SQYu6wIciOsATo1J3dIPbGGQU.png 768w",
+																"https://framerusercontent.com/images/SQYu6wIciOsATo1J3dIPbGGQU.png?scale-down-to=512&width=768&height=432 512w,https://framerusercontent.com/images/SQYu6wIciOsATo1J3dIPbGGQU.png?width=768&height=432 768w",
 														},
 														"Project Image",
 													),
@@ -1849,45 +1849,45 @@ var Component2 = /* @__PURE__ */ React2.forwardRef(function (props, ref) {
 });
 var css3 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-76RSA.framer-1jv9jw3, .framer-76RSA .framer-1jv9jw3 { display: block; }",
-	".framer-76RSA.framer-9n4rdh { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 44px; height: min-content; justify-content: flex-start; overflow: hidden; padding: 0px 100px 40px 100px; position: relative; width: 1200px; }",
-	".framer-76RSA .framer-1inqsug { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 31px; height: min-content; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 100%; z-index: 1; }",
-	".framer-76RSA .framer-6uzw6x { flex: none; height: auto; position: relative; white-space: pre; width: auto; z-index: 0; }",
-	".framer-76RSA .framer-ptb27k-container { flex: none; height: 33px; max-width: 1000px; position: relative; width: 100%; }",
-	".framer-76RSA .framer-kpez2r { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 24px; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-76RSA .framer-1pjkn8 { flex: none; height: 18px; position: relative; width: 18px; }",
-	".framer-76RSA .framer-ncsa12, .framer-76RSA .framer-11vzbki, .framer-76RSA .framer-sfzn2n, .framer-76RSA .framer-1iy7nmp, .framer-76RSA .framer-40twg2, .framer-76RSA .framer-hvwyme, .framer-76RSA .framer-xzjtzd, .framer-76RSA .framer-nh9fdn { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
-	".framer-76RSA .framer-1o4ieja { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 21px; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-76RSA .framer-58nlp3 { flex: none; height: 22px; position: relative; width: 30px; }",
-	".framer-76RSA .framer-1f0jvxg, .framer-76RSA .framer-1f9ha54 { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 28px; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-76RSA .framer-1eqmj5j { flex: none; height: 19px; position: relative; width: 30px; }",
-	".framer-76RSA .framer-1e7tk0c, .framer-76RSA .framer-tw696m { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 26px; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-76RSA .framer-wizlf6 { flex: none; height: 26px; position: relative; width: 23px; }",
-	".framer-76RSA .framer-1p5zyzb { flex: none; height: 24px; overflow: visible; position: relative; width: 24px; }",
-	".framer-76RSA .framer-fldsrd { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 6px); left: 0px; position: absolute; top: 0px; width: 6px; }",
-	".framer-76RSA .framer-16cxk40 { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 6px); left: 9px; position: absolute; top: 0px; width: 6px; }",
-	".framer-76RSA .framer-3yn0e { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 6px); left: 0px; position: absolute; top: 9px; width: 6px; }",
-	".framer-76RSA .framer-1o7ltjs { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 6px); left: 9px; position: absolute; top: 9px; width: 6px; }",
-	".framer-76RSA .framer-1at0acx { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 6px); left: 18px; position: absolute; top: 9px; width: 6px; }",
-	".framer-76RSA .framer-18vwn94 { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 5px); left: 0px; position: absolute; top: 19px; width: 6px; }",
-	".framer-76RSA .framer-1uiexxw { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 5px); left: 9px; position: absolute; top: 19px; width: 6px; }",
-	".framer-76RSA .framer-1foh7nc { flex: none; height: 29px; position: relative; width: 29px; }",
-	".framer-76RSA .framer-suncao, .framer-76RSA .framer-167ns4s { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 22px; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
-	".framer-76RSA .framer-a4lsxi { flex: none; height: 22px; position: relative; width: 27px; }",
-	".framer-76RSA .framer-1qgl5lv { flex: none; height: 16px; position: relative; width: 49px; }",
-	".framer-76RSA .framer-g5xaw4-container { flex: none; height: 253px; position: relative; width: 1200px; }",
-	".framer-76RSA .framer-1f68c6k-container, .framer-76RSA .framer-1r37jvn-container, .framer-76RSA .framer-vyg56j-container { height: auto; position: relative; width: auto; }",
-	".framer-76RSA .framer-pof1yx { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 1; }",
-	".framer-76RSA .framer-1ddsyz7-container { flex: none; height: 800px; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
-	".framer-76RSA.framer-v-zax2vy.framer-9n4rdh { gap: 50px; padding: 0px 40px 40px 40px; width: 810px; }",
-	".framer-76RSA.framer-v-zax2vy .framer-1inqsug { order: 0; }",
-	".framer-76RSA.framer-v-zax2vy .framer-g5xaw4-container { order: 2; }",
-	".framer-76RSA.framer-v-zax2vy .framer-pof1yx { order: 1; }",
-	".framer-76RSA.framer-v-1cg770z.framer-9n4rdh { gap: 120px; padding: 0px 20px 80px 20px; width: 390px; }",
-	".framer-76RSA.framer-v-1cg770z .framer-pof1yx { z-index: 0; }",
+	".framer-NW9gQ.framer-1jv9jw3, .framer-NW9gQ .framer-1jv9jw3 { display: block; }",
+	".framer-NW9gQ.framer-9n4rdh { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 44px; height: min-content; justify-content: flex-start; overflow: hidden; padding: 0px 100px 40px 100px; position: relative; width: 1200px; }",
+	".framer-NW9gQ .framer-1inqsug { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 31px; height: min-content; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 100%; z-index: 1; }",
+	".framer-NW9gQ .framer-6uzw6x { flex: none; height: auto; position: relative; white-space: pre; width: auto; z-index: 0; }",
+	".framer-NW9gQ .framer-ptb27k-container { flex: none; height: 33px; max-width: 1000px; position: relative; width: 100%; }",
+	".framer-NW9gQ .framer-kpez2r { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 24px; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-NW9gQ .framer-1pjkn8 { flex: none; height: 18px; position: relative; width: 18px; }",
+	".framer-NW9gQ .framer-ncsa12, .framer-NW9gQ .framer-11vzbki, .framer-NW9gQ .framer-sfzn2n, .framer-NW9gQ .framer-1iy7nmp, .framer-NW9gQ .framer-40twg2, .framer-NW9gQ .framer-hvwyme, .framer-NW9gQ .framer-xzjtzd, .framer-NW9gQ .framer-nh9fdn { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
+	".framer-NW9gQ .framer-1o4ieja { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 21px; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-NW9gQ .framer-58nlp3 { flex: none; height: 22px; position: relative; width: 30px; }",
+	".framer-NW9gQ .framer-1f0jvxg, .framer-NW9gQ .framer-1f9ha54 { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 28px; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-NW9gQ .framer-1eqmj5j { flex: none; height: 19px; position: relative; width: 30px; }",
+	".framer-NW9gQ .framer-1e7tk0c, .framer-NW9gQ .framer-tw696m { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 26px; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-NW9gQ .framer-wizlf6 { flex: none; height: 26px; position: relative; width: 23px; }",
+	".framer-NW9gQ .framer-1p5zyzb { flex: none; height: 24px; overflow: visible; position: relative; width: 24px; }",
+	".framer-NW9gQ .framer-fldsrd { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 6px); left: 0px; position: absolute; top: 0px; width: 6px; }",
+	".framer-NW9gQ .framer-16cxk40 { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 6px); left: 9px; position: absolute; top: 0px; width: 6px; }",
+	".framer-NW9gQ .framer-3yn0e { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 6px); left: 0px; position: absolute; top: 9px; width: 6px; }",
+	".framer-NW9gQ .framer-1o7ltjs { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 6px); left: 9px; position: absolute; top: 9px; width: 6px; }",
+	".framer-NW9gQ .framer-1at0acx { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 6px); left: 18px; position: absolute; top: 9px; width: 6px; }",
+	".framer-NW9gQ .framer-18vwn94 { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 5px); left: 0px; position: absolute; top: 19px; width: 6px; }",
+	".framer-NW9gQ .framer-1uiexxw { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 5px); left: 9px; position: absolute; top: 19px; width: 6px; }",
+	".framer-NW9gQ .framer-1foh7nc { flex: none; height: 29px; position: relative; width: 29px; }",
+	".framer-NW9gQ .framer-suncao, .framer-NW9gQ .framer-167ns4s { align-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 22px; justify-content: center; overflow: visible; padding: 0px; position: relative; width: min-content; }",
+	".framer-NW9gQ .framer-a4lsxi { flex: none; height: 22px; position: relative; width: 27px; }",
+	".framer-NW9gQ .framer-1qgl5lv { flex: none; height: 16px; position: relative; width: 49px; }",
+	".framer-NW9gQ .framer-g5xaw4-container { flex: none; height: 253px; position: relative; width: 1200px; }",
+	".framer-NW9gQ .framer-1f68c6k-container, .framer-NW9gQ .framer-1r37jvn-container, .framer-NW9gQ .framer-vyg56j-container { height: auto; position: relative; width: auto; }",
+	".framer-NW9gQ .framer-pof1yx { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 1; }",
+	".framer-NW9gQ .framer-1ddsyz7-container { flex: none; height: 800px; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
+	".framer-NW9gQ.framer-v-zax2vy.framer-9n4rdh { gap: 50px; padding: 0px 40px 40px 40px; width: 810px; }",
+	".framer-NW9gQ.framer-v-zax2vy .framer-1inqsug { order: 0; }",
+	".framer-NW9gQ.framer-v-zax2vy .framer-g5xaw4-container { order: 2; }",
+	".framer-NW9gQ.framer-v-zax2vy .framer-pof1yx { order: 1; }",
+	".framer-NW9gQ.framer-v-1cg770z.framer-9n4rdh { gap: 120px; padding: 0px 20px 80px 20px; width: 390px; }",
+	".framer-NW9gQ.framer-v-1cg770z .framer-pof1yx { z-index: 0; }",
 	...css,
 ];
-var FramerFBnWH0oiT = withCSS2(Component2, css3, "framer-76RSA");
+var FramerFBnWH0oiT = withCSS2(Component2, css3, "framer-NW9gQ");
 var stdin_default3 = FramerFBnWH0oiT;
 FramerFBnWH0oiT.displayName = "Intro Section";
 FramerFBnWH0oiT.defaultProps = {
@@ -1955,8 +1955,8 @@ addFonts2(
 					source: "framer",
 					style: "normal",
 					unicodeRange:
-						"U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
-					url: "https://framerusercontent.com/assets/vQyevYAyHtARFwPqUzQGpnDs.woff2",
+						"U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2070, U+2074-207E, U+2080-208E, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+					url: "https://framerusercontent.com/assets/GrgcKwrN6d3Uz8EwcLHZxwEfC4.woff2",
 					weight: "400",
 				},
 				{
@@ -2043,8 +2043,8 @@ addFonts2(
 					source: "framer",
 					style: "normal",
 					unicodeRange:
-						"U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
-					url: "https://framerusercontent.com/assets/1ZFS7N918ojhhd0nQWdj3jz4w.woff2",
+						"U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2070, U+2074-207E, U+2080-208E, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+					url: "https://framerusercontent.com/assets/yDtI2UI8XcEg1W2je9XPN3Noo.woff2",
 					weight: "600",
 				},
 				{

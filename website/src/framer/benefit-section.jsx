@@ -23,9 +23,10 @@
 }} Props
 
  */
-import { stdin_default as stdin_default2 } from "./chunks/chunk-WI7ZBAJI.js";
-import "./chunks/chunk-UJNP7OPO.js";
+import { stdin_default as stdin_default2 } from "./chunks/chunk-CQZGE527.js";
+import "./chunks/chunk-QAV64ZEM.js";
 import "./chunks/chunk-BTSBQWPZ.js";
+import "./chunks/chunk-EWWPQ2JC.js";
 import { className, css, fonts } from "./chunks/chunk-KYATNZPG.js";
 import { stdin_default } from "./chunks/chunk-EHCTMXQN.js";
 import { routes } from "./chunks/chunk-75FLX355.js";
@@ -34,7 +35,7 @@ import { routes } from "./chunks/chunk-75FLX355.js";
 import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/jXKnJfWfJ6CmOI4Pa51Y/ZjaKzR7MQeAAUpQ9s7QR/uSzRf2WyT.js
+// /:https://framerusercontent.com/modules/jXKnJfWfJ6CmOI4Pa51Y/NvgLJU8FZhLIkCYBr1MF/uSzRf2WyT.js
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
@@ -61,7 +62,7 @@ var BenefitCardFonts = getFonts(stdin_default2);
 var SmartComponentScopedContainerWithFX = withFX(SmartComponentScopedContainer);
 var GridFonts = getFonts(stdin_default);
 var cycleOrder = ["zISvybPEk", "C_ZZDts2y", "GFIhwxsh9"];
-var serializationHash = "framer-7G6fC";
+var serializationHash = "framer-mqaZS";
 var variantClassNames = {
 	C_ZZDts2y: "framer-v-tvkrgq",
 	GFIhwxsh9: "framer-v-hh5j7x",
@@ -354,9 +355,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														"--framer-text-alignment": "center",
 													}}
 												>
-													{"Smarter Investing. "}
-													<motion.br />
-													{"Stronger Outcomes"}
+													{"Unlock Knowledge. Build Smarter with holocron"}
 												</motion.h2>
 											</React.Fragment>
 										</RichTextWithFX>
@@ -375,7 +374,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									y={
 										(componentViewport?.y || 0) +
 										200 +
-										(((componentViewport?.height || 722) - 250 - 426.2) / 2 +
+										(((componentViewport?.height || 676) - 250 - 426.2) / 2 +
 											0 +
 											0) +
 										0 +
@@ -404,9 +403,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												y:
 													(componentViewport?.y || 0) +
 													80 +
-													(((componentViewport?.height || 1400) -
-														120 -
-														1141.2) /
+													(((componentViewport?.height || 200) - 120 - 1141.2) /
 														2 +
 														0 +
 														0) +
@@ -448,9 +445,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 										)}
 									>
 										{_jsx(stdin_default2, {
-											e2KlnzxYz: "AI-Powered Strategies",
+											e2KlnzxYz: "Instant Data Access",
 											Ec4tMUtI0:
-												"Adaptive strategies driven by real-time machine learning.",
+												"Fetch and update your data in milliseconds with our modern API.",
 											height: "100%",
 											id: "NjrcSoQxz",
 											layoutId: "NjrcSoQxz",
@@ -480,7 +477,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									y={
 										(componentViewport?.y || 0) +
 										200 +
-										(((componentViewport?.height || 722) - 250 - 426.2) / 2 +
+										(((componentViewport?.height || 676) - 250 - 426.2) / 2 +
 											0 +
 											0) +
 										0 +
@@ -509,9 +506,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												y:
 													(componentViewport?.y || 0) +
 													80 +
-													(((componentViewport?.height || 1400) -
-														120 -
-														1141.2) /
+													(((componentViewport?.height || 200) - 120 - 1141.2) /
 														2 +
 														0 +
 														0) +
@@ -556,9 +551,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 										)}
 									>
 										{_jsx(stdin_default2, {
-											e2KlnzxYz: "Portfolio Optimization",
+											e2KlnzxYz: "Seamless Integration",
 											Ec4tMUtI0:
-												"Smart rebalancing to maximize returns and control risk effectively.",
+												"Connect holocron to your favorite tools and frameworks with ease.",
 											height: "100%",
 											id: "rwuszWyOa",
 											layoutId: "rwuszWyOa",
@@ -577,7 +572,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									y={
 										(componentViewport?.y || 0) +
 										200 +
-										(((componentViewport?.height || 722) - 250 - 426.2) / 2 +
+										(((componentViewport?.height || 676) - 250 - 426.2) / 2 +
 											0 +
 											0) +
 										0 +
@@ -606,9 +601,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												y:
 													(componentViewport?.y || 0) +
 													80 +
-													(((componentViewport?.height || 1400) -
-														120 -
-														1141.2) /
+													(((componentViewport?.height || 200) - 120 - 1141.2) /
 														2 +
 														0 +
 														0) +
@@ -653,9 +646,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 										)}
 									>
 										{_jsx(stdin_default2, {
-											e2KlnzxYz: "Real-Time Insights",
+											e2KlnzxYz: "Secure by Design",
 											Ec4tMUtI0:
-												"Live analytics provide clarity for every investment decision.",
+												"Your data is encrypted and protected with enterprise-grade security.",
 											height: "100%",
 											id: "iGG3ubzmv",
 											layoutId: "iGG3ubzmv",
@@ -674,7 +667,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									y={
 										(componentViewport?.y || 0) +
 										200 +
-										(((componentViewport?.height || 722) - 250 - 426.2) / 2 +
+										(((componentViewport?.height || 676) - 250 - 426.2) / 2 +
 											0 +
 											0) +
 										0 +
@@ -703,9 +696,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												y:
 													(componentViewport?.y || 0) +
 													80 +
-													(((componentViewport?.height || 1400) -
-														120 -
-														1141.2) /
+													(((componentViewport?.height || 200) - 120 - 1141.2) /
 														2 +
 														0 +
 														0) +
@@ -750,9 +741,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 										)}
 									>
 										{_jsx(stdin_default2, {
-											e2KlnzxYz: "Automated Execution",
+											e2KlnzxYz: "Scalable Infrastructure",
 											Ec4tMUtI0:
-												"Seamless execution from signal to trade, with precision and speed.",
+												"Grow from prototype to production without worrying about capacity.",
 											height: "100%",
 											id: "bW_HOgte1",
 											layoutId: "bW_HOgte1",
@@ -771,7 +762,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									y={
 										(componentViewport?.y || 0) +
 										200 +
-										(((componentViewport?.height || 722) - 250 - 426.2) / 2 +
+										(((componentViewport?.height || 676) - 250 - 426.2) / 2 +
 											0 +
 											0) +
 										0 +
@@ -800,9 +791,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												y:
 													(componentViewport?.y || 0) +
 													80 +
-													(((componentViewport?.height || 1400) -
-														120 -
-														1141.2) /
+													(((componentViewport?.height || 200) - 120 - 1141.2) /
 														2 +
 														0 +
 														0) +
@@ -847,9 +836,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 										)}
 									>
 										{_jsx(stdin_default2, {
-											e2KlnzxYz: "Adaptive Risk Management",
+											e2KlnzxYz: "Developer Friendly",
 											Ec4tMUtI0:
-												"AI models adjust exposure based on changing market dynamics and volatility.",
+												"Comprehensive docs and SDKs for a smooth development experience.",
 											height: "100%",
 											id: "QMCfI5Sdn",
 											layoutId: "QMCfI5Sdn",
@@ -868,7 +857,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									y={
 										(componentViewport?.y || 0) +
 										200 +
-										(((componentViewport?.height || 722) - 250 - 426.2) / 2 +
+										(((componentViewport?.height || 676) - 250 - 426.2) / 2 +
 											0 +
 											0) +
 										0 +
@@ -897,9 +886,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												y:
 													(componentViewport?.y || 0) +
 													80 +
-													(((componentViewport?.height || 1400) -
-														120 -
-														1141.2) /
+													(((componentViewport?.height || 200) - 120 - 1141.2) /
 														2 +
 														0 +
 														0) +
@@ -944,9 +931,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 										)}
 									>
 										{_jsx(stdin_default2, {
-											e2KlnzxYz: "Performance Tracking",
+											e2KlnzxYz: "Real-Time Sync",
 											Ec4tMUtI0:
-												"Monitor performance in real-time with clear metrics and visual reporting.",
+												"Keep your apps up-to-date with instant data synchronization.",
 											height: "100%",
 											id: "Jp0PD1z46",
 											layoutId: "Jp0PD1z46",
@@ -968,12 +955,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 							layoutId={"WyGg344YA"}
 						>
 							<ComponentViewportProvider
-								height={(componentViewport?.height || 722) * 1 * 1}
+								height={(componentViewport?.height || 676) * 1 * 1}
 								width={componentViewport?.width || "100vw"}
 								y={
 									(componentViewport?.y || 0) +
-									((componentViewport?.height || 722) * 0.5000000000000002 -
-										((componentViewport?.height || 722) * 1) / 2) +
+									((componentViewport?.height || 676) * 0.5000000000000002 -
+										((componentViewport?.height || 676) * 1) / 2) +
 									0
 								}
 								{...addPropertyOverrides(
@@ -988,12 +975,12 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												0,
 										},
 										GFIhwxsh9: {
-											height: (componentViewport?.height || 1400) * 1 * 1,
+											height: (componentViewport?.height || 200) * 1 * 1,
 											y:
 												(componentViewport?.y || 0) +
-												((componentViewport?.height || 1400) *
+												((componentViewport?.height || 200) *
 													0.5000000000000002 -
-													((componentViewport?.height || 1400) * 1) / 2) +
+													((componentViewport?.height || 200) * 1) / 2) +
 												0,
 										},
 									},
@@ -1043,32 +1030,32 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 });
 var css2 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-7G6fC.framer-e5g54u, .framer-7G6fC .framer-e5g54u { display: block; }",
-	".framer-7G6fC.framer-1vlqip2 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 40px; height: min-content; justify-content: center; overflow: hidden; padding: 200px 100px 50px 100px; position: relative; width: 1200px; will-change: var(--framer-will-change-override, transform); }",
-	".framer-7G6fC .framer-uzoqzu { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
-	".framer-7G6fC .framer-10uv332 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 20px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 2; }",
-	".framer-7G6fC .framer-1xv11j0 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 18px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-7G6fC .framer-w9tee5 { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 18px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-7G6fC .framer-1gd1sx2 { flex: 1 0 0px; height: auto; position: relative; white-space: pre-wrap; width: 1px; word-break: break-word; word-wrap: break-word; }",
-	".framer-7G6fC .framer-11cgjwm { display: grid; flex: none; gap: 15px; grid-auto-rows: min-content; grid-template-columns: repeat(3, minmax(50px, 1fr)); grid-template-rows: repeat(2, min-content); height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
-	".framer-7G6fC .framer-yq5mik-container, .framer-7G6fC .framer-cuu991-container, .framer-7G6fC .framer-xbvzy9-container, .framer-7G6fC .framer-1rn7ipq-container, .framer-7G6fC .framer-17r2tkd-container, .framer-7G6fC .framer-1h3xmn-container { align-self: start; flex: none; height: auto; justify-self: start; position: relative; width: 100%; z-index: 1; }",
-	".framer-7G6fC .framer-i4a7x7 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 100%; justify-content: center; left: calc(50.00000000000002% - 100% / 2); overflow: hidden; padding: 0px; position: absolute; top: calc(50.00000000000002% - 100% / 2); width: 100%; z-index: 0; }",
-	".framer-7G6fC .framer-1wchqd9-container { flex: none; height: 100%; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
-	".framer-7G6fC.framer-v-tvkrgq.framer-1vlqip2 { padding: 150px 40px 40px 40px; width: 810px; }",
-	".framer-7G6fC.framer-v-tvkrgq .framer-1gd1sx2, .framer-7G6fC.framer-v-hh5j7x .framer-1gd1sx2 { max-width: 600px; }",
-	".framer-7G6fC.framer-v-tvkrgq .framer-11cgjwm { grid-template-columns: repeat(2, minmax(50px, 1fr)); max-width: 810px; }",
-	".framer-7G6fC.framer-v-hh5j7x.framer-1vlqip2 { padding: 80px 20px 40px 20px; width: 390px; will-change: unset; }",
-	".framer-7G6fC.framer-v-hh5j7x .framer-10uv332 { gap: 0px; }",
-	".framer-7G6fC.framer-v-hh5j7x .framer-1xv11j0 { gap: 20px; }",
-	".framer-7G6fC.framer-v-hh5j7x .framer-w9tee5 { gap: 16px; }",
-	".framer-7G6fC.framer-v-hh5j7x .framer-11cgjwm { gap: 10px; grid-template-columns: repeat(1, minmax(50px, 1fr)); max-width: 600px; }",
+	".framer-mqaZS.framer-e5g54u, .framer-mqaZS .framer-e5g54u { display: block; }",
+	".framer-mqaZS.framer-1vlqip2 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 40px; height: min-content; justify-content: center; overflow: hidden; padding: 200px 100px 50px 100px; position: relative; width: 1200px; will-change: var(--framer-will-change-override, transform); }",
+	".framer-mqaZS .framer-uzoqzu { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 25px; height: min-content; justify-content: center; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
+	".framer-mqaZS .framer-10uv332 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 20px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 2; }",
+	".framer-mqaZS .framer-1xv11j0 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 18px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-mqaZS .framer-w9tee5 { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 18px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-mqaZS .framer-1gd1sx2 { flex: 1 0 0px; height: auto; position: relative; white-space: pre-wrap; width: 1px; word-break: break-word; word-wrap: break-word; }",
+	".framer-mqaZS .framer-11cgjwm { display: grid; flex: none; gap: 15px; grid-auto-rows: min-content; grid-template-columns: repeat(3, minmax(50px, 1fr)); grid-template-rows: repeat(2, min-content); height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
+	".framer-mqaZS .framer-yq5mik-container, .framer-mqaZS .framer-cuu991-container, .framer-mqaZS .framer-xbvzy9-container, .framer-mqaZS .framer-1rn7ipq-container, .framer-mqaZS .framer-17r2tkd-container, .framer-mqaZS .framer-1h3xmn-container { align-self: center; flex: none; height: auto; justify-self: center; position: relative; width: 100%; z-index: 1; }",
+	".framer-mqaZS .framer-i4a7x7 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 100%; justify-content: center; left: calc(50.00000000000002% - 100% / 2); overflow: hidden; padding: 0px; position: absolute; top: calc(50.00000000000002% - 100% / 2); width: 100%; z-index: 0; }",
+	".framer-mqaZS .framer-1wchqd9-container { flex: none; height: 100%; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
+	".framer-mqaZS.framer-v-tvkrgq.framer-1vlqip2 { padding: 150px 40px 40px 40px; width: 810px; }",
+	".framer-mqaZS.framer-v-tvkrgq .framer-1gd1sx2, .framer-mqaZS.framer-v-hh5j7x .framer-1gd1sx2 { max-width: 600px; }",
+	".framer-mqaZS.framer-v-tvkrgq .framer-11cgjwm { grid-template-columns: repeat(2, minmax(50px, 1fr)); max-width: 810px; }",
+	".framer-mqaZS.framer-v-hh5j7x.framer-1vlqip2 { padding: 80px 20px 40px 20px; width: 390px; will-change: unset; }",
+	".framer-mqaZS.framer-v-hh5j7x .framer-10uv332 { gap: 0px; }",
+	".framer-mqaZS.framer-v-hh5j7x .framer-1xv11j0 { gap: 20px; }",
+	".framer-mqaZS.framer-v-hh5j7x .framer-w9tee5 { gap: 16px; }",
+	".framer-mqaZS.framer-v-hh5j7x .framer-11cgjwm { gap: 10px; grid-template-columns: repeat(1, minmax(50px, 1fr)); max-width: 600px; }",
 	...css,
 ];
-var FrameruSzRf2WyT = withCSS(Component, css2, "framer-7G6fC");
+var FrameruSzRf2WyT = withCSS(Component, css2, "framer-mqaZS");
 var stdin_default3 = FrameruSzRf2WyT;
 FrameruSzRf2WyT.displayName = "Benefit Section";
 FrameruSzRf2WyT.defaultProps = {
-	height: 722,
+	height: 676,
 	width: 1200,
 };
 addPropertyControls(FrameruSzRf2WyT, {
@@ -1132,8 +1119,8 @@ addFonts(
 					source: "framer",
 					style: "normal",
 					unicodeRange:
-						"U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
-					url: "https://framerusercontent.com/assets/vQyevYAyHtARFwPqUzQGpnDs.woff2",
+						"U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2070, U+2074-207E, U+2080-208E, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+					url: "https://framerusercontent.com/assets/GrgcKwrN6d3Uz8EwcLHZxwEfC4.woff2",
 					weight: "400",
 				},
 				{

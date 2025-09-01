@@ -23,7 +23,7 @@
 }} Props
 
  */
-import { stdin_default } from "./chunks/chunk-AGU7MRZZ.js";
+import { stdin_default } from "./chunks/chunk-JNVFAY6E.js";
 import "./chunks/chunk-EWWPQ2JC.js";
 import { routes } from "./chunks/chunk-75FLX355.js";
 

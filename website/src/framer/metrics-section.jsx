@@ -23,9 +23,9 @@
 }} Props
 
  */
-import { stdin_default } from "./chunks/chunk-UUA2UP3M.js";
-import "./chunks/chunk-SNH2M5FY.js";
+import { stdin_default } from "./chunks/chunk-WAY7ZVLA.js";
 import { className, css, fonts } from "./chunks/chunk-KYATNZPG.js";
+import "./chunks/chunk-6G2SY433.js";
 import { stdin_default as stdin_default2 } from "./chunks/chunk-EHCTMXQN.js";
 import { routes } from "./chunks/chunk-75FLX355.js";
 
@@ -33,7 +33,7 @@ import { routes } from "./chunks/chunk-75FLX355.js";
 import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/2SsOGDH5kdOgAPwE40h3/MoPCntU2621TwAFHPkYP/vhCjmM3G7.js
+// /:https://framerusercontent.com/modules/2SsOGDH5kdOgAPwE40h3/Jos6Nzc0Bkbfi6sr65aW/vhCjmM3G7.js
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
@@ -59,7 +59,7 @@ var MetricsFonts = getFonts(stdin_default);
 var SmartComponentScopedContainerWithFX = withFX(SmartComponentScopedContainer);
 var GridFonts = getFonts(stdin_default2);
 var cycleOrder = ["RbAa9puV7", "OtqoiJd06", "fRvvpqAuJ"];
-var serializationHash = "framer-Tqu6U";
+var serializationHash = "framer-Re7GY";
 var variantClassNames = {
 	fRvvpqAuJ: "framer-v-tfloyz",
 	OtqoiJd06: "framer-v-1y6mng5",
@@ -279,7 +279,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												"--framer-text-alignment": "center",
 											}}
 										>
-											{"Performance You Can Measure"}
+											{"Track Your Progress with holocron"}
 										</motion.h2>
 									</React.Fragment>
 								</RichText>
@@ -314,7 +314,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 													y:
 														(componentViewport?.y || 0) +
 														120 +
-														(((componentViewport?.height || 684) -
+														(((componentViewport?.height || 200) -
 															170 -
 															468.2) /
 															2 +
@@ -376,7 +376,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												IOMocQpEh: "98.7%",
 												layoutId: "Ekaa9E_EB",
 												variant: "TwYCDqD7T",
-												vCgcTaJbS: "Client Retention Rate",
+												vCgcTaJbS: "Active Users",
 												width: "100%",
 												...addPropertyOverrides(
 													{
@@ -408,7 +408,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 													y:
 														(componentViewport?.y || 0) +
 														120 +
-														(((componentViewport?.height || 684) -
+														(((componentViewport?.height || 200) -
 															170 -
 															468.2) /
 															2 +
@@ -470,7 +470,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												IOMocQpEh: "$250M+",
 												layoutId: "fRrsww0wH",
 												variant: "TwYCDqD7T",
-												vCgcTaJbS: "Assets Managed",
+												vCgcTaJbS: "Knowledge Bases Created",
 												width: "100%",
 												...addPropertyOverrides(
 													{
@@ -502,7 +502,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 													y:
 														(componentViewport?.y || 0) +
 														120 +
-														(((componentViewport?.height || 684) -
+														(((componentViewport?.height || 200) -
 															170 -
 															468.2) /
 															2 +
@@ -564,7 +564,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												IOMocQpEh: "120+",
 												layoutId: "cnpXwY4rT",
 												variant: "TwYCDqD7T",
-												vCgcTaJbS: "Automated Strategies",
+												vCgcTaJbS: "API Calls Processed",
 												width: "100%",
 												...addPropertyOverrides(
 													{
@@ -594,7 +594,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 								{...addPropertyOverrides(
 									{
 										fRvvpqAuJ: {
-											height: (componentViewport?.height || 684) * 1 * 1,
+											height: (componentViewport?.height || 200) * 1 * 1,
 										},
 										OtqoiJd06: {
 											height: (componentViewport?.height || 421) * 1 * 1,
@@ -646,32 +646,32 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 });
 var css2 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-Tqu6U.framer-16nofxx, .framer-Tqu6U .framer-16nofxx { display: block; }",
-	".framer-Tqu6U.framer-1fvnu53 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 70px; height: min-content; justify-content: flex-start; overflow: hidden; padding: 220px 100px 50px 100px; position: relative; width: 1200px; }",
-	".framer-Tqu6U .framer-nxlf1j { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 43px; height: min-content; justify-content: flex-start; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
-	".framer-Tqu6U .framer-1kj9rp9 { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 0px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
-	".framer-Tqu6U .framer-tkkfp8 { flex: 1.2 0 0px; height: auto; max-width: 600px; position: relative; white-space: pre-wrap; width: 1px; word-break: break-word; word-wrap: break-word; z-index: 1; }",
-	".framer-Tqu6U .framer-v864au { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 8px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
-	".framer-Tqu6U .framer-6vh5bz { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; height: min-content; justify-content: space-between; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-Tqu6U .framer-1i3s4lk-container, .framer-Tqu6U .framer-1o742yd-container, .framer-Tqu6U .framer-1humiq1-container { flex: none; height: auto; position: relative; width: auto; }",
-	".framer-Tqu6U .framer-padrz3 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 0; }",
-	".framer-Tqu6U .framer-18lehov-container { flex: none; height: 100%; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
-	".framer-Tqu6U.framer-v-1y6mng5.framer-1fvnu53 { gap: 50px; padding: 150px 40px 50px 40px; width: 810px; }",
-	".framer-Tqu6U.framer-v-1y6mng5 .framer-nxlf1j { gap: 25px; max-width: 810px; order: 0; }",
-	".framer-Tqu6U.framer-v-1y6mng5 .framer-1kj9rp9 { gap: 21px; order: 0; }",
-	".framer-Tqu6U.framer-v-1y6mng5 .framer-tkkfp8 { flex: 1 0 0px; max-width: 550px; }",
-	".framer-Tqu6U.framer-v-1y6mng5 .framer-v864au { order: 1; }",
-	".framer-Tqu6U.framer-v-1y6mng5 .framer-padrz3 { height: 100%; order: 1; }",
-	".framer-Tqu6U.framer-v-tfloyz.framer-1fvnu53 { gap: 120px; justify-content: center; padding: 120px 20px 50px 20px; width: 390px; }",
-	".framer-Tqu6U.framer-v-tfloyz .framer-nxlf1j { gap: 40px; justify-content: center; max-width: 540px; }",
-	".framer-Tqu6U.framer-v-tfloyz .framer-1kj9rp9 { align-content: center; align-items: center; flex-direction: column; gap: 22px; order: 0; z-index: 3; }",
-	".framer-Tqu6U.framer-v-tfloyz .framer-tkkfp8 { flex: none; max-width: unset; width: 100%; }",
-	".framer-Tqu6U.framer-v-tfloyz .framer-v864au { gap: 15px; max-width: 600px; order: 1; }",
-	".framer-Tqu6U.framer-v-tfloyz .framer-6vh5bz { flex-direction: column; gap: 35px; justify-content: flex-start; }",
-	".framer-Tqu6U.framer-v-tfloyz .framer-padrz3 { height: 100%; }",
+	".framer-Re7GY.framer-16nofxx, .framer-Re7GY .framer-16nofxx { display: block; }",
+	".framer-Re7GY.framer-1fvnu53 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 70px; height: min-content; justify-content: flex-start; overflow: hidden; padding: 220px 100px 50px 100px; position: relative; width: 1200px; }",
+	".framer-Re7GY .framer-nxlf1j { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 43px; height: min-content; justify-content: flex-start; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
+	".framer-Re7GY .framer-1kj9rp9 { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 0px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
+	".framer-Re7GY .framer-tkkfp8 { flex: 1.2 0 0px; height: auto; max-width: 600px; position: relative; white-space: pre-wrap; width: 1px; word-break: break-word; word-wrap: break-word; z-index: 1; }",
+	".framer-Re7GY .framer-v864au { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 8px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
+	".framer-Re7GY .framer-6vh5bz { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; height: min-content; justify-content: space-between; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-Re7GY .framer-1i3s4lk-container, .framer-Re7GY .framer-1o742yd-container, .framer-Re7GY .framer-1humiq1-container { flex: none; height: auto; position: relative; width: auto; }",
+	".framer-Re7GY .framer-padrz3 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 800px; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 0; }",
+	".framer-Re7GY .framer-18lehov-container { flex: none; height: 100%; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
+	".framer-Re7GY.framer-v-1y6mng5.framer-1fvnu53 { gap: 50px; padding: 150px 40px 50px 40px; width: 810px; }",
+	".framer-Re7GY.framer-v-1y6mng5 .framer-nxlf1j { gap: 25px; max-width: 810px; order: 0; }",
+	".framer-Re7GY.framer-v-1y6mng5 .framer-1kj9rp9 { gap: 21px; order: 0; }",
+	".framer-Re7GY.framer-v-1y6mng5 .framer-tkkfp8 { flex: 1 0 0px; max-width: 550px; }",
+	".framer-Re7GY.framer-v-1y6mng5 .framer-v864au { order: 1; }",
+	".framer-Re7GY.framer-v-1y6mng5 .framer-padrz3 { height: 100%; order: 1; }",
+	".framer-Re7GY.framer-v-tfloyz.framer-1fvnu53 { gap: 120px; justify-content: center; padding: 120px 20px 50px 20px; width: 390px; }",
+	".framer-Re7GY.framer-v-tfloyz .framer-nxlf1j { gap: 40px; justify-content: center; max-width: 540px; }",
+	".framer-Re7GY.framer-v-tfloyz .framer-1kj9rp9 { align-content: center; align-items: center; flex-direction: column; gap: 22px; order: 0; z-index: 3; }",
+	".framer-Re7GY.framer-v-tfloyz .framer-tkkfp8 { flex: none; max-width: unset; width: 100%; }",
+	".framer-Re7GY.framer-v-tfloyz .framer-v864au { gap: 15px; max-width: 600px; order: 1; }",
+	".framer-Re7GY.framer-v-tfloyz .framer-6vh5bz { flex-direction: column; gap: 35px; justify-content: flex-start; }",
+	".framer-Re7GY.framer-v-tfloyz .framer-padrz3 { height: 100%; }",
 	...css,
 ];
-var FramervhCjmM3G7 = withCSS(Component, css2, "framer-Tqu6U");
+var FramervhCjmM3G7 = withCSS(Component, css2, "framer-Re7GY");
 var stdin_default3 = FramervhCjmM3G7;
 FramervhCjmM3G7.displayName = "Metrics Section";
 FramervhCjmM3G7.defaultProps = {
@@ -739,8 +739,8 @@ addFonts(
 					source: "framer",
 					style: "normal",
 					unicodeRange:
-						"U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
-					url: "https://framerusercontent.com/assets/vQyevYAyHtARFwPqUzQGpnDs.woff2",
+						"U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2070, U+2074-207E, U+2080-208E, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+					url: "https://framerusercontent.com/assets/GrgcKwrN6d3Uz8EwcLHZxwEfC4.woff2",
 					weight: "400",
 				},
 				{

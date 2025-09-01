@@ -23,11 +23,10 @@
 }} Props
 
  */
-import { stdin_default as stdin_default2 } from "./chunks/chunk-EQCMABB4.js";
-import "./chunks/chunk-IEUFZ327.js";
+import { stdin_default as stdin_default2 } from "./chunks/chunk-6D6DIEPS.js";
+import "./chunks/chunk-6JRFOZZS.js";
 import "./chunks/chunk-IETFVNRG.js";
 import "./chunks/chunk-BTSBQWPZ.js";
-import "./chunks/chunk-SNH2M5FY.js";
 import { className, css, fonts } from "./chunks/chunk-EWWPQ2JC.js";
 import "./chunks/chunk-YL4V4VZK.js";
 import {
@@ -47,7 +46,7 @@ import { routes } from "./chunks/chunk-75FLX355.js";
 import { Fragment as Fragment3 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/IRpd7ydacrSEWHemeFej/Gkp7HtncN5tCfXEuJ1mW/msg92ECOA.js
+// /:https://framerusercontent.com/modules/IRpd7ydacrSEWHemeFej/OywHBDY6m9M04cvPfZ3g/msg92ECOA.js
 import { jsx as _jsx2, jsxs as _jsxs2 } from "react/jsx-runtime";
 import {
 	addFonts as addFonts2,
@@ -70,7 +69,7 @@ import {
 import * as React2 from "react";
 import { useRef as useRef2 } from "react";
 
-// /:https://framerusercontent.com/modules/nA9HxOzJeXxfDtoisEVF/5m9SSjA0PyDZW1rlToma/OrSFgvSXl.js
+// /:https://framerusercontent.com/modules/nA9HxOzJeXxfDtoisEVF/KpqIBEjyfqyYrUyHZnoG/OrSFgvSXl.js
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
@@ -103,7 +102,7 @@ var cycleOrder = [
 	"AgRpmg7x2",
 	"ykEExBqq2",
 ];
-var serializationHash = "framer-DufCc";
+var serializationHash = "framer-9bSfM";
 var variantClassNames = {
 	AgRpmg7x2: "framer-v-10qugzq",
 	DApkxFVK9: "framer-v-16lzuye",
@@ -363,7 +362,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												"--framer-text-alignment": "center",
 											}}
 										>
-											{"Pricing Options"}
+											{"holocron Plans"}
 										</motion.h2>
 									</React.Fragment>
 								</RichText>
@@ -388,7 +387,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												"--framer-text-alignment": "center",
 											}}
 										>
-											{"Choose the subscription plan that suits your needs"}
+											{"Select the plan that fits your workflow"}
 										</motion.p>
 									</React.Fragment>
 								</RichText>
@@ -730,7 +729,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											y:
 												(componentViewport?.y || 0) +
 												120 +
-												(((componentViewport?.height || 1278) - 140 - 1220.2) /
+												(((componentViewport?.height || 200) - 140 - 1220.2) /
 													2 +
 													200.2 +
 													44) +
@@ -764,7 +763,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											y:
 												(componentViewport?.y || 0) +
 												120 +
-												(((componentViewport?.height || 1278) - 140 - 1220.2) /
+												(((componentViewport?.height || 200) - 140 - 1220.2) /
 													2 +
 													200.2 +
 													44) +
@@ -873,7 +872,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											y:
 												(componentViewport?.y || 0) +
 												120 +
-												(((componentViewport?.height || 1278) - 140 - 1220.2) /
+												(((componentViewport?.height || 200) - 140 - 1220.2) /
 													2 +
 													200.2 +
 													44) +
@@ -907,7 +906,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											y:
 												(componentViewport?.y || 0) +
 												120 +
-												(((componentViewport?.height || 1278) - 140 - 1220.2) /
+												(((componentViewport?.height || 200) - 140 - 1220.2) /
 													2 +
 													200.2 +
 													44) +
@@ -997,38 +996,38 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 });
 var css4 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-DufCc.framer-om29j8, .framer-DufCc .framer-om29j8 { display: block; }",
-	".framer-DufCc.framer-1yqo1s5 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 35px; height: min-content; justify-content: center; overflow: hidden; padding: 220px 100px 20px 100px; position: relative; width: 1200px; }",
-	".framer-DufCc .framer-r094w5 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 51px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-DufCc .framer-t44znr { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-DufCc .framer-i5bx2z, .framer-DufCc .framer-1vrveeb { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; }",
-	".framer-DufCc .framer-7b812y { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 2px; height: min-content; justify-content: center; overflow: visible; padding: 3px; position: relative; width: min-content; }",
-	".framer-DufCc .framer-su457z { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 34px; justify-content: center; overflow: visible; padding: 4px 14px 4px 14px; position: relative; width: min-content; }",
-	".framer-DufCc .framer-oyonyg { flex: none; height: auto; position: relative; white-space: pre; width: auto; z-index: 1; }",
-	".framer-DufCc .framer-yepgu8 { bottom: 0px; flex: none; gap: 10px; left: 0px; overflow: hidden; position: absolute; right: 0px; top: 0px; will-change: var(--framer-will-change-override, transform); z-index: 0; }",
-	".framer-DufCc .framer-1me1ch7 { align-content: center; align-items: center; cursor: pointer; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 34px; justify-content: center; overflow: hidden; padding: 4px 14px 4px 14px; position: relative; width: min-content; will-change: var(--framer-will-change-override, transform); }",
-	".framer-DufCc .framer-qjs96q { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
-	".framer-DufCc .framer-1w0579 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
-	".framer-DufCc .framer-16oqhu2-container { flex: none; height: auto; position: relative; width: auto; }",
-	".framer-DufCc .framer-i3uw90-container { flex: 1 0 0px; height: auto; position: relative; width: 1px; }",
-	".framer-DufCc.framer-v-16lzuye .framer-su457z, .framer-DufCc.framer-v-bu7onv .framer-su457z, .framer-DufCc.framer-v-1296uo .framer-su457z { cursor: pointer; }",
-	".framer-DufCc.framer-v-16lzuye .framer-yepgu8 { left: 82px; right: -71px; }",
-	".framer-DufCc.framer-v-1w1e0i5.framer-1yqo1s5, .framer-DufCc.framer-v-bu7onv.framer-1yqo1s5 { padding: 150px 40px 20px 40px; width: 810px; }",
-	".framer-DufCc.framer-v-1w1e0i5 .framer-1w0579, .framer-DufCc.framer-v-bu7onv .framer-1w0579 { max-width: 810px; }",
-	".framer-DufCc.framer-v-1w1e0i5 .framer-16oqhu2-container, .framer-DufCc.framer-v-bu7onv .framer-16oqhu2-container { flex: 1 0 0px; width: 1px; }",
-	".framer-DufCc.framer-v-1w1e0i5 .framer-i3uw90-container, .framer-DufCc.framer-v-bu7onv .framer-i3uw90-container { flex: 1.3 0 0px; }",
-	".framer-DufCc.framer-v-bu7onv .framer-yepgu8 { left: 83px; right: -71px; }",
-	".framer-DufCc.framer-v-bu7onv .framer-1me1ch7, .framer-DufCc.framer-v-1296uo .framer-1me1ch7 { cursor: unset; }",
-	".framer-DufCc.framer-v-10qugzq.framer-1yqo1s5, .framer-DufCc.framer-v-1296uo.framer-1yqo1s5 { gap: 22px; padding: 120px 20px 20px 20px; width: 390px; }",
-	".framer-DufCc.framer-v-10qugzq .framer-1w0579, .framer-DufCc.framer-v-1296uo .framer-1w0579 { flex-direction: column; max-width: 580px; }",
-	".framer-DufCc.framer-v-10qugzq .framer-16oqhu2-container, .framer-DufCc.framer-v-1296uo .framer-16oqhu2-container { width: 100%; }",
-	".framer-DufCc.framer-v-10qugzq .framer-i3uw90-container, .framer-DufCc.framer-v-1296uo .framer-i3uw90-container { flex: none; width: 100%; }",
-	".framer-DufCc.framer-v-1296uo .framer-yepgu8 { left: 81px; right: -71px; }",
+	".framer-9bSfM.framer-om29j8, .framer-9bSfM .framer-om29j8 { display: block; }",
+	".framer-9bSfM.framer-1yqo1s5 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 35px; height: min-content; justify-content: center; overflow: hidden; padding: 220px 100px 20px 100px; position: relative; width: 1200px; }",
+	".framer-9bSfM .framer-r094w5 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 51px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-9bSfM .framer-t44znr { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-9bSfM .framer-i5bx2z, .framer-9bSfM .framer-1vrveeb { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; }",
+	".framer-9bSfM .framer-7b812y { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 2px; height: min-content; justify-content: center; overflow: visible; padding: 3px; position: relative; width: min-content; }",
+	".framer-9bSfM .framer-su457z { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 34px; justify-content: center; overflow: visible; padding: 4px 14px 4px 14px; position: relative; width: min-content; }",
+	".framer-9bSfM .framer-oyonyg { flex: none; height: auto; position: relative; white-space: pre; width: auto; z-index: 1; }",
+	".framer-9bSfM .framer-yepgu8 { bottom: 0px; flex: none; gap: 10px; left: 0px; overflow: hidden; position: absolute; right: 0px; top: 0px; will-change: var(--framer-will-change-override, transform); z-index: 0; }",
+	".framer-9bSfM .framer-1me1ch7 { align-content: center; align-items: center; cursor: pointer; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 34px; justify-content: center; overflow: hidden; padding: 4px 14px 4px 14px; position: relative; width: min-content; will-change: var(--framer-will-change-override, transform); }",
+	".framer-9bSfM .framer-qjs96q { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
+	".framer-9bSfM .framer-1w0579 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
+	".framer-9bSfM .framer-16oqhu2-container { flex: none; height: auto; position: relative; width: auto; }",
+	".framer-9bSfM .framer-i3uw90-container { flex: 1 0 0px; height: auto; position: relative; width: 1px; }",
+	".framer-9bSfM.framer-v-16lzuye .framer-su457z, .framer-9bSfM.framer-v-bu7onv .framer-su457z, .framer-9bSfM.framer-v-1296uo .framer-su457z { cursor: pointer; }",
+	".framer-9bSfM.framer-v-16lzuye .framer-yepgu8 { left: 82px; right: -71px; }",
+	".framer-9bSfM.framer-v-1w1e0i5.framer-1yqo1s5, .framer-9bSfM.framer-v-bu7onv.framer-1yqo1s5 { padding: 150px 40px 20px 40px; width: 810px; }",
+	".framer-9bSfM.framer-v-1w1e0i5 .framer-1w0579, .framer-9bSfM.framer-v-bu7onv .framer-1w0579 { max-width: 810px; }",
+	".framer-9bSfM.framer-v-1w1e0i5 .framer-16oqhu2-container, .framer-9bSfM.framer-v-bu7onv .framer-16oqhu2-container { flex: 1 0 0px; width: 1px; }",
+	".framer-9bSfM.framer-v-1w1e0i5 .framer-i3uw90-container, .framer-9bSfM.framer-v-bu7onv .framer-i3uw90-container { flex: 1.3 0 0px; }",
+	".framer-9bSfM.framer-v-bu7onv .framer-yepgu8 { left: 83px; right: -71px; }",
+	".framer-9bSfM.framer-v-bu7onv .framer-1me1ch7, .framer-9bSfM.framer-v-1296uo .framer-1me1ch7 { cursor: unset; }",
+	".framer-9bSfM.framer-v-10qugzq.framer-1yqo1s5, .framer-9bSfM.framer-v-1296uo.framer-1yqo1s5 { gap: 22px; padding: 120px 20px 20px 20px; width: 390px; }",
+	".framer-9bSfM.framer-v-10qugzq .framer-1w0579, .framer-9bSfM.framer-v-1296uo .framer-1w0579 { flex-direction: column; max-width: 580px; }",
+	".framer-9bSfM.framer-v-10qugzq .framer-16oqhu2-container, .framer-9bSfM.framer-v-1296uo .framer-16oqhu2-container { width: 100%; }",
+	".framer-9bSfM.framer-v-10qugzq .framer-i3uw90-container, .framer-9bSfM.framer-v-1296uo .framer-i3uw90-container { flex: none; width: 100%; }",
+	".framer-9bSfM.framer-v-1296uo .framer-yepgu8 { left: 81px; right: -71px; }",
 	...css3,
 	...css2,
 	...css,
 ];
-var FramerOrSFgvSXl = withCSS(Component, css4, "framer-DufCc");
+var FramerOrSFgvSXl = withCSS(Component, css4, "framer-9bSfM");
 var stdin_default3 = FramerOrSFgvSXl;
 FramerOrSFgvSXl.displayName = "Pricing Section";
 FramerOrSFgvSXl.defaultProps = {
@@ -1110,8 +1109,8 @@ addFonts(
 					source: "framer",
 					style: "normal",
 					unicodeRange:
-						"U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
-					url: "https://framerusercontent.com/assets/vQyevYAyHtARFwPqUzQGpnDs.woff2",
+						"U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2070, U+2074-207E, U+2080-208E, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+					url: "https://framerusercontent.com/assets/GrgcKwrN6d3Uz8EwcLHZxwEfC4.woff2",
 					weight: "400",
 				},
 				{
@@ -1135,7 +1134,7 @@ addFonts(
 	},
 );
 
-// /:https://framerusercontent.com/modules/IRpd7ydacrSEWHemeFej/Gkp7HtncN5tCfXEuJ1mW/msg92ECOA.js
+// /:https://framerusercontent.com/modules/IRpd7ydacrSEWHemeFej/OywHBDY6m9M04cvPfZ3g/msg92ECOA.js
 var PricingSectionFonts = getFonts2(stdin_default3);
 var GridFonts = getFonts2(stdin_default);
 var cycleOrder2 = ["zo40Q3o2F", "N1_cwUnSS", "NgJxe3Ari"];

@@ -23,7 +23,7 @@
 }} Props
 
  */
-import { stdin_default } from "./chunks/chunk-EUMVRNAR.js";
+import { stdin_default } from "./chunks/chunk-WNBTOZ4T.js";
 import { className, css, fonts } from "./chunks/chunk-KYATNZPG.js";
 import "./chunks/chunk-6G2SY433.js";
 import { stdin_default as stdin_default2 } from "./chunks/chunk-EHCTMXQN.js";
@@ -33,7 +33,7 @@ import { routes } from "./chunks/chunk-75FLX355.js";
 import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/vsGrSyPjmSu6qtp6KhG2/MoEMxV9FNtffAK2sfmkH/qtvfO8YHV.js
+// /:https://framerusercontent.com/modules/vsGrSyPjmSu6qtp6KhG2/GxB5KsJM2moAnMukcSw2/qtvfO8YHV.js
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
@@ -59,7 +59,7 @@ var FAQFonts = getFonts(stdin_default);
 var SmartComponentScopedContainerWithFX = withFX(SmartComponentScopedContainer);
 var GridFonts = getFonts(stdin_default2);
 var cycleOrder = ["rmeeJSz78", "XrZxEUAaJ", "EW4AHUAxX"];
-var serializationHash = "framer-CHiaW";
+var serializationHash = "framer-WDAAi";
 var variantClassNames = {
 	EW4AHUAxX: "framer-v-x37i1",
 	rmeeJSz78: "framer-v-1rbr5xo",
@@ -353,7 +353,8 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											},
 											variant: "G8PiTZbU_",
 											width: "100%",
-											xyvbwpR7S: "How is Holocron different than Fumadocs?",
+											xyvbwpR7S:
+												"How is Holocron different from other documentation tools?",
 										})}
 									</SmartComponentScopedContainerWithFX>
 								</ComponentViewportProvider>
@@ -558,7 +559,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											variant: "G8PiTZbU_",
 											width: "100%",
 											xyvbwpR7S:
-												"Why should I use Holocron instead of self-hosting Fumadocs?",
+												"Why should I use Holocron instead of self-hosting?",
 										})}
 									</SmartComponentScopedContainerWithFX>
 								</ComponentViewportProvider>
@@ -620,14 +621,14 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											id: "WKntHTHga",
 											layoutId: "WKntHTHga",
 											lr9MckAMy:
-												"Holocron is fully open source and has no vendor lock-in. You can later self-deploy your docs using Fumadocs. Shumumabase.",
+												"Holocron is fully open source and has no vendor lock-in. You can later self-deploy your docs using Fumadocs. There is no dependency on proprietary platforms.",
 											style: {
 												width: "100%",
 											},
 											variant: "G8PiTZbU_",
 											width: "100%",
 											xyvbwpR7S:
-												"What is the difference between Holocron and Mintlify?",
+												"What makes Holocron unique compared to Mintlify?",
 										})}
 									</SmartComponentScopedContainerWithFX>
 								</ComponentViewportProvider>
@@ -689,7 +690,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											id: "W0OxweZ9I",
 											layoutId: "W0OxweZ9I",
 											lr9MckAMy:
-												"Right now Holocron is free. Holocron will add a subscription plan for companies that need more features like",
+												"Right now Holocron is free. Holocron will add a subscription plan for companies that need more features like advanced analytics and integrations.",
 											style: {
 												width: "100%",
 											},
@@ -766,25 +767,25 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 });
 var css2 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-CHiaW.framer-17mvys5, .framer-CHiaW .framer-17mvys5 { display: block; }",
-	".framer-CHiaW.framer-1rbr5xo { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 60px; height: min-content; justify-content: flex-start; overflow: hidden; padding: 102px 100px 80px 100px; position: relative; width: 1200px; }",
-	".framer-CHiaW .framer-3xiqmp { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 60px; height: min-content; justify-content: flex-start; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
-	".framer-CHiaW .framer-11gl5ow { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 8px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-CHiaW .framer-yufxp6 { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; }",
-	".framer-CHiaW .framer-1c1yyb7 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 14px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
-	".framer-CHiaW .framer-2kt7vz-container, .framer-CHiaW .framer-sl7xtq-container, .framer-CHiaW .framer-1hn1rsr-container, .framer-CHiaW .framer-p22cp9-container, .framer-CHiaW .framer-1jqtena-container, .framer-CHiaW .framer-6sqcfe-container { flex: none; height: auto; position: relative; width: 100%; }",
-	".framer-CHiaW .framer-1a5qlxf { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 100%; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 0; }",
-	".framer-CHiaW .framer-kl5dm0-container { flex: none; height: 100%; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
-	".framer-CHiaW.framer-v-fvebzn.framer-1rbr5xo { gap: 0px; padding: 150px 40px 50px 40px; width: 810px; }",
-	".framer-CHiaW.framer-v-fvebzn .framer-3xiqmp { gap: 40px; max-width: unset; }",
-	".framer-CHiaW.framer-v-fvebzn .framer-1c1yyb7 { max-width: 810px; }",
-	".framer-CHiaW.framer-v-x37i1.framer-1rbr5xo { gap: 40px; padding: 120px 20px 0px 20px; width: 390px; }",
-	".framer-CHiaW.framer-v-x37i1 .framer-3xiqmp { gap: 40px; max-width: 580px; }",
-	".framer-CHiaW.framer-v-x37i1 .framer-11gl5ow { gap: 5px; }",
-	".framer-CHiaW.framer-v-x37i1 .framer-1c1yyb7 { gap: 10px; }",
+	".framer-WDAAi.framer-17mvys5, .framer-WDAAi .framer-17mvys5 { display: block; }",
+	".framer-WDAAi.framer-1rbr5xo { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 60px; height: min-content; justify-content: flex-start; overflow: hidden; padding: 102px 100px 80px 100px; position: relative; width: 1200px; }",
+	".framer-WDAAi .framer-3xiqmp { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 60px; height: min-content; justify-content: flex-start; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
+	".framer-WDAAi .framer-11gl5ow { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 8px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-WDAAi .framer-yufxp6 { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; }",
+	".framer-WDAAi .framer-1c1yyb7 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 14px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
+	".framer-WDAAi .framer-2kt7vz-container, .framer-WDAAi .framer-sl7xtq-container, .framer-WDAAi .framer-1hn1rsr-container, .framer-WDAAi .framer-p22cp9-container, .framer-WDAAi .framer-1jqtena-container, .framer-WDAAi .framer-6sqcfe-container { flex: none; height: auto; position: relative; width: 100%; }",
+	".framer-WDAAi .framer-1a5qlxf { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 100%; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 0; }",
+	".framer-WDAAi .framer-kl5dm0-container { flex: none; height: 100%; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
+	".framer-WDAAi.framer-v-fvebzn.framer-1rbr5xo { gap: 0px; padding: 150px 40px 50px 40px; width: 810px; }",
+	".framer-WDAAi.framer-v-fvebzn .framer-3xiqmp { gap: 40px; max-width: unset; }",
+	".framer-WDAAi.framer-v-fvebzn .framer-1c1yyb7 { max-width: 810px; }",
+	".framer-WDAAi.framer-v-x37i1.framer-1rbr5xo { gap: 40px; padding: 120px 20px 0px 20px; width: 390px; }",
+	".framer-WDAAi.framer-v-x37i1 .framer-3xiqmp { gap: 40px; max-width: 580px; }",
+	".framer-WDAAi.framer-v-x37i1 .framer-11gl5ow { gap: 5px; }",
+	".framer-WDAAi.framer-v-x37i1 .framer-1c1yyb7 { gap: 10px; }",
 	...css,
 ];
-var FramerqtvfO8YHV = withCSS(Component, css2, "framer-CHiaW");
+var FramerqtvfO8YHV = withCSS(Component, css2, "framer-WDAAi");
 var stdin_default3 = FramerqtvfO8YHV;
 FramerqtvfO8YHV.displayName = "FAQ Section";
 FramerqtvfO8YHV.defaultProps = {

@@ -23,15 +23,16 @@
 }} Props
 
  */
-import { stdin_default as stdin_default2 } from "./chunks/chunk-2DA32EHW.js";
-import "./chunks/chunk-UJNP7OPO.js";
-import "./chunks/chunk-SNH2M5FY.js";
+import { stdin_default as stdin_default2 } from "./chunks/chunk-EUWWW7VO.js";
+import "./chunks/chunk-QAV64ZEM.js";
+import "./chunks/chunk-EWWPQ2JC.js";
 import { className, css, fonts } from "./chunks/chunk-YL4V4VZK.js";
 import {
 	className as className2,
 	css as css2,
 	fonts as fonts2,
 } from "./chunks/chunk-KYATNZPG.js";
+import "./chunks/chunk-6G2SY433.js";
 import { stdin_default } from "./chunks/chunk-EHCTMXQN.js";
 import { routes } from "./chunks/chunk-75FLX355.js";
 
@@ -39,7 +40,7 @@ import { routes } from "./chunks/chunk-75FLX355.js";
 import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/Mmejh8IHc5aPOSTKtYf3/byA8jzGCQie1Kt5wJbPT/zpIDfR7Ez.js
+// /:https://framerusercontent.com/modules/Mmejh8IHc5aPOSTKtYf3/S1XuLYZwC7vDqZ6Swjrx/zpIDfR7Ez.js
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
@@ -65,7 +66,7 @@ var MotionDivWithFX = withFX(motion.div);
 var CardTestimonialsCardFonts = getFonts(stdin_default2);
 var GridFonts = getFonts(stdin_default);
 var cycleOrder = ["kI5dB9Hnr", "zi2QQaP9o", "xqBh8EtFt"];
-var serializationHash = "framer-KTDSv";
+var serializationHash = "framer-XrkQm";
 var variantClassNames = {
 	kI5dB9Hnr: "framer-v-eugzf5",
 	xqBh8EtFt: "framer-v-1srezno",
@@ -373,7 +374,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																"--framer-text-alignment": "center",
 															}}
 														>
-															{"Trusted by Forward-Thinking Investors"}
+															{"See Why Users Trust Holocron"}
 														</motion.h2>
 													</React.Fragment>
 												),
@@ -398,7 +399,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																"--framer-text-alignment": "center",
 															}}
 														>
-															{"Trusted by Forward-Thinking Investors"}
+															{"See Why Users Trust Holocron"}
 														</motion.h2>
 													</React.Fragment>
 												),
@@ -416,7 +417,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												"--framer-text-alignment": "left",
 											}}
 										>
-											{"Trusted by Forward-Thinking Investors"}
+											{"See Why Users Trust Holocron"}
 										</motion.h2>
 									</React.Fragment>
 								</RichTextWithFX>
@@ -452,7 +453,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 															}}
 														>
 															{
-																"Real stories from users who\u2019ve transformed their investment experience with AI-driven insights."
+																"Discover how Holocron is helping people achieve smarter, data-driven decisions every day."
 															}
 														</motion.p>
 													</React.Fragment>
@@ -479,7 +480,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 															}}
 														>
 															{
-																"Real stories from users who\u2019ve transformed their investment experience with AI-driven insights."
+																"Discover how Holocron is helping people achieve smarter, data-driven decisions every day."
 															}
 														</motion.p>
 													</React.Fragment>
@@ -500,7 +501,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											}}
 										>
 											{
-												"Real stories from users who\u2019ve transformed their investment experience with AI-driven insights."
+												"Discover how Holocron is helping people achieve smarter, data-driven decisions every day."
 											}
 										</motion.p>
 									</React.Fragment>
@@ -686,9 +687,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														{
 															pixelHeight: 1200,
 															pixelWidth: 904,
-															src: "https://framerusercontent.com/images/QrADGQTmq3J8LlfYkqvDVxCP3wc.png",
+															src: "https://framerusercontent.com/images/QrADGQTmq3J8LlfYkqvDVxCP3wc.png?width=904&height=1200",
 															srcSet:
-																"https://framerusercontent.com/images/QrADGQTmq3J8LlfYkqvDVxCP3wc.png?scale-down-to=1024 771w,https://framerusercontent.com/images/QrADGQTmq3J8LlfYkqvDVxCP3wc.png 904w",
+																"https://framerusercontent.com/images/QrADGQTmq3J8LlfYkqvDVxCP3wc.png?scale-down-to=1024&width=904&height=1200 771w,https://framerusercontent.com/images/QrADGQTmq3J8LlfYkqvDVxCP3wc.png?width=904&height=1200 904w",
 														},
 														"",
 													),
@@ -703,7 +704,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 													tQSAcNzNQ: "Product Manager",
 													width: "100%",
 													ZZgWc_vQ4:
-														"The platform gave me clarity and confidence in managing my personal investments, even with limited time.",
+														"Holocron streamlined my workflow and gave me actionable insights I can trust.",
 												})}
 											</SmartComponentScopedContainer>
 										</ComponentViewportProvider>
@@ -777,9 +778,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														{
 															pixelHeight: 1200,
 															pixelWidth: 800,
-															src: "https://framerusercontent.com/images/ldPd9QjTVeqbcMC9KYbofTGZCA.png",
+															src: "https://framerusercontent.com/images/ldPd9QjTVeqbcMC9KYbofTGZCA.png?width=800&height=1200",
 															srcSet:
-																"https://framerusercontent.com/images/ldPd9QjTVeqbcMC9KYbofTGZCA.png?scale-down-to=1024 682w,https://framerusercontent.com/images/ldPd9QjTVeqbcMC9KYbofTGZCA.png 800w",
+																"https://framerusercontent.com/images/ldPd9QjTVeqbcMC9KYbofTGZCA.png?scale-down-to=1024&width=800&height=1200 682w,https://framerusercontent.com/images/ldPd9QjTVeqbcMC9KYbofTGZCA.png?width=800&height=1200 800w",
 														},
 														"",
 													),
@@ -794,7 +795,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 													tQSAcNzNQ: "Wealth Advisor",
 													width: "100%",
 													ZZgWc_vQ4:
-														"I use it daily to fine-tune portfolio strategies\u2014it saves hours and adds accuracy.",
+														"I rely on Holocron every day to keep my projects organized and my team aligned.",
 												})}
 											</SmartComponentScopedContainer>
 										</ComponentViewportProvider>
@@ -868,9 +869,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														{
 															pixelHeight: 1200,
 															pixelWidth: 800,
-															src: "https://framerusercontent.com/images/lPKVWJhAaa7KtMRoqStcJ1Z9x54.png",
+															src: "https://framerusercontent.com/images/lPKVWJhAaa7KtMRoqStcJ1Z9x54.png?width=800&height=1200",
 															srcSet:
-																"https://framerusercontent.com/images/lPKVWJhAaa7KtMRoqStcJ1Z9x54.png?scale-down-to=1024 682w,https://framerusercontent.com/images/lPKVWJhAaa7KtMRoqStcJ1Z9x54.png 800w",
+																"https://framerusercontent.com/images/lPKVWJhAaa7KtMRoqStcJ1Z9x54.png?scale-down-to=1024&width=800&height=1200 682w,https://framerusercontent.com/images/lPKVWJhAaa7KtMRoqStcJ1Z9x54.png?width=800&height=1200 800w",
 														},
 														"",
 													),
@@ -885,7 +886,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 													tQSAcNzNQ: "Freelance Designer",
 													width: "100%",
 													ZZgWc_vQ4:
-														"As someone new to finance, I felt empowered by how intuitive and intelligent this tool is.",
+														"As a newcomer, Holocron\u2019s interface made it easy to get started and see real results.",
 												})}
 											</SmartComponentScopedContainer>
 										</ComponentViewportProvider>
@@ -959,9 +960,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														{
 															pixelHeight: 1200,
 															pixelWidth: 800,
-															src: "https://framerusercontent.com/images/9Y9Et3Se2h9t6HeQ1Nrki7Zndjg.png",
+															src: "https://framerusercontent.com/images/9Y9Et3Se2h9t6HeQ1Nrki7Zndjg.png?width=800&height=1200",
 															srcSet:
-																"https://framerusercontent.com/images/9Y9Et3Se2h9t6HeQ1Nrki7Zndjg.png?scale-down-to=1024 682w,https://framerusercontent.com/images/9Y9Et3Se2h9t6HeQ1Nrki7Zndjg.png 800w",
+																"https://framerusercontent.com/images/9Y9Et3Se2h9t6HeQ1Nrki7Zndjg.png?scale-down-to=1024&width=800&height=1200 682w,https://framerusercontent.com/images/9Y9Et3Se2h9t6HeQ1Nrki7Zndjg.png?width=800&height=1200 800w",
 														},
 														"",
 													),
@@ -976,7 +977,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 													tQSAcNzNQ: "Private Investor",
 													width: "100%",
 													ZZgWc_vQ4:
-														"Accurate, automated, and surprisingly intuitive. This is what modern wealth management should feel like.",
+														"The automation features are a game-changer for my productivity.",
 												})}
 											</SmartComponentScopedContainer>
 										</ComponentViewportProvider>
@@ -1050,9 +1051,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														{
 															pixelHeight: 1200,
 															pixelWidth: 904,
-															src: "https://framerusercontent.com/images/QrADGQTmq3J8LlfYkqvDVxCP3wc.png",
+															src: "https://framerusercontent.com/images/QrADGQTmq3J8LlfYkqvDVxCP3wc.png?width=904&height=1200",
 															srcSet:
-																"https://framerusercontent.com/images/QrADGQTmq3J8LlfYkqvDVxCP3wc.png?scale-down-to=1024 771w,https://framerusercontent.com/images/QrADGQTmq3J8LlfYkqvDVxCP3wc.png 904w",
+																"https://framerusercontent.com/images/QrADGQTmq3J8LlfYkqvDVxCP3wc.png?scale-down-to=1024&width=904&height=1200 771w,https://framerusercontent.com/images/QrADGQTmq3J8LlfYkqvDVxCP3wc.png?width=904&height=1200 904w",
 														},
 														"",
 													),
@@ -1067,7 +1068,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 													tQSAcNzNQ: "Product Manager",
 													width: "100%",
 													ZZgWc_vQ4:
-														"The platform gave me clarity and confidence in managing my personal investments, even with limited time.",
+														"Holocron offers the clarity and transparency I need to make informed decisions.",
 												})}
 											</SmartComponentScopedContainer>
 										</ComponentViewportProvider>
@@ -1171,9 +1172,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 															{
 																pixelHeight: 1200,
 																pixelWidth: 800,
-																src: "https://framerusercontent.com/images/5SvmsGUbwyGolmfue9bSL7VCIc.png",
+																src: "https://framerusercontent.com/images/5SvmsGUbwyGolmfue9bSL7VCIc.png?width=800&height=1200",
 																srcSet:
-																	"https://framerusercontent.com/images/5SvmsGUbwyGolmfue9bSL7VCIc.png?scale-down-to=1024 682w,https://framerusercontent.com/images/5SvmsGUbwyGolmfue9bSL7VCIc.png 800w",
+																	"https://framerusercontent.com/images/5SvmsGUbwyGolmfue9bSL7VCIc.png?scale-down-to=1024&width=800&height=1200 682w,https://framerusercontent.com/images/5SvmsGUbwyGolmfue9bSL7VCIc.png?width=800&height=1200 800w",
 															},
 															"",
 														),
@@ -1188,7 +1189,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														tQSAcNzNQ: "Crypto Analyst",
 														width: "100%",
 														ZZgWc_vQ4:
-															"The AI insights helped me balance risk across both traditional and crypto assets seamlessly.",
+															"Holocron\u2019s analytics helped me understand trends and optimize my strategy.",
 													})}
 												</SmartComponentScopedContainer>
 											</ComponentViewportProvider>
@@ -1242,9 +1243,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 															{
 																pixelHeight: 1200,
 																pixelWidth: 960,
-																src: "https://framerusercontent.com/images/9sOLRhns5l6TC2uP5BRhF14RIUk.png",
+																src: "https://framerusercontent.com/images/9sOLRhns5l6TC2uP5BRhF14RIUk.png?width=960&height=1200",
 																srcSet:
-																	"https://framerusercontent.com/images/9sOLRhns5l6TC2uP5BRhF14RIUk.png?scale-down-to=1024 819w,https://framerusercontent.com/images/9sOLRhns5l6TC2uP5BRhF14RIUk.png 960w",
+																	"https://framerusercontent.com/images/9sOLRhns5l6TC2uP5BRhF14RIUk.png?scale-down-to=1024&width=960&height=1200 819w,https://framerusercontent.com/images/9sOLRhns5l6TC2uP5BRhF14RIUk.png?width=960&height=1200 960w",
 															},
 															"",
 														),
@@ -1259,7 +1260,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														tQSAcNzNQ: "Operations Director",
 														width: "100%",
 														ZZgWc_vQ4:
-															"I appreciate the transparency\u2014real-time tracking makes our internal reporting much easier.",
+															"Real-time updates keep my whole team on the same page, all the time.",
 													})}
 												</SmartComponentScopedContainer>
 											</ComponentViewportProvider>
@@ -1313,9 +1314,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 															{
 																pixelHeight: 1200,
 																pixelWidth: 960,
-																src: "https://framerusercontent.com/images/2T0ZuDGJ91K2VQX5Hu2Mk3YE2no.png",
+																src: "https://framerusercontent.com/images/2T0ZuDGJ91K2VQX5Hu2Mk3YE2no.png?width=960&height=1200",
 																srcSet:
-																	"https://framerusercontent.com/images/2T0ZuDGJ91K2VQX5Hu2Mk3YE2no.png?scale-down-to=1024 819w,https://framerusercontent.com/images/2T0ZuDGJ91K2VQX5Hu2Mk3YE2no.png 960w",
+																	"https://framerusercontent.com/images/2T0ZuDGJ91K2VQX5Hu2Mk3YE2no.png?scale-down-to=1024&width=960&height=1200 819w,https://framerusercontent.com/images/2T0ZuDGJ91K2VQX5Hu2Mk3YE2no.png?width=960&height=1200 960w",
 															},
 															"",
 														),
@@ -1330,7 +1331,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														tQSAcNzNQ: "AI Engineer",
 														width: "100%",
 														ZZgWc_vQ4:
-															"I value the smart algorithms behind the product\u2014finally, tech that understands the market like a human.",
+															"The smart recommendations feel like having an expert by my side.",
 													})}
 												</SmartComponentScopedContainer>
 											</ComponentViewportProvider>
@@ -1384,9 +1385,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 															{
 																pixelHeight: 1200,
 																pixelWidth: 1200,
-																src: "https://framerusercontent.com/images/dPCyMK1mMc6lEw4PNgOWalWDnWg.png",
+																src: "https://framerusercontent.com/images/dPCyMK1mMc6lEw4PNgOWalWDnWg.png?width=1200&height=1200",
 																srcSet:
-																	"https://framerusercontent.com/images/dPCyMK1mMc6lEw4PNgOWalWDnWg.png?scale-down-to=512 512w,https://framerusercontent.com/images/dPCyMK1mMc6lEw4PNgOWalWDnWg.png?scale-down-to=1024 1024w,https://framerusercontent.com/images/dPCyMK1mMc6lEw4PNgOWalWDnWg.png 1200w",
+																	"https://framerusercontent.com/images/dPCyMK1mMc6lEw4PNgOWalWDnWg.png?scale-down-to=512&width=1200&height=1200 512w,https://framerusercontent.com/images/dPCyMK1mMc6lEw4PNgOWalWDnWg.png?scale-down-to=1024&width=1200&height=1200 1024w,https://framerusercontent.com/images/dPCyMK1mMc6lEw4PNgOWalWDnWg.png?width=1200&height=1200 1200w",
 															},
 															"",
 														),
@@ -1401,7 +1402,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														tQSAcNzNQ: "Startup Founder",
 														width: "100%",
 														ZZgWc_vQ4:
-															"Our team uses the enterprise dashboard to monitor treasury activity\u2014it's become essential.",
+															"Our company dashboard with Holocron is now essential for daily operations.",
 													})}
 												</SmartComponentScopedContainer>
 											</ComponentViewportProvider>
@@ -1455,9 +1456,9 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 															{
 																pixelHeight: 1200,
 																pixelWidth: 800,
-																src: "https://framerusercontent.com/images/5SvmsGUbwyGolmfue9bSL7VCIc.png",
+																src: "https://framerusercontent.com/images/5SvmsGUbwyGolmfue9bSL7VCIc.png?width=800&height=1200",
 																srcSet:
-																	"https://framerusercontent.com/images/5SvmsGUbwyGolmfue9bSL7VCIc.png?scale-down-to=1024 682w,https://framerusercontent.com/images/5SvmsGUbwyGolmfue9bSL7VCIc.png 800w",
+																	"https://framerusercontent.com/images/5SvmsGUbwyGolmfue9bSL7VCIc.png?scale-down-to=1024&width=800&height=1200 682w,https://framerusercontent.com/images/5SvmsGUbwyGolmfue9bSL7VCIc.png?width=800&height=1200 800w",
 															},
 															"",
 														),
@@ -1472,7 +1473,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 														tQSAcNzNQ: "Crypto Analyst",
 														width: "100%",
 														ZZgWc_vQ4:
-															"The AI insights helped me balance risk across both traditional and crypto assets seamlessly.",
+															"Holocron\u2019s risk management tools give me peace of mind.",
 													})}
 												</SmartComponentScopedContainer>
 											</ComponentViewportProvider>
@@ -1488,9 +1489,21 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 							layoutId={"DWeFZdjU8"}
 						>
 							<ComponentViewportProvider
-								height={(componentViewport?.height || 200) * 1 * 1}
+								height={(componentViewport?.height || 1145) * 1 * 1}
 								width={componentViewport?.width || "100vw"}
 								y={(componentViewport?.y || 0) + 0 + 0}
+								{...addPropertyOverrides(
+									{
+										xqBh8EtFt: {
+											height: (componentViewport?.height || 200) * 1 * 1,
+										},
+										zi2QQaP9o: {
+											height: (componentViewport?.height || 1053) * 1 * 1,
+										},
+									},
+									baseVariant,
+									gestureVariant,
+								)}
 							>
 								<SmartComponentScopedContainer
 									className={"framer-1smx68z-container"}
@@ -1557,40 +1570,40 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 });
 var css3 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-KTDSv.framer-n8gw4f, .framer-KTDSv .framer-n8gw4f { display: block; }",
-	".framer-KTDSv.framer-eugzf5 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 70px; height: min-content; justify-content: flex-start; overflow: visible; padding: 250px 100px 50px 100px; position: relative; width: 1200px; }",
-	".framer-KTDSv .framer-nqc413 { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 0px; height: min-content; justify-content: center; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
-	".framer-KTDSv .framer-17mgpcj { align-content: flex-start; align-items: flex-start; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 16px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: sticky; top: 120px; width: 1px; z-index: 1; }",
-	".framer-KTDSv .framer-1mo0pmr { flex: none; height: auto; max-width: 600px; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; z-index: 1; }",
-	".framer-KTDSv .framer-1xlkw8a { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; z-index: 1; }",
-	".framer-KTDSv .framer-1jimr11 { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 8px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 1px; z-index: 1; }",
-	".framer-KTDSv .framer-2tus5b { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 845px; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-KTDSv .framer-f2ozck { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: 1px; }",
-	".framer-KTDSv .framer-1agu673-container, .framer-KTDSv .framer-yv2pad-container, .framer-KTDSv .framer-1bm4zvk-container, .framer-KTDSv .framer-1eabwo-container, .framer-KTDSv .framer-1rzl8ti-container, .framer-KTDSv .framer-1ot0cxc-container, .framer-KTDSv .framer-1j8j4yq-container, .framer-KTDSv .framer-1a3azb3-container, .framer-KTDSv .framer-1mdrsq1-container, .framer-KTDSv .framer-1osxska-container { flex: none; height: auto; position: relative; width: 100%; }",
-	".framer-KTDSv .framer-nc2jec { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 1px; }",
-	".framer-KTDSv .framer-1pqpxdy { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 100%; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 0; }",
-	".framer-KTDSv .framer-1smx68z-container { flex: none; height: 100%; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
-	".framer-KTDSv .framer-at0vw2 { bottom: 143px; flex: none; height: 953px; left: calc(12.000000000000021% - 780px / 2); overflow: visible; position: absolute; width: 780px; z-index: 1; }",
-	".framer-KTDSv.framer-v-geeel9.framer-eugzf5 { gap: 50px; overflow: hidden; padding: 150px 40px 0px 40px; width: 810px; }",
-	".framer-KTDSv.framer-v-geeel9 .framer-nqc413 { align-content: center; align-items: center; flex-direction: column; gap: 55px; max-width: unset; order: 0; }",
-	".framer-KTDSv.framer-v-geeel9 .framer-17mgpcj { align-content: center; align-items: center; flex: none; gap: 10px; order: 0; position: relative; top: unset; width: 100%; }",
-	".framer-KTDSv.framer-v-geeel9 .framer-1mo0pmr { max-width: 95%; }",
-	".framer-KTDSv.framer-v-geeel9 .framer-1xlkw8a { max-width: 80%; }",
-	".framer-KTDSv.framer-v-geeel9 .framer-1jimr11 { flex: none; max-width: 810px; order: 1; width: 100%; }",
-	".framer-KTDSv.framer-v-geeel9 .framer-2tus5b { height: 741px; justify-content: center; z-index: 1; }",
-	".framer-KTDSv.framer-v-geeel9 .framer-1pqpxdy { order: 1; }",
-	".framer-KTDSv.framer-v-1srezno.framer-eugzf5 { gap: 120px; justify-content: center; padding: 150px 20px 0px 20px; width: 390px; }",
-	".framer-KTDSv.framer-v-1srezno .framer-nqc413 { flex-direction: column; gap: 40px; max-width: 580px; }",
-	".framer-KTDSv.framer-v-1srezno .framer-17mgpcj { align-content: center; align-items: center; flex: none; gap: 22px; order: 0; position: relative; top: unset; width: 100%; z-index: 3; }",
-	".framer-KTDSv.framer-v-1srezno .framer-1mo0pmr { max-width: unset; }",
-	".framer-KTDSv.framer-v-1srezno .framer-1xlkw8a { max-width: 350px; width: 90%; }",
-	".framer-KTDSv.framer-v-1srezno .framer-1jimr11 { flex: none; gap: 15px; max-width: 600px; order: 1; width: 100%; }",
-	".framer-KTDSv.framer-v-1srezno .framer-2tus5b { flex-direction: column; gap: 35px; height: min-content; }",
-	".framer-KTDSv.framer-v-1srezno .framer-f2ozck { flex: none; width: 100%; }",
+	".framer-XrkQm.framer-n8gw4f, .framer-XrkQm .framer-n8gw4f { display: block; }",
+	".framer-XrkQm.framer-eugzf5 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 70px; height: min-content; justify-content: flex-start; overflow: visible; padding: 250px 100px 50px 100px; position: relative; width: 1200px; }",
+	".framer-XrkQm .framer-nqc413 { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 0px; height: min-content; justify-content: center; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
+	".framer-XrkQm .framer-17mgpcj { align-content: flex-start; align-items: flex-start; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 16px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: sticky; top: 120px; width: 1px; z-index: 1; }",
+	".framer-XrkQm .framer-1mo0pmr { flex: none; height: auto; max-width: 600px; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; z-index: 1; }",
+	".framer-XrkQm .framer-1xlkw8a { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; z-index: 1; }",
+	".framer-XrkQm .framer-1jimr11 { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 8px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 1px; z-index: 1; }",
+	".framer-XrkQm .framer-2tus5b { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 845px; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-XrkQm .framer-f2ozck { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: flex-start; overflow: visible; padding: 0px; position: relative; width: 1px; }",
+	".framer-XrkQm .framer-1agu673-container, .framer-XrkQm .framer-yv2pad-container, .framer-XrkQm .framer-1bm4zvk-container, .framer-XrkQm .framer-1eabwo-container, .framer-XrkQm .framer-1rzl8ti-container, .framer-XrkQm .framer-1ot0cxc-container, .framer-XrkQm .framer-1j8j4yq-container, .framer-XrkQm .framer-1a3azb3-container, .framer-XrkQm .framer-1mdrsq1-container, .framer-XrkQm .framer-1osxska-container { flex: none; height: auto; position: relative; width: 100%; }",
+	".framer-XrkQm .framer-nc2jec { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 1px; }",
+	".framer-XrkQm .framer-1pqpxdy { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 100%; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 0; }",
+	".framer-XrkQm .framer-1smx68z-container { flex: none; height: 100%; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
+	".framer-XrkQm .framer-at0vw2 { bottom: 143px; flex: none; height: 953px; left: calc(12.000000000000021% - 780px / 2); overflow: visible; position: absolute; width: 780px; z-index: 1; }",
+	".framer-XrkQm.framer-v-geeel9.framer-eugzf5 { gap: 50px; overflow: hidden; padding: 150px 40px 0px 40px; width: 810px; }",
+	".framer-XrkQm.framer-v-geeel9 .framer-nqc413 { align-content: center; align-items: center; flex-direction: column; gap: 55px; max-width: unset; order: 0; }",
+	".framer-XrkQm.framer-v-geeel9 .framer-17mgpcj { align-content: center; align-items: center; flex: none; gap: 10px; order: 0; position: relative; top: unset; width: 100%; }",
+	".framer-XrkQm.framer-v-geeel9 .framer-1mo0pmr { max-width: 95%; }",
+	".framer-XrkQm.framer-v-geeel9 .framer-1xlkw8a { max-width: 80%; }",
+	".framer-XrkQm.framer-v-geeel9 .framer-1jimr11 { flex: none; max-width: 810px; order: 1; width: 100%; }",
+	".framer-XrkQm.framer-v-geeel9 .framer-2tus5b { height: 741px; justify-content: center; z-index: 1; }",
+	".framer-XrkQm.framer-v-geeel9 .framer-1pqpxdy { order: 1; }",
+	".framer-XrkQm.framer-v-1srezno.framer-eugzf5 { gap: 120px; justify-content: center; padding: 150px 20px 0px 20px; width: 390px; }",
+	".framer-XrkQm.framer-v-1srezno .framer-nqc413 { flex-direction: column; gap: 40px; max-width: 580px; }",
+	".framer-XrkQm.framer-v-1srezno .framer-17mgpcj { align-content: center; align-items: center; flex: none; gap: 22px; order: 0; position: relative; top: unset; width: 100%; z-index: 3; }",
+	".framer-XrkQm.framer-v-1srezno .framer-1mo0pmr { max-width: unset; }",
+	".framer-XrkQm.framer-v-1srezno .framer-1xlkw8a { max-width: 350px; width: 90%; }",
+	".framer-XrkQm.framer-v-1srezno .framer-1jimr11 { flex: none; gap: 15px; max-width: 600px; order: 1; width: 100%; }",
+	".framer-XrkQm.framer-v-1srezno .framer-2tus5b { flex-direction: column; gap: 35px; height: min-content; }",
+	".framer-XrkQm.framer-v-1srezno .framer-f2ozck { flex: none; width: 100%; }",
 	...css2,
 	...css,
 ];
-var FramerzpIDfR7Ez = withCSS(Component, css3, "framer-KTDSv");
+var FramerzpIDfR7Ez = withCSS(Component, css3, "framer-XrkQm");
 var stdin_default3 = FramerzpIDfR7Ez;
 FramerzpIDfR7Ez.displayName = "Testimonials Section";
 FramerzpIDfR7Ez.defaultProps = {
@@ -1658,8 +1671,8 @@ addFonts(
 					source: "framer",
 					style: "normal",
 					unicodeRange:
-						"U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
-					url: "https://framerusercontent.com/assets/vQyevYAyHtARFwPqUzQGpnDs.woff2",
+						"U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2070, U+2074-207E, U+2080-208E, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+					url: "https://framerusercontent.com/assets/GrgcKwrN6d3Uz8EwcLHZxwEfC4.woff2",
 					weight: "400",
 				},
 				{
