@@ -96,7 +96,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2'
     const linkClass = 'text-primary hover:underline mt-4'
 
-    const supportEmail = 'tommy@holocron.com'
+    const supportEmail = 'tommy@holocron.so'
 
     const getMailtoLink = (errorDetails: string) => {
         const subject = encodeURIComponent('Error Report - Holocron')

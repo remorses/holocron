@@ -13,7 +13,7 @@
 
 ## 2025-01-28 18:10
 
-- Add preview environment configuration to wrangler.jsonc at preview.holocron.com/_tunnel
+- Add preview environment configuration to wrangler.jsonc at preview.holocron.so/_tunnel
 - Create comprehensive test suite using vitest and native WebSocket client
 - Test upstream-client message exchange, multiple client support, duplicate upstream rejection
 - Add test script to package.json
