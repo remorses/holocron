@@ -571,6 +571,7 @@ function InstallGithubAppToolbar() {
 
     const githubOwner = branchData.site.githubOwner
     const isChatGenerating = useWebsiteState((state) => state.isChatGenerating)
+    const mentionOptions = chatData?.mentionOptions || []
 
     // Create install URL with next parameter pointing to connect-github
     const nextPath = href('/github/:orgId/:branchId/connect-github', {
@@ -584,6 +585,9 @@ function InstallGithubAppToolbar() {
     if (hideBrowser) {
         return null
     }
+
+    // Hide if user has no pages
+    if (!mentionOptions.length) return null
 
     // Only show if site has NO GitHub installation
     if (!!branchData.site.githubInstallations?.length) return null
