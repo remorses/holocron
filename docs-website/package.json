@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "NODE_OPTIONS=--max-old-space-size=6144 NODE_ENV=production doppler run -c production --preserve-env -- react-router build",
+    "build": "NODE_OPTIONS=--max-old-space-size=6144 NODE_ENV=production doppler run --preserve-env -- react-router build",
     "dev": "doppler run -- react-router dev --port 7777",
     "dev:prod": "doppler run -c production -- react-router dev --port 7777",
     "fly": "fly --app holocron-docs-prod",

@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "pnpm generate-example-docs-json && NODE_OPTIONS=--max-old-space-size=6144 NODE_ENV=production doppler run -c production --preserve-env -- react-router build",
+    "build": "pnpm generate-example-docs-json && NODE_OPTIONS=--max-old-space-size=6144 NODE_ENV=production doppler run --preserve-env -- react-router build",
     "build-vercel": "pnpm bootstrap && pnpm generate-example-docs-json && pnpm react-router typegen && pnpm tsc && NODE_OPTIONS=--max-old-space-size=6144 NODE_ENV=production react-router build",
     "dev": "doppler run -- react-router dev --port 7664",
     "debug-database-chat": "doppler run -- vite-node scripts/debug-database-chat.ts",
