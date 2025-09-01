@@ -73,6 +73,12 @@ export type CloudflareCustomHostnameResponse = {
     messages: any[]
 }
 
+export const CloudflareZones = {
+  holocronso: '',
+  fumabasecom: '856baddaec9272d348d34fc7ad3c5efe',
+  holocronsitescom: '',
+}
+
 export class CloudflareClient {
     private fetch = async (path: string, init?: RequestInit): Promise<any> => {
         const res = await fetch(
