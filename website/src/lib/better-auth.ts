@@ -18,6 +18,9 @@ export const auth = betterAuth({
     }),
     account: {
         modelName: 'Account',
+        accountLinking: {
+            enabled: true,
+        },
     },
     advanced: {
         crossSubDomainCookies: { enabled: false },
