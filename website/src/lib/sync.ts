@@ -26,7 +26,7 @@ import { deduplicateBy, generateSlugFromPath, isDocsJson } from 'docs-website/sr
 import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
 import path from 'path'
 import type { SearchApiFile } from 'searchapi/sdk'
-import { cloudflareClient } from './cloudflare'
+import { CloudflareClient, getZoneIdForDomain } from './cloudflare'
 import { env } from './env'
 import { notifyError } from './errors'
 import {
@@ -324,10 +324,16 @@ export async function syncSite({
     const deletedAssetPaths = [] as string[]
 
     // Get all media assets for this branch upfront
-    const allMediaAssets = await prisma.mediaAsset.findMany({
-        where: { branchId },
-        select: { slug: true },
-    })
+    let [allMediaAssets, branchDomains] = await Promise.all([
+        prisma.mediaAsset.findMany({
+            where: { branchId },
+            select: { slug: true },
+        }),
+        prisma.domain.findMany({
+            where: { branchId },
+            select: { host: true, domainType: true },
+        }),
+    ])
     const mediaAssetSlugs = new Set(allMediaAssets.map((asset) => asset.slug))
 
     // Closure functions for each asset type
@@ -384,15 +390,11 @@ export async function syncSite({
 
         // Handle domain connections
         if (jsonData.domains && Array.isArray(jsonData.domains)) {
-            const existingDomains = await prisma.domain.findMany({
-                where: { branchId },
-                select: { host: true, domainType: true },
-            })
-            const existingHosts = new Set(existingDomains.map((d) => d.host))
+            const existingHosts = new Set(branchDomains.map((d) => d.host))
             const configuredHosts = new Set(jsonData.domains)
 
             // Remove internal domains that are no longer in the configuration
-            const internalDomainsToRemove = existingDomains.filter(
+            const internalDomainsToRemove = branchDomains.filter(
                 (domain) =>
                     domain.domainType === 'internalDomain' &&
                     !configuredHosts.has(domain.host),
@@ -410,6 +412,11 @@ export async function syncSite({
                     })
                     console.log(`Removed internal domain: ${domain.host}`)
                 }
+                // Refresh branchDomains after deletion
+                branchDomains = await prisma.domain.findMany({
+                    where: { branchId },
+                    select: { host: true, domainType: true },
+                })
             }
 
             const domainsToConnect = jsonData.domains.filter(
@@ -437,6 +444,8 @@ export async function syncSite({
                             ? 'internalDomain'
                             : 'customDomain'
                     if (domainType === 'customDomain') {
+                        const zoneId = getZoneIdForDomain(host)
+                        const cloudflareClient = new CloudflareClient({ zoneId })
                         const takenInCloudflare = await cloudflareClient
                             .get(host)
                             .catch((e) => {
@@ -455,6 +464,8 @@ export async function syncSite({
                         }
                     }
                     try {
+                        const zoneId = getZoneIdForDomain(host)
+                        const cloudflareClient = new CloudflareClient({ zoneId })
                         await cloudflareClient.createDomain(host)
 
                         await prisma.domain.create({
@@ -476,6 +487,13 @@ export async function syncSite({
                             throw e
                         }
                     }
+                }
+                // Refresh branchDomains after additions
+                if (domainsToConnect.length > 0) {
+                    branchDomains = await prisma.domain.findMany({
+                        where: { branchId },
+                        select: { host: true, domainType: true },
+                    })
                 }
             }
         }
@@ -635,7 +653,7 @@ export async function syncSite({
 
     async function syncPage(asset: AssetForSync): Promise<SearchApiFile[]> {
         if (asset.type !== 'page') return []
-        
+
         pageCount++ // Increment page count
         const filesToSync: SearchApiFile[] = []
         const slug = getSlugFromPath({
@@ -1065,7 +1083,24 @@ export async function syncSite({
 
     // Invalidate cache tags
     if (cacheTagsToInvalidate.length) {
-        await cloudflareClient.invalidateCacheTags(cacheTagsToInvalidate)
+        // Group domains by their zone ID (using branchDomains from earlier)
+        const zoneIdToDomains = new Map<string, string[]>()
+        for (const domain of branchDomains) {
+            const zoneId = getZoneIdForDomain(domain.host)
+            if (!zoneIdToDomains.has(zoneId)) {
+                zoneIdToDomains.set(zoneId, [])
+            }
+            zoneIdToDomains.get(zoneId)!.push(domain.host)
+        }
+
+        // Invalidate cache tags for each zone
+        for (const [zoneId, domains] of zoneIdToDomains) {
+            if (zoneId) { // Only invalidate if zone ID is not empty
+                console.log(`Invalidating cache for zone ${zoneId} (domains: ${domains.join(', ')})`)
+                const cloudflareClient = new CloudflareClient({ zoneId })
+                await cloudflareClient.invalidateCacheTags(cacheTagsToInvalidate)
+            }
+        }
     }
 
     // No cleanup needed for search API as it handles file updates automatically

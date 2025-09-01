@@ -1,10 +1,12 @@
 import { describe, it } from 'vitest'
-import { cloudflareClient } from './cloudflare'
+import { CloudflareClient, getZoneIdForDomain } from './cloudflare'
 
 describe.skip('CloudflareClient', () => {
     const domain = 'test.holocron.live'
     it('should create a domain and log the result', async () => {
         // You should replace 'example.com' with a real test domain if running for real.
+        const zoneId = getZoneIdForDomain(domain)
+        const cloudflareClient = new CloudflareClient({ zoneId })
         const result = await cloudflareClient.createDomain(domain)
         console.log(result)
         // void {
@@ -38,6 +40,8 @@ describe.skip('CloudflareClient', () => {
         // }
     })
     it('should remove a domain and log the result', async () => {
+        const zoneId = getZoneIdForDomain(domain)
+        const cloudflareClient = new CloudflareClient({ zoneId })
         const result = await cloudflareClient.removeDomain(domain)
         console.log(result)
 

@@ -79,10 +79,27 @@ export const CloudflareZones = {
   holocronsitescom: '',
 }
 
+export const getZoneIdForDomain = (domain: string): string => {
+    if (domain.includes('fumabase.com')) {
+        return CloudflareZones.fumabasecom
+    }
+    if (domain.includes('holocronsites.com')) {
+        return CloudflareZones.holocronsitescom
+    }
+    // Default to holocronso for all other cases
+    return CloudflareZones.holocronso
+}
+
 export class CloudflareClient {
+    private zoneId: string
+
+    constructor({ zoneId }: { zoneId: string }) {
+        this.zoneId = zoneId
+    }
+
     private fetch = async (path: string, init?: RequestInit): Promise<any> => {
         const res = await fetch(
-            `https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}${path}`,
+            `https://api.cloudflare.com/client/v4/zones/${this.zoneId}${path}`,
             {
                 ...init,
                 headers: {
@@ -207,4 +224,5 @@ export class CloudflareClient {
     }
 }
 
-export const cloudflareClient = new CloudflareClient()
+// Note: This export is deprecated. Create new instances with appropriate zone IDs instead.
+// export const cloudflareClient = new CloudflareClient(CloudflareZones.holocronso)
