@@ -8,12 +8,15 @@ import {
 
 async function main() {
     const stage = getCurrentStage()
-    if (stage !== 'production') {
+    const isProduction = stage === 'production'
+
+    if (stage !== 'production' && stage !== 'preview') {
         console.warn(
-            `skipping depoyment because not in prod. staging currently not setup still`,
+            `skipping deployment because stage is ${stage}. Only production and preview are supported.`,
         )
         return
     }
+
     const env = await getDopplerEnv({ stage, project: 'website' })
     env.FORCE_COLOR = '1'
 
@@ -35,16 +38,17 @@ async function main() {
     const port = 7777
 
     const appNameSuffix = basePath ? `-base-path-${basePath.replace(/^\//, '').replace(/\//g, '-')}` : ''
-    const appName = `fumabase-docs-prod${appNameSuffix}`
+    const stagePrefix = stage === 'production' ? 'prod' : 'preview'
+    const appName = `fumabase-docs-${stagePrefix}${appNameSuffix}`
 
     await deployFly({
         appName,
         port,
         buildRemotely: true,
         dockerfile: 'Dockerfile',
-        minInstances: 1,
+        minInstances: stage === 'production' ? 1 : 0,
         forceHttps: false,
-        maxInstances: 3,
+        maxInstances: stage === 'production' ? 3 : 1,
         healthCheckPath: `${basePath}/api/health`,
         memorySize: '1gb',
         machineType: 'shared-cpu-2x',

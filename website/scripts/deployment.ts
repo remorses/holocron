@@ -10,12 +10,15 @@ import { app } from 'website/src/lib/spiceflow'
 
 async function main() {
     const stage = getCurrentStage()
-    if (stage !== 'production') {
+    const isProduction = stage === 'production'
+
+    if (stage !== 'production' && stage !== 'preview') {
         console.warn(
-            `skipping depoyment because not in prod. staging currently not setup still`,
+            `skipping deployment because stage is ${stage}. Only production and preview are supported.`,
         )
         return
     }
+
     const env = await getDopplerEnv({ stage, project: 'website' })
     env.FORCE_COLOR = '1'
     await shell(`pnpm react-router typegen`)
@@ -28,24 +31,28 @@ async function main() {
         }),
     ])
 
-    await qstash.schedules.create({
-        destination: new URL(
-            app.safePath('/api/databaseNightlyCleanup'),
-            env.PUBLIC_URL,
-        ).toString(),
-        cron: '*/10 * * * *',
-        scheduleId: 'nightly-page-blobs-cleanup',
-        method: 'POST',
-        body: JSON.stringify({ SERVICE_SECRET: env.SERVICE_SECRET }),
-    })
+    if (isProduction) {
+        await qstash.schedules.create({
+            destination: new URL(
+                app.safePath('/api/databaseNightlyCleanup'),
+                env.PUBLIC_URL,
+            ).toString(),
+            cron: '*/10 * * * *',
+            scheduleId: 'nightly-page-blobs-cleanup',
+            method: 'POST',
+            body: JSON.stringify({ SERVICE_SECRET: env.SERVICE_SECRET }),
+        })
+    }
 
     const port = 7664
+    const appName = stage === 'production' ? 'fumabase-website-prod' : 'fumabase-website-preview'
+
     await deployFly({
-        appName: 'fumabase-website-prod',
+        appName,
         port,
         buildRemotely: true,
         dockerfile: 'Dockerfile',
-        minInstances: 1,
+        minInstances: isProduction ? 1 : 0,
         forceHttps: false,
         maxInstances: 1,
         kill_timeout: 300,
