@@ -576,105 +576,105 @@ export const app = new Spiceflow({ basePath: '/api' })
         },
     })
 
-    .route({
-        method: 'POST',
-        path: '/commitChangesToRepo',
-        request: z.object({
-            branchId: z.string().min(1, 'branchId is required'),
-            filesInDraft: z.record(z.string(), fileUpdateSchema),
-        }),
-        async handler({ request, state: { userId } }) {
-            const { branchId, filesInDraft } = await request.json()
+    // .route({
+    //     method: 'POST',
+    //     path: '/commitChangesToRepo',
+    //     request: z.object({
+    //         branchId: z.string().min(1, 'branchId is required'),
+    //         filesInDraft: z.record(z.string(), fileUpdateSchema),
+    //     }),
+    //     async handler({ request, state: { userId } }) {
+    //         const { branchId, filesInDraft } = await request.json()
 
-            if (!userId) {
-                throw new AppError('Missing userId')
-            }
+    //         if (!userId) {
+    //             throw new AppError('Missing userId')
+    //         }
 
-            // Check user has access to the branch
-            const commitBranch = await prisma.siteBranch.findFirst({
-                where: {
-                    branchId,
-                    site: {
-                        org: {
-                            users: {
-                                some: { userId },
-                            },
-                        },
-                    },
-                },
-                include: {
-                    site: {
-                        include: {
-                            githubInstallations: {
-                                where: {
-                                    appId: env.GITHUB_APP_ID,
-                                },
-                                include: {
-                                    github: true,
-                                },
-                            },
-                        },
-                    },
-                },
-            })
+    //         // Check user has access to the branch
+    //         const commitBranch = await prisma.siteBranch.findFirst({
+    //             where: {
+    //                 branchId,
+    //                 site: {
+    //                     org: {
+    //                         users: {
+    //                             some: { userId },
+    //                         },
+    //                     },
+    //                 },
+    //             },
+    //             include: {
+    //                 site: {
+    //                     include: {
+    //                         githubInstallations: {
+    //                             where: {
+    //                                 appId: env.GITHUB_APP_ID,
+    //                             },
+    //                             include: {
+    //                                 github: true,
+    //                             },
+    //                         },
+    //                     },
+    //                 },
+    //             },
+    //         })
 
-            if (!commitBranch) {
-                throw new AppError('Branch not found or access denied')
-            }
+    //         if (!commitBranch) {
+    //             throw new AppError('Branch not found or access denied')
+    //         }
 
-            const site = commitBranch.site
-            const githubInstallation = site.githubInstallations.find(
-                (x) => x.appId === env.GITHUB_APP_ID,
-            )
-            if (!githubInstallation) {
-                throw new AppError('GitHub installation not found')
-            }
+    //         const site = commitBranch.site
+    //         const githubInstallation = site.githubInstallations.find(
+    //             (x) => x.appId === env.GITHUB_APP_ID,
+    //         )
+    //         if (!githubInstallation) {
+    //             throw new AppError('GitHub installation not found')
+    //         }
 
-            const installationId = githubInstallation.installationId
-            const octokit = await getOctokit({ installationId })
+    //         const installationId = githubInstallation.installationId
+    //         const octokit = await getOctokit({ installationId })
 
-            if (!site.githubOwner || !site.githubRepo) {
-                throw new AppError(
-                    'GitHub owner and repo must be set for the site',
-                )
-            }
-            const owner = site.githubOwner
-            const repo = site.githubRepo
+    //         if (!site.githubOwner || !site.githubRepo) {
+    //             throw new AppError(
+    //                 'GitHub owner and repo must be set for the site',
+    //             )
+    //         }
+    //         const owner = site.githubOwner
+    //         const repo = site.githubRepo
 
-            // Get the default branch of the repo
-            const { data: repoData } = await octokit.rest.repos.get({
-                owner,
-                repo,
-            })
-            const defaultBranch = repoData.default_branch
+    //         // Get the default branch of the repo
+    //         const { data: repoData } = await octokit.rest.repos.get({
+    //             owner,
+    //             repo,
+    //         })
+    //         const defaultBranch = repoData.default_branch
 
-            // Convert filesInDraft to files format
-            const files = Object.entries(filesInDraft).map(
-                ([filePath, fileUpdate]) => ({
-                    filePath,
-                    content: fileUpdate?.content || '',
-                }),
-            )
+    //         // Convert filesInDraft to files format
+    //         const files = Object.entries(filesInDraft).map(
+    //             ([filePath, fileUpdate]) => ({
+    //                 filePath,
+    //                 content: fileUpdate?.content || '',
+    //             }),
+    //         )
 
-            try {
-                const result = await pushToPrOrBranch({
-                    auth: githubInstallation?.github.oauthToken || '',
-                    files,
-                    owner,
-                    repo,
-                    branch: defaultBranch,
-                })
+    //         try {
+    //             const result = await pushToPrOrBranch({
+    //                 auth: githubInstallation?.github.oauthToken || '',
+    //                 files,
+    //                 owner,
+    //                 repo,
+    //                 branch: defaultBranch,
+    //             })
 
-                return {
-                    prUrl: result.prUrl || '',
-                    commitUrl: result.commitUrl || '',
-                    githubAuthUrl: '',
-                }
-            } catch (error) {
-                throw new AppError(`Failed to commit changes: ${error.message}`)
-            }
-        },
-    })
+    //             return {
+    //                 prUrl: result.prUrl || '',
+    //                 commitUrl: result.commitUrl || '',
+    //                 githubAuthUrl: '',
+    //             }
+    //         } catch (error) {
+    //             throw new AppError(`Failed to commit changes: ${error.message}`)
+    //         }
+    //     },
+    // })
     .route({
         method: 'POST',
         path: '/updateChatFilesInDraft',
