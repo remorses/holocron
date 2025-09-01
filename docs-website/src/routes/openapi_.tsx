@@ -33,7 +33,7 @@ const document = {
 }
 
 export const loader = async ({ params, request }) => {
-    const processed = await processDocument(document as any, true)
+    const processed = await processDocument(document as any, )
     return { processed }
 }
 import React, { Suspense } from 'react'
