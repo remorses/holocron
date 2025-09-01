@@ -29,9 +29,9 @@
         "label": "Home"
       },
       {
-        "href": "https://github.com",
-        "icon": "github",
-        "label": "GitHub"
+        "label": "GitHub",
+        "href": "https://github.com/remorses/fumabase",
+        "icon": "github"
       }
     ],
     "primary": {
