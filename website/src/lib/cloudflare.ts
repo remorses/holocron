@@ -74,17 +74,21 @@ export type CloudflareCustomHostnameResponse = {
 }
 
 export const CloudflareZones = {
-  holocronso: '',
+  holocronso: 'ee6e7769d681906f642bd72c11647d33',
   fumabasecom: '856baddaec9272d348d34fc7ad3c5efe',
-  holocronsitescom: '',
+  holocronsitescom: 'febc04e7bb560e93bee7c556a814548e',
+  holocronlive: '1d8dcc0b7173dcb3a79441c6e7cd12fb',
 }
 
 export const getZoneIdForDomain = (domain: string): string => {
-    if (domain.includes('fumabase.com')) {
+    if (domain.endsWith('fumabase.com')) {
         return CloudflareZones.fumabasecom
     }
-    if (domain.includes('holocronsites.com')) {
+    if (domain.endsWith('holocronsites.com')) {
         return CloudflareZones.holocronsitescom
+    }
+    if (domain.endsWith('holocron.live')) {
+        return CloudflareZones.holocronlive
     }
     // Default to holocronso for all other cases
     return CloudflareZones.holocronso
