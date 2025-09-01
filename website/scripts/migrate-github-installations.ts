@@ -5,7 +5,7 @@ import { env } from '../src/lib/env.js'
 
 const { Client } = pg
 
-let dryRun = true
+let dryRun = false
 
 async function checkInstallationActive(installationId: number): Promise<boolean> {
     try {
