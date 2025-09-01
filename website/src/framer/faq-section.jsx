@@ -23,9 +23,9 @@
 }} Props
 
  */
-import { stdin_default } from "./chunks/chunk-BV4MQMG4.js";
-import "./chunks/chunk-SNH2M5FY.js";
+import { stdin_default } from "./chunks/chunk-EUMVRNAR.js";
 import { className, css, fonts } from "./chunks/chunk-KYATNZPG.js";
+import "./chunks/chunk-6G2SY433.js";
 import { stdin_default as stdin_default2 } from "./chunks/chunk-EHCTMXQN.js";
 import { routes } from "./chunks/chunk-75FLX355.js";
 
@@ -33,7 +33,7 @@ import { routes } from "./chunks/chunk-75FLX355.js";
 import { Fragment as Fragment2 } from "react";
 import { ContextProviders } from "unframer";
 
-// /:https://framerusercontent.com/modules/vsGrSyPjmSu6qtp6KhG2/q2YtPTAlcxO9jrlaUyT4/qtvfO8YHV.js
+// /:https://framerusercontent.com/modules/vsGrSyPjmSu6qtp6KhG2/MoEMxV9FNtffAK2sfmkH/qtvfO8YHV.js
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
 	addFonts,
@@ -59,7 +59,7 @@ var FAQFonts = getFonts(stdin_default);
 var SmartComponentScopedContainerWithFX = withFX(SmartComponentScopedContainer);
 var GridFonts = getFonts(stdin_default2);
 var cycleOrder = ["rmeeJSz78", "XrZxEUAaJ", "EW4AHUAxX"];
-var serializationHash = "framer-RWrrY";
+var serializationHash = "framer-CHiaW";
 var variantClassNames = {
 	EW4AHUAxX: "framer-v-x37i1",
 	rmeeJSz78: "framer-v-1rbr5xo",
@@ -347,13 +347,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											id: "LGIjljqLt",
 											layoutId: "LGIjljqLt",
 											lr9MckAMy:
-												"Fumabase is a hosting and deployment platform built on top of the open source Fumadocs framework. It makes it easy to deploy your documentation website with instant deployments and instant preview using the Fumabase dev command.",
+												"Holocron is a hosting and deployment platform built on top of the open source Fumadocs framework. It makes it easy to deploy your documentation website with instant deployments and instant preview using the Holocron dev command.",
 											style: {
 												width: "100%",
 											},
 											variant: "G8PiTZbU_",
 											width: "100%",
-											xyvbwpR7S: "How is Fumabase different than Fumadocs?",
+											xyvbwpR7S: "How is Holocron different than Fumadocs?",
 										})}
 									</SmartComponentScopedContainerWithFX>
 								</ComponentViewportProvider>
@@ -415,13 +415,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											id: "qlcnY0jiN",
 											layoutId: "qlcnY0jiN",
 											lr9MckAMy:
-												"Your content is placed in a GitHub repository as markdown and MDX files. You can also use a Fumabase.json file to customize your website\u2014add links, a footer, and colors. For advanced customization, you can edit the fully customizable styles.css file.",
+												"Your content is placed in a GitHub repository as markdown and MDX files. You can also use a Holocron.json file to customize your website\u2014add links, a footer, and colors. For advanced customization, you can edit the fully customizable styles.css file.",
 											style: {
 												width: "100%",
 											},
 											variant: "G8PiTZbU_",
 											width: "100%",
-											xyvbwpR7S: "Where is Fumabase content hosted?",
+											xyvbwpR7S: "Where is Holocron content hosted?",
 										})}
 									</SmartComponentScopedContainerWithFX>
 								</ComponentViewportProvider>
@@ -483,13 +483,13 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											id: "Bp7PFXrzD",
 											layoutId: "Bp7PFXrzD",
 											lr9MckAMy:
-												"Fumabase allows you to fully customize colors using CSS variables in the Fumabase.json file. You can also add a custom styles.css file for complete control over your website\u2019s appearance.",
+												"Holocron allows you to fully customize colors using CSS variables in the Holocron.json file. You can also add a custom styles.css file for complete control over your website\u2019s appearance.",
 											style: {
 												width: "100%",
 											},
 											variant: "G8PiTZbU_",
 											width: "100%",
-											xyvbwpR7S: "Which colors can I customize in Fumabase?",
+											xyvbwpR7S: "Which colors can I customize in Holocron?",
 										})}
 									</SmartComponentScopedContainerWithFX>
 								</ComponentViewportProvider>
@@ -551,14 +551,14 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											id: "vJsYo6GVZ",
 											layoutId: "vJsYo6GVZ",
 											lr9MckAMy:
-												"Fumabase is simpler to deploy, requiring only one click and can be used by non-technical people. It builds and deploys instantly, regardless of the number of markdown files. Customization is easier and does not require writing code thanks to the Fumabase.json file. Fumabase also fully integrates with an agent that can write and keep your docs updated for you.",
+												"Holocron is simpler to deploy, requiring only one click and can be used by non-technical people. It builds and deploys instantly, regardless of the number of markdown files. Customization is easier and does not require writing code thanks to the Holocron.json file. Holocron also fully integrates with an agent that can write and keep your docs updated for you.",
 											style: {
 												width: "100%",
 											},
 											variant: "G8PiTZbU_",
 											width: "100%",
 											xyvbwpR7S:
-												"Why should I use Fumabase instead of self-hosting Fumadocs?",
+												"Why should I use Holocron instead of self-hosting Fumadocs?",
 										})}
 									</SmartComponentScopedContainerWithFX>
 								</ComponentViewportProvider>
@@ -620,14 +620,14 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											id: "WKntHTHga",
 											layoutId: "WKntHTHga",
 											lr9MckAMy:
-												"Fumabase is fully open source and has no vendor lock-in. You can later self-deploy your docs using Fumadocs. Shumumabase.",
+												"Holocron is fully open source and has no vendor lock-in. You can later self-deploy your docs using Fumadocs. Shumumabase.",
 											style: {
 												width: "100%",
 											},
 											variant: "G8PiTZbU_",
 											width: "100%",
 											xyvbwpR7S:
-												"What is the difference between Fumabase and Mintlify?",
+												"What is the difference between Holocron and Mintlify?",
 										})}
 									</SmartComponentScopedContainerWithFX>
 								</ComponentViewportProvider>
@@ -689,7 +689,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											id: "W0OxweZ9I",
 											layoutId: "W0OxweZ9I",
 											lr9MckAMy:
-												"Right now Fumabase is free. Fumabase will add a subscription plan for companies that need more features like ",
+												"Right now Holocron is free. Holocron will add a subscription plan for companies that need more features like",
 											style: {
 												width: "100%",
 											},
@@ -714,7 +714,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 								{...addPropertyOverrides(
 									{
 										EW4AHUAxX: {
-											height: (componentViewport?.height || 200) * 1 * 1,
+											height: (componentViewport?.height || 824) * 1 * 1,
 										},
 										XrZxEUAaJ: {
 											height: (componentViewport?.height || 747) * 1 * 1,
@@ -766,25 +766,25 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 });
 var css2 = [
 	"@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }",
-	".framer-RWrrY.framer-17mvys5, .framer-RWrrY .framer-17mvys5 { display: block; }",
-	".framer-RWrrY.framer-1rbr5xo { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 60px; height: min-content; justify-content: flex-start; overflow: hidden; padding: 102px 100px 80px 100px; position: relative; width: 1200px; }",
-	".framer-RWrrY .framer-3xiqmp { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 60px; height: min-content; justify-content: flex-start; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
-	".framer-RWrrY .framer-11gl5ow { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 8px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
-	".framer-RWrrY .framer-yufxp6 { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; }",
-	".framer-RWrrY .framer-1c1yyb7 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 14px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
-	".framer-RWrrY .framer-2kt7vz-container, .framer-RWrrY .framer-sl7xtq-container, .framer-RWrrY .framer-1hn1rsr-container, .framer-RWrrY .framer-p22cp9-container, .framer-RWrrY .framer-1jqtena-container, .framer-RWrrY .framer-6sqcfe-container { flex: none; height: auto; position: relative; width: 100%; }",
-	".framer-RWrrY .framer-1a5qlxf { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 100%; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 0; }",
-	".framer-RWrrY .framer-kl5dm0-container { flex: none; height: 100%; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
-	".framer-RWrrY.framer-v-fvebzn.framer-1rbr5xo { gap: 0px; padding: 150px 40px 50px 40px; width: 810px; }",
-	".framer-RWrrY.framer-v-fvebzn .framer-3xiqmp { gap: 40px; max-width: unset; }",
-	".framer-RWrrY.framer-v-fvebzn .framer-1c1yyb7 { max-width: 810px; }",
-	".framer-RWrrY.framer-v-x37i1.framer-1rbr5xo { gap: 40px; padding: 120px 20px 0px 20px; width: 390px; }",
-	".framer-RWrrY.framer-v-x37i1 .framer-3xiqmp { gap: 40px; max-width: 580px; }",
-	".framer-RWrrY.framer-v-x37i1 .framer-11gl5ow { gap: 5px; }",
-	".framer-RWrrY.framer-v-x37i1 .framer-1c1yyb7 { gap: 10px; }",
+	".framer-CHiaW.framer-17mvys5, .framer-CHiaW .framer-17mvys5 { display: block; }",
+	".framer-CHiaW.framer-1rbr5xo { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 60px; height: min-content; justify-content: flex-start; overflow: hidden; padding: 102px 100px 80px 100px; position: relative; width: 1200px; }",
+	".framer-CHiaW .framer-3xiqmp { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 60px; height: min-content; justify-content: flex-start; max-width: 1100px; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
+	".framer-CHiaW .framer-11gl5ow { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 8px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; }",
+	".framer-CHiaW .framer-yufxp6 { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; }",
+	".framer-CHiaW .framer-1c1yyb7 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 14px; height: min-content; justify-content: center; overflow: visible; padding: 0px; position: relative; width: 100%; z-index: 1; }",
+	".framer-CHiaW .framer-2kt7vz-container, .framer-CHiaW .framer-sl7xtq-container, .framer-CHiaW .framer-1hn1rsr-container, .framer-CHiaW .framer-p22cp9-container, .framer-CHiaW .framer-1jqtena-container, .framer-CHiaW .framer-6sqcfe-container { flex: none; height: auto; position: relative; width: 100%; }",
+	".framer-CHiaW .framer-1a5qlxf { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 10px; height: 100%; justify-content: center; overflow: hidden; padding: 0px; position: absolute; right: 0px; top: 0px; width: 100%; z-index: 0; }",
+	".framer-CHiaW .framer-kl5dm0-container { flex: none; height: 100%; left: calc(50.00000000000002% - 100% / 2); position: absolute; top: 0px; width: 100%; z-index: 0; }",
+	".framer-CHiaW.framer-v-fvebzn.framer-1rbr5xo { gap: 0px; padding: 150px 40px 50px 40px; width: 810px; }",
+	".framer-CHiaW.framer-v-fvebzn .framer-3xiqmp { gap: 40px; max-width: unset; }",
+	".framer-CHiaW.framer-v-fvebzn .framer-1c1yyb7 { max-width: 810px; }",
+	".framer-CHiaW.framer-v-x37i1.framer-1rbr5xo { gap: 40px; padding: 120px 20px 0px 20px; width: 390px; }",
+	".framer-CHiaW.framer-v-x37i1 .framer-3xiqmp { gap: 40px; max-width: 580px; }",
+	".framer-CHiaW.framer-v-x37i1 .framer-11gl5ow { gap: 5px; }",
+	".framer-CHiaW.framer-v-x37i1 .framer-1c1yyb7 { gap: 10px; }",
 	...css,
 ];
-var FramerqtvfO8YHV = withCSS(Component, css2, "framer-RWrrY");
+var FramerqtvfO8YHV = withCSS(Component, css2, "framer-CHiaW");
 var stdin_default3 = FramerqtvfO8YHV;
 FramerqtvfO8YHV.displayName = "FAQ Section";
 FramerqtvfO8YHV.defaultProps = {
