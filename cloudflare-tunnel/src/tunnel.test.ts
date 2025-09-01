@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest'
 import WebSocket from 'ws'
 
-const WS_URL = 'wss://preview.fumabase.com/_tunnel'
+const WS_URL = 'wss://preview.holocron.com/_tunnel'
 
 describe.concurrent('Tunnel WebSocket', () => {
     // Generate unique IDs for each test to avoid conflicts

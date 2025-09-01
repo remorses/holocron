@@ -427,7 +427,7 @@ export async function createNewRepo({
         org: owner,
         name: repo,
         private: privateRepo,
-        description: `Repository created using Fumabase`,
+        description: `Repository created using Holocron`,
         homepage: homepage,
         has_wiki: false,
         has_discussions: true,

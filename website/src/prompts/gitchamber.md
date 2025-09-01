@@ -68,17 +68,17 @@ If you notice a repo has an `examples/something/README.md` it is a good idea to 
 ### Examples with Custom Globs
 
 #### TypeScript files only (use same glob for all operations)
-https://gitchamber.com/repos/remorses/fumabase/main/files?glob=**/*.ts
-https://gitchamber.com/repos/remorses/fumabase/main/file/website/react-router.config.ts?glob=**/*.ts
-https://gitchamber.com/repos/remorses/fumabase/main/search/export?glob=**/*.ts
+https://gitchamber.com/repos/remorses/holocron/main/files?glob=**/*.ts
+https://gitchamber.com/repos/remorses/holocron/main/file/website/react-router.config.ts?glob=**/*.ts
+https://gitchamber.com/repos/remorses/holocron/main/search/export?glob=**/*.ts
 
 #### JavaScript files in website directory only
-https://gitchamber.com/repos/remorses/fumabase/main/files?glob=website/**/*.js
-https://gitchamber.com/repos/remorses/fumabase/main/file/website/vite.config.js?glob=website/**/*.js
-https://gitchamber.com/repos/remorses/fumabase/main/search/async?website=website/**/*.js
+https://gitchamber.com/repos/remorses/holocron/main/files?glob=website/**/*.js
+https://gitchamber.com/repos/remorses/holocron/main/file/website/vite.config.js?glob=website/**/*.js
+https://gitchamber.com/repos/remorses/holocron/main/search/async?website=website/**/*.js
 
 #### All files (NOT RECOMMENDED - very slow)
-<https://gitchamber.com/repos/remorses/fumabase/main/files?glob=**/*>
+<https://gitchamber.com/repos/remorses/holocron/main/files?glob=**/*>
 
 **Best Practice:** Stick to the default (markdown/README only) unless you specifically need to examine source code implementations.
 
