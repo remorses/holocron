@@ -114,7 +114,6 @@ export async function generateSystemMessage({
         await import('../prompts/agent.md?raw').then((x) => x.default),
         await import('../prompts/tone-and-style.md?raw').then((x) => x.default),
         await import('../prompts/writing-mdx.md?raw').then((x) => x.default),
-        await import('../prompts/css-variables.md?raw').then((x) => x.default),
         await import('../prompts/frontmatter.md?raw').then((x) => x.default),
         await import('../prompts/gitchamber.md?raw').then((x) => x.default),
         await import('../prompts/migrating.md?raw').then((x) => x.default),
@@ -129,13 +128,24 @@ export async function generateSystemMessage({
 
         Notice that this project is located in the base folder ${githubFolder}, all your files should be put inside ${githubFolder}
         `,
+        !isOnboardingChat &&
+            (await import('../prompts/holocron-jsonc.md?raw').then(
+                (x) => x.default,
+            )),
         isOnboardingChat && '## Onboarding Instructions',
         isOnboardingChat &&
             (await import('../prompts/create-site.md?raw').then(
                 (x) => x.default,
             )),
         isOnboardingChat && generateExampleTemplateFilesPrompt(),
-        await import('../prompts/capabilities.md?raw').then((x) => x.default),
+        !isOnboardingChat &&
+            (await import('../prompts/capabilities.md?raw').then(
+                (x) => x.default,
+            )),
+        !isOnboardingChat &&
+            (await import('../prompts/css-variables.md?raw').then(
+                (x) => x.default,
+            )),
     ]
         .filter(Boolean)
         .join('\n\n')
@@ -896,7 +906,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
         currentSlug: z.string(),
         filesInDraft: z.record(z.string(), fileUpdateSchema),
     }),
-    async *handler({  request, waitUntil, state: { userId } }) {
+    async *handler({ request, waitUntil, state: { userId } }) {
         const {
             messages,
             currentSlug,
@@ -935,12 +945,11 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                     userId,
                 },
             }),
-             getFilesForSource({
+            getFilesForSource({
                 branchId,
                 filesInDraft,
                 githubFolder,
-            })
-
+            }),
         ])
         if (!branch) {
             throw new Error('You do not have access to this branch')
@@ -955,20 +964,21 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
                 .map((part) => part.text)
                 .join('')
 
-             waitUntil(prisma.chatMessage.upsert({
-                where: {
-                    id: lastUserMessage.id,
-                },
-                update: {},
-                create: {
-                    chatId,
-                    createdAt: new Date(),
-                    id: lastUserMessage.id,
-                    role: 'user',
-                },
-             }))
+            waitUntil(
+                prisma.chatMessage.upsert({
+                    where: {
+                        id: lastUserMessage.id,
+                    },
+                    update: {},
+                    create: {
+                        chatId,
+                        createdAt: new Date(),
+                        id: lastUserMessage.id,
+                        role: 'user',
+                    },
+                }),
+            )
         }
-
 
         // Create FileSystemEmulator instance
         const fileSystem = new FileSystemEmulator({
