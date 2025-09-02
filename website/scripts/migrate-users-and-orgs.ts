@@ -5,7 +5,7 @@ import { ulid } from 'ulid'
 
 const { Client } = pg
 
-let dryRun = true
+let dryRun = false
 
 interface OldUser {
     id: string
@@ -155,6 +155,26 @@ async function migrateUsersAndOrgs() {
         }
         console.log(`  - ${installationsByOldOrgId.size} orgs have GitHub installations`)
 
+        // Fetch all existing GitHub installations from new database upfront
+        console.log('\nFetching existing GitHub installations from new database...')
+        console.time('fetch-new-github-installations')
+        const existingGithubInstallations = await prisma.githubInstallation.findMany({
+            where: {
+                appId: env.GITHUB_APP_ID!
+            },
+            select: {
+                installationId: true,
+                appId: true
+            }
+        })
+        console.timeEnd('fetch-new-github-installations')
+        console.log(`Found ${existingGithubInstallations.length} GitHub installations in new database`)
+
+        // Create a Set for fast lookups
+        const existingInstallationIds = new Set(
+            existingGithubInstallations.map(inst => inst.installationId)
+        )
+
         console.log('\n' + '='.repeat(50))
         console.log('Starting migration process...')
         console.log('='.repeat(50) + '\n')
@@ -182,20 +202,26 @@ async function migrateUsersAndOrgs() {
             }
         }
 
-        // Pre-generate IDs for shared orgs that have GitHub installations
-        const sharedOrgs = new Set<string>()
+        // Map shared orgs to first admin user's personal org
+        const sharedOrgMappings = new Map<string, string>()
         for (const [oldOrgId, members] of oldOrgMembers.entries()) {
             if (members.size > 1) {
-                // Check if this org has GitHub installations
-                const hasInstallations = installationsByOldOrgId.has(oldOrgId) &&
-                                        installationsByOldOrgId.get(oldOrgId)!.length > 0
-
-                if (hasInstallations) {
-                    sharedOrgs.add(oldOrgId)
-                    const newOrgId = ulid()
-                    oldToNewOrgIdMap.set(oldOrgId, newOrgId)
-
-                    console.log(`\nPreparing shared org ${oldOrgId} → ${newOrgId} with ${members.size} members`)
+                // Find the first admin user for this org
+                for (const userId of members) {
+                    const orgRel = oldOrgsUsersResult.rows.find(
+                        r => r.userId === userId && r.orgId === oldOrgId && r.role === 'ADMIN'
+                    )
+                    if (orgRel) {
+                        sharedOrgMappings.set(oldOrgId, userId)
+                        console.log(`\nShared org ${oldOrgId} with ${members.size} members will map to first admin user ${userId}`)
+                        break
+                    }
+                }
+                // If no admin found, use first member
+                if (!sharedOrgMappings.has(oldOrgId)) {
+                    const firstUserId = Array.from(members)[0]
+                    sharedOrgMappings.set(oldOrgId, firstUserId)
+                    console.log(`\nShared org ${oldOrgId} with ${members.size} members will map to first member ${firstUserId} (no admin found)`)
                 }
             }
         }
@@ -231,21 +257,53 @@ async function migrateUsersAndOrgs() {
             }
 
             if (existingEmailsSet.has(oldUser.email)) {
-                console.log(`Skipping existing user: ${oldUser.email}`)
+                console.log(`Found existing user: ${oldUser.email}`)
 
-                // Still need to map the ID for org relationships
+                // Get the existing user and their orgs
                 const existingUser = await prisma.user.findUnique({
-                    where: { email: oldUser.email }
+                    where: { email: oldUser.email },
+                    include: {
+                        orgs: true
+                    }
                 })
+
                 if (existingUser) {
                     oldToNewUserIdMap.set(oldUser.id, existingUser.id)
+
+                    // Since user ID = org ID, use the user's ID as their personal org
+                    const personalOrgId = existingUser.id
+                    console.log(`  → Using user's org (same as user ID): ${personalOrgId}`)
+
+                    // Map old orgs to existing personal org
+                    const userOrgs = userOrgRelationships.get(oldUser.id) || []
+                    for (const orgRel of userOrgs) {
+                        const orgMembers = oldOrgMembers.get(orgRel.orgId)
+                        if (orgMembers) {
+                            if (orgMembers.size === 1) {
+                                // Single-member org
+                                if (!oldToNewOrgIdMap.has(orgRel.orgId)) {
+                                    oldToNewOrgIdMap.set(orgRel.orgId, personalOrgId)
+                                    console.log(`  → Mapped old personal org ${orgRel.orgId} to existing org ${personalOrgId}`)
+                                }
+                            } else {
+                                // Multi-member org - check if this user is the designated owner
+                                const designatedOwner = sharedOrgMappings.get(orgRel.orgId)
+                                if (designatedOwner === oldUser.id) {
+                                    if (!oldToNewOrgIdMap.has(orgRel.orgId)) {
+                                        oldToNewOrgIdMap.set(orgRel.orgId, personalOrgId)
+                                        console.log(`  → Mapped shared org ${orgRel.orgId} to existing org ${personalOrgId} (designated owner)`)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 continue
             }
 
             const userMetadata = oldUser.raw_user_meta_data || {}
 
-            // Generate new user ID
+            // Generate new user ID (same ID will be used for personal org)
             const newUserId = ulid()
             oldToNewUserIdMap.set(oldUser.id, newUserId)
 
@@ -273,99 +331,63 @@ async function migrateUsersAndOrgs() {
                 migratedUsersCount++
             }
 
-            // Create a personal org for the user
-            const personalOrgId = ulid()
-            console.log(`  → Creating personal org: ${personalOrgId}`)
+            // Create a personal org for the user (using same ID as user)
+            const personalOrgId = newUserId
+            console.log(`  → Creating personal org with same ID as user: ${personalOrgId}`)
 
             if (!dryRun) {
-                await prisma.org.create({
-                    data: {
-                        orgId: personalOrgId,
-                        name: oldUser.email.split('@')[0] + "'s Org",
-                        image: userMetadata.avatar_url || null,
-                        createdAt: oldUser.created_at,
-                        users: {
-                            create: {
-                                userId: newUserId,
-                                role: 'ADMIN',
+                try {
+                    await prisma.org.create({
+                        data: {
+                            orgId: personalOrgId,
+                            name: oldUser.email.split('@')[0] + "'s Org",
+                            image: userMetadata.avatar_url || null,
+                            createdAt: oldUser.created_at,
+                            users: {
+                                create: {
+                                    userId: newUserId,
+                                    role: 'ADMIN',
+                                },
                             },
                         },
-                    },
-                })
-                migratedOrgsCount++
+                    })
+                    migratedOrgsCount++
+                } catch (error: any) {
+                    if (error.code === 'P2002') {
+                        console.error(`  ✗ Personal org ${personalOrgId} already exists (this should be extremely rare)`)
+                    } else {
+                        throw error
+                    }
+                }
             }
 
-            // Map old single-member orgs to the new personal org
+            // Map old orgs to the new personal org
             const userOrgs = userOrgRelationships.get(oldUser.id) || []
 
             for (const orgRel of userOrgs) {
-                // Check if this is a single-member org (personal org)
                 const orgMembers = oldOrgMembers.get(orgRel.orgId)
-                if (orgMembers && orgMembers.size === 1) {
-                    // This is a personal org in the old system, map it to the new personal org
-                    if (!oldToNewOrgIdMap.has(orgRel.orgId)) {
-                        oldToNewOrgIdMap.set(orgRel.orgId, personalOrgId)
-                        console.log(`  → Mapped old personal org ${orgRel.orgId} to new personal org ${personalOrgId}`)
+                if (orgMembers) {
+                    if (orgMembers.size === 1) {
+                        // Single-member org - map to personal org
+                        if (!oldToNewOrgIdMap.has(orgRel.orgId)) {
+                            oldToNewOrgIdMap.set(orgRel.orgId, personalOrgId)
+                            console.log(`  → Mapped old personal org ${orgRel.orgId} to new personal org ${personalOrgId}`)
+                        }
+                    } else {
+                        // Multi-member org - check if this user is the designated owner
+                        const designatedOwner = sharedOrgMappings.get(orgRel.orgId)
+                        if (designatedOwner === oldUser.id) {
+                            if (!oldToNewOrgIdMap.has(orgRel.orgId)) {
+                                oldToNewOrgIdMap.set(orgRel.orgId, personalOrgId)
+                                console.log(`  → Mapped shared org ${orgRel.orgId} to this user's personal org ${personalOrgId} (designated owner)`)
+                            }
+                        }
                     }
                 }
             }
         }
 
-        // Now create shared orgs and add members
-        for (const oldOrgId of sharedOrgs) {
-            const members = oldOrgMembers.get(oldOrgId)!
-            const newOrgId = oldToNewOrgIdMap.get(oldOrgId)!
-
-            // Find the first migrated user to determine org details
-            let orgName = `Shared Organization ${oldOrgId.slice(0, 8)}`
-            let orgCreatedAt = new Date()
-
-            for (const oldUserId of members) {
-                const oldUser = oldUsersResult.rows.find(u => u.id === oldUserId)
-                if (oldUser) {
-                    orgCreatedAt = oldUser.created_at
-                    const userMetadata = oldUser.raw_user_meta_data || {}
-                    if (userMetadata.name) {
-                        orgName = `${userMetadata.name}'s Team`
-                        break
-                    }
-                }
-            }
-
-            console.log(`\nCreating shared org: ${newOrgId} (was ${oldOrgId})`)
-
-            if (!dryRun) {
-                // Create the shared org
-                await prisma.org.create({
-                    data: {
-                        orgId: newOrgId,
-                        name: orgName,
-                        createdAt: orgCreatedAt,
-                    },
-                })
-                migratedOrgsCount++
-
-                // Add all members to the shared org (only those who were migrated)
-                for (const oldUserId of members) {
-                    const newUserId = oldToNewUserIdMap.get(oldUserId)
-                    if (newUserId) {
-                        const orgRel = oldOrgsUsersResult.rows.find(
-                            r => r.userId === oldUserId && r.orgId === oldOrgId
-                        )
-
-                        await prisma.orgsUsers.create({
-                            data: {
-                                userId: newUserId,
-                                orgId: newOrgId,
-                                role: orgRel?.role === 'ADMIN' ? 'ADMIN' : 'MEMBER',
-                            },
-                        })
-
-                        console.log(`  → Added user ${newUserId} as ${orgRel?.role || 'MEMBER'}`)
-                    }
-                }
-            }
-        }
+        // No longer creating shared orgs - they are mapped to personal orgs of designated owners
 
         // Connect GitHub installations to orgs based on old org relationships
         console.log(`\n${'='.repeat(50)}`)
@@ -381,17 +403,20 @@ async function migrateUsersAndOrgs() {
 
             for (const inst of installations) {
                 // Check if this installation exists in the new database (already migrated)
-                const existingInstallation = await prisma.githubInstallation.findUnique({
-                    where: {
-                        installationId_appId: {
-                            installationId: inst.installationId,
-                            appId: env.GITHUB_APP_ID!,
-                        },
-                    },
-                })
+                if (existingInstallationIds.has(inst.installationId)) {
+                    // Find the user email for this org (since orgId = userId)
+                    let userEmail = 'unknown'
+                    // First check if it's a direct user ID mapping
+                    const userEntry = Array.from(oldToNewUserIdMap.entries()).find(([_, newId]) => newId === newOrgId)
+                    if (userEntry) {
+                        const oldUserId = userEntry[0]
+                        const oldUser = oldUsersResult.rows.find(u => u.id === oldUserId)
+                        if (oldUser?.email) {
+                            userEmail = oldUser.email
+                        }
+                    }
 
-                if (existingInstallation) {
-                    console.log(`\nConnecting GitHub installation ${inst.installationId} (${inst.accountLogin}) to org ${newOrgId}`)
+                    console.log(`\nConnecting GitHub installation ${inst.installationId} (${inst.accountLogin}) to org ${newOrgId} (user: ${userEmail})`)
 
                     if (!dryRun) {
                         try {
