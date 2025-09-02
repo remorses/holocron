@@ -5,7 +5,7 @@ import { ulid } from 'ulid'
 
 const { Client } = pg
 
-let dryRun = process.argv.includes('--dry-run')
+let dryRun = true
 
 interface OldUser {
     id: string
@@ -47,20 +47,30 @@ async function migrateUsersAndOrgs() {
         console.log(`Running in ${dryRun ? 'DRY RUN' : 'LIVE'} mode\n`)
 
         // Get existing users to avoid duplicates
+        console.log('Fetching existing users from new database...')
+        console.time('fetch-existing-users')
         const existingUsers = await prisma.user.findMany({
             select: { email: true },
         })
         const existingEmailsSet = new Set(existingUsers.map(u => u.email))
+        console.timeEnd('fetch-existing-users')
+        console.log(`Found ${existingUsers.length} existing users in new database`)
 
         // Get existing orgs to track what we've already migrated
+        console.log('\nFetching existing orgs from new database...')
+        console.time('fetch-existing-orgs')
         const existingOrgs = await prisma.org.findMany({
             select: { orgId: true },
         })
         const existingOrgIds = new Set(existingOrgs.map(o => o.orgId))
+        console.timeEnd('fetch-existing-orgs')
+        console.log(`Found ${existingOrgs.length} existing orgs in new database`)
 
         // Fetch users from old database
+        console.log('\nFetching users from old database...')
+        console.time('fetch-old-users')
         const oldUsersResult = await holocronClient.query<OldUser>(`
-            SELECT 
+            SELECT
                 id,
                 email,
                 raw_user_meta_data,
@@ -72,19 +82,26 @@ async function migrateUsersAndOrgs() {
             AND is_anonymous = false
             ORDER BY created_at ASC
         `)
-
-        console.log(`Found ${oldUsersResult.rows.length} users in old database\n`)
+        console.timeEnd('fetch-old-users')
+        console.log(`Found ${oldUsersResult.rows.length} users in old database`)
+        console.log(`  - ${oldUsersResult.rows.filter(u => u.email).length} users with email`)
+        console.log(`  - ${oldUsersResult.rows.filter(u => !u.email).length} users without email`)
+        console.log(`  - ${oldUsersResult.rows.filter(u => u.email_confirmed_at).length} users with verified email`)
 
 
         // Fetch old org relationships
+        console.log('\nFetching org relationships from old database...')
+        console.time('fetch-old-orgs-users')
         const oldOrgsUsersResult = await holocronClient.query<OldOrgsUsers>(`
-            SELECT 
+            SELECT
                 "userId",
                 "orgId",
                 role,
                 "guestSiteIds"
             FROM public."OrgsUsers"
         `)
+        console.timeEnd('fetch-old-orgs-users')
+        console.log(`Found ${oldOrgsUsersResult.rows.length} org-user relationships`)
 
         // Group by userId to find users' org relationships
         const userOrgRelationships = new Map<string, OldOrgsUsers[]>()
@@ -94,10 +111,17 @@ async function migrateUsersAndOrgs() {
             }
             userOrgRelationships.get(rel.userId)!.push(rel)
         }
+        console.log(`  - ${userOrgRelationships.size} unique users with org relationships`)
+
+        // Count unique orgs
+        const uniqueOldOrgs = new Set(oldOrgsUsersResult.rows.map(r => r.orgId))
+        console.log(`  - ${uniqueOldOrgs.size} unique orgs`)
 
         // Fetch old GitHub installations that were connected to orgs
+        console.log('\nFetching GitHub installations from old database...')
+        console.time('fetch-old-github-installations')
         const oldGithubInstallationsResult = await holocronClient.query<OldGithubInstallation>(`
-            SELECT 
+            SELECT
                 "installationId",
                 "accountLogin",
                 "accountAvatarUrl",
@@ -109,6 +133,10 @@ async function migrateUsersAndOrgs() {
                 status
             FROM public."GithubInstallation"
         `)
+        console.timeEnd('fetch-old-github-installations')
+        console.log(`Found ${oldGithubInstallationsResult.rows.length} GitHub installations`)
+        console.log(`  - ${oldGithubInstallationsResult.rows.filter(i => i.status === 'active').length} active installations`)
+        console.log(`  - ${oldGithubInstallationsResult.rows.filter(i => i.status === 'suspended').length} suspended installations`)
 
         // Map installations by old orgId
         const installationsByOldOrgId = new Map<string, OldGithubInstallation[]>()
@@ -118,6 +146,11 @@ async function migrateUsersAndOrgs() {
             }
             installationsByOldOrgId.get(inst.orgId)!.push(inst)
         }
+        console.log(`  - ${installationsByOldOrgId.size} orgs have GitHub installations`)
+
+        console.log('\n' + '='.repeat(50))
+        console.log('Starting migration process...')
+        console.log('='.repeat(50) + '\n')
 
         let migratedUsersCount = 0
         let migratedOrgsCount = 0
@@ -144,14 +177,14 @@ async function migrateUsersAndOrgs() {
         for (const [oldOrgId, members] of oldOrgMembers.entries()) {
             if (members.size > 1) {
                 // Check if this org has GitHub installations
-                const hasInstallations = installationsByOldOrgId.has(oldOrgId) && 
+                const hasInstallations = installationsByOldOrgId.has(oldOrgId) &&
                                         installationsByOldOrgId.get(oldOrgId)!.length > 0
-                
+
                 if (hasInstallations) {
                     sharedOrgs.add(oldOrgId)
                     const newOrgId = ulid()
                     oldToNewOrgIdMap.set(oldOrgId, newOrgId)
-                    
+
                     console.log(`\nPreparing shared org ${oldOrgId} → ${newOrgId} with ${members.size} members`)
                 }
             }
@@ -182,14 +215,14 @@ async function migrateUsersAndOrgs() {
 
             // Skip users without GitHub installations
             if (!usersWithGithubInstallations.has(oldUser.id)) {
-                console.log(`Skipping user ${oldUser.email} - no GitHub installations`)
+                // console.log(`Skipping user ${oldUser.email} - no GitHub installations`)
                 skippedUsersCount++
                 continue
             }
 
             if (existingEmailsSet.has(oldUser.email)) {
                 console.log(`Skipping existing user: ${oldUser.email}`)
-                
+
                 // Still need to map the ID for org relationships
                 const existingUser = await prisma.user.findUnique({
                     where: { email: oldUser.email }
@@ -238,7 +271,7 @@ async function migrateUsersAndOrgs() {
                 await prisma.org.create({
                     data: {
                         orgId: personalOrgId,
-                        name: oldUser.email.split('@')[0] + "'s Organization",
+                        name: oldUser.email.split('@')[0] + "'s Org",
                         image: userMetadata.avatar_url || null,
                         createdAt: oldUser.created_at,
                         users: {
@@ -254,7 +287,7 @@ async function migrateUsersAndOrgs() {
 
             // Map old single-member orgs to the new personal org
             const userOrgs = userOrgRelationships.get(oldUser.id) || []
-            
+
             for (const orgRel of userOrgs) {
                 // Check if this is a single-member org (personal org)
                 const orgMembers = oldOrgMembers.get(orgRel.orgId)
@@ -272,11 +305,11 @@ async function migrateUsersAndOrgs() {
         for (const oldOrgId of sharedOrgs) {
             const members = oldOrgMembers.get(oldOrgId)!
             const newOrgId = oldToNewOrgIdMap.get(oldOrgId)!
-            
+
             // Find the first migrated user to determine org details
             let orgName = `Shared Organization ${oldOrgId.slice(0, 8)}`
             let orgCreatedAt = new Date()
-            
+
             for (const oldUserId of members) {
                 const oldUser = oldUsersResult.rows.find(u => u.id === oldUserId)
                 if (oldUser) {
@@ -290,7 +323,7 @@ async function migrateUsersAndOrgs() {
             }
 
             console.log(`\nCreating shared org: ${newOrgId} (was ${oldOrgId})`)
-            
+
             if (!dryRun) {
                 // Create the shared org
                 await prisma.org.create({
@@ -309,7 +342,7 @@ async function migrateUsersAndOrgs() {
                         const orgRel = oldOrgsUsersResult.rows.find(
                             r => r.userId === oldUserId && r.orgId === oldOrgId
                         )
-                        
+
                         await prisma.orgsUsers.create({
                             data: {
                                 userId: newUserId,
@@ -317,7 +350,7 @@ async function migrateUsersAndOrgs() {
                                 role: orgRel?.role === 'ADMIN' ? 'ADMIN' : 'MEMBER',
                             },
                         })
-                        
+
                         console.log(`  → Added user ${newUserId} as ${orgRel?.role || 'MEMBER'}`)
                     }
                 }
@@ -327,10 +360,10 @@ async function migrateUsersAndOrgs() {
         // Connect GitHub installations to orgs based on old org relationships
         console.log(`\n${'='.repeat(50)}`)
         console.log('Connecting GitHub installations to new orgs...')
-        
+
         for (const [oldOrgId, installations] of installationsByOldOrgId.entries()) {
             const newOrgId = oldToNewOrgIdMap.get(oldOrgId)
-            
+
             if (!newOrgId) {
                 console.log(`\nNo mapping found for old org ${oldOrgId}, skipping ${installations.length} installations`)
                 continue
@@ -349,7 +382,7 @@ async function migrateUsersAndOrgs() {
 
                 if (existingInstallation) {
                     console.log(`\nConnecting GitHub installation ${inst.installationId} (${inst.accountLogin}) to org ${newOrgId}`)
-                    
+
                     if (!dryRun) {
                         try {
                             // Create the org-github relationship
@@ -382,13 +415,13 @@ async function migrateUsersAndOrgs() {
         console.log(`Created orgs: ${migratedOrgsCount}`)
         console.log(`Connected GitHub installations: ${connectedInstallationsCount}`)
         console.log(`Skipped users: ${skippedUsersCount}`)
-        
+
         if (dryRun) {
             console.log(`\n⚠️  This was a dry run. Run without --dry-run to actually migrate.`)
         }
 
         console.log(`\nNote: Sites and other relationships need to be migrated separately.`)
-        
+
     } catch (error) {
         console.error('Migration failed:', error)
         throw error
