@@ -7,6 +7,7 @@ import Stripe from 'stripe'
 
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { env } from './env'
+import { notifyError } from './errors'
 
 const stripeClient = new Stripe(env.STRIPE_SECRET_KEY || '', {
     apiVersion: '2025-05-28.basil',
@@ -21,6 +22,9 @@ export const auth = betterAuth({
         accountLinking: {
             enabled: true,
         },
+    },
+    onAPIError: {
+        onError: (e, ctx) => notifyError(e, 'better-auth '),
     },
     advanced: {
         crossSubDomainCookies: { enabled: false },
