@@ -103,19 +103,26 @@ async function migrateUsersAndOrgs() {
         console.timeEnd('fetch-old-orgs-users')
         console.log(`Found ${oldOrgsUsersResult.rows.length} org-user relationships`)
 
-        // Group by userId to find users' org relationships
+        // Group by userId to find users' org relationships (exclude GUEST users)
         const userOrgRelationships = new Map<string, OldOrgsUsers[]>()
         for (const rel of oldOrgsUsersResult.rows) {
-            if (!userOrgRelationships.has(rel.userId)) {
-                userOrgRelationships.set(rel.userId, [])
+            // Only consider ADMIN and MEMBER roles as actual org membership
+            if (rel.role === 'ADMIN' || rel.role === 'MEMBER') {
+                if (!userOrgRelationships.has(rel.userId)) {
+                    userOrgRelationships.set(rel.userId, [])
+                }
+                userOrgRelationships.get(rel.userId)!.push(rel)
             }
-            userOrgRelationships.get(rel.userId)!.push(rel)
         }
-        console.log(`  - ${userOrgRelationships.size} unique users with org relationships`)
+        console.log(`  - ${userOrgRelationships.size} unique users with org relationships (ADMIN/MEMBER only)`)
+
+        // Count GUEST relationships that were excluded
+        const guestRelationships = oldOrgsUsersResult.rows.filter(r => r.role === 'GUEST')
+        console.log(`  - ${guestRelationships.length} GUEST relationships excluded`)
 
         // Count unique orgs
         const uniqueOldOrgs = new Set(oldOrgsUsersResult.rows.map(r => r.orgId))
-        console.log(`  - ${uniqueOldOrgs.size} unique orgs`)
+        console.log(`  - ${uniqueOldOrgs.size} unique orgs (including those with only GUEST users)`)
 
         // Fetch old GitHub installations that were connected to orgs
         console.log('\nFetching GitHub installations from old database...')
@@ -164,12 +171,15 @@ async function migrateUsersAndOrgs() {
         // Track which users belong to which old orgs (for shared org migration)
         const oldOrgMembers = new Map<string, Set<string>>()
 
-        // First pass: identify all unique old orgs and their members
+        // First pass: identify all unique old orgs and their members (exclude GUEST users)
         for (const rel of oldOrgsUsersResult.rows) {
-            if (!oldOrgMembers.has(rel.orgId)) {
-                oldOrgMembers.set(rel.orgId, new Set())
+            // Only consider ADMIN and MEMBER users as actual org members
+            if (rel.role === 'ADMIN' || rel.role === 'MEMBER') {
+                if (!oldOrgMembers.has(rel.orgId)) {
+                    oldOrgMembers.set(rel.orgId, new Set())
+                }
+                oldOrgMembers.get(rel.orgId)!.add(rel.userId)
             }
-            oldOrgMembers.get(rel.orgId)!.add(rel.userId)
         }
 
         // Pre-generate IDs for shared orgs that have GitHub installations
