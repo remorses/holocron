@@ -22,7 +22,7 @@ export function ErrorPreview({ error }) {
             <div className='shrink-0'>⎿</div>
             <span>
                 Error:{' '}
-                <span className='dark:text-red-300 text-red-500 whitespace-pre-line'>
+                <span className='dark:text-orange-300 text-orange-500 whitespace-pre-line'>
                     {truncatedError}
                 </span>
             </span>
