@@ -151,11 +151,7 @@ function PageContent(props: Route.ComponentProps): any {
     // Early return for editor mode (only if editor is not disabled)
     if (previewMode === 'editor' && !isEditorDisabled) {
         return (
-            <PageRoot
-                toc={{
-                    toc: toc as any,
-                }}
-            >
+            <PageRoot>
                 <PageArticle className='docs-page-article !pt-0'>
                     <Suspense
                         fallback={
