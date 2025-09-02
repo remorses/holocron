@@ -602,6 +602,7 @@ export default function Page(props: Route.ComponentProps): any {
 export function ErrorBoundary({
     error,
     loaderData,
+
     params,
 }: Route.ErrorBoundaryProps) {
     const containerClass =
@@ -610,6 +611,11 @@ export function ErrorBoundary({
     const messageClass = 'text-base mb-2 text-muted-foreground'
     const preClass =
         'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2'
+
+    // Check if we're in a chat context
+    const url =
+        typeof window !== 'undefined' ? new URL(window.location.href) : null
+    const chatId = url?.searchParams.get('chatId')
 
     const isRetryableErrorWithClientLoader =
         (isRouteErrorResponse(error) && error.status === 404) ||
@@ -622,6 +628,15 @@ export function ErrorBoundary({
 
     if (isRouteErrorResponse(error)) {
         const { status, statusText } = error
+
+        // Show "page building in progress" message for 404 errors when in chat
+        if (status === 404 && chatId) {
+            return (
+                <div className={containerClass}>
+                    <h1 className={titleClass}>Site in construction...</h1>
+                </div>
+            )
+        }
 
         return (
             <div className={containerClass}>

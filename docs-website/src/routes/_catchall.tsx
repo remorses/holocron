@@ -14,7 +14,7 @@ import {
 } from 'react-router'
 // @ts-ignore
 import type { Route } from './+types/root'
-import { DocsJsonType,  } from 'docs-website/src/lib/docs-json'
+import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import JSONC from 'tiny-jsonc'
 
 import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
@@ -51,7 +51,6 @@ export async function loader({ request }: Route.LoaderArgs) {
     const cookies = parseCookies(cookieHeader)
     const chatId = cookies.chatId || url.searchParams.get('chatId')
     console.log(`${timerId} - cookies:`, { chatId })
-
 
     const domain = url.hostname.split(':')[0]
 
@@ -205,7 +204,7 @@ export async function loader({ request }: Route.LoaderArgs) {
             if (themeModules[docsJson.theme]) {
                 return themeModules[docsJson.theme]
             } else {
-              console.error(`cannot find theme css for ${docsJson.theme}`)
+                console.error(`cannot find theme css for ${docsJson.theme}`)
             }
         }
         return ''
@@ -258,8 +257,22 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     const preClass =
         'bg-muted text-muted-foreground p-4 rounded-md text-xs text-left overflow-auto w-full border mt-2'
 
+    // Check if we're in a chat context
+    const url =
+        typeof window !== 'undefined' ? new URL(window.location.href) : null
+    const chatId = url?.searchParams.get('chatId')
+
     if (isRouteErrorResponse(error)) {
         const { status, statusText } = error
+
+        // Show "page building in progress" message for 404 errors when in chat
+        if (status === 404 && chatId) {
+            return (
+                <div className={containerClass}>
+                    <h1 className={titleClass}>Page in construction...</h1>
+                </div>
+            )
+        }
 
         return (
             <div className={containerClass}>
