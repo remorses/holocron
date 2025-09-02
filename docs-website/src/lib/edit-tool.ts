@@ -351,7 +351,7 @@ export function createEditExecute({
                 if (!previous) {
                     return {
                         success: false,
-                        error: `No previous edit found for path: ${path}. Cannot undo.`,
+                        error: `No previous edit found for path: ${path}. Cannot undo`,
                     }
                 }
 
