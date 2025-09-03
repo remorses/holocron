@@ -14,8 +14,6 @@ const logger = console
 // Cookie name for GitHub login data
 export const GITHUB_LOGIN_DATA_COOKIE = 'github_login_data'
 
-
-
 function getWebhooks() {
     // https://tunnel.unframer.co/api/github/webhooks
     const webhooks = new Webhooks({
@@ -212,6 +210,21 @@ const webhooks = getWebhooks()
 export async function action({ request }: ActionFunctionArgs) {
     const text = await request.text()
     try {
+        // Parse the payload to check the app ID
+        const payload = JSON.parse(text)
+
+        // Check if the webhook is from our GitHub App
+        if (payload.installation?.app_id && env.GITHUB_APP_ID) {
+            const appId = String(payload.installation.app_id)
+            const expectedAppId = String(env.GITHUB_APP_ID)
+
+            if (appId !== expectedAppId) {
+                const message = `Ignoring webhook from different app. Expected: ${expectedAppId}, Received: ${appId}`
+                logger.log(message)
+                return new Response(message)
+            }
+        }
+
         await webhooks.verifyAndReceive({
             id: request.headers.get('x-github-delivery') || '',
             name: request.headers.get('x-github-event') || ('' as any),
