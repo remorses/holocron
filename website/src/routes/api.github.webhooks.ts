@@ -17,7 +17,7 @@ export const GITHUB_LOGIN_DATA_COOKIE = 'github_login_data'
 function getWebhooks() {
     // https://tunnel.unframer.co/api/github/webhooks
     const webhooks = new Webhooks({
-        secret: env.GITHUB_WEBSOCKET_SECRET!,
+        secret: env.GITHUB_WEBHOOKS_SECRET!,
     })
 
     webhooks.on('marketplace_purchase.purchased', async (event) => {

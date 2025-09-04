@@ -17,7 +17,8 @@
     "deployment": "doppler run --preserve-env -- pnpm vite-node scripts/deployment.ts",
     "_dev_cloudflare": "doppler secrets download --format=env --no-file > .dev.vars && react-router dev --port 7664",
     "gen-client": "DIRS=(../cli/src/generated ../docs-website/src/generated) && tsc --incremental; for DIR in \"${DIRS[@]}\"; do rm -rf $DIR && mkdir -p $DIR && cp dist/src/lib/spiceflow-client.* $DIR; done",
-    "start": "doppler run -- node ./build/server/server.js --port 7664",
+    "start": "doppler run -c dev -- node ./build/server/server.js --port 7664",
+    "start:prod": "doppler run -c production -- node ./build/server/server.js --port 7664",
     "typecheck": "react-router typegen && tsc"
   },
   "exports": {
@@ -45,7 +46,7 @@
     "@motionone/easing": "^10.18.0",
     "@octokit/webhooks": "^14.0.2",
     "@openrouter/ai-sdk-provider": "^1.1.2",
-    "@prisma/client": "^6.14.0",
+    "@prisma/client": "^6.15.0",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-checkbox": "^1.3.2",

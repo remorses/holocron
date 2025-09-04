@@ -33,7 +33,7 @@ export const env = {
     LANCEDB_API_KEY: process.env.LANCEDB_API_KEY,
     OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
     BASETEN_API_KEY: process.env.BASETEN_API_KEY,
-    GITHUB_WEBSOCKET_SECRET: process.env.GITHUB_WEBSOCKET_SECRET,
+    GITHUB_WEBHOOKS_SECRET: process.env.GITHUB_WEBHOOKS_SECRET,
 }
 
 // console.log(env)

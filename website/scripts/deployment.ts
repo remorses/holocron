@@ -51,10 +51,11 @@ async function main() {
         appName,
         port,
         buildRemotely: true,
+
         dockerfile: 'Dockerfile',
         minInstances: isProduction ? 1 : 0,
         forceHttps: false,
-        maxInstances: 1,
+        maxInstances: 3,
         kill_timeout: 300,
         healthCheckPath: '/api/health',
         memorySize: '1gb',

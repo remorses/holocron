@@ -21,6 +21,8 @@ import { GITHUB_LOGIN_DATA_COOKIE } from './api.github.webhooks'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
+import { Globe, Lock } from 'lucide-react'
 import { useState } from 'react'
 const COOKIE_OPTIONS = {
     httpOnly: true,
@@ -170,6 +172,32 @@ export default function ConnectGitHub() {
                     </p>
                 </div>
 
+                <div className='flex flex-col gap-2'>
+                    <Label htmlFor='visibility'>Repository Visibility</Label>
+                    <Select name='visibility' defaultValue='public'>
+                        <SelectTrigger id='visibility'>
+                            <SelectValue placeholder='Select visibility' />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value='public'>
+                                <div className='flex items-center gap-2'>
+                                    <Globe className='size-4' />
+                                    <span>Public</span>
+                                </div>
+                            </SelectItem>
+                            <SelectItem value='private'>
+                                <div className='flex items-center gap-2'>
+                                    <Lock className='size-4' />
+                                    <span>Private</span>
+                                </div>
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <p className='text-sm text-muted-foreground'>
+                        Public repositories are visible to everyone. Private repositories are only accessible to you and people you explicitly grant access.
+                    </p>
+                </div>
+
                 <Button
                     type='submit'
                     className='font-semibold'
@@ -195,9 +223,14 @@ export async function action({ request, params }: Route.ActionArgs) {
     // Parse form data
     const formData = await request.formData()
     const repoName = formData.get('repoName') as string
+    const visibility = formData.get('visibility') as 'public' | 'private'
 
     if (!repoName || !/^[a-zA-Z0-9-_]+$/.test(repoName)) {
         throw new Response('Invalid repository name', { status: 400 })
+    }
+
+    if (!visibility || !['public', 'private'].includes(visibility)) {
+        throw new Response('Invalid visibility', { status: 400 })
     }
 
     // Parse cookies
@@ -348,7 +381,7 @@ export async function action({ request, params }: Route.ActionArgs) {
         octokit: octokit.rest,
         owner: githubAccountLogin,
         oauthToken: githubInstallation.oauthToken!,
-        privateRepo: false,
+        privateRepo: visibility === 'private',
         repo: repoName,
         homepage,
     })
@@ -357,6 +390,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     updateData.githubRepo = repoName
     updateData.githubFolder = '' // root folder
     updateData.githubRepoId = result?.githubRepoId
+    updateData.visibility = visibility
 
     // Update branch with GitHub info if it exists
     if (existingBranch) {

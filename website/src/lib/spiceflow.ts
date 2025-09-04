@@ -98,22 +98,34 @@ export const app = new Spiceflow({ basePath: '/api' })
             if (githubPath.startsWith('/')) {
                 githubPath = githubPath.slice(1)
             }
-            // First, check if the user can access the requested branch
+            // First, check if the branch exists and get site visibility
             const branch = await prisma.siteBranch.findFirst({
                 where: {
                     branchId,
+                },
+                include: {
                     site: {
-                        org: {
-                            users: {
-                                some: {
-                                    userId,
+                        include: {
+                            org: {
+                                include: {
+                                    users: true,
                                 },
                             },
                         },
                     },
                 },
             })
+            
             if (!branch) {
+                throw new Error('Branch not found')
+            }
+
+            const site = branch.site
+            const isPublic = site.visibility === 'public'
+            const isOrgMember = userId && site.org.users.some(u => u.userId === userId)
+
+            // For private sites, require user to be org member
+            if (!isPublic && !isOrgMember) {
                 throw new Error('You do not have access to this branch')
             }
 
@@ -1240,6 +1252,50 @@ export const app = new Spiceflow({ basePath: '/api' })
                     isDefault: b.name === repoData.default_branch,
                 })),
                 defaultBranch: repoData.default_branch,
+            }
+        },
+    })
+    .route({
+        method: 'POST',
+        path: '/updateSiteVisibility',
+        request: z.object({
+            siteId: z.string().min(1, 'siteId is required'),
+            visibility: z.enum(['public', 'private']),
+        }),
+        async handler({ request, state: { userId } }) {
+            const { siteId, visibility } = await request.json()
+
+            if (!userId) {
+                throw new AppError('User not authenticated')
+            }
+
+            // Find site and check user access
+            const site = await prisma.site.findFirst({
+                where: {
+                    siteId,
+                    org: {
+                        users: {
+                            some: { userId },
+                        },
+                    },
+                },
+            })
+
+            if (!site) {
+                throw new AppError('Site not found or user has no access')
+            }
+
+            // Update site visibility
+            const updatedSite = await prisma.site.update({
+                where: { siteId },
+                data: { visibility },
+            })
+
+            return {
+                success: true,
+                siteId,
+                visibility: updatedSite.visibility,
+                message: `Site visibility updated to ${visibility}`,
             }
         },
     })

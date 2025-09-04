@@ -23,60 +23,74 @@ export async function loader({
         throw new Error('Request aborted')
     }
 
-    const [siteBranch, chatHistory, siteBranches] = await Promise.all([
+    // Fetch all data in parallel
+    const [siteBranch, chatHistory] = await Promise.all([
         prisma.siteBranch.findFirst({
             where: {
                 branchId: branchId,
-                site: {
-                    org: {
-                        users: {
-                            some: { userId },
-                        },
-                    },
-                },
             },
-            include: {
+            select: {
+                branchId: true,
+                title: true,
+                githubBranch: true,
+                createdAt: true,
+                updatedAt: true,
+                lastGithubSyncAt: true,
+                lastGithubSyncCommit: true,
+                docsJson: true,
                 site: {
-                    include: {
-                        org: true,
+                    select: {
+                        siteId: true,
+                        name: true,
+                        orgId: true,
+                        visibility: true,
+                        githubOwner: true,
+                        githubRepo: true,
+                        githubFolder: true,
+                        defaultLocale: true,
+                        createdAt: true,
+                        org: {
+                            select: {
+                                orgId: true,
+                                users: {
+                                    select: {
+                                        userId: true,
+                                    },
+                                },
+                            },
+                        },
                         githubInstallations: {
                             where: {
                                 appId: env.GITHUB_APP_ID!,
+                            },
+                            select: {
+                                installationId: true,
+                                appId: true,
                             },
                         },
                     },
                 },
             },
         }),
-        prisma.chat.findMany({
-            where: {
-                userId,
-                branchId,
-            },
-            select: {
-                chatId: true,
-                title: true,
-                createdAt: true,
-                branch: {
-                    select: {
-                        githubBranch: true,
-                    },
-                },
-            },
-            orderBy: { createdAt: 'desc' },
-        }),
-        prisma.siteBranch.findMany({
-            where: {
-                siteId: branchId,
-            },
-            select: {
-                branchId: true,
-                githubBranch: true,
-            },
-            orderBy: {
-                createdAt: 'asc',
-            },
-        }),
+        userId
+            ? prisma.chat.findMany({
+                  where: {
+                      userId,
+                      branchId,
+                  },
+                  select: {
+                      chatId: true,
+                      title: true,
+                      createdAt: true,
+                      branch: {
+                          select: {
+                              githubBranch: true,
+                          },
+                      },
+                  },
+                  orderBy: { createdAt: 'desc' },
+              })
+            : Promise.resolve([]),
     ])
 
     if (!siteBranch) {
@@ -84,10 +98,19 @@ export async function loader({
     }
 
     const site = siteBranch.site
+    const isPublic = site.visibility === 'public'
+    const isOrgMember =
+        userId && site.org.users.some((u) => u.userId === userId)
+
+    // For private sites, require user to be org member
+    if (!isPublic && !isOrgMember) {
+        throw new Error('Access denied')
+    }
+
     const siteId = site.siteId
 
-    // Get all branches for this site
-    const allSiteBranches = await prisma.siteBranch.findMany({
+    // Now fetch all branches for this site
+    const siteBranches = await prisma.siteBranch.findMany({
         where: {
             siteId,
         },
@@ -106,7 +129,7 @@ export async function loader({
         branchId,
         siteBranch,
         chatHistory,
-        siteBranches: allSiteBranches,
+        siteBranches,
     }
 }
 export function Component({ loaderData }: Route.ComponentProps) {

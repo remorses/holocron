@@ -44,6 +44,7 @@ import { ChatProvider, ChatState } from 'contesto/src/chat/chat-provider'
 import { env, supportEmail } from 'docs-website/src/lib/env'
 import { formatDistanceToNow } from 'date-fns'
 import { Button } from '../components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { GithubIcon, Mail } from 'lucide-react'
 import { useShouldHideBrowser, useThrowingFn } from '../lib/hooks'
 import { apiClient } from '../lib/spiceflow-client'
@@ -73,12 +74,49 @@ export async function loader({
         throw new Error('Request aborted')
     }
 
-    // Fetch chat and branch info
-    const [chat, siteBranch] = await Promise.all([
+    // Fetch branch and chat in parallel
+    const [siteBranch, chatData] = await Promise.all([
+        prisma.siteBranch.findFirst({
+            where: {
+                branchId,
+            },
+            select: {
+                branchId: true,
+                title: true,
+                githubBranch: true,
+                createdAt: true,
+                updatedAt: true,
+                lastGithubSyncAt: true,
+                lastGithubSyncCommit: true,
+                docsJson: true,
+                domains: true,
+                site: {
+                    select: {
+                        siteId: true,
+                        name: true,
+                        orgId: true,
+                        visibility: true,
+                        githubOwner: true,
+                        githubRepo: true,
+                        githubFolder: true,
+                        defaultLocale: true,
+                        locales: true,
+                        org: {
+                            select: {
+                                users: {
+                                    select: {
+                                        userId: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        }),
         prisma.chat.findUnique({
             where: {
                 chatId: chatId,
-                userId,
             },
             include: {
                 messages: {
@@ -93,29 +131,31 @@ export async function loader({
                 },
             },
         }),
-        prisma.siteBranch.findFirst({
-            where: {
-                branchId,
-            },
-            include: {
-                domains: true,
-                site: {
-                    include: {
-                        locales: true,
-                    },
-                },
-            },
-        }),
     ])
 
-    if (!chat) {
-        throw new Error('Chat not found')
-    }
     if (!siteBranch) {
         throw new Error('Branch not found')
     }
 
+    if (!chatData) {
+        throw new Error('Chat not found')
+    }
+
     const site = siteBranch.site
+    const isPublic = site.visibility === 'public'
+    const isOrgMember = userId && site.org.users.some(u => u.userId === userId)
+
+    // For private sites, require user to be org member
+    if (!isPublic && !isOrgMember) {
+        throw new Error('Access denied')
+    }
+
+    // For private sites, ensure the chat belongs to the user
+    if (!isPublic && chatData.userId !== userId) {
+        throw new Error('Chat not found')
+    }
+
+    const chat = chatData
 
     // Create PR URL if chat has a PR number
     const prUrl = chat.prNumber
@@ -319,6 +359,7 @@ function RightSide() {
                     {/* <TabsTrigger value='errors'>Errors</TabsTrigger> */}
                 </TabsList>
                 <div className='grow'></div>
+                <VisibilitySwitch />
                 <FeedbackButton />
                 <GithubRepoButton />
                 <GitHubSyncStatus />
@@ -370,6 +411,90 @@ const scaleDownElement = memoize(function (iframeScale) {
         height: `${Number(100 / iframeScale).toFixed(1)}%`,
     }
 })
+
+function VisibilitySwitch() {
+    const { siteBranch, siteId, session } = useLoaderData<typeof loader>()
+    const branchData = useRouteLoaderData(
+        'routes/org.$orgId.branch.$branchId',
+    ) as BranchRoute.ComponentProps['loaderData']
+    
+    const site = branchData?.site
+    const [visibility, setVisibility] = useState(site?.visibility || 'private')
+    const [isUpdating, setIsUpdating] = useState(false)
+    const [errorMessage, setErrorMessage] = useState('')
+    
+    // Only show visibility switch for org members
+    const isOrgMember = session?.userId && site?.org?.users?.some(u => u.userId === session.userId)
+    if (!isOrgMember) {
+        return null
+    }
+    
+    const handleVisibilityChange = async (newVisibility: string) => {
+        setIsUpdating(true)
+        setErrorMessage('')
+        const oldVisibility = visibility
+        
+        try {
+            setVisibility(newVisibility as 'public' | 'private')
+            
+            const { error } = await apiClient.api.updateSiteVisibility.post({
+                siteId,
+                visibility: newVisibility as 'public' | 'private',
+            })
+            
+            if (error) throw error
+            
+        } catch (err) {
+            console.error(err)
+            setErrorMessage(err.message || 'Failed to update visibility')
+            // Revert on error
+            setVisibility(oldVisibility)
+        } finally {
+            setIsUpdating(false)
+        }
+    }
+    
+    return (
+        <Popover
+            open={!!errorMessage}
+            onOpenChange={(open) => {
+                if (!open) setErrorMessage('')
+            }}
+        >
+            <PopoverTrigger asChild>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <div>
+                            <Select
+                                value={visibility}
+                                onValueChange={handleVisibilityChange}
+                                disabled={isUpdating}
+                            >
+                                <SelectTrigger className='w-[130px]'>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value='public'>Public</SelectItem>
+                                    <SelectItem value='private'>Private</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        {visibility === 'public' 
+                            ? 'This site is publicly visible. Anyone with the link can view it.' 
+                            : 'This site is private. Only organization members can view it.'}
+                    </TooltipContent>
+                </Tooltip>
+            </PopoverTrigger>
+            
+            <InlineErrorMessagePopoverContent
+                errorMessage={errorMessage}
+                onClear={() => setErrorMessage('')}
+            />
+        </Popover>
+    )
+}
 
 function FeedbackButton() {
     const { session } = useLoaderData<typeof loader>()
