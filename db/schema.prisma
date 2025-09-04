@@ -188,6 +188,7 @@ model Site {
   githubRepo  String?
   githubRepoId  Int @default(0)
 
+  visibility  SiteVisibility @default(private)
 
   locales     SiteEnabledLocale[]
 
@@ -195,6 +196,11 @@ model Site {
 
   @@index([createdAt])
   @@index([orgId])
+}
+
+enum SiteVisibility {
+ private
+ public
 }
 
 // model PreviewDataForSite {
