@@ -44,7 +44,13 @@ import { ChatProvider, ChatState } from 'contesto/src/chat/chat-provider'
 import { env, supportEmail } from 'docs-website/src/lib/env'
 import { formatDistanceToNow } from 'date-fns'
 import { Button } from '../components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '../components/ui/select'
 import { GithubIcon, Mail } from 'lucide-react'
 import { useShouldHideBrowser, useThrowingFn } from '../lib/hooks'
 import { apiClient } from '../lib/spiceflow-client'
@@ -143,7 +149,8 @@ export async function loader({
 
     const site = siteBranch.site
     const isPublic = site.visibility === 'public'
-    const isOrgMember = userId && site.org.users.some(u => u.userId === userId)
+    const isOrgMember =
+        userId && site.org.users.some((u) => u.userId === userId)
 
     // For private sites, require user to be org member
     if (!isPublic && !isOrgMember) {
@@ -213,12 +220,14 @@ export async function loader({
 
     const githubFolder = site.githubFolder
     const siteId = site.siteId
-    
+
     // Read cookie to determine default tab preference
     const cookies = parse(request.headers.get('Cookie') || '')
     const prefersEditorView = cookies[PREFERS_EDITOR_VIEW_COOKIE] === 'true'
-    const initialActiveTab: 'preview' | 'editor' = prefersEditorView ? 'editor' : 'preview'
-    
+    const initialActiveTab: 'preview' | 'editor' = prefersEditorView
+        ? 'editor'
+        : 'preview'
+
     return {
         chatId,
         chat,
@@ -278,12 +287,15 @@ function ChatContent() {
 }
 
 function RightSide() {
-    const { chat, iframeUrl, host, siteBranch, initialActiveTab } = useLoaderData<typeof loader>()
+    const { chat, iframeUrl, host, siteBranch, initialActiveTab } =
+        useLoaderData<typeof loader>()
     const branchData = useRouteLoaderData(
         'routes/org.$orgId.branch.$branchId',
     ) as BranchRoute.ComponentProps['loaderData']
     const iframeRef = useRef<HTMLIFrameElement>(null)
-    const [activeTab, setActiveTab] = useState<'preview' | 'editor'>(initialActiveTab)
+    const [activeTab, setActiveTab] = useState<'preview' | 'editor'>(
+        initialActiveTab,
+    )
     const previewMode = activeTab
 
     useEffect(() => {
@@ -362,7 +374,6 @@ function RightSide() {
                 <VisibilitySwitch />
                 <FeedbackButton />
                 <GithubRepoButton />
-                <GitHubSyncStatus />
                 {/* <GitHubSyncButton /> */}
                 <InstallGithubAppToolbar />
             </div>
@@ -417,33 +428,34 @@ function VisibilitySwitch() {
     const branchData = useRouteLoaderData(
         'routes/org.$orgId.branch.$branchId',
     ) as BranchRoute.ComponentProps['loaderData']
-    
+
     const site = branchData?.site
     const [visibility, setVisibility] = useState(site?.visibility || 'private')
     const [isUpdating, setIsUpdating] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
-    
+
     // Only show visibility switch for org members
-    const isOrgMember = session?.userId && site?.org?.users?.some(u => u.userId === session.userId)
+    const isOrgMember =
+        session?.userId &&
+        site?.org?.users?.some((u) => u.userId === session.userId)
     if (!isOrgMember) {
         return null
     }
-    
+
     const handleVisibilityChange = async (newVisibility: string) => {
         setIsUpdating(true)
         setErrorMessage('')
         const oldVisibility = visibility
-        
+
         try {
             setVisibility(newVisibility as 'public' | 'private')
-            
+
             const { error } = await apiClient.api.updateSiteVisibility.post({
                 siteId,
                 visibility: newVisibility as 'public' | 'private',
             })
-            
+
             if (error) throw error
-            
         } catch (err) {
             console.error(err)
             setErrorMessage(err.message || 'Failed to update visibility')
@@ -453,7 +465,7 @@ function VisibilitySwitch() {
             setIsUpdating(false)
         }
     }
-    
+
     return (
         <Popover
             open={!!errorMessage}
@@ -462,32 +474,33 @@ function VisibilitySwitch() {
             }}
         >
             <PopoverTrigger asChild>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <div>
-                            <Select
-                                value={visibility}
-                                onValueChange={handleVisibilityChange}
-                                disabled={isUpdating}
-                            >
-                                <SelectTrigger className='w-[130px]'>
+                <div>
+                    <Select
+                        value={visibility}
+                        onValueChange={handleVisibilityChange}
+                        disabled={isUpdating}
+                        variant='ghost'
+                    >
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <SelectTrigger className='w-[110px] h-8'>
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value='public'>Public</SelectItem>
-                                    <SelectItem value='private'>Private</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        {visibility === 'public' 
-                            ? 'This site is publicly visible. Anyone with the link can view it.' 
-                            : 'This site is private. Only organization members can view it.'}
-                    </TooltipContent>
-                </Tooltip>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {visibility === 'public'
+                                    ? 'This site is publicly visible. Anyone with the link can view it.'
+                                    : 'This site is private. Only organization members can view it.'}
+                            </TooltipContent>
+                        </Tooltip>
+                        <SelectContent>
+                            <SelectItem value='public'>Public</SelectItem>
+                            <SelectItem value='private'>Private</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </PopoverTrigger>
-            
+
             <InlineErrorMessagePopoverContent
                 errorMessage={errorMessage}
                 onClear={() => setErrorMessage('')}
@@ -498,14 +511,14 @@ function VisibilitySwitch() {
 
 function FeedbackButton() {
     const { session } = useLoaderData<typeof loader>()
-    
+
     const userEmail = session?.user?.email || ''
     const subject = encodeURIComponent('Feedback for Holocron')
     const body = encodeURIComponent(`From: ${userEmail}\n\n`)
     const mailtoLink = `mailto:${supportEmail}?subject=${subject}&body=${body}`
-    
+
     return (
-        <Button variant='ghost' asChild>
+        <Button variant='ghost' size='sm' asChild>
             <a href={mailtoLink}>
                 <Mail className='size-4 mr-1' />
                 Feedback
@@ -515,6 +528,7 @@ function FeedbackButton() {
 }
 
 function GithubRepoButton() {
+    const { siteBranch } = useLoaderData<typeof loader>()
     const branchData = useRouteLoaderData(
         'routes/org.$orgId.branch.$branchId',
     ) as BranchRoute.ComponentProps['loaderData']
@@ -530,51 +544,64 @@ function GithubRepoButton() {
 
     const repoUrl = `https://github.com/${githubOwner}/${githubRepo}${githubFolder ? '/' + githubFolder.replace(/^\/+/, '') : ''}`
 
-    return (
-        <Button variant='secondary' asChild>
-            <a href={repoUrl} target='_blank' rel='noopener noreferrer'>
-                <GithubIcon className='size-4 mr-2' />
-                {githubOwner}/{githubRepo}
-            </a>
-        </Button>
-    )
-}
+    const hasSyncInfo =
+        siteBranch?.lastGithubSyncAt &&
+        siteBranch?.lastGithubSyncCommit &&
+        branchData.site.githubInstallations?.length
 
-function GitHubSyncStatus() {
-    const { siteBranch } = useLoaderData<typeof loader>()
-    const branchData = useRouteLoaderData(
-        'routes/org.$orgId.branch.$branchId',
-    ) as BranchRoute.ComponentProps['loaderData']
+    const syncInfo = (() => {
+        if (
+            !hasSyncInfo ||
+            !siteBranch?.lastGithubSyncAt ||
+            !siteBranch?.lastGithubSyncCommit
+        )
+            return null
 
-    const githubOwner = branchData?.site.githubOwner
-    const githubRepo = branchData?.site.githubRepo
+        const timeAgo = formatDistanceToNow(
+            new Date(siteBranch.lastGithubSyncAt),
+            {
+                addSuffix: true,
+            },
+        )
+        const shortCommit = siteBranch.lastGithubSyncCommit.slice(0, 7)
+        const commitUrl = `https://github.com/${githubOwner}/${githubRepo}/commit/${siteBranch.lastGithubSyncCommit}`
 
-    if (
-        !siteBranch?.lastGithubSyncAt ||
-        !siteBranch?.lastGithubSyncCommit ||
-        !githubOwner ||
-        !githubRepo
-    ) {
-        return null
-    }
-    if (!branchData.site.githubInstallations?.length) return null
-
-    const timeAgo = formatDistanceToNow(new Date(siteBranch.lastGithubSyncAt), {
-        addSuffix: true,
-    })
-    const shortCommit = siteBranch.lastGithubSyncCommit.slice(0, 7)
-    const commitUrl = `https://github.com/${githubOwner}/${githubRepo}/commit/${siteBranch.lastGithubSyncCommit}`
+        return { timeAgo, shortCommit, commitUrl }
+    })()
 
     return (
-        <div className='flex justify-center'>
-            <Button variant='outline' asChild>
-                <Link to={commitUrl} target='_blank' rel='noopener noreferrer'>
-                    <span>
-                        <strong>Last sync</strong> {timeAgo}: {shortCommit}
-                    </span>
-                </Link>
-            </Button>
-        </div>
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <Button variant='ghost' size='sm' asChild>
+                    <a href={repoUrl} target='_blank' rel='noopener noreferrer'>
+                        <GithubIcon className='size-4 mr-2' />
+                        {githubOwner}/{githubRepo}
+                    </a>
+                </Button>
+            </TooltipTrigger>
+            {syncInfo && (
+                <TooltipContent className='max-w-xs'>
+                    <div className='space-y-1'>
+                        <div className='font-medium'>GitHub Repository</div>
+                        <div className='text-xs text-muted-foreground'>
+                            Last sync: {syncInfo.timeAgo}
+                        </div>
+                        <div className='text-xs'>
+                            Commit:{' '}
+                            <a
+                                href={syncInfo.commitUrl}
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                className='text-primary hover:underline'
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                {syncInfo.shortCommit}
+                            </a>
+                        </div>
+                    </div>
+                </TooltipContent>
+            )}
+        </Tooltip>
     )
 }
 
@@ -722,9 +749,8 @@ function InstallGithubAppToolbar() {
             <TooltipTrigger asChild>
                 <Link to={installUrl.pathname + installUrl.search}>
                     <Button
-                        variant='default'
-                        size={'sm'}
-                        className='bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50'
+                        variant='ghost'
+                        size='sm'
                         disabled={isChatGenerating}
                     >
                         <div className='flex items-center gap-2'>
@@ -735,7 +761,9 @@ function InstallGithubAppToolbar() {
                 </Link>
             </TooltipTrigger>
             {isChatGenerating ? (
-                <TooltipContent>Wait for chat to finish generating</TooltipContent>
+                <TooltipContent>
+                    Wait for chat to finish generating
+                </TooltipContent>
             ) : (
                 <TooltipContent>Connect GitHub to create PRs</TooltipContent>
             )}

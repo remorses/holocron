@@ -1,5 +1,16 @@
 # Changelog
 
+## 2025-01-24 20:20
+
+- Add variant prop support to Select component (ghost variant removes border)
+- Update visibility select to use ghost variant to match other toolbar buttons
+
+## 2025-01-24 20:15
+
+- Merge GitHub sync status into tooltip on GitHub repo button
+- Remove separate GitHubSyncStatus button from toolbar
+- Update all toolbar buttons to use size "sm" and variant "ghost" for consistency
+
 ## 2025-01-24 20:10
 
 - Switch to JSONC parser for meta.json validation instead of extractJsonCComments
