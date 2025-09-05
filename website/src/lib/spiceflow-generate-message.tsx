@@ -921,15 +921,24 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             prisma.siteBranch.findFirst({
                 where: {
                     branchId,
-                    site: {
-                        org: {
-                            users: {
-                                some: {
-                                    userId,
+                    OR: [
+                        {
+                            site: {
+                                org: {
+                                    users: {
+                                        some: {
+                                            userId,
+                                        },
+                                    },
                                 },
                             },
                         },
-                    },
+                        {
+                            site: {
+                                visibility: 'public',
+                            },
+                        },
+                    ],
                 },
                 include: {
                     site: {
@@ -942,7 +951,6 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
             prisma.chat.findFirst({
                 where: {
                     chatId,
-                    userId,
                 },
             }),
             getFilesForSource({
@@ -953,6 +961,12 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
         ])
         if (!branch) {
             throw new Error('You do not have access to this branch')
+        }
+
+        if (chat && chat.userId !== userId) {
+            throw new Error(
+                'This chat belongs to another user. Please start a new chat instead.',
+            )
         }
 
         // Create the last user message before streaming
