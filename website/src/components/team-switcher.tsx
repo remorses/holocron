@@ -46,7 +46,7 @@ export function TeamSwitcher({
     const { siteId: currentSiteId } = params
     const [open, setOpen] = React.useState(false)
 
-    if (!sites.length) return null
+    if (!sites.length) return <div className={className} />
 
     const activeSite =
         sites.find((site) => site.siteId === currentSiteId) || sites[0] || null

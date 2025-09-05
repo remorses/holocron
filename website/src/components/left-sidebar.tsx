@@ -214,6 +214,7 @@ export function ChatLeftSidebar({
             <div className='justify-between max-w-[900px] w-full mx-auto row-span-1 z-10 gap-2 pr-2 flex'>
                 <TeamSwitcher className='grow ' sites={userSites || []} />
 
+
                 <div className='flex items-start gap-2'>
                     <ChatCombobox chatId={chatId} />
                     <NewChatButton />
