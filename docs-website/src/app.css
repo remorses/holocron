@@ -26,7 +26,6 @@ summary {
     font-display: swap;
 }
 
-
 :root {
     --color-fd-primary: hsl(220, 91%, 54%);
     --fd-layout-width: 1460px;
@@ -48,12 +47,18 @@ summary {
 /* llm text selection highlight using accent color */
 ::highlight(llm-text-selection) {
     background: color-mix(in srgb, var(--color-fd-primary) 20%, transparent);
-    border: 1px solid color-mix(in srgb, var(--color-fd-primary) 40%, transparent);
+    border: 1px solid
+        color-mix(in srgb, var(--color-fd-primary) 40%, transparent);
 }
 .dark {
     ::highlight(llm-text-selection) {
-        background: color-mix(in srgb, var(--color-fd-primary) 30%, transparent);
-        border: 1px solid color-mix(in srgb, var(--color-fd-primary) 50%, transparent);
+        background: color-mix(
+            in srgb,
+            var(--color-fd-primary) 30%,
+            transparent
+        );
+        border: 1px solid
+            color-mix(in srgb, var(--color-fd-primary) 50%, transparent);
     }
 }
 mark {
@@ -61,7 +66,6 @@ mark {
 }
 .dark mark {
     background-color: theme(colors.yellow.100/0.6);
-
 }
 
 .navIcon {
@@ -113,11 +117,10 @@ mark {
 }
 
 /* TODO Optimize rendering for long content pages */
-.page-content-markdown > *:nth-child(n+7) {
+.page-content-markdown > *:nth-child(n + 7) {
     content-visibility: auto;
     /* contain-intrinsic-size: auto 500px; */
 }
-
 
 .fd-steps {
     content-visibility: visible !important;

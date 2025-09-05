@@ -547,7 +547,7 @@ export default function Chat({
             <div
                 style={
                     {
-                        '--show-more-bg': '#000',
+                        '--show-more-bg': 'var(--color-root-background)',
                     } as CSSProperties
                 }
                 className='flex grow w-full max-w-[900px] flex-col gap-3 pr-2 pl-0 justify-center'
@@ -761,8 +761,14 @@ function Footer() {
         submit,
         messages,
     } = useChatContext()
-    const { chat, chatId, githubFolder, prUrl, projectPagesFilenames, branchId } =
-        useLoaderData() as Route.ComponentProps['loaderData']
+    const {
+        chat,
+        chatId,
+        githubFolder,
+        prUrl,
+        projectPagesFilenames,
+        branchId,
+    } = useLoaderData() as Route.ComponentProps['loaderData']
     const branchData = useRouteLoaderData(
         'routes/org.$orgId.branch.$branchId',
     ) as BranchRoute.ComponentProps['loaderData']
@@ -803,7 +809,7 @@ function Footer() {
         >
             <div className='space-y-3'>
                 <div className='flex flex-col gap-2 '>
-                    <div className='flex gap-1 empty:hidden justify-start items-center bg-black p-1 rounded-md'>
+                    <div className='flex gap-1 empty:hidden justify-start items-center bg-root-background p-1 rounded-md'>
                         {showCreatePR && (
                             <DiffStats
                                 filesInDraft={filesInDraft}
@@ -829,7 +835,11 @@ function Footer() {
                         <div className='flex'>
                             <ContextButton
                                 textareaRef={textareaRef}
-                                contextOptions={projectPagesFilenames?.map(f => `@${f}`) || []}
+                                contextOptions={
+                                    projectPagesFilenames?.map(
+                                        (f) => `@${f}`,
+                                    ) || []
+                                }
                             />
                         </div>
                         <ChatTextarea
@@ -837,7 +847,9 @@ function Footer() {
                             disabled={false}
                             placeholder='Ask me anything...'
                             className=''
-                            mentionOptions={projectPagesFilenames?.map(f => `@${f}`) || []}
+                            mentionOptions={
+                                projectPagesFilenames?.map((f) => `@${f}`) || []
+                            }
                         />
                         {/* Textarea buttons */}
                         <div className='flex items-center justify-between gap-2 p-3'>

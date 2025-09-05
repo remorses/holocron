@@ -64,7 +64,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     src='https://assets.onedollarstats.com/stonks.js'
                 ></script>
             </head>
-            <body className='h-full flex flex-col grow dark:bg-black'>
+            <body className='h-full flex flex-col grow dark:bg-root-background '>
                 {children}
                 <ScrollRestoration />
                 <Scripts />

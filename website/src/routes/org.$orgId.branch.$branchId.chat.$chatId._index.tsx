@@ -274,7 +274,7 @@ function ChatContent() {
     useFilesInDraftAutoSave(chatId)
 
     return (
-        <div className='dark:bg-black flex h-full gap-2 py-4 px-3'>
+        <div className=' flex h-full gap-2 py-4 px-3'>
             <ChatLeftSidebar />
 
             {!hideBrowser && (
