@@ -22,6 +22,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { Combobox } from './ui/combobox'
 import { Badge } from './ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
+import { useErrorPopover } from './error-popover'
 import {
     Command,
     CommandEmpty,
@@ -88,6 +89,7 @@ function NewChatButton() {
     const { orgId, branchId } = params
     const [open, setOpen] = React.useState(false)
     const [isCreatingChat, setIsCreatingChat] = React.useState(false)
+    const { setErrorMessage, ErrorTooltipAnchor } = useErrorPopover()
     const { siteBranches } = branchData
 
     const handleNewChat = async (selectedBranchId: string) => {
@@ -95,6 +97,7 @@ function NewChatButton() {
 
         setIsCreatingChat(true)
         setOpen(false)
+        setErrorMessage('')
 
         try {
             const { data, error } = await apiClient.api.newChat.post({
@@ -103,7 +106,11 @@ function NewChatButton() {
             })
 
             if (error) {
-                console.error('Error creating new chat:', error)
+                setErrorMessage(
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to create new chat',
+                )
                 return
             }
 
@@ -117,72 +124,78 @@ function NewChatButton() {
                 )
             }
         } catch (error) {
-            console.error('Failed to create new chat:', error)
+            setErrorMessage(
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to create new chat',
+            )
         } finally {
             setIsCreatingChat(false)
         }
     }
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <PopoverTrigger
-                        onClick={(e) => {
-                            if (siteBranches.length <= 1) {
-                                e.stopPropagation()
-                                e.preventDefault()
-                                handleNewChat(siteBranches[0]?.branchId!)
-                            }
-                        }}
-                        asChild
-                    >
-                        <Button
-                            variant='secondary'
-                            className='flex items-center gap-1 px-3'
-                            disabled={isCreatingChat}
+        <ErrorTooltipAnchor>
+            <Popover open={open} onOpenChange={setOpen}>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <PopoverTrigger
+                            onClick={(e) => {
+                                if (siteBranches.length <= 1) {
+                                    e.stopPropagation()
+                                    e.preventDefault()
+                                    handleNewChat(siteBranches[0]?.branchId!)
+                                }
+                            }}
+                            asChild
                         >
-                            {isCreatingChat ? (
-                                <Loader2 className='h-4 w-4 animate-spin' />
-                            ) : (
-                                <PlusIcon className='h-4 w-4' />
-                            )}
-                            <ChevronDown className='h-3 w-3' />
-                        </Button>
-                    </PopoverTrigger>
-                </TooltipTrigger>
-                <TooltipContent>
-                    {isCreatingChat ? 'Creating new chat...' : 'New chat'}
-                </TooltipContent>
-            </Tooltip>
-            <PopoverContent className='p-0 w-56' align='start'>
-                <Command>
-                    <CommandInput
-                        placeholder='Search branches...'
-                        className='h-9'
-                    />
-                    <CommandList>
-                        <CommandEmpty>No branches found.</CommandEmpty>
-                        <CommandGroup>
-                            {siteBranches.map((branch) => (
-                                <CommandItem
-                                    key={branch.branchId}
-                                    value={branch.githubBranch}
-                                    onSelect={() => {
-                                        handleNewChat(branch.branchId)
-                                    }}
-                                    className='max-w-full cursor-pointer'
-                                >
-                                    <span className='truncate'>
-                                        New chat in {branch.githubBranch}
-                                    </span>
-                                </CommandItem>
-                            ))}
-                        </CommandGroup>
-                    </CommandList>
-                </Command>
-            </PopoverContent>
-        </Popover>
+                            <Button
+                                variant='secondary'
+                                className='flex items-center gap-1 px-3'
+                                disabled={isCreatingChat}
+                            >
+                                {isCreatingChat ? (
+                                    <Loader2 className='h-4 w-4 animate-spin' />
+                                ) : (
+                                    <PlusIcon className='h-4 w-4' />
+                                )}
+                                <ChevronDown className='h-3 w-3' />
+                            </Button>
+                        </PopoverTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        {isCreatingChat ? 'Creating new chat...' : 'New chat'}
+                    </TooltipContent>
+                </Tooltip>
+                <PopoverContent className='p-0 w-56' align='start'>
+                    <Command>
+                        <CommandInput
+                            placeholder='Search branches...'
+                            className='h-9'
+                        />
+                        <CommandList>
+                            <CommandEmpty>No branches found.</CommandEmpty>
+                            <CommandGroup>
+                                {siteBranches.map((branch) => (
+                                    <CommandItem
+                                        key={branch.branchId}
+                                        value={branch.githubBranch}
+                                        onSelect={() => {
+                                            handleNewChat(branch.branchId)
+                                        }}
+                                        className='max-w-full cursor-pointer'
+                                    >
+                                        <span className='truncate'>
+                                            New chat in {branch.githubBranch}
+                                        </span>
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+        </ErrorTooltipAnchor>
     )
 }
 export function ChatLeftSidebar({
@@ -213,7 +226,6 @@ export function ChatLeftSidebar({
         >
             <div className='justify-between max-w-[900px] w-full mx-auto row-span-1 z-10 gap-2 pr-2 flex'>
                 <TeamSwitcher className='grow ' sites={userSites || []} />
-
 
                 <div className='flex items-start gap-2'>
                     <ChatCombobox chatId={chatId} />

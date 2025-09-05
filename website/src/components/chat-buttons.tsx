@@ -1,16 +1,11 @@
 import { memo, useMemo, useState, useCallback } from 'react'
 import { Button } from 'website/src/components/ui/button'
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from 'website/src/components/ui/popover'
-import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
 } from 'website/src/components/ui/tooltip'
-import { AlertCircle, GitBranch, Save, X } from 'lucide-react'
+import { GitBranch, Save } from 'lucide-react'
 import {
     Link,
     useLoaderData,
@@ -23,6 +18,7 @@ import { useTemporaryState } from '../lib/hooks'
 import { apiClient } from '../lib/spiceflow-client'
 import { doFilesInDraftNeedPush, useWebsiteState } from '../lib/state'
 import { cn } from '../lib/utils'
+import { useErrorPopover } from './error-popover'
 
 import type { Route as BranchRoute } from '../routes/org.$orgId.branch.$branchId'
 import {
@@ -50,8 +46,6 @@ export function PrButton({ className = '' }) {
     const hasNonPushedChanges = useMemo(() => {
         return doFilesInDraftNeedPush(filesInDraft, lastPushedFiles)
     }, [filesInDraft, lastPushedFiles])
-
-
 
     const prHref = href('/org/:orgId/branch/:branchId/chat/:chatId/create-pr', {
         orgId,
@@ -103,7 +97,9 @@ export function PrButton({ className = '' }) {
         if (isChatGenerating) {
             return {
                 to: prHref,
-                text: chat.prNumber ? `Push to PR #${chat.prNumber}` : 'Create Github PR',
+                text: chat.prNumber
+                    ? `Push to PR #${chat.prNumber}`
+                    : 'Create Github PR',
                 isButtonDisabled: true,
                 tooltipMessage: 'Wait for chat to finish generating',
             }
@@ -179,7 +175,8 @@ export function PrButton({ className = '' }) {
 
 export function SaveChangesButton({ className = '' }) {
     const [isLoading, setIsLoading] = useState(false)
-    const [errorMessage, setErrorMessage] = useState('')
+    const { setErrorMessage, errorMessage, ErrorTooltipAnchor } =
+        useErrorPopover()
     const [buttonText, setButtonText] = useTemporaryState('', 2000)
     const { messages, isGenerating: isChatGenerating } = useChatContext()
 
@@ -281,67 +278,27 @@ export function SaveChangesButton({ className = '' }) {
 
     return (
         <div className={cn('flex items-center gap-2', className)}>
-            <Popover
-                onOpenChange={(x) => {
-                    if (!x) setErrorMessage('')
-                }}
-                open={!!errorMessage}
-            >
-                <PopoverTrigger asChild>
-                    <div className=''>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    // variant='secondary'
-                                    onClick={handleSaveChanges}
-                                    disabled={isButtonDisabled}
-                                    size={'sm'}
-                                    className='disabled:opacity-50'
-                                >
-                                    <div className='flex items-center gap-2'>
-                                        <Save className='size-4' />
-                                        {displayButtonText}
-                                    </div>
-                                </Button>
-                            </TooltipTrigger>
-                            {Boolean(
-                                isButtonDisabled && getTooltipMessage(),
-                            ) && (
-                                <TooltipContent>
-                                    {getTooltipMessage()}
-                                </TooltipContent>
-                            )}
-                        </Tooltip>
-                    </div>
-                </PopoverTrigger>
-
-                {!!errorMessage && (
-                    <div
-                        style={{
-                            pointerEvents: 'auto',
-                        }}
-                        className='fixed inset-0 z-50 bg-black/20 transition-all duration-100'
-                    />
-                )}
-
-                <PopoverContent className='w-full min-w-[200px] z-50 max-w-[400px]'>
-                    <div className='flex items-start gap-3 '>
-                        <AlertCircle className='size-5 text-destructive mt-0.5 flex-shrink-0' />
-                        <div className='grow'>
-                            <h4 className='font-medium  mb-1'>Error</h4>
-                            <p className=' '>{errorMessage}</p>
-                        </div>
+            <ErrorTooltipAnchor>
+                <Tooltip>
+                    <TooltipTrigger asChild>
                         <Button
-                            variant='ghost'
-                            size='sm'
-                            className='p-1 h-auto hover:text-destructive hover:bg-destructive/10'
-                            onClick={() => setErrorMessage('')}
+                            // variant='secondary'
+                            onClick={handleSaveChanges}
+                            disabled={isButtonDisabled}
+                            size={'sm'}
+                            className='disabled:opacity-50'
                         >
-                            <X className='size-4' />
+                            <div className='flex items-center gap-2'>
+                                <Save className='size-4' />
+                                {displayButtonText}
+                            </div>
                         </Button>
-                    </div>
-                </PopoverContent>
-            </Popover>
+                    </TooltipTrigger>
+                    {Boolean(isButtonDisabled && getTooltipMessage()) && (
+                        <TooltipContent>{getTooltipMessage()}</TooltipContent>
+                    )}
+                </Tooltip>
+            </ErrorTooltipAnchor>
         </div>
     )
 }

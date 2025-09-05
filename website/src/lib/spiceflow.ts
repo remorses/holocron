@@ -115,14 +115,15 @@ export const app = new Spiceflow({ basePath: '/api' })
                     },
                 },
             })
-            
+
             if (!branch) {
                 throw new Error('Branch not found')
             }
 
             const site = branch.site
             const isPublic = site.visibility === 'public'
-            const isOrgMember = userId && site.org.users.some(u => u.userId === userId)
+            const isOrgMember =
+                userId && site.org.users.some((u) => u.userId === userId)
 
             // For private sites, require user to be org member
             if (!isPublic && !isOrgMember) {
@@ -341,26 +342,42 @@ export const app = new Spiceflow({ basePath: '/api' })
         async handler({ request, state: { userId } }) {
             const { branchId, orgId } = await request.json()
 
+            // Require authentication
             if (!userId) {
                 throw new Error('User not authenticated')
             }
+            // throw new Error('User not authenticated')
 
-            // Check if user has access to this branch through org membership
-            const rateBranch = await prisma.siteBranch.findUnique({
+            // Check if the branch exists and get site visibility
+            const branch = await prisma.siteBranch.findFirst({
                 where: {
                     branchId,
+                },
+                include: {
                     site: {
-                        org: {
-                            users: {
-                                some: { userId },
+                        include: {
+                            org: {
+                                include: {
+                                    users: true,
+                                },
                             },
                         },
                     },
                 },
             })
 
-            if (!rateBranch) {
-                throw new Error('Branch not found or access denied')
+            if (!branch) {
+                throw new Error('Branch not found')
+            }
+
+            const site = branch!.site
+            const isPublic = site.visibility === 'public'
+            const isOrgMember = site.org.users.some((u) => u.userId === userId)
+
+            // For private sites, require user to be an org member
+            // For public sites, any authenticated user can create a chat
+            if (!isPublic && !isOrgMember) {
+                throw new Error('You do not have access to this branch')
             }
 
             // Create a new chat
@@ -380,7 +397,6 @@ export const app = new Spiceflow({ basePath: '/api' })
             }
         },
     })
-
     // currently not used
     .route({
         method: 'POST',
@@ -727,6 +743,7 @@ export const app = new Spiceflow({ basePath: '/api' })
             if (!userId) {
                 throw new AppError('Missing userId')
             }
+            // throw new Error('test')
 
             // Check user has access to the branch through chat
             const [branch, chat] = await Promise.all([
@@ -1203,20 +1220,23 @@ export const app = new Spiceflow({ basePath: '/api' })
             }
 
             // Verify the installation belongs to the org
-            const githubInstallation = await prisma.githubInstallation.findFirst({
-                where: {
-                    installationId,
-                    appId: env.GITHUB_APP_ID,
-                    orgs: {
-                        some: {
-                            orgId,
+            const githubInstallation =
+                await prisma.githubInstallation.findFirst({
+                    where: {
+                        installationId,
+                        appId: env.GITHUB_APP_ID,
+                        orgs: {
+                            some: {
+                                orgId,
+                            },
                         },
                     },
-                },
-            })
+                })
 
             if (!githubInstallation) {
-                throw new AppError('GitHub installation not found or access denied')
+                throw new AppError(
+                    'GitHub installation not found or access denied',
+                )
             }
 
             const octokit = await getOctokit({
