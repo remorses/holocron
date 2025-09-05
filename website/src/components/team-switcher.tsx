@@ -1,26 +1,27 @@
 'use client'
 
 import * as React from 'react'
-import { useNavigation, useParams, Link } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { href } from 'react-router'
-
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuShortcut,
-    DropdownMenuTrigger,
-} from 'website/src/components/ui/dropdown-menu'
-import {
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-} from 'website/src/components/ui/sidebar'
-import { RiExpandUpDownLine, RiAddLine } from '@remixicon/react'
+import { RiAddLine } from '@remixicon/react'
+import { ChevronsUpDownIcon, CheckIcon } from 'lucide-react'
 import { Button } from './ui/button'
 import { GithubIcon } from './icons'
+import { cn } from 'website/src/lib/utils'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from 'website/src/components/ui/popover'
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+    CommandSeparator,
+} from 'website/src/components/ui/command'
 
 export function TeamSwitcher({
     sites,
@@ -40,21 +41,24 @@ export function TeamSwitcher({
     }[]
     className?: string
 }) {
-    const navigation = useNavigation()
+    const navigate = useNavigate()
     const params = useParams()
-    const { siteId: currentSiteId, branchId } = params
+    const { siteId: currentSiteId } = params
+    const [open, setOpen] = React.useState(false)
+
+    if (!sites.length) return null
 
     const activeSite =
         sites.find((site) => site.siteId === currentSiteId) || sites[0] || null
 
-    if (!sites.length) return null
-
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger className={className} asChild>
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger className={className} asChild>
                 <Button
                     variant={'secondary'}
-                    className='pl-1 max-w-[260px] data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground gap-3 [&>svg]:size-auto'
+                    role='combobox'
+                    aria-expanded={open}
+                    className='pl-1 max-w-[260px] data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground gap-3 [&>svg]:size-auto justify-between'
                 >
                     <div className='flex shrink-0 aspect-square items-center justify-center rounded-md overflow-hidden bg-sidebar-primary text-sidebar-primary-foreground relative after:rounded-[inherit] after:absolute after:inset-0 after:shadow-[0_1px_2px_0_rgb(0_0_0/.05),inset_0_1px_0_0_rgb(255_255_255/.12)] after:pointer-events-none'>
                         {activeSite && (
@@ -76,84 +80,118 @@ export function TeamSwitcher({
                                 'Select a Site'}
                         </span>
                     </div>
-                    <RiExpandUpDownLine
-                        className='ms-auto text-sidebar-foreground/50'
-                        size={18}
+                    <ChevronsUpDownIcon
+                        className='ms-auto text-sidebar-foreground/50 h-4 w-4 shrink-0'
                         aria-hidden='true'
                     />
                 </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-                className='dark w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-md'
-                align='start'
-                side='bottom'
-                sideOffset={4}
-            >
-                <DropdownMenuLabel className='uppercase text-muted-foreground/70 text-xs'>
-                    Sites
-                </DropdownMenuLabel>
-                {sites.map((site, index) => (
-                    <DropdownMenuItem
-                        key={site.siteId}
-                        className='gap-2 p-2'
-                        asChild
-                    >
-                        <Link
-                            to={href('/org/:orgId/site/:siteId', {
-                                orgId: site.org.orgId,
-                                siteId: site.siteId,
-                            })}
-                        >
-                            <div className='flex size-6 items-center justify-center rounded-md overflow-hidden'>
-                                <img
-                                    src={
-                                        site.org.image ||
-                                        `https://avatar.vercel.sh/${encodeURIComponent(site.name || site.org.name)}?gradient=linear`
-                                    }
-                                    width={24}
-                                    height={24}
-                                    alt={site.name || site.org.name}
+            </PopoverTrigger>
+            <PopoverContent className='p-0 w-[260px]' align='start'>
+                <Command>
+                    <CommandInput
+                        placeholder='Search sites...'
+                        className='h-9'
+                    />
+                    <CommandList>
+                        <CommandEmpty>No sites found.</CommandEmpty>
+                        <CommandGroup>
+                            {sites.map((site) => (
+                                <CommandItem
+                                    key={site.siteId}
+                                    value={site.siteId}
+                                    onSelect={(selectedSiteId) => {
+                                        const selectedSite = sites.find(
+                                            (s) => s.siteId === selectedSiteId,
+                                        )
+                                        if (selectedSite) {
+                                            navigate(
+                                                href(
+                                                    '/org/:orgId/site/:siteId',
+                                                    {
+                                                        orgId: selectedSite.org
+                                                            .orgId,
+                                                        siteId: selectedSite.siteId,
+                                                    },
+                                                ),
+                                            )
+                                            setOpen(false)
+                                        }
+                                    }}
+                                    className='gap-2'
+                                >
+                                    <div className='flex size-6 items-center justify-center rounded-md overflow-hidden shrink-0'>
+                                        <img
+                                            src={
+                                                site.org.image ||
+                                                `https://avatar.vercel.sh/${encodeURIComponent(site.name || site.org.name)}?gradient=linear`
+                                            }
+                                            width={24}
+                                            height={24}
+                                            alt={site.name || site.org.name}
+                                        />
+                                    </div>
+                                    <span className='truncate'>
+                                        {site.name || site.org.name}
+                                    </span>
+                                    <CheckIcon
+                                        className={cn(
+                                            'ml-auto h-4 w-4 shrink-0',
+                                            currentSiteId === site.siteId
+                                                ? 'opacity-100'
+                                                : 'opacity-0',
+                                        )}
+                                    />
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                        <CommandSeparator />
+                        <CommandGroup>
+                            <CommandItem
+                                onSelect={() => {
+                                    navigate(
+                                        href('/org/:orgId/onboarding', {
+                                            orgId:
+                                                activeSite?.org.orgId ||
+                                                sites[0]?.org.orgId,
+                                        }),
+                                    )
+                                    setOpen(false)
+                                }}
+                                className='gap-2'
+                            >
+                                <RiAddLine
+                                    className='opacity-60 h-4 w-4'
+                                    aria-hidden='true'
                                 />
-                            </div>
-                            {site.name || site.org.name}
-                            {navigation.state === 'loading' ? (
-                                <div className='ml-auto text-xs text-muted-foreground'>
-                                    Loading...
-                                </div>
-                            ) : (
-                                <DropdownMenuShortcut>
-                                    ⌘{index + 1}
-                                </DropdownMenuShortcut>
-                            )}
-                        </Link>
-                    </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className='gap-2 p-2' asChild>
-                    <Link
-                        to={href('/org/:orgId/onboarding', {
-                            orgId: activeSite?.org.orgId || sites[0]?.org.orgId,
-                        })}
-                    >
-                        <RiAddLine
-                            className='opacity-60'
-                            size={16}
-                            aria-hidden='true'
-                        />
-                        <div className='font-medium'>Create new site</div>
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className='gap-2 p-2' asChild>
-                    <Link
-                        to={href('/org/:orgId/onboarding-from-github', {
-                            orgId: activeSite?.org.orgId || sites[0]?.org.orgId,
-                        })}
-                    >
-                        <GithubIcon className='opacity-60 w-4 h-4' />
-                        <div className='font-medium'>New from GitHub</div>
-                    </Link>
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+                                <span className='font-medium'>
+                                    Create new site
+                                </span>
+                            </CommandItem>
+                            <CommandItem
+                                onSelect={() => {
+                                    navigate(
+                                        href(
+                                            '/org/:orgId/onboarding-from-github',
+                                            {
+                                                orgId:
+                                                    activeSite?.org.orgId ||
+                                                    sites[0]?.org.orgId,
+                                            },
+                                        ),
+                                    )
+                                    setOpen(false)
+                                }}
+                                className='gap-2'
+                            >
+                                <GithubIcon className='opacity-60 w-4 h-4' />
+                                <span className='font-medium'>
+                                    New from GitHub
+                                </span>
+                            </CommandItem>
+                        </CommandGroup>
+                    </CommandList>
+                </Command>
+            </PopoverContent>
+        </Popover>
     )
 }

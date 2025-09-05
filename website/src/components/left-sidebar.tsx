@@ -48,6 +48,8 @@ function ChatCombobox({ chatId }: { chatId?: string }) {
     const { orgId, branchId } = params
     const { chatHistory } = branchData
 
+    if (!chatHistory.length) return null
+
     const chatHistoryItems = chatHistory.map((chat) => ({
         value: chat.chatId,
         label: chat.title || 'Untitled Chat',
