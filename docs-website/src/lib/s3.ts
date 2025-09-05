@@ -9,7 +9,7 @@ let aws4fetch = new AwsClient({
     region: '',
 })
 
-const bucket = 'holocron-uploads'
+const bucket = 'fumabase-uploads'
 export async function getPresignedUrl({
     key,
     headers,
@@ -53,4 +53,3 @@ export function parseKeyForMediaAsset(key: string): {
     const [, siteId] = match
     return { siteId }
 }
-

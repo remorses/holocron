@@ -282,7 +282,7 @@ export function SaveChangesButton({ className = '' }) {
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <Button
-                            // variant='secondary'
+                            variant='ghost'
                             onClick={handleSaveChanges}
                             disabled={isButtonDisabled}
                             size={'sm'}
