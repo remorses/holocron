@@ -73,7 +73,7 @@ export async function loader({
     }
 
     const session = await getSession({ request })
-    const { userId } = session
+    const userId = session.userId || undefined
 
     // Check signal before main database queries
     if (request.signal.aborted) {
@@ -437,7 +437,7 @@ function VisibilitySwitch() {
     // Only show visibility switch for org members
     const isOrgMember =
         session?.userId &&
-        site?.org?.users?.some((u) => u.userId === session.userId)
+        site?.org?.users?.some((u) => u.userId === session?.userId)
     if (!isOrgMember) {
         return null
     }

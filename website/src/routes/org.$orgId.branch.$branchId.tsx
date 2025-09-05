@@ -15,8 +15,9 @@ export async function loader({
         throw new Error('Request aborted')
     }
 
-    // We need userId for the queries, get it from session
-    const { userId } = await getSession({ request })
+    // Get session but don't require it
+    const session = await getSession({ request })
+    const userId = session.userId || undefined
 
     // Check signal before database queries
     if (request.signal.aborted) {

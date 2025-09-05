@@ -1,15 +1,10 @@
 import { prisma } from 'db'
 import { Route } from './+types/api.health'
+import { createHealthLoader } from '@xmorse/deployment-utils/src/health'
 
-export const loader = async ({ context }: Route.LoaderArgs) => {
+async function check() {
     const result = await prisma.$queryRawUnsafe('SELECT 1')
-    return new Response(JSON.stringify(result), {
-        headers: { 'Content-Type': 'application/json' },
-    })
+    return
 }
-export const action = async ({ context }: Route.ActionArgs) => {
-    const result = await prisma.$queryRawUnsafe('SELECT 1')
-    return new Response(JSON.stringify(result), {
-        headers: { 'Content-Type': 'application/json' },
-    })
-}
+export const loader = createHealthLoader({ check })
+export const action = createHealthLoader({ check })
