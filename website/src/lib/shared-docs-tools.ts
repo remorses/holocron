@@ -6,6 +6,7 @@ import {
 } from 'contesto/src/lib/interpreter-tool'
 import z from 'zod'
 import { EditToolParamSchema } from 'docs-website/src/lib/edit-tool'
+import type { TodoInfo } from 'contesto/src/lib/todo-tool'
 
 // Tool input schemas - extracted from docs-website/src/lib/spiceflow-docs-app.ts
 export const searchDocsInputSchema = z.object({
@@ -92,5 +93,13 @@ export type DocsTools = {
   jsInterpreter: {
     input: InterpreterToolParamSchema
     output: string
+  }
+  todowrite: {
+    input: { todos: TodoInfo[] }
+    output: { todos: TodoInfo[] }
+  }
+  todoread: {
+    input: {}
+    output: { todos: TodoInfo[] }
   }
 }

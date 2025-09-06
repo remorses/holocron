@@ -1,5 +1,6 @@
-import { ToolUIPart, UIMessage, UITools } from 'ai'
+import { ToolUIPart, UIMessage } from 'ai'
 import { type WebsiteTools } from './spiceflow-generate-message'
+import { type TodoWriteResponse, type TodoReadResponse, type TodoInfo } from 'contesto/src/lib/todo-tool'
 
 export type GithubState = {
   next?: string
@@ -13,3 +14,5 @@ export type GithubLoginRequestData = {
 export type WebsiteUIMessage = UIMessage<never, never, WebsiteTools>
 
 export type WebsiteToolPart = { output?: any } & ToolUIPart<WebsiteTools>
+
+export type { TodoWriteResponse, TodoReadResponse, TodoInfo }

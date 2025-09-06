@@ -7,8 +7,18 @@ import {
   type FetchUrlInput,
   type SelectTextInput,
 } from 'website/src/lib/shared-docs-tools'
+import { type TodoWriteResponse, type TodoReadResponse } from 'contesto/src/lib/todo-tool'
 
-export type { DocsTools, SearchDocsInput, GoToPageInput, GetCurrentPageInput, FetchUrlInput, SelectTextInput }
+export type {
+  DocsTools,
+  SearchDocsInput,
+  GoToPageInput,
+  GetCurrentPageInput,
+  FetchUrlInput,
+  SelectTextInput,
+  TodoWriteResponse,
+  TodoReadResponse,
+}
 
 export type DocsUIMessage = UIMessage<never, never, DocsTools>
 

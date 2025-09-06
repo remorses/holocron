@@ -2,7 +2,7 @@ import { tool } from 'ai'
 import { z } from 'zod'
 import dedent from 'string-dedent'
 
-const TodoInfo = z.object({
+export const TodoInfo = z.object({
   content: z.string().describe('Brief description of the task'),
   status: z
     .enum(['pending', 'in_progress', 'completed', 'cancelled'])
@@ -11,8 +11,9 @@ const TodoInfo = z.object({
   id: z.string().describe('Unique identifier for the todo item'),
 })
 
-type TodoInfo = z.infer<typeof TodoInfo>
+export type TodoInfo = z.infer<typeof TodoInfo>
 
+// https://github.com/sst/opencode/blob/dev/packages/opencode/src/tool/todowrite.txt
 const todoWriteDescription = dedent`
   Use this tool to create and manage a structured task list for your current coding session. This helps you track progress, organize complex tasks, and demonstrate thoroughness to the user.
   It also helps the user understand the progress of the task and overall progress of their requests.
@@ -199,23 +200,40 @@ const todoReadDescription = dedent`
   - If no todos exist yet, an empty list will be returned
 `
 
-export function createTodoTools({ todos }: { todos: Map<string, TodoInfo[]> }) {
+export type TodoWriteResponse = {
+  todos: TodoInfo[]
+}
+
+export type TodoReadResponse = {
+  todos: TodoInfo[]
+}
+
+export function createTodoTools({
+  todos,
+  onTodosChange,
+}: {
+  todos: TodoInfo[]
+  onTodosChange?: (newTodos: TodoInfo[]) => Promise<void>
+}) {
+  if (!Array.isArray(todos)) {
+    todos = []
+  }
   const todoWrite = tool({
     description: todoWriteDescription,
     inputSchema: z.object({
       todos: z.array(TodoInfo).describe('The updated todo list'),
     }),
-    execute: async ({ todos: newTodos }, { abortSignal, toolCallId }) => {
-      const sessionId = toolCallId
-      todos.set(sessionId, newTodos)
-      const incompleteTodos = newTodos.filter((x) => x.status !== 'completed').length
+    execute: async ({ todos: newTodos }): Promise<TodoWriteResponse> => {
+      todos.length = 0
+      todos.push(...newTodos)
+
+      // Call the callback if provided
+      if (onTodosChange) {
+        await onTodosChange(newTodos)
+      }
 
       return {
-        title: `${incompleteTodos} todos`,
-        output: JSON.stringify(newTodos, null, 2),
-        metadata: {
-          todos: newTodos,
-        },
+        todos: newTodos,
       }
     },
   })
@@ -223,17 +241,9 @@ export function createTodoTools({ todos }: { todos: Map<string, TodoInfo[]> }) {
   const todoRead = tool({
     description: todoReadDescription,
     inputSchema: z.object({}),
-    execute: async ({}, { abortSignal, toolCallId }) => {
-      const sessionId = toolCallId
-      const currentTodos = todos.get(sessionId) ?? []
-      const incompleteTodos = currentTodos.filter((x) => x.status !== 'completed').length
-
+    execute: async (): Promise<TodoReadResponse> => {
       return {
-        title: `${incompleteTodos} todos`,
-        output: JSON.stringify(currentTodos, null, 2),
-        metadata: {
-          todos: currentTodos,
-        },
+        todos: todos,
       }
     },
   })

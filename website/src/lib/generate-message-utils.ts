@@ -228,6 +228,7 @@ export async function* testGenerateMessage({
     messages: uiMessages,
     currentSlug,
     filesInDraft,
+    todos: [],
     fileSystem,
     files,
     githubFolder: '',

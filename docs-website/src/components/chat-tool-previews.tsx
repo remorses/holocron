@@ -116,6 +116,7 @@ export function ToolPreviewContainer({ children, className }: { children: React.
   return <div className={cn('py-2 rounded-lg font-mono text-sm space-y-2 w-full', className)}>{children}</div>
 }
 
+
 export function Dot({ toolCallId }: { toolCallId?: string }) {
   const { messages } = useChatContext()
 

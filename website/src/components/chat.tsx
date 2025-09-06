@@ -9,6 +9,7 @@ import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
 import { CSSProperties, startTransition, useEffect, useMemo, useState } from 'react'
 
 import { Dot, ToolPreviewContainer } from 'docs-website/src/components/chat-tool-previews'
+import { TodoPreview } from 'docs-website/src/components/todo-tool-previews'
 
 import { Button } from 'website/src/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from 'website/src/components/ui/popover'
@@ -553,6 +554,24 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
                   return result.url
                 }}
               />
+            )
+          }
+          if (part.type === 'tool-todowrite' && part.state === 'output-available') {
+            const todos = part.output?.todos || part.input?.todos || []
+            return (
+              <ToolPreviewContainer key={index}>
+                <Dot toolCallId={part.toolCallId} /> Updating todo list
+                <TodoPreview todos={todos} />
+              </ToolPreviewContainer>
+            )
+          }
+          if (part.type === 'tool-todoread' && part.state === 'output-available') {
+            const todos = part.output?.todos || []
+            return (
+              <ToolPreviewContainer key={index}>
+                <Dot toolCallId={part.toolCallId} /> Reading todo list
+                <TodoPreview todos={todos} />
+              </ToolPreviewContainer>
             )
           }
           return <MessagePartRenderer part={part as any} key={index} />

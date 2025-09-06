@@ -421,8 +421,10 @@ model Chat {
   userId          String
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt       DateTime      @default(now())
+
   currentSlug     String?
   filesInDraft    Json          @default("{}")
+  todos    Json          @default("[]")
   lastPushedFiles Json          @default("{}")
   prNumber        Int?
   branchId        String

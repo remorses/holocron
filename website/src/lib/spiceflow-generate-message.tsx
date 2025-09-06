@@ -33,6 +33,7 @@ import { processMdxInServer } from 'docs-website/src/lib/mdx.server'
 import path from 'path'
 import { Spiceflow } from 'spiceflow'
 import z, { ZodType } from 'zod'
+import { type TodoInfo, TodoInfo as TodoInfoSchema } from 'contesto/src/lib/todo-tool'
 import { printDirectoryTree } from 'docs-website/src/lib/directory-tree'
 import { validateMarkdownLinks, createFormattedError, type ErrorWithPosition } from 'docs-website/src/lib/lint'
 import {
@@ -67,6 +68,7 @@ import { docsJsonSchema } from 'docs-website/src/lib/docs-json'
 
 import exampleDocs from 'website/scripts/example-docs.json'
 import { readableStreamToAsyncIterable } from 'contesto/src/lib/utils'
+import { createTodoTools } from 'contesto/src/lib/todo-tool'
 import { interpreterToolParamsSchema, createInterpreterTool } from 'contesto/src/lib/interpreter-tool'
 import { ProcessorDataFrontmatter } from 'docs-website/src/lib/mdx-heavy'
 import fm from 'front-matter'
@@ -237,6 +239,14 @@ export type WebsiteTools = {
     input: z.infer<typeof interpreterToolParamsSchema>
     output: string
   }
+  todowrite: {
+    input: { todos: import('./types').TodoInfo[] }
+    output: import('./types').TodoWriteResponse
+  }
+  todoread: {
+    input: {}
+    output: import('./types').TodoReadResponse
+  }
 }
 
 /**
@@ -246,6 +256,7 @@ export async function* generateMessageStream({
   messages,
   currentSlug,
   filesInDraft,
+  todos,
   fileSystem,
   files,
   githubFolder,
@@ -255,11 +266,13 @@ export async function* generateMessageStream({
   modelId,
   modelProvider,
   onFinish,
+  onTodosChange,
   middlewares,
 }: {
   messages: WebsiteUIMessage[]
   currentSlug: string
   filesInDraft: Record<string, FileUpdate>
+  todos: TodoInfo[]
   fileSystem: FileSystemEmulator
   files: Array<VirtualFile & { data?: ProcessorDataFrontmatter }> // Files from getFilesForSource
   githubFolder: string
@@ -273,6 +286,7 @@ export async function* generateMessageStream({
     isAborted: boolean
     model: { modelId: string; provider: string }
   }) => Promise<void>
+  onTodosChange?: (newTodos: TodoInfo[]) => Promise<void>
   middlewares?: LanguageModelV2Middleware[]
 }) {
   const isOnboardingChat = [...files.map((x) => x.path)].filter((x) => !isDocsJson(x)).length === 0
@@ -413,9 +427,8 @@ export async function* generateMessageStream({
             // Add available slugs hint
             const availableSlugs = validSlugs.slice(0, 10).join(', ')
             const additionalMessage = dedent`
-                        Available page slugs include: ${availableSlugs}${
-                          validSlugs.length > 10 ? ` and ${validSlugs.length - 10} more...` : ''
-                        }
+                        Available page slugs include: ${availableSlugs}${validSlugs.length > 10 ? ` and ${validSlugs.length - 10} more...` : ''
+              }
                         Please fix the invalid links and submit the tool call again.
                         If you want to reference a page you plan to create later, first create it with empty content and only frontmatter
                         `
@@ -496,15 +509,19 @@ export async function* generateMessageStream({
   const tools = {
     strReplaceEditor,
 
+    ...createTodoTools({
+      todos,
+      onTodosChange,
+    }),
     ...(isOnboardingChat
       ? {
-          renderForm: createRenderFormTool({
-            replaceOptionalsWithNulls: model.provider.startsWith('openai'),
-          }),
-        }
-      : {
-          updateHolocronJsonc,
+        renderForm: createRenderFormTool({
+          replaceOptionalsWithNulls: model.provider.startsWith('openai'),
         }),
+      }
+      : {
+        updateHolocronJsonc,
+      }),
 
     getProjectFiles: tool({
       description:
@@ -736,9 +753,9 @@ export async function* generateMessageStream({
     experimental_transform: process.env.VITEST
       ? undefined
       : smoothStream({
-          delayInMs: 10,
-          chunking: 'word',
-        }),
+        delayInMs: 10,
+        chunking: 'word',
+      }),
     messages: allMessages,
     stopWhen: stepCountIs(100),
 
@@ -821,9 +838,19 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
     githubFolder: z.string(),
     currentSlug: z.string(),
     filesInDraft: z.record(z.string(), fileUpdateSchema),
+    todos: z.array(TodoInfoSchema).optional(),
   }),
   async *handler({ request, waitUntil, state: { userId } }) {
-    const { messages, currentSlug, chatId, siteId, branchId, filesInDraft, githubFolder } = await request.json()
+    const {
+      messages,
+      currentSlug,
+      chatId,
+      siteId,
+      branchId,
+      filesInDraft,
+      githubFolder,
+      todos: requestTodos,
+    } = await request.json()
 
     const [branch, chat, files] = await Promise.all([
       prisma.siteBranch.findFirst({
@@ -919,11 +946,15 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
       },
     })
 
+    // Keep a mutable reference to todos
+    let todos = requestTodos || (chat?.todos as TodoInfo[]) || []
+
     // Use the extracted stateless function
     yield* generateMessageStream({
       messages,
       currentSlug,
       filesInDraft,
+      todos: todos,
       fileSystem,
       files,
       githubFolder,
@@ -932,6 +963,9 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
       branchId,
       modelId: chat?.modelId,
       modelProvider: chat?.modelProvider,
+      onTodosChange: async (newTodos: TodoInfo[]) => {
+        todos = newTodos
+      },
       onFinish: async ({ uiMessages, isAborted, model }) => {
         const previousMessages = await prisma.chatMessage.findMany({
           where: { chatId },
@@ -964,6 +998,7 @@ export const generateMessageApp = new Spiceflow().state('userId', '').route({
               branchId,
               currentSlug,
               filesInDraft: (filesInDraft as any) || {},
+              todos: todos,
               lastPushedFiles: prevChat?.lastPushedFiles || {},
               title: prevChat?.title,
               prNumber: prevChat?.prNumber,
