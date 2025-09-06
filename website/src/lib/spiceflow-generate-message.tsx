@@ -99,6 +99,7 @@ const baseten = createOpenAICompatible({
 export async function generateSystemMessage({ isOnboardingChat, githubFolder }): Promise<string> {
   return [
     await import('../prompts/agent.md?raw').then((x) => x.default),
+    await import('../prompts/search.md?raw').then((x) => x.default),
     await import('../prompts/tone-and-style.md?raw').then((x) => x.default),
     await import('../prompts/writing-mdx.md?raw').then((x) => x.default),
     await import('../prompts/frontmatter.md?raw').then((x) => x.default),
