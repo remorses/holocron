@@ -750,24 +750,24 @@ export async function* generateMessageStream({
       webSearchAnthropic: anthropic.tools.webSearch_20250305({}),
     }),
 
-    // Add firecrawl web search for other providers
-    ...(!model.provider.startsWith('openai') && !model.provider.startsWith('anthropic') && env.FIRECRAWL_API_KEY && {
-      webSearchFirecrawl: tool({
-        description: 'Search the web for information using Firecrawl. Use this to find current information from the web.',
-        inputSchema: firecrawlWebSearchSchema,
-        execute: async ({ query, limit }) => {
-          const firecrawl = new FirecrawlClient({
-            apiKey: env.FIRECRAWL_API_KEY,
-          })
+    // // Add firecrawl web search for other providers
+    // ...(!model.provider.startsWith('openai') && !model.provider.startsWith('anthropic') && env.FIRECRAWL_API_KEY && {
+    //   webSearchFirecrawl: tool({
+    //     description: 'Search the web for information using Firecrawl. Use this to find current information from the web.',
+    //     inputSchema: firecrawlWebSearchSchema,
+    //     execute: async ({ query, limit }) => {
+    //       const firecrawl = new FirecrawlClient({
+    //         apiKey: env.FIRECRAWL_API_KEY,
+    //       })
 
-          const searchResults = await firecrawl.search(query, {
-            limit,
-          })
+    //       const searchResults = await firecrawl.search(query, {
+    //         limit,
+    //       })
 
-          return searchResults
-        },
-      }),
-    }),
+    //       return searchResults
+    //     },
+    //   }),
+    // }),
 
     // Add Google Search for other providers when Firecrawl is not available
     ...(!model.provider.startsWith('openai') && !model.provider.startsWith('anthropic') && {
