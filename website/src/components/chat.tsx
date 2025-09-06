@@ -556,13 +556,8 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
               />
             )
           }
-          if (part.type === 'tool-todowrite' && part.state === 'output-available') {
-            const todos = part.output?.todos || part.input?.todos || []
-            return <TodoPreview key={index} todos={todos} action="Update Todos" toolCallId={part.toolCallId} />
-          }
-          if (part.type === 'tool-todoread' && part.state === 'output-available') {
-            const todos = part.output?.todos || []
-            return <TodoPreview key={index} todos={todos} action="Read Todos" toolCallId={part.toolCallId} />
+          if ((part.type === 'tool-todowrite' || part.type === 'tool-todoread') && part.state === 'output-available') {
+            return <TodoPreview key={index} part={part} message={message} index={index} />
           }
           return <MessagePartRenderer part={part as any} key={index} />
         })}
