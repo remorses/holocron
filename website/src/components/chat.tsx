@@ -558,21 +558,11 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
           }
           if (part.type === 'tool-todowrite' && part.state === 'output-available') {
             const todos = part.output?.todos || part.input?.todos || []
-            return (
-              <ToolPreviewContainer key={index}>
-                <Dot toolCallId={part.toolCallId} /> Updating todo list
-                <TodoPreview todos={todos} />
-              </ToolPreviewContainer>
-            )
+            return <TodoPreview key={index} todos={todos} action="Update Todos" toolCallId={part.toolCallId} />
           }
           if (part.type === 'tool-todoread' && part.state === 'output-available') {
             const todos = part.output?.todos || []
-            return (
-              <ToolPreviewContainer key={index}>
-                <Dot toolCallId={part.toolCallId} /> Reading todo list
-                <TodoPreview todos={todos} />
-              </ToolPreviewContainer>
-            )
+            return <TodoPreview key={index} todos={todos} action="Read Todos" toolCallId={part.toolCallId} />
           }
           return <MessagePartRenderer part={part as any} key={index} />
         })}
