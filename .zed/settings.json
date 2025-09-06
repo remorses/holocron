@@ -1,0 +1,10 @@
+{
+  "languages": {
+    "TypeScript": {
+      "formatter": "language_server"
+    },
+    "TSX": {
+      "formatter": "language_server"
+    }
+  }
+}
