@@ -83,18 +83,16 @@ export function TeamSwitcher({
               {sites.map((site) => (
                 <CommandItem
                   key={site.siteId}
-                  value={site.siteId}
-                  onSelect={(selectedSiteId) => {
-                    const selectedSite = sites.find((s) => s.siteId === selectedSiteId)
-                    if (selectedSite) {
-                      navigate(
-                        href('/org/:orgId/site/:siteId', {
-                          orgId: selectedSite.org.orgId,
-                          siteId: selectedSite.siteId,
-                        }),
-                      )
-                      setOpen(false)
-                    }
+                  value={`${site.siteId}-${site.name || site.org.name}`}
+                  keywords={[site.name || '', site.org.name]}
+                  onSelect={() => {
+                    navigate(
+                      href('/org/:orgId/site/:siteId', {
+                        orgId: site.org.orgId,
+                        siteId: site.siteId,
+                      }),
+                    )
+                    setOpen(false)
                   }}
                   className='gap-2'
                 >
