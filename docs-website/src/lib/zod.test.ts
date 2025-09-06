@@ -5,12 +5,12 @@ import { openai } from '@ai-sdk/openai'
 import { generateText, tool } from 'ai'
 
 describe('optionalToNullable', () => {
-    test('UIFieldSchema can be made nullable for all optionals', async () => {
-        const transformedSchema = optionalToNullable(UIFieldSchema)
+  test('UIFieldSchema can be made nullable for all optionals', async () => {
+    const transformedSchema = optionalToNullable(UIFieldSchema)
 
-        const json = toJSONSchema(transformedSchema)
+    const json = toJSONSchema(transformedSchema)
 
-        expect(json).toMatchInlineSnapshot(`
+    expect(json).toMatchInlineSnapshot(`
           {
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             "additionalProperties": false,
@@ -183,41 +183,42 @@ describe('optionalToNullable', () => {
           }
         `)
 
-        const model = openai.responses('gpt-4.1')
-        const provider = model.provider
-        const modelId = model.modelId
-        expect({provider,modelId}).toMatchInlineSnapshot(`
+    const model = openai.responses('gpt-4.1')
+    const provider = model.provider
+    const modelId = model.modelId
+    expect({ provider, modelId }).toMatchInlineSnapshot(`
           {
             "modelId": "gpt-4.1",
             "provider": "openai.responses",
           }
         `)
-        const res = await generateText({
-            prompt: 'Convert this schema to a tool schema, random values for each field',
-            tools: {
-                test: tool({ inputSchema: UIFieldSchema }),
-            },
-            model,
-        })
+    const res = await generateText({
+      prompt:
+        'Convert this schema to a tool schema, random values for each field',
+      tools: {
+        test: tool({ inputSchema: UIFieldSchema }),
+      },
+      model,
+    })
+  })
+
+  test('converts optional primitive to nullable', () => {
+    const originalSchema = z.object({
+      name: z.string().optional(),
+      age: z.number().optional(),
+      active: z.boolean().optional(),
     })
 
-    test('converts optional primitive to nullable', () => {
-        const originalSchema = z.object({
-            name: z.string().optional(),
-            age: z.number().optional(),
-            active: z.boolean().optional(),
-        })
+    const transformedSchema = optionalToNullable(originalSchema)
 
-        const transformedSchema = optionalToNullable(originalSchema)
+    // Compare original vs transformed JSON schemas
+    const originalJson = toJSONSchema(originalSchema)
+    const transformedJson = toJSONSchema(transformedSchema)
 
-        // Compare original vs transformed JSON schemas
-        const originalJson = toJSONSchema(originalSchema)
-        const transformedJson = toJSONSchema(transformedSchema)
-
-        expect({
-            original: originalJson,
-            transformed: transformedJson,
-        }).toMatchInlineSnapshot(`
+    expect({
+      original: originalJson,
+      transformed: transformedJson,
+    }).toMatchInlineSnapshot(`
           {
             "original": {
               "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -279,32 +280,32 @@ describe('optionalToNullable', () => {
             },
           }
         `)
+  })
+
+  test('handles nested objects with optionals', () => {
+    const originalSchema = z.object({
+      user: z.object({
+        name: z.string().optional(),
+        email: z.string(),
+        profile: z
+          .object({
+            bio: z.string().optional(),
+            avatar: z.string().optional(),
+          })
+          .optional(),
+      }),
     })
 
-    test('handles nested objects with optionals', () => {
-        const originalSchema = z.object({
-            user: z.object({
-                name: z.string().optional(),
-                email: z.string(),
-                profile: z
-                    .object({
-                        bio: z.string().optional(),
-                        avatar: z.string().optional(),
-                    })
-                    .optional(),
-            }),
-        })
+    const transformedSchema = optionalToNullable(originalSchema)
 
-        const transformedSchema = optionalToNullable(originalSchema)
+    // Compare JSON schemas
+    const originalJson = toJSONSchema(originalSchema)
+    const transformedJson = toJSONSchema(transformedSchema)
 
-        // Compare JSON schemas
-        const originalJson = toJSONSchema(originalSchema)
-        const transformedJson = toJSONSchema(transformedSchema)
-
-        expect({
-            original: originalJson,
-            transformed: transformedJson,
-        }).toMatchInlineSnapshot(`
+    expect({
+      original: originalJson,
+      transformed: transformedJson,
+    }).toMatchInlineSnapshot(`
           {
             "original": {
               "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -416,23 +417,23 @@ describe('optionalToNullable', () => {
             },
           }
         `)
+  })
+
+  test('handles arrays with optional elements', () => {
+    const originalSchema = z.object({
+      tags: z.array(z.string().optional()),
+      numbers: z.array(z.number()),
     })
 
-    test('handles arrays with optional elements', () => {
-        const originalSchema = z.object({
-            tags: z.array(z.string().optional()),
-            numbers: z.array(z.number()),
-        })
+    const transformedSchema = optionalToNullable(originalSchema)
 
-        const transformedSchema = optionalToNullable(originalSchema)
+    const originalJson = toJSONSchema(originalSchema)
+    const transformedJson = toJSONSchema(transformedSchema)
 
-        const originalJson = toJSONSchema(originalSchema)
-        const transformedJson = toJSONSchema(transformedSchema)
-
-        expect({
-            original: originalJson,
-            transformed: transformedJson,
-        }).toMatchInlineSnapshot(`
+    expect({
+      original: originalJson,
+      transformed: transformedJson,
+    }).toMatchInlineSnapshot(`
           {
             "original": {
               "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -489,23 +490,23 @@ describe('optionalToNullable', () => {
             },
           }
         `)
+  })
+
+  test('handles records with optional values', () => {
+    const originalSchema = z.object({
+      metadata: z.record(z.string(), z.string().optional()),
+      config: z.record(z.string(), z.number()),
     })
 
-    test('handles records with optional values', () => {
-        const originalSchema = z.object({
-            metadata: z.record(z.string(), z.string().optional()),
-            config: z.record(z.string(), z.number()),
-        })
+    const transformedSchema = optionalToNullable(originalSchema)
 
-        const transformedSchema = optionalToNullable(originalSchema)
+    const originalJson = toJSONSchema(originalSchema)
+    const transformedJson = toJSONSchema(transformedSchema)
 
-        const originalJson = toJSONSchema(originalSchema)
-        const transformedJson = toJSONSchema(transformedSchema)
-
-        expect({
-            original: originalJson,
-            transformed: transformedJson,
-        }).toMatchInlineSnapshot(`
+    expect({
+      original: originalJson,
+      transformed: transformedJson,
+    }).toMatchInlineSnapshot(`
           {
             "original": {
               "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -574,26 +575,26 @@ describe('optionalToNullable', () => {
             },
           }
         `)
+  })
+
+  test('handles tuples with optional elements', () => {
+    const originalSchema = z.object({
+      coordinates: z.tuple([
+        z.number(),
+        z.number().optional(),
+        z.string().optional(),
+      ]),
     })
 
-    test('handles tuples with optional elements', () => {
-        const originalSchema = z.object({
-            coordinates: z.tuple([
-                z.number(),
-                z.number().optional(),
-                z.string().optional(),
-            ]),
-        })
+    const transformedSchema = optionalToNullable(originalSchema)
 
-        const transformedSchema = optionalToNullable(originalSchema)
+    const originalJson = toJSONSchema(originalSchema)
+    const transformedJson = toJSONSchema(transformedSchema)
 
-        const originalJson = toJSONSchema(originalSchema)
-        const transformedJson = toJSONSchema(transformedSchema)
-
-        expect({
-            original: originalJson,
-            transformed: transformedJson,
-        }).toMatchInlineSnapshot(`
+    expect({
+      original: originalJson,
+      transformed: transformedJson,
+    }).toMatchInlineSnapshot(`
           {
             "original": {
               "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -659,26 +660,26 @@ describe('optionalToNullable', () => {
             },
           }
         `)
+  })
+
+  test('handles unions with optional schemas', () => {
+    const originalSchema = z.object({
+      value: z.union([
+        z.string().optional(),
+        z.number(),
+        z.boolean().optional(),
+      ]),
     })
 
-    test('handles unions with optional schemas', () => {
-        const originalSchema = z.object({
-            value: z.union([
-                z.string().optional(),
-                z.number(),
-                z.boolean().optional(),
-            ]),
-        })
+    const transformedSchema = optionalToNullable(originalSchema)
 
-        const transformedSchema = optionalToNullable(originalSchema)
+    const originalJson = toJSONSchema(originalSchema)
+    const transformedJson = toJSONSchema(transformedSchema)
 
-        const originalJson = toJSONSchema(originalSchema)
-        const transformedJson = toJSONSchema(transformedSchema)
-
-        expect({
-            original: originalJson,
-            transformed: transformedJson,
-        }).toMatchInlineSnapshot(`
+    expect({
+      original: originalJson,
+      transformed: transformedJson,
+    }).toMatchInlineSnapshot(`
           {
             "original": {
               "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -739,29 +740,29 @@ describe('optionalToNullable', () => {
             },
           }
         `)
+  })
+
+  test('handles intersections with optional fields', () => {
+    const baseSchema = z.object({
+      id: z.string(),
+      name: z.string().optional(),
     })
 
-    test('handles intersections with optional fields', () => {
-        const baseSchema = z.object({
-            id: z.string(),
-            name: z.string().optional(),
-        })
+    const extendedSchema = z.object({
+      email: z.string().optional(),
+      age: z.number(),
+    })
 
-        const extendedSchema = z.object({
-            email: z.string().optional(),
-            age: z.number(),
-        })
+    const originalSchema = z.intersection(baseSchema, extendedSchema)
+    const transformedSchema = optionalToNullable(originalSchema)
 
-        const originalSchema = z.intersection(baseSchema, extendedSchema)
-        const transformedSchema = optionalToNullable(originalSchema)
+    const originalJson = toJSONSchema(originalSchema)
+    const transformedJson = toJSONSchema(transformedSchema)
 
-        const originalJson = toJSONSchema(originalSchema)
-        const transformedJson = toJSONSchema(transformedSchema)
-
-        expect({
-            original: originalJson,
-            transformed: transformedJson,
-        }).toMatchInlineSnapshot(`
+    expect({
+      original: originalJson,
+      transformed: transformedJson,
+    }).toMatchInlineSnapshot(`
           {
             "original": {
               "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -851,26 +852,26 @@ describe('optionalToNullable', () => {
             },
           }
         `)
+  })
+
+  test('leaves non-optional fields unchanged', () => {
+    const originalSchema = z.object({
+      required: z.string(),
+      alsoRequired: z.number(),
+      nested: z.object({
+        stillRequired: z.boolean(),
+      }),
     })
 
-    test('leaves non-optional fields unchanged', () => {
-        const originalSchema = z.object({
-            required: z.string(),
-            alsoRequired: z.number(),
-            nested: z.object({
-                stillRequired: z.boolean(),
-            }),
-        })
+    const transformedSchema = optionalToNullable(originalSchema)
 
-        const transformedSchema = optionalToNullable(originalSchema)
+    const originalJson = toJSONSchema(originalSchema)
+    const transformedJson = toJSONSchema(transformedSchema)
 
-        const originalJson = toJSONSchema(originalSchema)
-        const transformedJson = toJSONSchema(transformedSchema)
-
-        expect({
-            original: originalJson,
-            transformed: transformedJson,
-        }).toMatchInlineSnapshot(`
+    expect({
+      original: originalJson,
+      transformed: transformedJson,
+    }).toMatchInlineSnapshot(`
           {
             "original": {
               "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -934,25 +935,25 @@ describe('optionalToNullable', () => {
             },
           }
         `)
+  })
+
+  test('handles additional types - literals and enums', () => {
+    const originalSchema = z.object({
+      literalField: z.literal('specific-value').optional(),
+      enumField: z.enum(['option1', 'option2']).optional(),
+      booleanField: z.boolean().optional(),
+      numberField: z.number().optional(),
     })
 
-    test('handles additional types - literals and enums', () => {
-        const originalSchema = z.object({
-            literalField: z.literal('specific-value').optional(),
-            enumField: z.enum(['option1', 'option2']).optional(),
-            booleanField: z.boolean().optional(),
-            numberField: z.number().optional(),
-        })
+    const transformedSchema = optionalToNullable(originalSchema)
 
-        const transformedSchema = optionalToNullable(originalSchema)
+    const originalJson = toJSONSchema(originalSchema)
+    const transformedJson = toJSONSchema(transformedSchema)
 
-        const originalJson = toJSONSchema(originalSchema)
-        const transformedJson = toJSONSchema(transformedSchema)
-
-        expect({
-            original: originalJson,
-            transformed: transformedJson,
-        }).toMatchInlineSnapshot(`
+    expect({
+      original: originalJson,
+      transformed: transformedJson,
+    }).toMatchInlineSnapshot(`
           {
             "original": {
               "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1038,5 +1039,5 @@ describe('optionalToNullable', () => {
             },
           }
         `)
-    })
+  })
 })

@@ -3,16 +3,16 @@ import { z } from 'zod'
 import dedent from 'string-dedent'
 
 const TodoInfo = z.object({
-    content: z.string().describe('Brief description of the task'),
-    status: z
-        .enum(['pending', 'in_progress', 'completed', 'cancelled'])
-        .describe(
-            'Current status of the task: pending, in_progress, completed, cancelled',
-        ),
-    priority: z
-        .enum(['high', 'medium', 'low'])
-        .describe('Priority level of the task: high, medium, low'),
-    id: z.string().describe('Unique identifier for the todo item'),
+  content: z.string().describe('Brief description of the task'),
+  status: z
+    .enum(['pending', 'in_progress', 'completed', 'cancelled'])
+    .describe(
+      'Current status of the task: pending, in_progress, completed, cancelled',
+    ),
+  priority: z
+    .enum(['high', 'medium', 'low'])
+    .describe('Priority level of the task: high, medium, low'),
+  id: z.string().describe('Unique identifier for the todo item'),
 })
 
 type TodoInfo = z.infer<typeof TodoInfo>
@@ -204,50 +204,50 @@ const todoReadDescription = dedent`
 `
 
 export function createTodoTools({ todos }: { todos: Map<string, TodoInfo[]> }) {
-    const todoWrite = tool({
-        description: todoWriteDescription,
-        inputSchema: z.object({
-            todos: z.array(TodoInfo).describe('The updated todo list'),
-        }),
-        execute: async ({ todos: newTodos }, { abortSignal, toolCallId }) => {
-            const sessionId = toolCallId
-            todos.set(sessionId, newTodos)
-            const incompleteTodos = newTodos.filter(
-                (x) => x.status !== 'completed',
-            ).length
+  const todoWrite = tool({
+    description: todoWriteDescription,
+    inputSchema: z.object({
+      todos: z.array(TodoInfo).describe('The updated todo list'),
+    }),
+    execute: async ({ todos: newTodos }, { abortSignal, toolCallId }) => {
+      const sessionId = toolCallId
+      todos.set(sessionId, newTodos)
+      const incompleteTodos = newTodos.filter(
+        (x) => x.status !== 'completed',
+      ).length
 
-            return {
-                title: `${incompleteTodos} todos`,
-                output: JSON.stringify(newTodos, null, 2),
-                metadata: {
-                    todos: newTodos,
-                },
-            }
+      return {
+        title: `${incompleteTodos} todos`,
+        output: JSON.stringify(newTodos, null, 2),
+        metadata: {
+          todos: newTodos,
         },
-    })
+      }
+    },
+  })
 
-    const todoRead = tool({
-        description: todoReadDescription,
-        inputSchema: z.object({}),
-        execute: async ({}, { abortSignal, toolCallId }) => {
-            const sessionId = toolCallId
-            const currentTodos = todos.get(sessionId) ?? []
-            const incompleteTodos = currentTodos.filter(
-                (x) => x.status !== 'completed',
-            ).length
+  const todoRead = tool({
+    description: todoReadDescription,
+    inputSchema: z.object({}),
+    execute: async ({}, { abortSignal, toolCallId }) => {
+      const sessionId = toolCallId
+      const currentTodos = todos.get(sessionId) ?? []
+      const incompleteTodos = currentTodos.filter(
+        (x) => x.status !== 'completed',
+      ).length
 
-            return {
-                title: `${incompleteTodos} todos`,
-                output: JSON.stringify(currentTodos, null, 2),
-                metadata: {
-                    todos: currentTodos,
-                },
-            }
+      return {
+        title: `${incompleteTodos} todos`,
+        output: JSON.stringify(currentTodos, null, 2),
+        metadata: {
+          todos: currentTodos,
         },
-    })
+      }
+    },
+  })
 
-    return {
-        todowrite: todoWrite,
-        todoread: todoRead,
-    }
+  return {
+    todowrite: todoWrite,
+    todoread: todoRead,
+  }
 }

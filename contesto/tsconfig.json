@@ -1,14 +1,14 @@
 {
-    "extends": "../tsconfig.base.json",
-    "compilerOptions": {
-        "rootDir": "src",
-        "outDir": "dist",
-        "jsx": "react-jsx",
-        "lib": ["dom", "dom.iterable", "esnext"],
-        "moduleResolution": "nodenext",
-        "paths": {
-            "contesto": ["."]
-        }
-    },
-    "include": ["src"]
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "jsx": "react-jsx",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "moduleResolution": "nodenext",
+    "paths": {
+      "contesto": ["."]
+    }
+  },
+  "include": ["src"]
 }

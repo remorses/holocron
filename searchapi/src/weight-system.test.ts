@@ -3,19 +3,19 @@ import { SearchClient } from './sdk.js'
 import type { SearchApiFile } from './types.js'
 
 describe('weight system for search ranking', () => {
-    const client = new SearchClient()
-    const datasetId = `test-weights-${Date.now()}`
-    
-    afterAll(async () => {
-        // Clean up the test dataset
-        await client.deleteDataset({ datasetId })
-    })
-    
-    test('frontmatter sections get higher weights and rank higher in search', async () => {
-        const files: SearchApiFile[] = [
-            {
-                filename: 'page-with-frontmatter.md',
-                content: `---
+  const client = new SearchClient()
+  const datasetId = `test-weights-${Date.now()}`
+
+  afterAll(async () => {
+    // Clean up the test dataset
+    await client.deleteDataset({ datasetId })
+  })
+
+  test('frontmatter sections get higher weights and rank higher in search', async () => {
+    const files: SearchApiFile[] = [
+      {
+        filename: 'page-with-frontmatter.md',
+        content: `---
 title: Test Page About Rockets
 description: This page explains rocket science
 ---
@@ -28,10 +28,10 @@ This section also mentions rockets but should rank lower.
 
 More content about rockets here.
 `,
-            },
-            {
-                filename: 'page-without-frontmatter.md',
-                content: `# Main Section About Rockets
+      },
+      {
+        filename: 'page-without-frontmatter.md',
+        content: `# Main Section About Rockets
 
 This is the main content about rockets without frontmatter.
 
@@ -39,25 +39,25 @@ This is the main content about rockets without frontmatter.
 
 Even more rocket content here.
 `,
-            },
-        ]
-        
-        // Create dataset and upsert files
-        await client.upsertDataset({ datasetId })
-        await client.upsertFiles({ datasetId, files })
-        
-        // Create indexes for better search performance
-        await client.createPendingIndexes(datasetId)
-        
-        // Search for "rockets"
-        const searchResults = await client.searchSections({
-            datasetId,
-            query: 'rockets',
-            perPage: 10,
-        })
-        
-        // The frontmatter section should rank first due to higher weight
-        expect(searchResults.results).toMatchInlineSnapshot(`
+      },
+    ]
+
+    // Create dataset and upsert files
+    await client.upsertDataset({ datasetId })
+    await client.upsertFiles({ datasetId, files })
+
+    // Create indexes for better search performance
+    await client.createPendingIndexes(datasetId)
+
+    // Search for "rockets"
+    const searchResults = await client.searchSections({
+      datasetId,
+      query: 'rockets',
+      perPage: 10,
+    })
+
+    // The frontmatter section should rank first due to higher weight
+    expect(searchResults.results).toMatchInlineSnapshot(`
           [
             {
               "cleanedSnippet": "Test Page About Rockets This page explains rocket science",
@@ -121,20 +121,22 @@ Even more rocket content here.
             },
           ]
         `)
-        
-        // Verify that scores reflect the weight system
-        expect(searchResults.results.length).toBeGreaterThan(0)
-        if (searchResults.results.length > 1) {
-            // First result should have higher score
-            expect(searchResults.results[0].score).toBeGreaterThan(searchResults.results[1].score)
-        }
-    })
-    
-    test('H1 sections rank higher than H2 and H3 sections', async () => {
-        const files: SearchApiFile[] = [
-            {
-                filename: 'hierarchy-test.md',
-                content: `# Primary Topic About Testing
+
+    // Verify that scores reflect the weight system
+    expect(searchResults.results.length).toBeGreaterThan(0)
+    if (searchResults.results.length > 1) {
+      // First result should have higher score
+      expect(searchResults.results[0].score).toBeGreaterThan(
+        searchResults.results[1].score,
+      )
+    }
+  })
+
+  test('H1 sections rank higher than H2 and H3 sections', async () => {
+    const files: SearchApiFile[] = [
+      {
+        filename: 'hierarchy-test.md',
+        content: `# Primary Topic About Testing
 
 This is the main section about testing.
 
@@ -150,20 +152,20 @@ This is a sub-subsection about testing.
 
 This is even deeper about testing.
 `,
-            },
-        ]
-        
-        await client.upsertFiles({ datasetId, files })
-        
-        // Search for "testing"
-        const searchResults = await client.searchSections({
-            datasetId,
-            query: 'testing',
-            perPage: 10,
-            maxChunksPerFile: 10, // Allow more chunks to see all sections
-        })
-        
-        expect(searchResults.results).toMatchInlineSnapshot(`
+      },
+    ]
+
+    await client.upsertFiles({ datasetId, files })
+
+    // Search for "testing"
+    const searchResults = await client.searchSections({
+      datasetId,
+      query: 'testing',
+      perPage: 10,
+      maxChunksPerFile: 10, // Allow more chunks to see all sections
+    })
+
+    expect(searchResults.results).toMatchInlineSnapshot(`
           [
             {
               "cleanedSnippet": "Primary Topic About Testing
@@ -215,25 +217,31 @@ This is even deeper about testing.
             },
           ]
         `)
-        
-        // Verify sections are returned in order of heading level (weight)
-        const h1Result = searchResults.results.find(r => r.sectionSlug === 'primary-topic-about-testing')
-        const h2Result = searchResults.results.find(r => r.sectionSlug === 'secondary-topic-about-testing')
-        const h3Result = searchResults.results.find(r => r.sectionSlug === 'tertiary-topic-about-testing')
-        
-        if (h1Result && h2Result) {
-            expect(h1Result.score).toBeGreaterThan(h2Result.score)
-        }
-        if (h2Result && h3Result) {
-            expect(h2Result.score).toBeGreaterThan(h3Result.score)
-        }
-    })
-    
-    test('all frontmatter sections get weight 2.0', async () => {
-        const files: SearchApiFile[] = [
-            {
-                filename: 'with-title.md',
-                content: `---
+
+    // Verify sections are returned in order of heading level (weight)
+    const h1Result = searchResults.results.find(
+      (r) => r.sectionSlug === 'primary-topic-about-testing',
+    )
+    const h2Result = searchResults.results.find(
+      (r) => r.sectionSlug === 'secondary-topic-about-testing',
+    )
+    const h3Result = searchResults.results.find(
+      (r) => r.sectionSlug === 'tertiary-topic-about-testing',
+    )
+
+    if (h1Result && h2Result) {
+      expect(h1Result.score).toBeGreaterThan(h2Result.score)
+    }
+    if (h2Result && h3Result) {
+      expect(h2Result.score).toBeGreaterThan(h3Result.score)
+    }
+  })
+
+  test('all frontmatter sections get weight 2.0', async () => {
+    const files: SearchApiFile[] = [
+      {
+        filename: 'with-title.md',
+        content: `---
 title: Important Document About Weights
 author: Test Author
 ---
@@ -242,10 +250,10 @@ author: Test Author
 
 Content about weights.
 `,
-            },
-            {
-                filename: 'without-title.md', 
-                content: `---
+      },
+      {
+        filename: 'without-title.md',
+        content: `---
 author: Another Author
 tags: [weights, testing]
 ---
@@ -254,18 +262,18 @@ tags: [weights, testing]
 
 More content about weights.
 `,
-            },
-        ]
-        
-        await client.upsertFiles({ datasetId, files })
-        
-        const searchResults = await client.searchSections({
-            datasetId,
-            query: 'weights',
-            perPage: 10,
-        })
-        
-        expect(searchResults.results).toMatchInlineSnapshot(`
+      },
+    ]
+
+    await client.upsertFiles({ datasetId, files })
+
+    const searchResults = await client.searchSections({
+      datasetId,
+      query: 'weights',
+      perPage: 10,
+    })
+
+    expect(searchResults.results).toMatchInlineSnapshot(`
           [
             {
               "cleanedSnippet": "Important Document About Weights Test Author",
@@ -317,12 +325,14 @@ More content about weights.
             },
           ]
         `)
-        
-        // All frontmatter sections should have weight 2.0
-        const frontmatterSections = searchResults.results.filter(r => r.sectionSlug === '')
-        
-        for (const section of frontmatterSections) {
-            expect(section.score).toBe(2.0)
-        }
-    })
+
+    // All frontmatter sections should have weight 2.0
+    const frontmatterSections = searchResults.results.filter(
+      (r) => r.sectionSlug === '',
+    )
+
+    for (const section of frontmatterSections) {
+      expect(section.score).toBe(2.0)
+    }
+  })
 })

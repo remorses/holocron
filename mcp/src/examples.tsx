@@ -1,52 +1,58 @@
 /**
  * MCP Documentation Examples
- * 
+ *
  * This file demonstrates how to use the MCP components to render
  * tool documentation with chat examples.
  */
 
-import { MCPPage, MCPTool, createSampleMCPTool, createSampleChatExample, sampleTools } from './index';
-import { getContext } from 'fumadocs-openapi/render/api-page';
-import { processDocument } from 'fumadocs-openapi/utils/process-document';
-import type { Tool } from '@modelcontextprotocol/sdk/types.js';
-import type { CoreMessage } from 'ai';
+import {
+  MCPPage,
+  MCPTool,
+  createSampleMCPTool,
+  createSampleChatExample,
+  sampleTools,
+} from './index'
+import { getContext } from 'fumadocs-openapi/render/api-page'
+import { processDocument } from 'fumadocs-openapi/utils/process-document'
+import type { Tool } from '@modelcontextprotocol/sdk/types.js'
+import type { CoreMessage } from 'ai'
 
 /**
  * Example 1: Complete MCP Tool Page
- * 
+ *
  * Shows how to render a complete page with an MCP tool
  */
 export async function CompleteMCPToolExample() {
-  const tool = createSampleMCPTool();
-  const chatExample = createSampleChatExample();
+  const tool = createSampleMCPTool()
+  const chatExample = createSampleChatExample()
 
   return (
     <MCPPage
       tool={tool}
-      serverUrl="mcp://localhost:3000"
+      serverUrl='mcp://localhost:3000'
       hasHead={true}
       chatExample={chatExample}
     />
-  );
+  )
 }
 
 /**
  * Example 2: Individual MCP Tool Component
- * 
+ *
  * Shows how to use the MCPTool component directly
  */
 export async function IndividualMCPToolExample() {
-  const tool = sampleTools.read_file;
-  
+  const tool = sampleTools.read_file
+
   // Create basic context for rendering
   const dummyDocument = {
     openapi: '3.1.0',
     info: { title: 'MCP Tools', version: '1.0.0' },
     paths: {},
-  };
-  
-  const document = await processDocument(dummyDocument);
-  const ctx = await getContext(document);
+  }
+
+  const document = await processDocument(dummyDocument)
+  const ctx = await getContext(document)
 
   const chatExample: CoreMessage[] = [
     {
@@ -58,7 +64,7 @@ export async function IndividualMCPToolExample() {
       content: [
         {
           type: 'text',
-          text: 'I\'ll read the config.json file for you.',
+          text: "I'll read the config.json file for you.",
         },
         {
           type: 'tool-call',
@@ -73,37 +79,41 @@ export async function IndividualMCPToolExample() {
     },
     {
       role: 'tool',
-      content: [{
-        type: 'tool-result',
-        toolCallId: 'call_1',
-        toolName: 'read_file',
-        output: {
-          content: '{\n  "app_name": "MyApp",\n  "version": "1.0.0",\n  "debug": true\n}',
-          size: 75,
-        } as any,
-      }],
+      content: [
+        {
+          type: 'tool-result',
+          toolCallId: 'call_1',
+          toolName: 'read_file',
+          output: {
+            content:
+              '{\n  "app_name": "MyApp",\n  "version": "1.0.0",\n  "debug": true\n}',
+            size: 75,
+          } as any,
+        },
+      ],
     },
     {
       role: 'assistant',
-      content: 'Here\'s the content of config.json:\n\n```json\n{\n  "app_name": "MyApp",\n  "version": "1.0.0",\n  "debug": true\n}\n```\n\nThe file contains your application configuration with the app name, version, and debug mode enabled.',
+      content:
+        'Here\'s the content of config.json:\n\n```json\n{\n  "app_name": "MyApp",\n  "version": "1.0.0",\n  "debug": true\n}\n```\n\nThe file contains your application configuration with the app name, version, and debug mode enabled.',
     },
-  ];
+  ]
 
   return (
     <MCPTool
       tool={tool}
-      serverUrl="mcp://localhost:3000"
+      serverUrl='mcp://localhost:3000'
       hasHead={true}
       headingLevel={2}
       chatExample={chatExample}
       ctx={ctx}
     />
-  );
+  )
 }
 
 /**
  * Example 3: Custom MCP Tool
- * 
+ *
  * Shows how to create and display a custom MCP tool
  */
 export async function CustomMCPToolExample() {
@@ -199,7 +209,7 @@ export async function CustomMCPToolExample() {
         },
       },
     },
-  };
+  }
 
   const customChatExample: CoreMessage[] = [
     {
@@ -211,7 +221,7 @@ export async function CustomMCPToolExample() {
       content: [
         {
           type: 'text',
-          text: 'I\'ll send that email for you.',
+          text: "I'll send that email for you.",
         },
         {
           type: 'tool-call',
@@ -228,36 +238,39 @@ export async function CustomMCPToolExample() {
     },
     {
       role: 'tool',
-      content: [{
-        type: 'tool-result',
-        toolCallId: 'call_1',
-        toolName: 'send_email',
-        output: {
-          message_id: 'msg_abc123',
-          status: 'sent',
-          timestamp: '2024-01-15T10:30:00Z',
-        } as any,
-      }],
+      content: [
+        {
+          type: 'tool-result',
+          toolCallId: 'call_1',
+          toolName: 'send_email',
+          output: {
+            message_id: 'msg_abc123',
+            status: 'sent',
+            timestamp: '2024-01-15T10:30:00Z',
+          } as any,
+        },
+      ],
     },
     {
       role: 'assistant',
-      content: 'Email sent successfully! The message was delivered to john@example.com with the subject "Project Update". Message ID: msg_abc123',
+      content:
+        'Email sent successfully! The message was delivered to john@example.com with the subject "Project Update". Message ID: msg_abc123',
     },
-  ];
+  ]
 
   return (
     <MCPPage
       tool={customTool}
-      serverUrl="mcp://api.example.com"
+      serverUrl='mcp://api.example.com'
       hasHead={true}
       chatExample={customChatExample}
     />
-  );
+  )
 }
 
 /**
  * Example 4: MCP Tool from Server Response
- * 
+ *
  * Shows how to use actual MCP server response data
  */
 export async function MCPServerResponseExample() {
@@ -310,7 +323,7 @@ export async function MCPServerResponseExample() {
         },
       },
     },
-  };
+  }
 
   const serverChatExample: CoreMessage[] = [
     {
@@ -322,7 +335,7 @@ export async function MCPServerResponseExample() {
       content: [
         {
           type: 'text',
-          text: 'I\'ll create a README.md file for you.',
+          text: "I'll create a README.md file for you.",
         },
         {
           type: 'tool-call',
@@ -330,7 +343,8 @@ export async function MCPServerResponseExample() {
           toolName: 'create_file',
           input: {
             path: './README.md',
-            content: '# My Project\n\nThis is a sample project.\n\n## Getting Started\n\nTo get started...',
+            content:
+              '# My Project\n\nThis is a sample project.\n\n## Getting Started\n\nTo get started...',
             overwrite: false,
           },
         },
@@ -338,36 +352,39 @@ export async function MCPServerResponseExample() {
     },
     {
       role: 'tool',
-      content: [{
-        type: 'tool-result',
-        toolCallId: 'call_1',
-        toolName: 'create_file',
-        output: {
-          path: '/Users/example/project/README.md',
-          size: 75,
-          created_at: '2024-01-15T10:30:00Z',
-        } as any,
-      }],
+      content: [
+        {
+          type: 'tool-result',
+          toolCallId: 'call_1',
+          toolName: 'create_file',
+          output: {
+            path: '/Users/example/project/README.md',
+            size: 75,
+            created_at: '2024-01-15T10:30:00Z',
+          } as any,
+        },
+      ],
     },
     {
       role: 'assistant',
-      content: 'Successfully created README.md! The file is 75 bytes and contains basic project information.',
+      content:
+        'Successfully created README.md! The file is 75 bytes and contains basic project information.',
     },
-  ];
+  ]
 
   return (
     <MCPPage
       tool={mcpServerTool}
-      serverUrl="mcp://filesystem.local"
+      serverUrl='mcp://filesystem.local'
       hasHead={true}
       chatExample={serverChatExample}
     />
-  );
+  )
 }
 
 /**
  * Example 5: Minimal MCP Tool Display
- * 
+ *
  * Shows the simplest way to display an MCP tool
  */
 export async function MinimalMCPExample() {
@@ -384,14 +401,9 @@ export async function MinimalMCPExample() {
         },
       },
     },
-  };
+  }
 
-  return (
-    <MCPPage
-      tool={simpleTool}
-      hasHead={false}
-    />
-  );
+  return <MCPPage tool={simpleTool} hasHead={false} />
 }
 
 // Example usage in documentation:

@@ -1,53 +1,53 @@
 {
-    // the logo shown in the top left
-    "logo": {
-        "dark": "/logo/light.svg",
-        "light": "/logo/dark.svg",
-    },
-    "name": "holocron",
-    "footer": {
-        "links": [
-            {
-                "items": [
-                    {
-                        "href": "https://holocron.so",
-                        "label": "Holocron",
-                    },
-                ],
-                "header": "Documentation",
-            },
+  // the logo shown in the top left
+  "logo": {
+    "dark": "/logo/light.svg",
+    "light": "/logo/dark.svg"
+  },
+  "name": "holocron",
+  "footer": {
+    "links": [
+      {
+        "items": [
+          {
+            "href": "https://holocron.so",
+            "label": "Holocron"
+          }
         ],
-        "socials": {
-            "github": "https://github.com/remorses",
-            "twitter": "https://x.com/__morse",
-        },
-    },
-    "navbar": {
-        // the links shown in the top right
-        "links": [
-            {
-                "href": "https://holocron.so",
-                "icon": "document",
-                "label": "Home",
-            },
-        ],
-        // a button shown on the top right
-        "primary": {
-            "href": "https://holocron.so/login",
-            "type": "button",
-            "label": "Get Started",
-        },
-    },
-    "siteId": "cmclpd3km0000htompzockfgx",
-    "$schema": "https://holocron.so/holocron.json",
-    // to add new domains you can simply add them here, then add a CNAME record pointing to cname.holocron.so
-    "domains": [
-        "holocron-o4f79efs.localhost",
-        "docs.holocron.so",
-        "holocron-o4f79efs.holocron.so",
+        "header": "Documentation"
+      }
     ],
-    "favicon": {
-        "dark": "/favicon.svg",
-        "light": "/favicon.svg",
-    },
+    "socials": {
+      "github": "https://github.com/remorses",
+      "twitter": "https://x.com/__morse"
+    }
+  },
+  "navbar": {
+    // the links shown in the top right
+    "links": [
+      {
+        "href": "https://holocron.so",
+        "icon": "document",
+        "label": "Home"
+      }
+    ],
+    // a button shown on the top right
+    "primary": {
+      "href": "https://holocron.so/login",
+      "type": "button",
+      "label": "Get Started"
+    }
+  },
+  "siteId": "cmclpd3km0000htompzockfgx",
+  "$schema": "https://holocron.so/holocron.json",
+  // to add new domains you can simply add them here, then add a CNAME record pointing to cname.holocron.so
+  "domains": [
+    "holocron-o4f79efs.localhost",
+    "docs.holocron.so",
+    "holocron-o4f79efs.holocron.so"
+  ],
+  "favicon": {
+    "dark": "/favicon.svg",
+    "light": "/favicon.svg"
+  }
 }

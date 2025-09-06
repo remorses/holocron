@@ -4,116 +4,115 @@ import { FilesInDraft } from './docs-state'
 import { getFumadocsSource } from './source'
 
 export interface GetTreeFromFilesParams {
-    files: VirtualFile[]
-    filesInDraft: FilesInDraft
-    defaultLanguage: string
-    languages: string[]
-    githubFolder: string
+  files: VirtualFile[]
+  filesInDraft: FilesInDraft
+  defaultLanguage: string
+  languages: string[]
+  githubFolder: string
 }
 
 export const getTreeFromFiles = ({
-    files,
-    filesInDraft,
-    defaultLanguage,
-    languages,
-    githubFolder,
+  files,
+  filesInDraft,
+  defaultLanguage,
+  languages,
+  githubFolder,
 }: GetTreeFromFilesParams) => {
-    function removeGithubFolder(p) {
-        if (p.startsWith('/')) {
-            p = p.slice(1)
-        }
-        if (p.startsWith(githubFolder)) {
-            p = p.slice(githubFolder.length)
-            if (p.startsWith('/')) {
-                p = p.slice(1)
-            }
-            return p
-        }
-        return p
+  function removeGithubFolder(p) {
+    if (p.startsWith('/')) {
+      p = p.slice(1)
     }
-    // Create files with filesInDraft included
-    const allFiles: VirtualFile[] = [...files]
+    if (p.startsWith(githubFolder)) {
+      p = p.slice(githubFolder.length)
+      if (p.startsWith('/')) {
+        p = p.slice(1)
+      }
+      return p
+    }
+    return p
+  }
+  // Create files with filesInDraft included
+  const allFiles: VirtualFile[] = [...files]
 
-    // Add files from draft state
-    Object.entries(filesInDraft).forEach(([githubPath, fileData]) => {
-        const normalizedPath = removeGithubFolder(githubPath)
-        const existingIndex = allFiles.findIndex((f) => f.path === normalizedPath)
+  // Add files from draft state
+  Object.entries(filesInDraft).forEach(([githubPath, fileData]) => {
+    const normalizedPath = removeGithubFolder(githubPath)
+    const existingIndex = allFiles.findIndex((f) => f.path === normalizedPath)
 
-        if (!fileData || fileData.content === null) {
-            // Remove file if it exists and fileData is null or content is null (deleted)
-            if (existingIndex >= 0) {
-                allFiles.splice(existingIndex, 1)
-            }
-            return
-        }
+    if (!fileData || fileData.content === null) {
+      // Remove file if it exists and fileData is null or content is null (deleted)
+      if (existingIndex >= 0) {
+        allFiles.splice(existingIndex, 1)
+      }
+      return
+    }
 
-        // Determine file type based on extension
-        const isMetaFile = githubPath.endsWith('meta.json')
-        const isPageFile =
-            githubPath.endsWith('.mdx') || githubPath.endsWith('.md')
+    // Determine file type based on extension
+    const isMetaFile = githubPath.endsWith('meta.json')
+    const isPageFile = githubPath.endsWith('.mdx') || githubPath.endsWith('.md')
 
-        if (!isMetaFile && !isPageFile) return
+    if (!isMetaFile && !isPageFile) return
 
-        let draftFile: VirtualFile
+    let draftFile: VirtualFile
 
-        if (isMetaFile) {
-            // Parse JSON for meta files
-            let jsonData
-            try {
-                jsonData = JSON.parse(fileData.content)
-            } catch {
-                return // Skip invalid JSON
-            }
+    if (isMetaFile) {
+      // Parse JSON for meta files
+      let jsonData
+      try {
+        jsonData = JSON.parse(fileData.content)
+      } catch {
+        return // Skip invalid JSON
+      }
 
-            draftFile = {
-                data: jsonData,
-                path: normalizedPath,
-                type: 'meta',
-            }
-        } else {
-            // Parse frontmatter for page files
-            const { attributes: frontmatter } = frontMatter(fileData.content)
+      draftFile = {
+        data: jsonData,
+        path: normalizedPath,
+        type: 'meta',
+      }
+    } else {
+      // Parse frontmatter for page files
+      const { attributes: frontmatter } = frontMatter(fileData.content)
 
-            draftFile = {
-                data: frontmatter,
-                path: normalizedPath,
-                type: 'page',
-            }
-        }
+      draftFile = {
+        data: frontmatter,
+        path: normalizedPath,
+        type: 'page',
+      }
+    }
 
-        // Replace existing file or add new one
-        // console.log(draftFile, allFiles)
-        if (existingIndex >= 0) {
-            allFiles[existingIndex] = draftFile
-        } else {
-            allFiles.push(draftFile)
-        }
+    // Replace existing file or add new one
+    // console.log(draftFile, allFiles)
+    if (existingIndex >= 0) {
+      allFiles[existingIndex] = draftFile
+    } else {
+      allFiles.push(draftFile)
+    }
+  })
+  try {
+    // Create source and get tree synchronously
+    const source = getFumadocsSource({
+      files: allFiles,
+      defaultLanguage,
+      languages,
     })
-    try {
-        // Create source and get tree synchronously
-        const source = getFumadocsSource({
-            files: allFiles,
-            defaultLanguage,
-            languages,
-        })
 
-        const tree = source.getPageTree(defaultLanguage || 'en')
-        // force rerender
-        tree.$id = Math.random().toString(36).slice(2)
-        // console.log(tree)
-        return tree
-    } catch (e) {
-        console.error(`cannot create tree with draft files`, e, filesInDraft)
-        const source = getFumadocsSource({
-            files,
-            defaultLanguage,
-            languages,
-        })
+    const tree = source.getPageTree(defaultLanguage || 'en')
+    // force rerender
+    tree.$id = Math.random().toString(36).slice(2)
+    // console.log(tree)
+    return tree
+  } catch (e) {
+    console.error(`cannot create tree with draft files`, e, filesInDraft)
+    const source = getFumadocsSource({
+      files,
+      defaultLanguage,
+      languages,
+    })
 
-        const tree = source.getPageTree(defaultLanguage || 'en')
-        tree.$id = Math.random().toString(36).slice(2)
-        console.log(`creating new tree with id`, tree.$id)
-        // console.log(tree)
-        return tree
-    }
+    const tree = source.getPageTree(defaultLanguage || 'en')
+    tree.$id = Math.random().toString(36).slice(2)
+    console.log(`creating new tree with id`, tree.$id)
+    // console.log(tree)
+    return tree
+  }
 }

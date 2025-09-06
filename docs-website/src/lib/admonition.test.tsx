@@ -9,8 +9,8 @@ import { SafeMdxRenderer } from 'safe-mdx'
 import { renderToStaticMarkup } from 'react-dom/server'
 
 describe('admonitions', () => {
-    test('admonitions with ::: and no space', async () => {
-        const markdown = dedent`
+  test('admonitions with ::: and no space', async () => {
+    const markdown = dedent`
         # hello
 
         :::tip
@@ -21,33 +21,31 @@ describe('admonitions', () => {
 
         `
 
-        const result = await processMdxInServer({
-            markdown,
-            githubPath: '',
-            extension: 'mdx',
-        })
-        const data = result.data as { ast: Root }
-        const jsx = renderToStaticMarkup(
-            <SafeMdxRenderer
-            allowClientEsmImports
-                mdast={data?.ast}
-                components={{
-                    Callout({ children, type }) {
-                        return (
-                            <div
-                                className={`callout callout-${type ?? 'note'}`}
-                            >
-                                {children}
-                            </div>
-                        )
-                    },
-                }}
-            />,
-        )
-
-        // Check the full output
-        expect(jsx).toMatchInlineSnapshot(
-            `"<div class="callout callout-info"><p>You should commit your project&#x27;s file to Git.</p></div>"`,
-        )
+    const result = await processMdxInServer({
+      markdown,
+      githubPath: '',
+      extension: 'mdx',
     })
+    const data = result.data as { ast: Root }
+    const jsx = renderToStaticMarkup(
+      <SafeMdxRenderer
+        allowClientEsmImports
+        mdast={data?.ast}
+        components={{
+          Callout({ children, type }) {
+            return (
+              <div className={`callout callout-${type ?? 'note'}`}>
+                {children}
+              </div>
+            )
+          },
+        }}
+      />,
+    )
+
+    // Check the full output
+    expect(jsx).toMatchInlineSnapshot(
+      `"<div class="callout callout-info"><p>You should commit your project&#x27;s file to Git.</p></div>"`,
+    )
+  })
 })

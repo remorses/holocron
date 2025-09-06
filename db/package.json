@@ -1,36 +1,36 @@
 {
-    "name": "db",
-    "private": true,
-    "type": "module",
-    "main": "src/prisma.ts",
-    "description": "db",
-    "scripts": {
-        "studio": "doppler run -- prisma studio",
-        "psql:prod": "doppler run -c production --command 'psql \"$(echo $DATABASE_URL | sed \"s/\\?.*//\")\"'",
-        "psql:preview": "doppler run --command 'psql $DATABASE_URL'",
-        "diff:prod": "doppler run -c production --command 'pnpm prisma migrate diff --script --from-url $DATABASE_URL --to-schema-datamodel schema.prisma > diff.sql'",
-        "diff:preview": "doppler run -c preview --command 'pnpm prisma migrate diff --script --from-url $DATABASE_URL --to-schema-datamodel schema.prisma > diff.sql'",
-        "push:diff": "doppler run --command 'psql \"$DIRECT_URL\" -a -f diff.sql'",
-        "dump:prod": "doppler run -c production --command 'pnpm supabase --db-url $DIRECT_URL db dump --schema auth -f dump.sql'",
-        "push": "doppler run -c dev --command 'prisma db push && pnpm tsc'",
-        "push:prod": "doppler run -c production --command 'prisma db push && pnpm tsc'",
-        "pull": "doppler run -c dev -- prisma db pull && prisma generate",
-        "gen": "prisma generate && pnpm tsc",
-        "pull:prod": "doppler run -c production -- prisma db pull "
-    },
-    "keywords": [],
-    "author": "remorses <beats.by.morse@gmail.com>",
-    "license": "ISC",
-    "dependencies": {
-        "@prisma/adapter-pg": "^6.15.0",
-        "@prisma/client": "^6.15.0",
-        "docs-website": "workspace:*",
-        "pg": "^8.13.1",
-        "postgres": "^3.4.7",
-        "prisma": "^6.15.0"
-    },
-    "devDependencies": {
-        "@types/node": "^24.0.1",
-        "supabase": "^2.24.3"
-    }
+  "name": "db",
+  "private": true,
+  "type": "module",
+  "main": "src/prisma.ts",
+  "description": "db",
+  "scripts": {
+    "studio": "doppler run -- prisma studio",
+    "psql:prod": "doppler run -c production --command 'psql \"$(echo $DATABASE_URL | sed \"s/\\?.*//\")\"'",
+    "psql:preview": "doppler run --command 'psql $DATABASE_URL'",
+    "diff:prod": "doppler run -c production --command 'pnpm prisma migrate diff --script --from-url $DATABASE_URL --to-schema-datamodel schema.prisma > diff.sql'",
+    "diff:preview": "doppler run -c preview --command 'pnpm prisma migrate diff --script --from-url $DATABASE_URL --to-schema-datamodel schema.prisma > diff.sql'",
+    "push:diff": "doppler run --command 'psql \"$DIRECT_URL\" -a -f diff.sql'",
+    "dump:prod": "doppler run -c production --command 'pnpm supabase --db-url $DIRECT_URL db dump --schema auth -f dump.sql'",
+    "push": "doppler run -c dev --command 'prisma db push && pnpm tsc'",
+    "push:prod": "doppler run -c production --command 'prisma db push && pnpm tsc'",
+    "pull": "doppler run -c dev -- prisma db pull && prisma generate",
+    "gen": "prisma generate && pnpm tsc",
+    "pull:prod": "doppler run -c production -- prisma db pull "
+  },
+  "keywords": [],
+  "author": "remorses <beats.by.morse@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/adapter-pg": "^6.15.0",
+    "@prisma/client": "^6.15.0",
+    "docs-website": "workspace:*",
+    "pg": "^8.13.1",
+    "postgres": "^3.4.7",
+    "prisma": "^6.15.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.1",
+    "supabase": "^2.24.3"
+  }
 }

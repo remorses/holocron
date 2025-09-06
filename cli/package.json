@@ -1,45 +1,45 @@
 {
-    "name": "@holocron.so/cli",
-    "version": "0.1.5",
-    "description": "",
-    "type": "module",
-    "repository": "https://github.com/remorses/holocron",
-    "scripts": {
-        "build": "tsc ",
-        "typecheck": "tsc",
-        "prepublishOnly": "tsc",
-        "holocron": "node bin.js",
-        "watch": "tsc -w"
-    },
-    "bin": "./bin.js",
-    "files": [
-        "dist",
-        "src",
-        "bin.js"
-    ],
-    "keywords": [],
-    "author": "Tommaso De Rossi, morse <beats.by.morse@gmail.com>",
-    "license": "",
-    "dependencies": {
-        "cac": "^6.7.14",
-        "chokidar": "^4.0.3",
-        "cli-table3": "^0.6.5",
-        "durablefetch": "^0.1.0",
-        "globby": "^14.1.0",
-        "image-dimensions": "^2.3.0",
-        "mime-types": "^2.1.35",
-        "picocolors": "^1.1.1",
-        "prompts": "^2.4.2",
-        "sema4": "^0.1.3",
-        "spiceflow": "^1.17.8",
-        "tiny-jsonc": "^1.0.2",
-        "ws": "^8.18.2"
-    },
-    "devDependencies": {
-        "@types/mime-types": "^2.1.4",
-        "@types/prompts": "^2.4.9",
-        "@types/ws": "^8.18.1",
-        "docs-website": "workspace:*",
-        "website": "workspace:*"
-    }
+  "name": "@holocron.so/cli",
+  "version": "0.1.5",
+  "description": "",
+  "type": "module",
+  "repository": "https://github.com/remorses/holocron",
+  "scripts": {
+    "build": "tsc ",
+    "typecheck": "tsc",
+    "prepublishOnly": "tsc",
+    "holocron": "node bin.js",
+    "watch": "tsc -w"
+  },
+  "bin": "./bin.js",
+  "files": [
+    "dist",
+    "src",
+    "bin.js"
+  ],
+  "keywords": [],
+  "author": "Tommaso De Rossi, morse <beats.by.morse@gmail.com>",
+  "license": "",
+  "dependencies": {
+    "cac": "^6.7.14",
+    "chokidar": "^4.0.3",
+    "cli-table3": "^0.6.5",
+    "durablefetch": "^0.1.0",
+    "globby": "^14.1.0",
+    "image-dimensions": "^2.3.0",
+    "mime-types": "^2.1.35",
+    "picocolors": "^1.1.1",
+    "prompts": "^2.4.2",
+    "sema4": "^0.1.3",
+    "spiceflow": "^1.17.8",
+    "tiny-jsonc": "^1.0.2",
+    "ws": "^8.18.2"
+  },
+  "devDependencies": {
+    "@types/mime-types": "^2.1.4",
+    "@types/prompts": "^2.4.9",
+    "@types/ws": "^8.18.1",
+    "docs-website": "workspace:*",
+    "website": "workspace:*"
+  }
 }

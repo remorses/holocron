@@ -3,24 +3,25 @@ import { marked } from 'marked'
 import dedent from 'string-dedent'
 
 describe('marked.lexer', () => {
-    it('tokenizes a simple markdown string', () => {
-        const markdown = dedent(`
+  it('tokenizes a simple markdown string', () => {
+    const markdown = dedent(`
             # Heading
 
             Paragraph text.
         `)
-        const tokens = marked.lexer(markdown)
-        expect(tokens.map((token) => JSON.stringify(token.raw)))
-            .toMatchInlineSnapshot(`
+    const tokens = marked.lexer(markdown)
+    expect(
+      tokens.map((token) => JSON.stringify(token.raw)),
+    ).toMatchInlineSnapshot(`
               [
                 ""# Heading\\n\\n"",
                 ""Paragraph text."",
               ]
             `)
-    })
+  })
 
-    it('tokenizes mdx JSX blocks', () => {
-        const markdown = dedent(`
+  it('tokenizes mdx JSX blocks', () => {
+    const markdown = dedent(`
           # Example MDX
 
           <Alert type="info">
@@ -38,9 +39,10 @@ describe('marked.lexer', () => {
 
           > This is a paragraph <Inline/>
       `)
-        const tokens = marked.lexer(markdown)
-        expect(tokens.map((token) => JSON.stringify(token.raw)))
-            .toMatchInlineSnapshot(`
+    const tokens = marked.lexer(markdown)
+    expect(
+      tokens.map((token) => JSON.stringify(token.raw)),
+    ).toMatchInlineSnapshot(`
               [
                 ""# Example MDX\\n\\n"",
                 ""<Alert type=\\"info\\">\\n\\n"",
@@ -50,10 +52,10 @@ describe('marked.lexer', () => {
                 ""> This is a paragraph <Inline/>"",
               ]
             `)
-    })
+  })
 
-    it('tokenizes lists and links', () => {
-        const markdown = dedent(`
+  it('tokenizes lists and links', () => {
+    const markdown = dedent(`
           # Here is a list
             - [Link](http://example.com)
             - Item 2
@@ -70,9 +72,10 @@ describe('marked.lexer', () => {
           and more
           \`\`\`
         `)
-        const tokens = marked.lexer(markdown)
-        expect(tokens.map((token) => [token.type, JSON.stringify(token.raw)]))
-            .toMatchInlineSnapshot(`
+    const tokens = marked.lexer(markdown)
+    expect(
+      tokens.map((token) => [token.type, JSON.stringify(token.raw)]),
+    ).toMatchInlineSnapshot(`
               [
                 [
                   "heading",
@@ -116,5 +119,5 @@ describe('marked.lexer', () => {
                 ],
               ]
             `)
-    })
+  })
 })

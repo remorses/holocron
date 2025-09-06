@@ -1,15 +1,17 @@
 import { describe, expect, test } from 'vitest'
 import { remark } from 'remark'
 import remarkMdx from 'remark-mdx'
-import { remarkCodeGroup, remarkSingleAccordionItems, remarkMermaidCode } from './remark-plugins'
+import {
+  remarkCodeGroup,
+  remarkSingleAccordionItems,
+  remarkMermaidCode,
+} from './remark-plugins'
 
 describe('remarkCodeGroup', () => {
-    test('transforms simple CodeGroup with two code blocks', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkCodeGroup)
+  test('transforms simple CodeGroup with two code blocks', async () => {
+    const processor = remark().use(remarkMdx).use(remarkCodeGroup)
 
-        const input = `<CodeGroup>
+    const input = `<CodeGroup>
 
 \`\`\`js title="JavaScript"
 console.log('Hello')
@@ -21,8 +23,8 @@ console.log('Hello' as string)
 
 </CodeGroup>`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<Tabs items={["JavaScript", "TypeScript"]}>
             <Tab value="JavaScript">
               \`\`\`js
@@ -38,14 +40,12 @@ console.log('Hello' as string)
           </Tabs>
           "
         `)
-    })
+  })
 
-    test('handles CodeGroup with language as fallback title', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkCodeGroup)
+  test('handles CodeGroup with language as fallback title', async () => {
+    const processor = remark().use(remarkMdx).use(remarkCodeGroup)
 
-        const input = `<CodeGroup>
+    const input = `<CodeGroup>
 
 \`\`\`python title 1
 print("Hello")
@@ -57,8 +57,8 @@ puts "Hello"
 
 </CodeGroup>`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<Tabs items={["title 1", "title 2"]}>
             <Tab value="title 1">
               \`\`\`python
@@ -74,16 +74,16 @@ puts "Hello"
           </Tabs>
           "
         `)
-    })
+  })
 
-    test('handles CodeGroup with persist configuration', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkCodeGroup, {
-                persist: { id: 'package-manager' }
-            })
+  test('handles CodeGroup with persist configuration', async () => {
+    const processor = remark()
+      .use(remarkMdx)
+      .use(remarkCodeGroup, {
+        persist: { id: 'package-manager' },
+      })
 
-        const input = `<CodeGroup>
+    const input = `<CodeGroup>
 
 \`\`\`bash title="npm"
 npm install package
@@ -99,8 +99,8 @@ pnpm add package
 
 </CodeGroup>`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<Tabs groupId="package-manager" persist items={["npm", "yarn", "pnpm"]}>
             <Tab value="npm">
               \`\`\`bash
@@ -122,17 +122,15 @@ pnpm add package
           </Tabs>
           "
         `)
+  })
+
+  test('handles CodeGroup with custom Tab and Tabs names', async () => {
+    const processor = remark().use(remarkMdx).use(remarkCodeGroup, {
+      Tab: 'CustomTab',
+      Tabs: 'CustomTabs',
     })
 
-    test('handles CodeGroup with custom Tab and Tabs names', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkCodeGroup, {
-                Tab: 'CustomTab',
-                Tabs: 'CustomTabs'
-            })
-
-        const input = `<CodeGroup>
+    const input = `<CodeGroup>
 
 \`\`\`json title="Config"
 {
@@ -146,8 +144,8 @@ name: test
 
 </CodeGroup>`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<CustomTabs items={["Config", "YAML Config"]}>
             <CustomTab value="Config">
               \`\`\`json
@@ -165,29 +163,25 @@ name: test
           </CustomTabs>
           "
         `)
-    })
+  })
 
-    test('handles empty CodeGroup', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkCodeGroup)
+  test('handles empty CodeGroup', async () => {
+    const processor = remark().use(remarkMdx).use(remarkCodeGroup)
 
-        const input = `<CodeGroup>
+    const input = `<CodeGroup>
 </CodeGroup>`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<CodeGroup />
           "
         `)
-    })
+  })
 
-    test('handles CodeGroup with mixed content', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkCodeGroup)
+  test('handles CodeGroup with mixed content', async () => {
+    const processor = remark().use(remarkMdx).use(remarkCodeGroup)
 
-        const input = `<CodeGroup>
+    const input = `<CodeGroup>
 
 Some text content
 
@@ -203,8 +197,8 @@ More text
 
 </CodeGroup>`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<Tabs items={["Example", "Styles"]}>
             <Tab value="Example">
               \`\`\`js
@@ -220,14 +214,12 @@ More text
           </Tabs>
           "
         `)
-    })
+  })
 
-    test('handles code blocks without title or language', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkCodeGroup)
+  test('handles code blocks without title or language', async () => {
+    const processor = remark().use(remarkMdx).use(remarkCodeGroup)
 
-        const input = `<CodeGroup>
+    const input = `<CodeGroup>
 
 \`\`\`
 plain text code
@@ -239,8 +231,8 @@ another block
 
 </CodeGroup>`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<Tabs items={["Code", "Code"]}>
             <Tab value="Code">
               \`\`\`
@@ -256,14 +248,12 @@ another block
           </Tabs>
           "
         `)
-    })
+  })
 
-    test('preserves code block meta after title extraction', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkCodeGroup)
+  test('preserves code block meta after title extraction', async () => {
+    const processor = remark().use(remarkMdx).use(remarkCodeGroup)
 
-        const input = `<CodeGroup>
+    const input = `<CodeGroup>
 
 \`\`\`js title="Component" showLineNumbers {2-4}
 function MyComponent() {
@@ -274,8 +264,8 @@ function MyComponent() {
 
 </CodeGroup>`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<Tabs items={["Component"]}>
             <Tab value="Component">
               \`\`\`js
@@ -288,21 +278,19 @@ function MyComponent() {
           </Tabs>
           "
         `)
-    })
+  })
 })
 
 describe('remarkSingleAccordionItems', () => {
-    test('wraps single Accordion in AccordionGroup', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkSingleAccordionItems)
+  test('wraps single Accordion in AccordionGroup', async () => {
+    const processor = remark().use(remarkMdx).use(remarkSingleAccordionItems)
 
-        const input = `<Accordion title="FAQ Item">
+    const input = `<Accordion title="FAQ Item">
 Content inside accordion
 </Accordion>`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<AccordionGroup>
             <Accordion title="FAQ Item">
               Content inside accordion
@@ -310,14 +298,12 @@ Content inside accordion
           </AccordionGroup>
           "
         `)
-    })
+  })
 
-    test('does not wrap Accordion already inside AccordionGroup', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkSingleAccordionItems)
+  test('does not wrap Accordion already inside AccordionGroup', async () => {
+    const processor = remark().use(remarkMdx).use(remarkSingleAccordionItems)
 
-        const input = `<AccordionGroup>
+    const input = `<AccordionGroup>
 <Accordion title="Item 1">
 Content 1
 </Accordion>
@@ -326,8 +312,8 @@ Content 2
 </Accordion>
 </AccordionGroup>`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<AccordionGroup>
             <Accordion title="Item 1">
               Content 1
@@ -339,14 +325,12 @@ Content 2
           </AccordionGroup>
           "
         `)
-    })
+  })
 
-    test('does not wrap Accordion already inside Accordions', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkSingleAccordionItems)
+  test('does not wrap Accordion already inside Accordions', async () => {
+    const processor = remark().use(remarkMdx).use(remarkSingleAccordionItems)
 
-        const input = `<Accordions>
+    const input = `<Accordions>
 <Accordion title="Item 1">
 Content 1
 </Accordion>
@@ -355,8 +339,8 @@ Content 2
 </Accordion>
 </Accordions>`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<Accordions>
             <Accordion title="Item 1">
               Content 1
@@ -368,14 +352,12 @@ Content 2
           </Accordions>
           "
         `)
-    })
+  })
 
-    test('wraps multiple standalone Accordions separately', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkSingleAccordionItems)
+  test('wraps multiple standalone Accordions separately', async () => {
+    const processor = remark().use(remarkMdx).use(remarkSingleAccordionItems)
 
-        const input = `<Accordion title="First">
+    const input = `<Accordion title="First">
 First content
 </Accordion>
 
@@ -385,8 +367,8 @@ Some text between
 Second content
 </Accordion>`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<AccordionGroup>
             <Accordion title="First">
               First content
@@ -402,21 +384,19 @@ Second content
           </AccordionGroup>
           "
         `)
-    })
+  })
 
-    test('handles nested Accordions in MDX components', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkSingleAccordionItems)
+  test('handles nested Accordions in MDX components', async () => {
+    const processor = remark().use(remarkMdx).use(remarkSingleAccordionItems)
 
-        const input = `<Card>
+    const input = `<Card>
 <Accordion title="Nested">
 Nested content
 </Accordion>
 </Card>`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<Card>
             <AccordionGroup>
               <Accordion title="Nested">
@@ -426,19 +406,17 @@ Nested content
           </Card>
           "
         `)
-    })
+  })
 
-    test('preserves Accordion attributes when wrapping', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkSingleAccordionItems)
+  test('preserves Accordion attributes when wrapping', async () => {
+    const processor = remark().use(remarkMdx).use(remarkSingleAccordionItems)
 
-        const input = `<Accordion title="Advanced" icon="settings" defaultOpen>
+    const input = `<Accordion title="Advanced" icon="settings" defaultOpen>
 Advanced content with attributes
 </Accordion>`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<AccordionGroup>
             <Accordion title="Advanced" icon="settings" defaultOpen>
               Advanced content with attributes
@@ -446,30 +424,26 @@ Advanced content with attributes
           </AccordionGroup>
           "
         `)
-    })
+  })
 
-    test('handles empty Accordion', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkSingleAccordionItems)
+  test('handles empty Accordion', async () => {
+    const processor = remark().use(remarkMdx).use(remarkSingleAccordionItems)
 
-        const input = `<Accordion title="Empty" />`
+    const input = `<Accordion title="Empty" />`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<AccordionGroup>
             <Accordion title="Empty" />
           </AccordionGroup>
           "
         `)
-    })
+  })
 
-    test('handles Accordion with complex children', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkSingleAccordionItems)
+  test('handles Accordion with complex children', async () => {
+    const processor = remark().use(remarkMdx).use(remarkSingleAccordionItems)
 
-        const input = `<Accordion title="Complex">
+    const input = `<Accordion title="Complex">
 
 ## Heading inside
 
@@ -482,8 +456,8 @@ console.log('code')
 
 </Accordion>`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<AccordionGroup>
             <Accordion title="Complex">
               ## Heading inside
@@ -498,24 +472,22 @@ console.log('code')
           </AccordionGroup>
           "
         `)
-    })
+  })
 })
 
 describe('remarkMermaidCode', () => {
-    test('transforms mermaid code block to Mermaid component', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkMermaidCode)
+  test('transforms mermaid code block to Mermaid component', async () => {
+    const processor = remark().use(remarkMdx).use(remarkMermaidCode)
 
-        const input = `\`\`\`mermaid
+    const input = `\`\`\`mermaid
 graph TD
     A[Start] --> B{Is it?}
     B -->|Yes| C[OK]
     B -->|No| D[End]
 \`\`\``
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<Mermaid
             chart="graph TD
               A[Start] --> B{Is it?}
@@ -524,14 +496,12 @@ graph TD
           />
           "
         `)
-    })
+  })
 
-    test('does not transform non-mermaid code blocks', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkMermaidCode)
+  test('does not transform non-mermaid code blocks', async () => {
+    const processor = remark().use(remarkMdx).use(remarkMermaidCode)
 
-        const input = `\`\`\`javascript
+    const input = `\`\`\`javascript
 console.log('Not mermaid')
 \`\`\`
 
@@ -539,8 +509,8 @@ console.log('Not mermaid')
 print("Also not mermaid")
 \`\`\``
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "\`\`\`javascript
           console.log('Not mermaid')
           \`\`\`
@@ -550,14 +520,12 @@ print("Also not mermaid")
           \`\`\`
           "
         `)
-    })
+  })
 
-    test('handles multiple mermaid blocks', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkMermaidCode)
+  test('handles multiple mermaid blocks', async () => {
+    const processor = remark().use(remarkMdx).use(remarkMermaidCode)
 
-        const input = `First diagram:
+    const input = `First diagram:
 
 \`\`\`mermaid
 flowchart LR
@@ -572,8 +540,8 @@ sequenceDiagram
     Bob->>Alice: Hi!
 \`\`\``
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "First diagram:
 
           <Mermaid
@@ -590,14 +558,12 @@ sequenceDiagram
           />
           "
         `)
-    })
+  })
 
-    test('handles mermaid block with complex content', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkMermaidCode)
+  test('handles mermaid block with complex content', async () => {
+    const processor = remark().use(remarkMdx).use(remarkMermaidCode)
 
-        const input = `\`\`\`mermaid
+    const input = `\`\`\`mermaid
 gitGraph
     commit
     branch develop
@@ -608,8 +574,8 @@ gitGraph
     commit
 \`\`\``
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<Mermaid
             chart="gitGraph
               commit
@@ -622,21 +588,19 @@ gitGraph
           />
           "
         `)
-    })
+  })
 
-    test('preserves mermaid content with special characters', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkMermaidCode)
+  test('preserves mermaid content with special characters', async () => {
+    const processor = remark().use(remarkMdx).use(remarkMermaidCode)
 
-        const input = `\`\`\`mermaid
+    const input = `\`\`\`mermaid
 graph TD
     A["Node with 'quotes'"] --> B["Node with \"double quotes\""]
     B --> C[Node with <brackets>]
 \`\`\``
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<Mermaid
             chart="graph TD
               A[&#x22;Node with 'quotes'&#x22;] --> B[&#x22;Node with &#x22;double quotes&#x22;&#x22;]
@@ -644,29 +608,25 @@ graph TD
           />
           "
         `)
-    })
+  })
 
-    test('handles empty mermaid code block', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkMermaidCode)
+  test('handles empty mermaid code block', async () => {
+    const processor = remark().use(remarkMdx).use(remarkMermaidCode)
 
-        const input = `\`\`\`mermaid
+    const input = `\`\`\`mermaid
 \`\`\``
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<Mermaid chart="" />
           "
         `)
-    })
+  })
 
-    test('works with mixed content', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkMermaidCode)
+  test('works with mixed content', async () => {
+    const processor = remark().use(remarkMdx).use(remarkMermaidCode)
 
-        const input = `# Documentation
+    const input = `# Documentation
 
 Here's a regular code block:
 
@@ -685,8 +645,8 @@ pie title Pets
 
 More text after.`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "# Documentation
 
           Here's a regular code block:
@@ -707,14 +667,12 @@ More text after.`
           More text after.
           "
         `)
-    })
+  })
 
-    test('handles mermaid in MDX components', async () => {
-        const processor = remark()
-            .use(remarkMdx)
-            .use(remarkMermaidCode)
+  test('handles mermaid in MDX components', async () => {
+    const processor = remark().use(remarkMdx).use(remarkMermaidCode)
 
-        const input = `<Card>
+    const input = `<Card>
 
 \`\`\`mermaid
 classDiagram
@@ -724,8 +682,8 @@ classDiagram
 
 </Card>`
 
-        const result = await processor.process(input)
-        expect(String(result)).toMatchInlineSnapshot(`
+    const result = await processor.process(input)
+    expect(String(result)).toMatchInlineSnapshot(`
           "<Card>
             <Mermaid
               chart="classDiagram
@@ -735,5 +693,5 @@ classDiagram
           </Card>
           "
         `)
-    })
+  })
 })

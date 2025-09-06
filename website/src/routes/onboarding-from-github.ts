@@ -4,57 +4,54 @@ import { prisma } from 'db'
 import type { Route } from './+types/onboarding-from-github'
 
 export async function loader({ request }: Route.LoaderArgs) {
-    const { userId } = await getSession({ request })
-    const url = new URL(request.url)
+  const { userId } = await getSession({ request })
+  const url = new URL(request.url)
 
-    if (!userId) {
-        console.log(`no userId, redirecting to login`)
-        const loginUrl = new URL(href('/login'), process.env.PUBLIC_URL)
-        loginUrl.searchParams.set(
-            'callbackUrl',
-            href('/onboarding-from-github'),
-        )
+  if (!userId) {
+    console.log(`no userId, redirecting to login`)
+    const loginUrl = new URL(href('/login'), process.env.PUBLIC_URL)
+    loginUrl.searchParams.set('callbackUrl', href('/onboarding-from-github'))
 
-        const existingParams = url.searchParams
-        existingParams.forEach((value, key) => {
-            if (key !== 'callbackUrl') {
-                loginUrl.searchParams.set(key, value)
-            }
-        })
-
-        throw redirect(loginUrl.toString())
-    }
-
-    let org = await prisma.org.findFirst({
-        where: {
-            users: {
-                some: {
-                    userId,
-                },
-            },
-        },
+    const existingParams = url.searchParams
+    existingParams.forEach((value, key) => {
+      if (key !== 'callbackUrl') {
+        loginUrl.searchParams.set(key, value)
+      }
     })
 
-    if (!org) {
-        console.log(`no org found, creating org for userId=${userId}`)
+    throw redirect(loginUrl.toString())
+  }
 
-        const newOrg = await prisma.org.create({
-            data: {
-                users: {
-                    create: {
-                        userId,
-                        role: 'ADMIN',
-                    },
-                },
-            },
-        })
+  let org = await prisma.org.findFirst({
+    where: {
+      users: {
+        some: {
+          userId,
+        },
+      },
+    },
+  })
 
-        org = newOrg
-    }
+  if (!org) {
+    console.log(`no org found, creating org for userId=${userId}`)
 
-    const orgId = org.orgId
+    const newOrg = await prisma.org.create({
+      data: {
+        users: {
+          create: {
+            userId,
+            role: 'ADMIN',
+          },
+        },
+      },
+    })
 
-    throw redirect(
-        href('/org/:orgId/onboarding-from-github', { orgId }) + url.search,
-    )
+    org = newOrg
+  }
+
+  const orgId = org.orgId
+
+  throw redirect(
+    href('/org/:orgId/onboarding-from-github', { orgId }) + url.search,
+  )
 }

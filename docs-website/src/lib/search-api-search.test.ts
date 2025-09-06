@@ -3,11 +3,11 @@ import { searchDocsWithSearchApi } from './search-api-search'
 import type { FileUpdate } from './edit-tool'
 
 describe('searchDocsWithSearchApi', () => {
-    it('searches through filesInDraft using regex', async () => {
-        const filesInDraft: Record<string, FileUpdate> = {
-            'getting-started.mdx': {
-                githubPath: 'getting-started.mdx',
-                content: `---
+  it('searches through filesInDraft using regex', async () => {
+    const filesInDraft: Record<string, FileUpdate> = {
+      'getting-started.mdx': {
+        githubPath: 'getting-started.mdx',
+        content: `---
 title: Getting Started Guide
 description: Learn how to get started with our platform
 ---
@@ -39,12 +39,12 @@ Configure your settings in the config file:
 
 Once you're set up, you can start using the platform features.
 `,
-                addedLines: 30,
-                deletedLines: 0,
-            },
-            'api/authentication.mdx': {
-                githubPath: 'api/authentication.mdx',
-                content: `---
+        addedLines: 30,
+        deletedLines: 0,
+      },
+      'api/authentication.mdx': {
+        githubPath: 'api/authentication.mdx',
+        content: `---
 title: Authentication
 description: How to authenticate with our API
 ---
@@ -71,12 +71,12 @@ curl -H "Authorization: Bearer YOUR_API_KEY" https://api.example.com
 
 Remember to keep your API key secure!
 `,
-                addedLines: 25,
-                deletedLines: 0,
-            },
-            'tutorials/advanced.mdx': {
-                githubPath: 'tutorials/advanced.mdx',
-                content: `---
+        addedLines: 25,
+        deletedLines: 0,
+      },
+      'tutorials/advanced.mdx': {
+        githubPath: 'tutorials/advanced.mdx',
+        content: `---
 title: Advanced Features
 ---
 
@@ -92,19 +92,19 @@ You can create custom hooks for specific use cases.
 
 Optimize your application performance with these tips.
 `,
-                addedLines: 15,
-                deletedLines: 0,
-            },
-        }
+        addedLines: 15,
+        deletedLines: 0,
+      },
+    }
 
-        const results = await searchDocsWithSearchApi({
-            query: ['API', 'key'],
-            branchId: null, // No LanceDB search
-            exact: false,
-            filesInDraft,
-        })
+    const results = await searchDocsWithSearchApi({
+      query: ['API', 'key'],
+      branchId: null, // No LanceDB search
+      exact: false,
+      filesInDraft,
+    })
 
-        expect(results).toMatchInlineSnapshot(`
+    expect(results).toMatchInlineSnapshot(`
           [
             {
               "content": "Authentication (Draft)",
@@ -174,30 +174,30 @@ Optimize your application performance with these tips.
             },
           ]
         `)
-    })
+  })
 
-    it('searches with case-insensitive regex', async () => {
-        const filesInDraft: Record<string, FileUpdate> = {
-            'example.mdx': {
-                githubPath: 'example.mdx',
-                content: `# Example Documentation
+  it('searches with case-insensitive regex', async () => {
+    const filesInDraft: Record<string, FileUpdate> = {
+      'example.mdx': {
+        githubPath: 'example.mdx',
+        content: `# Example Documentation
 
 This is an EXAMPLE of how to use the API.
 Another example shows different usage patterns.
 `,
-                addedLines: 4,
-                deletedLines: 0,
-            },
-        }
+        addedLines: 4,
+        deletedLines: 0,
+      },
+    }
 
-        const results = await searchDocsWithSearchApi({
-            query: 'example',
-            branchId: null,
-            exact: false,
-            filesInDraft,
-        })
+    const results = await searchDocsWithSearchApi({
+      query: 'example',
+      branchId: null,
+      exact: false,
+      filesInDraft,
+    })
 
-        expect(results).toMatchInlineSnapshot(`
+    expect(results).toMatchInlineSnapshot(`
           [
             {
               "content": "example (Draft)",
@@ -241,30 +241,30 @@ Another example shows different usage patterns.
             },
           ]
         `)
-    })
+  })
 
-    it('handles files without frontmatter', async () => {
-        const filesInDraft: Record<string, FileUpdate> = {
-            'simple.md': {
-                githubPath: 'simple.md',
-                content: `# Simple Document
+  it('handles files without frontmatter', async () => {
+    const filesInDraft: Record<string, FileUpdate> = {
+      'simple.md': {
+        githubPath: 'simple.md',
+        content: `# Simple Document
 
 This is a simple document without frontmatter.
 It should still be searchable.
 `,
-                addedLines: 4,
-                deletedLines: 0,
-            },
-        }
+        addedLines: 4,
+        deletedLines: 0,
+      },
+    }
 
-        const results = await searchDocsWithSearchApi({
-            query: 'simple',
-            branchId: null,
-            exact: false,
-            filesInDraft,
-        })
+    const results = await searchDocsWithSearchApi({
+      query: 'simple',
+      branchId: null,
+      exact: false,
+      filesInDraft,
+    })
 
-        expect(results).toMatchInlineSnapshot(`
+    expect(results).toMatchInlineSnapshot(`
           [
             {
               "content": "simple (Draft)",
@@ -297,31 +297,31 @@ It should still be searchable.
             },
           ]
         `)
-    })
+  })
 
-    it('handles special regex characters in search query', async () => {
-        const filesInDraft: Record<string, FileUpdate> = {
-            'regex-test.mdx': {
-                githubPath: 'regex-test.mdx',
-                content: `# Regex Test
+  it('handles special regex characters in search query', async () => {
+    const filesInDraft: Record<string, FileUpdate> = {
+      'regex-test.mdx': {
+        githubPath: 'regex-test.mdx',
+        content: `# Regex Test
 
 Use $.price to get the price.
 Set config.* for wildcard settings.
 The pattern [a-z]+ matches letters.
 `,
-                addedLines: 5,
-                deletedLines: 0,
-            },
-        }
+        addedLines: 5,
+        deletedLines: 0,
+      },
+    }
 
-        const results = await searchDocsWithSearchApi({
-            query: '$.price',
-            branchId: null,
-            exact: false,
-            filesInDraft,
-        })
+    const results = await searchDocsWithSearchApi({
+      query: '$.price',
+      branchId: null,
+      exact: false,
+      filesInDraft,
+    })
 
-        expect(results).toMatchInlineSnapshot(`
+    expect(results).toMatchInlineSnapshot(`
           [
             {
               "content": "regex-test (Draft)",
@@ -343,67 +343,67 @@ The pattern [a-z]+ matches letters.
             },
           ]
         `)
-    })
+  })
 
-    it('returns empty results when no matches found', async () => {
-        const filesInDraft: Record<string, FileUpdate> = {
-            'no-match.mdx': {
-                githubPath: 'no-match.mdx',
-                content: `# No Match Document
+  it('returns empty results when no matches found', async () => {
+    const filesInDraft: Record<string, FileUpdate> = {
+      'no-match.mdx': {
+        githubPath: 'no-match.mdx',
+        content: `# No Match Document
 
 This document contains different content.
 Nothing here matches the search term.
 `,
-                addedLines: 4,
-                deletedLines: 0,
-            },
-        }
+        addedLines: 4,
+        deletedLines: 0,
+      },
+    }
 
-        const results = await searchDocsWithSearchApi({
-            query: 'nonexistent',
-            branchId: null,
-            exact: false,
-            filesInDraft,
-        })
-
-        expect(results).toMatchInlineSnapshot(`[]`)
+    const results = await searchDocsWithSearchApi({
+      query: 'nonexistent',
+      branchId: null,
+      exact: false,
+      filesInDraft,
     })
 
-    it('handles empty filesInDraft', async () => {
-        const results = await searchDocsWithSearchApi({
-            query: 'test',
-            branchId: null,
-            exact: false,
-            filesInDraft: {},
-        })
+    expect(results).toMatchInlineSnapshot(`[]`)
+  })
 
-        expect(results).toMatchInlineSnapshot(`[]`)
+  it('handles empty filesInDraft', async () => {
+    const results = await searchDocsWithSearchApi({
+      query: 'test',
+      branchId: null,
+      exact: false,
+      filesInDraft: {},
     })
 
-    it('handles files with null content', async () => {
-        const filesInDraft: Record<string, FileUpdate> = {
-            'empty.mdx': {
-                githubPath: 'empty.mdx',
-                content: null,
-                addedLines: 0,
-                deletedLines: 0,
-            },
-            'valid.mdx': {
-                githubPath: 'valid.mdx',
-                content: '# Valid document with searchable content',
-                addedLines: 1,
-                deletedLines: 0,
-            },
-        }
+    expect(results).toMatchInlineSnapshot(`[]`)
+  })
 
-        const results = await searchDocsWithSearchApi({
-            query: 'searchable',
-            branchId: null,
-            exact: false,
-            filesInDraft,
-        })
+  it('handles files with null content', async () => {
+    const filesInDraft: Record<string, FileUpdate> = {
+      'empty.mdx': {
+        githubPath: 'empty.mdx',
+        content: null,
+        addedLines: 0,
+        deletedLines: 0,
+      },
+      'valid.mdx': {
+        githubPath: 'valid.mdx',
+        content: '# Valid document with searchable content',
+        addedLines: 1,
+        deletedLines: 0,
+      },
+    }
 
-        expect(results).toMatchInlineSnapshot(`
+    const results = await searchDocsWithSearchApi({
+      query: 'searchable',
+      branchId: null,
+      exact: false,
+      filesInDraft,
+    })
+
+    expect(results).toMatchInlineSnapshot(`
           [
             {
               "content": "valid (Draft)",
@@ -422,5 +422,5 @@ Nothing here matches the search term.
             },
           ]
         `)
-    })
+  })
 })

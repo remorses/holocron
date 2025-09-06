@@ -3,14 +3,14 @@
 import { useState, useMemo } from 'react'
 import { createIdGenerator, UIMessage } from 'ai'
 import {
-    ChatAssistantMessage,
-    ChatErrorMessage,
-    ChatUserMessage,
+  ChatAssistantMessage,
+  ChatErrorMessage,
+  ChatUserMessage,
 } from 'contesto/src/chat/chat-message'
 import {
-    ChatProvider,
-    ChatState,
-    useChatContext,
+  ChatProvider,
+  ChatState,
+  useChatContext,
 } from 'contesto/src/chat/chat-provider'
 import { ChatTextarea } from 'contesto/src/chat/chat-textarea'
 import { useStickToBottom } from 'contesto/src/lib/stick-to-bottom'
@@ -21,23 +21,23 @@ import '../shadcn.css'
 import { ScrollArea } from 'contesto/src/components/ui/scroll-area'
 
 let exampleMessages: UIMessage[] = [
-    {
-        id: '1',
-        role: 'user',
-        parts: [
-            {
-                type: 'text',
-                text: 'Hi, I want to get started with customizing my docs site. Any guidance?',
-            },
-        ],
-    },
-    {
-        id: '2',
-        role: 'assistant',
-        parts: [
-            {
-                type: 'text',
-                text: `
+  {
+    id: '1',
+    role: 'user',
+    parts: [
+      {
+        type: 'text',
+        text: 'Hi, I want to get started with customizing my docs site. Any guidance?',
+      },
+    ],
+  },
+  {
+    id: '2',
+    role: 'assistant',
+    parts: [
+      {
+        type: 'text',
+        text: `
 # Welcome to the Docs Customizer! 🚀
 
 I'm here to help you set up and tailor your documentation site. Here’s a quick overview of what you can do:
@@ -72,169 +72,166 @@ If you want details on any of these, just ask!
 
 Let me know what you'd like to do first!
                 `.trim(),
-            },
-        ],
-    },
+      },
+    ],
+  },
 ]
 
 const AUTOCOMPLETE_SUGGESTIONS = [
-    'How can I help you today?',
-    'What would you like to know?',
-    'Tell me about your project',
-    'I need help with...',
-    'Can you explain...',
-    'Show me how to...',
-    'What are the best practices for...',
-    'Compare different approaches',
-    'Troubleshoot this issue',
-    'Performance optimization tips',
+  'How can I help you today?',
+  'What would you like to know?',
+  'Tell me about your project',
+  'I need help with...',
+  'Can you explain...',
+  'Show me how to...',
+  'What are the best practices for...',
+  'Compare different approaches',
+  'Troubleshoot this issue',
+  'Performance optimization tips',
 ]
 
 export function Chat() {
-    const initialChatState = useMemo<Partial<ChatState>>(
-        () => ({
-            messages: exampleMessages,
-            isGenerating: false,
-        }),
-        [],
-    )
+  const initialChatState = useMemo<Partial<ChatState>>(
+    () => ({
+      messages: exampleMessages,
+      isGenerating: false,
+    }),
+    [],
+  )
 
-    return (
-        <ChatProvider initialValue={initialChatState}>
-            <div className='flex flex-col max-h-[700px] '>
-                <div
-
-                    className='px-3 py-4 w-full min-h-0 max-w-full max-h-full relative overflow-y-auto '
-                >
-                    <div className='flex flex-col gap-4 relative h-full justify-center'>
-                        <Messages />
-                        <WelcomeMessage />
-                        <Footer />
-                    </div>
-                </div>
-            </div>
-        </ChatProvider>
-    )
+  return (
+    <ChatProvider initialValue={initialChatState}>
+      <div className='flex flex-col max-h-[700px] '>
+        <div className='px-3 py-4 w-full min-h-0 max-w-full max-h-full relative overflow-y-auto '>
+          <div className='flex flex-col gap-4 relative h-full justify-center'>
+            <Messages />
+            <WelcomeMessage />
+            <Footer />
+          </div>
+        </div>
+      </div>
+    </ChatProvider>
+  )
 }
 
 function WelcomeMessage() {
-    const { messages } = useChatContext()
-    if (messages?.length) return null
+  const { messages } = useChatContext()
+  if (messages?.length) return null
 
-    return (
-        <div className='text-center py-8'>
-            <h2 className='text-2xl select-none font-semibold text-foreground mb-4'>
-                Welcome to MCP Chat Demo
-            </h2>
-            <p className='text-muted-foreground select-none'>
-                Start a conversation by typing a message below
-            </p>
-        </div>
-    )
+  return (
+    <div className='text-center py-8'>
+      <h2 className='text-2xl select-none font-semibold text-foreground mb-4'>
+        Welcome to MCP Chat Demo
+      </h2>
+      <p className='text-muted-foreground select-none'>
+        Start a conversation by typing a message below
+      </p>
+    </div>
+  )
 }
 
 function Messages({ ref }) {
-    const { messages } = useChatContext()
+  const { messages } = useChatContext()
 
-    if (!messages?.length) return null
+  if (!messages?.length) return null
 
-    return (
-        <div ref={ref} className='flex flex-col gap-6 pb-4'>
-            {messages.map((message) => (
-                <MessageRenderer key={message.id} message={message} />
-            ))}
-            <ChatErrorMessage />
-        </div>
-    )
+  return (
+    <div ref={ref} className='flex flex-col gap-6 pb-4'>
+      {messages.map((message) => (
+        <MessageRenderer key={message.id} message={message} />
+      ))}
+      <ChatErrorMessage />
+    </div>
+  )
 }
 
 function MessageRenderer({ message }: { message: UIMessage }) {
-    const { isGenerating: isChatGenerating } = useChatContext()
+  const { isGenerating: isChatGenerating } = useChatContext()
 
-    if (message.role === 'user') {
-        return (
-            <ChatUserMessage message={message}>
-                {message.parts.map((part, index) => {
-                    if (part.type === 'text') {
-                        return (
-                            <Markdown
-                                key={index}
-                                markdown={part.text}
-                                isStreaming={isChatGenerating}
-                                className='prose prose-sm max-w-none'
-                            />
-                        )
-                    }
-                    return null
-                })}
-            </ChatUserMessage>
-        )
-    }
-
+  if (message.role === 'user') {
     return (
-        <ChatAssistantMessage message={message}>
-            {message.parts.map((part, index) => {
-                if (part.type === 'text') {
-                    return (
-                        <Markdown
-                            key={index}
-                            markdown={part.text}
-                            isStreaming={isChatGenerating}
-                            className='prose prose-sm max-w-none'
-                        />
-                    )
-                }
-
-                return null
-            })}
-        </ChatAssistantMessage>
+      <ChatUserMessage message={message}>
+        {message.parts.map((part, index) => {
+          if (part.type === 'text') {
+            return (
+              <Markdown
+                key={index}
+                markdown={part.text}
+                isStreaming={isChatGenerating}
+                className='prose prose-sm max-w-none'
+              />
+            )
+          }
+          return null
+        })}
+      </ChatUserMessage>
     )
+  }
+
+  return (
+    <ChatAssistantMessage message={message}>
+      {message.parts.map((part, index) => {
+        if (part.type === 'text') {
+          return (
+            <Markdown
+              key={index}
+              markdown={part.text}
+              isStreaming={isChatGenerating}
+              className='prose prose-sm max-w-none'
+            />
+          )
+        }
+
+        return null
+      })}
+    </ChatAssistantMessage>
+  )
 }
 
 function Footer() {
-    const { isGenerating: isPending, text } = useChatContext()
+  const { isGenerating: isPending, text } = useChatContext()
 
-    const transcribeAudio = async (audioFile: File): Promise<string> => {
-        console.log('Audio transcription not implemented yet', audioFile)
-        return ''
-    }
+  const transcribeAudio = async (audioFile: File): Promise<string> => {
+    console.log('Audio transcription not implemented yet', audioFile)
+    return ''
+  }
 
-    const onSubmit = async () => {
-        console.log('Chat submission not implemented yet')
-    }
+  const onSubmit = async () => {
+    console.log('Chat submission not implemented yet')
+  }
 
-    return (
-        <div className=' sticky bottom-0 z-50 w-full mt-2'>
-            <div className='flex flex-col text-sm gap-3 p-2 border rounded-lg bg-card'>
-                <ChatTextarea
-                    onSubmit={onSubmit}
-                    disabled={isPending}
-                    placeholder='Type your message...'
-                    className='min-h-[30px] p-2 text-sm resize-none'
-                    rows={1}
-                    autoFocus
-                />
+  return (
+    <div className=' sticky bottom-0 z-50 w-full mt-2'>
+      <div className='flex flex-col text-sm gap-3 p-2 border rounded-lg bg-card'>
+        <ChatTextarea
+          onSubmit={onSubmit}
+          disabled={isPending}
+          placeholder='Type your message...'
+          className='min-h-[30px] p-2 text-sm resize-none'
+          rows={1}
+          autoFocus
+        />
 
-                <div className='flex items-center justify-between'>
-                    <div className='flex items-center gap-2'>
-                        <ChatUploadButton
-                            accept='image/*,text/*,.pdf,.docx,.doc'
-                            onFilesChange={(files) => {
-                                console.log('Files uploaded:', files)
-                            }}
-                        />
-                        <ChatRecordButton transcribeAudio={transcribeAudio} />
-                    </div>
+        <div className='flex items-center justify-between'>
+          <div className='flex items-center gap-2'>
+            <ChatUploadButton
+              accept='image/*,text/*,.pdf,.docx,.doc'
+              onFilesChange={(files) => {
+                console.log('Files uploaded:', files)
+              }}
+            />
+            <ChatRecordButton transcribeAudio={transcribeAudio} />
+          </div>
 
-                    <button
-                        onClick={onSubmit}
-                        disabled={isPending || !text.trim()}
-                        className='px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'
-                    >
-                        {isPending ? 'Sending...' : 'Send'}
-                    </button>
-                </div>
-            </div>
+          <button
+            onClick={onSubmit}
+            disabled={isPending || !text.trim()}
+            className='px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'
+          >
+            {isPending ? 'Sending...' : 'Send'}
+          </button>
         </div>
-    )
+      </div>
+    </div>
+  )
 }

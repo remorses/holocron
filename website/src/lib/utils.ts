@@ -6,88 +6,88 @@ import { DocsJsonType } from 'docs-website/src/lib/docs-json'
 import { createIdGenerator } from 'ai'
 import { apiClient } from './spiceflow-client'
 export const sleep = (ms: number): Promise<void> => {
-    return new Promise((resolve) => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export { cn }
 
 export const isTruthy = <T>(value: T): value is NonNullable<T> => {
-    return Boolean(value)
+  return Boolean(value)
 }
 
 export const safeJsoncParse = <T = unknown>(json: string): T | null => {
-    try {
-        return JSONC.parse(json)
-    } catch {
-        return null
-    }
+  try {
+    return JSONC.parse(json)
+  } catch {
+    return null
+  }
 }
 
 export function splitExtension(str: string): {
-    base: string
-    extension: string
+  base: string
+  extension: string
 } {
-    const lastSlash = str.lastIndexOf('/')
-    const lastDot = str.lastIndexOf('.')
-    // Extension must come after the last slash and dot is not the first character after slash.
-    if (lastDot > lastSlash + 1) {
-        return {
-            base: str.slice(0, lastDot),
-            extension: str.slice(lastDot), // includes the dot
-        }
-    }
+  const lastSlash = str.lastIndexOf('/')
+  const lastDot = str.lastIndexOf('.')
+  // Extension must come after the last slash and dot is not the first character after slash.
+  if (lastDot > lastSlash + 1) {
     return {
-        base: str,
-        extension: '',
+      base: str.slice(0, lastDot),
+      extension: str.slice(lastDot), // includes the dot
     }
+  }
+  return {
+    base: str,
+    extension: '',
+  }
 }
 
 export function slugKebabCaseKeepExtension(str: string): string {
-    const { base, extension } = splitExtension(str)
-    // slugify base path
-    let slug = base
-        .toLowerCase()
-        .split('/')
-        .map((segment) => segment.split(' ').filter(Boolean).join('-'))
-        .join('-')
-        .replace(/-+/g, '-') // collapse multiple dashes
-    if (slug.endsWith('-')) slug = slug.slice(0, -1)
-    // Just concat extension if exists; keep as is because prompt says "keep it as is"
-    return slug + extension
+  const { base, extension } = splitExtension(str)
+  // slugify base path
+  let slug = base
+    .toLowerCase()
+    .split('/')
+    .map((segment) => segment.split(' ').filter(Boolean).join('-'))
+    .join('-')
+    .replace(/-+/g, '-') // collapse multiple dashes
+  if (slug.endsWith('-')) slug = slug.slice(0, -1)
+  // Just concat extension if exists; keep as is because prompt says "keep it as is"
+  return slug + extension
 }
 
 export const mdxRegex = /\.mdx?$/
 
 export async function* yieldTasksInParallel<T>(
-    concurrency = Infinity,
-    tasks: Array<() => Promise<T>>,
+  concurrency = Infinity,
+  tasks: Array<() => Promise<T>>,
 ) {
-    const queue = tasks.slice() // ✓ don’t mutate caller’s array
-    const pending = queue
-        .splice(0, concurrency) // start the first batch
-        .map((fn) => fn())
+  const queue = tasks.slice() // ✓ don’t mutate caller’s array
+  const pending = queue
+    .splice(0, concurrency) // start the first batch
+    .map((fn) => fn())
 
-    while (pending.length) {
-        // tag the *current* pending list so we know which one wins the race
-        const tagged = pending.map((p, i) =>
-            p.then(
-                (value: T) => ({ i, value, ok: true as const }),
-                (err: any) => ({ i, err, ok: false as const }),
-            ),
-        )
+  while (pending.length) {
+    // tag the *current* pending list so we know which one wins the race
+    const tagged = pending.map((p, i) =>
+      p.then(
+        (value: T) => ({ i, value, ok: true as const }),
+        (err: any) => ({ i, err, ok: false as const }),
+      ),
+    )
 
-        const result = await Promise.race(tagged)
+    const result = await Promise.race(tagged)
 
-        pending.splice(result.i, 1) // drop the finished promise
-        if (queue.length) {
-            const nextFn = queue.shift()
-            if (nextFn) pending.push(nextFn())
-        }
-
-        if (result.ok)
-            yield result.value // stream the value
-        else throw result.err // abort on first error
+    pending.splice(result.i, 1) // drop the finished promise
+    if (queue.length) {
+      const nextFn = queue.shift()
+      if (nextFn) pending.push(nextFn())
     }
+
+    if (result.ok)
+      yield result.value // stream the value
+    else throw result.err // abort on first error
+  }
 }
 
 /**
@@ -97,135 +97,130 @@ export async function* yieldTasksInParallel<T>(
  * @returns An array of arrays, each of which is at most length n.
  */
 export function groupByN<T>(arr: T[], n: number): T[][] {
-    if (n <= 0) throw new Error('n must be greater than 0')
-    const result: T[][] = []
-    if (!arr?.length) return []
-    for (let i = 0; i < arr.length; i += n) {
-        result.push(arr.slice(i, i + n))
-    }
-    return result
+  if (n <= 0) throw new Error('n must be greater than 0')
+  const result: T[][] = []
+  if (!arr?.length) return []
+  for (let i = 0; i < arr.length; i += n) {
+    result.push(arr.slice(i, i + n))
+  }
+  return result
 }
 
 export function debounce<T extends (...args: any[]) => any>(
-    delay: number,
-    fn: T,
+  delay: number,
+  fn: T,
 ): T {
-    let timeoutId: ReturnType<typeof setTimeout> | undefined
-    let pendingPromise: Promise<any> | null = null
-    return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
-        if (timeoutId) clearTimeout(timeoutId)
-        if (pendingPromise) return pendingPromise
-        pendingPromise = new Promise<any>((resolve, reject) => {
-            timeoutId = setTimeout(() => {
-                Promise.resolve(fn.apply(this, args))
-                    .then(resolve, reject)
-                    .finally(() => {
-                        pendingPromise = null
-                    })
-            }, delay)
-        })
-        return pendingPromise
-    } as any
+  let timeoutId: ReturnType<typeof setTimeout> | undefined
+  let pendingPromise: Promise<any> | null = null
+  return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
+    if (timeoutId) clearTimeout(timeoutId)
+    if (pendingPromise) return pendingPromise
+    pendingPromise = new Promise<any>((resolve, reject) => {
+      timeoutId = setTimeout(() => {
+        Promise.resolve(fn.apply(this, args))
+          .then(resolve, reject)
+          .finally(() => {
+            pendingPromise = null
+          })
+      }, delay)
+    })
+    return pendingPromise
+  } as any
 }
 
 export async function* processGeneratorConcurrentlyInOrder<T, R>(
-    iterable: AsyncIterable<T>,
-    maxConcurrent = 3,
-    mapper: (item: T) => Promise<R>,
+  iterable: AsyncIterable<T>,
+  maxConcurrent = 3,
+  mapper: (item: T) => Promise<R>,
 ): AsyncGenerator<R> {
-    const queue: Promise<R>[] = []
-    const iterator = iterable[Symbol.asyncIterator]()
-    let done = false
+  const queue: Promise<R>[] = []
+  const iterator = iterable[Symbol.asyncIterator]()
+  let done = false
 
-    // fill the queue
-    while (queue.length < maxConcurrent) {
-        const { value, done: iterDone } = await iterator.next()
-        if (iterDone) {
-            done = true
-            break
-        }
+  // fill the queue
+  while (queue.length < maxConcurrent) {
+    const { value, done: iterDone } = await iterator.next()
+    if (iterDone) {
+      done = true
+      break
+    }
+    queue.push(mapper(value))
+  }
+
+  while (queue.length) {
+    const nextPromise = queue.shift()!
+    // Start next only if not done
+    if (!done) {
+      const { value, done: iterDone } = await iterator.next()
+      if (!iterDone) {
         queue.push(mapper(value))
+      } else {
+        done = true
+      }
     }
-
-    while (queue.length) {
-        const nextPromise = queue.shift()!
-        // Start next only if not done
-        if (!done) {
-            const { value, done: iterDone } = await iterator.next()
-            if (!iterDone) {
-                queue.push(mapper(value))
-            } else {
-                done = true
-            }
-        }
-        yield await nextPromise
-    }
+    yield await nextPromise
+  }
 }
 
-
-
-
 export async function uploadFileToSite(file: File, siteId: string) {
-    const idGenerator = createIdGenerator()
-    const filename = encodeURIComponent(
-        slugKebabCaseKeepExtension(
-            `${idGenerator()}-${file.name || 'file'}`,
-        ),
-    )
-    const contentType = file.type || 'application/octet-stream'
+  const idGenerator = createIdGenerator()
+  const filename = encodeURIComponent(
+    slugKebabCaseKeepExtension(`${idGenerator()}-${file.name || 'file'}`),
+  )
+  const contentType = file.type || 'application/octet-stream'
 
-    const { error, data } = await apiClient.api.createUploadSignedUrl.post({
-        siteId,
-        files: [
-            {
-                slug: filename,
-                contentType,
-                contentLength: file.size,
-            },
-        ],
-    })
-
-    if (error) throw error
-
-    const [result] = data.files
-
-    const uploadResp = await fetch(result.signedUrl, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': contentType,
-        },
-        body: file,
-    })
-
-    if (!uploadResp.ok) {
-        throw new Error('Failed to upload file to storage.')
-    }
-
-    return {
-        name: result.path,
+  const { error, data } = await apiClient.api.createUploadSignedUrl.post({
+    siteId,
+    files: [
+      {
+        slug: filename,
         contentType,
-        url: result.finalUrl,
-    }
+        contentLength: file.size,
+      },
+    ],
+  })
+
+  if (error) throw error
+
+  const [result] = data.files
+
+  const uploadResp = await fetch(result.signedUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': contentType,
+    },
+    body: file,
+  })
+
+  if (!uploadResp.ok) {
+    throw new Error('Failed to upload file to storage.')
+  }
+
+  return {
+    name: result.path,
+    contentType,
+    url: result.finalUrl,
+  }
 }
 
 export async function transcribeAudio(audioFile: File): Promise<string> {
-    try {
-        const formData = new FormData()
-        formData.append('audio', audioFile)
+  try {
+    const formData = new FormData()
+    formData.append('audio', audioFile)
 
-        const response = await fetch('/api/transcribeAudio', {
-            method: 'POST',
-            body: formData,
-        })
+    const response = await fetch('/api/transcribeAudio', {
+      method: 'POST',
+      body: formData,
+    })
 
-        if (!response.ok) {
-            throw new Error('Transcription failed')
-        }
-
-        const { text } = await response.json()
-        return text || ''
-    } catch (error) {
-        console.error('Transcription error:', error)
-        return ''
+    if (!response.ok) {
+      throw new Error('Transcription failed')
     }
+
+    const { text } = await response.json()
+    return text || ''
+  } catch (error) {
+    console.error('Transcription error:', error)
+    return ''
+  }
 }

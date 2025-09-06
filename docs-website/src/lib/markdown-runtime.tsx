@@ -9,37 +9,37 @@ import { renderNode } from './mdx-render-node'
 import { getProcessor } from './mdx-heavy'
 
 export function MarkdownRuntime({
-    extension = 'mdx',
-    isStreaming = true,
-    markdown,
-    showDiff = false,
-    previousMarkdown = '',
-    className = '',
-    ...rest
+  extension = 'mdx',
+  isStreaming = true,
+  markdown,
+  showDiff = false,
+  previousMarkdown = '',
+  className = '',
+  ...rest
 }: MarkdownRendererProps & {
-    extension?: string
-    showDiff?: boolean
-    previousMarkdown?: string
+  extension?: string
+  showDiff?: boolean
+  previousMarkdown?: string
 }) {
-    const onAst = (ast) => {
-        if (showDiff && previousMarkdown) {
-            const diffs = diffWordsWithSpace(previousMarkdown, markdown || '')
-            markAddedNodes(diffs, ast)
-        }
+  const onAst = (ast) => {
+    if (showDiff && previousMarkdown) {
+      const diffs = diffWordsWithSpace(previousMarkdown, markdown || '')
+      markAddedNodes(diffs, ast)
     }
+  }
 
-    const processor = useMemo(() => getProcessor({ extension }), [extension])
+  const processor = useMemo(() => getProcessor({ extension }), [extension])
 
-    return (
-        <Markdown
-            isStreaming={isStreaming}
-            renderNode={renderNode}
-            onAst={onAst}
-            markdown={markdown}
-            processor={processor}
-            components={mdxComponents}
-            className={className}
-            {...rest}
-        />
-    )
+  return (
+    <Markdown
+      isStreaming={isStreaming}
+      renderNode={renderNode}
+      onAst={onAst}
+      markdown={markdown}
+      processor={processor}
+      components={mdxComponents}
+      className={className}
+      {...rest}
+    />
+  )
 }

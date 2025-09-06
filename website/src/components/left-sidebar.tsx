@@ -5,15 +5,15 @@ import { HistoryIcon, PlusIcon, Loader2, ChevronDown } from 'lucide-react'
 
 import { NavUser } from 'website/src/components/nav-user'
 import {
-    Sidebar,
-    SidebarContent,
-    SidebarFooter,
-    SidebarGroup,
-    SidebarGroupContent,
-    SidebarGroupLabel,
-    SidebarHeader,
-    SidebarMenu,
-    SidebarMenuItem,
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
 } from 'website/src/components/ui/sidebar'
 import { TeamSwitcher } from './team-switcher'
 import Chat from './chat'
@@ -24,12 +24,12 @@ import { Badge } from './ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { useErrorPopover } from './error-popover'
 import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandItem,
-    CommandList,
-    CommandInput,
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+  CommandInput,
 } from './ui/command'
 import { useRouteLoaderData, useParams, useNavigate } from 'react-router'
 import { href } from 'react-router'
@@ -41,204 +41,197 @@ import { useStickToBottom } from 'use-stick-to-bottom'
 import { useShouldHideBrowser } from '../lib/hooks'
 
 function ChatCombobox({ chatId }: { chatId?: string }) {
-    const branchData = useRouteLoaderData(
-        'routes/org.$orgId.branch.$branchId',
-    ) as BranchRoute.ComponentProps['loaderData']
-    const params = useParams()
-    const navigate = useNavigate()
-    const { orgId, branchId } = params
-    const { chatHistory } = branchData
+  const branchData = useRouteLoaderData(
+    'routes/org.$orgId.branch.$branchId',
+  ) as BranchRoute.ComponentProps['loaderData']
+  const params = useParams()
+  const navigate = useNavigate()
+  const { orgId, branchId } = params
+  const { chatHistory } = branchData
 
-    if (!chatHistory.length) return null
+  if (!chatHistory.length) return null
 
-    const chatHistoryItems = chatHistory.map((chat) => ({
-        value: chat.chatId,
-        label: chat.title || 'Untitled Chat',
-        branch: chat.branch.githubBranch,
-    }))
+  const chatHistoryItems = chatHistory.map((chat) => ({
+    value: chat.chatId,
+    label: chat.title || 'Untitled Chat',
+    branch: chat.branch.githubBranch,
+  }))
 
-    return (
-        <Combobox
-            value={chatId}
-            onValueChange={(value) => {
-                if (value && value !== chatId) {
-                    navigate(
-                        href('/org/:orgId/branch/:branchId/chat/:chatId', {
-                            orgId: orgId!,
-                            branchId: branchId!,
-                            chatId: value,
-                        }),
-                    )
-                }
-            }}
-            placeholder='Select chat...'
-            searchPlaceholder='Search chats...'
-            emptyText='No chats found.'
-            className='min-w-0 truncate max-w-[200px] font-medium'
-            items={chatHistoryItems}
-        />
-    )
+  return (
+    <Combobox
+      value={chatId}
+      onValueChange={(value) => {
+        if (value && value !== chatId) {
+          navigate(
+            href('/org/:orgId/branch/:branchId/chat/:chatId', {
+              orgId: orgId!,
+              branchId: branchId!,
+              chatId: value,
+            }),
+          )
+        }
+      }}
+      placeholder='Select chat...'
+      searchPlaceholder='Search chats...'
+      emptyText='No chats found.'
+      className='min-w-0 truncate max-w-[200px] font-medium'
+      items={chatHistoryItems}
+    />
+  )
 }
 
 function NewChatButton() {
-    const branchData = useRouteLoaderData(
-        'routes/org.$orgId.branch.$branchId',
-    ) as BranchRoute.ComponentProps['loaderData']
-    const params = useParams()
-    const navigate = useNavigate()
-    const { orgId, branchId } = params
-    const [open, setOpen] = React.useState(false)
-    const [isCreatingChat, setIsCreatingChat] = React.useState(false)
-    const { setErrorMessage, ErrorTooltipAnchor } = useErrorPopover()
-    const { siteBranches } = branchData
+  const branchData = useRouteLoaderData(
+    'routes/org.$orgId.branch.$branchId',
+  ) as BranchRoute.ComponentProps['loaderData']
+  const params = useParams()
+  const navigate = useNavigate()
+  const { orgId, branchId } = params
+  const [open, setOpen] = React.useState(false)
+  const [isCreatingChat, setIsCreatingChat] = React.useState(false)
+  const { setErrorMessage, ErrorTooltipAnchor } = useErrorPopover()
+  const { siteBranches } = branchData
 
-    const handleNewChat = async (selectedBranchId: string) => {
-        if (!orgId || !branchId || isCreatingChat) return
+  const handleNewChat = async (selectedBranchId: string) => {
+    if (!orgId || !branchId || isCreatingChat) return
 
-        setIsCreatingChat(true)
-        setOpen(false)
-        setErrorMessage('')
+    setIsCreatingChat(true)
+    setOpen(false)
+    setErrorMessage('')
 
-        try {
-            const { data, error } = await apiClient.api.newChat.post({
-                orgId,
-                branchId: selectedBranchId,
-            })
+    try {
+      const { data, error } = await apiClient.api.newChat.post({
+        orgId,
+        branchId: selectedBranchId,
+      })
 
-            if (error) {
-                setErrorMessage(
-                    error instanceof Error
-                        ? error.message
-                        : 'Failed to create new chat',
-                )
-                return
-            }
+      if (error) {
+        setErrorMessage(
+          error instanceof Error ? error.message : 'Failed to create new chat',
+        )
+        return
+      }
 
-            if (data?.success && data.chatId) {
-                navigate(
-                    href('/org/:orgId/branch/:branchId/chat/:chatId', {
-                        orgId,
-                        branchId: selectedBranchId,
-                        chatId: data.chatId,
-                    }),
-                )
-            }
-        } catch (error) {
-            setErrorMessage(
-                error instanceof Error
-                    ? error.message
-                    : 'Failed to create new chat',
-            )
-        } finally {
-            setIsCreatingChat(false)
-        }
+      if (data?.success && data.chatId) {
+        navigate(
+          href('/org/:orgId/branch/:branchId/chat/:chatId', {
+            orgId,
+            branchId: selectedBranchId,
+            chatId: data.chatId,
+          }),
+        )
+      }
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Failed to create new chat',
+      )
+    } finally {
+      setIsCreatingChat(false)
     }
+  }
 
-    return (
-        <ErrorTooltipAnchor>
-            <Popover open={open} onOpenChange={setOpen}>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <PopoverTrigger
-                            onClick={(e) => {
-                                if (siteBranches.length <= 1) {
-                                    e.stopPropagation()
-                                    e.preventDefault()
-                                    handleNewChat(siteBranches[0]?.branchId!)
-                                }
-                            }}
-                            asChild
-                        >
-                            <Button
-                                variant='secondary'
-                                className='flex items-center gap-1 px-3'
-                                disabled={isCreatingChat}
-                            >
-                                {isCreatingChat ? (
-                                    <Loader2 className='h-4 w-4 animate-spin' />
-                                ) : (
-                                    <PlusIcon className='h-4 w-4' />
-                                )}
-                                <ChevronDown className='h-3 w-3' />
-                            </Button>
-                        </PopoverTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        {isCreatingChat ? 'Creating new chat...' : 'New chat'}
-                    </TooltipContent>
-                </Tooltip>
-                <PopoverContent className='p-0 w-56' align='start'>
-                    <Command>
-                        <CommandInput
-                            placeholder='Search branches...'
-                            className='h-9'
-                        />
-                        <CommandList>
-                            <CommandEmpty>No branches found.</CommandEmpty>
-                            <CommandGroup>
-                                {siteBranches.map((branch) => (
-                                    <CommandItem
-                                        key={branch.branchId}
-                                        value={branch.githubBranch}
-                                        onSelect={() => {
-                                            handleNewChat(branch.branchId)
-                                        }}
-                                        className='max-w-full cursor-pointer'
-                                    >
-                                        <span className='truncate'>
-                                            New chat in {branch.githubBranch}
-                                        </span>
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
-                        </CommandList>
-                    </Command>
-                </PopoverContent>
-            </Popover>
-        </ErrorTooltipAnchor>
-    )
+  return (
+    <ErrorTooltipAnchor>
+      <Popover open={open} onOpenChange={setOpen}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger
+              onClick={(e) => {
+                if (siteBranches.length <= 1) {
+                  e.stopPropagation()
+                  e.preventDefault()
+                  handleNewChat(siteBranches[0]?.branchId!)
+                }
+              }}
+              asChild
+            >
+              <Button
+                variant='secondary'
+                className='flex items-center gap-1 px-3'
+                disabled={isCreatingChat}
+              >
+                {isCreatingChat ? (
+                  <Loader2 className='h-4 w-4 animate-spin' />
+                ) : (
+                  <PlusIcon className='h-4 w-4' />
+                )}
+                <ChevronDown className='h-3 w-3' />
+              </Button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent>
+            {isCreatingChat ? 'Creating new chat...' : 'New chat'}
+          </TooltipContent>
+        </Tooltip>
+        <PopoverContent className='p-0 w-56' align='start'>
+          <Command>
+            <CommandInput placeholder='Search branches...' className='h-9' />
+            <CommandList>
+              <CommandEmpty>No branches found.</CommandEmpty>
+              <CommandGroup>
+                {siteBranches.map((branch) => (
+                  <CommandItem
+                    key={branch.branchId}
+                    value={branch.githubBranch}
+                    onSelect={() => {
+                      handleNewChat(branch.branchId)
+                    }}
+                    className='max-w-full cursor-pointer'
+                  >
+                    <span className='truncate'>
+                      New chat in {branch.githubBranch}
+                    </span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    </ErrorTooltipAnchor>
+  )
 }
 export function ChatLeftSidebar({
-    ...props
+  ...props
 }: React.ComponentProps<typeof Sidebar>) {
-    const hideBrowser = useShouldHideBrowser()
-    const orgData = useRouteLoaderData(
-        'routes/org.$orgId',
-    ) as OrgRoute.ComponentProps['loaderData']
+  const hideBrowser = useShouldHideBrowser()
+  const orgData = useRouteLoaderData(
+    'routes/org.$orgId',
+  ) as OrgRoute.ComponentProps['loaderData']
 
-    const params = useParams()
-    const { chatId } = params
-    const { userSites } = orgData
+  const params = useParams()
+  const { chatId } = params
+  const { userSites } = orgData
 
-    const overflowDivRef = React.useRef<HTMLDivElement>(null)
+  const overflowDivRef = React.useRef<HTMLDivElement>(null)
 
-    return (
-        <div
-            {...props}
-            style={{
-                width: hideBrowser ? '100%' : '500px',
-                ...(hideBrowser && {
-                    paddingLeft: '2px',
-                    paddingRight: '2px',
-                }),
-            }}
-            className='dark mx-auto h-full flex-col scheme-only-dark px-0 grid max-w-full min-h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
-        >
-            <div className='justify-between max-w-[900px] w-full mx-auto row-span-1 z-10 gap-2 pr-2 flex'>
-                <TeamSwitcher className='grow ' sites={userSites || []} />
+  return (
+    <div
+      {...props}
+      style={{
+        width: hideBrowser ? '100%' : '500px',
+        ...(hideBrowser && {
+          paddingLeft: '2px',
+          paddingRight: '2px',
+        }),
+      }}
+      className='dark mx-auto h-full flex-col scheme-only-dark px-0 grid max-w-full min-h-full grid-rows-24 grid-cols-1 items-stretch gap-2'
+    >
+      <div className='justify-between max-w-[900px] w-full mx-auto row-span-1 z-10 gap-2 pr-2 flex'>
+        <TeamSwitcher className='grow ' sites={userSites || []} />
 
-                <div className='flex items-start gap-2'>
-                    <ChatCombobox chatId={chatId} />
-                    <NewChatButton />
-                </div>
-            </div>
-
-            <div
-                ref={overflowDivRef}
-                className='grow relative overflow-y-auto items-center overflow-x-hidden w-full row-span-23 flex flex-col '
-            >
-                <Chat />
-            </div>
+        <div className='flex items-start gap-2'>
+          <ChatCombobox chatId={chatId} />
+          <NewChatButton />
         </div>
-    )
+      </div>
+
+      <div
+        ref={overflowDivRef}
+        className='grow relative overflow-y-auto items-center overflow-x-hidden w-full row-span-23 flex flex-col '
+      >
+        <Chat />
+      </div>
+    </div>
+  )
 }

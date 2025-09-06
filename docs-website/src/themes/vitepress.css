@@ -52,7 +52,7 @@
   --tw-prose-code: var(--color-fd-primary);
 }
 
-.prose :where(code):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+.prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
   border: none;
   background-color: color-mix(
     in oklab,

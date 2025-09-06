@@ -1,31 +1,31 @@
 import { describe, test, expect } from 'vitest'
 import {
-    validateMarkdownLinks,
-    formatErrorWithContext,
-    createFormattedError,
+  validateMarkdownLinks,
+  formatErrorWithContext,
+  createFormattedError,
 } from './lint'
 import { getProcessor } from './mdx-heavy'
 
 describe('validateMarkdownLinks', () => {
-    const processor = getProcessor({ extension: 'md' })
+  const processor = getProcessor({ extension: 'md' })
 
-    test('detects invalid internal links', async () => {
-        const content = `
+  test('detects invalid internal links', async () => {
+    const content = `
 # Test Document
 
 Here is a [valid link](/docs/getting-started) and an [invalid link](/docs/non-existent).
 
 Also a [relative link](./relative-path) that doesn't exist.
 `
-        const tree = processor.parse({ value: content })
-        const validSlugs = ['/docs/getting-started', '/docs/installation']
+    const tree = processor.parse({ value: content })
+    const validSlugs = ['/docs/getting-started', '/docs/installation']
 
-        const errors = await validateMarkdownLinks(tree, {
-            validSlugs,
-            resolveDir: '/docs',
-        })
+    const errors = await validateMarkdownLinks(tree, {
+      validSlugs,
+      resolveDir: '/docs',
+    })
 
-        expect(errors).toMatchInlineSnapshot(`
+    expect(errors).toMatchInlineSnapshot(`
           [
             {
               "column": 54,
@@ -41,52 +41,52 @@ Also a [relative link](./relative-path) that doesn't exist.
             },
           ]
         `)
-    })
+  })
 
-    test('ignores external URLs', async () => {
-        const content = `
+  test('ignores external URLs', async () => {
+    const content = `
 # Test Document
 
 External links like [Google](https://google.com) and [GitHub](http://github.com) should be ignored.
 `
-        const tree = processor.parse({ value: content })
-        const validSlugs = ['/docs/getting-started']
+    const tree = processor.parse({ value: content })
+    const validSlugs = ['/docs/getting-started']
 
-        const errors = await validateMarkdownLinks(tree, { validSlugs })
+    const errors = await validateMarkdownLinks(tree, { validSlugs })
 
-        expect(errors).toMatchInlineSnapshot(`[]`)
-    })
+    expect(errors).toMatchInlineSnapshot(`[]`)
+  })
 
-    test('ignores mailto links', async () => {
-        const content = `
+  test('ignores mailto links', async () => {
+    const content = `
 # Test Document
 
 Contact us at [email](mailto:test@example.com).
 `
-        const tree = processor.parse({ value: content })
-        const validSlugs = ['/docs/getting-started']
+    const tree = processor.parse({ value: content })
+    const validSlugs = ['/docs/getting-started']
 
-        const errors = await validateMarkdownLinks(tree, { validSlugs })
+    const errors = await validateMarkdownLinks(tree, { validSlugs })
 
-        expect(errors).toMatchInlineSnapshot(`[]`)
-    })
+    expect(errors).toMatchInlineSnapshot(`[]`)
+  })
 
-    test('ignores anchor-only links', async () => {
-        const content = `
+  test('ignores anchor-only links', async () => {
+    const content = `
 # Test Document
 
 Jump to [section](#some-section) on this page.
 `
-        const tree = processor.parse({ value: content })
-        const validSlugs = ['/docs/getting-started']
+    const tree = processor.parse({ value: content })
+    const validSlugs = ['/docs/getting-started']
 
-        const errors = await validateMarkdownLinks(tree, { validSlugs })
+    const errors = await validateMarkdownLinks(tree, { validSlugs })
 
-        expect(errors).toMatchInlineSnapshot(`[]`)
-    })
+    expect(errors).toMatchInlineSnapshot(`[]`)
+  })
 
-    test('handles links with fragments and query params', async () => {
-        const content = `
+  test('handles links with fragments and query params', async () => {
+    const content = `
 # Test Document
 
 Link with fragment: [valid with hash](/docs/getting-started#section)
@@ -95,12 +95,12 @@ Link with both: [valid with both](/docs/getting-started?tab=1#section)
 
 Invalid with fragment: [invalid](/docs/non-existent#section)
 `
-        const tree = processor.parse({ value: content })
-        const validSlugs = ['/docs/getting-started']
+    const tree = processor.parse({ value: content })
+    const validSlugs = ['/docs/getting-started']
 
-        const errors = await validateMarkdownLinks(tree, { validSlugs })
+    const errors = await validateMarkdownLinks(tree, { validSlugs })
 
-        expect(errors).toMatchInlineSnapshot(`
+    expect(errors).toMatchInlineSnapshot(`
           [
             {
               "column": 24,
@@ -110,10 +110,10 @@ Invalid with fragment: [invalid](/docs/non-existent#section)
             },
           ]
         `)
-    })
+  })
 
-    test('validates all valid links correctly', async () => {
-        const content = `
+  test('validates all valid links correctly', async () => {
+    const content = `
 # Test Document
 
 - [Home](/)
@@ -122,22 +122,22 @@ Invalid with fragment: [invalid](/docs/non-existent#section)
 - [Installation](/docs/installation)
 - [API Reference](/api/reference)
 `
-        const tree = processor.parse({ value: content })
-        const validSlugs = [
-            '/',
-            '/docs',
-            '/docs/getting-started',
-            '/docs/installation',
-            '/api/reference',
-        ]
+    const tree = processor.parse({ value: content })
+    const validSlugs = [
+      '/',
+      '/docs',
+      '/docs/getting-started',
+      '/docs/installation',
+      '/api/reference',
+    ]
 
-        const errors = await validateMarkdownLinks(tree, { validSlugs })
+    const errors = await validateMarkdownLinks(tree, { validSlugs })
 
-        expect(errors).toMatchInlineSnapshot(`[]`)
-    })
+    expect(errors).toMatchInlineSnapshot(`[]`)
+  })
 
-    test('resolves relative paths with resolveDir', async () => {
-        const content = `
+  test('resolves relative paths with resolveDir', async () => {
+    const content = `
 # Test Document
 
 - [Parent](../)
@@ -147,22 +147,22 @@ Invalid with fragment: [invalid](/docs/non-existent#section)
 - [Parent sibling](../other)
 - [Escape attempt](../../outside)
 `
-        const tree = processor.parse({ value: content })
-        const validSlugs = [
-            '/',
-            '/docs',
-            '/docs/guide',
-            '/docs/guide/sibling',
-            '/docs/guide/child/page',
-            '/docs/other',
-        ]
+    const tree = processor.parse({ value: content })
+    const validSlugs = [
+      '/',
+      '/docs',
+      '/docs/guide',
+      '/docs/guide/sibling',
+      '/docs/guide/child/page',
+      '/docs/other',
+    ]
 
-        const errors = await validateMarkdownLinks(tree, {
-            validSlugs,
-            resolveDir: '/docs/guide',
-        })
+    const errors = await validateMarkdownLinks(tree, {
+      validSlugs,
+      resolveDir: '/docs/guide',
+    })
 
-        expect(errors).toMatchInlineSnapshot(`
+    expect(errors).toMatchInlineSnapshot(`
           [
             {
               "column": 3,
@@ -172,20 +172,20 @@ Invalid with fragment: [invalid](/docs/non-existent#section)
             },
           ]
         `)
-    })
+  })
 
-    test('errors on relative paths without resolveDir', async () => {
-        const content = `
+  test('errors on relative paths without resolveDir', async () => {
+    const content = `
 # Test Document
 
 [Relative link](./relative)
 `
-        const tree = processor.parse({ value: content })
-        const validSlugs = ['/docs/relative']
+    const tree = processor.parse({ value: content })
+    const validSlugs = ['/docs/relative']
 
-        const errors = await validateMarkdownLinks(tree, { validSlugs })
+    const errors = await validateMarkdownLinks(tree, { validSlugs })
 
-        expect(errors).toMatchInlineSnapshot(`
+    expect(errors).toMatchInlineSnapshot(`
           [
             {
               "column": 1,
@@ -195,24 +195,24 @@ Invalid with fragment: [invalid](/docs/non-existent#section)
             },
           ]
         `)
-    })
+  })
 })
 
 describe('formatErrorWithContext', () => {
-    test('formats error with context lines', () => {
-        const content = `Line 1
+  test('formats error with context lines', () => {
+    const content = `Line 1
 Line 2
 Line 3 with error here
 Line 4
 Line 5`
 
-        const error = new Error('Something went wrong') as any
-        error.line = 3
-        error.column = 14
+    const error = new Error('Something went wrong') as any
+    error.line = 3
+    error.column = 14
 
-        const formatted = formatErrorWithContext(error, content, 'Test Error')
+    const formatted = formatErrorWithContext(error, content, 'Test Error')
 
-        expect(formatted).toMatchInlineSnapshot(`
+    expect(formatted).toMatchInlineSnapshot(`
           "Test Error at line 3, column 14:
           Something went wrong
 
@@ -225,20 +225,20 @@ Line 5`
             5 | Line 5
           "
         `)
-    })
+  })
 
-    test('formats error at beginning of file', () => {
-        const content = `First line with error
+  test('formats error at beginning of file', () => {
+    const content = `First line with error
 Second line
 Third line`
 
-        const error = new Error('Invalid syntax') as any
-        error.line = 1
-        error.column = 7
+    const error = new Error('Invalid syntax') as any
+    error.line = 1
+    error.column = 7
 
-        const formatted = formatErrorWithContext(error, content, 'Syntax Error')
+    const formatted = formatErrorWithContext(error, content, 'Syntax Error')
 
-        expect(formatted).toMatchInlineSnapshot(`
+    expect(formatted).toMatchInlineSnapshot(`
           "Syntax Error at line 1, column 7:
           Invalid syntax
 
@@ -249,22 +249,22 @@ Third line`
             3 | Third line
           "
         `)
-    })
+  })
 
-    test('formats error at end of file', () => {
-        const content = `Line 1
+  test('formats error at end of file', () => {
+    const content = `Line 1
 Line 2
 Line 3
 Line 4
 Last line with error`
 
-        const error = new Error('Unexpected end') as any
-        error.line = 5
-        error.column = 11
+    const error = new Error('Unexpected end') as any
+    error.line = 5
+    error.column = 11
 
-        const formatted = formatErrorWithContext(error, content)
+    const formatted = formatErrorWithContext(error, content)
 
-        expect(formatted).toMatchInlineSnapshot(`
+    expect(formatted).toMatchInlineSnapshot(`
           "Error at line 5, column 11:
           Unexpected end
 
@@ -277,24 +277,24 @@ Last line with error`
                          ^
           "
         `)
-    })
+  })
 
-    test('handles error with position object', () => {
-        const content = `Some content
+  test('handles error with position object', () => {
+    const content = `Some content
 Error line here
 More content`
 
-        const error = new Error('Position error') as any
-        error.position = {
-            start: {
-                line: 2,
-                column: 7,
-            },
-        }
+    const error = new Error('Position error') as any
+    error.position = {
+      start: {
+        line: 2,
+        column: 7,
+      },
+    }
 
-        const formatted = formatErrorWithContext(error, content, 'MDX Error')
+    const formatted = formatErrorWithContext(error, content, 'MDX Error')
 
-        expect(formatted).toMatchInlineSnapshot(`
+    expect(formatted).toMatchInlineSnapshot(`
           "MDX Error at line 2, column 7:
           Position error
 
@@ -305,31 +305,31 @@ More content`
             3 | More content
           "
         `)
-    })
+  })
 })
 
 describe('createFormattedError', () => {
-    test('creates error with formatted message', () => {
-        const content = `Line 1
+  test('creates error with formatted message', () => {
+    const content = `Line 1
 Line 2 with error
 Line 3`
 
-        const error = new Error('Original error') as any
-        error.line = 2
-        error.column = 8
-        error.reason = 'Invalid token'
+    const error = new Error('Original error') as any
+    error.line = 2
+    error.column = 8
+    error.reason = 'Invalid token'
 
-        const formattedError = createFormattedError(
-            error,
-            content,
-            'Parse Error',
-            'Please fix the syntax error and try again.',
-        )
+    const formattedError = createFormattedError(
+      error,
+      content,
+      'Parse Error',
+      'Please fix the syntax error and try again.',
+    )
 
-        expect(formattedError.line).toBe(2)
-        expect(formattedError.column).toBe(8)
-        expect(formattedError.reason).toBe('Invalid token')
-        expect(formattedError.message).toMatchInlineSnapshot(`
+    expect(formattedError.line).toBe(2)
+    expect(formattedError.column).toBe(8)
+    expect(formattedError.reason).toBe('Invalid token')
+    expect(formattedError.message).toMatchInlineSnapshot(`
           "Parse Error at line 2, column 8:
           Invalid token
 
@@ -341,30 +341,28 @@ Line 3`
 
           Please fix the syntax error and try again."
         `)
-    })
+  })
 
-    test('formats link validation errors', () => {
-        const content = `# Documentation
+  test('formats link validation errors', () => {
+    const content = `# Documentation
 
 Here is a [broken link](/docs/missing) in the text.
 
 And another [invalid link](../escape) that goes outside.`
 
-        const linkError = new Error(
-            'Found 2 invalid links in the markdown',
-        ) as any
-        linkError.line = 3
-        linkError.column = 11
-        linkError.reason =
-            'Line 3: "/docs/missing" - Link not found\nLine 5: "../escape" - Path escapes root'
+    const linkError = new Error('Found 2 invalid links in the markdown') as any
+    linkError.line = 3
+    linkError.column = 11
+    linkError.reason =
+      'Line 3: "/docs/missing" - Link not found\nLine 5: "../escape" - Path escapes root'
 
-        const formatted = formatErrorWithContext(
-            linkError,
-            content,
-            'Link Validation Error',
-        )
+    const formatted = formatErrorWithContext(
+      linkError,
+      content,
+      'Link Validation Error',
+    )
 
-        expect(formatted).toMatchInlineSnapshot(`
+    expect(formatted).toMatchInlineSnapshot(`
           "Link Validation Error at line 3, column 11:
           Line 3: "/docs/missing" - Link not found
           Line 5: "../escape" - Path escapes root
@@ -378,10 +376,10 @@ And another [invalid link](../escape) that goes outside.`
             5 | And another [invalid link](../escape) that goes outside.
           "
         `)
-    })
+  })
 
-    test('formats MDX parsing errors', () => {
-        const content = `---
+  test('formats MDX parsing errors', () => {
+    const content = `---
 title: Test Page
 ---
 
@@ -391,18 +389,18 @@ title: Test Page
 
 Some more content here`
 
-        const mdxError = new Error('Unexpected token') as any
-        mdxError.line = 7
-        mdxError.column = 26
-        mdxError.reason = 'Expected "}" but found "syntax"'
+    const mdxError = new Error('Unexpected token') as any
+    mdxError.line = 7
+    mdxError.column = 26
+    mdxError.reason = 'Expected "}" but found "syntax"'
 
-        const formatted = formatErrorWithContext(
-            mdxError,
-            content,
-            'MDX Compilation Error',
-        )
+    const formatted = formatErrorWithContext(
+      mdxError,
+      content,
+      'MDX Compilation Error',
+    )
 
-        expect(formatted).toMatchInlineSnapshot(`
+    expect(formatted).toMatchInlineSnapshot(`
           "MDX Compilation Error at line 7, column 26:
           Expected "}" but found "syntax"
 
@@ -418,28 +416,28 @@ Some more content here`
             9 | Some more content here
           "
         `)
-    })
+  })
 
-    test('formats JSON syntax errors', () => {
-        const content = `{
+  test('formats JSON syntax errors', () => {
+    const content = `{
   "name": "test",
   "version": "1.0.0",
   "invalid": true,
 }`
 
-        const jsonError = new Error(
-            'Unexpected token } in JSON at position 52',
-        ) as any
-        jsonError.line = 5
-        jsonError.column = 1
+    const jsonError = new Error(
+      'Unexpected token } in JSON at position 52',
+    ) as any
+    jsonError.line = 5
+    jsonError.column = 1
 
-        const formatted = formatErrorWithContext(
-            jsonError,
-            content,
-            'JSON Parse Error',
-        )
+    const formatted = formatErrorWithContext(
+      jsonError,
+      content,
+      'JSON Parse Error',
+    )
 
-        expect(formatted).toMatchInlineSnapshot(`
+    expect(formatted).toMatchInlineSnapshot(`
           "JSON Parse Error at line 5, column 1:
           Unexpected token } in JSON at position 52
 
@@ -452,23 +450,23 @@ Some more content here`
                ^
           "
         `)
-    })
+  })
 
-    test('handles very long content with error in middle', () => {
-        const lines: string[] = []
-        for (let i = 1; i <= 20; i++) {
-            lines.push(`Line ${i}`)
-        }
-        const content = lines.join('\n')
+  test('handles very long content with error in middle', () => {
+    const lines: string[] = []
+    for (let i = 1; i <= 20; i++) {
+      lines.push(`Line ${i}`)
+    }
+    const content = lines.join('\n')
 
-        const error = new Error('Error in the middle') as any
-        error.line = 10
-        error.column = 3
+    const error = new Error('Error in the middle') as any
+    error.line = 10
+    error.column = 3
 
-        const formatted = formatErrorWithContext(error, content, 'Test Error')
+    const formatted = formatErrorWithContext(error, content, 'Test Error')
 
-        // Should show 5 lines before and after
-        expect(formatted).toMatchInlineSnapshot(`
+    // Should show 5 lines before and after
+    expect(formatted).toMatchInlineSnapshot(`
           "Test Error at line 10, column 3:
           Error in the middle
 
@@ -487,5 +485,5 @@ Some more content here`
            15 | Line 15
           "
         `)
-    })
+  })
 })

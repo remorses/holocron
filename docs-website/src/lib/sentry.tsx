@@ -7,10 +7,10 @@ import { ErrorBoundary as ReactErrorBoundary } from 'react-error-boundary'
 const isServer = typeof window === 'undefined'
 
 export async function notifyError(error, msg?: string) {
-    console.log(msg, error)
-    // if (msg && error?.message) {
-    //     error.message = msg + ': ' + error?.message
-    // }
-    Sentry.captureException(error, { extra: { msg } })
-    await Sentry.flush(1000) // delivery timeout in ms
+  console.log(msg, error)
+  // if (msg && error?.message) {
+  //     error.message = msg + ': ' + error?.message
+  // }
+  Sentry.captureException(error, { extra: { msg } })
+  await Sentry.flush(1000) // delivery timeout in ms
 }

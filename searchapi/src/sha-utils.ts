@@ -11,26 +11,26 @@
  */
 export async function computeGitBlobSHA(content: string): Promise<string> {
   // Convert content to bytes
-  const contentBytes = new TextEncoder().encode(content);
-  const contentLength = contentBytes.length;
-  
+  const contentBytes = new TextEncoder().encode(content)
+  const contentLength = contentBytes.length
+
   // Create the Git blob format: "blob {length}\0{content}"
-  const header = `blob ${contentLength}\0`;
-  const headerBytes = new TextEncoder().encode(header);
-  
+  const header = `blob ${contentLength}\0`
+  const headerBytes = new TextEncoder().encode(header)
+
   // Combine header and content
-  const combined = new Uint8Array(headerBytes.length + contentBytes.length);
-  combined.set(headerBytes, 0);
-  combined.set(contentBytes, headerBytes.length);
-  
+  const combined = new Uint8Array(headerBytes.length + contentBytes.length)
+  combined.set(headerBytes, 0)
+  combined.set(contentBytes, headerBytes.length)
+
   // Compute SHA-1 hash
-  const hashBuffer = await crypto.subtle.digest('SHA-1', combined);
-  
+  const hashBuffer = await crypto.subtle.digest('SHA-1', combined)
+
   // Convert to hexadecimal string
-  const hashArray = new Uint8Array(hashBuffer);
+  const hashArray = new Uint8Array(hashBuffer)
   return Array.from(hashArray)
-    .map(byte => byte.toString(16).padStart(2, '0'))
-    .join('');
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')
 }
 
 /**
@@ -39,7 +39,10 @@ export async function computeGitBlobSHA(content: string): Promise<string> {
  * @param expectedSHA The expected SHA hash
  * @returns Promise<boolean> True if SHA matches
  */
-export async function verifySHA(content: string, expectedSHA: string): Promise<boolean> {
-  const computedSHA = await computeGitBlobSHA(content);
-  return computedSHA === expectedSHA;
+export async function verifySHA(
+  content: string,
+  expectedSHA: string,
+): Promise<boolean> {
+  const computedSHA = await computeGitBlobSHA(content)
+  return computedSHA === expectedSHA
 }

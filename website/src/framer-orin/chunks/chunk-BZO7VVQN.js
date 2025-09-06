@@ -4,64 +4,392 @@
 import {
   className as className2,
   css as css2,
-  fonts as fonts2
-} from "./chunk-VLMUKI5O.js";
-import {
-  className,
-  css,
-  fonts
-} from "./chunk-QKWA2WC3.js";
+  fonts as fonts2,
+} from './chunk-VLMUKI5O.js'
+import { className, css, fonts } from './chunk-QKWA2WC3.js'
 
 // /:https://framerusercontent.com/modules/y7TnmhBWIi9LLCGZMjrl/WajDG8Kir66GLo6WUT6h/yQ7Ez_M3k.js
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { addFonts, addPropertyControls, ControlType, cx, getFontsFromSharedStyle, getLoadingLazyAtYPosition, Image, RichText, useComponentViewport, useLocaleInfo, useVariantState, withCSS } from "unframer";
-import { LayoutGroup, motion, MotionConfigContext } from "unframer";
-import * as React from "react";
-import { useRef } from "react";
-var serializationHash = "framer-CsRSm";
-var variantClassNames = { P_0FGqsmu: "framer-v-jt8nn3" };
-var transition1 = { bounce: 0.2, delay: 0, duration: 0.4, type: "spring" };
+import { jsx as _jsx, jsxs as _jsxs } from 'react/jsx-runtime'
+import {
+  addFonts,
+  addPropertyControls,
+  ControlType,
+  cx,
+  getFontsFromSharedStyle,
+  getLoadingLazyAtYPosition,
+  Image,
+  RichText,
+  useComponentViewport,
+  useLocaleInfo,
+  useVariantState,
+  withCSS,
+} from 'unframer'
+import { LayoutGroup, motion, MotionConfigContext } from 'unframer'
+import * as React from 'react'
+import { useRef } from 'react'
+var serializationHash = 'framer-CsRSm'
+var variantClassNames = { P_0FGqsmu: 'framer-v-jt8nn3' }
+var transition1 = { bounce: 0.2, delay: 0, duration: 0.4, type: 'spring' }
 var toResponsiveImage = (value) => {
-  if (typeof value === "object" && value !== null && typeof value.src === "string") {
-    return value;
+  if (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof value.src === 'string'
+  ) {
+    return value
   }
-  return typeof value === "string" ? { src: value } : void 0;
-};
+  return typeof value === 'string' ? { src: value } : void 0
+}
 var Transition = ({ value, children }) => {
-  const config = React.useContext(MotionConfigContext);
-  const transition = value ?? config.transition;
-  const contextValue = React.useMemo(() => ({ ...config, transition }), [JSON.stringify(transition)]);
-  return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, { value: contextValue, children });
-};
-var Variants = motion.create(React.Fragment);
-var getProps = ({ color, height, id, image, name1, role, testimonial, width, ...props }) => {
-  return { ...props, a1AQ0lfUB: role ?? props.a1AQ0lfUB ?? "Agency Lead", rnxKgwYSX: image ?? props.rnxKgwYSX, uaBDeWXkh: name1 ?? props.uaBDeWXkh ?? "Tom Sullivan", WRDXXfyCt: testimonial ?? props.WRDXXfyCt ?? "\u201CWe\xA0saved on\xA0hosting and boosted conversions just by\xA0running Jet.\u201D", YWe_iFc5i: color ?? props.YWe_iFc5i ?? "rgb(0, 230, 197)" };
-};
+  const config = React.useContext(MotionConfigContext)
+  const transition = value ?? config.transition
+  const contextValue = React.useMemo(
+    () => ({ ...config, transition }),
+    [JSON.stringify(transition)],
+  )
+  return /* @__PURE__ */ _jsx(MotionConfigContext.Provider, {
+    value: contextValue,
+    children,
+  })
+}
+var Variants = motion.create(React.Fragment)
+var getProps = ({
+  color,
+  height,
+  id,
+  image,
+  name1,
+  role,
+  testimonial,
+  width,
+  ...props
+}) => {
+  return {
+    ...props,
+    a1AQ0lfUB: role ?? props.a1AQ0lfUB ?? 'Agency Lead',
+    rnxKgwYSX: image ?? props.rnxKgwYSX,
+    uaBDeWXkh: name1 ?? props.uaBDeWXkh ?? 'Tom Sullivan',
+    WRDXXfyCt:
+      testimonial ??
+      props.WRDXXfyCt ??
+      '\u201CWe\xA0saved on\xA0hosting and boosted conversions just by\xA0running Jet.\u201D',
+    YWe_iFc5i: color ?? props.YWe_iFc5i ?? 'rgb(0, 230, 197)',
+  }
+}
 var createLayoutDependency = (props, variants) => {
-  if (props.layoutDependency) return variants.join("-") + props.layoutDependency;
-  return variants.join("-");
-};
-var Component = /* @__PURE__ */ React.forwardRef(function(props, ref) {
-  const fallbackRef = useRef(null);
-  const refBinding = ref ?? fallbackRef;
-  const defaultLayoutId = React.useId();
-  const { activeLocale, setLocale } = useLocaleInfo();
-  const componentViewport = useComponentViewport();
-  const { style, className: className3, layoutId, variant, WRDXXfyCt, uaBDeWXkh, a1AQ0lfUB, rnxKgwYSX, YWe_iFc5i, ...restProps } = getProps(props);
-  const { baseVariant, classNames, clearLoadingGesture, gestureHandlers, gestureVariant, isLoading, setGestureState, setVariant, variants } = useVariantState({ defaultVariant: "P_0FGqsmu", ref: refBinding, variant, variantClassNames });
-  const layoutDependency = createLayoutDependency(props, variants);
-  const sharedStyleClassNames = [className2, className];
-  const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames);
-  return /* @__PURE__ */ _jsx(LayoutGroup, { id: layoutId ?? defaultLayoutId, children: /* @__PURE__ */ _jsx(Variants, { animate: variants, initial: false, children: /* @__PURE__ */ _jsx(Transition, { value: transition1, children: /* @__PURE__ */ _jsxs(motion.div, { ...restProps, ...gestureHandlers, className: cx(scopingClassNames, "framer-jt8nn3", className3, classNames), "data-framer-name": "Default", layoutDependency, layoutId: "P_0FGqsmu", ref: refBinding, style: { ...style }, children: [/* @__PURE__ */ _jsx(motion.div, { className: "framer-byqqgb", "data-framer-name": "Up Content", layoutDependency, layoutId: "n8aOZlsMe", children: /* @__PURE__ */ _jsx(RichText, { __fromCanvasComponent: true, children: /* @__PURE__ */ _jsx(React.Fragment, { children: /* @__PURE__ */ _jsx(motion.h3, { className: "framer-styles-preset-axtltf", "data-styles-preset": "c4QhLbUD5", children: "\u201CWe\xA0saved on\xA0hosting and boosted conversions just by\xA0running Jet.\u201D" }) }), className: "framer-1dcnm8q", fonts: ["Inter"], layoutDependency, layoutId: "V4F_Pk9H0", style: { "--framer-link-text-color": "rgb(0, 153, 255)", "--framer-link-text-decoration": "underline" }, text: WRDXXfyCt, verticalAlignment: "top", withExternalLayout: true }) }), /* @__PURE__ */ _jsxs(motion.div, { className: "framer-1q7n0h8", "data-framer-name": "Bottom Info", layoutDependency, layoutId: "mLn0tMBDf", children: [/* @__PURE__ */ _jsx(Image, { background: { alt: "", fit: "fill", loading: getLoadingLazyAtYPosition((componentViewport?.y || 0) + 34 + (0 + 27 + ((componentViewport?.height || 281) - 68 - 237) / 1 * 1) + 83), pixelHeight: 6240, pixelWidth: 4160, sizes: "40px", ...toResponsiveImage(rnxKgwYSX) }, className: "framer-10klwk5", "data-framer-name": "Image", draggable: "false", layoutDependency, layoutId: "pYcI9i0Nv", style: { filter: "brightness(0.9) grayscale(0.2)", WebkitFilter: "brightness(0.9) grayscale(0.2)" }, children: /* @__PURE__ */ _jsx(motion.div, { className: "framer-1ogxrbu", "data-framer-name": "Coloring", layoutDependency, layoutId: "ljNiDi4rl", style: { backgroundColor: YWe_iFc5i } }) }), /* @__PURE__ */ _jsxs(motion.div, { className: "framer-cix8dx", "data-framer-name": "Name + Role", layoutDependency, layoutId: "cbbYDUFy1", children: [/* @__PURE__ */ _jsx(RichText, { __fromCanvasComponent: true, children: /* @__PURE__ */ _jsx(React.Fragment, { children: /* @__PURE__ */ _jsx(motion.p, { className: "framer-styles-preset-c9mga6", "data-styles-preset": "Xa6VJQy2p", children: "Tom Sullivan" }) }), className: "framer-10blmtt", fonts: ["Inter"], layoutDependency, layoutId: "RYyDfclxZ", style: { "--framer-link-text-color": "rgb(0, 153, 255)", "--framer-link-text-decoration": "underline" }, text: uaBDeWXkh, verticalAlignment: "top", withExternalLayout: true }), /* @__PURE__ */ _jsx(RichText, { __fromCanvasComponent: true, children: /* @__PURE__ */ _jsx(React.Fragment, { children: /* @__PURE__ */ _jsx(motion.p, { className: "framer-styles-preset-c9mga6", "data-styles-preset": "Xa6VJQy2p", style: { "--framer-text-color": "var(--extracted-r6o4lv, var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5)))" }, children: "Agency Lead" }) }), className: "framer-1kmxg41", fonts: ["Inter"], layoutDependency, layoutId: "YSJz66HpA", style: { "--extracted-r6o4lv": "var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))", "--framer-link-text-color": "rgb(0, 153, 255)", "--framer-link-text-decoration": "underline" }, text: a1AQ0lfUB, verticalAlignment: "top", withExternalLayout: true })] })] })] }) }) }) });
-});
-var css3 = ["@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }", ".framer-CsRSm.framer-1sxnaj3, .framer-CsRSm .framer-1sxnaj3 { display: block; }", ".framer-CsRSm.framer-jt8nn3 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; height: 281px; justify-content: space-between; overflow: hidden; padding: 34px; position: relative; width: 1168px; }", ".framer-CsRSm .framer-byqqgb { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 16px; height: min-content; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 100%; }", ".framer-CsRSm .framer-1dcnm8q { flex: none; height: auto; max-width: 400px; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; }", ".framer-CsRSm .framer-1q7n0h8 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 16px; height: min-content; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 100%; }", ".framer-CsRSm .framer-10klwk5 { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 40px); overflow: hidden; position: relative; width: 40px; }", ".framer-CsRSm .framer-1ogxrbu { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 40px); left: 0px; mix-blend-mode: color; overflow: hidden; position: absolute; right: 0px; top: 0px; }", ".framer-CsRSm .framer-cix8dx { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 0px; height: min-content; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 1px; }", ".framer-CsRSm .framer-10blmtt, .framer-CsRSm .framer-1kmxg41 { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; }", ...css2, ...css];
-var FrameryQ7Ez_M3k = withCSS(Component, css3, "framer-CsRSm");
-var stdin_default = FrameryQ7Ez_M3k;
-FrameryQ7Ez_M3k.displayName = "Small Testimonial Card";
-FrameryQ7Ez_M3k.defaultProps = { height: 281, width: 1168 };
-addPropertyControls(FrameryQ7Ez_M3k, { WRDXXfyCt: { defaultValue: "\u201CWe\xA0saved on\xA0hosting and boosted conversions just by\xA0running Jet.\u201D", displayTextArea: false, title: "Testimonial", type: ControlType.String }, uaBDeWXkh: { defaultValue: "Tom Sullivan", displayTextArea: false, title: "Name", type: ControlType.String }, a1AQ0lfUB: { defaultValue: "Agency Lead", displayTextArea: false, title: "Role", type: ControlType.String }, rnxKgwYSX: { title: "Image", type: ControlType.ResponsiveImage }, YWe_iFc5i: { defaultValue: "rgb(0, 230, 197)", title: "Color", type: ControlType.Color } });
-addFonts(FrameryQ7Ez_M3k, [{ explicitInter: true, fonts: [{ family: "Inter", source: "framer", style: "normal", unicodeRange: "U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F", url: "https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2", weight: "400" }, { family: "Inter", source: "framer", style: "normal", unicodeRange: "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116", url: "https://framerusercontent.com/assets/EOr0mi4hNtlgWNn9if640EZzXCo.woff2", weight: "400" }, { family: "Inter", source: "framer", style: "normal", unicodeRange: "U+1F00-1FFF", url: "https://framerusercontent.com/assets/Y9k9QrlZAqio88Klkmbd8VoMQc.woff2", weight: "400" }, { family: "Inter", source: "framer", style: "normal", unicodeRange: "U+0370-03FF", url: "https://framerusercontent.com/assets/OYrD2tBIBPvoJXiIHnLoOXnY9M.woff2", weight: "400" }, { family: "Inter", source: "framer", style: "normal", unicodeRange: "U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF", url: "https://framerusercontent.com/assets/JeYwfuaPfZHQhEG8U5gtPDZ7WQ.woff2", weight: "400" }, { family: "Inter", source: "framer", style: "normal", unicodeRange: "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD", url: "https://framerusercontent.com/assets/vQyevYAyHtARFwPqUzQGpnDs.woff2", weight: "400" }, { family: "Inter", source: "framer", style: "normal", unicodeRange: "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB", url: "https://framerusercontent.com/assets/b6Y37FthZeALduNqHicBT6FutY.woff2", weight: "400" }] }, ...getFontsFromSharedStyle(fonts2), ...getFontsFromSharedStyle(fonts)], { supportsExplicitInterCodegen: true });
+  if (props.layoutDependency) return variants.join('-') + props.layoutDependency
+  return variants.join('-')
+}
+var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
+  const fallbackRef = useRef(null)
+  const refBinding = ref ?? fallbackRef
+  const defaultLayoutId = React.useId()
+  const { activeLocale, setLocale } = useLocaleInfo()
+  const componentViewport = useComponentViewport()
+  const {
+    style,
+    className: className3,
+    layoutId,
+    variant,
+    WRDXXfyCt,
+    uaBDeWXkh,
+    a1AQ0lfUB,
+    rnxKgwYSX,
+    YWe_iFc5i,
+    ...restProps
+  } = getProps(props)
+  const {
+    baseVariant,
+    classNames,
+    clearLoadingGesture,
+    gestureHandlers,
+    gestureVariant,
+    isLoading,
+    setGestureState,
+    setVariant,
+    variants,
+  } = useVariantState({
+    defaultVariant: 'P_0FGqsmu',
+    ref: refBinding,
+    variant,
+    variantClassNames,
+  })
+  const layoutDependency = createLayoutDependency(props, variants)
+  const sharedStyleClassNames = [className2, className]
+  const scopingClassNames = cx(serializationHash, ...sharedStyleClassNames)
+  return /* @__PURE__ */ _jsx(LayoutGroup, {
+    id: layoutId ?? defaultLayoutId,
+    children: /* @__PURE__ */ _jsx(Variants, {
+      animate: variants,
+      initial: false,
+      children: /* @__PURE__ */ _jsx(Transition, {
+        value: transition1,
+        children: /* @__PURE__ */ _jsxs(motion.div, {
+          ...restProps,
+          ...gestureHandlers,
+          className: cx(
+            scopingClassNames,
+            'framer-jt8nn3',
+            className3,
+            classNames,
+          ),
+          'data-framer-name': 'Default',
+          layoutDependency,
+          layoutId: 'P_0FGqsmu',
+          ref: refBinding,
+          style: { ...style },
+          children: [
+            /* @__PURE__ */ _jsx(motion.div, {
+              className: 'framer-byqqgb',
+              'data-framer-name': 'Up Content',
+              layoutDependency,
+              layoutId: 'n8aOZlsMe',
+              children: /* @__PURE__ */ _jsx(RichText, {
+                __fromCanvasComponent: true,
+                children: /* @__PURE__ */ _jsx(React.Fragment, {
+                  children: /* @__PURE__ */ _jsx(motion.h3, {
+                    className: 'framer-styles-preset-axtltf',
+                    'data-styles-preset': 'c4QhLbUD5',
+                    children:
+                      '\u201CWe\xA0saved on\xA0hosting and boosted conversions just by\xA0running Jet.\u201D',
+                  }),
+                }),
+                className: 'framer-1dcnm8q',
+                fonts: ['Inter'],
+                layoutDependency,
+                layoutId: 'V4F_Pk9H0',
+                style: {
+                  '--framer-link-text-color': 'rgb(0, 153, 255)',
+                  '--framer-link-text-decoration': 'underline',
+                },
+                text: WRDXXfyCt,
+                verticalAlignment: 'top',
+                withExternalLayout: true,
+              }),
+            }),
+            /* @__PURE__ */ _jsxs(motion.div, {
+              className: 'framer-1q7n0h8',
+              'data-framer-name': 'Bottom Info',
+              layoutDependency,
+              layoutId: 'mLn0tMBDf',
+              children: [
+                /* @__PURE__ */ _jsx(Image, {
+                  background: {
+                    alt: '',
+                    fit: 'fill',
+                    loading: getLoadingLazyAtYPosition(
+                      (componentViewport?.y || 0) +
+                        34 +
+                        (0 +
+                          27 +
+                          (((componentViewport?.height || 281) - 68 - 237) /
+                            1) *
+                            1) +
+                        83,
+                    ),
+                    pixelHeight: 6240,
+                    pixelWidth: 4160,
+                    sizes: '40px',
+                    ...toResponsiveImage(rnxKgwYSX),
+                  },
+                  className: 'framer-10klwk5',
+                  'data-framer-name': 'Image',
+                  draggable: 'false',
+                  layoutDependency,
+                  layoutId: 'pYcI9i0Nv',
+                  style: {
+                    filter: 'brightness(0.9) grayscale(0.2)',
+                    WebkitFilter: 'brightness(0.9) grayscale(0.2)',
+                  },
+                  children: /* @__PURE__ */ _jsx(motion.div, {
+                    className: 'framer-1ogxrbu',
+                    'data-framer-name': 'Coloring',
+                    layoutDependency,
+                    layoutId: 'ljNiDi4rl',
+                    style: { backgroundColor: YWe_iFc5i },
+                  }),
+                }),
+                /* @__PURE__ */ _jsxs(motion.div, {
+                  className: 'framer-cix8dx',
+                  'data-framer-name': 'Name + Role',
+                  layoutDependency,
+                  layoutId: 'cbbYDUFy1',
+                  children: [
+                    /* @__PURE__ */ _jsx(RichText, {
+                      __fromCanvasComponent: true,
+                      children: /* @__PURE__ */ _jsx(React.Fragment, {
+                        children: /* @__PURE__ */ _jsx(motion.p, {
+                          className: 'framer-styles-preset-c9mga6',
+                          'data-styles-preset': 'Xa6VJQy2p',
+                          children: 'Tom Sullivan',
+                        }),
+                      }),
+                      className: 'framer-10blmtt',
+                      fonts: ['Inter'],
+                      layoutDependency,
+                      layoutId: 'RYyDfclxZ',
+                      style: {
+                        '--framer-link-text-color': 'rgb(0, 153, 255)',
+                        '--framer-link-text-decoration': 'underline',
+                      },
+                      text: uaBDeWXkh,
+                      verticalAlignment: 'top',
+                      withExternalLayout: true,
+                    }),
+                    /* @__PURE__ */ _jsx(RichText, {
+                      __fromCanvasComponent: true,
+                      children: /* @__PURE__ */ _jsx(React.Fragment, {
+                        children: /* @__PURE__ */ _jsx(motion.p, {
+                          className: 'framer-styles-preset-c9mga6',
+                          'data-styles-preset': 'Xa6VJQy2p',
+                          style: {
+                            '--framer-text-color':
+                              'var(--extracted-r6o4lv, var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5)))',
+                          },
+                          children: 'Agency Lead',
+                        }),
+                      }),
+                      className: 'framer-1kmxg41',
+                      fonts: ['Inter'],
+                      layoutDependency,
+                      layoutId: 'YSJz66HpA',
+                      style: {
+                        '--extracted-r6o4lv':
+                          'var(--token-8acf10b0-fc55-42ff-8ac5-80a79dc47979, rgba(255, 255, 255, 0.5))',
+                        '--framer-link-text-color': 'rgb(0, 153, 255)',
+                        '--framer-link-text-decoration': 'underline',
+                      },
+                      text: a1AQ0lfUB,
+                      verticalAlignment: 'top',
+                      withExternalLayout: true,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      }),
+    }),
+  })
+})
+var css3 = [
+  '@supports (aspect-ratio: 1) { body { --framer-aspect-ratio-supported: auto; } }',
+  '.framer-CsRSm.framer-1sxnaj3, .framer-CsRSm .framer-1sxnaj3 { display: block; }',
+  '.framer-CsRSm.framer-jt8nn3 { align-content: center; align-items: center; display: flex; flex-direction: column; flex-wrap: nowrap; height: 281px; justify-content: space-between; overflow: hidden; padding: 34px; position: relative; width: 1168px; }',
+  '.framer-CsRSm .framer-byqqgb { align-content: flex-start; align-items: flex-start; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 16px; height: min-content; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 100%; }',
+  '.framer-CsRSm .framer-1dcnm8q { flex: none; height: auto; max-width: 400px; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; }',
+  '.framer-CsRSm .framer-1q7n0h8 { align-content: center; align-items: center; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 16px; height: min-content; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 100%; }',
+  '.framer-CsRSm .framer-10klwk5 { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 40px); overflow: hidden; position: relative; width: 40px; }',
+  '.framer-CsRSm .framer-1ogxrbu { aspect-ratio: 1 / 1; flex: none; height: var(--framer-aspect-ratio-supported, 40px); left: 0px; mix-blend-mode: color; overflow: hidden; position: absolute; right: 0px; top: 0px; }',
+  '.framer-CsRSm .framer-cix8dx { align-content: center; align-items: center; display: flex; flex: 1 0 0px; flex-direction: column; flex-wrap: nowrap; gap: 0px; height: min-content; justify-content: center; overflow: hidden; padding: 0px; position: relative; width: 1px; }',
+  '.framer-CsRSm .framer-10blmtt, .framer-CsRSm .framer-1kmxg41 { flex: none; height: auto; position: relative; white-space: pre-wrap; width: 100%; word-break: break-word; word-wrap: break-word; }',
+  ...css2,
+  ...css,
+]
+var FrameryQ7Ez_M3k = withCSS(Component, css3, 'framer-CsRSm')
+var stdin_default = FrameryQ7Ez_M3k
+FrameryQ7Ez_M3k.displayName = 'Small Testimonial Card'
+FrameryQ7Ez_M3k.defaultProps = { height: 281, width: 1168 }
+addPropertyControls(FrameryQ7Ez_M3k, {
+  WRDXXfyCt: {
+    defaultValue:
+      '\u201CWe\xA0saved on\xA0hosting and boosted conversions just by\xA0running Jet.\u201D',
+    displayTextArea: false,
+    title: 'Testimonial',
+    type: ControlType.String,
+  },
+  uaBDeWXkh: {
+    defaultValue: 'Tom Sullivan',
+    displayTextArea: false,
+    title: 'Name',
+    type: ControlType.String,
+  },
+  a1AQ0lfUB: {
+    defaultValue: 'Agency Lead',
+    displayTextArea: false,
+    title: 'Role',
+    type: ControlType.String,
+  },
+  rnxKgwYSX: { title: 'Image', type: ControlType.ResponsiveImage },
+  YWe_iFc5i: {
+    defaultValue: 'rgb(0, 230, 197)',
+    title: 'Color',
+    type: ControlType.Color,
+  },
+})
+addFonts(
+  FrameryQ7Ez_M3k,
+  [
+    {
+      explicitInter: true,
+      fonts: [
+        {
+          family: 'Inter',
+          source: 'framer',
+          style: 'normal',
+          unicodeRange:
+            'U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
+          url: 'https://framerusercontent.com/assets/5vvr9Vy74if2I6bQbJvbw7SY1pQ.woff2',
+          weight: '400',
+        },
+        {
+          family: 'Inter',
+          source: 'framer',
+          style: 'normal',
+          unicodeRange: 'U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116',
+          url: 'https://framerusercontent.com/assets/EOr0mi4hNtlgWNn9if640EZzXCo.woff2',
+          weight: '400',
+        },
+        {
+          family: 'Inter',
+          source: 'framer',
+          style: 'normal',
+          unicodeRange: 'U+1F00-1FFF',
+          url: 'https://framerusercontent.com/assets/Y9k9QrlZAqio88Klkmbd8VoMQc.woff2',
+          weight: '400',
+        },
+        {
+          family: 'Inter',
+          source: 'framer',
+          style: 'normal',
+          unicodeRange: 'U+0370-03FF',
+          url: 'https://framerusercontent.com/assets/OYrD2tBIBPvoJXiIHnLoOXnY9M.woff2',
+          weight: '400',
+        },
+        {
+          family: 'Inter',
+          source: 'framer',
+          style: 'normal',
+          unicodeRange:
+            'U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF',
+          url: 'https://framerusercontent.com/assets/JeYwfuaPfZHQhEG8U5gtPDZ7WQ.woff2',
+          weight: '400',
+        },
+        {
+          family: 'Inter',
+          source: 'framer',
+          style: 'normal',
+          unicodeRange:
+            'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD',
+          url: 'https://framerusercontent.com/assets/vQyevYAyHtARFwPqUzQGpnDs.woff2',
+          weight: '400',
+        },
+        {
+          family: 'Inter',
+          source: 'framer',
+          style: 'normal',
+          unicodeRange:
+            'U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB',
+          url: 'https://framerusercontent.com/assets/b6Y37FthZeALduNqHicBT6FutY.woff2',
+          weight: '400',
+        },
+      ],
+    },
+    ...getFontsFromSharedStyle(fonts2),
+    ...getFontsFromSharedStyle(fonts),
+  ],
+  { supportsExplicitInterCodegen: true },
+)
 
-export {
-  stdin_default
-};
+export { stdin_default }

@@ -7,9 +7,9 @@ import { Root } from 'mdast'
 import { processMdxInServer } from './mdx.server'
 
 describe('GitHub Blockquotes Plugin', () => {
-    test('transforms GitHub-style blockquotes correctly', async () => {
-        // Example markdown with GitHub-style blockquotes
-        const markdown = dedent`
+  test('transforms GitHub-style blockquotes correctly', async () => {
+    // Example markdown with GitHub-style blockquotes
+    const markdown = dedent`
         # hello
 
         > [!NOTE]
@@ -17,15 +17,15 @@ describe('GitHub Blockquotes Plugin', () => {
 
         `
 
-        const result = await processMdxInServer({
-            markdown,
-            githubPath: '',
-            extension: 'mdx',
-        })
-        const data = result.data as { ast: Root }
+    const result = await processMdxInServer({
+      markdown,
+      githubPath: '',
+      extension: 'mdx',
+    })
+    const data = result.data as { ast: Root }
 
-        // Check the full output
-        expect(result).toMatchInlineSnapshot(`
+    // Check the full output
+    expect(result).toMatchInlineSnapshot(`
           {
             "data": {
               "ast": {
@@ -125,5 +125,5 @@ describe('GitHub Blockquotes Plugin', () => {
             },
           }
         `)
-    })
+  })
 })

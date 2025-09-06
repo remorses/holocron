@@ -3,11 +3,11 @@
 import { type ReactNode, useSyncExternalStore } from 'react'
 
 export function ClientOnly({ children }: { children: ReactNode }) {
-    const isClient = useSyncExternalStore(
-        () => () => {},
-        () => true,
-        () => false,
-    )
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  )
 
-    return isClient ? children : null
+  return isClient ? children : null
 }

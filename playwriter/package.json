@@ -1,38 +1,38 @@
 {
-    "name": "playwriter",
-    "description": "",
-    "version": "0.0.3",
-    "type": "module",
-    "repository": "https://github.com/remorses/",
-    "scripts": {
-        "build": "rm -rf dist *.tsbuildinfo && mkdir dist && cp src/prompt.md dist/ && tsc",
-        "prepublishOnly": "pnpm build",
-        "watch": "tsc -w",
-        "typecheck": "tsc --noEmit",
-        "mcp": "vite-node src/mcp.ts",
-        "test": "vitest run",
-        "test:watch": "vitest"
-    },
-    "bin": "./bin.js",
-    "files": [
-        "dist",
-        "src",
-        "esm",
-        "bin.js"
-    ],
-    "keywords": [],
-    "author": "Tommaso De Rossi, morse <beats.by.morse@gmail.com>",
-    "license": "",
-    "devDependencies": {
-        "@vitest/ui": "^3.2.4",
-        "vite-node": "^3.2.4",
-        "vitest": "^3.2.4"
-    },
-    "dependencies": {
-        "@modelcontextprotocol/sdk": "^1.17.3",
-        "@playwright/mcp": "latest",
-        "patchright-core": "^1.52.5",
-        "user-agents": "^1.1.610",
-        "zod": "^4.1.1"
-    }
+  "name": "playwriter",
+  "description": "",
+  "version": "0.0.3",
+  "type": "module",
+  "repository": "https://github.com/remorses/",
+  "scripts": {
+    "build": "rm -rf dist *.tsbuildinfo && mkdir dist && cp src/prompt.md dist/ && tsc",
+    "prepublishOnly": "pnpm build",
+    "watch": "tsc -w",
+    "typecheck": "tsc --noEmit",
+    "mcp": "vite-node src/mcp.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "bin": "./bin.js",
+  "files": [
+    "dist",
+    "src",
+    "esm",
+    "bin.js"
+  ],
+  "keywords": [],
+  "author": "Tommaso De Rossi, morse <beats.by.morse@gmail.com>",
+  "license": "",
+  "devDependencies": {
+    "@vitest/ui": "^3.2.4",
+    "vite-node": "^3.2.4",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.3",
+    "@playwright/mcp": "latest",
+    "patchright-core": "^1.52.5",
+    "user-agents": "^1.1.610",
+    "zod": "^4.1.1"
+  }
 }

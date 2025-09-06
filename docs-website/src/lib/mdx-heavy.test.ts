@@ -20,10 +20,10 @@ More content.
 
 Final content.
 `
-    
+
     const ast = remark().use(remarkMdx).parse(markdown)
     const toc = getTocFromMdast(ast)
-    
+
     expect(toc).toMatchInlineSnapshot(`
       [
         {
@@ -52,10 +52,10 @@ Final content.
 
   test('should handle empty markdown', () => {
     const markdown = ''
-    
+
     const ast = remark().use(remarkMdx).parse(markdown)
     const toc = getTocFromMdast(ast)
-    
+
     expect(toc).toMatchInlineSnapshot(`[]`)
   })
 
@@ -65,10 +65,10 @@ This is just regular text without any headings.
 
 Some more text here.
 `
-    
+
     const ast = remark().use(remarkMdx).parse(markdown)
     const toc = getTocFromMdast(ast)
-    
+
     expect(toc).toMatchInlineSnapshot(`[]`)
   })
 
@@ -88,10 +88,10 @@ Some more text here.
 
 ### Subsection B.1
 `
-    
+
     const ast = remark().use(remarkMdx).parse(markdown)
     const toc = getTocFromMdast(ast)
-    
+
     expect(toc).toMatchInlineSnapshot(`
       [
         {
@@ -141,10 +141,10 @@ Some more text here.
 
 ### Section with [link](https://example.com)
 `
-    
+
     const ast = remark().use(remarkMdx).parse(markdown)
     const toc = getTocFromMdast(ast)
-    
+
     expect(toc).toMatchInlineSnapshot(`
       [
         {

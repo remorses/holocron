@@ -1,38 +1,38 @@
 {
-    "name": "root",
-    "private": true,
-    "scripts": {
-        "test": "NODE_ENV=test vitest",
-        "install-doppler": "curl -fsSL https://cli.doppler.com/install.sh | sh -s -- --no-package-manager --install-path ./node_modules/.bin",
-        "deployment": "pnpm bootstrap && pnpm -r --parallel --stream --no-bail run --filter website --filter docs-website deployment",
-        "bootstrap": "pnpm install-doppler && pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm ",
-        "watch": "pnpm -r watch",
-        "typecheck": "pnpm -r --parallel --no-bail --stream typecheck",
-        "ci": "pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm && pnpm --filter './*' build",
-        "release": "pnpm build && changeset",
-        "prettier": "prettier --write ."
-    },
-    "devDependencies": {
-        "@changesets/cli": "^2.29.4",
-        "@prisma/client": "^6.15.0",
-        "prettier": "^3.5.3",
-        "tsup": "8.5.0",
-        "tsx": "^4.20.3",
-        "typescript": "^5.8.3",
-        "vite": "^6.3.5",
-        "vite-node": "^3.2.4",
-        "vitest": "^3.2.4"
-    },
-    "pnpm": {
-        "overrides": {
-            "rollup": "4.43.0"
-        }
-    },
-    "repository": "https://github.com/remorses/",
-    "author": "remorses <beats.by.morse@gmail.com>",
-    "license": "",
-    "dependencies": {
-        "@types/node": "^24.0.1",
-        "unframer": "latest"
+  "name": "root",
+  "private": true,
+  "scripts": {
+    "test": "NODE_ENV=test vitest",
+    "install-doppler": "curl -fsSL https://cli.doppler.com/install.sh | sh -s -- --no-package-manager --install-path ./node_modules/.bin",
+    "deployment": "pnpm bootstrap && pnpm -r --parallel --stream --no-bail run --filter website --filter docs-website deployment",
+    "bootstrap": "pnpm install-doppler && pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm ",
+    "watch": "pnpm -r watch",
+    "typecheck": "pnpm -r --parallel --no-bail --stream typecheck",
+    "ci": "pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm && pnpm --filter './*' build",
+    "release": "pnpm build && changeset",
+    "format": "biome format --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.3",
+    "@changesets/cli": "^2.29.4",
+    "@prisma/client": "^6.15.0",
+    "tsup": "8.5.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vite-node": "^3.2.4",
+    "vitest": "^3.2.4"
+  },
+  "pnpm": {
+    "overrides": {
+      "rollup": "4.43.0"
     }
+  },
+  "repository": "https://github.com/remorses/",
+  "author": "remorses <beats.by.morse@gmail.com>",
+  "license": "",
+  "dependencies": {
+    "@types/node": "^24.0.1",
+    "unframer": "latest"
+  }
 }

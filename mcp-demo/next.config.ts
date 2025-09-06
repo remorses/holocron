@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
     'fumadocs-core',
     'fumadocs-ui',
     'fumadocs-openapi',
-    'fumadocs-mcp'
+    'fumadocs-mcp',
   ],
   // Handle ESM modules
   webpack: (config) => {

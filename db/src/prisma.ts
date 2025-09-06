@@ -6,23 +6,23 @@ import { PrismaClient } from './generated/client.js'
 const debugQueries = false
 
 export const pgAdapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL,
-    max: 7,
+  connectionString: process.env.DATABASE_URL,
+  max: 7,
 })
 
 export const prisma: PrismaClient =
-    (global as any).prisma ||
-    new PrismaClient({
-        adapter: pgAdapter,
+  (global as any).prisma ||
+  new PrismaClient({
+    adapter: pgAdapter,
 
-        log: debugQueries
-            ? [
-                  {
-                      emit: 'stdout',
-                      level: 'query',
-                  },
-              ]
-            : undefined,
-    })
+    log: debugQueries
+      ? [
+          {
+            emit: 'stdout',
+            level: 'query',
+          },
+        ]
+      : undefined,
+  })
 
 if (process.env.NODE_ENV !== 'production') (global as any).prisma = prisma

@@ -5,40 +5,40 @@ import { useEffect, useRef } from 'react'
  * and only executes if the revalidator is idle
  */
 export function useDebouncedEffect(
-    effect: () => void,
-    deps: React.DependencyList,
-    delay: number,
-    shouldRun: boolean = true
+  effect: () => void,
+  deps: React.DependencyList,
+  delay: number,
+  shouldRun: boolean = true,
 ) {
-    const timeoutRef = useRef<NodeJS.Timeout>(undefined)
+  const timeoutRef = useRef<NodeJS.Timeout>(undefined)
 
-    useEffect(() => {
-        if (!shouldRun) {
-            return
-        }
+  useEffect(() => {
+    if (!shouldRun) {
+      return
+    }
 
-        // Clear existing timeout
-        if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current)
-        }
+    // Clear existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
 
-        // Set new timeout
-        timeoutRef.current = setTimeout(effect, delay)
+    // Set new timeout
+    timeoutRef.current = setTimeout(effect, delay)
 
-        // Cleanup on unmount or deps change
-        return () => {
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current)
-            }
-        }
-    }, [...deps, shouldRun])
+    // Cleanup on unmount or deps change
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [...deps, shouldRun])
 
-    // Cleanup on unmount
-    useEffect(() => {
-        return () => {
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current)
-            }
-        }
-    }, [])
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
 }

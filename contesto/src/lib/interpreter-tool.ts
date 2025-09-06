@@ -6,82 +6,76 @@ import camelCase from 'camelcase'
 import dedent from 'string-dedent'
 
 export const interpreterToolParamsSchema = z.object({
-    title: z
-        .string()
-        .describe('A descriptive very short title for this code execution'),
-    code: z
-        .string()
-        .describe(
-            'JavaScript code to execute in an isolated environment. DO NOT use typescript or jsx. Only plain javascript is supported. No imports or require. Running on the server. Top level await is supported. Do not use an iife.',
-        ),
-    timeout: z
-        .number()
-        .min(100)
-        .max(300000)
-        .describe('Timeout in milliseconds'),
+  title: z
+    .string()
+    .describe('A descriptive very short title for this code execution'),
+  code: z
+    .string()
+    .describe(
+      'JavaScript code to execute in an isolated environment. DO NOT use typescript or jsx. Only plain javascript is supported. No imports or require. Running on the server. Top level await is supported. Do not use an iife.',
+    ),
+  timeout: z.number().min(100).max(300000).describe('Timeout in milliseconds'),
 })
 
 export type InterpreterToolParamSchema = z.infer<
-    typeof interpreterToolParamsSchema
+  typeof interpreterToolParamsSchema
 >
 
 export interface CreateInterpreterToolOptions {
-    tools?: Record<string, Tool<any, any>>
+  tools?: Record<string, Tool<any, any>>
 }
 
 function indentString(str: string, indent: string = '  '): string {
-    return str
-        .split('\n')
-        .map((line) => indent + line)
-        .join('\n')
+  return str
+    .split('\n')
+    .map((line) => indent + line)
+    .join('\n')
 }
 
 async function generateToolsTypeDefinition(
-    tools: Record<string, Tool<any, any>>,
+  tools: Record<string, Tool<any, any>>,
 ): Promise<string> {
-    const toolMethods: string[] = []
+  const toolMethods: string[] = []
 
-    for (const [name, toolDef] of Object.entries(tools)) {
-        if (!toolDef.execute) continue
+  for (const [name, toolDef] of Object.entries(tools)) {
+    if (!toolDef.execute) continue
 
-        const camelCaseName = camelCase(name)
+    const camelCaseName = camelCase(name)
 
-        try {
-            let inputType = 'any'
+    try {
+      let inputType = 'any'
 
-            if (toolDef.inputSchema) {
-                if ('_def' in toolDef.inputSchema) {
-                    const zodSchema = toolDef.inputSchema as any
-                    const jsonSchema = toJSONSchema(zodSchema) as any
-                    const typeScript = await compile(
-                        jsonSchema,
-                        `${camelCaseName}Input`,
-                        {
-                            strictIndexSignatures: false,
-                        },
-                    )
+      if (toolDef.inputSchema) {
+        if ('_def' in toolDef.inputSchema) {
+          const zodSchema = toolDef.inputSchema as any
+          const jsonSchema = toJSONSchema(zodSchema) as any
+          const typeScript = await compile(
+            jsonSchema,
+            `${camelCaseName}Input`,
+            {
+              strictIndexSignatures: false,
+            },
+          )
 
-                    const match = typeScript.match(
-                        /export interface \w+ ({[\s\S]*?})/m,
-                    )
-                    if (match) {
-                        inputType = match[1]
-                    }
-                }
-            }
-
-            toolMethods.push(
-                `${camelCaseName}: (args: ${inputType}) => Promise<any>;`,
-            )
-        } catch {
-            toolMethods.push(`${camelCaseName}: (args: any) => Promise<any>;`)
+          const match = typeScript.match(/export interface \w+ ({[\s\S]*?})/m)
+          if (match) {
+            inputType = match[1]
+          }
         }
+      }
+
+      toolMethods.push(
+        `${camelCaseName}: (args: ${inputType}) => Promise<any>;`,
+      )
+    } catch {
+      toolMethods.push(`${camelCaseName}: (args: any) => Promise<any>;`)
     }
+  }
 
-    if (toolMethods.length === 0) return ''
+  if (toolMethods.length === 0) return ''
 
-    const indentedMethods = indentString(toolMethods.join('\n'))
-    return dedent`
+  const indentedMethods = indentString(toolMethods.join('\n'))
+  return dedent`
       You have access to a global tools object to call the chat available tools, here is the typescript definition of the tools object:
 
       // exhaustive list of tools available. These are all the available methods on tools object
@@ -111,146 +105,131 @@ async function generateToolsTypeDefinition(
 }
 
 export async function createInterpreterTool(
-    options?: CreateInterpreterToolOptions,
+  options?: CreateInterpreterToolOptions,
 ) {
-    const tools = options?.tools || {}
+  const tools = options?.tools || {}
 
-    const availableTools = Object.entries(tools)
-        .filter(([_, toolDef]) => toolDef.execute)
-        .filter(
-            ([_, toolDef]) =>
-                toolDef.inputSchema !== interpreterToolParamsSchema,
-        )
-        .map(([name]) => name)
+  const availableTools = Object.entries(tools)
+    .filter(([_, toolDef]) => toolDef.execute)
+    .filter(
+      ([_, toolDef]) => toolDef.inputSchema !== interpreterToolParamsSchema,
+    )
+    .map(([name]) => name)
 
-    let toolsDescription = ''
+  let toolsDescription = ''
 
-    if (availableTools.length > 0) {
-        const typeDefinition = await generateToolsTypeDefinition(tools)
-        toolsDescription =
-            typeDefinition ||
-            `\n\nAvailable tools in the 'tools' object:\n${availableTools.map((name) => `- tools.${name}(...)`).join('\n')}`
-    }
+  if (availableTools.length > 0) {
+    const typeDefinition = await generateToolsTypeDefinition(tools)
+    toolsDescription =
+      typeDefinition ||
+      `\n\nAvailable tools in the 'tools' object:\n${availableTools.map((name) => `- tools.${name}(...)`).join('\n')}`
+  }
 
-    const description = `Execute JavaScript code in an isolated sandbox environment with console.log capture\n\n${toolsDescription}`
-    return tool({
-        description,
-        inputSchema: interpreterToolParamsSchema,
-        execute: async ({ title, code, timeout = 5000 }, secondArg) => {
-            const logs: string[] = []
-            let result: any
+  const description = `Execute JavaScript code in an isolated sandbox environment with console.log capture\n\n${toolsDescription}`
+  return tool({
+    description,
+    inputSchema: interpreterToolParamsSchema,
+    execute: async ({ title, code, timeout = 5000 }, secondArg) => {
+      const logs: string[] = []
+      let result: any
 
+      try {
+        const isolate = new ivm.Isolate({ memoryLimit: 64 })
+        const context = await isolate.createContext()
+        const jail = context.global
+
+        const consoleLog = new ivm.Reference((message: string) => {
+          logs.push(message)
+        })
+
+        await jail.set('_consoleLog', consoleLog)
+
+        // Set up URL constructor via callback
+        const urlConstructor = new ivm.Callback(
+          { sync: true } as any,
+          ((urlString: string, base?: string) => {
             try {
-                const isolate = new ivm.Isolate({ memoryLimit: 64 })
-                const context = await isolate.createContext()
-                const jail = context.global
+              const url = base ? new URL(urlString, base) : new URL(urlString)
+              return {
+                href: url.href,
+                protocol: url.protocol,
+                hostname: url.hostname,
+                host: url.host,
+                port: url.port,
+                pathname: url.pathname,
+                search: url.search,
+                searchParams: Object.fromEntries(url.searchParams.entries()),
+                hash: url.hash,
+                origin: url.origin,
+                username: url.username,
+                password: url.password,
+              }
+            } catch (error: any) {
+              throw new Error(`Invalid URL: ${error.message}`)
+            }
+          }) as any,
+        )
 
-                const consoleLog = new ivm.Reference((message: string) => {
-                    logs.push(message)
-                })
+        await jail.set('_urlConstructor', urlConstructor)
 
-                await jail.set('_consoleLog', consoleLog)
-
-                // Set up URL constructor via callback
-                const urlConstructor = new ivm.Callback(
-                    { sync: true } as any,
-                    ((urlString: string, base?: string) => {
-                        try {
-                            const url = base
-                                ? new URL(urlString, base)
-                                : new URL(urlString)
-                            return {
-                                href: url.href,
-                                protocol: url.protocol,
-                                hostname: url.hostname,
-                                host: url.host,
-                                port: url.port,
-                                pathname: url.pathname,
-                                search: url.search,
-                                searchParams: Object.fromEntries(
-                                    url.searchParams.entries(),
-                                ),
-                                hash: url.hash,
-                                origin: url.origin,
-                                username: url.username,
-                                password: url.password,
-                            }
-                        } catch (error: any) {
-                            throw new Error(`Invalid URL: ${error.message}`)
-                        }
-                    }) as any,
-                )
-
-                await jail.set('_urlConstructor', urlConstructor)
-
-                // Set up tools
-                const toolExecutors: Record<
-                    string,
-                    ivm.Reference<(args: any) => Promise<any>>
-                > = {}
-                for (const [name, toolDef] of Object.entries(tools)) {
-                    if (toolDef.execute) {
-                        const camelCaseName = camelCase(name)
-                        toolExecutors[camelCaseName] = new ivm.Reference(
-                            async (args: any) => {
-                                try {
-                                    // Validate input using the tool's inputSchema if it's a Zod schema
-                                    if (
-                                        toolDef.inputSchema &&
-                                        'parse' in toolDef.inputSchema
-                                    ) {
-                                        try {
-                                            const validated =
-                                                toolDef.inputSchema.parse(args)
-                                            args = validated
-                                        } catch (error: any) {
-                                            return {
-                                                __error: true,
-                                                message: `Invalid input for tool ${name}: ${error.message}`,
-                                            }
-                                        }
-                                    }
-
-                                    // Execute the tool
-                                    const result = await toolDef.execute!(
-                                        args,
-                                        secondArg,
-                                    )
-
-                                    // Handle async iterables
-                                    if (
-                                        result &&
-                                        typeof result === 'object' &&
-                                        Symbol.asyncIterator in result
-                                    ) {
-                                        const chunks: any[] = []
-                                        for await (const chunk of result as AsyncIterable<any>) {
-                                            chunks.push(chunk)
-                                        }
-                                        return {
-                                            __result: true,
-                                            value:
-                                                chunks.length === 1
-                                                    ? chunks[0]
-                                                    : chunks,
-                                        }
-                                    }
-
-                                    return { __result: true, value: result }
-                                } catch (error: any) {
-                                    return {
-                                        __error: true,
-                                        message: error.message || String(error),
-                                    }
-                                }
-                            },
-                        )
+        // Set up tools
+        const toolExecutors: Record<
+          string,
+          ivm.Reference<(args: any) => Promise<any>>
+        > = {}
+        for (const [name, toolDef] of Object.entries(tools)) {
+          if (toolDef.execute) {
+            const camelCaseName = camelCase(name)
+            toolExecutors[camelCaseName] = new ivm.Reference(
+              async (args: any) => {
+                try {
+                  // Validate input using the tool's inputSchema if it's a Zod schema
+                  if (toolDef.inputSchema && 'parse' in toolDef.inputSchema) {
+                    try {
+                      const validated = toolDef.inputSchema.parse(args)
+                      args = validated
+                    } catch (error: any) {
+                      return {
+                        __error: true,
+                        message: `Invalid input for tool ${name}: ${error.message}`,
+                      }
                     }
+                  }
+
+                  // Execute the tool
+                  const result = await toolDef.execute!(args, secondArg)
+
+                  // Handle async iterables
+                  if (
+                    result &&
+                    typeof result === 'object' &&
+                    Symbol.asyncIterator in result
+                  ) {
+                    const chunks: any[] = []
+                    for await (const chunk of result as AsyncIterable<any>) {
+                      chunks.push(chunk)
+                    }
+                    return {
+                      __result: true,
+                      value: chunks.length === 1 ? chunks[0] : chunks,
+                    }
+                  }
+
+                  return { __result: true, value: result }
+                } catch (error: any) {
+                  return {
+                    __error: true,
+                    message: error.message || String(error),
+                  }
                 }
+              },
+            )
+          }
+        }
 
-                await jail.set('_toolExecutors', toolExecutors, { copy: true })
+        await jail.set('_toolExecutors', toolExecutors, { copy: true })
 
-                const wrappedCode = `
+        const wrappedCode = `
                     const _log = function(...args) {
                         const message = args.map((arg) => {
                             if (arg instanceof Error) {
@@ -301,10 +280,10 @@ export async function createInterpreterTool(
 
                     const tools = {};
                     ${Object.entries(tools)
-                        .filter(([_, toolDef]) => toolDef.execute)
-                        .map(([name]) => {
-                            const camelCaseName = camelCase(name)
-                            return `
+                      .filter(([_, toolDef]) => toolDef.execute)
+                      .map(([name]) => {
+                        const camelCaseName = camelCase(name)
+                        return `
                     tools.${camelCaseName} = async function(args) {
                         if (!_toolExecutors.${camelCaseName}) {
                             throw new Error('Tool ${camelCaseName} is not executable');
@@ -320,34 +299,30 @@ export async function createInterpreterTool(
 
                         return result && result.__result ? result.value : result;
                     };`
-                        })
-                        .join('')}
+                      })
+                      .join('')}
 
                     (async () => {
                         ${code}
                     })()
                 `
 
-                const script = await isolate.compileScript(wrappedCode)
-                result = await script.run(context, {
-                    timeout,
-                    promise: true,
-                })
+        const script = await isolate.compileScript(wrappedCode)
+        result = await script.run(context, {
+          timeout,
+          promise: true,
+        })
 
-                isolate.dispose()
+        isolate.dispose()
 
-                return logs.length > 0 ? logs.join('\n') : 'no console logs'
-            } catch (error: any) {
-                const errorMessage = `Error: ${error.message || String(error)}`
-                const stackTrace = error.stack
-                    ? `\nStack trace:\n${error.stack}`
-                    : ''
-                const logsOutput =
-                    logs.length > 0
-                        ? `Logs before error:\n${logs.join('\n')}\n\n`
-                        : ''
-                return `${logsOutput}${errorMessage}${stackTrace}`
-            }
-        },
-    })
+        return logs.length > 0 ? logs.join('\n') : 'no console logs'
+      } catch (error: any) {
+        const errorMessage = `Error: ${error.message || String(error)}`
+        const stackTrace = error.stack ? `\nStack trace:\n${error.stack}` : ''
+        const logsOutput =
+          logs.length > 0 ? `Logs before error:\n${logs.join('\n')}\n\n` : ''
+        return `${logsOutput}${errorMessage}${stackTrace}`
+      }
+    },
+  })
 }

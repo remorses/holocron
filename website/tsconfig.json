@@ -1,43 +1,43 @@
 {
-    "compilerOptions": {
-        "lib": [
-            "DOM", //
-            "DOM.Iterable",
-            "ES2022",
-            "ESNext"
-        ],
-        "types": [
-            "@react-router/node",
-            "vite/client",
-            "./src/env.d.ts",
-            "@types/node"
-            // "./worker-configuration.d.ts"
-        ],
-        "outDir": "dist",
-        "rootDir": ".",
-        "isolatedModules": true,
-        "esModuleInterop": true,
-        "jsx": "react-jsx",
-        "module": "ESNext",
-        "moduleResolution": "Bundler",
-        "resolveJsonModule": true,
-        "target": "ES2022",
-        "strict": true,
-        "allowJs": true,
-        "skipLibCheck": true,
-        "declaration": true,
-        "allowArbitraryExtensions": true,
-        // "allowImportingTsExtensions": true,
-        "noImplicitAny": false,
-        "useUnknownInCatchVariables": false,
-        "forceConsistentCasingInFileNames": true,
-        "resolvePackageJsonImports": true,
-        "rootDirs": [".", "./.react-router/types"],
-        "baseUrl": ".",
-        "paths": {
-            "website/*": ["./*"],
-        },
-        "noEmit": false
+  "compilerOptions": {
+    "lib": [
+      "DOM", //
+      "DOM.Iterable",
+      "ES2022",
+      "ESNext"
+    ],
+    "types": [
+      "@react-router/node",
+      "vite/client",
+      "./src/env.d.ts",
+      "@types/node"
+      // "./worker-configuration.d.ts"
+    ],
+    "outDir": "dist",
+    "rootDir": ".",
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "target": "ES2022",
+    "strict": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "allowArbitraryExtensions": true,
+    // "allowImportingTsExtensions": true,
+    "noImplicitAny": false,
+    "useUnknownInCatchVariables": false,
+    "forceConsistentCasingInFileNames": true,
+    "resolvePackageJsonImports": true,
+    "rootDirs": [".", "./.react-router/types"],
+    "baseUrl": ".",
+    "paths": {
+      "website/*": ["./*"]
     },
-    "include": ["src", "scripts", ".react-router/types/**/*", "./src/worker.ts", ]
+    "noEmit": false
+  },
+  "include": ["src", "scripts", ".react-router/types/**/*", "./src/worker.ts"]
 }

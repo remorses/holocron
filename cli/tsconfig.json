@@ -1,15 +1,15 @@
 {
-    "extends": "../tsconfig.base.json",
-    "compilerOptions": {
-        "rootDir": "src",
-        "allowJs": true,
-        "lib": ["esnext", "es2015", "dom"],
-        "skipLibCheck": true,
-        "types": ["vite/client"],
-        "outDir": "dist",
-        "resolveJsonModule": true,
-        "jsx": "react-jsx"
-    },
-    "include": ["src"],
-    "exclude": ["node_modules", "**/node_modules/**"]
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "allowJs": true,
+    "lib": ["esnext", "es2015", "dom"],
+    "skipLibCheck": true,
+    "types": ["vite/client"],
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "jsx": "react-jsx"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "**/node_modules/**"]
 }

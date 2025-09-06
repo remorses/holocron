@@ -2,25 +2,25 @@ import { describe, test, expect } from 'vitest'
 import { extractJsonCComments, applyJsonCComments } from './json-c-comments'
 
 describe('extractJsonCComments', () => {
-    test('extracts simple comments above keys', () => {
-        const jsonC = `{
+  test('extracts simple comments above keys', () => {
+    const jsonC = `{
     // This is a comment for name
     "name": "John",
     // This is a comment for age
     "age": 30
 }`
-        
-        const result = extractJsonCComments(jsonC)
-        expect(result.comments).toMatchInlineSnapshot(`
+
+    const result = extractJsonCComments(jsonC)
+    expect(result.comments).toMatchInlineSnapshot(`
           {
             "age": "// This is a comment for age",
             "name": "// This is a comment for name",
           }
         `)
-    })
+  })
 
-    test('extracts nested object comments', () => {
-        const jsonC = `{
+  test('extracts nested object comments', () => {
+    const jsonC = `{
     // User information
     "user": {
         // Full name of the user
@@ -41,9 +41,9 @@ describe('extractJsonCComments', () => {
         }
     }
 }`
-        
-        const result = extractJsonCComments(jsonC)
-        expect(result.comments).toMatchInlineSnapshot(`
+
+    const result = extractJsonCComments(jsonC)
+    expect(result.comments).toMatchInlineSnapshot(`
           {
             "settings": "// Application settings",
             "settings.notifications": "// Notification preferences",
@@ -55,45 +55,45 @@ describe('extractJsonCComments', () => {
             "user.name": "// Full name of the user",
           }
         `)
-    })
+  })
 
-    test('handles empty input', () => {
-        const result = extractJsonCComments('')
-        expect(result.comments).toMatchInlineSnapshot(`{}`)
-        expect(result.data).toBeUndefined()
-    })
+  test('handles empty input', () => {
+    const result = extractJsonCComments('')
+    expect(result.comments).toMatchInlineSnapshot(`{}`)
+    expect(result.data).toBeUndefined()
+  })
 
-    test('handles JSON without comments', () => {
-        const jsonC = `{
+  test('handles JSON without comments', () => {
+    const jsonC = `{
     "name": "John",
     "age": 30,
     "settings": {
         "theme": "dark"
     }
 }`
-        
-        const result = extractJsonCComments(jsonC)
-        expect(result.comments).toMatchInlineSnapshot(`{}`)
-    })
 
-    test('handles multiple comment lines before single key', () => {
-        const jsonC = `{
+    const result = extractJsonCComments(jsonC)
+    expect(result.comments).toMatchInlineSnapshot(`{}`)
+  })
+
+  test('handles multiple comment lines before single key', () => {
+    const jsonC = `{
     // First comment line
     // Second comment line
     "name": "John"
 }`
-        
-        const result = extractJsonCComments(jsonC)
-        expect(result.comments).toMatchInlineSnapshot(`
+
+    const result = extractJsonCComments(jsonC)
+    expect(result.comments).toMatchInlineSnapshot(`
           {
             "name": "// First comment line
           // Second comment line",
           }
         `)
-    })
+  })
 
-    test('extracts array comments', () => {
-        const jsonC = `{
+  test('extracts array comments', () => {
+    const jsonC = `{
     // List of user names
     "users": [
         // First user
@@ -104,9 +104,9 @@ describe('extractJsonCComments', () => {
         "Bob"
     ]
 }`
-        
-        const result = extractJsonCComments(jsonC)
-        expect(result.comments).toMatchInlineSnapshot(`
+
+    const result = extractJsonCComments(jsonC)
+    expect(result.comments).toMatchInlineSnapshot(`
           {
             "users": "// List of user names",
             "users.0": "// First user",
@@ -114,10 +114,10 @@ describe('extractJsonCComments', () => {
             "users.2": "// Third user",
           }
         `)
-    })
+  })
 
-    test('extracts nested array with objects', () => {
-        const jsonC = `{
+  test('extracts nested array with objects', () => {
+    const jsonC = `{
     // Product catalog
     "products": [
         // Electronics category
@@ -136,9 +136,9 @@ describe('extractJsonCComments', () => {
         }
     ]
 }`
-        
-        const result = extractJsonCComments(jsonC)
-        expect(result.comments).toMatchInlineSnapshot(`
+
+    const result = extractJsonCComments(jsonC)
+    expect(result.comments).toMatchInlineSnapshot(`
           {
             "products": "// Product catalog",
             "products.0": "// Electronics category",
@@ -149,10 +149,10 @@ describe('extractJsonCComments', () => {
             "products.1.title": "// Book title",
           }
         `)
-    })
+  })
 
-    test('extracts comments for arrays inside nested objects', () => {
-        const jsonC = `{
+  test('extracts comments for arrays inside nested objects', () => {
+    const jsonC = `{
     // User configuration
     "config": {
         // Allowed permissions
@@ -174,9 +174,9 @@ describe('extractJsonCComments', () => {
         }
     }
 }`
-        
-        const result = extractJsonCComments(jsonC)
-        expect(result.comments).toMatchInlineSnapshot(`
+
+    const result = extractJsonCComments(jsonC)
+    expect(result.comments).toMatchInlineSnapshot(`
           {
             "config": "// User configuration",
             "config.permissions": "// Allowed permissions",
@@ -188,23 +188,23 @@ describe('extractJsonCComments', () => {
             "config.preferences.notifications.1": "// SMS notifications",
           }
         `)
-    })
+  })
 })
 
 describe('applyJsonCComments', () => {
-    test('applies comments to simple object', () => {
-        const obj = {
-            name: 'John',
-            age: 30
-        }
-        
-        const comments = {
-            'name': '// User name',
-            'age': '// User age in years'
-        }
-        
-        const result = applyJsonCComments(obj, comments, 2)
-        expect(result).toMatchInlineSnapshot(`
+  test('applies comments to simple object', () => {
+    const obj = {
+      name: 'John',
+      age: 30,
+    }
+
+    const comments = {
+      name: '// User name',
+      age: '// User age in years',
+    }
+
+    const result = applyJsonCComments(obj, comments, 2)
+    expect(result).toMatchInlineSnapshot(`
           "{
             // User name
             "name": "John",
@@ -212,27 +212,27 @@ describe('applyJsonCComments', () => {
             "age": 30
           }"
         `)
-    })
-    
-    test('applies comments to nested object', () => {
-        const obj = {
-            user: {
-                name: 'John Doe',
-                age: 25
-            },
-            settings: {
-                theme: 'dark'
-            }
-        }
-        
-        const comments = {
-            'user': '// User information',
-            'user.name': '// Full name',
-            'settings': '// App settings'
-        }
-        
-        const result = applyJsonCComments(obj, comments, 2)
-        expect(result).toMatchInlineSnapshot(`
+  })
+
+  test('applies comments to nested object', () => {
+    const obj = {
+      user: {
+        name: 'John Doe',
+        age: 25,
+      },
+      settings: {
+        theme: 'dark',
+      },
+    }
+
+    const comments = {
+      user: '// User information',
+      'user.name': '// Full name',
+      settings: '// App settings',
+    }
+
+    const result = applyJsonCComments(obj, comments, 2)
+    expect(result).toMatchInlineSnapshot(`
           "{
             // User information
             "user": {
@@ -246,21 +246,21 @@ describe('applyJsonCComments', () => {
             }
           }"
         `)
-    })
-    
-    test('applies comments to arrays', () => {
-        const obj = {
-            users: ['John', 'Jane', 'Bob']
-        }
-        
-        const comments = {
-            'users': '// List of users',
-            'users.0': '// First user',
-            'users.1': '// Second user'
-        }
-        
-        const result = applyJsonCComments(obj, comments, 2)
-        expect(result).toMatchInlineSnapshot(`
+  })
+
+  test('applies comments to arrays', () => {
+    const obj = {
+      users: ['John', 'Jane', 'Bob'],
+    }
+
+    const comments = {
+      users: '// List of users',
+      'users.0': '// First user',
+      'users.1': '// Second user',
+    }
+
+    const result = applyJsonCComments(obj, comments, 2)
+    expect(result).toMatchInlineSnapshot(`
           "{
             // List of users
             "users": [
@@ -272,22 +272,23 @@ describe('applyJsonCComments', () => {
             ]
           }"
         `)
-    })
-    
-    test('applies multiline comments', () => {
-        const obj = {
-            config: {
-                important: true
-            }
-        }
-        
-        const comments = {
-            'config': '// Configuration object\n// Contains important settings',
-            'config.important': '// This is very important\n// Do not change without permission'
-        }
-        
-        const result = applyJsonCComments(obj, comments, 2)
-        expect(result).toMatchInlineSnapshot(`
+  })
+
+  test('applies multiline comments', () => {
+    const obj = {
+      config: {
+        important: true,
+      },
+    }
+
+    const comments = {
+      config: '// Configuration object\n// Contains important settings',
+      'config.important':
+        '// This is very important\n// Do not change without permission',
+    }
+
+    const result = applyJsonCComments(obj, comments, 2)
+    expect(result).toMatchInlineSnapshot(`
           "{
             // Configuration object
             // Contains important settings
@@ -298,10 +299,10 @@ describe('applyJsonCComments', () => {
             }
           }"
         `)
-    })
-    
-    test('round-trip: extract and apply comments', () => {
-        const originalJsonC = `{
+  })
+
+  test('round-trip: extract and apply comments', () => {
+    const originalJsonC = `{
     // User data
     "user": {
         // Username
@@ -315,20 +316,21 @@ describe('applyJsonCComments', () => {
         "theme": "dark"
     }
 }`
-        
-        // Extract comments and data
-        const { comments: extractedComments, data: obj } = extractJsonCComments(originalJsonC)
-        
-        // Apply comments back
-        const result = applyJsonCComments(obj, extractedComments, 4)
-        
-        // The result should have the same comments
-        const { comments: resultComments } = extractJsonCComments(result)
-        expect(resultComments).toEqual(extractedComments)
-    })
-    
-    test('extracts data correctly', () => {
-        const jsonC = `{
+
+    // Extract comments and data
+    const { comments: extractedComments, data: obj } =
+      extractJsonCComments(originalJsonC)
+
+    // Apply comments back
+    const result = applyJsonCComments(obj, extractedComments, 4)
+
+    // The result should have the same comments
+    const { comments: resultComments } = extractJsonCComments(result)
+    expect(resultComments).toEqual(extractedComments)
+  })
+
+  test('extracts data correctly', () => {
+    const jsonC = `{
     // Product info
     "name": "Laptop",
     // Price in USD
@@ -336,56 +338,56 @@ describe('applyJsonCComments', () => {
     // Available colors
     "colors": ["black", "silver"]
 }`
-        
-        const { data } = extractJsonCComments(jsonC)
-        expect(data).toEqual({
-            name: "Laptop",
-            price: 999,
-            colors: ["black", "silver"]
-        })
+
+    const { data } = extractJsonCComments(jsonC)
+    expect(data).toEqual({
+      name: 'Laptop',
+      price: 999,
+      colors: ['black', 'silver'],
     })
+  })
 })
 
 describe('applyJsonCComments - Edge Cases', () => {
-    test('handles comments for non-existent fields gracefully', () => {
-        const obj = {
-            name: 'John',
-            age: 30
-        }
-        
-        const comments = {
-            'name': '// User name',
-            'nonExistentField': '// This field does not exist',
-            'deep.nested.field': '// This path does not exist'
-        }
-        
-        const result = applyJsonCComments(obj, comments, 2)
-        expect(result).toMatchInlineSnapshot(`
+  test('handles comments for non-existent fields gracefully', () => {
+    const obj = {
+      name: 'John',
+      age: 30,
+    }
+
+    const comments = {
+      name: '// User name',
+      nonExistentField: '// This field does not exist',
+      'deep.nested.field': '// This path does not exist',
+    }
+
+    const result = applyJsonCComments(obj, comments, 2)
+    expect(result).toMatchInlineSnapshot(`
           "{
             // User name
             "name": "John",
             "age": 30
           }"
         `)
-    })
-    
-    test('handles type mismatches - treating object as array', () => {
-        const obj = {
-            user: {
-                name: 'John',
-                age: 30
-            }
-        }
-        
-        const comments = {
-            'user': '// User object',
-            'user.0': '// Trying to access object as array',
-            'user.1': '// Another array-style access on object',
-            'user.name': '// Valid property access'
-        }
-        
-        const result = applyJsonCComments(obj, comments, 2)
-        expect(result).toMatchInlineSnapshot(`
+  })
+
+  test('handles type mismatches - treating object as array', () => {
+    const obj = {
+      user: {
+        name: 'John',
+        age: 30,
+      },
+    }
+
+    const comments = {
+      user: '// User object',
+      'user.0': '// Trying to access object as array',
+      'user.1': '// Another array-style access on object',
+      'user.name': '// Valid property access',
+    }
+
+    const result = applyJsonCComments(obj, comments, 2)
+    expect(result).toMatchInlineSnapshot(`
           "{
             // User object
             "user": {
@@ -395,22 +397,22 @@ describe('applyJsonCComments - Edge Cases', () => {
             }
           }"
         `)
-    })
-    
-    test('handles type mismatches - treating array as object', () => {
-        const obj = {
-            colors: ['red', 'blue', 'green']
-        }
-        
-        const comments = {
-            'colors': '// Color array',
-            'colors.0': '// Valid array index access',
-            'colors.name': '// Trying to access array as object property',
-            'colors.length': '// Another object-style access on array'
-        }
-        
-        const result = applyJsonCComments(obj, comments, 2)
-        expect(result).toMatchInlineSnapshot(`
+  })
+
+  test('handles type mismatches - treating array as object', () => {
+    const obj = {
+      colors: ['red', 'blue', 'green'],
+    }
+
+    const comments = {
+      colors: '// Color array',
+      'colors.0': '// Valid array index access',
+      'colors.name': '// Trying to access array as object property',
+      'colors.length': '// Another object-style access on array',
+    }
+
+    const result = applyJsonCComments(obj, comments, 2)
+    expect(result).toMatchInlineSnapshot(`
           "{
             // Color array
             "colors": [
@@ -421,27 +423,27 @@ describe('applyJsonCComments - Edge Cases', () => {
             ]
           }"
         `)
-    })
-    
-    test('handles accessing properties on primitive values', () => {
-        const obj = {
-            name: 'John',
-            age: 30,
-            isActive: true
-        }
-        
-        const comments = {
-            'name': '// Valid string comment',
-            'name.length': '// Trying to access property on string',
-            'name.0': '// Trying to access string as array',
-            'age': '// Valid number comment',
-            'age.toString': '// Trying to access method on number',
-            'isActive': '// Valid boolean comment',
-            'isActive.valueOf': '// Trying to access method on boolean'
-        }
-        
-        const result = applyJsonCComments(obj, comments, 2)
-        expect(result).toMatchInlineSnapshot(`
+  })
+
+  test('handles accessing properties on primitive values', () => {
+    const obj = {
+      name: 'John',
+      age: 30,
+      isActive: true,
+    }
+
+    const comments = {
+      name: '// Valid string comment',
+      'name.length': '// Trying to access property on string',
+      'name.0': '// Trying to access string as array',
+      age: '// Valid number comment',
+      'age.toString': '// Trying to access method on number',
+      isActive: '// Valid boolean comment',
+      'isActive.valueOf': '// Trying to access method on boolean',
+    }
+
+    const result = applyJsonCComments(obj, comments, 2)
+    expect(result).toMatchInlineSnapshot(`
           "{
             // Valid string comment
             "name": "John",
@@ -451,28 +453,28 @@ describe('applyJsonCComments - Edge Cases', () => {
             "isActive": true
           }"
         `)
-    })
-    
-    test('handles deeply nested non-existent paths', () => {
-        const obj = {
-            level1: {
-                level2: {
-                    level3: 'deep value'
-                }
-            }
-        }
-        
-        const comments = {
-            'level1': '// Level 1 exists',
-            'level1.level2': '// Level 2 exists',
-            'level1.level2.level3': '// Level 3 exists',
-            'level1.level2.level3.level4': '// Level 4 does not exist',
-            'level1.level2.nonExistent': '// Non-existent at level 3',
-            'level1.nonExistent.anything': '// Breaks at level 2'
-        }
-        
-        const result = applyJsonCComments(obj, comments, 2)
-        expect(result).toMatchInlineSnapshot(`
+  })
+
+  test('handles deeply nested non-existent paths', () => {
+    const obj = {
+      level1: {
+        level2: {
+          level3: 'deep value',
+        },
+      },
+    }
+
+    const comments = {
+      level1: '// Level 1 exists',
+      'level1.level2': '// Level 2 exists',
+      'level1.level2.level3': '// Level 3 exists',
+      'level1.level2.level3.level4': '// Level 4 does not exist',
+      'level1.level2.nonExistent': '// Non-existent at level 3',
+      'level1.nonExistent.anything': '// Breaks at level 2',
+    }
+
+    const result = applyJsonCComments(obj, comments, 2)
+    expect(result).toMatchInlineSnapshot(`
           "{
             // Level 1 exists
             "level1": {
@@ -484,30 +486,26 @@ describe('applyJsonCComments - Edge Cases', () => {
             }
           }"
         `)
-    })
-    
-    test('handles mixed valid and invalid paths in arrays', () => {
-        const obj = {
-            items: [
-                { name: 'item1', id: 1 },
-                { name: 'item2', id: 2 },
-                'stringItem'
-            ]
-        }
-        
-        const comments = {
-            'items': '// Items array',
-            'items.0': '// First item object',
-            'items.0.name': '// First item name',
-            'items.1.id': '// Second item id',
-            'items.2': '// String item',
-            'items.2.length': '// Accessing property on string in array',
-            'items.3': '// Out of bounds index',
-            'items.3.name': '// Property on non-existent item'
-        }
-        
-        const result = applyJsonCComments(obj, comments, 2)
-        expect(result).toMatchInlineSnapshot(`
+  })
+
+  test('handles mixed valid and invalid paths in arrays', () => {
+    const obj = {
+      items: [{ name: 'item1', id: 1 }, { name: 'item2', id: 2 }, 'stringItem'],
+    }
+
+    const comments = {
+      items: '// Items array',
+      'items.0': '// First item object',
+      'items.0.name': '// First item name',
+      'items.1.id': '// Second item id',
+      'items.2': '// String item',
+      'items.2.length': '// Accessing property on string in array',
+      'items.3': '// Out of bounds index',
+      'items.3.name': '// Property on non-existent item',
+    }
+
+    const result = applyJsonCComments(obj, comments, 2)
+    expect(result).toMatchInlineSnapshot(`
           "{
             // Items array
             "items": [
@@ -525,26 +523,26 @@ describe('applyJsonCComments - Edge Cases', () => {
             ]
           }"
         `)
-    })
-    
-    test('handles empty object and array edge cases', () => {
-        const obj = {
-            emptyObject: {},
-            emptyArray: [],
-            nullValue: null
-        }
-        
-        const comments = {
-            'emptyObject': '// Empty object',
-            'emptyObject.someField': '// Field in empty object',
-            'emptyArray': '// Empty array',
-            'emptyArray.0': '// First element of empty array',
-            'nullValue': '// Null value',
-            'nullValue.property': '// Property on null'
-        }
-        
-        const result = applyJsonCComments(obj, comments, 2)
-        expect(result).toMatchInlineSnapshot(`
+  })
+
+  test('handles empty object and array edge cases', () => {
+    const obj = {
+      emptyObject: {},
+      emptyArray: [],
+      nullValue: null,
+    }
+
+    const comments = {
+      emptyObject: '// Empty object',
+      'emptyObject.someField': '// Field in empty object',
+      emptyArray: '// Empty array',
+      'emptyArray.0': '// First element of empty array',
+      nullValue: '// Null value',
+      'nullValue.property': '// Property on null',
+    }
+
+    const result = applyJsonCComments(obj, comments, 2)
+    expect(result).toMatchInlineSnapshot(`
           "{
             // Empty object
             "emptyObject": {},
@@ -554,5 +552,5 @@ describe('applyJsonCComments - Edge Cases', () => {
             "nullValue": null
           }"
         `)
-    })
+  })
 })

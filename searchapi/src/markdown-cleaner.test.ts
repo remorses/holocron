@@ -1,5 +1,5 @@
-import { describe, test, expect } from 'vitest';
-import { cleanMarkdownContent } from './markdown-cleaner.js';
+import { describe, test, expect } from 'vitest'
+import { cleanMarkdownContent } from './markdown-cleaner.js'
 
 describe('cleanMarkdownContent', () => {
   test('basic markdown elements', () => {
@@ -13,9 +13,9 @@ This is a paragraph with **bold** and *italic* text.
   - Nested item
 
 1. Numbered item
-2. Another item`;
+2. Another item`
 
-    const result = cleanMarkdownContent(markdown);
+    const result = cleanMarkdownContent(markdown)
     expect(result).toMatchInlineSnapshot(`
       "Heading 1
       Heading 2
@@ -25,8 +25,8 @@ This is a paragraph with **bold** and *italic* text.
         - Nested item
       1. Numbered item
       2. Another item"
-    `);
-  });
+    `)
+  })
 
   test('code blocks and inline code', () => {
     const markdown = `# Code Examples
@@ -39,9 +39,9 @@ function hello() {
 }
 \`\`\`
 
-And some more text after the code block.`;
+And some more text after the code block.`
 
-    const result = cleanMarkdownContent(markdown);
+    const result = cleanMarkdownContent(markdown)
     expect(result).toMatchInlineSnapshot(`
       "Code Examples
       Here is some  inline code  in a sentence.
@@ -49,8 +49,8 @@ And some more text after the code block.`;
         console.log("Hello world");
       }
       And some more text after the code block."
-    `);
-  });
+    `)
+  })
 
   test('links and images', () => {
     const markdown = `# Links and Images
@@ -62,17 +62,17 @@ Check out [this link](https://example.com) and [another one](https://test.org).
 
 Here's a [reference link][1].
 
-[1]: https://reference.com`;
+[1]: https://reference.com`
 
-    const result = cleanMarkdownContent(markdown);
+    const result = cleanMarkdownContent(markdown)
     expect(result).toMatchInlineSnapshot(`
       "Links and Images
       Check out  this link  and  another one .
       Alt text for image 
        
       Here's a  reference link ."
-    `);
-  });
+    `)
+  })
 
   test('blockquotes and tables', () => {
     const markdown = `# Quotes and Tables
@@ -84,9 +84,9 @@ Here's a [reference link][1].
 | Header 1 | Header 2 |
 |----------|----------|
 | Cell 1   | Cell 2   |
-| Cell 3   | Cell 4   |`;
+| Cell 3   | Cell 4   |`
 
-    const result = cleanMarkdownContent(markdown);
+    const result = cleanMarkdownContent(markdown)
     expect(result).toMatchInlineSnapshot(`
         "Quotes and Tables
         This is a blockquote
@@ -94,8 +94,8 @@ Here's a [reference link][1].
         Header 1 Header 2
         Cell 1 Cell 2
         Cell 3 Cell 4"
-      `);
-  });
+      `)
+  })
 
   test('MDX with JSX components', () => {
     const mdx = `import { Button } from './components';
@@ -120,9 +120,9 @@ Some regular text here.
 
 export default function Layout({ children }) {
   return <div>{children}</div>;
-}`;
+}`
 
-    const result = cleanMarkdownContent(mdx);
+    const result = cleanMarkdownContent(mdx)
     expect(result).toMatchInlineSnapshot(`
       "import { Button } from './components';
       import React from 'react';
@@ -134,8 +134,8 @@ export default function Layout({ children }) {
       export default function Layout({ children }) {
         return   {children}  ;
       }"
-    `);
-  });
+    `)
+  })
 
   test('frontmatter and metadata', () => {
     const markdown = `---
@@ -146,15 +146,15 @@ date: 2024-01-21
 
 # Actual Content
 
-This is the document content after frontmatter.`;
+This is the document content after frontmatter.`
 
-    const result = cleanMarkdownContent(markdown);
+    const result = cleanMarkdownContent(markdown)
     expect(result).toMatchInlineSnapshot(`
       "My Document John Doe
       Actual Content
       This is the document content after frontmatter."
-    `);
-  });
+    `)
+  })
 
   test('frontmatter values are extracted and included', () => {
     // Test various frontmatter formats
@@ -169,14 +169,14 @@ weight: 2.0
 
 # Main Content
 
-This is the actual content.`;
+This is the actual content.`
 
-    const result1 = cleanMarkdownContent(markdownWithYamlFrontmatter);
+    const result1 = cleanMarkdownContent(markdownWithYamlFrontmatter)
     expect(result1).toMatchInlineSnapshot(`
       "Test Page About Rockets This page explains rocket science rockets space science John Doe true 2
       Main Content
       This is the actual content."
-    `);
+    `)
 
     // Test frontmatter with complex YAML
     const complexFrontmatter = `---
@@ -194,22 +194,24 @@ nested:
       text: This contains important information
 ---
 
-Content after complex frontmatter.`;
+Content after complex frontmatter.`
 
-    const result2 = cleanMarkdownContent(complexFrontmatter);
+    const result2 = cleanMarkdownContent(complexFrontmatter)
     expect(result2).toMatchInlineSnapshot(`
       "Complex Frontmatter Test A complex example test frontmatter yaml 42 This contains important information
       Content after complex frontmatter."
-    `);
+    `)
 
     // Test frontmatter only (no content after)
     const frontmatterOnly = `---
 title: Just Frontmatter
 description: This file only has frontmatter
----`;
+---`
 
-    const result3 = cleanMarkdownContent(frontmatterOnly);
-    expect(result3).toMatchInlineSnapshot(`"Just Frontmatter This file only has frontmatter"`);
+    const result3 = cleanMarkdownContent(frontmatterOnly)
+    expect(result3).toMatchInlineSnapshot(
+      `"Just Frontmatter This file only has frontmatter"`,
+    )
 
     // Test multiple dashes in frontmatter
     const frontmatterWithDashes = `---
@@ -217,14 +219,14 @@ title: Title with --- dashes
 description: Also has --- in content
 ---
 
-# The actual content starts here`;
+# The actual content starts here`
 
-    const result4 = cleanMarkdownContent(frontmatterWithDashes);
+    const result4 = cleanMarkdownContent(frontmatterWithDashes)
     expect(result4).toMatchInlineSnapshot(`
       "Title with --- dashes Also has --- in content
       The actual content starts here"
-    `);
-    
+    `)
+
     // Test invalid YAML frontmatter
     const invalidYamlFrontmatter = `---
 title: Invalid YAML
@@ -238,11 +240,11 @@ tags:
 
 # Content after invalid YAML
 
-This content should not be returned.`;
+This content should not be returned.`
 
-    const result5 = cleanMarkdownContent(invalidYamlFrontmatter);
-    expect(result5).toMatchInlineSnapshot(`""`);
-  });
+    const result5 = cleanMarkdownContent(invalidYamlFrontmatter)
+    expect(result5).toMatchInlineSnapshot(`""`)
+  })
 
   test('complex mixed content', () => {
     const markdown = `---
@@ -283,9 +285,9 @@ const Component = () => {
   Interactive demo component
 </Demo>
 
-Regular paragraph with ~~strikethrough~~ text.`;
+Regular paragraph with ~~strikethrough~~ text.`
 
-    const result = cleanMarkdownContent(markdown);
+    const result = cleanMarkdownContent(markdown)
     expect(result).toMatchInlineSnapshot(`
       "Complex Example
       import { useState } from 'react';
@@ -304,8 +306,8 @@ Regular paragraph with ~~strikethrough~~ text.`;
       Search ✅ Done
       Filter 🚧 WIP
       Regular paragraph with  strikethrough  text."
-    `);
-  });
+    `)
+  })
 
   test('HTML comments and special characters', () => {
     const markdown = `# Document
@@ -318,21 +320,21 @@ Text with special characters: <>&"' and symbols: @#$%^&*()
 spanning multiple
 lines -->
 
-More content here.`;
+More content here.`
 
-    const result = cleanMarkdownContent(markdown);
+    const result = cleanMarkdownContent(markdown)
     expect(result).toMatchInlineSnapshot(`
       "Document
       Text with special characters: <>&"' and symbols: @#$%^&*()
       More content here."
-    `);
-  });
+    `)
+  })
 
   test('empty and whitespace only content', () => {
-    expect(cleanMarkdownContent('')).toMatchInlineSnapshot(`""`);
-    expect(cleanMarkdownContent('   \n\n\t  ')).toMatchInlineSnapshot(`""`);
-    expect(cleanMarkdownContent('# \n\n## \n\n')).toMatchInlineSnapshot(`""`);
-  });
+    expect(cleanMarkdownContent('')).toMatchInlineSnapshot(`""`)
+    expect(cleanMarkdownContent('   \n\n\t  ')).toMatchInlineSnapshot(`""`)
+    expect(cleanMarkdownContent('# \n\n## \n\n')).toMatchInlineSnapshot(`""`)
+  })
 
   test('nested markdown in lists', () => {
     const markdown = `# Nested Content
@@ -343,9 +345,9 @@ More content here.`;
 - Item with image: ![alt](img.png)
 
 1. Numbered with **formatting**
-2. Another with \`inline code\``;
+2. Another with \`inline code\``
 
-    const result = cleanMarkdownContent(markdown);
+    const result = cleanMarkdownContent(markdown)
     expect(result).toMatchInlineSnapshot(`
           "Nested Content
           - Item with **bold** and *italic*
@@ -354,6 +356,6 @@ More content here.`;
           - Item with image: ![alt](img.png)
           1. Numbered with **formatting**
           2. Another with \`inline code\`"
-        `);
-  });
-});
+        `)
+  })
+})

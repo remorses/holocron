@@ -1,127 +1,124 @@
-@import 'tailwindcss';
-@import 'fumadocs-ui/css/neutral.css';
-@import 'fumadocs-ui/css/preset.css';
-@import 'fumadocs-openapi/css/preset.css';
-@import './shadcn.css';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+@import "fumadocs-openapi/css/preset.css";
+@import "./shadcn.css";
+@import "tw-animate-css";
 @source "../../contesto/src";
 @source ".";
 @source "./components";
 @source "fumadocs-ui";
 
 summary > p {
-    display: inline;
+  display: inline;
 }
 
 summary {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 @font-face {
-    font-family: 'Consolas';
-    src: url('https://cdn.jsdelivr.net/gh/your-org/fonts/consolas/Consolas-Regular.woff2')
-        format('woff2');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
+  font-family: "Consolas";
+  src: url("https://cdn.jsdelivr.net/gh/your-org/fonts/consolas/Consolas-Regular.woff2")
+    format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
 :root {
-    --color-fd-primary: hsl(220, 91%, 54%);
-    --fd-layout-width: 1460px;
-    --show-more-bg: var(--color-fd-background);
-    --font-mono:
-        'Consolas', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  --color-fd-primary: hsl(220, 91%, 54%);
+  --fd-layout-width: 1460px;
+  --show-more-bg: var(--color-fd-background);
+  --font-mono:
+    "Consolas", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
 }
 
 /* show added content as green in diff, improve for dark mode */
 ::highlight(md-add) {
-    background: rgba(182, 242, 194, 0.6);
+  background: rgba(182, 242, 194, 0.6);
 }
 .dark {
-    ::highlight(md-add) {
-        background: rgba(36, 78, 41, 0.6);
-    }
+  ::highlight(md-add) {
+    background: rgba(36, 78, 41, 0.6);
+  }
 }
 
 /* llm text selection highlight using accent color */
 ::highlight(llm-text-selection) {
-    background: color-mix(in srgb, var(--color-fd-primary) 20%, transparent);
-    border: 1px solid
-        color-mix(in srgb, var(--color-fd-primary) 40%, transparent);
+  background: color-mix(in srgb, var(--color-fd-primary) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-fd-primary) 40%, transparent);
 }
 .dark {
-    ::highlight(llm-text-selection) {
-        background: color-mix(
-            in srgb,
-            var(--color-fd-primary) 30%,
-            transparent
-        );
-        border: 1px solid
-            color-mix(in srgb, var(--color-fd-primary) 50%, transparent);
-    }
+  ::highlight(llm-text-selection) {
+    background: color-mix(in srgb, var(--color-fd-primary) 30%, transparent);
+    border: 1px solid
+      color-mix(in srgb, var(--color-fd-primary) 50%, transparent);
+  }
 }
 mark {
-    background-color: theme(colors.yellow.100/0.4);
+  background-color: var(--color-yellow-100);
+  opacity: 0.4;
 }
 .dark mark {
-    background-color: theme(colors.yellow.100/0.6);
+  background-color: var(--color-yellow-100);
+  opacity: 0.6;
 }
 
 .navIcon {
-    width: 19px;
-    height: 19px;
-    display: flex;
-    /* TODO remove this margin top when i have line height clip */
-    margin-top: 1px;
-    align-items: center;
-    /* background: #b5b5b5;
+  width: 19px;
+  height: 19px;
+  display: flex;
+  /* TODO remove this margin top when i have line height clip */
+  margin-top: 1px;
+  align-items: center;
+  /* background: #b5b5b5;
     border-radius: 6px;
     padding: 2px; */
-    font-size: 13px;
-    margin-right: 8px !important;
-    filter: grayscale(40%);
-    /* opacity: 0.9; */
-    flex-shrink: 0;
-    transition: all 400ms ease;
-    transition-property: opacity, filter;
+  font-size: 13px;
+  margin-right: 8px !important;
+  filter: grayscale(40%);
+  /* opacity: 0.9; */
+  flex-shrink: 0;
+  transition: all 400ms ease;
+  transition-property: opacity, filter;
 }
 
 .navIcon img {
-    /* fill all the width, object fit */
-    object-fit: cover;
-    overflow: hidden;
-    min-width: 100%;
-    width: 19px;
-    height: 19px;
+  /* fill all the width, object fit */
+  object-fit: cover;
+  overflow: hidden;
+  min-width: 100%;
+  width: 19px;
+  height: 19px;
 }
 
 .navLink:hover .navIcon {
-    /* filter: unset; */
-    filter: saturate(100%);
-    opacity: 1;
+  /* filter: unset; */
+  filter: saturate(100%);
+  opacity: 1;
 }
 
 @keyframes fade-in {
-    from {
-        opacity: 0;
-        transform: scale(0.96);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 .animate-fade-in {
-    animation: fade-in 0.18s cubic-bezier(0.33, 1, 0.68, 1) both;
+  animation: fade-in 0.18s cubic-bezier(0.33, 1, 0.68, 1) both;
 }
 
 /* TODO Optimize rendering for long content pages */
 .page-content-markdown > *:nth-child(n + 7) {
-    content-visibility: auto;
-    /* contain-intrinsic-size: auto 500px; */
+  content-visibility: auto;
+  /* contain-intrinsic-size: auto 500px; */
 }
 
 .fd-steps {
-    content-visibility: visible !important;
+  content-visibility: visible !important;
 }

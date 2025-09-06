@@ -2,15 +2,15 @@ import { describe, test, expect } from 'vitest'
 import { generateLlmsFullTxt } from './llms-full-txt'
 
 describe(
-    'generateLlmsFullTxt',
-    () => {
-        test('example domain', async () => {
-            const result = await generateLlmsFullTxt({
-                domain: 'docs.holocron.so',
-                searchQuery: ['markdown'],
-            })
+  'generateLlmsFullTxt',
+  () => {
+    test('example domain', async () => {
+      const result = await generateLlmsFullTxt({
+        domain: 'docs.holocron.so',
+        searchQuery: ['markdown'],
+      })
 
-            expect(result).toMatchInlineSnapshot(`
+      expect(result).toMatchInlineSnapshot(`
               "**Source:** https://docs.holocron.so/essentials/images.md
 
               Images and Embeds
@@ -96,7 +96,7 @@ describe(
 
               "
             `)
-        })
-    },
-    1000 * 10,
+    })
+  },
+  1000 * 10,
 )

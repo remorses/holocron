@@ -1,5 +1,8 @@
-import { describe, test, expect } from 'vitest';
-import { parseMarkdownIntoSections, isSupportedMarkdownFile } from './markdown-parser.js';
+import { describe, test, expect } from 'vitest'
+import {
+  parseMarkdownIntoSections,
+  isSupportedMarkdownFile,
+} from './markdown-parser.js'
 
 describe('parseMarkdownIntoSections', () => {
   test('handles frontmatter', () => {
@@ -16,9 +19,9 @@ This is the intro section.
 
 ## Getting Started
 
-Here's how to get started.`;
+Here's how to get started.`
 
-    const result = parseMarkdownIntoSections(content);
+    const result = parseMarkdownIntoSections(content)
 
     expect(result.sections).toMatchInlineSnapshot(`
       [
@@ -56,8 +59,8 @@ Here's how to get started.`;
           "weight": 1.1,
         },
       ]
-    `);
-  });
+    `)
+  })
   test('parses simple markdown with headings', () => {
     const content = `# Introduction
 
@@ -80,9 +83,9 @@ npm install
 
 ## Configuration
 
-Set up your config file.`;
+Set up your config file.`
 
-    const result = parseMarkdownIntoSections(content);
+    const result = parseMarkdownIntoSections(content)
 
     expect(result.sections).toMatchInlineSnapshot(`
       [
@@ -134,17 +137,17 @@ Set up your config file.`;
           "weight": 1.1,
         },
       ]
-    `);
-  });
+    `)
+  })
 
   test('handles markdown without any headings', () => {
     const content = `This is just some text.
 
 With multiple paragraphs.
 
-And some **formatting**.`;
+And some **formatting**.`
 
-    const result = parseMarkdownIntoSections(content);
+    const result = parseMarkdownIntoSections(content)
 
     expect(result.sections).toMatchInlineSnapshot(`
       [
@@ -160,14 +163,14 @@ And some **formatting**.`;
           "startLine": 1,
         },
       ]
-    `);
-  });
+    `)
+  })
 
   test('handles empty content', () => {
-    const result = parseMarkdownIntoSections('');
+    const result = parseMarkdownIntoSections('')
 
-    expect(result.sections).toMatchInlineSnapshot(`[]`);
-  });
+    expect(result.sections).toMatchInlineSnapshot(`[]`)
+  })
 
   test('handles markdown with code blocks and tables', () => {
     const content = `# API Reference
@@ -190,9 +193,9 @@ console.log(user.name);
 
 ## Response Format
 
-All responses are in JSON format.`;
+All responses are in JSON format.`
 
-    const result = parseMarkdownIntoSections(content);
+    const result = parseMarkdownIntoSections(content)
 
     expect(result.sections).toMatchInlineSnapshot(`
       [
@@ -243,8 +246,8 @@ All responses are in JSON format.`;
           "weight": 1.1,
         },
       ]
-    `);
-  });
+    `)
+  })
 
   test('preserves heading levels and order', () => {
     const content = `# Level 1
@@ -261,18 +264,18 @@ Content 3
 
 ## Another Level 2
 
-Content 4`;
+Content 4`
 
-    const result = parseMarkdownIntoSections(content);
+    const result = parseMarkdownIntoSections(content)
 
-    expect(result.totalSections).toBe(4);
-    expect(result.sections[0].level).toBe(1);
-    expect(result.sections[1].level).toBe(2);
-    expect(result.sections[2].level).toBe(3);
-    expect(result.sections[3].level).toBe(2);
+    expect(result.totalSections).toBe(4)
+    expect(result.sections[0].level).toBe(1)
+    expect(result.sections[1].level).toBe(2)
+    expect(result.sections[2].level).toBe(3)
+    expect(result.sections[3].level).toBe(2)
 
-    expect(result.sections.map(s => s.orderIndex)).toEqual([0, 1, 2, 3]);
-  });
+    expect(result.sections.map((s) => s.orderIndex)).toEqual([0, 1, 2, 3])
+  })
 
   test('handles markdown with blockquotes and lists', () => {
     const content = `# Notes
@@ -289,9 +292,9 @@ Some important information:
 3. Third item
 
 - Bullet point 1
-- Bullet point 2`;
+- Bullet point 2`
 
-    const result = parseMarkdownIntoSections(content);
+    const result = parseMarkdownIntoSections(content)
 
     expect(result.sections).toMatchInlineSnapshot(`
       [
@@ -324,8 +327,8 @@ Some important information:
           "weight": 1.1,
         },
       ]
-    `);
-  });
+    `)
+  })
 
   test('handles MDX with JSX imports and components', () => {
     const mdxContent = `---
@@ -396,9 +399,9 @@ function Component() {
 
 ## Conclusion
 
-MDX allows mixing markdown and JSX seamlessly.`;
+MDX allows mixing markdown and JSX seamlessly.`
 
-    const result = parseMarkdownIntoSections(mdxContent);
+    const result = parseMarkdownIntoSections(mdxContent)
 
     expect(result.sections).toMatchInlineSnapshot(`
       [
@@ -514,46 +517,58 @@ MDX allows mixing markdown and JSX seamlessly.`;
           "weight": 1.1,
         },
       ]
-    `);
+    `)
 
     // Find the actual sections with JSX content by their slugs
-    const jsxSection = result.sections.find(s => s.headingSlug === "mdx-with-jsx-components");
-    const codeExamplesSection = result.sections.find(s => s.headingSlug === "code-examples");
-    const inlineJsxSection = result.sections.find(s => s.headingSlug === "inline-jsx");
-    const mixedContentSection = result.sections.find(s => s.headingSlug === "mixed-content");
+    const jsxSection = result.sections.find(
+      (s) => s.headingSlug === 'mdx-with-jsx-components',
+    )
+    const codeExamplesSection = result.sections.find(
+      (s) => s.headingSlug === 'code-examples',
+    )
+    const inlineJsxSection = result.sections.find(
+      (s) => s.headingSlug === 'inline-jsx',
+    )
+    const mixedContentSection = result.sections.find(
+      (s) => s.headingSlug === 'mixed-content',
+    )
 
     // Verify that JSX is preserved in sections
-    expect(jsxSection?.content).toContain('<Card className="mb-4">');
-    expect(jsxSection?.content).toContain('<Button');
-    expect(codeExamplesSection?.content).toContain('<CustomChart');
-    expect(inlineJsxSection?.content).toContain('<Button size="small">Inline</Button>');
-    expect(mixedContentSection?.content).toContain('<Card>');
+    expect(jsxSection?.content).toContain('<Card className="mb-4">')
+    expect(jsxSection?.content).toContain('<Button')
+    expect(codeExamplesSection?.content).toContain('<CustomChart')
+    expect(inlineJsxSection?.content).toContain(
+      '<Button size="small">Inline</Button>',
+    )
+    expect(mixedContentSection?.content).toContain('<Card>')
 
     // Verify the parser handled frontmatter correctly
-    const frontmatterSection = result.sections.find(s => s.headingSlug === "");
-    expect(frontmatterSection).toBeDefined();
-    expect(frontmatterSection?.content).toContain('title: Advanced MDX Example');
-    expect(frontmatterSection?.weight).toMatchInlineSnapshot(`2`);
+    const frontmatterSection = result.sections.find((s) => s.headingSlug === '')
+    expect(frontmatterSection).toBeDefined()
+    expect(frontmatterSection?.content).toContain('title: Advanced MDX Example')
+    expect(frontmatterSection?.weight).toMatchInlineSnapshot(`2`)
 
     // Imports become part of the Introduction section
-    const introSection = result.sections.find(s => s.headingSlug === "introduction");
-    expect(introSection?.content).toContain("import { Button, Card }");
-  });
-});
+    const introSection = result.sections.find(
+      (s) => s.headingSlug === 'introduction',
+    )
+    expect(introSection?.content).toContain('import { Button, Card }')
+  })
+})
 
 describe('isSupportedMarkdownFile', () => {
   test('recognizes supported markdown extensions', () => {
-    expect(isSupportedMarkdownFile('README.md')).toBe(true);
-    expect(isSupportedMarkdownFile('docs/guide.md')).toBe(true);
-    expect(isSupportedMarkdownFile('component.mdx')).toBe(true);
-    expect(isSupportedMarkdownFile('path/to/file.MDX')).toBe(true);
-  });
+    expect(isSupportedMarkdownFile('README.md')).toBe(true)
+    expect(isSupportedMarkdownFile('docs/guide.md')).toBe(true)
+    expect(isSupportedMarkdownFile('component.mdx')).toBe(true)
+    expect(isSupportedMarkdownFile('path/to/file.MDX')).toBe(true)
+  })
 
   test('rejects unsupported file extensions', () => {
-    expect(isSupportedMarkdownFile('script.js')).toBe(false);
-    expect(isSupportedMarkdownFile('style.css')).toBe(false);
-    expect(isSupportedMarkdownFile('data.json')).toBe(false);
-    expect(isSupportedMarkdownFile('document.txt')).toBe(false);
-    expect(isSupportedMarkdownFile('file_without_extension')).toBe(false);
-  });
-});
+    expect(isSupportedMarkdownFile('script.js')).toBe(false)
+    expect(isSupportedMarkdownFile('style.css')).toBe(false)
+    expect(isSupportedMarkdownFile('data.json')).toBe(false)
+    expect(isSupportedMarkdownFile('document.txt')).toBe(false)
+    expect(isSupportedMarkdownFile('file_without_extension')).toBe(false)
+  })
+})

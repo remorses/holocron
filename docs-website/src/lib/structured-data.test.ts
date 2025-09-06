@@ -3,13 +3,13 @@ import { getProcessor, ProcessorData } from './mdx-heavy'
 import { groupBy } from './utils'
 
 describe('structuredData', () => {
-    test('structuredData processes MDX with various node types', async () => {
-        const processor = getProcessor({
-            extension: 'mdx',
-        })
+  test('structuredData processes MDX with various node types', async () => {
+    const processor = getProcessor({
+      extension: 'mdx',
+    })
 
-        // Test basic MDX with frontmatter, headings, and text
-        const basicMdx = `---
+    // Test basic MDX with frontmatter, headings, and text
+    const basicMdx = `---
 title: "Test Document"
 description: "A test document"
 ---
@@ -68,21 +68,21 @@ this is another paragraph in the same subsection 2
 
 `
 
-        const result = await processor.process(basicMdx)
-        const data: ProcessorData = result.data as any
-        const grouped = Object.entries(
-            groupBy(data?.structuredData.contents, (x) => x.heading || ''),
+    const result = await processor.process(basicMdx)
+    const data: ProcessorData = result.data as any
+    const grouped = Object.entries(
+      groupBy(data?.structuredData.contents, (x) => x.heading || ''),
+    )
+      .map(([k, v]) => {
+        return (
+          '## ' +
+          k +
+          '\n\n' +
+          v.flatMap((item) => [item.content]).join('\n---\n')
         )
-            .map(([k, v]) => {
-                return (
-                    '## ' +
-                    k +
-                    '\n\n' +
-                    v.flatMap((item) => [item.content]).join('\n---\n')
-                )
-            })
-            .join('\n\n----------\n\n')
-        expect(grouped).toMatchInlineSnapshot(`
+      })
+      .join('\n\n----------\n\n')
+    expect(grouped).toMatchInlineSnapshot(`
           "## main-title
 
           This is a paragraph with bold and italic text.
@@ -130,14 +130,14 @@ this is another paragraph in the same subsection 2
           ---
           something"
         `)
+  })
+
+  test('processes MDX with admonitions and code tabs', async () => {
+    const processor = getProcessor({
+      extension: 'mdx',
     })
 
-    test('processes MDX with admonitions and code tabs', async () => {
-        const processor = getProcessor({
-            extension: 'mdx',
-        })
-
-        const admonitionMdx = `---
+    const admonitionMdx = `---
 title: "Advanced Features"
 ---
 
@@ -181,8 +181,8 @@ npm install package
 </Steps>
 `
 
-        const result = await processor.process(admonitionMdx)
-        expect(result.data).toMatchInlineSnapshot(`
+    const result = await processor.process(admonitionMdx)
+    expect(result.data).toMatchInlineSnapshot(`
           {
             "ast": {
               "children": [
@@ -751,14 +751,14 @@ npm install package
             ],
           }
         `)
+  })
+
+  test('processes markdown file extension', async () => {
+    const processor = getProcessor({
+      extension: 'md',
     })
 
-    test('processes markdown file extension', async () => {
-        const processor = getProcessor({
-            extension: 'md',
-        })
-
-        const markdownContent = `---
+    const markdownContent = `---
 title: "Markdown Document"
 ---
 
@@ -781,8 +781,8 @@ def hello():
 > Blockquote in markdown
 `
 
-        const result = await processor.process(markdownContent)
-        expect(result.data).toMatchInlineSnapshot(`
+    const result = await processor.process(markdownContent)
+    expect(result.data).toMatchInlineSnapshot(`
           {
             "ast": {
               "children": [
@@ -1221,14 +1221,14 @@ def hello():
             ],
           }
         `)
+  })
+
+  test('processes MDX with install blocks and mermaid', async () => {
+    const processor = getProcessor({
+      extension: 'mdx',
     })
 
-    test('processes MDX with install blocks and mermaid', async () => {
-        const processor = getProcessor({
-            extension: 'mdx',
-        })
-
-        const complexMdx = `---
+    const complexMdx = `---
 title: "Complex Features"
 badge:
   content: "New"
@@ -1285,8 +1285,8 @@ This is an accordion item with content.
 </Accordion>
 `
 
-        const result = await processor.process(complexMdx)
-        expect(result.data).toMatchInlineSnapshot(`
+    const result = await processor.process(complexMdx)
+    expect(result.data).toMatchInlineSnapshot(`
           {
             "ast": {
               "children": [
@@ -2047,19 +2047,19 @@ This is an accordion item with content.
             ],
           }
         `)
+  })
+
+  test('processes empty MDX document', async () => {
+    const processor = getProcessor({
+      extension: 'mdx',
     })
 
-    test('processes empty MDX document', async () => {
-        const processor = getProcessor({
-            extension: 'mdx',
-        })
-
-        const emptyMdx = `---
+    const emptyMdx = `---
 title: "Empty Document"
 ---`
 
-        const result = await processor.process(emptyMdx)
-        expect(result.data).toMatchInlineSnapshot(`
+    const result = await processor.process(emptyMdx)
+    expect(result.data).toMatchInlineSnapshot(`
           {
             "ast": {
               "children": [
@@ -2105,14 +2105,14 @@ title: "Empty Document"
             "toc": [],
           }
         `)
+  })
+
+  test('processes MDX without frontmatter', async () => {
+    const processor = getProcessor({
+      extension: 'mdx',
     })
 
-    test('processes MDX without frontmatter', async () => {
-        const processor = getProcessor({
-            extension: 'mdx',
-        })
-
-        const noFrontmatterMdx = `# Document Without Frontmatter
+    const noFrontmatterMdx = `# Document Without Frontmatter
 
 This document has no frontmatter but should still be processed correctly.
 
@@ -2128,8 +2128,8 @@ const test = true;
 \`\`\`
 `
 
-        const result = await processor.process(noFrontmatterMdx)
-        expect(result.data).toMatchInlineSnapshot(`
+    const result = await processor.process(noFrontmatterMdx)
+    expect(result.data).toMatchInlineSnapshot(`
           {
             "ast": {
               "children": [
@@ -2498,5 +2498,5 @@ const test = true;
             ],
           }
         `)
-    })
+  })
 })

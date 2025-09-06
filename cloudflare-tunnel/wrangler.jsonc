@@ -1,50 +1,50 @@
 // wrangler.jsonc
 {
-    "$schema": "./node_modules/wrangler/config-schema.json",
-    "name": "ws-tunnel",
-    "main": "src/tunnel.ts",
-    "compatibility_date": "2025-06-27",
-    "account_id": "103e73569e2f6d4aea0fb679ceb8709b",
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "ws-tunnel",
+  "main": "src/tunnel.ts",
+  "compatibility_date": "2025-06-27",
+  "account_id": "103e73569e2f6d4aea0fb679ceb8709b",
 
-    "workers_dev": false,
+  "workers_dev": false,
 
-    // ↓ narrower pattern
-    "routes": [
-        {
-            "pattern": "holocron.so/_tunnel/*",
-            "zone_name": "holocron.so",
-        },
-        {
-            "pattern": "fumabase.com/_tunnel/*",
-            "zone_name": "fumabase.com",
-        },
-        {
-            "pattern": "unframer.co/_tunnel/*",
-            "zone_name": "unframer.co",
-        },
-    ],
-
-    "durable_objects": {
-        "bindings": [{ "name": "TUNNEL_DO", "class_name": "Tunnel" }],
+  // ↓ narrower pattern
+  "routes": [
+    {
+      "pattern": "holocron.so/_tunnel/*",
+      "zone_name": "holocron.so"
     },
-
-    "migrations": [{ "tag": "v1", "new_classes": ["Tunnel"] }],
-
-    "env": {
-        "preview": {
-            "routes": [
-                {
-                    "pattern": "preview.fumabase.com/_tunnel/*",
-                    "zone_name": "fumabase.com",
-                },
-                {
-                    "pattern": "preview.holocron.so/_tunnel/*",
-                    "zone_name": "holocron.so",
-                },
-            ],
-            "durable_objects": {
-                "bindings": [{ "name": "TUNNEL_DO", "class_name": "Tunnel" }],
-            },
-        },
+    {
+      "pattern": "fumabase.com/_tunnel/*",
+      "zone_name": "fumabase.com"
     },
+    {
+      "pattern": "unframer.co/_tunnel/*",
+      "zone_name": "unframer.co"
+    }
+  ],
+
+  "durable_objects": {
+    "bindings": [{ "name": "TUNNEL_DO", "class_name": "Tunnel" }]
+  },
+
+  "migrations": [{ "tag": "v1", "new_classes": ["Tunnel"] }],
+
+  "env": {
+    "preview": {
+      "routes": [
+        {
+          "pattern": "preview.fumabase.com/_tunnel/*",
+          "zone_name": "fumabase.com"
+        },
+        {
+          "pattern": "preview.holocron.so/_tunnel/*",
+          "zone_name": "holocron.so"
+        }
+      ],
+      "durable_objects": {
+        "bindings": [{ "name": "TUNNEL_DO", "class_name": "Tunnel" }]
+      }
+    }
+  }
 }
