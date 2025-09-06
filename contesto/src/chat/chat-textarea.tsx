@@ -4,7 +4,6 @@ import { matchSorter } from 'match-sorter'
 import * as React from 'react'
 import getCaretCoordinates from 'textarea-caret'
 
-import { createIdGenerator, UIMessage } from 'ai'
 import { useChatState } from './chat-provider.js'
 import { cn } from '../lib/cn.js'
 import { ScrollArea } from '../components/ui/scroll-area.js'
@@ -33,7 +32,7 @@ export function ChatTextarea({
     )
     const submitForm = useChatState((x) => x.submit)
     const value = useChatState((x) => x.draftText || '')
-    function onChange(text) {
+    function onChange(text: string) {
         useChatState.setState({ draftText: text })
     }
 
@@ -47,7 +46,7 @@ export function ChatTextarea({
     const mentionMatches = React.useMemo(() => {
         return matchSorter(
             getList(trigger, mentionOptions),
-            deferredSearchValue,
+            deferredSearchValue || '',
             {
                 baseSort: (a, b) => (a.index < b.index ? -1 : 1),
             },
@@ -57,7 +56,7 @@ export function ChatTextarea({
     const hasMatches = !!mentionMatches.length
 
     React.useLayoutEffect(() => {
-        mentionsCombobox.setOpen(hasMatches)
+        mentionsCombobox?.setOpen(hasMatches)
     }, [mentionsCombobox, hasMatches])
 
     React.useLayoutEffect(() => {
@@ -68,7 +67,9 @@ export function ChatTextarea({
 
     // Re-calculates the position of the combobox popover in case the changes on
     // the textarea value have shifted the trigger character.
-    React.useEffect(mentionsCombobox.render, [mentionsCombobox, value])
+    React.useEffect(() => {
+        mentionsCombobox?.render()
+    }, [mentionsCombobox, value])
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (event.isPropagationStopped()) {
@@ -91,7 +92,7 @@ export function ChatTextarea({
 
         // Handle mentions combobox
         if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-            mentionsCombobox.hide()
+            mentionsCombobox?.hide()
         }
 
         // Handle form submission - prevent if mentions combobox is open or autocomplete is showing
@@ -116,18 +117,18 @@ export function ChatTextarea({
         // before the caret is the trigger.
         if (trigger) {
             setTrigger(trigger)
-            mentionsCombobox.show()
+            mentionsCombobox?.show()
         }
         // There will be no trigger and no search value if the trigger character has
         // just been deleted.
         else if (!searchValue) {
             setTrigger(null)
-            mentionsCombobox.hide()
+            mentionsCombobox?.hide()
         }
         // Sets our textarea value.
         onChange(event.target.value)
         // Sets the combobox value that will be used to search in the list.
-        mentionsCombobox.setValue(searchValue)
+        mentionsCombobox?.setValue(searchValue)
     }
 
     const onMentionClick = (itemValue: string) => () => {
@@ -137,7 +138,7 @@ export function ChatTextarea({
         const displayValue = getValue(itemValue, trigger, mentionOptions)
         if (!displayValue) return
         setTrigger(null)
-        onChange(replaceValue(offset, searchValue, displayValue)(value))
+        onChange(replaceValue(offset, searchValue || '', displayValue)(value))
         const nextCaretOffset = offset + displayValue.length + 1
         setCaretOffset(nextCaretOffset)
     }
@@ -170,8 +171,8 @@ export function ChatTextarea({
                             placeholder={placeholder}
                             disabled={disabled}
                             onKeyDown={handleKeyDown}
-                            onScroll={mentionsCombobox.render}
-                            onPointerDown={mentionsCombobox.hide}
+                            onScroll={mentionsCombobox?.render}
+                            onPointerDown={mentionsCombobox?.hide}
                             onChange={handleChange}
                             className='box-border border-0 outline-none [field-sizing:content] whitespace-pre-wrap break-words  '
                         />

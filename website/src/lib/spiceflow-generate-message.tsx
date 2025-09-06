@@ -29,6 +29,7 @@ import {
     Tool,
     ModelMessage,
     wrapLanguageModel,
+    convertToModelMessages,
 } from 'ai'
 import { gateway } from '@ai-sdk/gateway'
 import { type LanguageModelV2Middleware } from '@ai-sdk/provider'
@@ -887,6 +888,7 @@ export async function* generateMessageStream({
     for await (const chunk of stream) {
         // console.log(chunk)
         if (chunk.type === 'error') {
+            // console.log(convertToModelMessages(messages))
             notifyError(new Error(chunk.errorText), 'generate ai message')
         }
         yield chunk

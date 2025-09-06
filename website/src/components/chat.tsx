@@ -1,7 +1,6 @@
 'use client'
-import dedent from 'string-dedent'
 
-import { createIdGenerator, isToolUIPart, UIMessage } from 'ai'
+import { createIdGenerator, isToolUIPart, UIMessage, FileUIPart } from 'ai'
 import {
     ChatAssistantMessage,
     ChatErrorMessage,
@@ -13,7 +12,6 @@ import { DOCS_JSON_BASENAME } from 'docs-website/src/lib/constants'
 
 import {
     CSSProperties,
-    Fragment,
     startTransition,
     useEffect,
     useMemo,
@@ -22,8 +20,6 @@ import {
 
 import {
     Dot,
-    EditorToolPreview,
-    ErrorPreview,
     ToolPreviewContainer,
 } from 'docs-website/src/components/chat-tool-previews'
 
@@ -59,6 +55,7 @@ import {
     ChatProvider,
     ChatState,
     useChatContext,
+    useChatState,
 } from 'contesto/src/chat/chat-provider'
 import { ChatRecordButton } from 'contesto/src/chat/chat-record-button'
 import { ChatSuggestionButton } from 'contesto/src/chat/chat-suggestion'
@@ -599,7 +596,30 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
             <ChatUserMessage className='my-4 text-[16px]' message={message}>
                 {message.parts.map((part, index) => {
                     if (part.type === 'text') {
-                        return part.text
+                        return <span key={index}>{part.text}</span>
+                    }
+
+                    // Display file attachments
+                    if (part.type === 'file') {
+                        const isImage = part.mediaType?.startsWith('image/')
+                        if (isImage) {
+                            return (
+                                <img
+                                    key={index}
+                                    src={part.url}
+                                    alt={part.filename}
+                                    className='max-w-sm rounded-lg mt-2'
+                                />
+                            )
+                        }
+                        return (
+                            <div
+                                key={index}
+                                className='flex items-center gap-2 mt-2 p-2 bg-muted rounded'
+                            >
+                                <span className='text-sm'>{part.filename}</span>
+                            </div>
+                        )
                     }
 
                     return null
@@ -864,8 +884,17 @@ function Footer() {
                                     }}
                                     accept='image/*,text/*,.pdf,.docx,.doc'
                                     onFilesChange={(files) => {
-                                        // TODO: Wire uploaded files to messages
-                                        console.log('Files uploaded:', files)
+                                        // Convert uploaded files to file parts for AI SDK
+                                        const fileParts: FileUIPart[] =
+                                            files.map((file) => ({
+                                                type: 'file',
+                                                filename: file.name,
+                                                mediaType: file.contentType,
+                                                url: file.url,
+                                            }))
+                                        useChatState.setState({
+                                            attachedFiles: fileParts,
+                                        })
                                     }}
                                 />
                                 <ChatRecordButton

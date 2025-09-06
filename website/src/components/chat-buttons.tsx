@@ -5,7 +5,7 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from 'website/src/components/ui/tooltip'
-import { GitBranch, Save } from 'lucide-react'
+import { GitBranch, ZapIcon } from 'lucide-react'
 import {
     Link,
     useLoaderData,
@@ -289,7 +289,7 @@ export function SaveChangesButton({ className = '' }) {
                             className='disabled:opacity-50'
                         >
                             <div className='flex items-center gap-2'>
-                                <Save className='size-4' />
+                                <ZapIcon className='size-4' />
                                 {displayButtonText}
                             </div>
                         </Button>

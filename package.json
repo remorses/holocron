@@ -9,7 +9,8 @@
         "watch": "pnpm -r watch",
         "typecheck": "pnpm -r --parallel --no-bail --stream typecheck",
         "ci": "pnpm --filter db gen && pnpm --filter fumadocs-root build:pnpm && pnpm --filter './*' build",
-        "release": "pnpm build && changeset"
+        "release": "pnpm build && changeset",
+        "prettier": "prettier --write ."
     },
     "devDependencies": {
         "@changesets/cli": "^2.29.4",

@@ -1,5 +1,4 @@
-import { createIdGenerator, UIMessage } from 'ai'
-import { useShallow } from 'zustand/react/shallow'
+import { createIdGenerator, UIMessage, FileUIPart } from 'ai'
 
 import { createTrackedSelector } from 'react-tracked'
 
@@ -15,7 +14,7 @@ import {
 } from 'react'
 import type { StoreApi, UseBoundStore } from 'zustand'
 import { ComboboxStore } from '@ariakit/react'
-import { cn } from '../lib/cn.js'
+
 import * as cookie from 'cookie'
 
 const ChatContext = createContext<UseBoundStore<StoreApi<ChatState>> | null>(
@@ -69,6 +68,7 @@ const ChatProvider = (props: {
             },
             abortController,
             mentionsCombobox,
+            attachedFiles: [],
             ...props.initialValue,
         }))
         Object.assign(useChatState, store)
@@ -89,17 +89,17 @@ const ChatProvider = (props: {
         const generateId = createIdGenerator()
         const assistantMessageId = generateId()
         let userMessageId = generateId()
-        const now = new Date()
         const {
             draftText: draftText = '',
             messages,
             isGenerating,
+            attachedFiles = [],
         } = store.getState()
         if (isGenerating) {
             return
         }
 
-        if (!draftText.trim()) {
+        if (!draftText.trim() && attachedFiles.length === 0) {
             const lastUserMessage = [...messages]
                 .reverse()
                 .find((msg) => msg.role === 'user')
@@ -118,10 +118,22 @@ const ChatProvider = (props: {
             })
         } else {
             // Create user message for new requests
+            const parts: UIMessage['parts'] = []
+
+            // Add text part if there's text
+            if (draftText.trim()) {
+                parts.push({ type: 'text', text: draftText })
+            }
+
+            // Add file parts if there are attached files
+            if (attachedFiles.length > 0) {
+                parts.push(...attachedFiles)
+            }
+
             const userMessage: UIMessage = {
                 id: userMessageId,
                 role: 'user',
-                parts: [{ type: 'text', text: draftText }],
+                parts,
             }
 
             flushSync(() => {
@@ -129,13 +141,14 @@ const ChatProvider = (props: {
                     messages: [
                         ...messages,
                         userMessage,
-                        {
-                            parts: [],
-                            role: 'assistant',
-                            id: assistantMessageId,
-                        },
+                        // {
+                        //     parts: [],
+                        //     role: 'assistant',
+                        //     id: assistantMessageId,
+                        // },
                     ],
                     draftText: '',
+                    attachedFiles: [], // Clear attached files after sending
                 })
             })
         }
@@ -285,17 +298,20 @@ let useChatState = ((
 
 export type ChatState = {
     messages: UIMessage[]
-    draftText?: string
-    setDraftText: (text: string) => void
-    submit: () => Promise<any>
-    stop: () => void
-    setMessages: (messages: UIMessage[]) => void
-    abortController: AbortController
-    isGenerating?: boolean
-    mentionsCombobox: ComboboxStore
-    selectedAutocompleteText?: string
     assistantErrorMessage?: string
+    setMessages(messages: UIMessage[]): void
+    draftText?: string
+    setDraftText(text: string): void
+    submit(): void
+    regenerate?(): void
+    isGenerating?: boolean
+    status?: 'ready' | 'streaming' | 'submitted' | 'error'
+    stop(): void
+    abortController: AbortController
+    mentionsCombobox?: ComboboxStore
+    attachedFiles?: FileUIPart[]
     editingMessageId?: string
+    selectedAutocompleteText?: string
 }
 
 export { ChatProvider, useChatState }
