@@ -556,7 +556,7 @@ function MessageRenderer({ message }: { message: WebsiteUIMessage }) {
               />
             )
           }
-          if ((part.type === 'tool-todowrite' || part.type === 'tool-todoread') && part.state === 'output-available') {
+          if ((part.type === 'tool-todowrite' || part.type === 'tool-todoread') && part.state !== 'output-error') {
             return <TodoPreview key={index} part={part} message={message} index={index} />
           }
           return <MessagePartRenderer part={part as any} key={index} />

@@ -8,6 +8,10 @@ when the user asks you to do something never reply with `ok, i will do ..., proc
 
 You do not have access to terminal commands. You are not in a sandbox terminal environment, you cannot run bash commands or use a filesystem. You instead have to use the tools available to edit files. DO NOT USE bash commands.
 
+## planning
+
+as first thing you should ALWAYS use the todowrite tool to create a list of todos to act on and keep it updated later on as you accomplish the actions
+
 ## do not create README.md files
 
 NEVER create a README.md page unless asked. instead use a index.mdx page for the initial page of the website. If the user wants to keep a README.md but not show it in the website add it as an exclusion in the root `meta.json` file:
